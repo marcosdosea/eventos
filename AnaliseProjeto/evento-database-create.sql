@@ -25,6 +25,16 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
+-- Table `evento`.`EstadosBrasil`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `evento`.`EstadosBrasil` (
+  `estado` CHAR(2) NOT NULL,
+  `nome` VARCHAR(50) NOT NULL,
+  PRIMARY KEY (`estado`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
 -- Table `evento`.`Evento`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `evento`.`Evento` (
@@ -32,7 +42,7 @@ CREATE TABLE IF NOT EXISTS `evento`.`Evento` (
   `nome` VARCHAR(200) NOT NULL,
   `descricao` VARCHAR(5000) NOT NULL,
   `inscricaoGratuita` TINYINT NOT NULL DEFAULT '0',
-  `status` ENUM('C', 'A', 'F') NOT NULL DEFAULT 'C' COMMENT 'C- CADASTRO\nA- ABERTO\nF- FINALIZADO\n ',
+  `status` ENUM('C', 'A', 'F') NOT NULL DEFAULT 'C' COMMENT 'C- CADASTRO\nA- ATIVO\nI - INATIVO\nF- FINALIZADO\n ',
   `dataInicioInscricao` DATETIME NOT NULL,
   `dataFimInscricao` DATETIME NOT NULL,
   `valorInscricao` DECIMAL(10,2) NOT NULL DEFAULT 0,
@@ -40,7 +50,7 @@ CREATE TABLE IF NOT EXISTS `evento`.`Evento` (
   `emailEvento` VARCHAR(100) NULL,
   `eventoPublico` TINYINT NOT NULL DEFAULT 1,
   `cep` VARCHAR(8) NOT NULL,
-  `estado` VARCHAR(2) NOT NULL,
+  `estado` CHAR(2) NOT NULL,
   `cidade` VARCHAR(50) NOT NULL,
   `bairro` VARCHAR(50) NOT NULL,
   `rua` VARCHAR(50) NOT NULL,
@@ -57,21 +67,17 @@ CREATE TABLE IF NOT EXISTS `evento`.`Evento` (
   PRIMARY KEY (`id`),
   UNIQUE INDEX `idEvento_UNIQUE` (`id` ASC),
   INDEX `fk_Evento_TipoEvento1_idx` (`idTipoEvento` ASC),
+  INDEX `fk_Evento_EstadosBrasil1_idx` (`estado` ASC),
   CONSTRAINT `fk_Evento_TipoEvento1`
     FOREIGN KEY (`idTipoEvento`)
     REFERENCES `evento`.`TipoEvento` (`id`)
     ON DELETE RESTRICT
+    ON UPDATE RESTRICT,
+  CONSTRAINT `fk_Evento_EstadosBrasil1`
+    FOREIGN KEY (`estado`)
+    REFERENCES `evento`.`EstadosBrasil` (`estado`)
+    ON DELETE RESTRICT
     ON UPDATE RESTRICT)
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
--- Table `evento`.`EstadosBrasil`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `evento`.`EstadosBrasil` (
-  `estado` CHAR(2) NOT NULL,
-  `nome` VARCHAR(50) NOT NULL,
-  PRIMARY KEY (`estado`))
 ENGINE = InnoDB;
 
 
@@ -83,6 +89,7 @@ CREATE TABLE IF NOT EXISTS `evento`.`Pessoa` (
   `nome` VARCHAR(50) NOT NULL,
   `nomeCracha` VARCHAR(20) NOT NULL,
   `cpf` VARCHAR(11) NOT NULL,
+  `sexo` ENUM('M', 'F', 'N') NOT NULL DEFAULT 'N' COMMENT 'M - Masculino\nF - Feminino\nN - Não Informado',
   `cep` VARCHAR(8) NULL,
   `rua` VARCHAR(50) NULL,
   `bairro` VARCHAR(50) NULL,
@@ -115,15 +122,17 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `evento`.`TipoInscricaoEvento`
+-- Table `evento`.`TipoInscricao`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `evento`.`TipoInscricaoEvento` (
-  `id` INT NOT NULL AUTO_INCREMENT,
+CREATE TABLE IF NOT EXISTS `evento`.`TipoInscricao` (
+  `id` INT NOT NULL,
   `idEvento` INT UNSIGNED NOT NULL,
   `descricao` VARCHAR(200) NOT NULL,
   `valor` DECIMAL(10,2) NOT NULL,
   `dataInicio` DATETIME NOT NULL,
   `datafim` DATETIME NOT NULL,
+  `usadaEvento` TINYINT NOT NULL DEFAULT 1,
+  `usadaSubevento` TINYINT NOT NULL DEFAULT 1,
   PRIMARY KEY (`id`),
   INDEX `fk_TipoInscricao_Evento1_idx` (`idEvento` ASC),
   CONSTRAINT `fk_TipoInscricao_Evento1`
@@ -139,25 +148,25 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `evento`.`InscricaoPessoaEvento` (
   `idPessoa` INT UNSIGNED NOT NULL,
-  `idEventoEvento` INT UNSIGNED NOT NULL,
+  `idEvento` INT UNSIGNED NOT NULL,
   `idPapel` INT NOT NULL,
-  `idTipoInscricaoEvento` INT NULL,
+  `idTipoInscricao` INT NULL,
   `dataInscricao` DATETIME NOT NULL,
-  `valor` DECIMAL(10,2) NOT NULL DEFAULT 0,
+  `valorTotal` DECIMAL(10,2) NOT NULL DEFAULT 0,
   `status` ENUM('A', 'C', 'S') NOT NULL DEFAULT 'S' COMMENT 'A - ATIVA\nC - CANCELADA\nS - SOLICITADA\n',
   `frequenciaFinal` DECIMAL(10,2) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`idPessoa`, `idEventoEvento`),
-  INDEX `fk_PessoaEvento_Evento1_idx` (`idEventoEvento` ASC),
+  INDEX `fk_PessoaEvento_Evento1_idx` (`idEvento` ASC),
   INDEX `fk_PessoaEvento_Pessoa_idx` (`idPessoa` ASC),
   INDEX `fk_PessoaEvento_Papel1_idx` (`idPapel` ASC),
-  INDEX `fk_PessoaEvento_TipoInscricao1_idx` (`idTipoInscricaoEvento` ASC),
+  INDEX `fk_PessoaEvento_TipoInscricao1_idx` (`idTipoInscricao` ASC),
+  PRIMARY KEY (`idPessoa`, `idEvento`),
   CONSTRAINT `fk_PessoaEvento_Pessoa`
     FOREIGN KEY (`idPessoa`)
     REFERENCES `evento`.`Pessoa` (`id`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT,
   CONSTRAINT `fk_PessoaEvento_Evento1`
-    FOREIGN KEY (`idEventoEvento`)
+    FOREIGN KEY (`idEvento`)
     REFERENCES `evento`.`Evento` (`id`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT,
@@ -167,8 +176,8 @@ CREATE TABLE IF NOT EXISTS `evento`.`InscricaoPessoaEvento` (
     ON DELETE RESTRICT
     ON UPDATE RESTRICT,
   CONSTRAINT `fk_PessoaEvento_TipoInscricao1`
-    FOREIGN KEY (`idTipoInscricaoEvento`)
-    REFERENCES `evento`.`TipoInscricaoEvento` (`id`)
+    FOREIGN KEY (`idTipoInscricao`)
+    REFERENCES `evento`.`TipoInscricao` (`id`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT)
 ENGINE = InnoDB;
@@ -255,6 +264,7 @@ ENGINE = InnoDB;
 CREATE TABLE IF NOT EXISTS `evento`.`PessoaAreaInteresse` (
   `idPessoa` INT UNSIGNED NOT NULL,
   `idAreaInteresse` INT UNSIGNED NOT NULL,
+  `todosEstados` TINYINT NOT NULL DEFAULT 1,
   PRIMARY KEY (`idPessoa`, `idAreaInteresse`),
   INDEX `fk_PessoaAreaInteresse_AreaInteresse1_idx` (`idAreaInteresse` ASC),
   INDEX `fk_PessoaAreaInteresse_Pessoa1_idx` (`idPessoa` ASC),
@@ -308,33 +318,13 @@ ENGINE = InnoDB;
 
 
 -- -----------------------------------------------------
--- Table `evento`.`TipoInscricaoSubEvento`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `evento`.`TipoInscricaoSubEvento` (
-  `id` INT NOT NULL AUTO_INCREMENT,
-  `descricao` VARCHAR(200) NOT NULL,
-  `valor` DECIMAL(10,2) NOT NULL,
-  `dataInicio` DATETIME NOT NULL,
-  `datafim` DATETIME NOT NULL,
-  `idSubEvento` INT UNSIGNED NOT NULL,
-  PRIMARY KEY (`id`),
-  INDEX `fk_TipoInscricaoSubEvento_SubEvento1_idx` (`idSubEvento` ASC),
-  CONSTRAINT `fk_TipoInscricaoSubEvento_SubEvento1`
-    FOREIGN KEY (`idSubEvento`)
-    REFERENCES `evento`.`SubEvento` (`id`)
-    ON DELETE RESTRICT
-    ON UPDATE RESTRICT)
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
 -- Table `evento`.`InscricaoPessoaSubEvento`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `evento`.`InscricaoPessoaSubEvento` (
   `idPessoa` INT UNSIGNED NOT NULL,
   `idSubEvento` INT UNSIGNED NOT NULL,
   `idPapel` INT NOT NULL,
-  `idTipoInscricaoSubEvento` INT NULL,
+  `idTipoInscricao` INT NULL,
   `dataInscricao` DATETIME NOT NULL,
   `valor` DECIMAL(10,2) NOT NULL DEFAULT 0,
   `status` ENUM('A', 'C', 'S') NOT NULL DEFAULT 'S' COMMENT 'A - ATIVA\nC - CANCELADA\nS - SOLICITADA\n',
@@ -343,7 +333,7 @@ CREATE TABLE IF NOT EXISTS `evento`.`InscricaoPessoaSubEvento` (
   INDEX `fk_PessoaSubEvento_SubEvento1_idx` (`idSubEvento` ASC),
   INDEX `fk_PessoaSubEvento_Pessoa1_idx` (`idPessoa` ASC),
   INDEX `fk_InscricaoPessoaSubEvento_Papel1_idx` (`idPapel` ASC),
-  INDEX `fk_InscricaoPessoaSubEvento_TipoInscricaoSubEvento1_idx` (`idTipoInscricaoSubEvento` ASC),
+  INDEX `fk_InscricaoPessoaSubEvento_TipoInscricao1_idx` (`idTipoInscricao` ASC),
   CONSTRAINT `fk_PessoaSubEvento_Pessoa1`
     FOREIGN KEY (`idPessoa`)
     REFERENCES `evento`.`Pessoa` (`id`)
@@ -359,9 +349,9 @@ CREATE TABLE IF NOT EXISTS `evento`.`InscricaoPessoaSubEvento` (
     REFERENCES `evento`.`Papel` (`id`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT,
-  CONSTRAINT `fk_InscricaoPessoaSubEvento_TipoInscricaoSubEvento1`
-    FOREIGN KEY (`idTipoInscricaoSubEvento`)
-    REFERENCES `evento`.`TipoInscricaoSubEvento` (`id`)
+  CONSTRAINT `fk_InscricaoPessoaSubEvento_TipoInscricao1`
+    FOREIGN KEY (`idTipoInscricao`)
+    REFERENCES `evento`.`TipoInscricao` (`id`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT)
 ENGINE = InnoDB;
@@ -412,6 +402,72 @@ CREATE TABLE IF NOT EXISTS `evento`.`ParticipacaoPessoaSubEvento` (
   CONSTRAINT `fk_PessoaSubEvento_SubEvento2`
     FOREIGN KEY (`idSubEvento`)
     REFERENCES `evento`.`SubEvento` (`id`)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `evento`.`TipoInscricaoSubEvento`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `evento`.`TipoInscricaoSubEvento` (
+  `idTipoInscricao` INT NOT NULL,
+  `idSubEvento` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`idTipoInscricao`, `idSubEvento`),
+  INDEX `fk_TipoInscricaoSubEvento_SubEvento1_idx` (`idSubEvento` ASC),
+  INDEX `fk_TipoInscricaoSubEvento_TipoInscricao1_idx` (`idTipoInscricao` ASC),
+  CONSTRAINT `fk_TipoInscricaoSubEvento_TipoInscricao1`
+    FOREIGN KEY (`idTipoInscricao`)
+    REFERENCES `evento`.`TipoInscricao` (`id`)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT,
+  CONSTRAINT `fk_TipoInscricaoSubEvento_SubEvento1`
+    FOREIGN KEY (`idSubEvento`)
+    REFERENCES `evento`.`SubEvento` (`id`)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `evento`.`Pagamento`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `evento`.`Pagamento` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `idPessoaInscricaoPessoaEvento` INT UNSIGNED NOT NULL,
+  `idEventoInscricaoPessoaEvento` INT UNSIGNED NOT NULL,
+  `valor` DECIMAL(10,2) NOT NULL,
+  `status` ENUM('S', 'C') NOT NULL DEFAULT 'S' COMMENT 'S- SOLICITADO\nC- CONFIRMADO',
+  `forma` ENUM('D', 'C', 'B', 'P') NOT NULL DEFAULT 'P' COMMENT 'D - DINHEIRO\nC- CARTAO\nB - BOLETO\nP - PIX',
+  `codigoPagamento` VARCHAR(500) NULL,
+  PRIMARY KEY (`id`),
+  INDEX `fk_Pagamento_InscricaoPessoaEvento1_idx` (`idPessoaInscricaoPessoaEvento` ASC, `idEventoInscricaoPessoaEvento` ASC),
+  CONSTRAINT `fk_Pagamento_InscricaoPessoaEvento1`
+    FOREIGN KEY (`idPessoaInscricaoPessoaEvento` , `idEventoInscricaoPessoaEvento`)
+    REFERENCES `evento`.`InscricaoPessoaEvento` (`idPessoa` , `idEvento`)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `evento`.`EstadosBrasilPessoaAreaInteresse`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `evento`.`EstadosBrasilPessoaAreaInteresse` (
+  `estadoEstadosBrasil` CHAR(2) NOT NULL,
+  `idPessoaPessoaAreaInteresse` INT UNSIGNED NOT NULL,
+  `idAreaInteressePessoaAreaInteresse` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`estadoEstadosBrasil`, `idPessoaPessoaAreaInteresse`, `idAreaInteressePessoaAreaInteresse`),
+  INDEX `fk_EstadosBrasilPessoaAreaInteresse_PessoaAreaInteresse1_idx` (`idPessoaPessoaAreaInteresse` ASC, `idAreaInteressePessoaAreaInteresse` ASC),
+  INDEX `fk_EstadosBrasilPessoaAreaInteresse_EstadosBrasil1_idx` (`estadoEstadosBrasil` ASC),
+  CONSTRAINT `fk_EstadosBrasilPessoaAreaInteresse_EstadosBrasil1`
+    FOREIGN KEY (`estadoEstadosBrasil`)
+    REFERENCES `evento`.`EstadosBrasil` (`estado`)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT,
+  CONSTRAINT `fk_EstadosBrasilPessoaAreaInteresse_PessoaAreaInteresse1`
+    FOREIGN KEY (`idPessoaPessoaAreaInteresse` , `idAreaInteressePessoaAreaInteresse`)
+    REFERENCES `evento`.`PessoaAreaInteresse` (`idPessoa` , `idAreaInteresse`)
     ON DELETE RESTRICT
     ON UPDATE RESTRICT)
 ENGINE = InnoDB;

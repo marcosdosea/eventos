@@ -15,7 +15,8 @@ public partial class Evento
 
     /// <summary>
     /// C- CADASTRO
-    /// A- ABERTO
+    /// A- ATIVO
+    /// I - INATIVO
     /// F- FINALIZADO
     ///  
     /// </summary>
@@ -63,6 +64,8 @@ public partial class Evento
 
     public int CargaHoraria { get; set; }
 
+    public virtual Estadosbrasil EstadoNavigation { get; set; } = null!;
+
     public virtual Tipoevento IdTipoEventoNavigation { get; set; } = null!;
 
     public virtual ICollection<Inscricaopessoaevento> Inscricaopessoaeventos { get; set; } = new List<Inscricaopessoaevento>();
@@ -75,7 +78,7 @@ public partial class Evento
 
     public virtual ICollection<Subevento> Subeventos { get; set; } = new List<Subevento>();
 
-    public virtual ICollection<Tipoinscricaoevento> Tipoinscricaoeventos { get; set; } = new List<Tipoinscricaoevento>();
+    public virtual ICollection<Tipoinscricao> Tipoinscricaos { get; set; } = new List<Tipoinscricao>();
 
     public virtual ICollection<Areainteresse> IdAreaInteresses { get; set; } = new List<Areainteresse>();
 }

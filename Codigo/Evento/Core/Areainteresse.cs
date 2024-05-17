@@ -9,7 +9,7 @@ public partial class Areainteresse
 
     public string Nome { get; set; } = null!;
 
-    public virtual ICollection<Evento> IdEventos { get; set; } = new List<Evento>();
+    public virtual ICollection<Pessoaareainteresse> Pessoaareainteresses { get; set; } = new List<Pessoaareainteresse>();
 
-    public virtual ICollection<Pessoa> IdPessoas { get; set; } = new List<Pessoa>();
+    public virtual ICollection<Evento> IdEventos { get; set; } = new List<Evento>();
 }

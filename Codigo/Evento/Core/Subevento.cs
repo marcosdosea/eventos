@@ -51,5 +51,5 @@ public partial class Subevento
 
     public virtual ICollection<Participacaopessoasubevento> Participacaopessoasubeventos { get; set; } = new List<Participacaopessoasubevento>();
 
-    public virtual ICollection<Tipoinscricaosubevento> Tipoinscricaosubeventos { get; set; } = new List<Tipoinscricaosubevento>();
+    public virtual ICollection<Tipoinscricao> IdTipoInscricaos { get; set; } = new List<Tipoinscricao>();
 }

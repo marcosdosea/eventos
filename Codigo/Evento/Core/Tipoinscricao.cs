@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Core;
 
-public partial class Tipoinscricaoevento
+public partial class Tipoinscricao
 {
     public int Id { get; set; }
 
@@ -17,7 +17,15 @@ public partial class Tipoinscricaoevento
 
     public DateTime Datafim { get; set; }
 
+    public sbyte UsadaEvento { get; set; }
+
+    public sbyte UsadaSubevento { get; set; }
+
     public virtual Evento IdEventoNavigation { get; set; } = null!;
 
     public virtual ICollection<Inscricaopessoaevento> Inscricaopessoaeventos { get; set; } = new List<Inscricaopessoaevento>();
+
+    public virtual ICollection<Inscricaopessoasubevento> Inscricaopessoasubeventos { get; set; } = new List<Inscricaopessoasubevento>();
+
+    public virtual ICollection<Subevento> IdSubEventos { get; set; } = new List<Subevento>();
 }

@@ -7,15 +7,15 @@ public partial class Inscricaopessoaevento
 {
     public uint IdPessoa { get; set; }
 
-    public uint IdEventoEvento { get; set; }
+    public uint IdEvento { get; set; }
 
     public int IdPapel { get; set; }
 
-    public int? IdTipoInscricaoEvento { get; set; }
+    public int? IdTipoInscricao { get; set; }
 
     public DateTime DataInscricao { get; set; }
 
-    public decimal Valor { get; set; }
+    public decimal ValorTotal { get; set; }
 
     /// <summary>
     /// A - ATIVA
@@ -27,11 +27,13 @@ public partial class Inscricaopessoaevento
 
     public decimal FrequenciaFinal { get; set; }
 
-    public virtual Evento IdEventoEventoNavigation { get; set; } = null!;
+    public virtual Evento IdEventoNavigation { get; set; } = null!;
 
     public virtual Papel IdPapelNavigation { get; set; } = null!;
 
     public virtual Pessoa IdPessoaNavigation { get; set; } = null!;
 
-    public virtual Tipoinscricaoevento? IdTipoInscricaoEventoNavigation { get; set; }
+    public virtual Tipoinscricao? IdTipoInscricaoNavigation { get; set; }
+
+    public virtual ICollection<Pagamento> Pagamentos { get; set; } = new List<Pagamento>();
 }

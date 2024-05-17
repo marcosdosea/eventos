@@ -13,6 +13,13 @@ public partial class Pessoa
 
     public string Cpf { get; set; } = null!;
 
+    /// <summary>
+    /// M - Masculino
+    /// F - Feminino
+    /// N - Não Informado
+    /// </summary>
+    public string Sexo { get; set; } = null!;
+
     public string? Cep { get; set; }
 
     public string? Rua { get; set; }
@@ -43,5 +50,5 @@ public partial class Pessoa
 
     public virtual ICollection<Participacaopessoasubevento> Participacaopessoasubeventos { get; set; } = new List<Participacaopessoasubevento>();
 
-    public virtual ICollection<Areainteresse> IdAreaInteresses { get; set; } = new List<Areainteresse>();
+    public virtual ICollection<Pessoaareainteresse> Pessoaareainteresses { get; set; } = new List<Pessoaareainteresse>();
 }

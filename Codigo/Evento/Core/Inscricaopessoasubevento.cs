@@ -11,7 +11,7 @@ public partial class Inscricaopessoasubevento
 
     public int IdPapel { get; set; }
 
-    public int? IdTipoInscricaoSubEvento { get; set; }
+    public int? IdTipoInscricao { get; set; }
 
     public DateTime DataInscricao { get; set; }
 
@@ -33,5 +33,5 @@ public partial class Inscricaopessoasubevento
 
     public virtual Subevento IdSubEventoNavigation { get; set; } = null!;
 
-    public virtual Tipoinscricaosubevento? IdTipoInscricaoSubEventoNavigation { get; set; }
+    public virtual Tipoinscricao? IdTipoInscricaoNavigation { get; set; }
 }
