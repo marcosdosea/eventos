@@ -1,4 +1,5 @@
 using Core;
+using Core.Service;
 using Microsoft.EntityFrameworkCore;
 using Service;
 
@@ -18,6 +19,7 @@ namespace EventoWeb
 
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             builder.Services.AddTransient<ITipoInscricaoService, TipoInscricaoService>();
+            builder.Services.AddTransient<ISubeventoService, SubeventoService>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
