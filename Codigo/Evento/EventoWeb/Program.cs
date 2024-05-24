@@ -1,3 +1,7 @@
+using Core;
+using Microsoft.EntityFrameworkCore;
+using Service;
+
 namespace EventoWeb
 {
     public class Program
@@ -9,6 +13,11 @@ namespace EventoWeb
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
+            builder.Services.AddDbContext<EventoContext>(
+                options => options.UseMySQL(builder.Configuration.GetConnectionString("EventoDatabase")));
+
+            builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            builder.Services.AddTransient<ITipoInscricaoService, TipoInscricaoService>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
