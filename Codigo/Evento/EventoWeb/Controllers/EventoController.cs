@@ -29,7 +29,7 @@ namespace EventoWeb.Controllers
         // GET: EventoController/Details/5
         public ActionResult Details(uint id)
         {
-            Evento evento = _eventoService.Obter(id);
+            Evento evento = _eventoService.Get(id);
             EventoModel eventoModel = _mapper.Map<EventoModel>(evento);
             return View(eventoModel);
         }
@@ -49,7 +49,7 @@ namespace EventoWeb.Controllers
             if (ModelState.IsValid)
             {
                 var evento = _mapper.Map<Evento>(eventoModel);
-                _eventoService.Inserir(evento);
+                _eventoService.Create(evento);
             }
             return RedirectToAction(nameof(Index));
         }
@@ -57,19 +57,17 @@ namespace EventoWeb.Controllers
         // GET: EventoController/Edit/5
         public ActionResult Edit(uint id)
         {
-            Evento evento = _eventoService.Obter(id);
-            EventoModel eventoModel = _mapper.Map<EventoModel>(evento);
-            return View(eventoModel);
+            return Details(id);
         }
 
         // POST: EventoController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, EventoModel eventoModel)
+        public ActionResult Edit(uint id, EventoModel eventoModel)
         {
             if (ModelState.IsValid){
                 var evento = _mapper.Map<Evento>(eventoModel);
-                _eventoService.Atualizar(evento);
+                _eventoService.Edit(evento);
             }
             return RedirectToAction(nameof(Index));
         }
@@ -77,8 +75,8 @@ namespace EventoWeb.Controllers
         // GET: EventoController/Delete/5
         public ActionResult Delete(uint id)
         {
-            Evento evento = _eventoService.Obter(id);
-            EventoModel eventoModel = _mapper.Map<EventoModel>(evento);
+            var evento = _eventoService.Get(id);
+            var eventoModel = _mapper.Map<EventoModel>(evento);
             return View(eventoModel);
         }
 
@@ -87,7 +85,7 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Delete(uint id, EventoModel eventoModel)
         {
-            _eventoService.Remover(id);
+            _eventoService.Delete(id);
             return RedirectToAction(nameof(Index));
         }
     }
