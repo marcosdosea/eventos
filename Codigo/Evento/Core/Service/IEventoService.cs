@@ -1,23 +1,19 @@
-﻿using Core.DTO;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Core;
+
 
 
 namespace Core.Service
 {
     public interface IEventoService
     {
-        public uint Inserir(Evento evento);
-        public void Atualizar(Evento evento);
-        public void Remover(uint Id);
+        uint Inserir(Evento evento);
+        void Atualizar(Evento evento);
+        void Remover(uint Id);
 
-        public Evento Obter(uint Id);
+        Evento Obter(uint Id);
 
-        public IEnumerable<Evento> GetAll();
+        IEnumerable<Evento> GetAll();
 
-        public IEnumerable<Evento> GetByNome(string Nome);
+        IEnumerable<Evento> GetByNome(string Nome);
     }
 }
