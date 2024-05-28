@@ -1,6 +1,7 @@
 ﻿
 using Core;
 using Core.Service;
+using Core.DTO;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -19,14 +20,27 @@ namespace Service
             _context = context;
         }
 
-        public uint Inserir(Evento evento)
+        /// <summary>
+        /// Cria um novo evento
+        /// </summary>
+        /// <param name="evento"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public uint Create(Evento evento)
         {
             _context.Add(evento);
             _context.SaveChanges();
             return (uint)evento.Id;
         }
 
-        public void Remover(uint Id)
+
+        /// <summary>
+        /// Deleta um evento do evento
+        /// </summary>
+        /// <param name="evento"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public void Delete(uint Id)
         {
             var evento = _context.Eventos.Find(Id);
             if (evento != null)
@@ -36,28 +50,51 @@ namespace Service
             }
         }
 
-        public void Atualizar(Evento evento)
+
+        /// <summary>
+        /// Edita um evento
+        /// </summary>
+        /// <param name="evento"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public void Edit(Evento evento)
         {
             _context.Update(evento);
             _context.SaveChanges();
         }
 
-        public Evento Obter(uint Id)
+
+        /// <summary>
+        /// Busca um evento
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public Evento Get(uint id)
         {
-            return _context.Eventos.Find(Id);
+            return _context.Eventos.Find(id);
         }
 
+
+        /// <summary>
+        /// Busca todos os subeventos
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<Evento> GetAll()
         {
             return _context.Eventos.AsNoTracking();
         }
 
-        public IEnumerable<Evento> GetByNome(string Nome)
+        public IEnumerable<EventoDTO> GetByNome(string Nome)
         {
             var query = from evento in _context.Eventos
                         where evento.Nome.StartsWith(Nome)
                         orderby evento.Nome
-                        select evento;
+                        select new Core.DTO.EventoDTO
+                        {
+                            Id = evento.Id,
+                            Nome = evento.Nome
+                        };
             return query.AsNoTracking();
         }
     }
