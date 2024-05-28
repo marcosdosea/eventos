@@ -20,6 +20,8 @@ namespace EventoWeb
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             builder.Services.AddTransient<ITipoInscricaoService, TipoInscricaoService>();
             builder.Services.AddTransient<IAreaInteresseService, AreaInteresseService>();
+            builder.Services.AddTransient<ISubeventoService, SubeventoService>();
+            builder.Services.AddTransient<IEventoService, EventoService>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
