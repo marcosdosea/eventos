@@ -2,7 +2,6 @@
 using Core;
 using Core.Service;
 using EventoWeb.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EventoWeb.Controllers
@@ -32,13 +31,14 @@ namespace EventoWeb.Controllers
         {
             Evento evento = _eventoService.Obter(id);
             EventoModel eventoModel = _mapper.Map<EventoModel>(evento);
-            return View(evento);
+            return View(eventoModel);
         }
 
         // GET: EventoController/Create
         public ActionResult Create()
         {
-            return View();
+            var eventoModel = new EventoModel();
+            return View(eventoModel);
         }
 
         // POST: EventoController/Create
