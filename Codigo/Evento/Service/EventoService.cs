@@ -1,6 +1,7 @@
 ﻿
 using Core;
 using Core.Service;
+using Core.DTO;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -19,14 +20,14 @@ namespace Service
             _context = context;
         }
 
-        public uint Inserir(Evento evento)
+        public uint Create(Evento evento)
         {
             _context.Add(evento);
             _context.SaveChanges();
             return (uint)evento.Id;
         }
 
-        public void Remover(uint Id)
+        public void Delete(uint Id)
         {
             var evento = _context.Eventos.Find(Id);
             if (evento != null)
@@ -36,13 +37,13 @@ namespace Service
             }
         }
 
-        public void Atualizar(Evento evento)
+        public void Edit(Evento evento)
         {
             _context.Update(evento);
             _context.SaveChanges();
         }
 
-        public Evento Obter(uint Id)
+        public Evento Get(uint Id)
         {
             return _context.Eventos.Find(Id);
         }
@@ -52,12 +53,16 @@ namespace Service
             return _context.Eventos.AsNoTracking();
         }
 
-        public IEnumerable<Evento> GetByNome(string Nome)
+        public IEnumerable<EventoDTO> GetByNome(string Nome)
         {
             var query = from evento in _context.Eventos
                         where evento.Nome.StartsWith(Nome)
                         orderby evento.Nome
-                        select evento;
+                        select new Core.DTO.EventoDTO
+                        {
+                            Id = evento.Id,
+                            Nome = evento.Nome
+                        };
             return query.AsNoTracking();
         }
     }
