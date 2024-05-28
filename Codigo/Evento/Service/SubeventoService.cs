@@ -76,8 +76,8 @@ namespace Service
         /// <summary>
         /// Obter eventos que iniciam com o nome
         /// </summary>
-        /// <param name="nome">nome da editora</param>
-        /// <returns>lista de eventos</returns>
+        /// <param name="nome">nome do subevento</param>
+        /// <returns>lista de subeventos</returns>
         public IEnumerable<SubeventoDTO> GetByNome(string nome)
         {
             var query = from subevento in _context.Subeventos
