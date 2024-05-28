@@ -77,7 +77,7 @@ namespace Service
 
 
         /// <summary>
-        /// Busca todos os subeventos
+        /// Busca todos os eventos
         /// </summary>
         /// <returns></returns>
         public IEnumerable<Evento> GetAll()
