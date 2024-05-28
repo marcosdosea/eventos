@@ -1,19 +1,18 @@
 ﻿using Core;
-
-
+using Core.DTO;
 
 namespace Core.Service
 {
     public interface IEventoService
     {
-        uint Inserir(Evento evento);
-        void Atualizar(Evento evento);
-        void Remover(uint Id);
+        uint Create(Evento evento);
+        void Edit(Evento evento);
+        void Delete(uint Id);
 
-        Evento Obter(uint Id);
+        Evento Get(uint Id);
 
         IEnumerable<Evento> GetAll();
 
-        IEnumerable<Evento> GetByNome(string Nome);
+        IEnumerable<EventoDTO> GetByNome(string Nome);
     }
 }

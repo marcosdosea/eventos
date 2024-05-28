@@ -73,6 +73,11 @@ namespace Service
             return _context.Subeventos.AsNoTracking();
         }
 
+        /// <summary>
+        /// Obter eventos que iniciam com o nome
+        /// </summary>
+        /// <param name="nome">nome do subevento</param>
+        /// <returns>lista de subeventos</returns>
         public IEnumerable<SubeventoDTO> GetByNome(string nome)
         {
             var query = from subevento in _context.Subeventos
