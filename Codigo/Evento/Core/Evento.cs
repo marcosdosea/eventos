@@ -11,6 +11,10 @@ public partial class Evento
 
     public string Descricao { get; set; } = null!;
 
+    public DateTime DataInicio { get; set; }
+
+    public DateTime DataFim { get; set; }
+
     public sbyte InscricaoGratuita { get; set; }
 
     /// <summary>

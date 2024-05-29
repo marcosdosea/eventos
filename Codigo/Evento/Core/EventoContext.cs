@@ -166,9 +166,15 @@ public partial class EventoContext : DbContext
             entity.Property(e => e.Complemento)
                 .HasMaxLength(50)
                 .HasColumnName("complemento");
+            entity.Property(e => e.DataFim)
+                .HasColumnType("datetime")
+                .HasColumnName("dataFim");
             entity.Property(e => e.DataFimInscricao)
                 .HasColumnType("datetime")
                 .HasColumnName("dataFimInscricao");
+            entity.Property(e => e.DataInicio)
+                .HasColumnType("datetime")
+                .HasColumnName("dataInicio");
             entity.Property(e => e.DataInicioInscricao)
                 .HasColumnType("datetime")
                 .HasColumnName("dataInicioInscricao");
@@ -456,6 +462,12 @@ public partial class EventoContext : DbContext
             entity.Property(e => e.CodigoPagamento)
                 .HasMaxLength(500)
                 .HasColumnName("codigoPagamento");
+            entity.Property(e => e.DataPagamento)
+                .HasColumnType("datetime")
+                .HasColumnName("dataPagamento");
+            entity.Property(e => e.DataSolicitacao)
+                .HasColumnType("datetime")
+                .HasColumnName("dataSolicitacao");
             entity.Property(e => e.Forma)
                 .HasDefaultValueSql("'P'")
                 .HasComment("D - DINHEIRO\nC- CARTAO\nB - BOLETO\nP - PIX")
@@ -683,9 +695,15 @@ public partial class EventoContext : DbContext
             entity.Property(e => e.CargaHoraria)
                 .HasColumnType("int(11)")
                 .HasColumnName("cargaHoraria");
+            entity.Property(e => e.DataFim)
+                .HasColumnType("datetime")
+                .HasColumnName("dataFim");
             entity.Property(e => e.DataFimInscricao)
                 .HasColumnType("datetime")
                 .HasColumnName("dataFimInscricao");
+            entity.Property(e => e.DataInicio)
+                .HasColumnType("datetime")
+                .HasColumnName("dataInicio");
             entity.Property(e => e.DataInicioInscricao)
                 .HasColumnType("datetime")
                 .HasColumnName("dataInicioInscricao");

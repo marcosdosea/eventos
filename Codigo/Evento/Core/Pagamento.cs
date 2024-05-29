@@ -29,5 +29,9 @@ public partial class Pagamento
 
     public string? CodigoPagamento { get; set; }
 
+    public DateTime DataPagamento { get; set; }
+
+    public DateTime DataSolicitacao { get; set; }
+
     public virtual Inscricaopessoaevento IdNavigation { get; set; } = null!;
 }

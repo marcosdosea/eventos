@@ -7,6 +7,7 @@ SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,N
 -- -----------------------------------------------------
 -- Schema evento
 -- -----------------------------------------------------
+DROP SCHEMA IF EXISTS `evento` ;
 
 -- -----------------------------------------------------
 -- Schema evento
@@ -41,6 +42,8 @@ CREATE TABLE IF NOT EXISTS `evento`.`Evento` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `nome` VARCHAR(200) NOT NULL,
   `descricao` VARCHAR(5000) NOT NULL,
+  `dataInicio` DATETIME NOT NULL,
+  `dataFim` DATETIME NOT NULL,
   `inscricaoGratuita` TINYINT NOT NULL DEFAULT '0',
   `status` ENUM('C', 'A', 'F') NOT NULL DEFAULT 'C' COMMENT 'C- CADASTRO\nA- ATIVO\nI - INATIVO\nF- FINALIZADO\n ',
   `dataInicioInscricao` DATETIME NOT NULL,
@@ -61,7 +64,7 @@ CREATE TABLE IF NOT EXISTS `evento`.`Evento` (
   `idTipoEvento` INT NOT NULL,
   `vagasOfertadas` INT NOT NULL DEFAULT 0,
   `vagasReservadas` INT NOT NULL DEFAULT 0,
-  `vagasDisponiveis` INT NOT NULL,
+  `vagasDisponiveis` INT NOT NULL DEFAULT 0,
   `tempoMinutosReserva` INT NOT NULL DEFAULT 15,
   `cargaHoraria` INT NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
@@ -289,6 +292,8 @@ CREATE TABLE IF NOT EXISTS `evento`.`SubEvento` (
   `idEvento` INT UNSIGNED NOT NULL,
   `nome` VARCHAR(200) NOT NULL,
   `descricao` VARCHAR(5000) NOT NULL,
+  `dataInicio` DATETIME NOT NULL,
+  `dataFim` DATETIME NOT NULL,
   `inscricaoGratuita` TINYINT NOT NULL DEFAULT '0',
   `status` ENUM('C', 'A', 'F') NOT NULL DEFAULT 'C' COMMENT 'C- CADASTRO\nA- ABERTO\nF- FINALIZADO\n ',
   `dataInicioInscricao` DATETIME NOT NULL,
@@ -440,6 +445,8 @@ CREATE TABLE IF NOT EXISTS `evento`.`Pagamento` (
   `status` ENUM('S', 'C') NOT NULL DEFAULT 'S' COMMENT 'S- SOLICITADO\nC- CONFIRMADO',
   `forma` ENUM('D', 'C', 'B', 'P') NOT NULL DEFAULT 'P' COMMENT 'D - DINHEIRO\nC- CARTAO\nB - BOLETO\nP - PIX',
   `codigoPagamento` VARCHAR(500) NULL,
+  `dataPagamento` DATETIME NOT NULL,
+  `dataSolicitacao` DATETIME NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_Pagamento_InscricaoPessoaEvento1_idx` (`idPessoaInscricaoPessoaEvento` ASC, `idEventoInscricaoPessoaEvento` ASC),
   CONSTRAINT `fk_Pagamento_InscricaoPessoaEvento1`
