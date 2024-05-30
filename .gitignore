@@ -5,3 +5,7 @@
 /Codigo/Evento/Service/bin
 /Codigo/Evento/Service/obj
 /Codigo/Evento/.vs
+/Codigo/Evento/EventoWebTests/obj
+/Codigo/Evento/EventoWebTests/bin
+/Codigo/Evento/ServiceTests/bin
+/Codigo/Evento/ServiceTests/obj

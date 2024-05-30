@@ -9,11 +9,11 @@ public class AreaInteresseService : IAreaInteresseService
     /// <summary>
     /// Manter dados de áreas de interesse no banco de dados
     /// </summary>
-    private readonly EventoContext _context;
+    private readonly EventoContext context;
 
     public AreaInteresseService(EventoContext context)
     {
-        this._context = context;
+        this.context = context;
     }
     /// <summary>
     /// Insere uma nova área de interesse na base de dados
@@ -22,9 +22,9 @@ public class AreaInteresseService : IAreaInteresseService
     /// <returns></returns>
     public uint Create(Areainteresse areainteresse)
     {
-        _context.Add(areainteresse);
-        _context.SaveChanges();
-        return (uint)areainteresse.Id;
+        context.Add(areainteresse);
+        context.SaveChanges();
+        return areainteresse.Id;
     }
     
     /// <summary>
@@ -34,8 +34,8 @@ public class AreaInteresseService : IAreaInteresseService
     /// <returns></returns>
     public void Edit(Areainteresse areainteresse)
     {
-        _context.Update(areainteresse);
-        _context.SaveChanges();
+        context.Update(areainteresse);
+        context.SaveChanges();
     }
     /// <summary>
     /// Exclui uma área de interesse na base de dados
@@ -44,9 +44,9 @@ public class AreaInteresseService : IAreaInteresseService
     /// <returns></returns>
     public void Delete(uint id)
     {
-        var areainteresse = _context.Areainteresses.Find(id);
-        _context.Remove(areainteresse);
-        _context.SaveChanges();
+        var areainteresse = context.Areainteresses.Find(id);
+        context.Remove(areainteresse);
+        context.SaveChanges();
     }
     /// <summary>
     /// Obtém uma área de interesse específica por id
@@ -55,7 +55,7 @@ public class AreaInteresseService : IAreaInteresseService
     /// <returns></returns>
     public Areainteresse Get(uint id)
     {
-        return _context.Areainteresses.Find(id);
+        return context.Areainteresses.Find(id);
     }
     /// <summary>
     /// Obtém todas áreas de interesse
@@ -63,7 +63,7 @@ public class AreaInteresseService : IAreaInteresseService
     /// <returns></returns>
     public IEnumerable<Areainteresse> GetAll()
     {
-        return _context.Areainteresses.AsNoTracking();
+        return context.Areainteresses.AsNoTracking();
     }
     
     /// <summary>
@@ -73,7 +73,7 @@ public class AreaInteresseService : IAreaInteresseService
     /// <returns></returns>
     public IEnumerable<Areainteresse> GetByNome(string nome)
     {
-        IQueryable<Areainteresse> tbAreaInteresse = _context.Areainteresses;
+        IQueryable<Areainteresse> tbAreaInteresse = context.Areainteresses;
         var query = from areainteresse in tbAreaInteresse
             where areainteresse.Nome.StartsWith(nome)
             orderby areainteresse.Nome descending
