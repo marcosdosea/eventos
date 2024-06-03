@@ -1,7 +1,6 @@
 using AutoMapper;
 using Core;
 using Core.Service;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using EventoWeb.Models;
 
@@ -37,8 +36,10 @@ public class AreaInteresseController : Controller
     // GET: AreainteresseController/Create
     public ActionResult Create()
     {
-        return View();
+        var areaInteresseModel = new AreaInteresseModel();
+        return View(areaInteresseModel);
     }
+
 
     // POST: AreainteresseController/Create
     [HttpPost]
