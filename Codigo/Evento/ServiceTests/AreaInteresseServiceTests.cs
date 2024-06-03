@@ -1,4 +1,5 @@
-﻿using Core;
+﻿using Service;
+using Core;
 using Core.Service;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -10,8 +11,8 @@ namespace Service.Tests
     public class AreaInteresseServiceTests
     {
 
-        private EventoContext? context;
-        private IAreaInteresseService? areaInteresseService;
+        private EventoContext _context;
+        private IAreaInteresseService _areaInteresseService;
 
         [TestInitialize]
         public void Initialize()
@@ -21,49 +22,93 @@ namespace Service.Tests
             builder.UseInMemoryDatabase("Evento");
             var options = builder.Options;
 
-            context = new EventoContext(options);
-            context.Database.EnsureDeleted();
-            context.Database.EnsureCreated();
-            var listaAreaInteresse = new List<Areainteresse>
-            {
+            _context = new EventoContext(options);
+            _context.Database.EnsureDeleted();
+            _context.Database.EnsureCreated();
+            var areainteresses = new List<Areainteresse>
+                {
                 new Areainteresse
                 {
-                    Id = 1,
-                    Nome = "Shows Musicais"
-                },
+                        Id = 1,
+                        Nome =  "Curso",
+                    },
                 new Areainteresse
                 {
-                    Id = 2,
-                    Nome = "Tecnologia"
-                }
-            };
+                        Id = 2,
+                        Nome =  "Palestra",
+                    },
+                new Areainteresse
+                {
+                        Id = 3,
+                        Nome =  "Festival",
+                    },
+                };
 
-            context.AddRange(listaAreaInteresse);
-            context.SaveChanges();
+            _context.AddRange(areainteresses);
+            _context.SaveChanges();
 
-            areaInteresseService = new AreaInteresseService(context);
+            _areaInteresseService = new AreaInteresseService(_context);
         }
 
         [TestMethod()]
-        public void CreateValidTest()
+        public void CreateTest()
         {
             // Act
-            areaInteresseService.Create(
-                new Areainteresse
-                {
-                    Id = 3,
-                    Nome = "Saúde"
-                });
-
+            _areaInteresseService.Create(new Areainteresse()
+            {
+                Id = 4,
+                Nome = "Encerramento",
+            });
             // Assert
-            var resultList = areaInteresseService.GetAll();
-            var listaAreasInteresse = resultList.ToImmutableList();
-            Assert.AreEqual(3, listaAreasInteresse.Count());
+            Assert.AreEqual(4, _areaInteresseService.GetAll().Count());
+            var areainteresse = _areaInteresseService.Get(4);
+            Assert.AreEqual("Encerramento", areainteresse.Nome);
+        }
 
-            var areaInteresse = areaInteresseService.Get(3);
+        [TestMethod()]
+        public void DeleteTest()
+        {
+            // Act
+            _areaInteresseService.Delete(1);
+            // Assert
+            Assert.AreEqual(2, _areaInteresseService.GetAll().Count());
+            var areainteresse = _areaInteresseService.Get(1);
+            Assert.AreEqual(null, areainteresse);
+        }
 
-            Assert.AreEqual((uint)3, areaInteresse.Id);
-            Assert.AreEqual("Saúde", areaInteresse.Nome);
+        [TestMethod()]
+        public void EditTest()
+        {
+            //Act 
+            var areainteresse = _areaInteresseService.Get(3);
+            areainteresse.Id = 3;
+            areainteresse.Nome = "Rave";
+            //Assert
+            areainteresse = _areaInteresseService.Get(3);
+            Assert.AreEqual((uint)3, areainteresse.Id);
+            Assert.AreEqual("Rave", areainteresse.Nome);
+        }
+
+        [TestMethod()]
+        public void GetTest()
+        {
+            var areainteresse = _areaInteresseService.Get(2);
+            Assert.IsNotNull(_areaInteresseService);
+            Assert.AreEqual((uint)2, areainteresse.Id);
+            Assert.AreEqual("Palestra", areainteresse.Nome);
+        }
+
+        [TestMethod()]
+        public void GetAllTest()
+        {
+            // Act
+            var listaAreaInteresse = _areaInteresseService.GetAll();
+            // Assert
+            Assert.IsInstanceOfType(listaAreaInteresse, typeof(IEnumerable<Areainteresse>));
+            Assert.IsNotNull(listaAreaInteresse);
+            Assert.AreEqual(3, listaAreaInteresse.Count());
+            var firstAreainteresse = listaAreaInteresse.First();
+            Assert.AreEqual((uint)1, firstAreainteresse.Id);
         }
     }
 }
