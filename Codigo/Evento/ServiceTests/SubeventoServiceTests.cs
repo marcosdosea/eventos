@@ -31,6 +31,8 @@ namespace Service.Tests
                     IdEvento = 1,
                     Nome = "SEMINFO",
                     Descricao = "Evento para a semana da tecnologia",
+                    DataInicio = new DateTime(2024, 09, 2, 7, 30, 0),
+                    DataFim = new DateTime(2024, 09, 7, 12, 30, 0),
                     InscricaoGratuita = 1,
                     Status = "A",
                     DataInicioInscricao = new DateTime(2024, 09, 2, 7, 30, 0),
@@ -50,6 +52,8 @@ namespace Service.Tests
                         IdEvento = 2,
                         Nome = "SEMAC",
                         Descricao = "Semana academica de cursos",
+                        DataInicio = new DateTime(2024, 02, 2, 7, 30, 0),
+                        DataFim = new DateTime(2024, 09, 7, 12, 30, 0),
                         InscricaoGratuita = 1,
                         Status = "F",
                         DataInicioInscricao = new DateTime(2024, 02, 2, 7, 30, 0),
@@ -69,6 +73,8 @@ namespace Service.Tests
                         IdEvento = 3,
                         Nome = "Balada do DJ Ikaruz",
                         Descricao = "Festa Fechada",
+                        DataInicio = new DateTime(2024, 09, 2, 7, 30, 0),
+                        DataFim = new DateTime(2024, 09, 3, 7, 30, 0),
                         InscricaoGratuita = 1,
                         Status = "C",
                         DataInicioInscricao = new DateTime(2024, 09, 2, 7, 30, 0),
@@ -100,6 +106,8 @@ namespace Service.Tests
                 IdEvento = 3,
                 Nome = "Balada do DJ Ikaruz",
                 Descricao = "Festa Fechada",
+                DataInicio = new DateTime(2024, 09, 2, 7, 30, 0),
+                DataFim = new DateTime(2024, 09, 3, 7, 30, 0),
                 InscricaoGratuita = 1,
                 Status = "C",
                 DataInicioInscricao = new DateTime(2024, 09, 2, 7, 30, 0),
@@ -119,6 +127,8 @@ namespace Service.Tests
             Assert.AreEqual((uint)3, subevento.IdEvento);
             Assert.AreEqual("Balada do DJ Ikaruz", subevento.Nome);
             Assert.AreEqual("Festa Fechada", subevento.Descricao);
+            Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), subevento.DataInicio);
+            Assert.AreEqual(DateTime.Parse("2024-09-03 07:30:00"), subevento.DataFim);
             Assert.AreEqual((sbyte)1, subevento.InscricaoGratuita);
             Assert.AreEqual("C", subevento.Status);
             Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), subevento.DataInicioInscricao);
@@ -152,6 +162,8 @@ namespace Service.Tests
             subevento.IdEvento = 2;
             subevento.Nome = "SEMAC";
             subevento.Descricao = "Semana academica de cursos";
+            subevento.DataInicio = new DateTime(2024, 02, 2, 7, 30, 0);
+            subevento.DataFim = new DateTime(2024, 09, 7, 12, 30, 0);
             subevento.InscricaoGratuita = 1;
             subevento.Status = "F";
             subevento.DataInicioInscricao = new DateTime(2024, 02, 2, 7, 30, 0);
@@ -170,6 +182,8 @@ namespace Service.Tests
             Assert.AreEqual((uint)2, subevento.IdEvento);
             Assert.AreEqual("SEMAC", subevento.Nome);
             Assert.AreEqual("Semana academica de cursos", subevento.Descricao);
+            Assert.AreEqual(new DateTime(2024, 02, 02, 7, 30, 0), subevento.DataInicio);
+            Assert.AreEqual(DateTime.Parse("2024-09-07 12:30:00"), subevento.DataFim);
             Assert.AreEqual((sbyte)1, subevento.InscricaoGratuita);
             Assert.AreEqual("F", subevento.Status);
             Assert.AreEqual(new DateTime(2024, 02, 02, 7, 30, 0), subevento.DataInicioInscricao);
@@ -192,6 +206,8 @@ namespace Service.Tests
             Assert.AreEqual((uint)2, subevento.IdEvento);
             Assert.AreEqual("SEMAC", subevento.Nome);
             Assert.AreEqual("Semana academica de cursos", subevento.Descricao);
+            Assert.AreEqual(DateTime.Parse("2024-02-02 07:30:00"), subevento.DataInicio);
+            Assert.AreEqual(DateTime.Parse("2024-09-07 12:30:00"), subevento.DataFim);
             Assert.AreEqual((sbyte)1, subevento.InscricaoGratuita);
             Assert.AreEqual("F", subevento.Status);
             Assert.AreEqual(DateTime.Parse("2024-02-02 07:30:00"), subevento.DataInicioInscricao);
@@ -219,6 +235,8 @@ namespace Service.Tests
             Assert.AreEqual((uint)1, firstSubevento.IdEvento);
             Assert.AreEqual("SEMINFO", firstSubevento.Nome);
             Assert.AreEqual("Evento para a semana da tecnologia", firstSubevento.Descricao);
+            Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), firstSubevento.DataInicio);
+            Assert.AreEqual(DateTime.Parse("2024-09-07 12:30:00"), firstSubevento.DataFim);
             Assert.AreEqual((sbyte)1, firstSubevento.InscricaoGratuita);
             Assert.AreEqual("A", firstSubevento.Status);
             Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), firstSubevento.DataInicioInscricao);
