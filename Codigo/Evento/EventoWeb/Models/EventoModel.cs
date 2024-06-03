@@ -11,39 +11,37 @@ namespace EventoWeb.Models
 
         [Display(Name = "Nome")]
         [Required(ErrorMessage = "Nome do Evento é obrigatório")]
+        
         public string Nome { get; set; } = null!;
+        [Display(Name = "Data Inicial do Evento")]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
+        
+        public DateTime DataInicio { get; set; }
+        [Display(Name = "Data Final do Evento")]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
+        public DateTime DataFim { get; set; }
 
         [Display(Name = "Descrição")]
         [Required(ErrorMessage = "Fale um pouco a respeito desse Evento")]
         public string Descricao { get; set; } = null!;
 
         [Display(Name = "Inscrição Gratuita")]
-        [Required(ErrorMessage = "Informe se a Inscrição é Gratuita")]
         public sbyte InscricaoGratuita { get; set; }
 
-        /// <summary>
-        /// C- CADASTRO
-        /// A- ATIVO
-        /// I - INATIVO
-        /// F- FINALIZADO
-        ///  
-        /// </summary>
         [Display(Name = "Status")]
         [Required(ErrorMessage = "Status do Evento é obrigatório")]
         public string Status { get; set; } = null!;
 
+
         [Display(Name = "Data de Inicio de Inscrição")]
-        [Required(ErrorMessage = "Data de Inicio de Inscrição do Evento é obrigatório")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
         public DateTime DataInicioInscricao { get; set; }
 
         [Display(Name = "Data Final de Inscrição")]
-        [Required(ErrorMessage = "Data Final de Inscrição do Evento é obrigatório")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
         public DateTime DataFimInscricao { get; set; }
 
         [Display(Name = "Valor da Inscrição")]
-        [Required(ErrorMessage = "Valor da Inscrição do Evento é obrigatório")]
         public decimal ValorInscricao { get; set; }
 
         [Display(Name = "Website")]
@@ -53,7 +51,6 @@ namespace EventoWeb.Models
         public string? EmailEvento { get; set; }
 
         [Display(Name = "Evento Publico")]
-        [Required(ErrorMessage = "Infome se o Evento é Publico")]
         public sbyte EventoPublico { get; set; }
 
         [Display(Name = "CEP")]
@@ -77,18 +74,15 @@ namespace EventoWeb.Models
         public string Rua { get; set; } = null!;
 
         [Display(Name = "Numero")]
-        [Required(ErrorMessage = "Informe o Numero onde o Evento será realizado")]
         public string? Numero { get; set; }
 
         [Display(Name = "Complemento")]
         public string? Complemento { get; set; }
 
         [Display(Name = "Há Certificação?")]
-        [Required(ErrorMessage = "Informe se o Evento possuirá Certificado")]
         public sbyte PossuiCertificado { get; set; }
 
         [Display(Name = "Frequência Minima para Receber a Certificação")]
-        [Required(ErrorMessage = "Informe a Frequência Minima")]
         public decimal FrequenciaMinimaCertificado { get; set; }
 
         [Display(Name = "ID do Tipo do Evento")]

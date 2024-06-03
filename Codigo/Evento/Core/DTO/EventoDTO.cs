@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Core.DTO
+﻿namespace Core.DTO
 {
     public class EventoDTO
     {
@@ -22,8 +16,8 @@ namespace Core.DTO
         /// </summary>
         public string Status { get; set; } = null!;
 
-        public DateTime DataInicioInscricao { get; set; }
+        public DateTime DataInicio { get; set; }
 
-        public DateTime DataFimInscricao { get; set; }
+        public DateTime DataFim { get; set; }
     }
 }
