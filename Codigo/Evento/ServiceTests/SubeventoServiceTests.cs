@@ -2,9 +2,7 @@
 using Core.Service;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Runtime.ConstrainedExecution;
-using System.Runtime.Serialization;
-using System.Security.Cryptography;
+
 
 namespace Service.Tests
 {
@@ -98,7 +96,7 @@ namespace Service.Tests
             // Act
             _subeventoService.Create(new Subevento()
             {
-                Id = 5,
+                Id = 7,
                 IdEvento = 3,
                 Nome = "Balada do DJ Ikaruz",
                 Descricao = "Festa Fechada",
@@ -117,22 +115,22 @@ namespace Service.Tests
             });
             // Assert
             Assert.AreEqual(4, _subeventoService.GetAll().Count());
-            var subevento = _subeventoService.Get(3);
-            Assert.AreEqual((uint)2, subevento.IdEvento);
-            Assert.AreEqual("SEMAC", subevento.Nome);
-            Assert.AreEqual("Semana academica de cursos", subevento.Descricao);
+            var subevento = _subeventoService.Get(7);
+            Assert.AreEqual((uint)3, subevento.IdEvento);
+            Assert.AreEqual("Balada do DJ Ikaruz", subevento.Nome);
+            Assert.AreEqual("Festa Fechada", subevento.Descricao);
             Assert.AreEqual((sbyte)1, subevento.InscricaoGratuita);
-            Assert.AreEqual("A", subevento.Status);
-            Assert.AreEqual(DateTime.Parse("2024-02-02 07:30:00"), subevento.DataInicioInscricao);
-            Assert.AreEqual(DateTime.Parse("2024-02-07 12:30:00"), subevento.DataFimInscricao);
-            Assert.AreEqual((decimal)0.2, subevento.ValorInscricao);
-            Assert.AreEqual((sbyte)1, subevento.PossuiCertificado);
-            Assert.AreEqual((decimal)2.2, subevento.FrequenciaMinimaCertificado);
-            Assert.AreEqual((int)1, subevento.IdTipoEvento);
+            Assert.AreEqual("C", subevento.Status);
+            Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), subevento.DataInicioInscricao);
+            Assert.AreEqual(DateTime.Parse("2024-09-03 07:30:00"), subevento.DataFimInscricao);
+            Assert.AreEqual((decimal)0, subevento.ValorInscricao);
+            Assert.AreEqual((sbyte)0, subevento.PossuiCertificado);
+            Assert.AreEqual((decimal)0, subevento.FrequenciaMinimaCertificado);
+            Assert.AreEqual((int)3, subevento.IdTipoEvento);
             Assert.AreEqual((int)100, subevento.VagasOfertadas);
             Assert.AreEqual((int)35, subevento.VagasReservadas);
             Assert.AreEqual((int)65, subevento.VagasDisponiveis);
-            Assert.AreEqual((int)4, subevento.CargaHoraria);
+            Assert.AreEqual((int)12, subevento.CargaHoraria);
         }
 
         [TestMethod()]
@@ -141,8 +139,8 @@ namespace Service.Tests
             // Act
             _subeventoService.Delete(1);
             // Assert
-            Assert.AreEqual(3, _subeventoService.GetAll().Count());
-            var subevento = _subeventoService.Get(1);
+            Assert.AreEqual(2, _subeventoService.GetAll().Count());
+            var subevento = _subeventoService.Get(7);
             Assert.AreEqual(null, subevento);
         }
 
@@ -173,12 +171,12 @@ namespace Service.Tests
             Assert.AreEqual("SEMAC", subevento.Nome);
             Assert.AreEqual("Semana academica de cursos", subevento.Descricao);
             Assert.AreEqual((sbyte)1, subevento.InscricaoGratuita);
-            Assert.AreEqual("A", subevento.Status);
-            Assert.AreEqual(new DateTime(2024, 02, 1, 7, 30, 0), subevento.DataInicioInscricao);
-            Assert.AreEqual(DateTime.Parse("2024-02-07 12:30:00"), subevento.DataFimInscricao);
-            Assert.AreEqual((decimal)0.2, subevento.ValorInscricao);
+            Assert.AreEqual("F", subevento.Status);
+            Assert.AreEqual(new DateTime(2024, 02, 02, 7, 30, 0), subevento.DataInicioInscricao);
+            Assert.AreEqual(DateTime.Parse("2024-09-07 12:30:00"), subevento.DataFimInscricao);
+            Assert.AreEqual((decimal)0, subevento.ValorInscricao);
             Assert.AreEqual((sbyte)1, subevento.PossuiCertificado);
-            Assert.AreEqual((decimal)2.2, subevento.FrequenciaMinimaCertificado);
+            Assert.AreEqual((decimal)1, subevento.FrequenciaMinimaCertificado);
             Assert.AreEqual((int)1, subevento.IdTipoEvento);
             Assert.AreEqual((int)100, subevento.VagasOfertadas);
             Assert.AreEqual((int)35, subevento.VagasReservadas);
@@ -195,12 +193,12 @@ namespace Service.Tests
             Assert.AreEqual("SEMAC", subevento.Nome);
             Assert.AreEqual("Semana academica de cursos", subevento.Descricao);
             Assert.AreEqual((sbyte)1, subevento.InscricaoGratuita);
-            Assert.AreEqual("A", subevento.Status);
+            Assert.AreEqual("F", subevento.Status);
             Assert.AreEqual(DateTime.Parse("2024-02-02 07:30:00"), subevento.DataInicioInscricao);
-            Assert.AreEqual(DateTime.Parse("2024-02-07 12:30:00"), subevento.DataFimInscricao);
-            Assert.AreEqual((decimal)0.2, subevento.ValorInscricao);
+            Assert.AreEqual(DateTime.Parse("2024-09-07 12:30:00"), subevento.DataFimInscricao);
+            Assert.AreEqual((decimal)0, subevento.ValorInscricao);
             Assert.AreEqual((sbyte)1, subevento.PossuiCertificado);
-            Assert.AreEqual((decimal)2.2, subevento.FrequenciaMinimaCertificado);
+            Assert.AreEqual((decimal)1, subevento.FrequenciaMinimaCertificado);
             Assert.AreEqual((int)1, subevento.IdTipoEvento);
             Assert.AreEqual((int)100, subevento.VagasOfertadas);
             Assert.AreEqual((int)35, subevento.VagasReservadas);
@@ -214,7 +212,7 @@ namespace Service.Tests
             // Act
             var listaSubevento = _subeventoService.GetAll();
             // Assert
-            Assert.IsInstanceOfType(listaSubevento, typeof(IEnumerable<Evento>));
+            Assert.IsInstanceOfType(listaSubevento, typeof(IEnumerable<Subevento>));
             Assert.IsNotNull(listaSubevento);
             Assert.AreEqual(3, listaSubevento.Count());
             var firstSubevento = listaSubevento.First();
@@ -225,9 +223,9 @@ namespace Service.Tests
             Assert.AreEqual("A", firstSubevento.Status);
             Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), firstSubevento.DataInicioInscricao);
             Assert.AreEqual(DateTime.Parse("2024-09-07 12:30:00"), firstSubevento.DataFimInscricao);
-            Assert.AreEqual((decimal)0.2, firstSubevento.ValorInscricao);
+            Assert.AreEqual((decimal)0, firstSubevento.ValorInscricao);
             Assert.AreEqual((sbyte)1, firstSubevento.PossuiCertificado);
-            Assert.AreEqual((decimal)2.2, firstSubevento.FrequenciaMinimaCertificado);
+            Assert.AreEqual((decimal)1, firstSubevento.FrequenciaMinimaCertificado);
             Assert.AreEqual((int)1, firstSubevento.IdTipoEvento);
             Assert.AreEqual((int)100, firstSubevento.VagasOfertadas);
             Assert.AreEqual((int)35, firstSubevento.VagasReservadas);
