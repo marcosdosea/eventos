@@ -166,7 +166,7 @@ namespace Service.Tests
             Assert.AreEqual("Balada do DJ Ikaruz", evento.Nome);
             Assert.AreEqual("Festa Fechada", evento.Descricao);
             Assert.AreEqual(DateTime.Parse("2024-10-02 07:30:00"), evento.DataInicio);
-            Assert.AreEqual(DateTime.Parse("2024-10-03 07:30:00"), evento.DataFim);
+            Assert.AreEqual(DateTime.Parse("2024-10-07 12:30:00"), evento.DataFim);
             Assert.AreEqual((sbyte)1, evento.InscricaoGratuita);
             Assert.AreEqual("C", evento.Status);
             Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), evento.DataInicioInscricao);
@@ -241,8 +241,8 @@ namespace Service.Tests
             Assert.AreEqual((uint)2, evento.Id);
             Assert.AreEqual("SEMAC", evento.Nome);
             Assert.AreEqual("Semana academica de cursos", evento.Descricao);
-            Assert.AreEqual(DateTime.Parse("2024-10-02 07:30:00"), evento.DataInicio);
-            Assert.AreEqual(DateTime.Parse("2024-10-03 07:30:00"), evento.DataFim);
+            Assert.AreEqual(DateTime.Parse("2024-10-01 07:30:00"), evento.DataInicio);
+            Assert.AreEqual(DateTime.Parse("2024-10-07 12:30:00"), evento.DataFim);
             Assert.AreEqual((sbyte)1, evento.InscricaoGratuita);
             Assert.AreEqual("F", evento.Status);
             Assert.AreEqual(new DateTime(2024, 02, 1, 7, 30, 0), evento.DataInicioInscricao);
@@ -276,7 +276,7 @@ namespace Service.Tests
             Assert.AreEqual("SEMAC", evento.Nome);
             Assert.AreEqual("Semana academica de cursos", evento.Descricao);
             Assert.AreEqual(DateTime.Parse("2024-10-02 07:30:00"), evento.DataInicio);
-            Assert.AreEqual(DateTime.Parse("2024-10-03 07:30:00"), evento.DataFim);
+            Assert.AreEqual(DateTime.Parse("2024-10-07 12:30:00"), evento.DataFim);
             Assert.AreEqual((sbyte)1, evento.InscricaoGratuita);
             Assert.AreEqual("F", evento.Status);
             Assert.AreEqual(DateTime.Parse("2024-02-02 07:30:00"), evento.DataInicioInscricao);
