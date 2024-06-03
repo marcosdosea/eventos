@@ -63,7 +63,7 @@ namespace EventoWeb.Controllers
         // POST: ModelocrachaController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(uint id, ModelocrachaModel modelocrachaModel)
+        public ActionResult Edit(int id, ModelocrachaModel modelocrachaModel)
         {
             if (ModelState.IsValid)
             {
