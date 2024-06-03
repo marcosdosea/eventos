@@ -5,49 +5,86 @@ namespace Service
 {
     public class TipoInscricaoService : ITipoInscricaoService
     {
-        private readonly EventoContext context;
+        private readonly EventoContext _context;
 
         public TipoInscricaoService(EventoContext eventoContext)
         {
-            context = eventoContext;
+            _context = eventoContext;
         }
 
         /// <summary>
-        /// Cria um novo tipo de inscrição para o evento
+        /// Cria um novo tipo de inscrição
         /// </summary>
         /// <param name="tipoInscricao"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
         public int Create(Tipoinscricao tipoInscricao)
         {
-            context.Add(tipoInscricao);
-            context.SaveChanges();
+            _context.Add(tipoInscricao);
+            _context.SaveChanges();
             return tipoInscricao.Id;
         }
 
-        public void Delete(int idTipoInscricao)
-        {
-            throw new NotImplementedException();
-        }
 
+        /// <summary>
+        /// Edita um tipo de inscrição na base de dados
+        /// </summary>
+        /// <param name="tipoInscricao">dados da area de interesse</param>
+        /// <returns></returns>
         public void Edit(Tipoinscricao tipoInscricao)
         {
-            throw new NotImplementedException();
+            _context.Update(tipoInscricao);
+            _context.SaveChanges();
         }
 
-        public Tipoinscricao Get(int idTipoInscricao)
+        /// <summary>
+        /// Exclui um tipo de inscrição na base de dados
+        /// </summary>
+        /// <param name="id">dados da area de interesse</param>
+        /// <returns></returns>
+        public void Delete(int id)
         {
-            throw new NotImplementedException();
+            var tipoinscricao = _context.Tipoinscricaos.Find(id);
+            _context.Remove(tipoinscricao);
+            _context.SaveChanges();
         }
 
+        /// <summary>
+        /// Obtém um tipo de inscrição específica por id
+        /// </summary>
+        /// <param name="id">dados da area de interesse</param>
+        /// <returns></returns>
+        public Tipoinscricao Get(int id)
+        {
+            return _context.Tipoinscricaos.Find(id);
+        }
+
+        /// <summary>
+        /// Obtém todos tipo de inscrição
+        /// </summary>
+        /// <returns></returns>
         public IEnumerable<Tipoinscricao> GetAll()
         {
-            return context.Tipoinscricaos.AsNoTracking();
+            return _context.Tipoinscricaos.AsNoTracking();
         }
 
-        public IEnumerable<Tipoinscricao> GetByEvento(int idEvento)
+        
+        /// <summary>
+        /// Obtém um tipo de inscrição específica por id
+        /// </summary>
+        /// <param name="nome">dados da area de interesse</param>
+        /// <returns></returns>
+        public IEnumerable<Tipoinscricao> GetByEvento(int id)
         {
-            throw new NotImplementedException();
+            var evento = _context.Eventos.Include(e => e.Tipoinscricaos)
+                .FirstOrDefault(e => e.Id == id);
+
+            if (evento != null)
+            {
+                return evento.Tipoinscricaos;
+            }
+
+            return Enumerable.Empty<Tipoinscricao>();
         }
     }
 }
