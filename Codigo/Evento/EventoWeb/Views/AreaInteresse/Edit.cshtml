@@ -3,28 +3,37 @@
     ViewData["Title"] = "Edit";
 }
 
-<h1>Edit</h1>
+<head>
+    <link rel="stylesheet" type="text/css" href="~/css/style.css">
+</head>
 
-<h4>AreaInteresse</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="Nome" class="control-label"></label>
-                <input asp-for="Nome" class="form-control" />
-                <span asp-validation-for="Nome" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+<div class="main fluid">
+    <div class="breadcrumb">
+        <a asp-controller="Home" asp-action="Index"><img src="/img/icon-wrapper.svg" /><p style="color:#0D6EFD;display:inline-block">Home</p></a>
+        <a asp-controller="Areainteresse" asp-action="Index" style="color:#0D6EFD;display:inline-block;text-decoration:none;"><p>/Área de interesse</p></a>
+        <p style="color:#6C757D;display:inline-block">/Editar uma área de interesse</p>
     </div>
-</div>
+    <h1 class="blue-normal">Editar uma área de interesse</h1>
+    <div class="row">
+        <div class="col-md-4">
+            <form asp-action="Edit">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="Id" />
+                <div class="form-group">
+                    <label asp-for="Nome" class="control-label"></label>
+                    <input asp-for="Nome" class="form-control" style="width:12rem" />
+                    <span asp-validation-for="Nome" class="text-danger"></span>
+                </div>
+                <br />
+                <div class="form-group">
+                    <input type="submit" value="Concluir edição" class="btn btn-primary" />
+                </div>
+            </form>
+        </div>
+    </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+    <div>
+        <a asp-action="Index" style="text-decoration:none">Cancelar</a>
+    </div>
 
+</div>

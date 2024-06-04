@@ -16,3 +16,10 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+.main {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 43px;
+}
