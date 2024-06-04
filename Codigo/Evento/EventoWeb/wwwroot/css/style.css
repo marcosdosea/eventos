@@ -1,0 +1,189 @@
+﻿/* Cores Base */
+.blue-light {
+    color: #e9eafa;
+}
+
+.blue-light-hover {
+    color: #dee0f8;
+}
+
+.blue-light-active {
+    color: #bbbef0;
+}
+
+.blue-normal {
+    color: #232ed0;
+}
+
+.blue-normal-hover {
+    color: #2029bb;
+}
+
+.blue-normal-active {
+    color: #1c25a6;
+}
+
+.blue-dark {
+    color: #1a239c;
+}
+
+.blue-dark-hover {
+    color: #151c7d;
+}
+
+.blue-dark-active {
+    color: #10155e;
+}
+
+.blue-darker {
+    color: #0c1049 ;
+}
+
+.yellow-light {
+    color: #fefaee;
+}
+
+.yellow-light-hover {
+    color: #fdf8e6;
+}
+
+.yellow-light-active {
+    color: #fbf0cb;
+}
+
+.yellow-normal {
+    color: #f3d058;
+}
+
+.yellow-normal-hover {
+    color: #dbbb4f;
+}
+
+.yellow-normal-active {
+    color: #c2a646;
+}
+
+.yellow-dark {
+    color: #b69c42;
+}
+
+.yellow-dark-hover {
+    color: #927d35;
+}
+
+.yellow-dark-active {
+    color: #6d5e28;
+}
+
+.yellow-darker {
+    color: #55491f;
+}
+
+.grey-light {
+    color: #e8e8e8;
+}
+
+.grey-light-hover {
+    color: #dddddd;
+}
+
+.grey-light-active {
+    color: #b8b8b8;
+}
+
+.grey-normal {
+    color: #1a1a1a;
+}
+
+.grey-normal-hover {
+    color: #171717;
+}
+
+.grey-normal-active {
+    color: #151515;
+}
+
+.grey-dark {
+    color: #141414;
+}
+
+.grey-dark-hover {
+    color: #101010;
+}
+
+.grey-dark-active {
+    color: #0c0c0c;
+}
+
+.grey-darker {
+    color: #090909;
+}
+
+/* Cores de Alerta */
+.danger-light {
+    color: #fee7ef;
+}
+
+.danger-light-hover {
+    color: #fddbe7;
+}
+
+.danger-light-active {
+    color: #fbb6ce;
+}
+
+.danger-normal {
+    color: #f31260;
+}
+
+.danger-normal-hover {
+    color: #db1056;
+}
+
+.danger-normal-active {
+    color: #c20ea4;
+}
+
+.danger-dark {
+    color: #b60e48;
+}
+
+.danger-dark-hover {
+    color: #920b3a;
+}
+
+.danger-dark-active {
+    color: #6d082b;
+}
+
+.danger-darker {
+    color: #550622;
+}
+
+/*Branco*/
+
+.color-white {
+    color: #ffffff;
+}
+
+/* Estilos de Background */
+body {
+    background-color: #F7F8FF;
+}
+
+.blue-normal-bg-table {
+    background-color: #e9eafa;
+}
+
+.btn-blue-normal {
+    background-color: #232ed0;
+}
+
+.no-padding {
+    padding: 0 !important;
+}
+
+.padding-lateral-50 {
+    padding-left: 50px;
+    padding-right: 50px;
+}
