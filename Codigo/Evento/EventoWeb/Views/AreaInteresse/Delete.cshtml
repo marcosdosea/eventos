@@ -10,8 +10,8 @@
 
 <div class="main fluid">
     <div class="breadcrumb">
-        <a asp-controller="Home" asp-action="Index"><img class="mb-1" src="/img/icon-wrapper.svg" /><p style="color:#0D6EFD;display:inline-block">Home</p></a>
-        <a asp-controller="Areainteresse" asp-action="Index" style="color:#0D6EFD;display:inline-block;text-decoration:none;"><p>/Área de interesse</p></a>
+        <a asp-controller="Home" asp-action="Index"><img class="mb-1" src="/img/icon-wrapper.svg" /><p class="blue-normal" style="display:inline-block">Home</p></a>
+        <a asp-controller="Areainteresse" asp-action="Index" class="blue-normal text-decoration-none" style="display:inline-block;"><p>/Área de interesse</p></a>
         <p style="color:#6C757D;display:inline-block">/Excluir área de interesse</p>
     </div>
     <h1 class="blue-normal">Excluir uma área de interesse</h1>
@@ -30,9 +30,9 @@
 
         <form asp-action="Delete">
             <input type="hidden" asp-for="Id" />
-            <input type="submit" value="Excluir item" class="btn btn-mg btn-danger" />
-            <button class="btn btn-mg btn-outline-danger">
-                <a asp-action="Index" class=" btn-outline-danger" style="text-decoration:none;">Cancelar</a>
+            <input type="submit" value="Excluir item" class="btn btn-mg btn-blue-normal" style="text-decoration:none; color:white" />
+            <button asp-action="Index"class="btn btn-mg btn-outline-danger">
+                <a>Cancelar</a>
             </button>
             </form>
     </div>
