@@ -179,6 +179,11 @@ body {
     background-color: #232ed0;
 }
 
+.btn-blue-normal:hover{
+    background-color: #151c7d;
+    color: #FFFFFF;
+}
+
 .no-padding {
     padding: 0 !important;
 }
