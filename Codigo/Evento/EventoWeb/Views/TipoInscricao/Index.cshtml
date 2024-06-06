@@ -3,75 +3,101 @@
 @{
 ViewData["Title"] = "Index";
 }
+<head>
+    <link rel="stylesheet" type="text/css" href="~/css/style.css">
+</head>
 
-<h1>Index</h1>
+<div class="container-fluid no-padding">
+    <div class="row">
+        <div class="col-2"> </div>
+        <div class="col-10 padding-lateral-50">
+            <div class="breadcrumb">
+                <a asp-controller="Home" asp-action="Index" style="text-decoration:none; padding-right:6px">
+                    <img class="mb-1" style="display:inline-block" src="/img/icon-wrapper.svg" />
+                    <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Home</p>
+                </a>
+                
+                <p style="color:#6C757D;display:inline-block">/ Tipo de Inscrição</p>
+            </div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-    <tr>
-        <th>
-            @Html.DisplayNameFor(model => model.Id)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.IdEvento)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.Descricao)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.Valor)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.DataInicio)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.Datafim)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.UsadaEvento)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.UsadaSubevento)
-        </th>
-        <th></th>
-    </tr>
-    </thead>
-    <tbody>
-    @foreach (var item in Model) {
-    <tr>
-        <td>
-            @Html.DisplayFor(modelItem => item.Id)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.IdEvento)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.Descricao)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.Valor)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.DataInicio)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.Datafim)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.UsadaEvento)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.UsadaSubevento)
-        </td>
-        <td>
-            <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-            <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-            <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-        </td>
-    </tr>
-    }
-    </tbody>
-</table>
+            <h1 class="blue-normal">Verifique os Tipos de Inscrição de seus Eventos!</h1>
+            <h3>Tipos de Inscrição</h3>
+
+            <table class="table table-striped">
+                <thead class="blue-normal blue-normal-bg-table">
+                    <tr>
+                        <th>
+                            @Html.DisplayNameFor(model => model.Id)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.IdEvento)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.Descricao)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.Valor)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.DataInicio)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.Datafim)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.UsadaEvento)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.UsadaSubevento)
+                        </th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Id)
+                            </td>
+                            <td>
+                               @Html.DisplayFor(modelItem => item.IdEvento) 
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Descricao)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Valor)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.DataInicio)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Datafim)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.UsadaEvento)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.UsadaSubevento)
+                            </td>
+                            <td>
+                                @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" }) |
+                                @Html.ActionLink("Detalhes", "Details", new { id = item.Id }, new { @style = "text-decoration:none;" }) |
+                                @Html.ActionLink("Deletar", "Delete", new { id = item.Id } , new { @style = "text-decoration:none;" })
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <h3 class="blue-normal ">Defina um novo Tipo de Inscrição ao seu Evento!</h3>
+            <button type="button" class="btn btn-mg btn-blue-normal text-white ">
+                <a asp-action="Create" class="text-white" style="text-decoration:none;">
+                    Novo Tipo de Inscrição
+                </a>
+            </button>
+        </div>
+        
+    </div>
+</div>
+
