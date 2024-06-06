@@ -61,6 +61,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual((uint)1, subeventoModel.IdEvento);
             Assert.AreEqual("SEMINFO", subeventoModel.Nome);
             Assert.AreEqual("Evento para a semana da tecnologia", subeventoModel.Descricao);
+            Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), subeventoModel.DataInicio);
+            Assert.AreEqual(DateTime.Parse("2024-09-07 12:30:00"), subeventoModel.DataFim);
             Assert.AreEqual((sbyte)1, subeventoModel.InscricaoGratuita);
             Assert.AreEqual("A", subeventoModel.Status);
             Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), subeventoModel.DataInicioInscricao);
@@ -128,6 +130,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual((uint)1, subeventoModel.IdEvento);
             Assert.AreEqual("SEMINFO", subeventoModel.Nome);
             Assert.AreEqual("Evento para a semana da tecnologia", subeventoModel.Descricao);
+            Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), subeventoModel.DataInicio);
+            Assert.AreEqual(DateTime.Parse("2024-09-07 12:30:00"), subeventoModel.DataFim);
             Assert.AreEqual((sbyte)1, subeventoModel.InscricaoGratuita);
             Assert.AreEqual("A", subeventoModel.Status);
             Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), subeventoModel.DataInicioInscricao);
@@ -169,6 +173,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual((uint)1, subeventoModel.IdEvento);
             Assert.AreEqual("SEMINFO", subeventoModel.Nome);
             Assert.AreEqual("Evento para a semana da tecnologia", subeventoModel.Descricao);
+            Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), subeventoModel.DataInicioInscricao);
+            Assert.AreEqual(DateTime.Parse("2024-09-07 12:30:00"), subeventoModel.DataFimInscricao);
             Assert.AreEqual((sbyte)1, subeventoModel.InscricaoGratuita);
             Assert.AreEqual("A", subeventoModel.Status);
             Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), subeventoModel.DataInicioInscricao);
@@ -204,6 +210,8 @@ namespace EventoWeb.Controllers.Tests
                 IdEvento = 1,
                 Nome = "SEMINFO",
                 Descricao = "Evento para a semana da tecnologia",
+                DataInicio = new DateTime(2024, 09, 2, 7, 30, 0),
+                DataFim = new DateTime(2024, 09, 7, 12, 30, 0),
                 InscricaoGratuita = 1,
                 Status = "A",
                 DataInicioInscricao = new DateTime(2024, 09, 2, 7, 30, 0),
@@ -226,6 +234,8 @@ namespace EventoWeb.Controllers.Tests
                 IdEvento = 1,
                 Nome = "SEMINFO",
                 Descricao = "Evento para a semana da tecnologia",
+                DataInicio = new DateTime(2024, 09, 2, 7, 30, 0),
+                DataFim = new DateTime(2024, 09, 7, 12, 30, 0),
                 InscricaoGratuita = 1,
                 Status = "A",
                 DataInicioInscricao = new DateTime(2024, 09, 2, 7, 30, 0),
@@ -249,6 +259,8 @@ namespace EventoWeb.Controllers.Tests
                 IdEvento = 1,
                 Nome = "SEMINFO",
                 Descricao = "Evento para a semana da tecnologia",
+                DataInicio = new DateTime(2024, 09, 2, 7, 30, 0),
+                DataFim = new DateTime(2024, 09, 7, 12, 30, 0),
                 InscricaoGratuita = 1,
                 Status = "A",
                 DataInicioInscricao = new DateTime(2024, 09, 2, 7, 30, 0),
@@ -274,6 +286,8 @@ namespace EventoWeb.Controllers.Tests
                     IdEvento = 1,
                     Nome = "SEMINFO",
                     Descricao = "Evento para a semana da tecnologia",
+                    DataInicio = new DateTime(2024, 09, 2, 7, 30, 0),
+                    DataFim = new DateTime(2024, 09, 7, 12, 30, 0),
                     InscricaoGratuita = 1,
                     Status = "A",
                     DataInicioInscricao = new DateTime(2024, 09, 2, 7, 30, 0),
@@ -293,6 +307,8 @@ namespace EventoWeb.Controllers.Tests
                         IdEvento = 1,
                         Nome = "SEMAC",
                         Descricao = "Semana academica de cursos",
+                        DataInicio = new DateTime(2024, 02, 2, 7, 30, 0),
+                        DataFim = new DateTime(2024, 02, 7, 12, 30, 0),
                         InscricaoGratuita = 1,
                         Status = "F",
                         DataInicioInscricao = new DateTime(2024, 02, 2, 7, 30, 0),
@@ -312,6 +328,8 @@ namespace EventoWeb.Controllers.Tests
                         IdEvento = 1,
                         Nome = "Balada do DJ Ikaruz",
                         Descricao = "Festa Fechada",
+                        DataInicio = new DateTime(2024, 09, 2, 7, 30, 0),
+                        DataFim = new DateTime(2024, 09, 3, 7, 30, 0),
                         InscricaoGratuita = 1,
                         Status = "C",
                         DataInicioInscricao = new DateTime(2024, 09, 2, 7, 30, 0),

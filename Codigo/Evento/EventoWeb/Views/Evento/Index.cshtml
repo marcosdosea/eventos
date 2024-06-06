@@ -3,183 +3,74 @@
 @{
     ViewData["Title"] = "Index";
 }
+<head>
+    <link rel="stylesheet" type="text/css" href="~/css/style.css">
+</head>
 
-<h1>Index</h1>
+<div class="container-fluid no-padding">
+    <div class="row">
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Id)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Nome)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Descricao)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.InscricaoGratuita)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.DataInicioInscricao)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.DataFimInscricao)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ValorInscricao)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Website)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.EmailEvento)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.EventoPublico)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Cep)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Estado)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Cidade)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Bairro)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Rua)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Numero)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Complemento)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PossuiCertificado)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.FrequenciaMinimaCertificado)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IdTipoEvento)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.VagasOfertadas)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.VagasReservadas)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.VagasDisponiveis)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.TempoMinutosReserva)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CargaHoraria)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Id)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Nome)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Descricao)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.InscricaoGratuita)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Status)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.DataInicioInscricao)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.DataFimInscricao)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ValorInscricao)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Website)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.EmailEvento)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.EventoPublico)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Cep)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Estado)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Cidade)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Bairro)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Rua)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Numero)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Complemento)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.PossuiCertificado)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.FrequenciaMinimaCertificado)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IdTipoEvento)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.VagasOfertadas)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.VagasReservadas)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.VagasDisponiveis)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.TempoMinutosReserva)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CargaHoraria)
-            </td>
-            <td>
-                @Html.ActionLink("Edit", "Edit", new {id=item.Id}) |
-                @Html.ActionLink("Details", "Details", new {id=item.Id}) |
-                @Html.ActionLink("Delete", "Delete", new {id=item.Id})
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+        <div class="col-2 btn-blue-normal">
+        </div>
+
+        <div class="col-10 padding-lateral-50">
+            <h1 class="blue-normal">Seja Bem-vindo</h1>
+            <h3>Confira os eventos do sistema!</h3>
+            <table class="table table-striped">
+                <thead class="blue-normal blue-normal-bg-table">
+                    <tr>
+                        <th>
+                            @Html.DisplayNameFor(model => model.Id)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.DataInicio)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.Nome)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.Status)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.IdTipoEvento)
+                        </th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Id)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.DataInicio)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Nome)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Status)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.IdTipoEvento)
+                            </td>
+                            <td>
+                                @Html.ActionLink("Edit", "Edit", new { id = item.Id }) |
+                                @Html.ActionLink("Details", "Details", new { id = item.Id }) |
+                                @Html.ActionLink("Delete", "Delete", new { id = item.Id })
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <h3 class="blue-normal">Publique um novo evento</h3>
+            <button type="button" class="btn btn-lg btn-blue-normal color-white"
+                    onclick="location.href='@Url.Action("Create")'">
+                Criar evento
+            </button>
+        </div>
+
+    </div>
+</div>
