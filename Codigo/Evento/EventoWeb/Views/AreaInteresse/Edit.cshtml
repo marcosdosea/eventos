@@ -9,7 +9,7 @@
 
 <div class="main fluid">
     <div class="breadcrumb">
-        <a asp-controller="Home" asp-action="Index"><img src="/img/icon-wrapper.svg" /><p style="color:#0D6EFD;display:inline-block">Home</p></a>
+        <a asp-controller="Home" asp-action="Index"><img class="mb-1" src="/img/icon-wrapper.svg" /><p style="color:#0D6EFD;display:inline-block">Home</p></a>
         <a asp-controller="Areainteresse" asp-action="Index" style="color:#0D6EFD;display:inline-block;text-decoration:none;"><p>/Área de interesse</p></a>
         <p style="color:#6C757D;display:inline-block">/Editar uma área de interesse</p>
     </div>
@@ -26,14 +26,14 @@
                 </div>
                 <br />
                 <div class="form-group">
-                    <input type="submit" value="Concluir edição" class="btn btn-primary" />
+                    <input type="submit" value="Concluir edição" class="btn btn-mg btn-blue-normal color-white" />
                 </div>
             </form>
         </div>
     </div>
 
-    <div>
-        <a asp-action="Index" style="text-decoration:none">Cancelar</a>
-    </div>
+    <button class="btn btn-mg btn-outline-danger">
+        <a asp-action="Index" class=" btn-outline-danger" style="text-decoration:none;">Cancelar</a>
+    </button>
 
 </div>

@@ -9,26 +9,27 @@
     <link rel="stylesheet" type="text/css" href="~/css/style.css">
 </head>
 
-<div class="main fluid">
+<div class=" col-10">
     <div class="breadcrumb">
-        <a asp-controller="Home" asp-action="Index"><img src="/img/icon-wrapper.svg" /><p class="blue-normal" style="display:inline-block">Home</p></a>
+        <a asp-controller="Home" asp-action="Index"><img class="mb-1" src="/img/icon-wrapper.svg" /><p class="blue-normal" style="display:inline-block">Home</p></a>
         <p style="color:#6C757D;display:inline-block">/Área de interesse</p>
     </div>
 
-    <h1 class="blue-normal">
+    <h1 class="blue-normal mb-2">
         Lista de Área de interesse
     </h1>
 
-    <button type="button" class="btn-blue-normal btn btn-primary">
+    <button type="button" class="btn-blue-normal btn btn-mg mb-2">
         <a asp-action="Create" style="text-decoration:none; color:white">Cadastrar área de interesse</a>
     </button>
-    <table class="table table-striped">
+    <div class="conteiner mt-2 col-10">
+        <table class="table col-10 table-striped">
         <thead class="blue-normal blue-normal-bg-table">
             <tr class="blue-light">
                 <th class="blue-normal">
                     @Html.DisplayNameFor(model => model.Nome)
                 </th>
-                <th class="blue-normal"></th>
+                <th class="blue-normal">Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -40,11 +41,11 @@
                     </td>
                     <td>
                         <a asp-action="Edit" asp-route-id="@item.Id" class="blue-normal" style="text-decoration:none;">Editar</a>
-                        <a asp-action="Details" asp-route-id="@item.Id" class="yellow-normal" style="text-decoration:none;">  Detalhes</a>
                         <a asp-action="Delete" asp-route-id="@item.Id" class="danger-normal" style="text-decoration:none;">  Excluir</a>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
+    </div>
 </div>
