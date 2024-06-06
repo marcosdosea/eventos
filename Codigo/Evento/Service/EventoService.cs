@@ -1,4 +1,4 @@
-﻿using Core;
+using Core;
 using Core.Service;
 using Core.DTO;
 using Microsoft.EntityFrameworkCore;
@@ -8,9 +8,11 @@ namespace Service
     public class EventoService : IEventoService
     {
         private readonly EventoContext _context;
+        private readonly IPessoaService _pessoaService;
         
-        public EventoService(EventoContext context)
+        public EventoService(EventoContext context,IPessoaService pessoaService)
         {
+            _pessoaService = pessoaService;
             _context = context;
         }
 
@@ -95,6 +97,28 @@ namespace Service
                             Nome = evento.Nome
                         };
             return query.AsNoTracking();
+        }
+
+        public void CreateGestorModel(Pessoa gestorEvento, uint idEvento)
+        {
+            uint idPessoa = _pessoaService.Create(gestorEvento);
+            using (var context = new EventoContext())
+            {
+                var novaInscricao = new Inscricaopessoaevento
+                {
+                    IdPessoa = idPessoa, 
+                    IdEvento = idEvento, 
+                    IdPapel = 2,
+                    IdTipoInscricao = 1, // Defina o Id do tipo de inscrição
+                    DataInscricao = DateTime.Now, // Defina a data da inscrição
+                    ValorTotal = 100, // Defina o valor total da inscrição
+                    Status = "A", // Defina o status da inscrição
+                    FrequenciaFinal = 0 // Defina a frequência final (se aplicável)
+                };
+
+                context.Inscricaopessoaeventos.Add(novaInscricao);
+                context.SaveChanges();
+            }
         }
     }
 }

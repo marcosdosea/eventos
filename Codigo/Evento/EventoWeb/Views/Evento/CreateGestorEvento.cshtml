@@ -1,8 +1,7 @@
 ﻿@model EventoWeb.Models.GestorEventoModel
-@using EventoWeb.Models
 
 @{
-    ViewData["Title"] = "Associar Gestor ao Evento";
+ViewData["Title"] = "Associar Gestor ao Evento";
 }
 
 <h1>Cadastrar Gestores do Evento</h1>
@@ -11,13 +10,14 @@
     <div class="col-md-6">
         <form asp-action="CreateGestorEvento" method="post">
             <div class="form-group">
-                <label for="EventoId" class="control-label">Evento</label>
-                <select id="EventoId" name="EventoId" class="form-control">
+                <label for="IdEvento" class="control-label">Evento</label>
+                <select id="IdEvento" name="IdEvento" class="form-control" asp-for="IdEvento">
                     @foreach (var evento in ViewBag.Eventos)
                     {
                     <option value="@evento.Id">@evento.Nome</option>
                     }
                 </select>
+                <span asp-validation-for="IdEvento" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Cpf" class="control-label">CPF</label>
@@ -45,3 +45,7 @@
         </form>
     </div>
 </div>
+
+@section Scripts {
+@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

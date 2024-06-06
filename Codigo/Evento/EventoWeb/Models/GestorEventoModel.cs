@@ -19,9 +19,6 @@ public class GestorEventoModel
     [Required(ErrorMessage = "Campo requerido")]
     public string Cpf { get; set; } = null!;
     
-    [Required(ErrorMessage = "Campo requerido")]
-    public string Sexo { get; set; } = null!;
-    
     public string? Telefone1 { get; set; }
     
     [Required(ErrorMessage = "Campo requerido")]

@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Drawing.Printing;
+using AutoMapper;
 using Core;
 using Core.DTO;
 using Core.Service;
@@ -54,6 +55,7 @@ namespace EventoWeb.Controllers
                 _eventoService.Create(evento);
                 return RedirectToAction(nameof(Index));
             }
+
             return View(eventoModel);
         }
 
@@ -76,6 +78,7 @@ namespace EventoWeb.Controllers
                 _eventoService.Edit(evento);
                 return RedirectToAction(nameof(Index));
             }
+
             return View(eventoModel);
         }
 
@@ -96,34 +99,32 @@ namespace EventoWeb.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        
         // GET: EventoController/CreateGestorEvento
         public ActionResult CreateGestorEvento()
         {
-           
             var gestorModel = new GestorEventoModel();
-            ViewBag.Eventos = _mapper.Map<List<EventoModel>>(_eventoService.GetAll());
+            SetEventosInViewBag();
             return View(gestorModel);
         }
 
-        
         // POST: EventoController/CreateGestorEvento
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult CreateGestorEvento(GestorEventoModel gestorEventoModel)
         {
-            if (ModelState.IsValid)
-            {
-                IEnumerable<PessoaDTO> pessoa = _pessoaService.GetByCpf(gestorEventoModel.Cpf);
-                if (pessoa == null)
-                {
-                    var gestorEvento = _mapper.Map<Pessoa>(gestorEventoModel);
-                    _pessoaService.Create(gestorEvento);
-                }
-                
-            }
-            ViewBag.Eventos = _mapper.Map<List<EventoModel>>(_eventoService.GetAll());
-            return View(gestorEventoModel);
+            gestorEventoModel.NomeCracha = gestorEventoModel.Nome;
+            var gestorEvento = _mapper.Map<Pessoa>(gestorEventoModel);
+            _eventoService.CreateGestorModel(gestorEvento,gestorEventoModel.IdEvento);
+            
+            return RedirectToAction("Index");
         }
 
+
+        private void SetEventosInViewBag()
+        {
+            ViewBag.Eventos = _mapper.Map<List<EventoModel>>(_eventoService.GetAll());
+        }
     }
 }
+
