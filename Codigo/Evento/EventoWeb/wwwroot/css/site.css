@@ -1,61 +1,66 @@
 html {
-  font-size: 14px;
+    font-size: 14px;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+    html {
+        font-size: 16px;
+    }
 }
 
 html {
-  position: relative;
-  min-height: 100%;
+    position: relative;
+    min-height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
+    margin-bottom: 60px;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+header {
+    box-shadow: 0px 5px 4px 0px rgba(0, 0, 0, 0.1);
 }
 
 .outer-container {
-  width: 100%;
-  height: 100%;
-  padding-left: 24px;
-  padding-right: 24px;
-  padding-top: 16px;
-  padding-bottom: 16px;
-  background: white;
-  justify-content: center;
-  align-items: center;
-  gap: 287px;
-  display: inline-flex;
+    width: 100%;
+    height: 100%;
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    background: white;
+    justify-content: center;
+    align-items: center;
+    gap: 287px;
+    display: inline-flex;
 }
 
 .inner-container {
-  flex: 1 1 0;
-  height: 53px;
-  justify-content: flex-start;
-  align-items: center;
-  gap: 22px;
-  display: flex;
+    flex: 1 1 0;
+    height: 53px;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 22px;
+    display: flex;
 }
 
 .nested-container {
-  padding-left: 14px;
-  padding-right: 14px;
-  padding-top: 10px;
-  padding-bottom: 10px;
-  border-radius: 4px;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  gap: 10px;
-  display: inline-flex;
+    padding-left: 14px;
+    padding-right: 14px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border-radius: 4px;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 10px;
+    display: inline-flex;
 }
 
 .placeholder-image {
-  width: 136px;
-  height: 53px;
+    width: 136px;
+    height: 53px;
 }
 
 .search-container {
@@ -70,7 +75,7 @@ body {
     cursor: pointer;
     width: 433px;
     gap: 16px;
-    font-family: Inter;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 16px;
     line-height: 24px;
     color: #232ED0;
@@ -103,36 +108,36 @@ body {
 }
 
 .absolute-box {
-  width: 16px;
-  height: 16px;
-  left: -0px;
-  top: 0px;
-  position: absolute;
-  background: #232ed0;
+    width: 16px;
+    height: 16px;
+    left: -0px;
+    top: 0px;
+    position: absolute;
+    background: #232ed0;
 }
 
 .search-text {
-  text-align: center;
-  color: #bbbef0;
-  font-size: 16px;
-  font-family: Inter;
-  font-weight: 400;
-  line-height: 24px;
-  word-wrap: break-word;
+    text-align: center;
+    color: #bbbef0;
+    font-size: 16px;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-weight: 400;
+    line-height: 24px;
+    word-wrap: break-word;
 }
 
 .second-inner-container {
-  justify-content: flex-start;
-  align-items: center;
-  gap: 17px;
-  display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 17px;
+    display: flex;
 }
 
 .location-container {
-  justify-content: flex-start;
-  align-items: center;
-  gap: 5px;
-  display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 5px;
+    display: flex;
 }
 
 .bi-geo-alt-fill {
@@ -140,13 +145,13 @@ body {
 }
 
 .location-text {
-  text-align: center;
-  color: #232ed0;
-  font-size: 16px;
-  font-family: Inter;
-  font-weight: 400;
-  line-height: 24px;
-  word-wrap: break-word;
+    text-align: center;
+    color: #232ed0;
+    font-size: 16px;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-weight: 400;
+    line-height: 24px;
+    word-wrap: break-word;
 }
 
 .location-link {
@@ -154,13 +159,13 @@ body {
 }
 
 .event-text {
-  text-align: center;
-  color: #232ed0;
-  font-size: 16px;
-  font-family: Inter;
-  font-weight: 400;
-  line-height: 24px;
-  word-wrap: break-word;
+    text-align: center;
+    color: #232ed0;
+    font-size: 16px;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-weight: 400;
+    line-height: 24px;
+    word-wrap: break-word;
 }
 
 .sign-in-container {
@@ -246,7 +251,7 @@ body {
 .tittle-text-footer {
     color: white;
     font-size: 30px;
-    font-family: Inter;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: 700;
     line-height: 30px;
     word-wrap: break-word;
@@ -263,7 +268,7 @@ body {
 .help-text {
     color: white;
     font-size: 16px;
-    font-family: Inter;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: 400;
     line-height: 24px;
     word-wrap: break-word;
@@ -298,7 +303,7 @@ body {
 .contact-text {
     color: #232ed0;
     font-size: 16px;
-    font-family: Inter;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: 400;
     line-height: 32px;
     word-wrap: break-word;
@@ -329,7 +334,7 @@ body {
     text-align: center;
     color: #e8e8e8;
     font-size: 16px;
-    font-family: Inter;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: 700;
     line-height: 24px;
     word-wrap: break-word;
@@ -338,7 +343,7 @@ body {
 .about-text {
     color: #e9eafa;
     font-size: 12px;
-    font-family: Inter;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: 400;
     line-height: 18px;
     word-wrap: break-word;
@@ -347,7 +352,7 @@ body {
 .brand-text {
     color: #e9eafa;
     font-size: 12px;
-    font-family: Inter;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: 400;
     line-height: 18px;
     word-wrap: break-word;
@@ -356,7 +361,7 @@ body {
 .about-us-text {
     color: #e9eafa;
     font-size: 12px;
-    font-family: Inter;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: 400;
     line-height: 18px;
     word-wrap: break-word;
@@ -375,7 +380,7 @@ body {
     text-align: center;
     color: #e8e8e8;
     font-size: 16px;
-    font-family: Inter;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: 700;
     line-height: 24px;
     word-wrap: break-word;
@@ -384,7 +389,7 @@ body {
 .half-price-law {
     color: #e9eafa;
     font-size: 12px;
-    font-family: Inter;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: 400;
     line-height: 18px;
     word-wrap: break-word;
@@ -393,16 +398,15 @@ body {
 .terms-of-service-text {
     color: #e9eafa;
     font-size: 12px;
-    font-family: Inter;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: 400;
     line-height: 18px;
-    word-wrap: break-word;
 }
 
 .privacy-terms-text {
     color: #e9eafa;
     font-size: 12px;
-    font-family: Inter;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: 400;
     line-height: 18px;
     word-wrap: break-word;
@@ -418,14 +422,18 @@ body {
 .social-media-text {
     color: #e9eafa;
     font-size: 16px;
-    font-family: Inter;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-weight: 700;
     line-height: 24px;
     word-wrap: break-word;
 }
 
 .social-media-container .flex-container {
-    margin-top: 16px; 
+    margin-top: 16px;
+}
+
+.icon-container a {
+    text-decoration: none;
 }
 
 .icon-container i.bi {
@@ -455,4 +463,3 @@ body {
     position: absolute;
     background: #e9eafa;
 }
-
