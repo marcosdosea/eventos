@@ -1,6 +1,9 @@
 using Core;
 using Core.Service;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.Extensions.Options;
+using System.Globalization;
 using Service;
 
 namespace EventoWeb
@@ -23,6 +26,17 @@ namespace EventoWeb
             builder.Services.AddTransient<ISubeventoService, SubeventoService>();
             builder.Services.AddTransient<IEventoService, EventoService>();
             builder.Services.AddTransient<IModelocrachaService, ModelocrachaService>();
+			builder.Services.AddTransient<IEstadosbrasilService, EstadosbrasilService>();
+
+			// Configure localization
+			builder.Services.Configure<RequestLocalizationOptions>(options =>
+            {
+                var supportedCultures = new[] { new CultureInfo("pt-BR") };
+                options.DefaultRequestCulture = new RequestCulture("pt-BR");
+                options.SupportedCultures = supportedCultures;
+                options.SupportedUICultures = supportedCultures;
+            });
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -37,6 +51,8 @@ namespace EventoWeb
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            app.UseRequestLocalization(app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>().Value);
 
             app.UseAuthorization();
 

@@ -161,7 +161,6 @@
 }
 
 /*Branco*/
-
 .color-white {
     color: #ffffff;
 }
@@ -177,6 +176,11 @@ body {
 
 .btn-blue-normal {
     background-color: #232ed0;
+}
+
+.btn-blue-normal:hover{
+    background-color: #151c7d;
+    color: #FFFFFF;
 }
 
 .no-padding {

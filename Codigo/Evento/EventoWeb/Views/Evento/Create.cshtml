@@ -1,168 +1,196 @@
 ﻿@model EventoWeb.Models.EventoModel
 
 @{
-    ViewData["Title"] = "Create";
+	ViewData["Title"] = "Create";
 }
 
-<h1>Create</h1>
-
-<h4>EventoModel</h4>
+<h1 class="blue-normal">Cadastre seu evento</h1>
 <hr />
 <div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Id" class="control-label"></label>
-                <input asp-for="Id" class="form-control" />
-                <span asp-validation-for="Id" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Nome" class="control-label"></label>
-                <input asp-for="Nome" class="form-control" />
-                <span asp-validation-for="Nome" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Descricao" class="control-label"></label>
-                <input asp-for="Descricao" class="form-control" />
-                <span asp-validation-for="Descricao" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="DataInicio" class="control-label"></label>
-                <input asp-for="DataInicio" class="form-control" />
-                <span asp-validation-for="DataInicio" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="DataFim" class="control-label"></label>
-                <input asp-for="DataFim" class="form-control" />
-                <span asp-validation-for="DataFim" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="InscricaoGratuita" class="control-label"></label>
-                <input asp-for="InscricaoGratuita" class="form-control" />
-                <span asp-validation-for="InscricaoGratuita" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Status" class="control-label"></label>
-                <input asp-for="Status" class="form-control" />
-                <span asp-validation-for="Status" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="DataInicioInscricao" class="control-label"></label>
-                <input asp-for="DataInicioInscricao" class="form-control" />
-                <span asp-validation-for="DataInicioInscricao" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="DataFimInscricao" class="control-label"></label>
-                <input asp-for="DataFimInscricao" class="form-control" />
-                <span asp-validation-for="DataFimInscricao" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ValorInscricao" class="control-label"></label>
-                <input asp-for="ValorInscricao" class="form-control" />
-                <span asp-validation-for="ValorInscricao" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Website" class="control-label"></label>
-                <input asp-for="Website" class="form-control" />
-                <span asp-validation-for="Website" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="EmailEvento" class="control-label"></label>
-                <input asp-for="EmailEvento" class="form-control" />
-                <span asp-validation-for="EmailEvento" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="EventoPublico" class="control-label"></label>
-                <input asp-for="EventoPublico" class="form-control" />
-                <span asp-validation-for="EventoPublico" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Cep" class="control-label"></label>
-                <input asp-for="Cep" class="form-control" />
-                <span asp-validation-for="Cep" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Estado" class="control-label"></label>
-                <input asp-for="Estado" class="form-control" />
-                <span asp-validation-for="Estado" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Cidade" class="control-label"></label>
-                <input asp-for="Cidade" class="form-control" />
-                <span asp-validation-for="Cidade" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Bairro" class="control-label"></label>
-                <input asp-for="Bairro" class="form-control" />
-                <span asp-validation-for="Bairro" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Rua" class="control-label"></label>
-                <input asp-for="Rua" class="form-control" />
-                <span asp-validation-for="Rua" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Numero" class="control-label"></label>
-                <input asp-for="Numero" class="form-control" />
-                <span asp-validation-for="Numero" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Complemento" class="control-label"></label>
-                <input asp-for="Complemento" class="form-control" />
-                <span asp-validation-for="Complemento" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="PossuiCertificado" class="control-label"></label>
-                <input asp-for="PossuiCertificado" class="form-control" />
-                <span asp-validation-for="PossuiCertificado" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="FrequenciaMinimaCertificado" class="control-label"></label>
-                <input asp-for="FrequenciaMinimaCertificado" class="form-control" />
-                <span asp-validation-for="FrequenciaMinimaCertificado" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="IdTipoEvento" class="control-label"></label>
-                <input asp-for="IdTipoEvento" class="form-control" />
-                <span asp-validation-for="IdTipoEvento" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="VagasOfertadas" class="control-label"></label>
-                <input asp-for="VagasOfertadas" class="form-control" />
-                <span asp-validation-for="VagasOfertadas" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="VagasReservadas" class="control-label"></label>
-                <input asp-for="VagasReservadas" class="form-control" />
-                <span asp-validation-for="VagasReservadas" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="VagasDisponiveis" class="control-label"></label>
-                <input asp-for="VagasDisponiveis" class="form-control" />
-                <span asp-validation-for="VagasDisponiveis" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="TempoMinutosReserva" class="control-label"></label>
-                <input asp-for="TempoMinutosReserva" class="form-control" />
-                <span asp-validation-for="TempoMinutosReserva" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CargaHoraria" class="control-label"></label>
-                <input asp-for="CargaHoraria" class="form-control" />
-                <span asp-validation-for="CargaHoraria" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
+	<div class="col-md-8">
+		<form asp-action="Create">
+			<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+			<div class="form-group">
+				<label asp-for="Nome" class="control-label"></label>
+				<input asp-for="Nome" class="form-control" placeholder="Nome do evento" />
+				<span asp-validation-for="Nome" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Descricao" class="control-label"></label>
+				<textarea asp-for="Descricao" class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+				<span asp-validation-for="Descricao" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Status" class="control-label"></label>
+				<select asp-for="Status" class="form-select" aria-label="Default select example">
+					<option value="C">Cadastro</option>
+					<option value="A">Ativo</option>
+					<option value="F">Finalizado</option>
+					<option value="I">Inativo</option>
+				</select>
+				<span asp-validation-for="Status" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Website" class="control-label"></label>
+				<input asp-for="Website" class="form-control" placeholder="Site do evento" />
+				<span asp-validation-for="Website" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="EmailEvento" class="control-label">E-mail</label>
+				<input asp-for="EmailEvento" class="form-control" placeholder="E-mail para contato do evento" />
+				<span asp-validation-for="EmailEvento" class="text-danger"></span>
+			</div>
+			<br />
+			<h4 class="blue-normal">
+				Datas
+			</h4>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="DataInicio" class="control-label"></label>
+						<input asp-for="DataInicio" class="form-control" />
+						<span asp-validation-for="DataInicio" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="DataFim" class="control-label"></label>
+						<input asp-for="DataFim" class="form-control" />
+						<span asp-validation-for="DataFim" class="text-danger"></span>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="DataInicioInscricao" class="control-label"></label>
+						<input asp-for="DataInicioInscricao" class="form-control" />
+						<span asp-validation-for="DataInicioInscricao" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="DataFimInscricao" class="control-label"></label>
+						<input asp-for="DataFimInscricao" class="form-control" />
+						<span asp-validation-for="DataFimInscricao" class="text-danger"></span>
+					</div>
+				</div>
+			</div>
+			<br />
+			<div class="form-group">
+				<label asp-for="InscricaoGratuita" class="control-label"></label>
+				<select asp-for="InscricaoGratuita" class="form-select" id="InscricaoGratuita" aria-label="Default select example">
+					<option value="0">Não</option>
+					<option value="1">Sim</option>
+				</select>
+				<span asp-validation-for="InscricaoGratuita" class="text-danger"></span>
+			</div>
+			<div class="form-group" id="valorInscricaoGroup">
+				<label asp-for="ValorInscricao" class="control-label"></label>
+				<input type="text" asp-for="ValorInscricao" class="form-control" onkeypress="return validateInput(event)">
+				<span asp-validation-for="ValorInscricao" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="EventoPublico" class="control-label"></label>
+				<select asp-for="EventoPublico" class="form-select" aria-label="Default select example">
+					<option value="0">Não</option>
+					<option value="1">Sim</option>
+				</select>
+				<span asp-validation-for="EventoPublico" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Cep" class="control-label"></label>
+				<input asp-for="Cep" class="form-control" />
+				<span asp-validation-for="Cep" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Estado" class="control-label">Estado</label>
+				<select asp-for="Estado" class="form-select" asp-items="ViewBag.estado">
+					<option value="">Selecione o estado</option>
+				</select>
+				<span asp-validation-for="Estado" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Cidade" class="control-label"></label>
+				<input asp-for="Cidade" class="form-control" />
+				<span asp-validation-for="Cidade" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Bairro" class="control-label"></label>
+				<input asp-for="Bairro" class="form-control" />
+				<span asp-validation-for="Bairro" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Rua" class="control-label"></label>
+				<input asp-for="Rua" class="form-control" />
+				<span asp-validation-for="Rua" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Numero" class="control-label"></label>
+				<input asp-for="Numero" class="form-control" />
+				<span asp-validation-for="Numero" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Complemento" class="control-label"></label>
+				<input asp-for="Complemento" class="form-control" />
+				<span asp-validation-for="Complemento" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="PossuiCertificado" class="control-label"></label>
+				<select asp-for="PossuiCertificado" class="form-select" id="PossuiCertificado" aria-label="Default select example">
+					<option value="0">Não</option>
+					<option value="1">Sim</option>
+				</select>
+				<span asp-validation-for="PossuiCertificado" class="text-danger"></span>
+			</div>
+			<div class="form-group" id="FrequenciaMinimaCertificado">
+				<label asp-for="FrequenciaMinimaCertificado" class="control-label"></label>
+				<input asp-for="FrequenciaMinimaCertificado" class="form-control" onkeypress="return validateInput(event)" />
+				<span asp-validation-for="FrequenciaMinimaCertificado" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="IdTipoEvento" class="control-label"></label>
+				<input asp-for="IdTipoEvento" class="form-control" />
+				<span asp-validation-for="IdTipoEvento" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="VagasOfertadas" class="control-label"></label>
+				<input asp-for="VagasOfertadas" class="form-control" />
+				<span asp-validation-for="VagasOfertadas" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="TempoMinutosReserva" class="control-label"></label>
+				<input asp-for="TempoMinutosReserva" class="form-control" />
+				<span asp-validation-for="TempoMinutosReserva" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="CargaHoraria" class="control-label"></label>
+				<input asp-for="CargaHoraria" class="form-control" />
+				<span asp-validation-for="CargaHoraria" class="text-danger"></span>
+			</div>
+			<br />
+			<div class="row justify-content-end">
+				<div class="col-2">
+					<div>
+						<a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
+					</div>
+				</div>
+				<div class="col-2">
+					<div class="form-group">
+						<input type="submit" value="Criar evento" class="btn btn-blue-normal color-white" />
+					</div>
+				</div>
+			</div>
+		</form>
+	</div>
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+	@{
+		await Html.RenderPartialAsync("_ValidationScriptsPartial");
+	}
+	<script>
+		toggleInputBased('InscricaoGratuita', 'valorInscricaoGroup', '1');
+		toggleInputBased('PossuiCertificado', 'FrequenciaMinimaCertificado', '0');
+	</script>
 }
