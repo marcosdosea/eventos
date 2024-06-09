@@ -1,48 +1,99 @@
-﻿/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
-for details on configuring this project to bundle and minify static web assets. */
-
-a.navbar-brand {
-  white-space: normal;
-  text-align: center;
-  word-break: break-all;
+﻿/* Estilos para o Header */
+.outer-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #f8f9fa;
 }
 
-a {
-  color: #0077cc;
+.inner-container, .second-inner-container {
+    display: flex;
+    align-items: center;
 }
 
-.btn-primary {
-  color: #fff;
-  background-color: #1b6ec2;
-  border-color: #1861ac;
+.nested-container, .location-container, .profile-container {
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
 }
 
-.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
-  color: #fff;
-  background-color: #1b6ec2;
-  border-color: #1861ac;
+.small-box, .small-absolute-box, .small-blue-box, .absolute-box {
+    width: 20px;
+    height: 20px;
+    background-color: #007bff;
+    margin-right: 10px;
 }
 
-.border-top {
-  border-top: 1px solid #e5e5e5;
-}
-.border-bottom {
-  border-bottom: 1px solid #e5e5e5;
+.placeholder-image {
+    margin-right: 15px;
 }
 
-.box-shadow {
-  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+.bordered-container {
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    border: 1px solid #ccc;
 }
 
-button.accept-policy {
-  font-size: 1rem;
-  line-height: inherit;
+.relative-container {
+    position: relative;
 }
 
-.footer {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  white-space: nowrap;
-  line-height: 60px;
+.absolute-box, .small-absolute-box {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.search-text, .location-text, .event-text {
+    font-size: 14px;
+    color: #333;
+}
+
+.profile-picture {
+    width: 40px;
+    height: 40px;
+    background-color: #ccc;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+/* Estilos para o Footer */
+.footer-background {
+    background-color: #343a40;
+    color: #fff;
+    padding: 20px 0;
+}
+
+.custom-flex-container, .flex-start-container {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 10px;
+}
+
+.custom-column-flex, .column-flex-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.tittle-text-footer, .help-text, .contact-text, .institutional-text, .about-text, .brand-text, .about-us-text, .terms-text, .half-price-law, .terms-of-service-text, .privacy-terms-text, .social-media-text {
+    margin: 5px 0;
+}
+
+.custom-container, .flex-container {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.icon-container {
+    margin-right: 10px;
+}
+
+.icon, .custom-icon {
+    width: 30px;
+    height: 30px;
+    background-color: #007bff;
+    border-radius: 50%;
 }
