@@ -37,19 +37,22 @@ namespace EventoWeb.Controllers
             return View(eventoModel);
         }
 
-        // GET: EventoController/Create
-        public ActionResult Create()
-        {
-            var eventoModel = new EventoModel();
-
+		// GET: EventoController/Create
+		public ActionResult Create()
+		{
+			var eventoModel = new EventoModel();
 			var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
-			ViewBag.estado = new SelectList(estados, "Nome", "Estado");
+			var viewModel = new EventocreateModel
+			{
+				Evento = eventoModel,
+				Estados = new SelectList(estados, "Estado", "Nome")
+			};
 
-			return View(eventoModel);
-        }
+			return View(viewModel);
+		}
 
-        // POST: EventoController/Create
-        [HttpPost]
+		// POST: EventoController/Create
+		[HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Create(EventoModel eventoModel)
         {
