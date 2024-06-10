@@ -7,11 +7,24 @@
   </PropertyGroup>
 
   <ItemGroup>
+<<<<<<< Branch_MarcosVenicio_9
     <None Remove="Views\AreaInteresse\StyleSheet.css" />
   </ItemGroup>
 
   <ItemGroup>
     <_ContentIncludedByDefault Remove="wwwroot\css\style.css" />
+=======
+    <Content Remove="Views\Shared\_LayoutAdministrador.cshtml" />
+    <Content Remove="wwwroot\js\toggleInputBased.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="wwwroot\js\toggleInputBased.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\js\toggleInputBased.js" />
+>>>>>>> main
   </ItemGroup>
 
   <ItemGroup>

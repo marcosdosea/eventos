@@ -41,7 +41,9 @@ namespace EventoWeb.Models
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
         public DateTime DataFimInscricao { get; set; }
 
-        [Display(Name = "Valor da Inscrição")]
+        [Display(Name = "Valor da Inscrição", Prompt = "R$ 00.00")]
+        [Range(0.01, double.MaxValue, ErrorMessage = "O valor da inscrição deve ser maior que zero.")]
+        [RegularExpression(@"^\d+(\.\d{1,2})?$", ErrorMessage = "Por favor, insira no máximo duas casas decimais e use '.' como separador decimal.")]
         public decimal ValorInscricao { get; set; }
 
         [Display(Name = "Website")]
@@ -53,8 +55,9 @@ namespace EventoWeb.Models
         [Display(Name = "Evento Publico")]
         public sbyte EventoPublico { get; set; }
 
-        [Display(Name = "CEP")]
-        [Required(ErrorMessage = "O CEP é obrigatório ")]
+        [Display(Name = "CEP", Prompt = "00000-000")]
+        [RegularExpression(@"^\d{5}-\d{3}$", ErrorMessage = "O CEP deve estar no formato 00000-000.")]
+        [StringLength(9, MinimumLength = 9, ErrorMessage = "O campo CEP deve ter 8 caracteres")]
         public string Cep { get; set; } = null!;
 
         [Display(Name = "Estado")]
@@ -73,7 +76,7 @@ namespace EventoWeb.Models
         [Required(ErrorMessage = "Informe a Rua onde o Evento será realizado")]
         public string Rua { get; set; } = null!;
 
-        [Display(Name = "Numero")]
+        [Display(Name = "Numero", Prompt = "Sem número, deixe o campo vazio")]
         public string? Numero { get; set; }
 
         [Display(Name = "Complemento")]

@@ -161,7 +161,6 @@
 }
 
 /*Branco*/
-
 .color-white {
     color: #ffffff;
 }
@@ -179,10 +178,20 @@ body {
     background-color: #232ed0;
 }
 
+.btn-blue-normal:hover{
+    background-color: #151c7d;
+    color: #FFFFFF;
+}
+
 .no-padding {
     padding: 0 !important;
 }
 
 .padding-lateral-50 {
     padding-left: 50px;
+<<<<<<< Branch_MarcosVenicio_9
     padding-right: 50px;
+=======
+    padding-right: 50px;
+}
+>>>>>>> main
