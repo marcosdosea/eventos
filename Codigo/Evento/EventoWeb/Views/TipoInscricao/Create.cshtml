@@ -3,64 +3,93 @@
 @{
     ViewData["Title"] = "Create";
 }
+<head>
+    <link rel="stylesheet" type="text/css" href="~/css/style.css">
+</head>
 
-<h1>Create</h1>
+<div class="container-fluid no-padding">
+    <div class="row">
+        <div class="col-2"> </div>
+        <div class="col-10 padding-lateral-50">
+            <div class="breadcrumb">
+                <a asp-controller="Home" asp-action="Index" style="text-decoration:none; padding-right:6px">
+                    <img class="mb-1" style="display:inline-block" src="/img/icon-wrapper.svg" />
+                    <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Home</p>
+                </a>
+                <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
+                <a asp-controller="TipoInscricao" asp-action="Index" style="text-decoration:none; padding-right:6px">
+                    <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Tipo de Inscrição</p>
+                </a>
+                <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
+                <p style="color:#6C757D;display:inline-block">Novo Tipo de Inscrição</p>
+            </div>
 
-<h4>Tipoinscricao</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Id" class="control-label"></label>
-                <input asp-for="Id" class="form-control" />
-                <span asp-validation-for="Id" class="text-danger"></span>
+            <h1 class="blue-normal">Novo Tipo de Inscrição</h1>
+            <div class="row">
+                <div class="col-md-4 ">
+                    <form asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <div class="form-group mb-2">
+                            <label asp-for="Id" class="control-label"></label>
+                            <input asp-for="Id" class="form-control" />
+                            <span asp-validation-for="Id" class="text-danger"></span>
+                        </div>
+                        <div class="form-group mb-2">
+                            <label asp-for="IdEvento" class="control-label"></label>
+                            <select asp-for="IdEvento" class="form-control" asp-items="ViewBag.IdEvento"></select>
+                            <span asp-validation-for="IdEvento" class="text-danger"></span>
+                        </div>
+                        <div class="form-group mb-2">
+                            <label asp-for="Descricao" class="control-label"></label>
+                            <input asp-for="Descricao" class="form-control" />
+                            <span asp-validation-for="Descricao" class="text-danger"></span>
+                        </div>
+                        <div class="form-group mb-2">
+                            <label asp-for="Valor" class="control-label"></label>
+                            <input type ="number" asp-for="Valor" class="form-control"/>
+                            <span asp-validation-for="Valor" class="text-danger"></span>
+                        </div>
+                        <div class="form-group mb-2">
+                            <label asp-for="DataInicio" class="control-label"></label>
+                            <input asp-for="DataInicio" class="form-control" type="date" />
+                            <span asp-validation-for="DataInicio" class="text-danger"></span>
+                        </div>
+                        <div class="form-group mb-2">
+                            <label asp-for="Datafim" class="control-label"></label>
+                            <input asp-for="Datafim" class="form-control" type="date" />
+                            <span asp-validation-for="Datafim" class="text-danger"></span>
+                        </div>
+                       <div class="form-group mb-2">
+                            <label asp-for="UsadaEvento" class="control-label"></label>
+                            <select id="UsadaEvento" class="form-select" aria-label="Selecione se o Tipo de Inscrição foi usado no Evento">
+                                <option value="0">Sim</option>
+                                <option value="1">Não</option>
+                            </select>
+                            <span asp-validation-for="UsadaEvento" class="text-danger"></span>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label asp-for="UsadaSubevento" class="control-label"></label>
+                            <select id="UsadaSubevento" class="form-select" aria-label="Selecione se o Tipo de Inscrição foi usado no Subevento">
+                                <option value="1">Sim</option>
+                                <option value="0">Não</option>
+                            </select>
+                            <span asp-validation-for="UsadaSubevento" class="text-danger"></span>
+                        </div>
+                        
+                        <div class="form-group mb-3">
+                            <input type="submit" value="Novo Tipo de Inscrição" class="btn btn-mg btn-blue-normal text-white btn-primary" />
+                            <button class="btn btn-mg btn-outline-danger">
+                                <a asp-action="Index" class=" btn-outline-danger" style="text-decoration:none;">
+                                    Cancelar
+                                </a>
+                            </button>
+                        </div>
+                        
+                    </form>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="IdEvento" class="control-label"></label>
-                <select asp-for="IdEvento" class="form-control" asp-items="ViewBag.IdEvento"></select>
-                <span asp-validation-for="IdEvento" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-            <label asp-for="Descricao" class="control-label"></label>
-            <input asp-for="Descricao" class="form-control" />
-            <span asp-validation-for="Descricao" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Valor" class="control-label"></label>
-                <input asp-for="Valor" class="form-control"  />
-                <span asp-validation-for="Valor" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="DataInicio" class="control-label"></label>
-                <input asp-for="DataInicio" class="form-control" type="date" />
-                <span asp-validation-for="DataInicio" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Datafim" class="control-label"></label>
-                <input asp-for="Datafim" class="form-control" type="date" />
-                <span asp-validation-for="Datafim" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="UsadaEvento" class="control-label"></label>
-                <input asp-for="UsadaEvento" class="form-control" />
-                <span asp-validation-for="UsadaEvento" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="UsadaSubevento" class="control-label"></label>
-                <input asp-for="UsadaSubevento" class="form-control" />
-                <span asp-validation-for="UsadaSubevento" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+         </div>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
 </div>
 
 @section Scripts {
