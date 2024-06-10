@@ -176,7 +176,7 @@ body {
 
 .btn-blue-normal {
     background-color: #232ed0;
-    color-white;
+    color: #FFFFFF;
 }
 
 .btn-blue-normal:hover{
@@ -186,9 +186,4 @@ body {
 
 .no-padding {
     padding: 0 !important;
-}
-
-.padding-lateral-50 {
-    padding-left: 50px;
-    padding-right: 50px;
 }
