@@ -16,19 +16,6 @@
         /// </summary>
         public string Status { get; set; } = null!;
 
-        public string StatusDescricao
-        {
-            get
-            {
-                if (Status.Equals("C"))
-                    return "Em Cadastro";
-                else if (Status.Equals("A"))
-                    return "Aberto";
-                else
-                    return "Finalizado";
-            }
-        }
-
         public DateTime DataInicio { get; set; }
 
         public DateTime DataFim { get; set; }

@@ -3,16 +3,19 @@ using Core;
 using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace EventoWeb.Controllers
 {
     public class EventoController : Controller
     {
+        private readonly IEstadosbrasilService _estadosbrasilService;
         private readonly IEventoService _eventoService;
         private readonly IMapper _mapper;
 
-        public EventoController(IEventoService eventoService, IMapper mapper)
+        public EventoController(IEventoService eventoService, IMapper mapper, IEstadosbrasilService estadosbrasilService)
         {
+            _estadosbrasilService = estadosbrasilService;
             _eventoService = eventoService;
             _mapper = mapper;
         }
@@ -34,15 +37,22 @@ namespace EventoWeb.Controllers
             return View(eventoModel);
         }
 
-        // GET: EventoController/Create
-        public ActionResult Create()
-        {
-            var eventoModel = new EventoModel();
-            return View(eventoModel);
-        }
+		// GET: EventoController/Create
+		public ActionResult Create()
+		{
+			var eventoModel = new EventoModel();
+			var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
+			var viewModel = new EventocreateModel
+			{
+				Evento = eventoModel,
+				Estados = new SelectList(estados, "Estado", "Nome")
+			};
 
-        // POST: EventoController/Create
-        [HttpPost]
+			return View(viewModel);
+		}
+
+		// POST: EventoController/Create
+		[HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Create(EventoModel eventoModel)
         {
@@ -59,7 +69,7 @@ namespace EventoWeb.Controllers
         {
             return Details(id);
         }
-
+        
         // POST: EventoController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]

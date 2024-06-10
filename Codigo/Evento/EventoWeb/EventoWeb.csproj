@@ -7,6 +7,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="Views\Shared\_LayoutAdministrador.cshtml" />
+    <Content Remove="wwwroot\js\toggleInputBased.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="wwwroot\js\toggleInputBased.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\js\toggleInputBased.js" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Core\Core.csproj" />
     <ProjectReference Include="..\Service\Service.csproj" />
   </ItemGroup>
