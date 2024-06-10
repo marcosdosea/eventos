@@ -11,13 +11,13 @@ namespace EventoWeb.Controllers
     public class EventoController : Controller
     {
         private readonly IEventoService _eventoService;
-        private readonly IPessoaService _pessoaService;
+        private readonly IInscricaoService _inscricaoService;
         private readonly IMapper _mapper;
 
-        public EventoController(IEventoService eventoService, IPessoaService pessoaService, IMapper mapper)
+        public EventoController(IEventoService eventoService, IInscricaoService inscricaoService, IMapper mapper)
         {
             _eventoService = eventoService;
-            _pessoaService = pessoaService;
+            _inscricaoService = inscricaoService;
             _mapper = mapper;
         }
 
@@ -103,8 +103,11 @@ namespace EventoWeb.Controllers
         // GET: EventoController/CreateGestorEvento
         public ActionResult CreateGestorEvento()
         {
-            var gestorModel = new GestorEventoModel();
-            SetEventosInViewBag();
+            var gestorModel = new GestorEventoModel
+            {
+                Eventos = _eventoService.GetAll(),
+                Gestores = _inscricaoService.GetPessoasByPapel(2) 
+            };
             return View(gestorModel);
         }
 
@@ -113,17 +116,15 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult CreateGestorEvento(GestorEventoModel gestorEventoModel)
         {
-            gestorEventoModel.NomeCracha = gestorEventoModel.Nome;
-            var gestorEvento = _mapper.Map<Pessoa>(gestorEventoModel);
-            _eventoService.CreateGestorModel(gestorEvento,gestorEventoModel.IdEvento);
-            
+            var pessoa = gestorEventoModel.Pessoa;
+            pessoa.NomeCracha = pessoa.Nome;
+            _eventoService.CreateGestorModel(pessoa, gestorEventoModel.IdEvento);
             return RedirectToAction("Index");
-        }
-
-
-        private void SetEventosInViewBag()
+        } 
+        public IActionResult DeletePessoaPapel(uint idPessoa, uint idEvento)
         {
-            ViewBag.Eventos = _mapper.Map<List<EventoModel>>(_eventoService.GetAll());
+            _inscricaoService.DeletePessoaPapel(idPessoa,idEvento);
+            return RedirectToAction(nameof(Index));
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using Core;
-using Core.DTO;
+﻿using Core.DTO;
 
 namespace Core.Service
 {
@@ -14,6 +13,7 @@ namespace Core.Service
         IEnumerable<Evento> GetAll();
 
         IEnumerable<EventoDTO> GetByNome(string Nome);
-        void CreateGestorModel(Pessoa gestorEvento, uint idEvento);
+
+        void CreateGestorModel(Pessoa pessoa,uint IdEvento);
     }
 }

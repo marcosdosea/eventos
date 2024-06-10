@@ -1,4 +1,4 @@
-using Core;
+﻿using Core;
 using Core.Service;
 using Core.DTO;
 using Microsoft.EntityFrameworkCore;
@@ -9,10 +9,12 @@ namespace Service
     {
         private readonly EventoContext _context;
         private readonly IPessoaService _pessoaService;
+        private readonly IInscricaoService _inscricaoService;
         
-        public EventoService(EventoContext context,IPessoaService pessoaService)
+        public EventoService(EventoContext context,IPessoaService pessoaService,IInscricaoService inscricaoService)
         {
             _pessoaService = pessoaService;
+            _inscricaoService = inscricaoService;
             _context = context;
         }
 
@@ -98,27 +100,25 @@ namespace Service
                         };
             return query.AsNoTracking();
         }
+        
 
-        public void CreateGestorModel(Pessoa gestorEvento, uint idEvento)
+        public void CreateGestorModel(Pessoa pessoa, uint IdEvento)
         {
-            uint idPessoa = _pessoaService.Create(gestorEvento);
-            using (var context = new EventoContext())
+            uint idPessoa = _pessoaService.Create(pessoa);
+    
+            var novaInscricao = new Inscricaopessoaevento
             {
-                var novaInscricao = new Inscricaopessoaevento
-                {
-                    IdPessoa = idPessoa, 
-                    IdEvento = idEvento, 
-                    IdPapel = 2,
-                    IdTipoInscricao = 1, // Defina o Id do tipo de inscrição
-                    DataInscricao = DateTime.Now, // Defina a data da inscrição
-                    ValorTotal = 100, // Defina o valor total da inscrição
-                    Status = "A", // Defina o status da inscrição
-                    FrequenciaFinal = 0 // Defina a frequência final (se aplicável)
-                };
-
-                context.Inscricaopessoaeventos.Add(novaInscricao);
-                context.SaveChanges();
-            }
+                IdPessoa = idPessoa,
+                IdEvento = IdEvento,
+                IdPapel = 2,
+                IdTipoInscricao = 1, // Id do tipo de inscrição (ajuste conforme necessário)
+                DataInscricao = DateTime.Now, 
+                ValorTotal = 100, // Valor total da inscrição (ajuste conforme necessário)
+                Status = "A", //(ativa)
+                FrequenciaFinal = 0 
+            };
+            _inscricaoService.CreateInscricaoEvento(novaInscricao);
         }
+
     }
 }

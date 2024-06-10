@@ -24,6 +24,7 @@ namespace EventoWeb
             builder.Services.AddTransient<ISubeventoService, SubeventoService>();
             builder.Services.AddTransient<IEventoService, EventoService>();
             builder.Services.AddTransient<IModelocrachaService, ModelocrachaService>();
+            builder.Services.AddTransient<IInscricaoService,InscricaoService>();
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
