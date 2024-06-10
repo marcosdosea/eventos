@@ -25,7 +25,9 @@
 				<th>
 					@Html.DisplayNameFor(model => model.IdTipoEvento)
 				</th>
-				<th></th>
+				<th>
+					Ações
+				</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -66,16 +68,17 @@
 						@Html.DisplayFor(modelItem => item.IdTipoEvento)
 					</td>
 					<td>
-						@Html.ActionLink("Edit", "Edit", new { id = item.Id }) |
-						@Html.ActionLink("Details", "Details", new { id = item.Id }) |
-						@Html.ActionLink("Delete", "Delete", new { id = item.Id })
+						@Html.ActionLink("Editar", "Edit", new { id = item.Id }) |
+						@Html.ActionLink("Detalhes", "Details", new { id = item.Id }) |
+						<a href="#!" data-toggle="modal" data-target="#deleteModal-@item.Id">Delete</a>
+			@await Html.PartialAsync("_DeleteModal", item)
 					</td>
 				</tr>
 }
 		</tbody>
 	</table>
 	<h3 class="blue-normal">Publique um novo evento</h3>
-	<button type="button" class="btn btn-lg btn-blue-normal color-white"
+	<button type="button" class="btn btn-lg btn-blue-normal"
 			onclick="location.href='@Url.Action("Create")'">
 		Criar evento
 	</button>
