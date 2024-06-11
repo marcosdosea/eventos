@@ -1,13 +1,14 @@
-using System.Collections;
 using System.ComponentModel.DataAnnotations;
 namespace EventoWeb.Models;
 
 public class AreaInteresseModel
 {
-    [Required(ErrorMessage = "Campo requerido")]
+    [Display(Name = "Código")]
+    [Required(ErrorMessage = "Código do Evento é obrigatório")]
+    [Key]
     public uint  Id { get; set; }
-    
-    [Required(ErrorMessage = "Campo requerido")]
-    [StringLength(100, ErrorMessage = "Nome deve ter no máximo 100 caracteres")]
+
+    [Display(Name = "Nome")]
+    [Required(ErrorMessage = "Nome do Evento é obrigatório")]
     public string Nome { get; set; } = null!;
 }
