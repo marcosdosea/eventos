@@ -1,4 +1,5 @@
-﻿@using Core
+﻿@using System.Reflection.Metadata
+@using Core
 @model EventoWeb.Models.GestorEventoModel
 
 @{
@@ -53,26 +54,25 @@ ViewData["Title"] = "Associar Gestor ao Evento";
             <thead>
             <tr>
                 <th>Nome</th>
-                <th>CPF</th>
+                <th>Evento</th>
             </tr>
             </thead>
             <tbody>
-            @foreach (var gestor in Model.Gestores)
-            {
-            <tr>
-                <td>@gestor.Nome</td>
-                <td>@gestor.Cpf</td>
-                <td>
-                    <button type="button" class="btn btn-primary" onclick="location.href='@Url.Action("MudarSenha", "Gestor", new { id = gestor.Id })'">Mudar Senha</button>
-                    <form asp-action="DeletePessoaPapel" asp-controller="Evento" method="post" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir?');">
-                        <input type="hidden" asp-for="Pessoa.Id" value="@gestor.Id" />
-                        <input type="hidden" asp-for="IdEvento" value="@Model.IdEvento" />
-                        <button type="submit" class="btn btn-danger">Excluir</button>
-                    </form>
-                </td>
-            </tr>
-            }
-            </tbody>
+                @foreach (var inscricaopessoaevento in Model.Inscricoes)
+                {
+                    <tr>
+                        <td>@inscricaopessoaevento.IdPessoa</td>
+                        <td>@inscricaopessoaevento.IdEvento</td>
+                        <td>
+                            
+                            @using (Html.BeginForm("DeletePessoaPapel", "Evento", new { IdPessoa = inscricaopessoaevento.IdPessoa, IdEvento = inscricaopessoaevento.IdEvento }, FormMethod.Post))
+                            {
+                                @Html.AntiForgeryToken()
+                                <input type="submit" value="Delete" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this item?');"/>
+                            }
+                        </td>
+                    </tr>
+                }
         </table>
     </div>
 </div>

@@ -106,6 +106,7 @@ namespace EventoWeb.Controllers
             var gestorModel = new GestorEventoModel
             {
                 Eventos = _eventoService.GetAll(),
+                Inscricoes = _inscricaoService.GetAllInscricaoEvento(),
                 Gestores = _inscricaoService.GetPessoasByPapel(2) 
             };
             return View(gestorModel);
@@ -119,12 +120,13 @@ namespace EventoWeb.Controllers
             var pessoa = gestorEventoModel.Pessoa;
             pessoa.NomeCracha = pessoa.Nome;
             _eventoService.CreateGestorModel(pessoa, gestorEventoModel.IdEvento);
-            return RedirectToAction("Index");
+            return View(gestorEventoModel);
         } 
+        // POST: EventoController/DeletePessoaPapel
         public IActionResult DeletePessoaPapel(uint idPessoa, uint idEvento)
         {
             _inscricaoService.DeletePessoaPapel(idPessoa,idEvento);
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction();
         }
     }
 }

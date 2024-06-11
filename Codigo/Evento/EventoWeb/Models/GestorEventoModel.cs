@@ -9,6 +9,7 @@ public class GestorEventoModel
        
     public Inscricaopessoaevento Inscricao { get; set; }
 
+    public IEnumerable<Inscricaopessoaevento> Inscricoes { get; set; }
     public IEnumerable<Evento> Eventos { get; set; }
     
     public IEnumerable<Pessoa> Gestores { get; set; }
