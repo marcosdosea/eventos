@@ -41,25 +41,24 @@ namespace EventoWeb.Controllers
         public ActionResult Create()
         {
             var tipoInscricaoModel = new TipoInscricaoModel();
-            
-            var eventos = _eventoService.GetAll();
-            ViewBag.IdEvento = new SelectList(eventos, "Id", "Nome");
-            
-            return View(tipoInscricaoModel);
+            var eventos = _eventoService.GetAll().OrderBy(e => e.Nome);
+            var viewModel = new TipoInscricaocreateModel
+            {
+                TipoInscricao = tipoInscricaoModel,
+                Evento = new SelectList(eventos, "Id", "Nome")
+            };
+
+            return View(viewModel);
         }
 
 
         // POST: TipoInscricaoController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(TipoInscricaoModel tipoInscricaoModel)
+        public ActionResult Create(TipoInscricaocreateModel tipoInscricaoModel)
         {
-            if (ModelState.IsValid)
-            {
-                var tipoinscricao = _mapper.Map<Tipoinscricao>(tipoInscricaoModel);
-                _tipoInscricaoService.Create(tipoinscricao);
-            }
-
+            var tipoinscricao = _mapper.Map<Tipoinscricao>(tipoInscricaoModel.TipoInscricao);
+            _tipoInscricaoService.Create(tipoinscricao);
             return RedirectToAction(nameof(Index));
         }
         
@@ -67,13 +66,20 @@ namespace EventoWeb.Controllers
         public ActionResult Edit(int id)
         {
             var tipoinscricao = _tipoInscricaoService.Get(id);
-            
-            var tipoInscricaoModel = _mapper.Map<TipoInscricaoModel>(tipoinscricao);
-
+            /*var tipoInscricaoModel = _mapper.Map<TipoInscricaoModel>(tipoinscricao);
             var eventos = _eventoService.GetAll();
             ViewBag.IdEvento = new SelectList(eventos, "Id", "Nome", tipoinscricao.IdEvento);
-
             return View(tipoInscricaoModel);
+            */
+            var tipoInscricaoModel = _mapper.Map<TipoInscricaoModel>(tipoinscricao);
+            var eventos = _eventoService.GetAll().OrderBy(e => e.Nome);
+            var viewModel = new TipoInscricaocreateModel
+            {
+                TipoInscricao = tipoInscricaoModel,
+                Evento = new SelectList(eventos, "Id", "Nome", tipoinscricao.IdEvento)
+            };
+
+            return View(viewModel);
         }
 
         // POST: TipoInscricaoController/Edit/5
