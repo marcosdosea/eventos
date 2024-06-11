@@ -141,4 +141,4 @@ namespace EventoWeb.Controllers
             return RedirectToAction("CreateGestorEvento", new { id = idEvento });
         }
     }
-
+}
