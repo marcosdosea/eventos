@@ -66,18 +66,18 @@ namespace EventoWeb.Controllers
         public ActionResult Edit(int id)
         {
             var tipoinscricao = _tipoInscricaoService.Get(id);
-            /*var tipoInscricaoModel = _mapper.Map<TipoInscricaoModel>(tipoinscricao);
+            var tipoInscricaoModel = _mapper.Map<TipoInscricaoModel>(tipoinscricao);
             var eventos = _eventoService.GetAll();
             ViewBag.IdEvento = new SelectList(eventos, "Id", "Nome", tipoinscricao.IdEvento);
             return View(tipoInscricaoModel);
-            */
-            var tipoInscricaoModel = _mapper.Map<TipoInscricaoModel>(tipoinscricao);
+            
+            /*var tipoInscricaoModel = _mapper.Map<TipoInscricaoModel>(tipoinscricao);
             var eventos = _eventoService.GetAll().OrderBy(e => e.Nome);
             var viewModel = new TipoInscricaocreateModel
             {
                 TipoInscricao = tipoInscricaoModel,
                 Evento = new SelectList(eventos, "Id", "Nome", tipoinscricao.IdEvento)
-            };
+            };*/
 
             return View(viewModel);
         }
