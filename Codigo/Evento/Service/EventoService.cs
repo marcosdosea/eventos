@@ -8,9 +8,13 @@ namespace Service
     public class EventoService : IEventoService
     {
         private readonly EventoContext _context;
+        private readonly IPessoaService _pessoaService;
+        private readonly IInscricaoService _inscricaoService;
         
-        public EventoService(EventoContext context)
+        public EventoService(EventoContext context,IPessoaService pessoaService,IInscricaoService inscricaoService)
         {
+            _pessoaService = pessoaService;
+            _inscricaoService = inscricaoService;
             _context = context;
         }
 
@@ -68,7 +72,25 @@ namespace Service
         {
             return _context.Eventos.Find(id);
         }
+        public EventoSimpleDTO GetEventoSimpleDto(uint id)
+        {
+            var evento = Get(id);
+            if (evento != null)
+            {
+                var eventoSimpleDto = new EventoSimpleDTO
+                {
+                    Id = evento.Id,
+                    Nome = evento.Nome
+                };
 
+                return eventoSimpleDto;
+            }
+            else
+            {
+                return null;
+            }
+        }
+    
 
         /// <summary>
         /// Busca todos os eventos
@@ -96,5 +118,25 @@ namespace Service
                         };
             return query.AsNoTracking();
         }
+        
+
+        public void CreateGestorModel(Pessoa pessoa, uint idEvento)
+        {
+            uint idPessoa = _pessoaService.Create(pessoa);
+    
+            var novaInscricao = new Inscricaopessoaevento
+            {
+                IdPessoa = idPessoa,
+                IdEvento = idEvento,
+                IdPapel = 2,
+                IdTipoInscricao = 1, // Id do tipo de inscrição (ajuste conforme necessário)
+                DataInscricao = DateTime.Now, 
+                ValorTotal = 100, // Valor total da inscrição (ajuste conforme necessário)
+                Status = "A", //(ativa)
+                FrequenciaFinal = 0 
+            };
+            _inscricaoService.CreateInscricaoEvento(novaInscricao);
+        }
+
     }
 }

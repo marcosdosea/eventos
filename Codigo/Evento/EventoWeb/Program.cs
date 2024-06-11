@@ -27,17 +27,18 @@ namespace EventoWeb
             builder.Services.AddTransient<ISubeventoService, SubeventoService>();
             builder.Services.AddTransient<IEventoService, EventoService>();
             builder.Services.AddTransient<IModelocrachaService, ModelocrachaService>();
-			builder.Services.AddTransient<IEstadosbrasilService, EstadosbrasilService>();
-
-			// Configure localization
-			builder.Services.Configure<RequestLocalizationOptions>(options =>
+            builder.Services.AddTransient<IInscricaoService,InscricaoService>();
+			      builder.Services.AddTransient<IEstadosbrasilService, EstadosbrasilService>(); 
+          
+            
+			      builder.Services.Configure<RequestLocalizationOptions>(options =>
             {
                 var supportedCultures = new[] { new CultureInfo("pt-BR") };
                 options.DefaultRequestCulture = new RequestCulture("pt-BR");
                 options.SupportedCultures = supportedCultures;
                 options.SupportedUICultures = supportedCultures;
             });
-
+          
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
