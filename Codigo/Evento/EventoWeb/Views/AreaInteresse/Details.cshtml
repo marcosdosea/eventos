@@ -4,21 +4,35 @@
     ViewData["Title"] = "Details";
 }
 
-<h1>Details</h1>
+<head>
+    <link rel="stylesheet" type="text/css" href="~/css/style.css">
+</head>
+<div class="main fluid">
 
-<div>
-    <h4>AreaInteresse</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Nome)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Nome)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+    <div class="breadcrumb">
+        <a asp-controller="Home" asp-action="Index"><img src="/img/icon-wrapper.svg" /><p style="color:#0D6EFD;display:inline-block">Home</p></a>
+        <a asp-controller="Areainteresse" asp-action="Index" style="color:#0D6EFD;display:inline-block;text-decoration:none;"><p>/Área de interesse</p></a>
+        <p style="color:#6C757D;display:inline-block">/Detalhes de uma área de interesse</p>
+    </div>
+
+    <h1 class="blue-normal">Detalhes sobre área de interesse</h1>
+    <div>
+        <dl class="row">
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Nome)
+            </dt>
+            <p> </p>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.Nome)
+            </dd>
+        </dl>
+    </div>
+    <div>
+        <button type="button" class="btn-blue-normal btn btn-primary">
+        <a asp-action="Edit" asp-route-id="@Model?.Id" style="color:#ffffff">
+           Editar
+        </a>
+        </button>
+        <a asp-action="Index">Retornar</a>
+    </div>
 </div>

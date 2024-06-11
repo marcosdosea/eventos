@@ -1,4 +1,4 @@
-﻿/* Cores Base */
+/* Cores Base */
 .blue-light {
     color: #e9eafa;
 }
@@ -36,7 +36,7 @@
 }
 
 .blue-darker {
-    color: #0c1049 ;
+    color: #0c1049;
 }
 
 .yellow-light {
@@ -161,7 +161,6 @@
 }
 
 /*Branco*/
-
 .color-white {
     color: #ffffff;
 }
@@ -177,6 +176,11 @@ body {
 
 .btn-blue-normal {
     background-color: #232ed0;
+}
+
+.btn-blue-normal:hover{
+    background-color: #151c7d;
+    color: #FFFFFF;
 }
 
 .no-padding {
