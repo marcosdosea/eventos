@@ -33,4 +33,10 @@
 
         public DateTime DataFim { get; set; }
     }
+    public class EventoSimpleDTO
+    {
+        public uint Id { get; set; }
+
+        public string Nome { get; set; } = null!;
+    }
 }

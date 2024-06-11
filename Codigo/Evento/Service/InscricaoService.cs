@@ -28,23 +28,15 @@ namespace Service
                 _context.SaveChanges();
             }
         }
-
         
-
-        public IEnumerable<Inscricaopessoaevento> GetAllInscricaoEvento()
-        {
-            return _context.Inscricaopessoaeventos.AsNoTracking();
-        }
-
-        public IEnumerable<Pessoa> GetPessoasByPapel(int idPapel)
+        public IEnumerable<Inscricaopessoaevento> GetInscricaoPessoaEvento(uint id)
         {
             return _context.Inscricaopessoaeventos
-                .Where(inscricao => inscricao.IdPapel == idPapel)
-                .Join(_context.Pessoas,
-                    inscricao => inscricao.IdPessoa,
-                    pessoa => pessoa.Id,
-                    (inscricao, pessoa) => pessoa)
+                .Include(i => i.IdPessoaNavigation)
+                .Where(i => i.IdEvento == id)
+                .AsNoTracking()
                 .ToList();
         }
+        
     }
 }

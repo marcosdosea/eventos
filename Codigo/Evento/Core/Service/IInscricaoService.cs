@@ -8,10 +8,9 @@ namespace Core.Service
                 void CreateInscricaoEvento(Inscricaopessoaevento inscricaopessoaevento); 
                 
                 void DeletePessoaPapel(uint idPessoa, uint idEvento);
+
+                IEnumerable<Inscricaopessoaevento> GetInscricaoPessoaEvento(uint id);
                 
-                IEnumerable<Inscricaopessoaevento> GetAllInscricaoEvento();
-                
-                IEnumerable<Pessoa> GetPessoasByPapel(int idPapel);
         }
 }
 

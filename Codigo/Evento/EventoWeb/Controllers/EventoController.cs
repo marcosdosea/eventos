@@ -101,13 +101,12 @@ namespace EventoWeb.Controllers
 
         
         // GET: EventoController/CreateGestorEvento
-        public ActionResult CreateGestorEvento()
+        public ActionResult CreateGestorEvento(uint id)
         {
             var gestorModel = new GestorEventoModel
             {
-                Eventos = _eventoService.GetAll(),
-                Inscricoes = _inscricaoService.GetAllInscricaoEvento(),
-                Gestores = _inscricaoService.GetPessoasByPapel(2) 
+                Evento = _eventoService.GetEventoSimpleDto(id),
+                Inscricoes = _inscricaoService.GetInscricaoPessoaEvento(id)
             };
             return View(gestorModel);
         }
@@ -115,18 +114,21 @@ namespace EventoWeb.Controllers
         // POST: EventoController/CreateGestorEvento
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult CreateGestorEvento(GestorEventoModel gestorEventoModel)
+        public ActionResult CreateGestorEvento( GestorEventoModel gestorEventoModel)
         {
             var pessoa = gestorEventoModel.Pessoa;
+            var idEvento = gestorEventoModel.Evento.Id;
             pessoa.NomeCracha = pessoa.Nome;
-            _eventoService.CreateGestorModel(pessoa, gestorEventoModel.IdEvento);
-            return View(gestorEventoModel);
+            _eventoService.CreateGestorModel(pessoa, idEvento);
+            return RedirectToAction("CreateGestorEvento", new { id = idEvento });
+
         } 
         // POST: EventoController/DeletePessoaPapel
         public IActionResult DeletePessoaPapel(uint idPessoa, uint idEvento)
         {
-            _inscricaoService.DeletePessoaPapel(idPessoa,idEvento);
-            return RedirectToAction();
+            _inscricaoService.DeletePessoaPapel(idPessoa, idEvento);
+
+            return RedirectToAction("CreateGestorEvento", new { id = idEvento });
         }
     }
 }

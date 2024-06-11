@@ -72,7 +72,25 @@ namespace Service
         {
             return _context.Eventos.Find(id);
         }
+        public EventoSimpleDTO GetEventoSimpleDto(uint id)
+        {
+            var evento = Get(id);
+            if (evento != null)
+            {
+                var eventoSimpleDto = new EventoSimpleDTO
+                {
+                    Id = evento.Id,
+                    Nome = evento.Nome
+                };
 
+                return eventoSimpleDto;
+            }
+            else
+            {
+                return null;
+            }
+        }
+    
 
         /// <summary>
         /// Busca todos os eventos
@@ -102,14 +120,14 @@ namespace Service
         }
         
 
-        public void CreateGestorModel(Pessoa pessoa, uint IdEvento)
+        public void CreateGestorModel(Pessoa pessoa, uint idEvento)
         {
             uint idPessoa = _pessoaService.Create(pessoa);
     
             var novaInscricao = new Inscricaopessoaevento
             {
                 IdPessoa = idPessoa,
-                IdEvento = IdEvento,
+                IdEvento = idEvento,
                 IdPapel = 2,
                 IdTipoInscricao = 1, // Id do tipo de inscrição (ajuste conforme necessário)
                 DataInscricao = DateTime.Now, 

@@ -7,18 +7,33 @@ ViewData["Title"] = "Associar Gestor ao Evento";
 }
 
 <h1>Cadastrar Gestores do Evento</h1>
+<script>
+    function validarFormulario() {
+        var eventoSelecionado = document.getElementById("IdEvento").value;
+        if (eventoSelecionado == 0) {
+            alert("Por favor, selecione um evento.");
+            return false; // Impede o envio do formulário
+        }
+        return true; // Permite o envio do formulário
+    }
+</script>
 
 <div class="row">
     <div class="col-md-6">
-        <form asp-action="CreateGestorEvento" method="post">
+        <form asp-action="CreateGestorEvento" method="post" onsubmit="return validarFormulario()">
             <div class="form-group">
                 <label for="IdEvento" class="control-label">Evento</label>
-                <select id="IdEvento" name="IdEvento" class="form-control">
-                    @foreach (var evento in Model.Eventos)
+                <select id="IdEvento" name="IdEvento" class="form-control" readonly>
+                    @if(Model.Evento == null || Model.Evento.Id == 0)
                     {
-                    <option value="@evento.Id">@evento.Nome</option>
+                        <option value="0">Não Informado</option>
+                    }
+                    else
+                    {
+                        <option value="@Model.Evento.Id" selected>@Model.Evento.Nome</option>
                     }
                 </select>
+                @Html.HiddenFor(model => model.Evento.Id)
             </div>
             <div class="form-group">
                 <label asp-for="Pessoa.Cpf" class="control-label">CPF</label>
@@ -46,23 +61,23 @@ ViewData["Title"] = "Associar Gestor ao Evento";
         </form>
     </div>
 </div>
-
 <div class="row">
     <div class="col-md-12">
         <h2>Lista de Gestores de Evento</h2>
         <table class="table">
             <thead>
             <tr>
+                <th>CPF</th>
                 <th>Nome</th>
-                <th>Evento</th>
+                <th>Ações</th>
             </tr>
             </thead>
             <tbody>
                 @foreach (var inscricaopessoaevento in Model.Inscricoes)
                 {
                     <tr>
-                        <td>@inscricaopessoaevento.IdPessoa</td>
-                        <td>@inscricaopessoaevento.IdEvento</td>
+                        <td>@inscricaopessoaevento.IdPessoaNavigation.Cpf</td>
+                        <td>@inscricaopessoaevento.IdPessoaNavigation.Nome</td>
                         <td>
                             
                             @using (Html.BeginForm("DeletePessoaPapel", "Evento", new { IdPessoa = inscricaopessoaevento.IdPessoa, IdEvento = inscricaopessoaevento.IdEvento }, FormMethod.Post))
