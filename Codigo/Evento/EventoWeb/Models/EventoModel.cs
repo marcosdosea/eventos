@@ -55,9 +55,9 @@ namespace EventoWeb.Models
         [Display(Name = "Evento Publico")]
         public sbyte EventoPublico { get; set; }
 
-        [Display(Name = "CEP", Prompt = "00000-000")]
-        [RegularExpression(@"^\d{5}-\d{3}$", ErrorMessage = "O CEP deve estar no formato 00000-000.")]
-        [StringLength(9, MinimumLength = 9, ErrorMessage = "O campo CEP deve ter 8 caracteres")]
+        [Display(Name = "CEP", Prompt = "Apenas números")]
+        [RegularExpression(@"^\d{8}$", ErrorMessage = "O CEP deve estar no formato 00000000.")]
+        [StringLength(8, MinimumLength = 8, ErrorMessage = "O campo CEP deve ter 8 caracteres")]
         public string Cep { get; set; } = null!;
 
         [Display(Name = "Estado")]

@@ -1,7 +1,5 @@
-﻿using System.Drawing.Printing;
-using AutoMapper;
+﻿using AutoMapper;
 using Core;
-using Core.DTO;
 using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -57,17 +55,12 @@ namespace EventoWeb.Controllers
 		// POST: EventoController/Create
 		[HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(EventoModel eventoModel)
+        public ActionResult Create(EventocreateModel eventoModel)
         {
-            if (ModelState.IsValid)
-            {
-                var evento = _mapper.Map<Evento>(eventoModel);
-                _eventoService.Create(evento);
-                return RedirectToAction(nameof(Index));
-            }
-
-            return View(eventoModel);
-        }
+			var evento = _mapper.Map<Evento>(eventoModel.Evento);
+			_eventoService.Create(evento);
+			return RedirectToAction(nameof(Index));
+		}
 
         // GET: EventoController/Edit/5
         public ActionResult Edit(uint id)
