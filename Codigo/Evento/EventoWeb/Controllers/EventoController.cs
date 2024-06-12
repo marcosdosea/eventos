@@ -11,15 +11,16 @@ namespace EventoWeb.Controllers
     {
         private readonly IEstadosbrasilService _estadosbrasilService;
         private readonly IEventoService _eventoService;
+        private readonly IInscricaoService _inscricaoService;
         private readonly IMapper _mapper;
 
-        public EventoController(IEventoService eventoService, IMapper mapper, IEstadosbrasilService estadosbrasilService)
+        public EventoController(IEventoService eventoService, IMapper mapper, IEstadosbrasilService estadosbrasilService,IInscricaoService inscricaoService)
         {
             _estadosbrasilService = estadosbrasilService;
             _eventoService = eventoService;
+            _inscricaoService = inscricaoService;
             _mapper = mapper;
         }
-
 
         // GET: EventoController
         public ActionResult Index()
@@ -54,20 +55,19 @@ namespace EventoWeb.Controllers
 		// POST: EventoController/Create
 		[HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(EventoModel eventoModel)
+        public ActionResult Create(EventocreateModel eventoModel)
         {
-            if (ModelState.IsValid)
-            {
-                var evento = _mapper.Map<Evento>(eventoModel);
-                _eventoService.Create(evento);
-            }
-            return RedirectToAction(nameof(Index));
-        }
+			var evento = _mapper.Map<Evento>(eventoModel.Evento);
+			_eventoService.Create(evento);
+			return RedirectToAction(nameof(Index));
+		}
 
         // GET: EventoController/Edit/5
         public ActionResult Edit(uint id)
         {
-            return Details(id);
+            var evento = _eventoService.Get(id);
+            var eventoModel = _mapper.Map<EventoModel>(evento);
+            return View(eventoModel);
         }
         
         // POST: EventoController/Edit/5
@@ -75,11 +75,14 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Edit(uint id, EventoModel eventoModel)
         {
-            if (ModelState.IsValid){
+            if (ModelState.IsValid)
+            {
                 var evento = _mapper.Map<Evento>(eventoModel);
                 _eventoService.Edit(evento);
+                return RedirectToAction(nameof(Index));
             }
-            return RedirectToAction(nameof(Index));
+
+            return View(eventoModel);
         }
 
         // GET: EventoController/Delete/5
@@ -97,6 +100,38 @@ namespace EventoWeb.Controllers
         {
             _eventoService.Delete(id);
             return RedirectToAction(nameof(Index));
+        }
+
+        
+        // GET: EventoController/CreateGestorEvento
+        public ActionResult CreateGestorEvento(uint id)
+        {
+            var gestorModel = new GestorEventoModel
+            {
+                Evento = _eventoService.GetEventoSimpleDto(id),
+                Inscricoes = _inscricaoService.GetInscricaoPessoaEvento(id)
+            };
+            return View(gestorModel);
+        }
+
+        // POST: EventoController/CreateGestorEvento
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult CreateGestorEvento( GestorEventoModel gestorEventoModel)
+        {
+            var pessoa = gestorEventoModel.Pessoa;
+            var idEvento = gestorEventoModel.Evento.Id;
+            pessoa.NomeCracha = pessoa.Nome;
+            _eventoService.CreateGestorModel(pessoa, idEvento);
+            return RedirectToAction("CreateGestorEvento", new { id = idEvento });
+
+        } 
+        // POST: EventoController/DeletePessoaPapel
+        public IActionResult DeletePessoaPapel(uint idPessoa, uint idEvento)
+        {
+            _inscricaoService.DeletePessoaPapel(idPessoa, idEvento);
+
+            return RedirectToAction("CreateGestorEvento", new { id = idEvento });
         }
     }
 }

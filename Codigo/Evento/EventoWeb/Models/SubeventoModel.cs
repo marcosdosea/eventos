@@ -4,60 +4,86 @@ namespace EventoWeb.Models
 {
     public class SubeventoModel
     {
-            [Key]
-            public uint Id { get; set; }
-            public uint IdEvento { get; set; }
+        [Display(Name = "Código")]
+        [Required(ErrorMessage = "Código do Sub-Evento é obrigatório")]
+        [Key]
+        public uint Id { get; set; }
 
+        [Display(Name = "Código")]
+        [Required(ErrorMessage = "Código do Evento é obrigatório")]
+        [Key]
+        public uint IdEvento { get; set; }
 
-            [Required(ErrorMessage = "Campo requerido")]
+        [Display(Name = "Nome")]
+        [Required(ErrorMessage = "Nome do Evento é obrigatório")]
+        public string Nome { get; set; } = null!;
 
-            [Display(Name = "Nome do subevento *")]
+        [Display(Name = "Descrição")]
+        [Required(ErrorMessage = "Fale um pouco a respeito desse Evento")]
+        public string Descricao { get; set; } = null!;
 
-            public string Nome { get; set; } = null!;
+        [Display(Name = "Data Inicial do Evento")]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
+        public DateTime DataInicio { get; set; }
 
+        [Display(Name = "Data Final do Evento")]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
+        public DateTime DataFim { get; set; }
 
-            [Required(ErrorMessage = "Campo requerido")]
+        [Display(Name = "Incrição gratuita")]
+        public sbyte InscricaoGratuita { get; set; }
 
-            [Display(Name = "Descrição do subevento *")]
+        /// <summary>
 
-            public string Descricao { get; set; } = null!;
+        /// C- CADASTRO
 
-            public DateTime DataInicio { get; set; }
+        /// A- ABERTO
 
-            public DateTime DataFim { get; set; }
+        /// F- FINALIZADO
 
-            public sbyte InscricaoGratuita { get; set; }
+        ///  
 
+        /// </summary>
 
-            /// <summary>
+        [Display(Name = "Status")]
+        [Required(ErrorMessage = "Status do Evento é obrigatório")]
+        public string Status { get; set; } = null!;
 
-            /// C- CADASTRO
+        [Display(Name = "Data de Inicio de Inscrição")]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
+        public DateTime DataInicioInscricao { get; set; }
 
-            /// A- ABERTO
+        [Display(Name = "Data Final de Inscrição")]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
+        public DateTime DataFimInscricao { get; set; }
 
-            /// F- FINALIZADO
+        [Display(Name = "Valor da Inscrição", Prompt = "R$ 00.00")]
+        [Range(0.01, double.MaxValue, ErrorMessage = "O valor da inscrição deve ser maior que zero.")]
+        [RegularExpression(@"^\d+(\.\d{1,2})?$", ErrorMessage = "Por favor, insira no máximo duas casas decimais e use '.' como separador decimal.")]
+        public decimal ValorInscricao { get; set; }
 
-            ///  
+        [Display(Name = "Há Certificação?")]
+        public sbyte PossuiCertificado { get; set; }
 
-            /// </summary>
+        [Display(Name = "Frequência Minima para Receber a Certificação")]
+        public decimal FrequenciaMinimaCertificado { get; set; }
 
-            [Required(ErrorMessage = "Campo requerido")]
+        [Display(Name = "Vagas Ofertadas")]
+        [Required(ErrorMessage = "Informe a quantidade de Vagas Ofertadas pra esse evento")]
+        public int VagasOfertadas { get; set; }
 
-            [Display(Name = "Status do subevento *")]
+        [Display(Name = "Vagas Reservadas")]
+        [Required(ErrorMessage = "Quantas vagas foram reservadas?")]
+        public int VagasReservadas { get; set; }
 
-            public string Status { get; set; } = null!;
+        [Display(Name = "Vagas Disponíveis")]
+        [Required(ErrorMessage = "Quantas vagas estão disponíveis?")]
+        public int VagasDisponiveis { get; set; }
 
-
-            public DateTime DataInicioInscricao { get; set; }
-            public DateTime DataFimInscricao { get; set; }
-            public decimal ValorInscricao { get; set; }
-            public sbyte PossuiCertificado { get; set; }
-            public decimal FrequenciaMinimaCertificado { get; set; }
-            public int VagasOfertadas { get; set; }
-            public int VagasReservadas { get; set; }
-            public int VagasDisponiveis { get; set; }
-            public int CargaHoraria { get; set; }
-            public int IdTipoEvento { get; set; }
+        [Display(Name = "Carga Horária")]
+        [Required(ErrorMessage = "Informe a Carga Horária do Evento")]
+        public int CargaHoraria { get; set; }
+        public int IdTipoEvento { get; set; }
     }
 
 }

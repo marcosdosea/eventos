@@ -8,9 +8,13 @@ namespace Service
     public class EventoService : IEventoService
     {
         private readonly EventoContext _context;
+        private readonly IPessoaService _pessoaService;
+        private readonly IInscricaoService _inscricaoService;
         
-        public EventoService(EventoContext context)
+        public EventoService(EventoContext context,IPessoaService pessoaService,IInscricaoService inscricaoService)
         {
+            _pessoaService = pessoaService;
+            _inscricaoService = inscricaoService;
             _context = context;
         }
 
@@ -68,7 +72,25 @@ namespace Service
         {
             return _context.Eventos.Find(id);
         }
+        public EventoSimpleDTO GetEventoSimpleDto(uint id)
+        {
+            var evento = Get(id);
+            if (evento != null)
+            {
+                var eventoSimpleDto = new EventoSimpleDTO
+                {
+                    Id = evento.Id,
+                    Nome = evento.Nome
+                };
 
+                return eventoSimpleDto;
+            }
+            else
+            {
+                return null;
+            }
+        }
+    
 
         /// <summary>
         /// Busca todos os eventos
@@ -96,5 +118,34 @@ namespace Service
                         };
             return query.AsNoTracking();
         }
+        
+
+        public void CreateGestorModel(Pessoa pessoa, uint idEvento)
+        {   
+            var existingPessoa = _pessoaService.GetByCpf(pessoa.Cpf);
+
+            uint idPessoa;
+    
+            if(existingPessoa != null)
+            {
+                idPessoa = existingPessoa.Id;
+            }
+            else
+            {
+                idPessoa = _pessoaService.Create(pessoa);
+            }
+    
+            var novaInscricao = new Inscricaopessoaevento
+            {
+                IdPessoa = idPessoa,
+                IdEvento = idEvento,
+                IdPapel = 2,
+                DataInscricao = DateTime.Now, 
+                Status = "S", //(Solicitada)
+            };
+            _inscricaoService.CreateInscricaoEvento(novaInscricao);
+            
+        }
+
     }
 }

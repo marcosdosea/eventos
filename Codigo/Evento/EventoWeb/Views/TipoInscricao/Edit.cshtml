@@ -1,7 +1,7 @@
 @model TipoInscricaoModel
 
 @{
-ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edit";
 }
 <head>
     <link rel="stylesheet" type="text/css" href="~/css/style.css">
@@ -10,85 +10,98 @@ ViewData["Title"] = "Edit";
 
 <div class="container-fluid no-padding">
     <div class="row">
-        <div class="col-2"> </div>
-        <div class="col-10 padding-lateral-50">
-            <div class="breadcrumb">
-                <a asp-controller="Home" asp-action="Index" style="text-decoration:none; padding-right:6px">
-                    <img class="mb-1" style="display:inline-block" src="/img/icon-wrapper.svg" />
-                    <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Home</p>
-                </a>
-                <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
-                <a asp-controller="TipoInscricao" asp-action="Index" style="text-decoration:none; padding-right:6px">
-                    <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Tipo de Inscrição</p>
-                </a>
-                <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
-                <p style="color:#6C757D;display:inline-block">Editar Tipo de Inscrição</p>
-            </div>
+        <div class="breadcrumb">
+            <a asp-controller="Home" asp-action="Index" style="text-decoration:none; padding-right:6px">
+                <img class="mb-1" style="display:inline-block" src="/img/icon-wrapper.svg" />
+                <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Home</p>
+            </a>
+            <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
+            <a asp-controller="TipoInscricao" asp-action="Index" style="text-decoration:none; padding-right:6px">
+                <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Tipo de Inscrição</p>
+            </a>
+            <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
+            <p style="color:#6C757D;display:inline-block">Editar Tipo de Inscrição</p>
+        </div>
 
 
-            <h1 class="blue-normal">Editar Tipo de Inscrição</h1>
-            <div class="row">
-                <div class="col-md-4">
-                    <form asp-action="Edit" method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-                        <input type="hidden" asp-for="Id" />
-                        <div class="form-group mb-2">
-                            <label asp-for="IdEvento" class="control-label"></label>
-                            <select asp-for="IdEvento" class="form-control" asp-items="ViewBag.IdEvento"></select>
-                            <span asp-validation-for="IdEvento" class="text-danger"></span>
-                        </div>
-                        <div class="form-group mb-2">
-                            <label asp-for="Descricao" class="control-label"></label>
-                            <input asp-for="Descricao" class="form-control" />
-                            <span asp-validation-for="Descricao" class="text-danger"></span>
-                        </div>
-                        <div class="form-group mb-2">
-                            <label asp-for="Valor" class="control-label"></label>
-                            <input type="number" asp-for="Valor" class="form-control" />
-                            <span asp-validation-for="Valor" class="text-danger"></span>
-                        </div>
+        <h1 class="blue-normal">Editar Tipo de Inscrição</h1>
+        <div class="row">
+            <div class="col-md-4">
+                <form asp-action="Edit" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <input type="hidden" asp-for="Id" />
+                    <div class="form-group mb-2">
+                        <label asp-for="IdEvento" class="control-label"></label>
+                        <select asp-for="IdEvento" class="form-control" asp-items="ViewBag.IdEvento"></select>
+                        <span asp-validation-for="IdEvento" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-2">
+                        <label asp-for="Descricao" class="control-label"></label>
+                        <input asp-for="Descricao" class="form-control" />
+                        <span asp-validation-for="Descricao" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-2">
+                        <label asp-for="Valor" class="control-label"></label>
+                        <input type="number" asp-for="Valor" class="form-control" />
+                        <span asp-validation-for="Valor" class="text-danger"></span>
+                    </div>
 
-                        <div class="form-group mb-2">
-                            <label asp-for="DataInicio" class="control-label"></label>
-                            <input asp-for="DataInicio" class="form-control" type="date" />
-                            <span asp-validation-for="DataInicio" class="text-danger"></span>
+                    <div class="form-group mb-2">
+                        <label asp-for="DataInicio" class="control-label"></label>
+                        <input asp-for="DataInicio" class="form-control" type="date" />
+                        <span asp-validation-for="DataInicio" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-2">
+                        <label asp-for="Datafim" class="control-label"></label>
+                        <input asp-for="Datafim" class="form-control" type="date" />
+                        <span asp-validation-for="Datafim" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-2">
+                        <label asp-for="UsadaEvento" class="control-label">Usada no Evento</label>
+                        <div class="d-flex align-items-center">
+                            <div class="form-check me-2">
+                                <input asp-for="UsadaEvento" class="form-check-input" type="radio" value="1" id="UsadaEventoSim">
+                                <label class="form-check-label" for="UsadaEventoSim">Sim</label>
+                            </div>
+                            <div class="form-check">
+                                <input asp-for="UsadaEvento" class="form-check-input" type="radio" value="0" id="UsadaEventoNao">
+                                <label class="form-check-label" for="UsadaEventoNao">Não</label>
+                            </div>
                         </div>
-                        <div class="form-group mb-2">
-                            <label asp-for="Datafim" class="control-label"></label>
-                            <input asp-for="Datafim" class="form-control" type="date" />
-                            <span asp-validation-for="Datafim" class="text-danger"></span>
-                        </div>
-                        <div class="form-group mb-2">
-                            <label asp-for="UsadaEvento" class="control-label"></label>
-                            <select id="UsadaEvento" class="form-select" aria-label="Selecione se o Tipo de Inscrição foi usado no Evento">
-                                <option value="1">Sim</option>
-                                <option value="0">Não</option>
-                            </select>
-                            <span asp-validation-for="UsadaEvento" class="text-danger"></span>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label asp-for="UsadaSubevento" class="control-label"></label>
-                            <select id="UsadaSubevento" class="form-select" aria-label="Selecione se o Tipo de Inscrição foi usado no Subevento">
-                                <option value="1">Sim</option>
-                                <option value="0">Não</option>
-                            </select>
-                            <span asp-validation-for="UsadaSubevento" class="text-danger"></span>
-                        </div>
-                        <div class="form-group mb-3">
-                            <input type="submit" value="Confirmar Edição" class="btn btn-mg btn-blue-normal text-white btn-primary" />
-                            <button class="btn btn-mg btn-outline-danger">
-                                <a asp-action="Index" class=" btn-outline-danger" style="text-decoration:none;">
-                                    Cancelar
-                                </a>
-                            </button>
-                        </div>
+                        <span asp-validation-for="UsadaEvento" class="text-danger"></span>
+                    </div>
 
-                    </form>
-                </div>
+                    <div class="form-group mb-3">
+                        <label asp-for="UsadaSubevento" class="control-label">Usada no Subevento</label>
+                        <div class="d-flex align-items-center">
+                            <div class="form-check me-2">
+                                <input asp-for="UsadaSubevento" class="form-check-input" type="radio" value="1" id="UsadaSubeventoSim">
+                                <label class="form-check-label" for="UsadaSubeventoSim">Sim</label>
+                            </div>
+                            <div class="form-check">
+                                <input asp-for="UsadaSubevento" class="form-check-input" type="radio" value="0" id="UsadaSubeventoNao">
+                                <label class="form-check-label" for="UsadaSubeventoNao">Não</label>
+                            </div>
+                        </div>
+                        <span asp-validation-for="UsadaSubevento" class="text-danger"></span>
+                    </div>
+                    <div class="form-group mb-3">
+                        <button class="btn btn-mg btn-outline-danger me-5">
+                            <a asp-action="Index" class=" btn-outline-danger" style="text-decoration:none;">
+                                Cancelar
+                            </a>
+                        </button>
+                        <input type="submit" value="Confirmar Edição" class="btn btn-mg btn-blue-normal text-white btn-primary" />
+
+                    </div>
+
+                </form>
             </div>
         </div>
     </div>
 </div>
 @section Scripts {
-@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

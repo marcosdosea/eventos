@@ -10,85 +10,84 @@
 
 <div class="container-fluid no-padding">
     <div class="row">
-        <div class="col-2"> </div>
-        <div class="col-10 padding-lateral-50">
-            <div class="breadcrumb">
-                <a asp-controller="Home" asp-action="Index" style="text-decoration:none; padding-right:6px">
-                    <img class="mb-1" style="display:inline-block" src="/img/icon-wrapper.svg" />
-                    <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Home</p>
-                </a>
-                <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
-                <a asp-controller="TipoInscricao" asp-action="Index" style="text-decoration:none; padding-right:6px">
-                    <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Tipo de Inscrição</p>
-                </a>
-                <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
-                <p style="color:#6C757D;display:inline-block">Detalhes Tipo de Inscrição</p>
-            </div>
+        <div class="breadcrumb">
+            <a asp-controller="Home" asp-action="Index" style="text-decoration:none; padding-right:6px">
+                <img class="mb-1" style="display:inline-block" src="/img/icon-wrapper.svg" />
+                <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Home</p>
+            </a>
+            <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
+            <a asp-controller="TipoInscricao" asp-action="Index" style="text-decoration:none; padding-right:6px">
+                <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Tipo de Inscrição</p>
+            </a>
+            <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
+            <p style="color:#6C757D;display:inline-block">Detalhes Tipo de Inscrição</p>
+        </div>
 
-            <h1 class="blue-normal">Detalhes Tipo de Inscrição</h1>
-            <div>
-                <dl class="row">
-                    <dt class="col-sm-2">
-                        @Html.DisplayNameFor(model => model.Id)
-                    </dt>
-                    <dd class="col-sm-10">
-                        @Html.DisplayFor(model => model.Id)
-                    </dd>
-                    <dt class="col-sm-2">
-                        @Html.DisplayNameFor(model => model.IdEvento)
-                    </dt>
-                    <dd class="col-sm-10">
-                        @Html.DisplayFor(model => model.IdEvento)
-                    </dd>
-                    <dt class="col-sm-2">
-                        @Html.DisplayNameFor(model => model.Descricao)
-                    </dt>
-                    <dd class="col-sm-10">
-                        @Html.DisplayFor(model => model.Descricao)
-                    </dd>
-                    <dt class="col-sm-2">
-                        @Html.DisplayNameFor(model => model.Valor)
-                    </dt>
-                    <dd class="col-sm-10">
-                        @Html.DisplayFor(model => model.Valor)
-                    </dd>
-                    <dt class="col-sm-2">
-                        @Html.DisplayNameFor(model => model.DataInicio)
-                    </dt>
-                    <dd class="col-sm-10">
-                        @Html.DisplayFor(model => model.DataInicio)
-                    </dd>
-                    <dt class="col-sm-2">
-                        @Html.DisplayNameFor(model => model.Datafim)
-                    </dt>
-                    <dd class="col-sm-10">
-                        @Html.DisplayFor(model => model.Datafim)
-                    </dd>
-                    <dt class="col-sm-2">
-                        @Html.DisplayNameFor(model => model.UsadaEvento)
-                    </dt>
-                    <dd class="col-sm-10">
-                        @Html.DisplayFor(model => model.UsadaEvento)
-                    </dd>
-                    <dt class="col-sm-2">
-                        @Html.DisplayNameFor(model => model.UsadaSubevento)
-                    </dt>
-                    <dd class="col-sm-10">
-                        @Html.DisplayFor(model => model.UsadaSubevento)
-                    </dd>
-                </dl>
-            </div>
-            <div>
-                <button type="button" class="btn btn-mg btn-blue-normal text-white ">
-                    <a asp-action="Edit" asp-route-id="@Model?.Id" class="text-white" style="text-decoration:none;">
-                        Editar Tipo de Inscrição
-                    </a>
-                </button> <button class="btn btn-mg btn-outline-danger">
-                    <a asp-action="Index" class=" btn-outline-danger" style="text-decoration:none;">
-                        Cancelar
-                    </a>
-                </button>
-            </div>
+        <h1 class="blue-normal">Detalhes Tipo de Inscrição</h1>
+        <div>
+            <dl class="row">
+                <dt class="col-sm-2">
+                    @Html.DisplayNameFor(model => model.Id)
+                </dt>
+                <dd class="col-sm-10">
+                    @Html.DisplayFor(model => model.Id)
+                </dd>
+                <dt class="col-sm-2">
+                    @Html.DisplayNameFor(model => model.IdEvento)
+                </dt>
+                <dd class="col-sm-10">
+                    @Html.DisplayFor(model => model.IdEvento)
+                </dd>
+                <dt class="col-sm-2">
+                    @Html.DisplayNameFor(model => model.Descricao)
+                </dt>
+                <dd class="col-sm-10">
+                    @Html.DisplayFor(model => model.Descricao)
+                </dd>
+                <dt class="col-sm-2">
+                    @Html.DisplayNameFor(model => model.Valor)
+                </dt>
+                <dd class="col-sm-10">
+                    @Html.DisplayFor(model => model.Valor)
+                </dd>
+                <dt class="col-sm-2">
+                    @Html.DisplayNameFor(model => model.DataInicio)
+                </dt>
+                <dd class="col-sm-10">
+                    @Html.DisplayFor(model => model.DataInicio)
+                </dd>
+                <dt class="col-sm-2">
+                    @Html.DisplayNameFor(model => model.Datafim)
+                </dt>
+                <dd class="col-sm-10">
+                    @Html.DisplayFor(model => model.Datafim)
+                </dd>
+                <dt class="col-sm-2">
+                    @Html.DisplayNameFor(model => model.UsadaEvento)
+                </dt>
+                <dd class="col-sm-10">
+                    @Html.DisplayFor(model => model.UsadaEvento)
+                </dd>
+                <dt class="col-sm-2">
+                    @Html.DisplayNameFor(model => model.UsadaSubevento)
+                </dt>
+                <dd class="col-sm-10">
+                    @Html.DisplayFor(model => model.UsadaSubevento)
+                </dd>
+            </dl>
+        </div>
+        <div>
+            <button class="btn btn-mg btn-outline-danger  me-5">
+                <a asp-action="Index" class=" btn-outline-danger" style="text-decoration:none;">
+                    Cancelar
+                </a>
+            </button>
+            <button type="button" class="btn btn-mg btn-blue-normal text-white ">
+                <a asp-action="Edit" asp-route-id="@Model?.Id" class="text-white" style="text-decoration:none;">
+                    Editar Tipo de Inscrição
+                </a>
+            </button>
+
         </div>
     </div>
 </div>

@@ -1,10 +1,10 @@
 ﻿@model IEnumerable<EventoWeb.Models.EventoModel>
 
 @{
-	ViewData["Title"] = "Index";
+    ViewData["Title"] = "Index";
 }
 
-<div">
+<div>
 	<h1 class="blue-normal">Seja Bem-vindo</h1>
 	<h3>Confira os eventos do sistema!</h3>
 	<table class="table table-striped">
@@ -71,7 +71,8 @@
 						@Html.ActionLink("Editar", "Edit", new { id = item.Id }) |
 						@Html.ActionLink("Detalhes", "Details", new { id = item.Id }) |
 						<a href="#!" data-toggle="modal" data-target="#deleteModal-@item.Id">Delete</a>
-			@await Html.PartialAsync("_DeleteModal", item)
+			@await Html.PartialAsync("_DeleteModal", item) |
+             @Html.ActionLink("Gestores", "CreateGestorEvento", new { id = item.Id })
 					</td>
 				</tr>
 }
