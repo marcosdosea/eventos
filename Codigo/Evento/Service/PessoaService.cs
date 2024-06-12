@@ -72,17 +72,15 @@ public class PessoaService : IPessoaService
     /// </summary>
     /// <param name="cpf">dados de pessoa</param>
     /// <returns></returns>
-    public IEnumerable<PessoaDTO> GetByCpf(string cpf)
+    public Pessoa GetByCpf(string cpf)
     {
         var query = from pessoa in _context.Pessoas
-            where pessoa.Cpf.StartsWith(cpf)
-            select new Core.DTO.PessoaDTO()
-            {
-                Id = pessoa.Id,
-                Nome = pessoa.Nome
-            };
-        return query;
+            where pessoa.Cpf == cpf
+            select pessoa;
+
+        return query.SingleOrDefault(); // Returns a single matching Pessoa or null if none found
     }
+
 }
 
 
