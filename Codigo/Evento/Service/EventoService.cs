@@ -121,21 +121,30 @@ namespace Service
         
 
         public void CreateGestorModel(Pessoa pessoa, uint idEvento)
-        {
-            uint idPessoa = _pessoaService.Create(pessoa);
+        {   
+            var existingPessoa = _pessoaService.GetByCpf(pessoa.Cpf);
+
+            uint idPessoa;
+    
+            if(existingPessoa != null)
+            {
+                idPessoa = existingPessoa.Id;
+            }
+            else
+            {
+                idPessoa = _pessoaService.Create(pessoa);
+            }
     
             var novaInscricao = new Inscricaopessoaevento
             {
                 IdPessoa = idPessoa,
                 IdEvento = idEvento,
                 IdPapel = 2,
-                IdTipoInscricao = 1, // Id do tipo de inscrição (ajuste conforme necessário)
                 DataInscricao = DateTime.Now, 
-                ValorTotal = 100, // Valor total da inscrição (ajuste conforme necessário)
-                Status = "A", //(ativa)
-                FrequenciaFinal = 0 
+                Status = "S", //(Solicitada)
             };
             _inscricaoService.CreateInscricaoEvento(novaInscricao);
+            
         }
 
     }

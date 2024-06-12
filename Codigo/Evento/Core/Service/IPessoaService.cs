@@ -11,5 +11,5 @@ public interface IPessoaService
     Pessoa Get(uint id);
     IEnumerable<Pessoa> GetAll();
     
-    IEnumerable<PessoaDTO> GetByCpf(string nome);
+    Pessoa GetByCpf(string nome);
 }
