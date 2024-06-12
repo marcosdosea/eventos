@@ -77,9 +77,9 @@ namespace EventoWeb.Controllers
             {
                 TipoInscricao = tipoInscricaoModel,
                 Evento = new SelectList(eventos, "Id", "Nome", tipoinscricao.IdEvento)
-            };*/
+            };
 
-            return View(viewModel);
+            return View(viewModel);*/
         }
 
         // POST: TipoInscricaoController/Edit/5
