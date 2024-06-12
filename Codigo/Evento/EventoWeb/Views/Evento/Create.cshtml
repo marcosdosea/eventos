@@ -98,44 +98,71 @@
 				</select>
 				<span asp-validation-for="Evento.EventoPublico" class="text-danger"></span>
 			</div>
-			<div class="form-group">
-				<label asp-for="Evento.Cep" class="control-label"></label>
-				<input asp-for="Evento.Cep" class="form-control" />
-				<span asp-validation-for="Evento.Cep" class="text-danger"></span>
+			<br/>
+			<h4 class="blue-normal">
+				Endereço
+			</h4>
+			<div class="row">
+				<div class="col-md-3">
+					<div class="form-group">
+						<label asp-for="Evento.Cep" class="control-label"></label>
+						<input asp-for="Evento.Cep" class="form-control" />
+						<span asp-validation-for="Evento.Cep" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label asp-for="Evento.Estado" class="control-label"></label>
+						<select asp-for="Evento.Estado" class="form-control" asp-items="Model.Estados">
+							<option value="">Selecione o estado</option>
+						</select>
+						<span asp-validation-for="Evento.Estado" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="Evento.Cidade" class="control-label"></label>
+						<input asp-for="Evento.Cidade" class="form-control" />
+						<span asp-validation-for="Evento.Cidade" class="text-danger"></span>
+					</div>
+				</div>
 			</div>
-			<div class="form-group">
-				<label asp-for="Evento.Estado" class="control-label"></label>
-				<select asp-for="Evento.Estado" class="form-control" asp-items="Model.Estados">
-					<option value="">Selecione o estado</option>
-				</select>
-				<span asp-validation-for="Evento.Estado" class="text-danger"></span>
+			<div class="row">
+				<div class ="col-md-6">
+					<div class="form-group">
+						<label asp-for="Evento.Bairro" class="control-label"></label>
+						<input asp-for="Evento.Bairro" class="form-control" />
+						<span asp-validation-for="Evento.Bairro" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="Evento.Rua" class="control-label"></label>
+						<input asp-for="Evento.Rua" class="form-control" />
+						<span asp-validation-for="Evento.Rua" class="text-danger"></span>
+					</div>
+				</div>				
 			</div>
-
-			<div class="form-group">
-				<label asp-for="Evento.Cidade" class="control-label"></label>
-				<input asp-for="Evento.Cidade" class="form-control" />
-				<span asp-validation-for="Evento.Cidade" class="text-danger"></span>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="Evento.Numero" class="control-label"></label>
+						<input asp-for="Evento.Numero" class="form-control" />
+						<span asp-validation-for="Evento.Numero" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="Evento.Complemento" class="control-label"></label>
+						<input asp-for="Evento.Complemento" class="form-control" />
+						<span asp-validation-for="Evento.Complemento" class="text-danger"></span>
+					</div>
+				</div>
 			</div>
-			<div class="form-group">
-				<label asp-for="Evento.Bairro" class="control-label"></label>
-				<input asp-for="Evento.Bairro" class="form-control" />
-				<span asp-validation-for="Evento.Bairro" class="text-danger"></span>
-			</div>
-			<div class="form-group">
-				<label asp-for="Evento.Rua" class="control-label"></label>
-				<input asp-for="Evento.Rua" class="form-control" />
-				<span asp-validation-for="Evento.Rua" class="text-danger"></span>
-			</div>
-			<div class="form-group">
-				<label asp-for="Evento.Numero" class="control-label"></label>
-				<input asp-for="Evento.Numero" class="form-control" />
-				<span asp-validation-for="Evento.Numero" class="text-danger"></span>
-			</div>
-			<div class="form-group">
-				<label asp-for="Evento.Complemento" class="control-label"></label>
-				<input asp-for="Evento.Complemento" class="form-control" />
-				<span asp-validation-for="Evento.Complemento" class="text-danger"></span>
-			</div>
+			<br />
+			<h4 class="blue-normal">
+				Outros
+			</h4>
 			<div class="form-group">
 				<label asp-for="Evento.PossuiCertificado" class="control-label"></label>
 				<select asp-for="Evento.PossuiCertificado" class="form-select" id="PossuiCertificado" aria-label="Default select example">

@@ -23,7 +23,7 @@
 					@Html.DisplayNameFor(model => model.Status)
 				</th>
 				<th>
-					@Html.DisplayNameFor(model => model.IdTipoEvento)
+					Tipo do Evento
 				</th>
 				<th>
 					Ações
@@ -68,11 +68,11 @@
 						@Html.DisplayFor(modelItem => item.IdTipoEvento)
 					</td>
 					<td>
-						@Html.ActionLink("Editar", "Edit", new { id = item.Id }) |
-						@Html.ActionLink("Detalhes", "Details", new { id = item.Id }) |
-						<a href="#!" data-toggle="modal" data-target="#deleteModal-@item.Id">Delete</a>
+						@Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" }) |
+						@Html.ActionLink("Detalhes", "Details", new { id = item.Id }, new { @style = "text-decoration:none;" }) |
+						<a class="danger-normal" style="text-decoration:none;" href="#!" data-toggle="modal" data-target="#deleteModal-@item.Id">Delete</a>
 			@await Html.PartialAsync("_DeleteModal", item) |
-             @Html.ActionLink("Gestores", "CreateGestorEvento", new { id = item.Id })
+						@Html.ActionLink("Gestores", "CreateGestorEvento", new { id = item.Id }, new { @style = "text-decoration:none;" })
 					</td>
 				</tr>
 }
