@@ -177,9 +177,11 @@
 				<span asp-validation-for="Evento.FrequenciaMinimaCertificado" class="text-danger"></span>
 			</div>
 			<div class="form-group">
-				<label asp-for="Evento.IdTipoEvento" class="control-label"></label>
-				<input asp-for="Evento.IdTipoEvento" class="form-control" />
-				<span asp-validation-for="Evento.IdTipoEvento" class="text-danger"></span>
+				<label asp-for="Evento.IdTipoEvento" class="control-label">Tipo do Evento</label>
+				<select asp-for="Evento.IdTipoEvento" class="form-control" asp-items="Model.TiposEventos">
+					<option value="">Selecione o tipo de evento</option>
+				</select>
+				<span asp-validation-for="Evento.Estado" class="text-danger"></span>
 			</div>
 			<div class="form-group">
 				<label asp-for="Evento.VagasOfertadas" class="control-label"></label>

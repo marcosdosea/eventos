@@ -103,8 +103,9 @@ namespace EventoWeb.Models
         [Display(Name = "Vagas Disponíveis")]
         [Required(ErrorMessage = "Quantas vagas estão disponíveis?")]
         public int VagasDisponiveis { get; set; }
+		public string NomeTipoEvento { get; set; }
 
-        [Display(Name = "Tempo de Reserva em Minutos")]
+		[Display(Name = "Tempo de Reserva em Minutos")]
         [Required(ErrorMessage = "Informe o Tempo da Reserva de uma Vaga")]
         public int TempoMinutosReserva { get; set; }
 

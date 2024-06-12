@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Core.DTO;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,6 +13,7 @@ namespace Core.Service
         void Edit(Tipoevento tipoevento);
         void Delete(int idTipoEvento);
         Tipoevento Get(int idTipoEvento);
-        IEnumerable<Tipoevento> GetAll();
-    }
+		IEnumerable<Tipoevento> GetAll();
+		string GetNomeById(int idTipoEvento);
+	}
 }

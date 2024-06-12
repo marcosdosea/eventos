@@ -66,5 +66,13 @@ namespace Service
         {
             return context.Tipoeventos.AsNoTracking();
         }
-    }
+
+		public string GetNomeById(int idTipoEvento)
+		{
+			return context.Tipoeventos
+				   .Where(t => t.Id == idTipoEvento)
+				   .Select(t => t.Nome)
+				   .FirstOrDefault();
+		}
+	}
 }
