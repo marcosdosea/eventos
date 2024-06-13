@@ -1,4 +1,141 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "BoraLá";
 }
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/_Layout_Inicio.css">
+    <link rel="stylesheet" href="~/css/site.css">
+    <link rel="stylesheet" href="~/css/style.css">
+</head>
 
+<body>
+    <main>
+        <section class="categorias">
+            <h1>Econtre o evento ideal!</h1>
+            <ul class="categorias-list">
+                <li>
+                    <a href="#">
+                         <img src="~/ícones/Palestras.png" alt="Palestras">
+                         <span>Palestras</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                         <img src="~/ícones/Teatros.png" alt="Teatros">
+                         <span>Teatros</span> 
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                          <img src="~/ícones/Shows.png" alt="Shows">
+                          <span>Shows</span> 
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                         <img src="~/ícones/Stand-up.png" alt="Stand-up">
+                         <span>Stand-Up</span> 
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                          <img src="~/ícones/Culturais.png" alt="Culturais">
+                          <span>Culturais</span> 
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                          <img src="~/ícones/Religiosos.png" alt="Religiosos">
+                          <span>Religiosos</span> 
+                    </a>
+                </li>
+            </ul>
+        </section>
+
+        <div class="carrossel">
+            <div class="carrossel-container">
+                <div class="carrossel-slide">
+                    <img src="~/Imagens_Eventos/Evento-Semac.png" alt="IV SEMAC">
+                    <div class="carrossel-content">
+                        <h2>IV SEMAC</h2>
+                        <p>“Emergências contemporâneas e transformação social”</p>
+                    </div>
+                </div>
+                <div class="carrossel-slide">
+                    <img src="~/Imagens_Eventos/Evento-Semac.png" alt="IV SEMAC">
+                    <div class="carrossel-content">
+                        <h2>V SEMAC</h2>
+                        <p>“Emergências contemporâneas e transformação social”</p>
+                    </div>
+                </div>
+                <div class="carrossel-slide">
+                    <img src="~/Imagens_Eventos/Evento-Semac.png" alt="IV SEMAC">
+                    <div class="carrossel-content">
+                        <h2>VI SEMAC</h2>
+                        <p>“Emergências contemporâneas e transformação social”</p>
+                    </div>
+                </div>
+                <div class="carrossel-slide">
+                    <img src="~/Imagens_Eventos/Evento-Semac.png" alt="IV SEMAC">
+                    <div class="carrossel-content">
+                        <h2>VII SEMAC</h2>
+                        <p>“Emergências contemporâneas e transformação social”</p>
+                    </div>
+                </div>
+            </div>
+            <div class="carrossel-indicators">
+                <span class="indicator active" onclick="currentSlide(0)"></span>
+                <span class="indicator" onclick="currentSlide(1)"></span>
+                <span class="indicator" onclick="currentSlide(2)"></span>
+                <span class="indicator" onclick="currentSlide(3)"></span>
+            </div>
+            <button class="carrossel-btn prev" onclick="moveSlide(-1)">&#10094;</button>
+            <button class="carrossel-btn next" onclick="moveSlide(1)">&#10095;</button>
+        </div>
+
+        <br>
+
+      <section class="eventos">
+        <h1>Shows!</h1>
+        <div class="container-eventos">
+            <div class="card">
+                <img src="imagem.jpg" alt="Imagem do card">
+                <h2>Título do card</h2>
+                <p>Texto do card</p>
+                <button class="btn">Bora lá!</button>
+            </div>
+            <div class="card">
+                <img src="imagem.jpg" alt="Imagem do card">
+                <h2>Título do card</h2>
+                <p>Texto do card</p>
+                <button class="btn">Bora lá!</button>
+            </div>
+                       <div class="card">
+                <img src="imagem.jpg" alt="Imagem do card">
+                <h2>Título do card</h2>
+                <p>Texto do card</p>
+                <button class="btn">Bora lá!</button>
+            </div>
+            <div class="card">
+                <img src="imagem.jpg" alt="Imagem do card">
+                <h2>Título do card</h2>
+                <p>Texto do card</p>
+                <button class="btn">Bora lá!</button>
+            </div>,
+                 <div class="card">
+                <img src="imagem.jpg" alt="Imagem do card">
+                <h2>Título do card</h2>
+                <p>Texto do card</p>
+                <button class="btn">Bora lá!</button>
+            </div> 
+  </div>
+</section>
+
+    </main>
+
+    <script src="~/js/carrossel.js"></script>
+</body>
+</html>
