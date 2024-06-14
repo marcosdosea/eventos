@@ -1,167 +1,222 @@
-﻿@model EventoWeb.Models.EventoModel
+﻿@model EventoWeb.Models.EventocreateModel
 
 @{
     ViewData["Title"] = "Edit";
 }
 
-<h1>Edit</h1>
-
-<h4>EventoModel</h4>
+<h1 class="blue-normal">Editar</h1>
 <hr />
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-8">
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Id" class="control-label"></label>
-                <input asp-for="Id" class="form-control" />
-                <span asp-validation-for="Id" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Nome" class="control-label"></label>
-                <input asp-for="Nome" class="form-control" />
-                <span asp-validation-for="Nome" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Descricao" class="control-label"></label>
-                <input asp-for="Descricao" class="form-control" />
-                <span asp-validation-for="Descricao" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="DataInicio" class="control-label"></label>
-                <input asp-for="DataInicio" class="form-control" />
-                <span asp-validation-for="DataInicio" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="DataFim" class="control-label"></label>
-                <input asp-for="DataFim" class="form-control" />
-                <span asp-validation-for="DataFim" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="InscricaoGratuita" class="control-label"></label>
-                <input asp-for="InscricaoGratuita" class="form-control" />
-                <span asp-validation-for="InscricaoGratuita" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Status" class="control-label"></label>
-                <input asp-for="Status" class="form-control" />
-                <span asp-validation-for="Status" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="DataInicioInscricao" class="control-label"></label>
-                <input asp-for="DataInicioInscricao" class="form-control" />
-                <span asp-validation-for="DataInicioInscricao" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="DataFimInscricao" class="control-label"></label>
-                <input asp-for="DataFimInscricao" class="form-control" />
-                <span asp-validation-for="DataFimInscricao" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ValorInscricao" class="control-label"></label>
-                <input asp-for="ValorInscricao" class="form-control" />
-                <span asp-validation-for="ValorInscricao" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Website" class="control-label"></label>
-                <input asp-for="Website" class="form-control" />
-                <span asp-validation-for="Website" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="EmailEvento" class="control-label"></label>
-                <input asp-for="EmailEvento" class="form-control" />
-                <span asp-validation-for="EmailEvento" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="EventoPublico" class="control-label"></label>
-                <input asp-for="EventoPublico" class="form-control" />
-                <span asp-validation-for="EventoPublico" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Cep" class="control-label"></label>
-                <input asp-for="Cep" class="form-control" />
-                <span asp-validation-for="Cep" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Estado" class="control-label"></label>
-                <input asp-for="Estado" class="form-control" />
-                <span asp-validation-for="Estado" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Cidade" class="control-label"></label>
-                <input asp-for="Cidade" class="form-control" />
-                <span asp-validation-for="Cidade" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Bairro" class="control-label"></label>
-                <input asp-for="Bairro" class="form-control" />
-                <span asp-validation-for="Bairro" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Rua" class="control-label"></label>
-                <input asp-for="Rua" class="form-control" />
-                <span asp-validation-for="Rua" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Numero" class="control-label"></label>
-                <input asp-for="Numero" class="form-control" />
-                <span asp-validation-for="Numero" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Complemento" class="control-label"></label>
-                <input asp-for="Complemento" class="form-control" />
-                <span asp-validation-for="Complemento" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="PossuiCertificado" class="control-label"></label>
-                <input asp-for="PossuiCertificado" class="form-control" />
-                <span asp-validation-for="PossuiCertificado" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="FrequenciaMinimaCertificado" class="control-label"></label>
-                <input asp-for="FrequenciaMinimaCertificado" class="form-control" />
-                <span asp-validation-for="FrequenciaMinimaCertificado" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="IdTipoEvento" class="control-label"></label>
-                <input asp-for="IdTipoEvento" class="form-control" />
-                <span asp-validation-for="IdTipoEvento" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="VagasOfertadas" class="control-label"></label>
-                <input asp-for="VagasOfertadas" class="form-control" />
-                <span asp-validation-for="VagasOfertadas" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="VagasReservadas" class="control-label"></label>
-                <input asp-for="VagasReservadas" class="form-control" />
-                <span asp-validation-for="VagasReservadas" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="VagasDisponiveis" class="control-label"></label>
-                <input asp-for="VagasDisponiveis" class="form-control" />
-                <span asp-validation-for="VagasDisponiveis" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="TempoMinutosReserva" class="control-label"></label>
-                <input asp-for="TempoMinutosReserva" class="form-control" />
-                <span asp-validation-for="TempoMinutosReserva" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CargaHoraria" class="control-label"></label>
-                <input asp-for="CargaHoraria" class="form-control" />
-                <span asp-validation-for="CargaHoraria" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
+			<div class="form-group">
+				<label asp-for="Evento.Nome" class="control-label"></label>
+				<input asp-for="Evento.Nome" class="form-control" placeholder="Nome do evento" />
+				<span asp-validation-for="Evento.Nome" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Evento.Descricao" class="control-label"></label>
+				<textarea asp-for="Evento.Descricao" class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
+				<span asp-validation-for="Evento.Descricao" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Evento.Status" class="control-label"></label>
+				<select asp-for="Evento.Status" class="form-select" aria-label="Default select example">
+					<option value="C">Cadastro</option>
+					<option value="A">Ativo</option>
+					<option value="F">Finalizado</option>
+					<option value="I">Inativo</option>
+				</select>
+				<span asp-validation-for="Evento.Status" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Evento.Website" class="control-label"></label>
+				<input asp-for="Evento.Website" class="form-control" placeholder="Site do evento" />
+				<span asp-validation-for="Evento.Website" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Evento.EmailEvento" class="control-label">E-mail</label>
+				<input asp-for="Evento.EmailEvento" class="form-control" placeholder="E-mail para contato do evento" />
+				<span asp-validation-for="Evento.EmailEvento" class="text-danger"></span>
+			</div>
+			<br />
+			<h4 class="blue-normal">
+				Datas
+			</h4>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="Evento.DataInicio" class="control-label"></label>
+						<input asp-for="Evento.DataInicio" class="form-control" />
+						<span asp-validation-for="Evento.DataInicio" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="Evento.DataFim" class="control-label"></label>
+						<input asp-for="Evento.DataFim" class="form-control" />
+						<span asp-validation-for="Evento.DataFim" class="text-danger"></span>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="Evento.DataInicioInscricao" class="control-label"></label>
+						<input asp-for="Evento.DataInicioInscricao" class="form-control" />
+						<span asp-validation-for="Evento.DataInicioInscricao" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="Evento.DataFimInscricao" class="control-label"></label>
+						<input asp-for="Evento.DataFimInscricao" class="form-control" />
+						<span asp-validation-for="Evento.DataFimInscricao" class="text-danger"></span>
+					</div>
+				</div>
+			</div>
+			<br />
+			<div class="form-group">
+				<label asp-for="Evento.InscricaoGratuita" class="control-label"></label>
+				<select asp-for="Evento.InscricaoGratuita" class="form-select" id="InscricaoGratuita" aria-label="Default select example">
+					<option value="0">Não</option>
+					<option value="1">Sim</option>
+				</select>
+				<span asp-validation-for="Evento.InscricaoGratuita" class="text-danger"></span>
+			</div>
+			<div class="form-group" id="valorInscricaoGroup">
+				<label asp-for="Evento.ValorInscricao" class="control-label"></label>
+				<input type="text" asp-for="Evento.ValorInscricao" class="form-control" onkeypress="return validateInput(event)">
+				<span asp-validation-for="Evento.ValorInscricao" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Evento.EventoPublico" class="control-label"></label>
+				<select asp-for="Evento.EventoPublico" class="form-select" aria-label="Default select example">
+					<option value="0">Não</option>
+					<option value="1">Sim</option>
+				</select>
+				<span asp-validation-for="Evento.EventoPublico" class="text-danger"></span>
+			</div>
+			<br />
+			<h4 class="blue-normal">
+				Endereço
+			</h4>
+			<div class="row">
+				<div class="col-md-3">
+					<div class="form-group">
+						<label asp-for="Evento.Cep" class="control-label"></label>
+						<input asp-for="Evento.Cep" class="form-control" />
+						<span asp-validation-for="Evento.Cep" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label asp-for="Evento.Estado" class="control-label"></label>
+						<select asp-for="Evento.Estado" class="form-control" asp-items="Model.Estados">
+							<option value="">Selecione o estado</option>
+						</select>
+						<span asp-validation-for="Evento.Estado" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="Evento.Cidade" class="control-label"></label>
+						<input asp-for="Evento.Cidade" class="form-control" />
+						<span asp-validation-for="Evento.Cidade" class="text-danger"></span>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="Evento.Bairro" class="control-label"></label>
+						<input asp-for="Evento.Bairro" class="form-control" />
+						<span asp-validation-for="Evento.Bairro" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="Evento.Rua" class="control-label"></label>
+						<input asp-for="Evento.Rua" class="form-control" />
+						<span asp-validation-for="Evento.Rua" class="text-danger"></span>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="Evento.Numero" class="control-label"></label>
+						<input asp-for="Evento.Numero" class="form-control" />
+						<span asp-validation-for="Evento.Numero" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="Evento.Complemento" class="control-label"></label>
+						<input asp-for="Evento.Complemento" class="form-control" />
+						<span asp-validation-for="Evento.Complemento" class="text-danger"></span>
+					</div>
+				</div>
+			</div>
+			<br />
+			<h4 class="blue-normal">
+				Outros
+			</h4>
+			<div class="form-group">
+				<label asp-for="Evento.PossuiCertificado" class="control-label"></label>
+				<select asp-for="Evento.PossuiCertificado" class="form-select" id="PossuiCertificado" aria-label="Default select example">
+					<option value="0">Não</option>
+					<option value="1">Sim</option>
+				</select>
+				<span asp-validation-for="Evento.PossuiCertificado" class="text-danger"></span>
+			</div>
+			<div class="form-group" id="FrequenciaMinimaCertificado">
+				<label asp-for="Evento.FrequenciaMinimaCertificado" class="control-label"></label>
+				<input asp-for="Evento.FrequenciaMinimaCertificado" class="form-control" onkeypress="return validateInput(event)" />
+				<span asp-validation-for="Evento.FrequenciaMinimaCertificado" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Evento.IdTipoEvento" class="control-label">Tipo do Evento</label>
+				<select asp-for="Evento.IdTipoEvento" class="form-control" asp-items="Model.TiposEventos">
+					<option value="">Selecione o tipo de evento</option>
+				</select>
+				<span asp-validation-for="Evento.Estado" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Evento.VagasOfertadas" class="control-label"></label>
+				<input asp-for="Evento.VagasOfertadas" class="form-control" />
+				<span asp-validation-for="Evento.VagasOfertadas" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Evento.TempoMinutosReserva" class="control-label"></label>
+				<input asp-for="Evento.TempoMinutosReserva" class="form-control" />
+				<span asp-validation-for="Evento.TempoMinutosReserva" class="text-danger"></span>
+			</div>
+			<div class="form-group">
+				<label asp-for="Evento.CargaHoraria" class="control-label"></label>
+				<input asp-for="Evento.CargaHoraria" class="form-control" />
+				<span asp-validation-for="Evento.CargaHoraria" class="text-danger"></span>
+			</div>
+			<br />
+			<div class="row justify-content-end">
+				<div class="col-2">
+					<div>
+						<a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
+					</div>
+				</div>
+				<div class="col-2">
+					<div class="form-group">
+						<input type="submit" value="Salvar" class="btn btn-blue-normal" />
+					</div>
+				</div>
+			</div>
+			
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

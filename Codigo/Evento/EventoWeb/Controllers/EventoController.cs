@@ -10,12 +10,14 @@ namespace EventoWeb.Controllers
     public class EventoController : Controller
     {
         private readonly IEstadosbrasilService _estadosbrasilService;
+        private readonly ITipoeventoService _tipoEventoService;
         private readonly IEventoService _eventoService;
         private readonly IInscricaoService _inscricaoService;
         private readonly IMapper _mapper;
 
-        public EventoController(IEventoService eventoService, IMapper mapper, IEstadosbrasilService estadosbrasilService,IInscricaoService inscricaoService)
+        public EventoController(IEventoService eventoService, IMapper mapper, IEstadosbrasilService estadosbrasilService,IInscricaoService inscricaoService, ITipoeventoService tipoeventoService)
         {
+            _tipoEventoService = tipoeventoService;
             _estadosbrasilService = estadosbrasilService;
             _eventoService = eventoService;
             _inscricaoService = inscricaoService;
@@ -25,10 +27,19 @@ namespace EventoWeb.Controllers
         // GET: EventoController
         public ActionResult Index()
         {
-            var listarEventos = _eventoService.GetAll();
-            var listarEventosModel = _mapper.Map<List<EventoModel>>(listarEventos);
-            return View(listarEventosModel);
-        }
+			var listarEventos = _eventoService.GetAll().ToList();
+			var listarEventosModel = listarEventos.Select(e => new EventoModel
+			{
+				Id = e.Id,
+				DataInicio = e.DataInicio,
+				Nome = e.Nome,
+				Status = e.Status,
+				IdTipoEvento = e.IdTipoEvento,
+				NomeTipoEvento = _tipoEventoService.GetNomeById(e.IdTipoEvento)
+			}).ToList();
+
+			return View(listarEventosModel);
+		}
 
         // GET: EventoController/Details/5
         public ActionResult Details(uint id)
@@ -43,11 +54,13 @@ namespace EventoWeb.Controllers
 		{
 			var eventoModel = new EventoModel();
 			var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
-			var viewModel = new EventocreateModel
+            var tiposEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
+            var viewModel = new EventocreateModel
 			{
 				Evento = eventoModel,
-				Estados = new SelectList(estados, "Estado", "Nome")
-			};
+				Estados = new SelectList(estados, "Estado", "Nome"),
+                TiposEventos = new SelectList(tiposEventos, "Id", "Nome")
+            };
 
 			return View(viewModel);
 		}
@@ -62,31 +75,41 @@ namespace EventoWeb.Controllers
 			return RedirectToAction(nameof(Index));
 		}
 
-        // GET: EventoController/Edit/5
-        public ActionResult Edit(uint id)
-        {
-            var evento = _eventoService.Get(id);
-            var eventoModel = _mapper.Map<EventoModel>(evento);
-            return View(eventoModel);
-        }
-        
-        // POST: EventoController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(uint id, EventoModel eventoModel)
-        {
-            if (ModelState.IsValid)
-            {
-                var evento = _mapper.Map<Evento>(eventoModel);
-                _eventoService.Edit(evento);
-                return RedirectToAction(nameof(Index));
-            }
+		// GET: EventoController/Edit/5
+		public ActionResult Edit(uint id)
+		{
+			var evento = _eventoService.Get(id);
+			if (evento == null)
+			{
+				return NotFound();
+			}
 
-            return View(eventoModel);
-        }
+			var eventoModel = _mapper.Map<EventoModel>(evento);
+			var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
+			var tiposEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
+			var viewModel = new EventocreateModel
+			{
+				Evento = eventoModel,
+				Estados = new SelectList(estados, "Estado", "Nome", eventoModel.Estado),
+				TiposEventos = new SelectList(tiposEventos, "Id", "Nome", eventoModel.Id)
+			};
 
-        // GET: EventoController/Delete/5
-        public ActionResult Delete(uint id)
+			return View(viewModel);
+		}
+
+		// POST: EventoController/Edit/5
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public ActionResult Edit(uint id, EventocreateModel viewModel)
+		{
+			var evento = _mapper.Map<Evento>(viewModel.Evento);
+			_eventoService.Edit(evento);
+			return RedirectToAction(nameof(Index));
+		}
+
+
+		// GET: EventoController/Delete/5
+		public ActionResult Delete(uint id)
         {
             var evento = _eventoService.Get(id);
             var eventoModel = _mapper.Map<EventoModel>(evento);

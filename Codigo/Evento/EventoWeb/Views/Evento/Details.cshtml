@@ -4,18 +4,11 @@
     ViewData["Title"] = "Details";
 }
 
-<h1>Details</h1>
+<h1 class ="blue-normal">Detalhes do Evento</h1>
 
 <div>
-    <h4>EventoModel</h4>
     <hr />
     <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Id)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Id)
-        </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Nome)
         </dt>
@@ -27,6 +20,41 @@
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Descricao)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Status)
+        </dt>
+        <dd class="col-sm-10">
+            @{
+                var status = Model.Status switch
+                {
+                    "C" => "Cadastro",
+                    "I" => "Inativo",
+                    "A" => "Ativo",
+                    "F" => "Finalizado",
+                    _ => "Desconhecido"
+                };
+                @status
+            }
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Website)
+        </dt>
+        <dd class="col-sm-10">
+            @if (string.IsNullOrWhiteSpace(Model.Website))
+            {
+                @Html.Raw("-")
+            }
+            else
+            {
+                @Html.DisplayFor(model => model.Website)
+            }
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.EmailEvento)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.EmailEvento)
         </dd>
         <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.DataInicio)
@@ -41,18 +69,6 @@
             @Html.DisplayFor(model => model.DataFim)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.InscricaoGratuita)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.InscricaoGratuita)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Status)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Status)
-        </dd>
-        <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.DataInicioInscricao)
         </dt>
         <dd class = "col-sm-10">
@@ -64,29 +80,23 @@
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.DataFimInscricao)
         </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.InscricaoGratuita)
+        </dt>
+        <dd class="col-sm-10">
+            @(Model.InscricaoGratuita == 1 ? "Sim" : "Não")
+        </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.ValorInscricao)
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.ValorInscricao)
         </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Website)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Website)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.EmailEvento)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.EmailEvento)
-        </dd>
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.EventoPublico)
         </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.EventoPublico)
+        <dd class="col-sm-10">
+            @(Model.EventoPublico == 1 ? "Sim" : "Não")
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Cep)
@@ -118,23 +128,30 @@
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Rua)
         </dd>
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Numero)
         </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Numero)
+        <dd class="col-sm-10">
+            @(!string.IsNullOrEmpty(Model.Numero) ? Model.Numero : "S/N")
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Complemento)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Complemento)
+            @if (string.IsNullOrWhiteSpace(Model.Complemento))
+            {
+                @Html.Raw("-")
+            }
+            else
+            {
+                @Html.DisplayFor(model => model.Complemento)
+            }
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.PossuiCertificado)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PossuiCertificado)
+            @(Model.PossuiCertificado == 1 ? "Sim" : "Não")
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.FrequenciaMinimaCertificado)
@@ -143,7 +160,7 @@
             @Html.DisplayFor(model => model.FrequenciaMinimaCertificado)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.IdTipoEvento)
+            Tipo do Evento
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.IdTipoEvento)
@@ -181,6 +198,16 @@
     </dl>
 </div>
 <div>
-    @Html.ActionLink("Edit", "Edit", new { id = Model.Id}) |
-    <a asp-action="Index">Back to List</a>
+    <div class="row">
+        <div class="col-1">
+            <div>
+                <a asp-action="Index" class="btn btn-outline-danger">Voltar</a>
+            </div>
+        </div>
+        <div class="col-1">
+            <button type="button" class="btn btn-blue-normal" onclick="location.href='@Url.Action("Edit", new { id = Model.Id })'">
+                Editar
+            </button>
+        </div>
+    </div>
 </div>
