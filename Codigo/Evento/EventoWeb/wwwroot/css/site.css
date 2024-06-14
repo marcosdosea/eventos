@@ -8,18 +8,19 @@ html {
     }
 }
 
-html {
-    position: relative;
-    min-height: 100%;
-}
-
-body {
-    margin-bottom: 60px;
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+html, body {
+    height: 100%;
 }
 
 header {
     box-shadow: 0px 5px 4px 0px rgba(0, 0, 0, 0.1);
+    margin-bottom: 45px;
+}
+
+body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
 }
 
 .outer-container {
@@ -99,6 +100,7 @@ header {
     align-items: center;
     gap: 16px;
     display: flex;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 .relative-container {
@@ -183,13 +185,14 @@ header {
     border-radius: 8px;
     border: 2px solid #232ED0;
     background: #232ED0;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
     .btn-login:hover {
-        background: transparent;
-        color: #232ED0;
+        background: #151c7d;
+        color: white;
         border-radius: 8px;
-        border: 2px solid #232ED0;
+        border: 2px solid #151c7d;
     }
 
 .btn-cadastrar {
@@ -201,6 +204,7 @@ header {
     border: 2px solid #232ED0;
     color: #232ED0 !important;
     background: transparent;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
     .btn-cadastrar:hover {
@@ -210,16 +214,21 @@ header {
         border: 2px solid #232ED0;
     }
 
+.wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.container {
+    flex: 1;
+}
+
 .footer {
-    width: 100%;
     background-color: #232ed0;
     color: white;
     padding: 20px 0;
-    position: fixed;
-    bottom: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    width: 100%;
 }
 
 .footer-background {
@@ -231,6 +240,7 @@ header {
     padding: 20px;
     background-color: #232ed0;
     color: white;
+    margin: 0 auto;
 }
 
 .custom-flex-container {
@@ -287,6 +297,7 @@ header {
     height: 32px;
     line-height: 32px;
     transition: background-color 0.3s, color 0.3s;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
     .btn-contact:hover {
@@ -298,6 +309,7 @@ header {
     height: 32px;
     padding-top: 0;
     padding-bottom: 0;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 .contact-text {
