@@ -6,66 +6,89 @@
 ViewData["Title"] = "Associar Gestor ao Evento";
 }
 
-<h1>Cadastrar Gestores do Evento</h1>
+<h1 class="blue-normal">Cadastrar Gestores do Evento</h1>
+<hr />
 <script>
     function validarFormulario() {
         var eventoSelecionado = document.getElementById("IdEvento").value;
         if (eventoSelecionado == 0) {
             alert("Por favor, selecione um evento.");
-            return false; // Impede o envio do formulário
+            return false; 
         }
-        return true; // Permite o envio do formulário
+        return true;
     }
 </script>
 
 <div class="row">
-    <div class="col-md-6">
-        <form asp-action="CreateGestorEvento" method="post" onsubmit="return validarFormulario()">
-            <div class="form-group">
-                <label for="IdEvento" class="control-label">Evento</label>
-                <select id="IdEvento" name="IdEvento" class="form-control" readonly>
-                    @if(Model.Evento == null || Model.Evento.Id == 0)
-                    {
-                        <option value="0">Não Informado</option>
-                    }
-                    else
-                    {
-                        <option value="@Model.Evento.Id" selected>@Model.Evento.Nome</option>
-                    }
-                </select>
-                @Html.HiddenFor(model => model.Evento.Id)
+    <div>
+        <form asp-action="CreateGestorEvento" method="post" onsubmit="return validarFormulario()"> 
+            <div class="row">
+                <div class="col-lg-3">
+                    <div class="form-group">
+                        <label for="IdEvento" class="control-label">Evento</label>
+                        <select id="IdEvento" name="IdEvento" class="form-control" readonly>
+                            @if (Model.Evento == null || Model.Evento.Id == 0)
+                            {
+                                <option value="0">Não Informado</option>
+                            }
+                            else
+                            {
+                                <option value="@Model.Evento.Id" selected>@Model.Evento.Nome</option>
+                            }
+                        </select>
+                        @Html.HiddenFor(model => model.Evento.Id)
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Pessoa.Cpf" class="control-label">CPF</label>
-                <input asp-for="Pessoa.Cpf" class="form-control" id="Cpf"/>
-                <span asp-validation-for="Pessoa.Cpf" class="text-danger"></span>
+            <br />
+            <h4 class="blue-normal">
+                Dados do Gestor
+            </h4>
+            <div class="row">
+                <div class="col-6 col-sm-6 col-md-3 col-lg-2">
+                    <div class="form-group">
+                        <label asp-for="Pessoa.Cpf" class="control-label">CPF</label>
+                        <input asp-for="Pessoa.Cpf" class="form-control" id="Cpf" placeholder="000.000.000-00" />
+                        <span asp-validation-for="Pessoa.Cpf" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3 col-lg-4">
+                    <div class="form-group">
+                        <label asp-for="Pessoa.Nome" class="control-label">Nome</label>
+                        <input asp-for="Pessoa.Nome" class="form-control" id="Nome" placeholder="Nome completo" />
+                        <span asp-validation-for="Pessoa.Nome" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-6 col-sm-6 col-md-3 col-lg-2">
+                    <div class="form-group">
+                        <label asp-for="Pessoa.Telefone1" class="control-label">Telefone</label>
+                        <input asp-for="Pessoa.Telefone1" type="number" class="form-control" id="Telefone1" placeholder="Com o DDD" />
+                        <span asp-validation-for="Pessoa.Telefone1" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-6 col-sm-6 col-md-3 col-lg-4">
+                    <div class="form-group">
+                        <label asp-for="Pessoa.Email" class="control-label">Email</label>
+                        <input asp-for="Pessoa.Email" class="form-control" id="Email" placeholder="Seu e-mail" />
+                        <span asp-validation-for="Pessoa.Email" class="text-danger"></span>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Pessoa.Nome" class="control-label">Nome</label>
-                <input asp-for="Pessoa.Nome" class="form-control" id="Nome"/>
-                <span asp-validation-for="Pessoa.Nome" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Pessoa.Telefone1" class="control-label">Telefone</label>
-                <input asp-for="Pessoa.Telefone1" class="form-control" id="Telefone1"/>
-                <span asp-validation-for="Pessoa.Telefone1" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Pessoa.Email" class="control-label">Email</label>
-                <input asp-for="Pessoa.Email" class="form-control" id="Email"/>
-                <span asp-validation-for="Pessoa.Email" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Adicionar Gestor" class="btn btn-primary"/>
-            </div>
+            <br />
+            <div class="d-flex flex-row-reverse">
+                <div class="form-group">
+                    <input type="submit" value="Adicionar Gestor" class="btn btn-lg btn-blue-normal" />
+                </div>
+            </div> 
+            <br />
         </form>
     </div>
 </div>
 <div class="row">
     <div class="col-md-12">
-        <h2>Lista de Gestores de Evento</h2>
-        <table class="table">
-            <thead>
+        <h2 class="blue-normal">Lista de Gestores do Evento</h2>
+        <table class="table table-striped">
+            <thead class="blue-normal blue-normal-bg-table">
             <tr>
                 <th>CPF</th>
                 <th>Nome</th>
