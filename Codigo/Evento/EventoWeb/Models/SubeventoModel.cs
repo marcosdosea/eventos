@@ -9,24 +9,24 @@ namespace EventoWeb.Models
         [Key]
         public uint Id { get; set; }
 
-        [Display(Name = "Código")]
+        [Display(Name = "Código do Evento")]
         [Required(ErrorMessage = "Código do Evento é obrigatório")]
         [Key]
         public uint IdEvento { get; set; }
 
         [Display(Name = "Nome")]
-        [Required(ErrorMessage = "Nome do Evento é obrigatório")]
+        [Required(ErrorMessage = "Nome do Sub-Evento é obrigatório")]
         public string Nome { get; set; } = null!;
 
         [Display(Name = "Descrição")]
-        [Required(ErrorMessage = "Fale um pouco a respeito desse Evento")]
+        [Required(ErrorMessage = "Fale um pouco a respeito desse Sub-Evento")]
         public string Descricao { get; set; } = null!;
 
-        [Display(Name = "Data Inicial do Evento")]
+        [Display(Name = "Data Inicial do Sub-Evento")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
         public DateTime DataInicio { get; set; }
 
-        [Display(Name = "Data Final do Evento")]
+        [Display(Name = "Data Final do Sub-Evento")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
         public DateTime DataFim { get; set; }
 
@@ -46,7 +46,7 @@ namespace EventoWeb.Models
         /// </summary>
 
         [Display(Name = "Status")]
-        [Required(ErrorMessage = "Status do Evento é obrigatório")]
+        [Required(ErrorMessage = "Status do Sub-Evento é obrigatório")]
         public string Status { get; set; } = null!;
 
         [Display(Name = "Data de Inicio de Inscrição")]
@@ -69,7 +69,7 @@ namespace EventoWeb.Models
         public decimal FrequenciaMinimaCertificado { get; set; }
 
         [Display(Name = "Vagas Ofertadas")]
-        [Required(ErrorMessage = "Informe a quantidade de Vagas Ofertadas pra esse evento")]
+        [Required(ErrorMessage = "Informe a quantidade de Vagas Ofertadas pra esse subevento")]
         public int VagasOfertadas { get; set; }
 
         [Display(Name = "Vagas Reservadas")]
@@ -81,9 +81,18 @@ namespace EventoWeb.Models
         public int VagasDisponiveis { get; set; }
 
         [Display(Name = "Carga Horária")]
-        [Required(ErrorMessage = "Informe a Carga Horária do Evento")]
+        [Required(ErrorMessage = "Informe a Carga Horária do Subevento")]
         public int CargaHoraria { get; set; }
+
+        [Display(Name = "ID do Tipo do Evento")]
+        [Required(ErrorMessage = "Informe qual o Tipo desse Sub-Evento")]
         public int IdTipoEvento { get; set; }
+
+        [Display(Name = "Tipo de Sub-Evento")]
+        public string NomeTipoEvento { get; set; }
+        
+        [Display(Name = "Evento")]
+        public string NomeEvento { get; set; }
     }
 
 }
