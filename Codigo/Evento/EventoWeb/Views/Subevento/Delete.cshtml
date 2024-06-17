@@ -1,128 +1,143 @@
-﻿@model EventoWeb.Models.SubeventoModel
+﻿@model EventoWeb.Models.SubeventocreateModel
 
 @{
     ViewData["Title"] = "Delete";
 }
+<div class="container-fluid no-padding">
+    <div class="row">
+        <div class="breadcrumb">
+            <a asp-controller="Home" asp-action="Index" style="text-decoration:none; padding-right:6px">
+                <img class="mb-1" style="display:inline-block" src="/img/icon-wrapper.svg" />
+                <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Home</p>
+            </a>
+            <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
+            <a asp-controller="Subevento" asp-action="Index" style="text-decoration:none; padding-right:6px">
+                <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Subevento</p>
+            </a>
+            <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
+            <p style="color:#6C757D;display:inline-block">Deletar Subevento</p>
+        </div>
+        <h1 class="blue-normal">Deletar Subevento</h1>
+        <div class="col-md-8">
+            <h4>Informções do Subevento</h4>
+            <hr />
+            <dl class="row">
+                <dt class="col-sm-4">
+                    @Html.DisplayNameFor(model => model.Subevento.Nome)
+                </dt>
+                <dd class="col-sm-6">
+                    @Html.DisplayFor(model => model.Subevento.Nome)
+                </dd>
+                <dt class="col-sm-4">
+                    @Html.DisplayNameFor(model => model.Subevento.IdEvento)
+                </dt>
+                <dd class="col-sm-6">
+                    @Html.DisplayFor(model => model.Subevento.IdEvento)
+                </dd>
+                <dt class="col-sm-4">
+                    @Html.DisplayNameFor(model => model.Subevento.Descricao)
+                </dt>
+                <dd class="col-sm-6">
+                    @Html.DisplayFor(model => model.Subevento.Descricao)
+                </dd>
+                <dt class="col-sm-4">
+                    @Html.DisplayNameFor(model => model.Subevento.DataInicio)
+                </dt>
+                <dd class="col-sm-6">
+                    @Html.DisplayFor(model => model.Subevento.DataInicio)
+                </dd>
+                <dt class="col-sm-4">
+                    @Html.DisplayNameFor(model => model.Subevento.DataFim)
+                </dt>
+                <dd class="col-sm-6">
+                    @Html.DisplayFor(model => model.Subevento.DataFim)
+                </dd>
+                <dt class="col-sm-4">
+                    @Html.DisplayNameFor(model => model.Subevento.InscricaoGratuita)
+                </dt>
+                <dd class="col-sm-6">
+                    @Html.DisplayFor(model => model.Subevento.InscricaoGratuita)
+                </dd>
+                <dt class="col-sm-4">
+                    @Html.DisplayNameFor(model => model.Subevento.Status)
+                </dt>
+                <dd class="col-sm-6">
+                    @Html.DisplayFor(model => model.Subevento.Status)
+                </dd>
+                <dt class="col-sm-4">
+                    @Html.DisplayNameFor(model => model.Subevento.DataInicioInscricao)
+                </dt>
+                <dd class="col-sm-6">
+                    @Html.DisplayFor(model => model.Subevento.DataInicioInscricao)
+                </dd>
+                <dt class="col-sm-4">
+                    @Html.DisplayNameFor(model => model.Subevento.DataFimInscricao)
+                </dt>
+                <dd class="col-sm-6">
+                    @Html.DisplayFor(model => model.Subevento.DataFimInscricao)
+                </dd>
+                <dt class="col-sm-4">
+                    @Html.DisplayNameFor(model => model.Subevento.ValorInscricao)
+                </dt>
+                <dd class="col-sm-6">
+                    @Html.DisplayFor(model => model.Subevento.ValorInscricao)
+                </dd>
+                <dt class="col-sm-4">
+                    @Html.DisplayNameFor(model => model.Subevento.PossuiCertificado)
+                </dt>
+                <dd class="col-sm-6">
+                    @Html.DisplayFor(model => model.Subevento.PossuiCertificado)
+                </dd>
+                <dt class="col-sm-4">
+                    @Html.DisplayNameFor(model => model.Subevento.FrequenciaMinimaCertificado)
+                </dt>
+                <dd class="col-sm-6">
+                    @Html.DisplayFor(model => model.Subevento.FrequenciaMinimaCertificado)
+                </dd>
+                <dt class="col-sm-4">
+                    @Html.DisplayNameFor(model => model.Subevento.VagasOfertadas)
+                </dt>
+                <dd class="col-sm-6">
+                    @Html.DisplayFor(model => model.Subevento.VagasOfertadas)
+                </dd>
+                <dt class="col-sm-4">
+                    @Html.DisplayNameFor(model => model.Subevento.VagasReservadas)
+                </dt>
+                <dd class="col-sm-6">
+                    @Html.DisplayFor(model => model.Subevento.VagasReservadas)
+                </dd>
+                <dt class="col-sm-4">
+                    @Html.DisplayNameFor(model => model.Subevento.VagasDisponiveis)
+                </dt>
+                <dd class="col-sm-6">
+                    @Html.DisplayFor(model => model.Subevento.VagasDisponiveis)
+                </dd>
+                <dt class="col-sm-4">
+                    @Html.DisplayNameFor(model => model.Subevento.CargaHoraria)
+                </dt>
+                <dd class="col-sm-6">
+                    @Html.DisplayFor(model => model.Subevento.CargaHoraria)
+                </dd>
+                <dt class="col-sm-4">
+                    @Html.DisplayNameFor(model => model.Subevento.IdTipoEvento)
+                </dt>
+                <dd class="col-sm-6">
+                    @Html.DisplayFor(model => model.Subevento.IdTipoEvento)
+                </dd>
+            </dl>
 
-<h1>Delete</h1>
-
-<h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>SubeventoModel</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Id)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.IdEvento)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.IdEvento)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Nome)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Nome)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Descricao)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Descricao)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.DataInicio)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.DataInicio)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.DataFim)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.DataFim)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.InscricaoGratuita)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.InscricaoGratuita)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Status)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Status)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.DataInicioInscricao)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.DataInicioInscricao)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.DataFimInscricao)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.DataFimInscricao)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ValorInscricao)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ValorInscricao)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PossuiCertificado)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PossuiCertificado)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FrequenciaMinimaCertificado)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FrequenciaMinimaCertificado)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.VagasOfertadas)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.VagasOfertadas)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.VagasReservadas)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.VagasReservadas)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.VagasDisponiveis)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.VagasDisponiveis)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CargaHoraria)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CargaHoraria)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.IdTipoEvento)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.IdTipoEvento)
-        </dd>
-    </dl>
-    
-    <form asp-action="Delete">
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
-    </form>
+            <div class="row justify-content-end">
+                <div class="col-2">
+                    <div>
+                        <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
+                    </div>
+                </div>
+                <div class="col-2">
+                    <div class="form-group">
+                        <input type="submit" value="Excluir" class="btn btn-blue-normal color-white" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
