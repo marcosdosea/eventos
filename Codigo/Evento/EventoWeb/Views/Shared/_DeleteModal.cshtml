@@ -1,18 +1,17 @@
-﻿@model EventoWeb.Models.EventoModel
+﻿@model EventoWeb.Models.DeleteModel
 
-<div class="modal fade" id="deleteModal-@Model.Id" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+<div class="modal fade" id="@Model.ModalId" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="deleteModalLabel">Confirmar Exclusão</h5>
-                
+                <h5 class="modal-title" id="modalLabel">Confirmar Exclusão</h5>
             </div>
             <div class="modal-body">
-                Tem certeza que deseja excluir o evento "@Model.Nome"?
+                @Model.ConfirmMessage
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-blue-normal" data-dismiss="modal">Cancelar</button>
-                <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+                <form asp-action="@Model.ActionName" asp-controller="@Model.ControllerName" asp-route-id="@Model.RouteValues" method="post">
                     <button type="submit" class="btn btn-danger">Excluir</button>
                 </form>
             </div>
