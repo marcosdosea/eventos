@@ -118,7 +118,14 @@ namespace Service
                         };
             return query.AsNoTracking();
         }
-        
+
+        public string GetNomeById(uint id)
+        {
+            return _context.Eventos
+                   .Where(t => t.Id == id)
+                   .Select(t => t.Nome)
+                   .FirstOrDefault();
+        }
 
         public void CreateGestorModel(Pessoa pessoa, uint idEvento)
         {   
