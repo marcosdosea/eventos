@@ -118,9 +118,9 @@ namespace Service
                         };
             return query.AsNoTracking();
         }
-        
 
-        public void CreateGestorModel(Pessoa pessoa, uint idEvento)
+
+        public void CreateGestorModel(Pessoa pessoa, uint idEvento,int idPapel)
         {   
             var existingPessoa = _pessoaService.GetByCpf(pessoa.Cpf);
 
@@ -139,7 +139,7 @@ namespace Service
             {
                 IdPessoa = idPessoa,
                 IdEvento = idEvento,
-                IdPapel = 2,
+                IdPapel = idPapel,
                 DataInscricao = DateTime.Now, 
                 Status = "S", //(Solicitada)
             };

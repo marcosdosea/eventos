@@ -16,6 +16,6 @@ namespace Core.Service
 
         IEnumerable<EventoDTO> GetByNome(string Nome);
 
-        void CreateGestorModel(Pessoa pessoa,uint IdEvento);
+        void CreateGestorModel(Pessoa pessoa,uint IdEvento, int idPapel);
     }
 }

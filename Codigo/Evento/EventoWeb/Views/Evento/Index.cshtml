@@ -84,7 +84,9 @@
 
 						<a class="danger-normal" style="text-decoration:none;" href="#!" data-toggle="modal" data-target="#@deleteModel.ModalId">Delete</a>
 						@await Html.PartialAsync("_DeleteModal", deleteModel) |
-						@Html.ActionLink("Gestores", "CreateGestorEvento", new { id = item.Id }, new { @style = "text-decoration:none;" })
+						@Html.ActionLink("Gestores", "GestaoPapel", new { idEvento = item.Id,idPapel = 2 }, new { @style = "text-decoration:none;" })|
+						@Html.ActionLink("Colaboradores", "GestaoPapel", new { idEvento = item.Id, idPapel = 3}, new { @style = "text-decoration:none;" })|
+						@Html.ActionLink("Participantes", "GestaoPapel", new { idEvento = item.Id,idPapel = 4 }, new { @style = "text-decoration:none;" })
 					</td>
 				</tr>
 }
@@ -95,3 +97,4 @@
 			onclick="location.href='@Url.Action("Create")'">
 		Criar evento
 	</button>
+</div>

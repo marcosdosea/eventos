@@ -127,12 +127,13 @@ namespace EventoWeb.Controllers
 
         
         // GET: EventoController/CreateGestorEvento
-        public ActionResult CreateGestorEvento(uint id)
+        public ActionResult GestaoPapel(uint idEvento, int idPapel)
         {
-            var gestorModel = new GestorEventoModel
+            var gestorModel = new GestaoPapelModel
             {
-                Evento = _eventoService.GetEventoSimpleDto(id),
-                Inscricoes = _inscricaoService.GetInscricaoPessoaEvento(id)
+	            IdPapel = idPapel,
+                Evento = _eventoService.GetEventoSimpleDto(idEvento),
+                Inscricoes = _inscricaoService.GetInscricaoPessoaEvento(idEvento,idPapel),
             };
             return View(gestorModel);
         }
@@ -140,21 +141,22 @@ namespace EventoWeb.Controllers
         // POST: EventoController/CreateGestorEvento
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult CreateGestorEvento( GestorEventoModel gestorEventoModel)
+        public ActionResult GestaoPapel( GestaoPapelModel gestaoPapelModel)
         {
-            var pessoa = gestorEventoModel.Pessoa;
-            var idEvento = gestorEventoModel.Evento.Id;
+            var pessoa = gestaoPapelModel.Pessoa;
+            var idEvento = gestaoPapelModel.Evento.Id;
+            var idPapel = gestaoPapelModel.IdPapel;
             pessoa.NomeCracha = pessoa.Nome;
-            _eventoService.CreateGestorModel(pessoa, idEvento);
-            return RedirectToAction("CreateGestorEvento", new { id = idEvento });
+            _eventoService.CreateGestorModel(pessoa, idEvento, idPapel);
+            return RedirectToAction("GestaoPapel", new { idEvento, idPapel });
 
         } 
         // POST: EventoController/DeletePessoaPapel
-        public IActionResult DeletePessoaPapel(uint idPessoa, uint idEvento)
+        public IActionResult DeletePessoaPapel(uint idPessoa, uint idEvento, int idPapel)
         {
-            _inscricaoService.DeletePessoaPapel(idPessoa, idEvento);
+            _inscricaoService.DeletePessoaPapel(idPessoa, idEvento, idPapel);
 
-            return RedirectToAction("CreateGestorEvento", new { id = idEvento });
+            return RedirectToAction("GestaoPapel", new { idEvento, idPapel });
         }
     }
 }

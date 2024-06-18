@@ -19,9 +19,9 @@ namespace Service
             _context.SaveChanges();
         }
 
-        public void DeletePessoaPapel(uint idPessoa, uint idEvento)
+        public void DeletePessoaPapel(uint idPessoa, uint idEvento,int idPapel)
         {
-            var inscricao = _context.Inscricaopessoaeventos.FirstOrDefault(i => i.IdPessoa == idPessoa && i.IdEvento == idEvento);
+            var inscricao = _context.Inscricaopessoaeventos.FirstOrDefault(i => i.IdPessoa == idPessoa && i.IdEvento == idEvento && i.IdPapel == idPapel);
             if (inscricao != null)
             {
                 _context.Inscricaopessoaeventos.Remove(inscricao);
@@ -29,11 +29,11 @@ namespace Service
             }
         }
         
-        public IEnumerable<Inscricaopessoaevento> GetInscricaoPessoaEvento(uint id)
+        public IEnumerable<Inscricaopessoaevento> GetInscricaoPessoaEvento(uint idEvento, int idPapel)
         {
             return _context.Inscricaopessoaeventos
                 .Include(i => i.IdPessoaNavigation)
-                .Where(i => i.IdEvento == id)
+                .Where(i => i.IdEvento == idEvento && i.IdPapel == idPapel)
                 .AsNoTracking()
                 .ToList();
         }
