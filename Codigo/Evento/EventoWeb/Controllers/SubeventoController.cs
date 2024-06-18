@@ -25,14 +25,13 @@ namespace EventoWeb.Controllers
         public ActionResult Index()
         {
             var listaSubeventos = _subeventoService.GetAll().ToList(); ;
-            //var listaSubeventosModel = _mapper.Map<List<SubeventoModel>>(listaSubeventos);
-            //return View(listaSubeventosModel);
             var listaSubeventosModel = listaSubeventos.Select(e => new SubeventoModel
             {
                 Id = e.Id,
                 Nome = e.Nome,
                 IdEvento = e.IdEvento,
                 NomeEvento = _eventoService.GetNomeById(e.IdEvento),
+                DataInicio = e.DataInicio,
                 Status = e.Status,
                 IdTipoEvento = e.IdTipoEvento,
                 NomeTipoEvento = _tipoEventoService.GetNomeById(e.IdTipoEvento)
@@ -95,41 +94,26 @@ namespace EventoWeb.Controllers
         public ActionResult Edit(uint id, SubeventocreateModel subeventoModel)
         {
             var subevento = _mapper.Map<Subevento>(subeventoModel.Subevento);
+            subevento.Id = id;
             _subeventoService.Edit(subevento);
             return RedirectToAction(nameof(Index));
         }
         // GET: SubeventoController/Delete/5
         public ActionResult Delete(uint id)
         {
+            
             var subevento = _subeventoService.Get(id);
-            if (subevento == null)
-            {
-                return NotFound();
-            }
             var subeventoModel = _mapper.Map<SubeventoModel>(subevento);
-            var tipoEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
-            var eventos = _eventoService.GetAll().OrderBy(e => e.Nome);
-            var viewModel = new SubeventocreateModel
-            {
-                Subevento = subeventoModel,
-                Eventos = new SelectList(eventos, "Id", "Nome"),
-                TiposEventos = new SelectList(tipoEventos, "Id", "Nome")
-            };
-            return View(viewModel);
-            //var subevento = _subeventoService.Get(id);
-            //var subeventoModel = _mapper.Map<SubeventoModel>(subevento);
-            // return View(subeventoModel);
+            return View(subeventoModel);
         }
         // POST: SubeventoController/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(uint id, SubeventocreateModel subeventoModel)
+        public ActionResult Delete(uint id, SubeventoModel subeventoModel)
         {
-            var subevento = _mapper.Map<Subevento>(subeventoModel.Subevento);
-            _subeventoService.Edit(subevento);
+            
+            _subeventoService.Delete(id);
             return RedirectToAction(nameof(Index));
-           // _subeventoService.Delete(id);
-            //return RedirectToAction(nameof(Index));
         }
     }
 }
