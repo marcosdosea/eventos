@@ -16,7 +16,6 @@ namespace EventoWeb.Models
         [Display(Name = "Valor", Prompt = "R$ 00.00")]
         [Range(0.01, double.MaxValue, ErrorMessage = "O valor da inscrição deve ser maior que zero.")]
         [RegularExpression(@"^\d+(\.\d{1,2})?$", ErrorMessage = "Por favor, insira no máximo duas casas decimais e use '.' como separador decimal.")]
-        public decimal ValorInscricao { get; set; }
         public decimal Valor { get; set; }
 
         [Display(Name = "Data de Inicio")]
@@ -28,11 +27,11 @@ namespace EventoWeb.Models
         public DateTime Datafim { get; set; }
 
         [Display(Name = "Evento")]
-        [Range(0, 1, ErrorMessage = "O valor deve ser Não ou Sim.")]
+        [Range(1, 2, ErrorMessage = "O valor deve ser Não ou Sim.")]
         public sbyte UsadaEvento { get; set; }
 
         [Display(Name = "Subevento")]
-        [Range(0, 1, ErrorMessage = "O valor deve ser Não ou Sim.")]
+        [Range(1, 2, ErrorMessage = "O valor deve ser Não ou Sim.")]
         public sbyte UsadaSubevento { get; set; }
 
         [Display(Name = "Evento")]
