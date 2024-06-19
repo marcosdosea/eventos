@@ -11,9 +11,6 @@
 		<thead class="blue-normal blue-normal-bg-table">
 			<tr>
 				<th>
-					@Html.DisplayNameFor(model => model.Id)
-				</th>
-				<th>
 					@Html.DisplayNameFor(model => model.DataInicio)
 				</th>
 				<th>
@@ -34,9 +31,6 @@
 @foreach (var item in Model)
 {
 				<tr>
-					<td>
-						@Html.DisplayFor(modelItem => item.Id)
-					</td>
 					<td>
 						@Html.DisplayFor(modelItem => item.DataInicio)
 					</td>
@@ -69,8 +63,7 @@
 					</td>
 					<td>
 						@Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" }) |
-						@Html.ActionLink("Detalhes", "Details", new { id = item.Id }, new { @style = "text-decoration:none;" }) |
-						<a class="danger-normal" style="text-decoration:none;" href="#!" data-toggle="modal" data-target="#deleteModal-@item.Id">Delete</a>
+						<a class="danger-normal" style="text-decoration:none;" href="#!" data-toggle="modal" data-target="#deleteModal-@item.Id">Excluir</a>
 			@await Html.PartialAsync("_DeleteModal", item) |
 						@Html.ActionLink("Gestores", "CreateGestorEvento", new { id = item.Id }, new { @style = "text-decoration:none;" })
 					</td>
@@ -83,3 +76,4 @@
 			onclick="location.href='@Url.Action("Create")'">
 		Criar evento
 	</button>
+</div>
