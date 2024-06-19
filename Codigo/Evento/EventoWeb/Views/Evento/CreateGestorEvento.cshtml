@@ -6,88 +6,173 @@
 ViewData["Title"] = "Associar Gestor ao Evento";
 }
 
-<h1>Cadastrar Gestores do Evento</h1>
+<h1 class="blue-normal">Cadastrar Gestores do Evento</h1>
+<hr />
 <script>
     function validarFormulario() {
         var eventoSelecionado = document.getElementById("IdEvento").value;
         if (eventoSelecionado == 0) {
             alert("Por favor, selecione um evento.");
-            return false; // Impede o envio do formulário
+            return false; 
         }
-        return true; // Permite o envio do formulário
+        return true;
     }
 </script>
 
 <div class="row">
-    <div class="col-md-6">
-        <form asp-action="CreateGestorEvento" method="post" onsubmit="return validarFormulario()">
-            <div class="form-group">
-                <label for="IdEvento" class="control-label">Evento</label>
-                <select id="IdEvento" name="IdEvento" class="form-control" readonly>
-                    @if(Model.Evento == null || Model.Evento.Id == 0)
-                    {
-                        <option value="0">Não Informado</option>
-                    }
-                    else
-                    {
-                        <option value="@Model.Evento.Id" selected>@Model.Evento.Nome</option>
-                    }
-                </select>
-                @Html.HiddenFor(model => model.Evento.Id)
+    <div>
+        <form asp-action="CreateGestorEvento" method="post" onsubmit="return validarFormulario()"> 
+            <div class="row">
+                <div class="col-lg-3">
+                    <div class="form-group">
+                        <label for="IdEvento" class="control-label">Evento</label>
+                        <select id="IdEvento" name="IdEvento" class="form-control" readonly>
+                            @if (Model.Evento == null || Model.Evento.Id == 0)
+                            {
+                                <option value="0">Não Informado</option>
+                            }
+                            else
+                            {
+                                <option value="@Model.Evento.Id" selected>@Model.Evento.Nome</option>
+                            }
+                        </select>
+                        @Html.HiddenFor(model => model.Evento.Id)
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Pessoa.Cpf" class="control-label">CPF</label>
-                <input asp-for="Pessoa.Cpf" class="form-control" id="Cpf"/>
-                <span asp-validation-for="Pessoa.Cpf" class="text-danger"></span>
+            <br />
+            <h4 class="blue-normal">
+                Dados do Gestor
+            </h4>
+            <div class="row">
+                <div class="col-6 col-sm-6 col-md-3 col-lg-2">
+                    <div class="form-group">
+                        <label asp-for="Pessoa.Cpf" class="control-label">CPF</label>
+                        <input asp-for="Pessoa.Cpf" class="form-control" id="Cpf" placeholder="000.000.000-00" oninput="formatarCPF()" maxlength="14" />
+                        <span asp-validation-for="Pessoa.Cpf" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-md-3 col-lg-4">
+                    <div class="form-group">
+                        <label asp-for="Pessoa.Nome" class="control-label">Nome</label>
+                        <input asp-for="Pessoa.Nome" class="form-control" id="Nome" placeholder="Nome completo" />
+                        <span asp-validation-for="Pessoa.Nome" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-6 col-sm-6 col-md-3 col-lg-2">
+                    <div class="form-group">
+                        <label asp-for="Pessoa.Telefone1" class="control-label">Telefone</label>
+                        <input asp-for="Pessoa.Telefone1" type="number" class="form-control" id="Telefone1" placeholder="Com o DDD" />
+                        <span asp-validation-for="Pessoa.Telefone1" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-6 col-sm-6 col-md-3 col-lg-4">
+                    <div class="form-group">
+                        <label asp-for="Pessoa.Email" class="control-label">Email</label>
+                        <input asp-for="Pessoa.Email" class="form-control" id="Email" placeholder="Seu e-mail" />
+                        <span asp-validation-for="Pessoa.Email" class="text-danger"></span>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Pessoa.Nome" class="control-label">Nome</label>
-                <input asp-for="Pessoa.Nome" class="form-control" id="Nome"/>
-                <span asp-validation-for="Pessoa.Nome" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Pessoa.Telefone1" class="control-label">Telefone</label>
-                <input asp-for="Pessoa.Telefone1" class="form-control" id="Telefone1"/>
-                <span asp-validation-for="Pessoa.Telefone1" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Pessoa.Email" class="control-label">Email</label>
-                <input asp-for="Pessoa.Email" class="form-control" id="Email"/>
-                <span asp-validation-for="Pessoa.Email" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Adicionar Gestor" class="btn btn-primary"/>
-            </div>
+            <br />
+            <div class="d-flex flex-row-reverse">
+                <div class="form-group">
+                    <input type="submit" value="Adicionar Gestor" class="btn btn-lg btn-blue-normal" />
+                </div>
+            </div> 
+            <br />
         </form>
     </div>
 </div>
 <div class="row">
     <div class="col-md-12">
-        <h2>Lista de Gestores de Evento</h2>
-        <table class="table">
-            <thead>
-            <tr>
-                <th>CPF</th>
-                <th>Nome</th>
-                <th>Ações</th>
-            </tr>
+        <h2 class="blue-normal">Lista de Gestores do Evento</h2>
+        <table class="table table-striped">
+            <thead class="blue-normal blue-normal-bg-table">
+                <tr>
+                    <th>CPF</th>
+                    <th>Nome</th>
+                    <th>Ações</th>
+                </tr>
             </thead>
             <tbody>
                 @foreach (var inscricaopessoaevento in Model.Inscricoes)
                 {
                     <tr>
-                        <td>@inscricaopessoaevento.IdPessoaNavigation.Cpf</td>
-                        <td>@inscricaopessoaevento.IdPessoaNavigation.Nome</td>
-                        <td>
-                            
-                            @using (Html.BeginForm("DeletePessoaPapel", "Evento", new { IdPessoa = inscricaopessoaevento.IdPessoa, IdEvento = inscricaopessoaevento.IdEvento }, FormMethod.Post))
-                            {
+                        <td style="vertical-align: middle;">@FormatarCPF(inscricaopessoaevento.IdPessoaNavigation.Cpf)</td>
+                        <td style="vertical-align: middle;">@inscricaopessoaevento.IdPessoaNavigation.Nome</td>
+                        <td style="vertical-align: middle;">
+                            <form id="removeForm-@inscricaopessoaevento.IdPessoa" method="POST" action="/Evento/DeletePessoaPapel">
                                 @Html.AntiForgeryToken()
-                                <input type="submit" value="Delete" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this item?');"/>
-                            }
+                                <input type="hidden" name="IdPessoa" value="@inscricaopessoaevento.IdPessoa" />
+                                <input type="hidden" name="IdEvento" value="@Model.Evento.Id" />
+                                <a href="#confirmRemovalModal" data-toggle="modal" onclick="setModalValues('@inscricaopessoaevento.IdPessoaNavigation.Nome', '@Model.Evento.Nome', '@inscricaopessoaevento.IdPessoa', '@Model.Evento.Id')" class="text-danger" style="text-decoration: none; cursor: pointer;">Remover Gestor</a>
+                            </form>
                         </td>
                     </tr>
                 }
+            </tbody>
         </table>
     </div>
 </div>
+
+<!-- Modal -->
+<div class="modal fade" id="confirmRemovalModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalLabel">Confirmar Remoção</h5>
+            </div>
+            <div class="modal-body">
+                Quer realmente remover <strong><span id="pessoaNome"></span></strong> como gestor do evento: <strong><span id="eventoNome"></span></strong>?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-blue-normal" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirmRemovalButton">Remover</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function setModalValues(pessoaNome, eventoNome, pessoaId, eventoId) {
+        document.getElementById('pessoaNome').textContent = pessoaNome;
+        document.getElementById('eventoNome').textContent = eventoNome;
+
+
+        var removeForm = document.getElementById('removeForm-' + pessoaId);
+        document.getElementById('confirmRemovalButton').onclick = function () {
+            removeForm.submit();
+        };
+    }
+</script>
+
+@functions {
+    public static string FormatarCPF(string cpf)
+    {
+        if (string.IsNullOrEmpty(cpf) || cpf.Length != 11)
+            return cpf;
+
+        return Convert.ToUInt64(cpf).ToString(@"000\.000\.000\-00");
+    }
+}
+<!--
+    <script>
+    function formatarCPF() {
+        var cpf = document.getElementById('Cpf');
+        var valor = cpf.value.replace(/\D/g, "");
+        var tamanho = valor.length;
+
+
+        if (tamanho >= 10) {
+            cpf.value = valor.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+        } else if (tamanho >= 9) {
+            cpf.value = valor.replace(/(\d{3})(\d{3})(\d{3})/, "$1.$2.$3-");
+        } else if (tamanho >= 6) {
+            cpf.value = valor.replace(/(\d{3})(\d{3})/, "$1.$2.");
+        } else if (tamanho >= 3) {
+            cpf.value = valor.replace(/(\d{3})/, "$1.");
+        }
+    }
+</script>
+-->

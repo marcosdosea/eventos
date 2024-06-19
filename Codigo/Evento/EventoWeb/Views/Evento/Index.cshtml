@@ -63,8 +63,22 @@
 					</td>
 					<td>
 						@Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" }) |
-						<a class="danger-normal" style="text-decoration:none;" href="#!" data-toggle="modal" data-target="#deleteModal-@item.Id">Excluir</a>
-			@await Html.PartialAsync("_DeleteModal", item) |
+
+						@Html.ActionLink("Detalhes", "Details", new { id = item.Id }, new { @style = "text-decoration:none;" }) |
+						@{
+							var deleteModel = new EventoWeb.Models.DeleteModel
+							{
+								ModalId = "deleteModal-" + item.Id,
+								ActionName = "Delete",
+								ControllerName = "Evento",
+								RouteValues = item.Id,
+								ConfirmMessage = $"Tem certeza que deseja excluir o evento \"{item.Nome}\"?",
+								ItemName = item.Nome
+							};
+						}
+
+						<a class="danger-normal" style="text-decoration:none;" href="#!" data-toggle="modal" data-target="#@deleteModel.ModalId">Delete</a>
+						@await Html.PartialAsync("_DeleteModal", deleteModel) |
 						@Html.ActionLink("Gestores", "CreateGestorEvento", new { id = item.Id }, new { @style = "text-decoration:none;" })
 					</td>
 				</tr>

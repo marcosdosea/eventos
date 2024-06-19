@@ -13,7 +13,6 @@
     <div class="row">
         <div class="breadcrumb">
             <a asp-controller="Home" asp-action="Index" style="text-decoration:none; padding-right:6px">
-                <img class="mb-1" style="display:inline-block" src="/img/icon-wrapper.svg" />
                 <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Home</p>
             </a>
             <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
@@ -78,16 +77,14 @@
                 </dd>
             </dl>
 
-            <form asp-action="Delete">
-                <button class="btn btn-mg btn-outline-danger  me-5">
-                    <a asp-action="Index" class=" btn-outline-danger" style="text-decoration:none;">
-                        Cancelar
-                    </a>
-                </button>
+            <form asp-action="Delete" class="row justify-content-end">
+                <div class="col-2">
+                    <div>
+                        <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
+                    </div>
+                </div>
                 <input type="hidden" asp-for="Id" />
-                <input type="submit" value="Deletar" class="btn btn-mg btn-blue-normal text-white btn-primary" />
-
-
+                <input type="submit" value="Deletar" class="col-2 btn btn-mg btn-blue-normal text-white btn-primary" />
             </form>
         </div>
     </div>
