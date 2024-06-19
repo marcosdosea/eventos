@@ -9,11 +9,7 @@
 
 <div>
     <div class="breadcrumb">
-        <a asp-controller="Home" asp-action="Index" style="text-decoration:none; padding-right:6px">
-            <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Home</p>
-        </a>
-
-        <p style="color:#6C757D;display:inline-block">/ Tipo de Inscrição</p>
+        <p style="color:#6C757D;display:inline-block">Tipo de Inscrição</p>
     </div>
 
     <h1 class="blue-normal">Verifique os Tipos de Inscrição de seus Eventos!</h1>
@@ -23,13 +19,10 @@
         <thead class="blue-normal blue-normal-bg-table">
             <tr>
                 <th>
-                    @Html.DisplayNameFor(model => model.Id)
+                    @Html.DisplayNameFor(model => model.Descricao)
                 </th>
                 <th>
                     @Html.DisplayNameFor(model => model.NomeEvento)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.Descricao)
                 </th>
                 <th>
                     @Html.DisplayNameFor(model => model.Valor)
@@ -46,7 +39,7 @@
                 <th>
                     @Html.DisplayNameFor(model => model.UsadaSubevento)
                 </th>
-                <th></th>
+                <th>Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -54,13 +47,10 @@
             {
                 <tr>
                     <td>
-                        @Html.DisplayFor(modelItem => item.Id)
+                        @Html.DisplayFor(modelItem => item.Descricao)
                     </td>
                     <td>
                         @Html.DisplayFor(modelItem => item.NomeEvento)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.Descricao)
                     </td>
                     <td>
                         @Html.DisplayFor(modelItem => item.Valor)
@@ -76,7 +66,7 @@
                             string usadaEvento = "Desconhecido";
                             switch (item.UsadaEvento)
                             {
-                                case 0:
+                                case 2:
                                     usadaEvento = "Não";
                                     break;
                                 case 1:
@@ -91,7 +81,7 @@
                             string usadaSubvento = "Desconhecido";
                             switch (item.UsadaSubevento)
                             {
-                                case 0:
+                                case 2:
                                     usadaSubvento = "Não";
                                     break;
                                 case 1:
@@ -103,7 +93,20 @@
                     </td>
                     <td>
                         @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" }) |
-                        @Html.ActionLink("Deletar", "Delete", new { id = item.Id }, new { @style = "color:#f31260; text-decoration:none;" })
+                        @{
+                            var deleteModel = new EventoWeb.Models.DeleteModel
+                {
+                    ModalId = "deleteModal-" + item.Id,
+                    ActionName = "Delete",
+                    ControllerName = "TipoInscricao",
+                    RouteValues = item.Id,
+                    ConfirmMessage = $"Tem certeza que deseja excluir o tipo de inscrição \"{item.Descricao}\" do evento \"{item.NomeEvento}\"?",
+                    ItemName = item.Descricao
+                };
+                        }
+
+                        <a class="danger-normal" style="text-decoration:none;" href="#!" data-toggle="modal" data-target="#@deleteModel.ModalId">Excluir</a>
+                        @await Html.PartialAsync("_DeleteModal", deleteModel)
 
                     </td>
                 </tr>
