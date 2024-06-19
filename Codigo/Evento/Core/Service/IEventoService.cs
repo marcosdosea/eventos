@@ -1,4 +1,4 @@
-﻿using Core.DTO;
+using Core.DTO;
 
 namespace Core.Service
 {
@@ -19,5 +19,7 @@ namespace Core.Service
         void CreateGestorModel(Pessoa pessoa,uint IdEvento);
 
         void CreateParticipanteModel(Pessoa pessoa, uint IdEvento);
+        
+        string GetNomeById(uint id);
     }
 }
