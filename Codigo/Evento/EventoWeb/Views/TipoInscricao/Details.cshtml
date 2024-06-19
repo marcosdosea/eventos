@@ -12,7 +12,6 @@
     <div class="row">
         <div class="breadcrumb">
             <a asp-controller="Home" asp-action="Index" style="text-decoration:none; padding-right:6px">
-                <img class="mb-1" style="display:inline-block" src="/img/icon-wrapper.svg" />
                 <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Home</p>
             </a>
             <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
@@ -76,13 +75,14 @@
                 </dd>
             </dl>
         </div>
-        <div>
-            <button class="btn btn-mg btn-outline-danger  me-5">
-                <a asp-action="Index" class=" btn-outline-danger" style="text-decoration:none;">
-                    Cancelar
-                </a>
-            </button>
-            <button type="button" class="btn btn-mg btn-blue-normal text-white ">
+       
+        <div class="row justify-content-end">
+            <div class="col-2">
+                <div>
+                    <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
+                </div>
+            </div>
+            <button type="button" class=" col-2 btn btn-mg btn-blue-normal text-white ">
                 <a asp-action="Edit" asp-route-id="@Model?.Id" class="text-white" style="text-decoration:none;">
                     Editar Tipo de Inscrição
                 </a>
