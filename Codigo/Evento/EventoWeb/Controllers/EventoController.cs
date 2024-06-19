@@ -148,7 +148,32 @@ namespace EventoWeb.Controllers
             _eventoService.CreateGestorModel(pessoa, idEvento);
             return RedirectToAction("CreateGestorEvento", new { id = idEvento });
 
-        } 
+        }
+
+        // GET: EventoController/CreateParticipante
+        public ActionResult CreateParticipante(uint id)
+        {
+            var participanteModel = new ParticipanteModel
+            {
+                Evento = _eventoService.GetEventoSimpleDto(id),
+                Inscricoes = _inscricaoService.GetInscricaoPessoaEvento(id)
+            };
+            return View(participanteModel);
+        }
+
+        // POST: EventoController/CreateParticipante
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult CreateParticipante(ParticipanteModel participanteModel)
+        {
+            var pessoa = participanteModel.Pessoa;
+            var idEvento = participanteModel.Evento.Id;
+            pessoa.NomeCracha = pessoa.Nome;
+            _eventoService.CreateParticipanteModel(pessoa, idEvento);
+            return RedirectToAction("CreateParticipante", new { id = idEvento });
+
+        }
+
         // POST: EventoController/DeletePessoaPapel
         public IActionResult DeletePessoaPapel(uint idPessoa, uint idEvento)
         {
@@ -156,5 +181,6 @@ namespace EventoWeb.Controllers
 
             return RedirectToAction("CreateGestorEvento", new { id = idEvento });
         }
+
     }
 }

@@ -73,6 +73,8 @@
 						<a class="danger-normal" style="text-decoration:none;" href="#!" data-toggle="modal" data-target="#deleteModal-@item.Id">Delete</a>
 			@await Html.PartialAsync("_DeleteModal", item) |
 						@Html.ActionLink("Gestores", "CreateGestorEvento", new { id = item.Id }, new { @style = "text-decoration:none;" })
+						|
+						@Html.ActionLink("Participantes", "CreateParticipante", new { id = item.Id }, new { @style = "text-decoration:none;" })
 					</td>
 				</tr>
 }

@@ -147,5 +147,33 @@ namespace Service
             
         }
 
+
+        public void CreateParticipanteModel(Pessoa pessoa, uint idEvento)
+        {
+            var existingPessoa = _pessoaService.GetByCpf(pessoa.Cpf);
+
+            uint idPessoa;
+
+            if (existingPessoa != null)
+            {
+                idPessoa = existingPessoa.Id;
+            }
+            else
+            {
+                idPessoa = _pessoaService.Create(pessoa);
+            }
+
+            var novaInscricao = new Inscricaopessoaevento
+            {
+                IdPessoa = idPessoa,
+                IdEvento = idEvento,
+                IdPapel = 4,
+                DataInscricao = DateTime.Now,
+                Status = "S", //(Solicitada)
+            };
+            _inscricaoService.CreateInscricaoEvento(novaInscricao);
+
+        }
+
     }
 }
