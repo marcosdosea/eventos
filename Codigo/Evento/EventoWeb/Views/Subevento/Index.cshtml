@@ -8,11 +8,7 @@
 
 <div>
     <div class="breadcrumb">
-        <a asp-controller="Home" asp-action="Index" style="text-decoration:none; padding-right:6px">
-            <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Home</p>
-        </a>
-
-        <p style="color:#6C757D;display:inline-block">/ Subeventos</p>
+         <p style="color:#6C757D;display:inline-block">Subeventos</p>
     </div>
 
     <h1 class="blue-normal">Verifique os Subeventos de seus Eventos!</h1>
@@ -20,9 +16,6 @@
     <table class="table table-striped">
         <thead class="blue-normal blue-normal-bg-table">
             <tr>
-                <th>
-                    @Html.DisplayNameFor(model => model.Id)
-                </th>
                 <th>
                     @Html.DisplayNameFor(model => model.Nome)
                 </th>
@@ -45,9 +38,6 @@
             @foreach (var item in Model)
             {
                 <tr>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.Id)
-                    </td>
                     <td>
                         @Html.DisplayFor(modelItem => item.Nome)
                     </td>
@@ -83,8 +73,20 @@
                     </td>
                     <td>
                         @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" }) |
-                        <!--@Html.ActionLink("Detalhes", "Details", new { id = item.Id }, new { @style = "text-decoration:none;" }) |-->
-                        @Html.ActionLink("Deletar", "Delete", new { id = item.Id }, new { @style = "color:#f31260; text-decoration:none;" })
+                        @{
+                            var deleteModel = new EventoWeb.Models.DeleteModel
+                {
+                    ModalId = "deleteModal-" + item.Id,
+                    ActionName = "Delete",
+                    ControllerName = "Subevento",
+                    RouteValues = item.Id,
+                    ConfirmMessage = $"Tem certeza que deseja excluir o subevento \"{item.Nome}\"?",
+                    ItemName = item.Nome
+                };
+                        }
+
+                        <a class="danger-normal" style="text-decoration:none;" href="#!" data-toggle="modal" data-target="#@deleteModel.ModalId">Excluir</a>
+                        @await Html.PartialAsync("_DeleteModal", deleteModel)
                     </td>
                 </tr>
             }

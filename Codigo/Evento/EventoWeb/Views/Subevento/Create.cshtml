@@ -5,10 +5,6 @@
 }
 
 <div class="breadcrumb">
-    <a asp-controller="Home" asp-action="Index" style="text-decoration:none; padding-right:6px">
-        <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Home</p>
-    </a>
-    <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
     <a asp-controller="Subevento" asp-action="Index" style="text-decoration:none; padding-right:6px">
         <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Subevento</p>
     </a>
@@ -119,8 +115,19 @@
             <h4 class="blue-normal">
                 Outros
             </h4>
+            <div class ="row">
+                <div class="">
+                    <div class="form-group">
+                        <label asp-for="Subevento.IdTipoEvento" class="control-label">Tipos de Subevento</label>
+                        <select asp-for="Subevento.IdTipoEvento" class="form-control" asp-items="Model.TiposEventos">
+                            <option value="">Tipo de Subevento</option>
+                        </select>
+                        <span asp-validation-for="Subevento.IdTipoEvento" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="form-group">
                         <label asp-for="Subevento.PossuiCertificado" class="control-label"></label>
                         <select asp-for="Subevento.PossuiCertificado" class="form-select" id="PossuiCertificado" aria-label="Default select example">
@@ -130,25 +137,13 @@
                         <span asp-validation-for="Subevento.PossuiCertificado" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="form-group" id="FrequenciaMinimaCertificado">
                         <label asp-for="Subevento.FrequenciaMinimaCertificado" class="control-label"></label>
                         <input asp-for="Subevento.FrequenciaMinimaCertificado" class="form-control" />
                         <span asp-validation-for="Subevento.FrequenciaMinimaCertificado" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label asp-for="Subevento.IdTipoEvento" class="control-label">Tipos de Subevento</label>
-                        <select asp-for="Subevento.IdTipoEvento" class="form-control" asp-items="Model.TiposEventos">
-                            <option value="">Selecione o tipo de Subevento</option>
-                        </select>
-                        <span asp-validation-for="Subevento.IdTipoEvento" class="text-danger"></span>
-                    </div>
-                </div> 
-            </div>
-            <br />
-            <div class="row">
                 <div class="col-md-3">
                     <div class="form-group">
                         <label asp-for="Subevento.VagasOfertadas" class="control-label"></label>
@@ -165,16 +160,12 @@
                 </div>
             </div>
             <br />
-            <div class="row justify-content-end">
-                <div class="col-2">
-                    <div>
-                        <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
-                    </div>
+            <div class="d-flex flex-row-reverse">
+                <div class="form-group">
+                    <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
                 </div>
-                <div class="col-2">
-                    <div class="form-group">
-                        <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
-                    </div>
+                <div class="form-group" style="margin-right: 10px;">
+                    <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
                 </div>
             </div>
         </form>

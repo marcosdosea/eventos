@@ -11,10 +11,6 @@
 <div class="container-fluid no-padding">
     <div class="row">
         <div class="breadcrumb">
-            <a asp-controller="Home" asp-action="Index" style="text-decoration:none; padding-right:6px">
-                <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Home</p>
-            </a>
-            <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
             <a asp-controller="TipoInscricao" asp-action="Index" style="text-decoration:none; padding-right:6px">
                 <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Tipo de Inscrição</p>
             </a>
@@ -38,9 +34,9 @@
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="form-group mb-2">
+                            <div class="form-group" id="valorInscricaoGroup">
                                 <label asp-for="TipoInscricao.Valor" class="control-label"></label>
-                                <input type="number" asp-for="TipoInscricao.Valor" class="form-control" />
+                                <input type="text" asp-for="TipoInscricao.Valor" class="form-control" onkeypress="return validateInput(event)">
                                 <span asp-validation-for="TipoInscricao.Valor" class="text-danger"></span>
                             </div>
                         </div>
@@ -49,7 +45,7 @@
 
                     <div class="form-group mb-2">
                         <label asp-for="TipoInscricao.Descricao" class="control-label"></label>
-                        <input asp-for="TipoInscricao.Descricao" class="form-control" />
+                        <input asp-for="TipoInscricao.Descricao" class="form-control"/>
                         <span asp-validation-for="TipoInscricao.Descricao" class="text-danger"></span>
                     </div>
                     <br />
@@ -86,7 +82,7 @@
                                         <label class="form-check-label" for="UsadaEventoSim">Sim</label>
                                     </div>
                                     <div class="form-check">
-                                        <input asp-for="TipoInscricao.UsadaEvento" class="form-check-input" type="radio" value="0" id="UsadaEventoNao">
+                                        <input asp-for="TipoInscricao.UsadaEvento" class="form-check-input" type="radio" value="2" id="UsadaEventoNao">
                                         <label class="form-check-label" for="UsadaEventoNao">Não</label>
                                     </div>
                                 </div>
@@ -102,7 +98,7 @@
                                         <label class="form-check-label" for="UsadaSubeventoSim">Sim</label>
                                     </div>
                                     <div class="form-check">
-                                        <input asp-for="TipoInscricao.UsadaSubevento" class="form-check-input" type="radio" value="0" id="UsadaSubeventoNao">
+                                        <input asp-for="TipoInscricao.UsadaSubevento" class="form-check-input" type="radio" value="2" id="UsadaSubeventoNao">
                                         <label class="form-check-label" for="UsadaSubeventoNao">Não</label>
                                     </div>
                                 </div>
@@ -111,16 +107,12 @@
                         </div>
                     </div>
                     <br />
-                    <div class="row justify-content-end">
-                        <div class="col-4">
-                            <div>
-                                <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
-                            </div>
+                    <div class="d-flex flex-row-reverse">
+                        <div class="form-group">
+                            <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
                         </div>
-                        <div class="col-3">
-                            <div class="form-group">
-                                <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
-                            </div>
+                        <div class="form-group" style="margin-right: 10px;">
+                            <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
                         </div>
                     </div>
                 </form>

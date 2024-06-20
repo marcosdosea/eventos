@@ -65,7 +65,7 @@ namespace EventoWeb.Models
         [Display(Name = "Há Certificação?")]
         public sbyte PossuiCertificado { get; set; }
 
-        [Display(Name = "Frequência para Certificação")]
+        [Display(Name = "Frequência Minima")]
         public decimal FrequenciaMinimaCertificado { get; set; }
 
         [Display(Name = "Vagas Ofertadas")]
