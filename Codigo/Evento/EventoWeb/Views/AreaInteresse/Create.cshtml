@@ -10,32 +10,37 @@
 
 <div class="col-10">
     <div class="breadcrumb">
-        <a asp-controller="Home" asp-action="Index"><img class="mb-1" src="/img/icon-wrapper.svg" /><p class="blue-normal" style="display:inline-block">Home</p></a>
-        <a asp-controller="Areainteresse" asp-action="Index" class="blue-normal text-decoration-none" style="display:inline-block;"><p>/Área de interesse</p></a>
-        <p style="color:#6C757D;display:inline-block">/Criar área de interesse</p>
+        <a asp-controller="Areainteresse" asp-action="Index" style="text-decoration:none; padding-right:6px">
+            <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Área de Interesse</p>
+        </a>
+        <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
+        <p style="color:#6C757D;display:inline-block">Criar Área de Interesse</p>
     </div>
-    <h1 class="blue-normal">Cadastrar área de interesse</h1>
+    <h1 class="blue-normal">Cadastrar Área de Interesse</h1>
     <div class="row">
         <div class="col-md-4">
             <form asp-action="Create">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <div class="form-group">
                     <label asp-for="Nome" class="control-label"></label>
-                    <input asp-for="Nome" class="form-control" style="width:18rem" placeholder="Insira o nome da área de interesse" />
+                    <input asp-for="Nome" class="form-control" placeholder="Insira o nome da área de interesse" />
                     <span asp-validation-for="Nome" class="text-danger"></span>
                 </div>
-                <div class="form-group">
-                    <br>
-                    <button type="submit" class="btn btn-blue-normal btn-mg mb-2">
-                        <a asp-for="Nome" style="text-decoration:none; color:white">Adicionar área de interesse</a>
-                    </button>
+                <br />
+                <div class="row justify-content-end">
+                    <div class="col-4">
+                        <div>
+                            <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
+                        </div>
+                    </div>
+                    <div class="col-5">
+                        <div class="form-group">
+                            <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
+                        </div>
+                    </div>
                 </div>
             </form>
         </div>
     </div>
-    <a asp-action="Index">
-    <button class="btn btn-mg btn-outline-danger">
-        Cancelar
-    </button>
-    </a>
+    
 </div>
