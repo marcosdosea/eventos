@@ -11,32 +11,28 @@
 <div class="col-10">
     <div class="breadcrumb">
         <a asp-controller="Areainteresse" asp-action="Index" style="text-decoration:none; padding-right:6px">
-            <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Área de Interesse</p>
+            <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Ãrea de Interesse</p>
         </a>
         <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
-        <p style="color:#6C757D;display:inline-block">Criar Área de Interesse</p>
+        <p style="color:#6C757D;display:inline-block">Criar Ãrea de Interesse</p>
     </div>
-    <h1 class="blue-normal">Cadastrar Área de Interesse</h1>
+    <h1 class="blue-normal">Cadastrar Ãrea de Interesse</h1>
     <div class="row">
         <div class="col-md-4">
             <form asp-action="Create">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <div class="form-group">
                     <label asp-for="Nome" class="control-label"></label>
-                    <input asp-for="Nome" class="form-control" placeholder="Insira o nome da área de interesse" />
+                    <input asp-for="Nome" class="form-control" placeholder="Insira o nome da Ã¡rea de interesse" />
                     <span asp-validation-for="Nome" class="text-danger"></span>
                 </div>
                 <br />
-                <div class="row justify-content-end">
-                    <div class="col-4">
-                        <div>
-                            <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
-                        </div>
+                <div class="d-flex flex-row-reverse">
+                    <div class="form-group">
+                        <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
                     </div>
-                    <div class="col-5">
-                        <div class="form-group">
-                            <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
-                        </div>
+                    <div class="form-group" style="margin-right: 10px;">
+                        <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
                     </div>
                 </div>
             </form>
