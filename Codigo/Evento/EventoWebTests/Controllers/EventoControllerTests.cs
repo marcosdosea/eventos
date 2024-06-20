@@ -18,6 +18,10 @@ namespace EventoWeb.Controllers.Tests
         {
             // Arrange
             var mockService = new Mock<IEventoService>();
+            var mockServiceEstado = new Mock<IEstadosbrasilService>();
+            var mockServiceInscricao = new Mock<IInscricaoService>();
+            var mockServiceTipoevento = new Mock<ITipoeventoService>();
+
 
             IMapper mapper = new MapperConfiguration(cfg =>
             cfg.AddProfile(new EventoProfile())).CreateMapper();
@@ -28,7 +32,7 @@ namespace EventoWeb.Controllers.Tests
                 .Returns(GetTargetEvento());
             mockService.Setup(service => service.Create(It.IsAny<Evento>()))
                 .Verifiable();
-            controller = new EventoController(mockService.Object, mapper);
+            controller = new EventoController(mockService.Object, mapper, mockServiceEstado.Object, mockServiceInscricao.Object, mockServiceTipoevento.Object);
         }
 
         [TestMethod()]
@@ -249,7 +253,7 @@ namespace EventoWeb.Controllers.Tests
                 EmailEvento = "DSI@academico.ufs.br",
                 EventoPublico = 1,
                 Cep = "49506036",
-                Estado = "SE",
+                Estado = "Sergipe",
                 Cidade = "Itabaiana",
                 Bairro = "Porto",
                 Rua = " Av. Vereador Olímpio Grande",

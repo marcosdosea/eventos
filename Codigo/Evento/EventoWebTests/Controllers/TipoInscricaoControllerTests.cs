@@ -182,8 +182,8 @@ namespace EventoWeb.Controllers.Tests
                 IdEvento = 1,
                 Descricao = "Gratuita",
                 Valor = 1,
-                DataInicio = new DateTime(2024, 09, 2, 7, 30, 0),
-                Datafim = new DateTime(2024, 09, 7, 12, 30, 0),
+                DataInicio = new DateTime(2024, 09, 2, 0, 0, 0),
+                Datafim = new DateTime(2024, 09, 7, 0, 0, 0),
                 UsadaEvento = 1,
                 UsadaSubevento = 1,
             };

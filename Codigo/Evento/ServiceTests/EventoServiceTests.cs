@@ -10,6 +10,8 @@ namespace Service.Tests
     {
         private EventoContext _context;
         private IEventoService _eventoService;
+        private IPessoaService _pessoaService;
+        private IInscricaoService _inscricaoService;
 
         [TestInitialize]
         public void Initialize()
@@ -122,7 +124,7 @@ namespace Service.Tests
             _context.AddRange(eventos);
             _context.SaveChanges();
 
-            _eventoService = new EventoService(_context);
+            _eventoService = new EventoService(_context, _pessoaService, _inscricaoService);
         }
 
         [TestMethod()]
