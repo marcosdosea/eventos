@@ -10,19 +10,14 @@
 <div class="container-fluid no-padding">
     <div class="row">
         <div class="breadcrumb">
-            <a asp-controller="Home" asp-action="Index" style="text-decoration:none; padding-right:6px">
-                <img class="mb-1" style="display:inline-block" src="/img/icon-wrapper.svg" />
-                <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Home</p>
-            </a>
-            <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
             <a asp-controller="TipoInscricao" asp-action="Index" style="text-decoration:none; padding-right:6px">
                 <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Tipo de Inscrição</p>
             </a>
             <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
-            <p style="color:#6C757D;display:inline-block">Novo Tipo de Inscrição</p>
+            <p style="color:#6C757D;display:inline-block">Criar Tipo de Inscrição</p>
         </div>
 
-        <h1 class="blue-normal">Novo Tipo de Inscrição</h1>
+        <h1 class="blue-normal">Criar Tipo de Inscrição</h1>
         <div class="row">
             <div class="col-md-4 ">
                 <form asp-action="Create">
@@ -32,71 +27,97 @@
                         <input asp-for="TipoInscricao.Id" class="form-control" />
                         <span asp-validation-for="TipoInscricao.Id" class="text-danger"></span>
                     </div>
-                    <div class="form-group mb-2">
-                        <label asp-for="TipoInscricao.IdEvento" class="control-label"></label>
-                        <select asp-for="TipoInscricao.IdEvento" class="form-control" asp-items="Model.Evento"></select>
-                        <span asp-validation-for="TipoInscricao.IdEvento" class="text-danger"></span>
-                    </div>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="form-group mb-2">
+                                <label asp-for="TipoInscricao.IdEvento" class="control-label"></label>
+                                <select asp-for="TipoInscricao.IdEvento" class="form-control" asp-items="Model.Evento"></select>
+                                <span asp-validation-for="TipoInscricao.IdEvento" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group mb-2">
+                                <label asp-for="TipoInscricao.Valor" class="control-label"></label>
+                                <input type="number" asp-for="TipoInscricao.Valor" class="form-control" />
+                                <span asp-validation-for="TipoInscricao.Valor" class="text-danger"></span>
+                            </div>
+                        </div>
+                     </div>
+                    
+                    
                     <div class="form-group mb-2">
                         <label asp-for="TipoInscricao.Descricao" class="control-label"></label>
                         <input asp-for="TipoInscricao.Descricao" class="form-control" />
                         <span asp-validation-for="TipoInscricao.Descricao" class="text-danger"></span>
                     </div>
-                    <div class="form-group mb-2">
-                        <label asp-for="TipoInscricao.Valor" class="control-label"></label>
-                        <input type="number" asp-for="TipoInscricao.Valor" class="form-control" />
-                        <span asp-validation-for="TipoInscricao.Valor" class="text-danger"></span>
-                    </div>
-                    <div class="form-group mb-2">
-                        <label asp-for="TipoInscricao.DataInicio" class="control-label"></label>
-                        <input asp-for="TipoInscricao.DataInicio" class="form-control" type="date" />
-                        <span asp-validation-for="TipoInscricao.DataInicio" class="text-danger"></span>
-                    </div>
-                    <div class="form-group mb-2">
-                        <label asp-for="TipoInscricao.Datafim" class="control-label"></label>
-                        <input asp-for="TipoInscricao.Datafim" class="form-control" type="date" />
-                        <span asp-validation-for="TipoInscricao.Datafim" class="text-danger"></span>
-                    </div>
-                    <div class="form-group mb-2">
-                        <label asp-for="TipoInscricao.UsadaEvento" class="control-label">Usada no Evento</label>
-                        <div class="d-flex align-items-center">
-                            <div class="form-check me-2">
-                                <input asp-for="TipoInscricao.UsadaEvento" class="form-check-input" type="radio" value="1" id="UsadaEventoSim">
-                                <label class="form-check-label" for="UsadaEventoSim">Sim</label>
-                            </div>
-                            <div class="form-check">
-                                <input asp-for="TipoInscricao.UsadaEvento" class="form-check-input" type="radio" value="0" id="UsadaEventoNao">
-                                <label class="form-check-label" for="UsadaEventoNao">Não</label>
+                    
+                    <br />
+                    <h4 class="blue-normal">
+                        Datas
+                    </h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-2">
+                                <label asp-for="TipoInscricao.DataInicio" class="control-label"></label>
+                                <input asp-for="TipoInscricao.DataInicio" class="form-control" type="date" />
+                                <span asp-validation-for="TipoInscricao.DataInicio" class="text-danger"></span>
                             </div>
                         </div>
-                        <span asp-validation-for="TipoInscricao.UsadaEvento" class="text-danger"></span>
-                    </div>
-
-                    <div class="form-group mb-3">
-                        <label asp-for="TipoInscricao.UsadaSubevento" class="control-label">Usada no Subevento</label>
-                        <div class="d-flex align-items-center">
-                            <div class="form-check me-2">
-                                <input asp-for="TipoInscricao.UsadaSubevento" class="form-check-input" type="radio" value="1" id="UsadaSubeventoSim">
-                                <label class="form-check-label" for="UsadaSubeventoSim">Sim</label>
-                            </div>
-                            <div class="form-check">
-                                <input asp-for="TipoInscricao.UsadaSubevento" class="form-check-input" type="radio" value="0" id="UsadaSubeventoNao">
-                                <label class="form-check-label" for="UsadaSubeventoNao">Não</label>
+                        <div class="col-md-6">
+                            <div class="form-group mb-2">
+                                <label asp-for="TipoInscricao.Datafim" class="control-label"></label>
+                                <input asp-for="TipoInscricao.Datafim" class="form-control" type="date" />
+                                <span asp-validation-for="TipoInscricao.Datafim" class="text-danger"></span>
                             </div>
                         </div>
-                        <span asp-validation-for="TipoInscricao.UsadaSubevento" class="text-danger"></span>
                     </div>
-
-                    <div class="form-group mb-3">
-                        <button class="btn btn-mg btn-outline-danger  me-5">
-                            <a asp-action="Index" class=" btn-outline-danger" style="text-decoration:none;">
-                                Cancelar
-                            </a>
-                        </button>
-                        <input type="submit" value="Novo Tipo de Inscrição" class="btn btn-mg btn-blue-normal text-white btn-primary" />
-
+                    <br />
+                    <h4 class="blue-normal">
+                        Usado em
+                    </h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-2">
+                                <label asp-for="TipoInscricao.UsadaEvento" class="control-label">Evento</label>
+                                <div class="d-flex align-items-center">
+                                    <div class="form-check me-2">
+                                        <input asp-for="TipoInscricao.UsadaEvento" class="form-check-input" type="radio" value="1" id="UsadaEventoSim">
+                                        <label class="form-check-label" for="UsadaEventoSim">Sim</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input asp-for="TipoInscricao.UsadaEvento" class="form-check-input" type="radio" value="2" id="UsadaEventoNao">
+                                        <label class="form-check-label" for="UsadaEventoNao">Não</label>
+                                    </div>
+                                </div>
+                                <span asp-validation-for="TipoInscricao.UsadaEvento" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="TipoInscricao.UsadaSubevento" class="control-label">Subevento</label>
+                                <div class="d-flex align-items-center">
+                                    <div class="form-check me-2">
+                                        <input asp-for="TipoInscricao.UsadaSubevento" class="form-check-input" type="radio" value="1" id="UsadaSubeventoSim">
+                                        <label class="form-check-label" for="UsadaSubeventoSim">Sim</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input asp-for="TipoInscricao.UsadaSubevento" class="form-check-input" type="radio" value="2" id="UsadaSubeventoNao">
+                                        <label class="form-check-label" for="UsadaSubeventoNao">Não</label>
+                                    </div>
+                                </div>
+                                <span asp-validation-for="TipoInscricao.UsadaSubevento" class="text-danger"></span>
+                            </div>
+                        </div>
                     </div>
-
+                    <br />
+                    <div class="d-flex flex-row-reverse">
+                        <div class="form-group">
+                            <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
+                        </div>
+                        <div class="form-group" style="margin-right: 10px;">
+                            <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>
