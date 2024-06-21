@@ -180,6 +180,7 @@ namespace EventoWeb.Controllers.Tests
         {
 
             var tipoInscricaoModel = new TipoInscricaoModel
+<<<<<<< remotes/origin/Branch_Nagibe_108
             {
                 Id = 1,
                 IdEvento = 1,
@@ -200,6 +201,8 @@ namespace EventoWeb.Controllers.Tests
         {
 
             var tipoInscricaoModel = new TipoInscricaoModel
+=======
+>>>>>>> local
             {
                 Id = 1,
                 IdEvento = 1,
@@ -214,6 +217,29 @@ namespace EventoWeb.Controllers.Tests
             {
                 TipoInscricao = tipoInscricaoModel,
             };
+<<<<<<< remotes/origin/Branch_Nagibe_108
+=======
+        }
+
+        private TipoInscricaocreateModel GetTargetTipoInscricaoModelEdit()
+        {
+
+            var tipoInscricaoModel = new TipoInscricaoModel
+            {
+                Id = 1,
+                IdEvento = 1,
+                Descricao = "Gratuita",
+                Valor = 1,
+                DataInicio = new DateTime(2024, 09, 2, 7, 30, 0),
+                Datafim = new DateTime(2024, 09, 7, 12, 30, 0),
+                UsadaEvento = 1,
+                UsadaSubevento = 1,
+            };
+            return new TipoInscricaocreateModel
+            {
+                TipoInscricao = tipoInscricaoModel,
+            };
+>>>>>>> local
         }
         private static Tipoinscricao GetTargetTipoInscricao()
         {

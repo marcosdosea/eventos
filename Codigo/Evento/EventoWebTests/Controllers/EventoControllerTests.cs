@@ -22,7 +22,10 @@ namespace EventoWeb.Controllers.Tests
             var mockServiceInscricao = new Mock<IInscricaoService>();
             var mockServiceTipoevento = new Mock<ITipoeventoService>();
 <<<<<<< remotes/origin/Branch_Nagibe_108
+<<<<<<< remotes/origin/Branch_Nagibe_108
 
+=======
+>>>>>>> local
 =======
 >>>>>>> local
 
