@@ -18,8 +18,10 @@ namespace EventoWeb.Controllers.Tests
         {
             // Arrange
             var mockService = new Mock<ISubeventoService>();
+            var mockServiceEvento = new Mock<IEventoService>();
+            var mockServiceTipoevento = new Mock<ITipoeventoService>();
 
-            IMapper mapper = new MapperConfiguration(cfg =>
+        IMapper mapper = new MapperConfiguration(cfg =>
             cfg.AddProfile(new SubeventoProfile())).CreateMapper();
 
             mockService.Setup(service => service.GetAll())
@@ -28,7 +30,7 @@ namespace EventoWeb.Controllers.Tests
                 .Returns(GetTargetSubevento());
             mockService.Setup(service => service.Create(It.IsAny<Subevento>()))
                 .Verifiable();
-            controller = new SubeventoController(mockService.Object, mapper);
+            controller = new SubeventoController(mockService.Object, mapper, mockServiceEvento.Object, mockServiceTipoevento.Object);
         }
 
         [TestMethod()]
@@ -125,32 +127,32 @@ namespace EventoWeb.Controllers.Tests
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
-            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(SubeventoModel));
-            SubeventoModel subeventoModel = (SubeventoModel)viewResult.ViewData.Model;
-            Assert.AreEqual((uint)1, subeventoModel.IdEvento);
-            Assert.AreEqual("SEMINFO", subeventoModel.Nome);
-            Assert.AreEqual("Evento para a semana da tecnologia", subeventoModel.Descricao);
-            Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), subeventoModel.DataInicio);
-            Assert.AreEqual(DateTime.Parse("2024-09-07 12:30:00"), subeventoModel.DataFim);
-            Assert.AreEqual((sbyte)1, subeventoModel.InscricaoGratuita);
-            Assert.AreEqual("A", subeventoModel.Status);
-            Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), subeventoModel.DataInicioInscricao);
-            Assert.AreEqual(DateTime.Parse("2024-09-07 12:30:00"), subeventoModel.DataFimInscricao);
-            Assert.AreEqual((decimal)0, subeventoModel.ValorInscricao);
-            Assert.AreEqual((sbyte)1, subeventoModel.PossuiCertificado);
-            Assert.AreEqual((decimal)1, subeventoModel.FrequenciaMinimaCertificado);
-            Assert.AreEqual((int)1, subeventoModel.IdTipoEvento);
-            Assert.AreEqual((int)100, subeventoModel.VagasOfertadas);
-            Assert.AreEqual((int)35, subeventoModel.VagasReservadas);
-            Assert.AreEqual((int)65, subeventoModel.VagasDisponiveis);
-            Assert.AreEqual((int)4, subeventoModel.CargaHoraria);
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(SubeventocreateModel));
+            SubeventocreateModel subeventoModel = (SubeventocreateModel)viewResult.ViewData.Model;
+            Assert.AreEqual((uint)1, subeventoModel.Subevento.IdEvento);
+            Assert.AreEqual("SEMINFO", subeventoModel.Subevento.Nome);
+            Assert.AreEqual("Evento para a semana da tecnologia", subeventoModel.Subevento.Descricao);
+            Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), subeventoModel.Subevento.DataInicio);
+            Assert.AreEqual(DateTime.Parse("2024-09-07 12:30:00"), subeventoModel.Subevento.DataFim);
+            Assert.AreEqual((sbyte)1, subeventoModel.Subevento.InscricaoGratuita);
+            Assert.AreEqual("A", subeventoModel.Subevento.Status);
+            Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), subeventoModel.Subevento.DataInicioInscricao);
+            Assert.AreEqual(DateTime.Parse("2024-09-07 12:30:00"), subeventoModel.Subevento.DataFimInscricao);
+            Assert.AreEqual((decimal)0, subeventoModel.Subevento.ValorInscricao);
+            Assert.AreEqual((sbyte)1, subeventoModel.Subevento.PossuiCertificado);
+            Assert.AreEqual((decimal)1, subeventoModel.Subevento.FrequenciaMinimaCertificado);
+            Assert.AreEqual((int)1, subeventoModel.Subevento.IdTipoEvento);
+            Assert.AreEqual((int)100, subeventoModel.Subevento.VagasOfertadas);
+            Assert.AreEqual((int)35, subeventoModel.Subevento.VagasReservadas);
+            Assert.AreEqual((int)65, subeventoModel.Subevento.VagasDisponiveis);
+            Assert.AreEqual((int)4, subeventoModel.Subevento.CargaHoraria);
         }
 
         [TestMethod()]
         public void EditTest_Post_Valid()
         {
             // Act
-            var result = controller.Edit(GetTargetSubeventoModel().Id, GetTargetSubeventoModel());
+            var result = controller.Edit(GetTargetSubeventoModelEdit().Subevento.Id, GetTargetSubeventoModelEdit());
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
@@ -202,9 +204,9 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
         }
 
-        private SubeventoModel GetNewSubevento()
+        private SubeventocreateModel GetNewSubevento()
         {
-            return new SubeventoModel
+            var subeventoModel = new SubeventoModel
             {
                 Id = 1,
                 IdEvento = 1,
@@ -224,6 +226,10 @@ namespace EventoWeb.Controllers.Tests
                 VagasReservadas = 35,
                 VagasDisponiveis = 65,
                 CargaHoraria = 4,
+            };
+            return new SubeventocreateModel
+            {
+                Subevento = subeventoModel,
             };
         }
         private static Subevento GetTargetSubevento()
@@ -248,6 +254,35 @@ namespace EventoWeb.Controllers.Tests
                 VagasReservadas = 35,
                 VagasDisponiveis = 65,
                 CargaHoraria = 4,
+            };
+        }
+
+        private SubeventocreateModel GetTargetSubeventoModelEdit()
+        {
+            var subeventoModel = new SubeventoModel
+            {
+                Id = 1,
+                IdEvento = 1,
+                Nome = "SEMINFO",
+                Descricao = "Evento para a semana da tecnologia",
+                DataInicio = new DateTime(2024, 09, 2, 7, 30, 0),
+                DataFim = new DateTime(2024, 09, 7, 12, 30, 0),
+                InscricaoGratuita = 1,
+                Status = "A",
+                DataInicioInscricao = new DateTime(2024, 09, 2, 7, 30, 0),
+                DataFimInscricao = new DateTime(2024, 09, 7, 12, 30, 0),
+                ValorInscricao = 0,
+                PossuiCertificado = 1,
+                FrequenciaMinimaCertificado = 1,
+                IdTipoEvento = 1,
+                VagasOfertadas = 100,
+                VagasReservadas = 35,
+                VagasDisponiveis = 65,
+                CargaHoraria = 4,
+            };
+            return new SubeventocreateModel
+            {
+                Subevento = subeventoModel,
             };
         }
 
