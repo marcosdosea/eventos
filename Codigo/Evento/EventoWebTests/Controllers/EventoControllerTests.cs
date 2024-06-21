@@ -21,13 +21,6 @@ namespace EventoWeb.Controllers.Tests
             var mockServiceEstado = new Mock<IEstadosbrasilService>();
             var mockServiceInscricao = new Mock<IInscricaoService>();
             var mockServiceTipoevento = new Mock<ITipoeventoService>();
-<<<<<<< remotes/origin/Branch_Nagibe_108
-<<<<<<< remotes/origin/Branch_Nagibe_108
-
-=======
->>>>>>> local
-=======
->>>>>>> local
 
             IMapper mapper = new MapperConfiguration(cfg =>
             cfg.AddProfile(new EventoProfile())).CreateMapper();
@@ -259,7 +252,7 @@ namespace EventoWeb.Controllers.Tests
                 EmailEvento = "DSI@academico.ufs.br",
                 EventoPublico = 1,
                 Cep = "49506036",
-                Estado = "Sergipe",
+                Estado = "SE",
                 Cidade = "Itabaiana",
                 Bairro = "Porto",
                 Rua = " Av. Vereador Olímpio Grande",
