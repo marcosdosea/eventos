@@ -21,7 +21,10 @@ namespace EventoWeb.Controllers.Tests
             var mockServiceEstado = new Mock<IEstadosbrasilService>();
             var mockServiceInscricao = new Mock<IInscricaoService>();
             var mockServiceTipoevento = new Mock<ITipoeventoService>();
+<<<<<<< remotes/origin/Branch_Nagibe_108
 
+=======
+>>>>>>> local
 
             IMapper mapper = new MapperConfiguration(cfg =>
             cfg.AddProfile(new EventoProfile())).CreateMapper();
@@ -138,42 +141,42 @@ namespace EventoWeb.Controllers.Tests
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
-            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(EventoModel));
-            EventoModel eventoModel = (EventoModel)viewResult.ViewData.Model;
-            Assert.AreEqual("SEMINFO", eventoModel.Nome);
-            Assert.AreEqual("Evento para a semana da tecnologia", eventoModel.Descricao);
-            Assert.AreEqual(DateTime.Parse("2024-10-02 07:30:00"), eventoModel.DataInicio);
-            Assert.AreEqual(DateTime.Parse("2024-10-07 12:30:00"), eventoModel.DataFim);
-            Assert.AreEqual((sbyte)1, eventoModel.InscricaoGratuita);
-            Assert.AreEqual("A", eventoModel.Status);
-            Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), eventoModel.DataInicioInscricao);
-            Assert.AreEqual(DateTime.Parse("2024-09-07 12:30:00"), eventoModel.DataFimInscricao);
-            Assert.AreEqual((decimal)0.0, eventoModel.ValorInscricao);
-            Assert.AreEqual("www.itatechjr.com.br", eventoModel.Website);
-            Assert.AreEqual("DSI@academico.ufs.br", eventoModel.EmailEvento);
-            Assert.AreEqual((sbyte)1, eventoModel.EventoPublico);
-            Assert.AreEqual("49506036", eventoModel.Cep);
-            Assert.AreEqual("SE", eventoModel.Estado);
-            Assert.AreEqual("Itabaiana", eventoModel.Cidade);
-            Assert.AreEqual("Porto", eventoModel.Bairro);
-            Assert.AreEqual(" Av. Vereador Olímpio Grande", eventoModel.Rua);
-            Assert.AreEqual("s/n", eventoModel.Numero);
-            Assert.AreEqual("Universidade", eventoModel.Complemento);
-            Assert.AreEqual((sbyte)1, eventoModel.PossuiCertificado);
-            Assert.AreEqual((decimal)1.0, eventoModel.FrequenciaMinimaCertificado);
-            Assert.AreEqual((int)1, eventoModel.IdTipoEvento);
-            Assert.AreEqual((int)100, eventoModel.VagasOfertadas);
-            Assert.AreEqual((int)35, eventoModel.VagasReservadas);
-            Assert.AreEqual((int)65, eventoModel.VagasDisponiveis);
-            Assert.AreEqual((int)240, eventoModel.TempoMinutosReserva);
-            Assert.AreEqual((int)4, eventoModel.CargaHoraria);
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(EventocreateModel));
+            EventocreateModel eventoModel = (EventocreateModel)viewResult.ViewData.Model;
+            Assert.AreEqual("SEMINFO", eventoModel.Evento.Nome);
+            Assert.AreEqual("Evento para a semana da tecnologia", eventoModel.Evento.Descricao);
+            Assert.AreEqual(DateTime.Parse("2024-10-02 07:30:00"), eventoModel.Evento.DataInicio);
+            Assert.AreEqual(DateTime.Parse("2024-10-07 12:30:00"), eventoModel.Evento.DataFim);
+            Assert.AreEqual((sbyte)1, eventoModel.Evento.InscricaoGratuita);
+            Assert.AreEqual("A", eventoModel.Evento.Status);
+            Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), eventoModel.Evento.DataInicioInscricao);
+            Assert.AreEqual(DateTime.Parse("2024-09-07 12:30:00"), eventoModel.Evento.DataFimInscricao);
+            Assert.AreEqual((decimal)0.0, eventoModel.Evento.ValorInscricao);
+            Assert.AreEqual("www.itatechjr.com.br", eventoModel.Evento.Website);
+            Assert.AreEqual("DSI@academico.ufs.br", eventoModel.Evento.EmailEvento);
+            Assert.AreEqual((sbyte)1, eventoModel.Evento.EventoPublico);
+            Assert.AreEqual("49506036", eventoModel.Evento.Cep);
+            Assert.AreEqual("SE", eventoModel.Evento.Estado);
+            Assert.AreEqual("Itabaiana", eventoModel.Evento.Cidade);
+            Assert.AreEqual("Porto", eventoModel.Evento.Bairro);
+            Assert.AreEqual(" Av. Vereador Olímpio Grande", eventoModel.Evento.Rua);
+            Assert.AreEqual("s/n", eventoModel.Evento.Numero);
+            Assert.AreEqual("Universidade", eventoModel.Evento.Complemento);
+            Assert.AreEqual((sbyte)1, eventoModel.Evento.PossuiCertificado);
+            Assert.AreEqual((decimal)1.0, eventoModel.Evento.FrequenciaMinimaCertificado);
+            Assert.AreEqual((int)1, eventoModel.Evento.IdTipoEvento);
+            Assert.AreEqual((int)100, eventoModel.Evento.VagasOfertadas);
+            Assert.AreEqual((int)35, eventoModel.Evento.VagasReservadas);
+            Assert.AreEqual((int)65, eventoModel.Evento.VagasDisponiveis);
+            Assert.AreEqual((int)240, eventoModel.Evento.TempoMinutosReserva);
+            Assert.AreEqual((int)4, eventoModel.Evento.CargaHoraria);
         }
 
         [TestMethod()]
         public void EditTest_Post_Valid()
         {
             // Act
-            var result = controller.Edit(GetTargetEventoModel().Id, GetTargetEventoModel());
+            var result = controller.Edit(GetTargetEventoModelEdit().Evento.Id, GetTargetEventoModelEdit());
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
@@ -235,9 +238,9 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
         }
 
-        private EventoModel GetNewEvento()
+        private EventocreateModel GetNewEvento()
         {
-            return new EventoModel
+            var eventoModel = new EventoModel
             {
                 Id = 1,
                 Nome = "SEMINFO",
@@ -267,6 +270,10 @@ namespace EventoWeb.Controllers.Tests
                 VagasDisponiveis = 65,
                 TempoMinutosReserva = 240,
                 CargaHoraria = 4,
+            };
+            return new EventocreateModel
+            {
+                Evento = eventoModel,
             };
         }
         private static Evento GetTargetEvento()
@@ -301,6 +308,45 @@ namespace EventoWeb.Controllers.Tests
                 VagasDisponiveis = 65,
                 TempoMinutosReserva = 240,
                 CargaHoraria = 4,
+            };
+        }
+
+        private EventocreateModel GetTargetEventoModelEdit()
+        {
+            var eventoModel = new EventoModel
+            {
+                Id = 1,
+                Nome = "SEMINFO",
+                Descricao = "Evento para a semana da tecnologia",
+                DataInicio = new DateTime(2024, 10, 2, 7, 30, 0),
+                DataFim = new DateTime(2024, 10, 7, 12, 30, 0),
+                InscricaoGratuita = 1,
+                Status = "A",
+                DataInicioInscricao = new DateTime(2024, 09, 2, 7, 30, 0),
+                DataFimInscricao = new DateTime(2024, 09, 7, 12, 30, 0),
+                ValorInscricao = 0,
+                Website = "www.itatechjr.com.br",
+                EmailEvento = "DSI@academico.ufs.br",
+                EventoPublico = 1,
+                Cep = "49506036",
+                Estado = "SE",
+                Cidade = "Itabaiana",
+                Bairro = "Porto",
+                Rua = " Av. Vereador Olímpio Grande",
+                Numero = "s/n",
+                Complemento = "Universidade",
+                PossuiCertificado = 1,
+                FrequenciaMinimaCertificado = 1,
+                IdTipoEvento = 1,
+                VagasOfertadas = 100,
+                VagasReservadas = 35,
+                VagasDisponiveis = 65,
+                TempoMinutosReserva = 240,
+                CargaHoraria = 4,
+            };
+            return new EventocreateModel
+            {
+                Evento = eventoModel,
             };
         }
 
