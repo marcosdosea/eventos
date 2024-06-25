@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using Core;
-using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Mvc;
-using Service;
+using Core.Service;
+using System.IO;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace EventoWeb.Controllers
 {
@@ -41,37 +43,87 @@ namespace EventoWeb.Controllers
             return View(modelocrachaModel);
         }
 
-        // POST: ModelocrachaController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(ModelocrachaModel modelocrachaModel)
+        public async Task<IActionResult> Create(ModelocrachaModel modelocrachaModel)
         {
-            if (ModelState.IsValid)
+            // Verifica se o arquivo foi fornecido e está dentro do tamanho permitido
+            if (modelocrachaModel.LogotipoFile != null)
             {
-                var modelocracha = _mapper.Map<Modelocracha>(modelocrachaModel);
-                _modelocrachaService.Create(modelocracha);
+                if (modelocrachaModel.LogotipoFile.Length > 65536)
+                {
+                    ModelState.AddModelError("LogotipoFile", "O tamanho máximo permitido para o arquivo é de 64 KB.");
+                    return View(modelocrachaModel);
+                }
+                
+                if (!_modelocrachaService.IsImage(modelocrachaModel.LogotipoFile))
+                {
+                    ModelState.AddModelError("LogotipoFile", "O arquivo fornecido não é uma imagem válida.");
+                    return View(modelocrachaModel);
+                }
+                
+                using (var memoryStream = new MemoryStream())
+                {
+                    await modelocrachaModel.LogotipoFile.CopyToAsync(memoryStream);
+                    modelocrachaModel.Logotipo = memoryStream.ToArray();
+                }
             }
+            var modelocracha = _mapper.Map<Modelocracha>(modelocrachaModel);
+            _modelocrachaService.Create(modelocracha);
+                             
             return RedirectToAction(nameof(Index));
         }
-
+        
         // GET: ModelocrachaController/Edit/5
         public ActionResult Edit(int id)
         {
-            return Details(id);
+            var modelocracha = _modelocrachaService.Get(id);
+            var modelocrachaModel = _mapper.Map<ModelocrachaModel>(modelocracha);
+            return View(modelocrachaModel);
         }
 
         // POST: ModelocrachaController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, ModelocrachaModel modelocrachaModel)
+        public async Task<ActionResult> Edit(int id, ModelocrachaModel modelocrachaModel)
         {
             if (ModelState.IsValid)
             {
+                // Verifica se foi fornecido um novo arquivo de logotipo
+                if (modelocrachaModel.LogotipoFile != null && modelocrachaModel.LogotipoFile.Length > 0)
+                {
+                    // Verifica o tamanho do arquivo
+                    if (modelocrachaModel.LogotipoFile.Length > 65536)
+                    {
+                        ModelState.AddModelError("LogotipoFile", "O tamanho máximo permitido para o arquivo é de 64 KB.");
+                        return View(modelocrachaModel);
+                    }
+
+                    // Verifica se é uma imagem válida
+                    if (!_modelocrachaService.IsImage(modelocrachaModel.LogotipoFile))
+                    {
+                        ModelState.AddModelError("LogotipoFile", "O arquivo fornecido não é uma imagem válida.");
+                        return View(modelocrachaModel);
+                    }
+
+                    // Se tudo estiver correto, converte o arquivo para byte[]
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        await modelocrachaModel.LogotipoFile.CopyToAsync(memoryStream);
+                        modelocrachaModel.Logotipo = memoryStream.ToArray();
+                    }
+                }
+
+                // Mapeia e atualiza o modelo
                 var modelo = _mapper.Map<Modelocracha>(modelocrachaModel);
                 _modelocrachaService.Edit(modelo);
+
+                return RedirectToAction(nameof(Index));
             }
-            return RedirectToAction(nameof(Index));
+
+            return View(modelocrachaModel);
         }
+
 
         // GET: ModelocrachaController/Delete/5
         public ActionResult Delete(int id)

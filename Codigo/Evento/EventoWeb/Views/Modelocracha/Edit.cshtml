@@ -1,7 +1,7 @@
 ﻿@model EventoWeb.Models.ModelocrachaModel
 
 @{
-    ViewData["Title"] = "Edit";
+ViewData["Title"] = "Edit";
 }
 
 <h1>Edit</h1>
@@ -19,8 +19,12 @@
             </div>
             <div class="form-group">
                 <label asp-for="Logotipo" class="control-label"></label>
-                <input asp-for="Logotipo" class="form-control" />
-                <span asp-validation-for="Logotipo" class="text-danger"></span>
+                @if (Model.LogotipoBase64 != null)
+                {
+                <img src="data:image/png;base64,@Model.LogotipoBase64" width="100" height="100" />
+                }
+                <input asp-for="LogotipoFile" type="file" class="form-control" />
+                <span asp-validation-for="LogotipoFile" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="Texto" class="control-label"></label>
@@ -49,5 +53,5 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }

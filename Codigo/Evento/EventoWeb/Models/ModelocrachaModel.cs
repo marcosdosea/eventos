@@ -12,7 +12,11 @@ namespace EventoWeb.Models
         [Display(Name = "Logotipo do crachá ")]
         [Required(ErrorMessage = "Informe a logotipo")]
         public byte[] Logotipo { get; set; } = null!;
-
+        
+        public IFormFile LogotipoFile { get; set; }
+        
+        public string LogotipoBase64 => Logotipo != null ? Convert.ToBase64String(Logotipo) : null;
+        
         [Display(Name = "Texto do crachá ")]
         [Required(ErrorMessage = "Informe o texto do crachá")]
         public string Texto { get; set; } = null!;

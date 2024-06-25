@@ -1,11 +1,7 @@
 ﻿using Core;
 using Core.Service;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Service
 {
@@ -39,8 +35,8 @@ namespace Service
         /// <exception cref="NotImplementedException"></exception>
         public void Delete(int id)
         {
-            var modelo = _context.Modelocrachas.Find(id);
-            _context.Remove(modelo);
+            var modelocracha = _context.Modelocrachas.Find(id);
+            _context.Remove(modelocracha);
             _context.SaveChanges();
         }
 
@@ -76,6 +72,30 @@ namespace Service
         public IEnumerable<Modelocracha> GetAll()
         {
             return _context.Modelocrachas.AsNoTracking();
+        }
+
+        public bool IsImage(IFormFile file)
+        {
+            if (file == null)
+                return false;
+
+            // Verifica o tipo MIME do arquivo
+            if (file.ContentType.ToLower() != "image/jpeg" &&
+                file.ContentType.ToLower() != "image/jpg" &&
+                file.ContentType.ToLower() != "image/png" &&
+                file.ContentType.ToLower() != "image/gif")
+            {
+                return false;
+            }
+
+            // Verifica a extensão do arquivo (opcional)
+            var ext = Path.GetExtension(file.FileName).ToLower();
+            if (ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".gif")
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }
