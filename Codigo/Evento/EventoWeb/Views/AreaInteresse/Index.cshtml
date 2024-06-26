@@ -9,21 +9,18 @@
     <link rel="stylesheet" type="text/css" href="~/css/style.css">
 </head>
 
-<div class=" col-10">
+<div>
     <div class="breadcrumb">
-        <a asp-controller="Home" asp-action="Index"><img class="mb-1" src="/img/icon-wrapper.svg" /><p class="blue-normal" style="display:inline-block">Home</p></a>
-        <p style="color:#6C757D;display:inline-block">/Área de interesse</p>
+        <p style="color:#6C757D;display:inline-block">Área de Interesse</p>
     </div>
 
     <h1 class="blue-normal mb-2">
-        Lista de Área de interesse
+        Lista de Áreas de Interesse
     </h1>
-
-    <button type="button" class="btn-blue-normal btn btn-mg mb-2">
-        <a asp-action="Create" style="text-decoration:none; color:white">Cadastrar área de interesse</a>
-    </button>
-    <div class="conteiner mt-2 col-10">
-        <table class="table col-10 table-striped">
+    <h3>Confira as Áreas de Interesse do sistema!</h3>
+    
+    <div class="conteiner">
+        <table class="table table-striped">
         <thead class="blue-normal blue-normal-bg-table">
             <tr class="blue-light">
                 <th class="blue-normal">
@@ -40,12 +37,30 @@
                         @Html.DisplayFor(modelItem => item.Nome)
                     </td>
                     <td>
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="blue-normal" style="text-decoration:none;">Editar</a>
-                        <a asp-action="Delete" asp-route-id="@item.Id" class="danger-normal" style="text-decoration:none;">  Excluir</a>
+                            @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" }) |
+                            @{
+                                var deleteModel = new EventoWeb.Models.DeleteModel
+                                {
+                                    ModalId = "deleteModal-" + item.Id,
+                                    ActionName = "Delete",
+                                    ControllerName = "AreaInteresse",
+                                    RouteValues = item.Id,
+                                    ConfirmMessage = $"Tem certeza que deseja excluir a Área de Interesse \"{item.Nome}\" ?",
+                                    ItemName = item.Nome
+                                };
+                            }
+
+                            <a class="danger-normal" style="text-decoration:none;" href="#!" data-toggle="modal" data-target="#@deleteModel.ModalId">Excluir</a>
+                            @await Html.PartialAsync("_DeleteModal", deleteModel)
+
                     </td>
                 </tr>
             }
         </tbody>
     </table>
     </div>
+    <h3 class="blue-normal ">Defina uma nova Área de Interesse!</h3>
+    <button type="button" class="btn-blue-normal btn btn-lg mb-2">
+        <a asp-action="Create" style="text-decoration:none; color:white">Cadastrar Área de Interesse</a>
+    </button>
 </div>

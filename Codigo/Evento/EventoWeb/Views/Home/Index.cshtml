@@ -1,8 +1,11 @@
-﻿@{
+﻿@model List<EventoWeb.Models.EventoModel>
+
+@{
     ViewData["Title"] = "BoraLá";
 }
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,31 +29,31 @@
                 <li>
                     <a href="#">
                         <img src="~/ícones/Teatros.png" alt="Teatros">
-                        <span>Teatros</span> 
+                        <span>Teatros</span>
                     </a>
                 </li>
                 <li>
                     <a href="#">
                         <img src="~/ícones/Shows.png" alt="Shows">
-                        <span>Shows</span> 
+                        <span>Shows</span>
                     </a>
                 </li>
                 <li>
                     <a href="#">
                         <img src="~/ícones/Stand-up.png" alt="Stand-up">
-                        <span>Stand-Up</span> 
+                        <span>Stand-Up</span>
                     </a>
                 </li>
                 <li>
                     <a href="#">
                         <img src="~/ícones/Culturais.png" alt="Culturais">
-                        <span>Culturais</span> 
+                        <span>Culturais</span>
                     </a>
                 </li>
                 <li>
                     <a href="#">
                         <img src="~/ícones/Religiosos.png" alt="Religiosos">
-                        <span>Religiosos</span> 
+                        <span>Religiosos</span>
                     </a>
                 </li>
             </ul>
@@ -66,24 +69,24 @@
                     </div>
                 </div>
                 <div class="carrossel-slide">
-                    <img src="~/Imagens_Eventos/Evento-Semac.png" alt="IV SEMAC">
+                    <img src="~/Imagens_Eventos/Evento-Jazz.png" alt="IV SEMAC">
                     <div class="carrossel-content">
-                        <h2>V SEMAC</h2>
-                        <p>“Emergências contemporâneas e transformação social”</p>
+                        <h2>Jazz Under the Stars</h2>
+                        <p>“A noite do Jazz”</p>
                     </div>
                 </div>
                 <div class="carrossel-slide">
-                    <img src="~/Imagens_Eventos/Evento-Semac.png" alt="IV SEMAC">
+                    <img src="~/Imagens_Eventos/Evento-Rock.png" alt="IV SEMAC">
                     <div class="carrossel-content">
-                        <h2>VI SEMAC</h2>
-                        <p>“Emergências contemporâneas e transformação social”</p>
+                        <h2>Rock Fest 2024</h2>
+                        <p>“Festival de Rock”</p>
                     </div>
                 </div>
                 <div class="carrossel-slide">
-                    <img src="~/Imagens_Eventos/Evento-Semac.png" alt="IV SEMAC">
+                    <img src="~/Imagens_Eventos/Evento-Eletronica.png" alt="IV SEMAC">
                     <div class="carrossel-content">
-                        <h2>VII SEMAC</h2>
-                        <p>“Emergências contemporâneas e transformação social”</p>
+                        <h2>EDM Festival</h2>
+                        <p>“Festival de música eletrônica”</p>
                     </div>
                 </div>
             </div>
@@ -98,41 +101,94 @@
         </section>
 
         <section class="eventos">
+            <h1>Recomendações</h1>
+            <div class="scroll-wrapper">
+                <div class="cards-container">
+                    @if (Model != null && Model.Count > 0)
+                    {
+                        foreach (var evento in Model)
+                        {
+                            if (evento.Status == "A")
+                            {
+                                <div class="card">
+                                    <img src="~/Imagens_Eventos/Evento-BoraLá.png" alt="Imagem do Evento">
+                                    <div class="card-content">
+                                        <h2>@evento.Nome</h2>
+                                        @{
+                                            string descricao = evento.Descricao;
+                                            int maxCaracteres = 30;
+                                            if (descricao.Length > maxCaracteres)
+                                            {
+                                                descricao = descricao.Substring(0, maxCaracteres);
+                                                int ultimoEspaco = descricao.LastIndexOf(" ");
+                                                if (ultimoEspaco != -1)
+                                                {
+                                                    descricao = descricao.Substring(0, ultimoEspaco) + "...";
+                                                }
+                                                else
+                                                {
+                                                    descricao += "...";
+                                                }
+                                            }
+                                        }
+                                        <p>@descricao</p>
+                                        <button class="btn btn-blue-normal">Bora lá</button>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    }
+                    else
+                    {
+                        <p>Não há eventos para exibir.</p>
+                    }
+                </div>
+            </div>
+        </section>
+
+        <section class="eventos">
             <h1>Shows</h1>
             <div class="scroll-wrapper">
                 <div class="cards-container">
-                    <div class="card">
-                        <div class="card-image" style="background: url('./Imagens_Eventos/Evento-Djavan.png');"></div>
-                        <div class="card-content">
-                            <h2>Djavan</h2>
-                            <p>Djavan: alma e ritmo em harmonia perfeita. <br>Confira esse show, com as melhores músicas <br>de sua carreira</p>
-                           <button class="btn btn-blue-normal">Bora lá</button>
-                        </div>
-                    </div>
-                     <div class="card">
-                        <div class="card-image" style="background: url('./Imagens_Eventos/Evento-Djavan.png');"></div>
-                        <div class="card-content">
-                            <h2>Djavan</h2>
-                            <p>Djavan: alma e ritmo em harmonia perfeita. <br>Confira esse show, com as melhores músicas <br>de sua carreira</p>
-                           <button class="btn btn-blue-normal">Bora lá</button>
-                        </div>
-                    </div>
-                     <div class="card">
-                        <div class="card-image" style="background: url('./Imagens_Eventos/Evento-Djavan.png');"></div>
-                        <div class="card-content">
-                            <h2>Djavan</h2>
-                            <p>Djavan: alma e ritmo em harmonia perfeita. <br>Confira esse show, com as melhores músicas <br>de sua carreira</p>
-                           <button class="btn btn-blue-normal">Bora lá</button>
-                        </div>
-                    </div>
-                     <div class="card">
-                        <div class="card-image" style="background: url('./Imagens_Eventos/Evento-Djavan.png');"></div>
-                        <div class="card-content">
-                            <h2>Djavan</h2>
-                            <p>Djavan: alma e ritmo em harmonia perfeita. <br>Confira esse show, com as melhores músicas <br>de sua carreira</p>
-                           <button class="btn btn-blue-normal">Bora lá</button>
-                        </div>
-                    </div>
+                    @{
+                        var eventosShows = Model?.Where(e => e.IdTipoEvento == 6 && e.Status == "A").ToList();
+
+                        if (eventosShows != null && eventosShows.Count > 0)
+                        {
+                            foreach (var evento in eventosShows)
+                            {
+                                <div class="card">
+                                    <img src="~/Imagens_Eventos/Evento-BoraLá.png" alt="Imagem do Evento">
+                                    <div class="card-content">
+                                        <h2>@evento.Nome</h2>
+                                        @{
+                                            string descricao = evento.Descricao;
+                                            int maxCaracteres = 40;
+                                            if (descricao.Length > maxCaracteres)
+                                            {
+                                                descricao = descricao.Substring(0, maxCaracteres);
+                                                int ultimoEspaco = descricao.LastIndexOf(" ");
+                                                if (ultimoEspaco != -1)
+                                                {
+                                                    descricao = descricao.Substring(0, ultimoEspaco) + "...";
+                                                }
+                                                else
+                                                {
+                                                    descricao += "...";
+                                                }
+                                            }
+                                        }
+                                        <p>@descricao</p>
+                                        <button class="btn btn-blue-normal">Bora lá</button>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p>Não há eventos para exibir.</p>
+                        }
+                    }
                 </div>
             </div>
         </section>
@@ -141,52 +197,106 @@
             <h1>Palestras</h1>
             <div class="scroll-wrapper">
                 <div class="cards-container">
-                    <div class="card">
-                        <div class="card-image" style="background: url('./Imagens_Eventos/Evento-Cortela.png');"></div>
-                        <div class="card-content">
-                            <h2>Filosofia com Cortela</h2>
-                            <p>Venha discutir os temas mais<br> relevantes para nossa sociedade.</p>
-                           <button class="btn btn-blue-normal">Bora lá</button>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-image" style="background: url('./Imagens_Eventos/Evento-Cortela.png');"></div>
-                        <div class="card-content">
-                            <h2>Filosofia com Cortela</h2>
-                            <p>Venha discutir os temas mais<br> relevantes para nossa sociedade.</p>
-                           <button class="btn btn-blue-normal">Bora lá</button>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-image" style="background: url('./Imagens_Eventos/Evento-Cortela.png');"></div>
-                        <div class="card-content">
-                            <h2>Filosofia com Cortela</h2>
-                            <p>Venha discutir os temas mais<br> relevantes para nossa sociedade.</p>
-                           <button class="btn btn-blue-normal">Bora lá</button>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-image" style="background: url('./Imagens_Eventos/Evento-Cortela.png');"></div>
-                        <div class="card-content">
-                            <h2>Filosofia com Cortela</h2>
-                            <p>Venha discutir os temas mais<br> relevantes para nossa sociedade.</p>
-                           <button class="btn btn-blue-normal">Bora lá</button>
-                        </div>
-                    </div>
+                    @{
+                        var eventosPalestra = Model?.Where(e => e.IdTipoEvento == 1 && e.Status == "A").ToList();
+
+                        if (eventosPalestra != null && eventosPalestra.Count > 0)
+                        {
+                            foreach (var evento in eventosPalestra)
+                            {
+                                <div class="card">
+                                    <img src="~/Imagens_Eventos/Evento-BoraLá.png" alt="Imagem do Evento">
+                                    <div class="card-content">
+                                        <h2>@evento.Nome</h2>
+                                        @{
+                                            string descricao = evento.Descricao;
+                                            int maxCaracteres = 40;
+                                            if (descricao.Length > maxCaracteres)
+                                            {
+                                                descricao = descricao.Substring(0, maxCaracteres);
+                                                int ultimoEspaco = descricao.LastIndexOf(" ");
+                                                if (ultimoEspaco != -1)
+                                                {
+                                                    descricao = descricao.Substring(0, ultimoEspaco) + "...";
+                                                }
+                                                else
+                                                {
+                                                    descricao += "...";
+                                                }
+                                            }
+                                        }
+                                        <p>@descricao</p>
+                                        <button class="btn btn-blue-normal">Bora lá</button>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p>Não há eventos para exibir.</p>
+                        }
+                    }
+                </div>
+            </div>
+        </section>
+
+        <section class="eventos">
+            <h1>Workshops</h1>
+            <div class="scroll-wrapper">
+                <div class="cards-container">
+                    @{
+                        var eventosWorkshop = Model?.Where(e => e.IdTipoEvento == 5 && e.Status == "A").ToList();
+
+                        if (eventosWorkshop != null && eventosWorkshop.Count > 0)
+                        {
+                            foreach (var evento in eventosWorkshop)
+                            {
+                                <div class="card">
+                                    <img src="~/Imagens_Eventos/Evento-Djavan.png" alt="Imagem do Evento">
+                                    <div class="card-content">
+                                        <h2>@evento.Nome</h2>
+                                        @{
+                                            string descricao = evento.Descricao;
+                                            int maxCaracteres = 40;
+                                            if (descricao.Length > maxCaracteres)
+                                            {
+                                                descricao = descricao.Substring(0, maxCaracteres);
+                                                int ultimoEspaco = descricao.LastIndexOf(" ");
+                                                if (ultimoEspaco != -1)
+                                                {
+                                                    descricao = descricao.Substring(0, ultimoEspaco) + "...";
+                                                }
+                                                else
+                                                {
+                                                    descricao += "...";
+                                                }
+                                            }
+                                        }
+                                        <p>@descricao</p>
+                                        <button class="btn btn-blue-normal">Bora lá</button>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p>Não há eventos para exibir.</p>
+                        }
+                    }
                 </div>
             </div>
         </section>
 
         <section class="destaque">
-    <div class="destaque-content">
-        <h1>Crie seu evento</h1>
-        <p>Você está planejando um evento e quer garantir<br> que ele alcance o máximo de pessoas possíveis? <br>O Boralá é o lugar certo para você!</p>
-        <button class="btn btn-blue-normal">Criar meu evento!</button>
-    </div>
-</section>
+            <div class="destaque-content">
+                <h1>Crie seu evento</h1>
+                <p>Você está planejando um evento e quer garantir<br> que ele alcance o máximo de pessoas possíveis? <br>O Boralá é o lugar certo para você!</p>
+                <a href="/Evento" class="btn btn-blue-normal">Criar meu evento!</a>
+            </div>
+        </section>
 
+        <script src="~/js/carrossel.js"></script>
     </main>
-
-    <script src="~/js/carrossel.js"></script>
 </body>
+
 </html>

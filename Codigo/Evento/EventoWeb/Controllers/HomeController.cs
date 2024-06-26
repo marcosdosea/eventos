@@ -1,22 +1,32 @@
-﻿using EventoWeb.Models;
+﻿using AutoMapper;
+using Core.Service;
+using EventoWeb.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
 namespace EventoWeb.Controllers
 {
+
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly IEventoService _eventoService;
+        private readonly IMapper _mapper;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, IEventoService eventoService, IMapper mapper)
         {
             _logger = logger;
+            _eventoService = eventoService;
+            _mapper = mapper;
         }
 
-        public IActionResult Index()
-        {
-            return View();
-        }
+        // Aqui está a Index action que precisamos modificar
+     public IActionResult Index()
+{
+    var listarEventos = _eventoService.GetAll();
+    var listarEventosModel = _mapper.Map<List<EventoModel>>(listarEventos);
+    return View(listarEventosModel);
+}
 
         public IActionResult Privacy()
         {
