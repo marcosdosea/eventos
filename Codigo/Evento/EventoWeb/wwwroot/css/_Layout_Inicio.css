@@ -1,22 +1,22 @@
 .categorias {
-    margin: 20px auto;
+    margin: 1.25rem auto;
     width: 100%;
     white-space: nowrap;
 }
 
 .categorias h1 {
-    font-size: 30px;
+    font-size: 1.875rem;
     font-weight: bold;
     color: #232ed0;
-    margin-bottom: 30px;
+    margin-bottom: 1.875rem;
     text-align: center; 
 }
 
 .eventos h1 {
-    font-size: 30px;
+    font-size: 1.875rem;
     font-weight: bold;
     color: #232ed0;
-    margin-bottom: 30px;
+    margin-bottom: 1.875rem;
     text-align: left; 
 }
 
@@ -25,7 +25,7 @@
     padding: 0;
     display: flex;
     flex-wrap: nowrap;
-    gap: 80px; 
+    gap: 5rem;
     justify-content: center; 
     overflow-x: auto;
     scrollbar-width: none;
@@ -39,36 +39,35 @@
 .categorias-list li {
     flex: 0 0 auto;
     text-align: center;
-    max-width: 100px;
+    max-width: 6.25rem;
     overflow-x: hidden;
 }
 
 .categorias-list a {
     display: block;
     text-decoration: none;
-    font-size: 18px;
+    font-size: 1.125rem;
     color: rgba(28, 28, 28, 1);
 }
 
 .categorias-list img {
-    width: 80px;
+    width: 5rem;
     height: auto;
-    margin-bottom: 10px;
+    margin-bottom: 0.625rem;
 }
 
 .categorias-list span {
     display: block;
-    margin-top: 5px;
+    margin-top: 0.3125rem;
 }
-
 
 .carrossel {
     position: relative;
     width: 100%;
-    height: 100%; 
-    max-width: 1274px;
+    height: 100%;
+    max-width: 79.625rem;
     overflow: hidden;
-    border-radius: 10px;
+    border-radius: 0.625rem;
 }
 
 .carrossel-container {
@@ -80,7 +79,6 @@
     min-width: 100%;
     position: relative;
     display: none;
-    
 }
 
 .carrossel-slide img {
@@ -91,40 +89,40 @@
 
 .carrossel-content {
     position: absolute;
-    bottom: 30px;
+    bottom: 1.875rem;
     left: 50%;
     transform: translateX(-50%);
     text-align: center;
     color: white;
 }
+
 .carrossel-content h2 {
-    font-size: 20px;
-    margin-bottom: 10px;
+    font-size: 1.25rem;
+    margin-bottom: 0.625rem;
     text-align: center;
 }
 
 .carrossel-content p {
-    font-size: 16px;
-    line-height: 24px;
-    margin-bottom: 10px; 
+    font-size: 1rem;
+    line-height: 1.5rem;
+    margin-bottom: 0.625rem;
     text-align: center; 
 }
-
 
 .carrossel-indicators {
     display: flex;
     justify-content: center;
-    gap: 5px;
-    margin-top: 10px;
+    gap: 0.3125rem;
+    margin-top: 0.625rem;
     position: absolute;
-    bottom: 20px;
+    bottom: 1.25rem;
     left: 50%;
     transform: translateX(-50%);
 }
 
 .indicator {
-    width: 34px;
-    height: 3px;
+    width: 2.125rem;
+    height: 0.1875rem;
     background: rgba(255, 255, 255, 0.50);
     cursor: pointer;
 }
@@ -141,244 +139,252 @@
     color: white;
     border: none;
     cursor: pointer;
-    padding: 10px;
-    font-size: 18px;
+    padding: 0.625rem;
+    font-size: 1.125rem;
     z-index: 10;
 }
 
 .carrossel-btn.prev {
-    left: 10px;
+    left: 0.625rem;
 }
 
 .carrossel-btn.next {
-    right: 10px;
+    right: 0.625rem;
 }
 
 .eventos {
     width: 100%;
-    max-width: 120%; 
-    margin: 0 auto; 
-    text-align: center; 
-    padding: 20px 0; 
-    overflow: hidden; 
+    max-width: 120%;
+    margin: 0 auto;
+    text-align: center;
+    padding: 1.25rem 0;
+    overflow: hidden;
 }
 
 .eventos h1 {
-    font-size: 32px;
+    font-size: 2rem;
     color: #232ED0;
-    margin-bottom: 20px;
+    margin-bottom: 1.25rem;
 }
 
-
 .scroll-wrapper {
-    overflow-x: auto; 
-    white-space: nowrap; 
-    -webkit-overflow-scrolling: touch; 
-    margin-bottom: -20px; 
-    scrollbar-width: thin; 
-    scrollbar-color: rgba(0, 0, 0, 0.2) transparent; 
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: -1.25rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 }
 
 .scroll-wrapper::-webkit-scrollbar {
-    width: 6px; 
-    height: 4px; 
-    background-color: transparent; 
+    width: 0.375rem;
+    height: 0.25rem;
+    background-color: transparent;
 }
 
 .scroll-wrapper::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.2); 
-    border-radius: 3px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 0.1875rem;
 }
+
 .cards-container {
-    display: inline-flex; 
-    gap: 20px;
-    padding-bottom: 20px;
+    display: inline-flex;
+    gap: 1.25rem;
+    padding-bottom: 1.25rem;
 }
 
 .card {
-    width: 298px;
-    height: 374px;
+    width: 18.625rem;
+    height: 23.375rem;
     display: flex;
-    border-radius: 8px;
+    flex-direction: column;
+    border-radius: 0.5rem;
     overflow: hidden;
     background-color: rgba(238, 238, 238, 1);
     flex-shrink: 0;
-    flex-direction: column;
 }
 
-.card-image {
-    width: 298px;
-    height: 200px;
-    border-radius: 8px 8px 0 0;
-    background-size: cover;
-    background-position: center;
+.card-content img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
 }
 
 .card-content {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    padding: 16px;
-    gap: 18px;
+    padding: 1rem;
+    gap: 1.125rem;
     flex-grow: 1;
+    justify-content: space-between;
 }
 
 .card-content h2 {
     color: var(--Foundation-Blue-Normal, #232ED0);
     margin: 0;
-    font-size: 20px;
+    font-size: 1.25rem;
     font-weight: 600;
     line-height: 150%;
 }
 
 .card-content p {
-    margin: 0;
-    flex-grow: 1;
-    font-size: 12px;
-   text-align: justify;
-   font-style: normal;
-   font-weight: 300;
-   line-height: 150%; 
+    font-size: 1rem;
+    margin: 0 0 15px;
+    max-height: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .destaque {
-    padding: 50px 20px; 
-    text-align: center; 
+    padding: 3.125rem 1.25rem;
+    text-align: center;
 }
 
 .destaque-content {
-    max-width: 800px; 
-    margin: 0 auto; 
+    max-width: 50rem;
+    margin: 0 auto;
 }
 
 .destaque h1 {
     color: #182AD5;
-    font-size: 50px; 
+    font-size: 3.125rem;
     font-weight: 700;
-    line-height: 1.5; 
-    text-align: center; 
+    line-height: 1.5;
+    text-align: center;
 }
 
 .destaque p {
-    color: #1A1A1A; 
-    font-size: 16px; 
-    font-weight: 400; 
-    line-height: 1.5; 
-    margin-top: 20px; 
-    margin-bottom: 20px; 
+    color: #1A1A1A;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    margin-top: 1.25rem;
+    margin-bottom: 1.25rem;
     text-align: center;
 }
 
-
-  @media (max-width: 768px) {
-
-    .destaque-content p{
-        font-size: 118px;
+/* Media queries for specific screen sizes */
+@media (min-width: 576px) and (max-width: 767.98px) {
+    .eventos h1 {
+        text-align: left;
     }
-    .destaque-content h1{
-        font-size: 22px;
+    .destaque-content p {
+        font-size: 0.875rem;
     }
-
+    .destaque-content h1 {
+        font-size: 1.375rem;
+    }
     .categorias h1, .eventos h1 {
-        font-size: 24px;
-        padding-left: 10px;
+        font-size: 1.5rem;
+        padding-left: 0.625rem;
         text-align: center; 
     }
-
     .categorias-list {
-        gap: 15px;
-        justify-content: flex-start; 
+        gap: 0.9375rem;
+        justify-content: flex-start;
     }
-
     .categorias-list li {
-        max-width: 80px;
+        max-width: 5rem;
     }
-
     .categorias-list a {
-        font-size: 16px;
+        font-size: 1rem;
     }
-
     .categorias-list img {
-        width: 60px;
+        width: 3.75rem;
+    }
+    .card {
+        width: 14rem;
+        height: 16rem;
+    }
+    .card-content {
+        padding: 0.75rem;
+    }
+    .card-content p {
+        display: none;
+    }
+    .card-content h2 {
+        font-size: 1.0rem;
+    }
+    .categorias-list {
+        justify-content: center;
     }
 }
-    
-  
-.carrossel-content {
-    position: absolute;
-    bottom: 30px;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: center;
-    color: white;
-}
 
-
-
-@media (max-width: 480px) {
-
-    .destaque-content p{
-        font-size: 12px;
+@media (max-width: 575.98px) {
+    .categorias-list {
+        justify-content: center;
     }
-    .destaque-content h1{
-        font-size: 20px;
+    .eventos h1 {
+        text-align: left;
     }
-
+    .destaque-content p {
+        font-size: 0.75rem;
+    }
+    .destaque-content h1 {
+        font-size: 1.25rem;
+    }
     .carrossel-content h2 {
-        font-size: 12px;
-        margin-bottom: 6px; 
+        font-size: 0.75rem;
+        margin-bottom: 0.375rem;
     }
-
     .carrossel-content p {
-        font-size: 10px;
-        line-height: 18px;
-        margin-bottom: 6px; 
+        font-size: 0.625rem;
+        line-height: 1.125rem;
+        margin-bottom: 0.375rem;
     }
     .carrossel-content {
-        bottom: 20px; 
-        width: 90%; 
-        left: 50%; 
+        bottom: 1.25rem;
+        width: 90%;
+        left: 50%;
         transform: translateX(-50%);
-        font-size: 12px;
+        font-size: 0.75rem;
     }
-
-
     .carrossel-btn {
-        padding: 6px;
+        padding: 0.375rem;
     }
-
     .carrossel-btn.prev {
-        left: 3px;
+        left: 0.1875rem;
     }
-
     .carrossel-btn.next {
-        right: 3px;
+        right: 0.1875rem;
     }
-
     .carrossel-indicators .indicator {
-        width: 6px;
-        height: 6px;
+        width: 0.375rem;
+        height: 0.375rem;
     }
     .categorias h1, .eventos h1 {
-        font-size: 20px;
-        padding-left: 5px;
-        text-align: left; /* Alinhado à esquerda em telas menores */
+        font-size: 1.25rem;
+        padding-left: 0.3125rem;
+        text-align: left;
     }
-
     .categorias-list {
-        gap: 10px;
-        justify-content: flex-start; /* Alinha itens ao início em telas menores */
+        gap: 0.625rem;
+        justify-content: center;
     }
-
     .categorias-list li {
-        max-width: 60px;
+        max-width: 3.75rem;
     }
-
     .categorias-list a {
-        font-size: 14px;
+        font-size: 0.875rem;
     }
-
     .categorias-list img {
-        width: 50px;
+        width: 3.125rem;
+    }
+    .card {
+        width: 10rem;
+        height: 12rem;
+    }
+    .card-content {
+        padding: 0.5rem;
+    }
+    .card-content p {
+        display: none;
+    }
+    .card-content h2 {
+        font-size: 1rem;
+    }
+    .btn {
+        font-size: 0.675rem;
     }
 }
