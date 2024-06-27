@@ -18,7 +18,6 @@ namespace Core.Service
 
         void CreateGestorModel(Pessoa pessoa,uint IdEvento, int idPapel);
       
-        void CreateGestorModel(Pessoa pessoa,uint IdEvento);
         string GetNomeById(uint id);
     }
 }
