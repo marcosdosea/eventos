@@ -4,7 +4,7 @@ namespace EventoWeb.Models
     public class TipoInscricaoModel
     {
         [Display(Name = "Código")]
-        public int Id { get; set; }
+        public uint Id { get; set; }
 
         [Display(Name = "Evento")]
         public uint IdEvento { get; set; }

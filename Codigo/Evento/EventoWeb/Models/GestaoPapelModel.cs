@@ -9,5 +9,5 @@ public class GestaoPapelModel
     
     public EventoSimpleDTO Evento { get; set; }
     public IEnumerable<Inscricaopessoaevento> Inscricoes { get; set; }
-    public int IdPapel { get; set; }
+    public uint IdPapel { get; set; }
 }

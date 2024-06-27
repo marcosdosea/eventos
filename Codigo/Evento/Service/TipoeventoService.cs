@@ -18,7 +18,7 @@ namespace Service
         /// </summary>
         /// <param name="tipoevento">dados da area de interesse</param>
         /// <returns></returns>
-        public int Create(Tipoevento tipoevento)
+        public uint Create(Tipoevento tipoevento)
         {
             context.Add(tipoevento);
             context.SaveChanges();
@@ -30,7 +30,7 @@ namespace Service
         /// </summary>
         /// <param name="idTipoEvento">dados da area de interesse</param>
         /// <returns></returns>
-        public void Delete(int idTipoEvento)
+        public void Delete(uint idTipoEvento)
         {
             var tipoevento = context.Areainteresses.Find(idTipoEvento);
             context.Remove(tipoevento);
@@ -53,7 +53,7 @@ namespace Service
         /// </summary>
         /// <param name="idTipoEvento">dados da area de interesse</param>
         /// <returns></returns>
-        public Tipoevento Get(int idTipoEvento)
+        public Tipoevento Get(uint idTipoEvento)
         {
             return context.Tipoeventos.Find(idTipoEvento);
         }
@@ -67,7 +67,7 @@ namespace Service
             return context.Tipoeventos.AsNoTracking();
         }
 
-		public string GetNomeById(int idTipoEvento)
+		public string GetNomeById(uint idTipoEvento)
 		{
 			return context.Tipoeventos
 				   .Where(t => t.Id == idTipoEvento)

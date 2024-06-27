@@ -2,7 +2,7 @@
 {
     public interface ITipoInscricaoService
     {
-        int Create(Tipoinscricao tipoInscricao);
+        uint Create(Tipoinscricao tipoInscricao);
         void Edit(Tipoinscricao tipoInscricao);
         void Delete(int idTipoInscricao);
         Tipoinscricao Get(int idTipoInscricao);

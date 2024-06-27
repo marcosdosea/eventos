@@ -127,7 +127,7 @@ namespace Service
                    .FirstOrDefault();
         }
 
-        public void CreateGestorModel(Pessoa pessoa, uint idEvento,int idPapel)
+        public void CreateGestorModel(Pessoa pessoa, uint idEvento, uint idPapel)
         {   
             var existingPessoa = _pessoaService.GetByCpf(pessoa.Cpf);
 

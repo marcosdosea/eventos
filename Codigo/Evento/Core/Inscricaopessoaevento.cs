@@ -9,19 +9,16 @@ public partial class Inscricaopessoaevento
 
     public uint IdEvento { get; set; }
 
-    public int IdPapel { get; set; }
+    public uint IdPapel { get; set; }
 
-    public int? IdTipoInscricao { get; set; }
+    public uint IdTipoInscricao { get; set; }
 
     public DateTime DataInscricao { get; set; }
 
     public decimal ValorTotal { get; set; }
 
     /// <summary>
-    /// A - ATIVA
-    /// C - CANCELADA
-    /// S - SOLICITADA
-    /// 
+    /// A - ATIVA\nC - CANCELADA\nS - SOLICITADA\n
     /// </summary>
     public string Status { get; set; } = null!;
 
@@ -33,7 +30,5 @@ public partial class Inscricaopessoaevento
 
     public virtual Pessoa IdPessoaNavigation { get; set; } = null!;
 
-    public virtual Tipoinscricao? IdTipoInscricaoNavigation { get; set; }
-
-    public virtual ICollection<Pagamento> Pagamentos { get; set; } = new List<Pagamento>();
+    public virtual Tipoinscricao IdTipoInscricaoNavigation { get; set; } = null!;
 }

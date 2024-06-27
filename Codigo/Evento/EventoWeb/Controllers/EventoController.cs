@@ -127,7 +127,7 @@ namespace EventoWeb.Controllers
 
         
         // GET: EventoController/CreateGestorEvento
-        public ActionResult GestaoPapel(uint idEvento, int idPapel)
+        public ActionResult GestaoPapel(uint idEvento, uint idPapel)
         {
             var gestorModel = new GestaoPapelModel
             {
@@ -152,7 +152,7 @@ namespace EventoWeb.Controllers
 
         } 
         // POST: EventoController/DeletePessoaPapel
-        public IActionResult DeletePessoaPapel(uint idPessoa, uint idEvento, int idPapel)
+        public IActionResult DeletePessoaPapel(uint idPessoa, uint idEvento, uint idPapel)
         {
             _inscricaoService.DeletePessoaPapel(idPessoa, idEvento, idPapel);
 

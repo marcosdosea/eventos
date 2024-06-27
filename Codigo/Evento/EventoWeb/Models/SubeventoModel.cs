@@ -86,7 +86,7 @@ namespace EventoWeb.Models
 
         [Display(Name = "ID do Tipo do Evento")]
         [Required(ErrorMessage = "Informe qual o Tipo desse Subevento")]
-        public int IdTipoEvento { get; set; }
+        public uint IdTipoEvento { get; set; }
 
         [Display(Name = "Tipo de Subevento")]
         public string NomeTipoEvento { get; set; }

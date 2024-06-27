@@ -14,6 +14,4 @@ public partial class Pessoaareainteresse
     public virtual Areainteresse IdAreaInteresseNavigation { get; set; } = null!;
 
     public virtual Pessoa IdPessoaNavigation { get; set; } = null!;
-
-    public virtual ICollection<Estadosbrasil> EstadoEstadosBrasils { get; set; } = new List<Estadosbrasil>();
 }

@@ -5,7 +5,7 @@ namespace Core;
 
 public partial class Tipoevento
 {
-    public int Id { get; set; }
+    public uint Id { get; set; }
 
     public string Nome { get; set; } = null!;
 

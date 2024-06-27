@@ -18,7 +18,7 @@ namespace Service
         /// <param name="tipoInscricao"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public int Create(Tipoinscricao tipoInscricao)
+        public uint Create(Tipoinscricao tipoInscricao)
         {
             _context.Add(tipoInscricao);
             _context.SaveChanges();

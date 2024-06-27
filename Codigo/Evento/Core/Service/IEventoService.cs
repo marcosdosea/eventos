@@ -16,7 +16,7 @@ namespace Core.Service
 
         IEnumerable<EventoDTO> GetByNome(string Nome);
 
-        void CreateGestorModel(Pessoa pessoa,uint IdEvento, int idPapel);
+        void CreateGestorModel(Pessoa pessoa, uint IdEvento, uint idPapel);
       
         string GetNomeById(uint id);
     }

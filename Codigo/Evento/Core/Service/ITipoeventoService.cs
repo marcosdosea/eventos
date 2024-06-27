@@ -9,11 +9,11 @@ namespace Core.Service
 {
     public interface ITipoeventoService
     {
-        int Create(Tipoevento tipoevento);
+        uint Create(Tipoevento tipoevento);
         void Edit(Tipoevento tipoevento);
-        void Delete(int idTipoEvento);
-        Tipoevento Get(int idTipoEvento);
+        void Delete(uint idTipoEvento);
+        Tipoevento Get(uint idTipoEvento);
 		IEnumerable<Tipoevento> GetAll();
-		string GetNomeById(int idTipoEvento);
+		string GetNomeById(uint idTipoEvento);
 	}
 }

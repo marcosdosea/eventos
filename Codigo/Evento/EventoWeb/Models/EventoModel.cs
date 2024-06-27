@@ -90,7 +90,7 @@ namespace EventoWeb.Models
 
         [Display(Name = "ID do Tipo do Evento")]
         [Required(ErrorMessage = "Informe qual o Tipo desse Evento")]
-        public int IdTipoEvento { get; set; }
+        public uint IdTipoEvento { get; set; }
 
         [Display(Name = "Vagas Ofertadas")]
         [Required(ErrorMessage = "Informe a quantidade de Vagas Ofertadas pra esse evento")]

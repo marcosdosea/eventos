@@ -19,7 +19,7 @@ namespace Service
             _context.SaveChanges();
         }
 
-        public void DeletePessoaPapel(uint idPessoa, uint idEvento,int idPapel)
+        public void DeletePessoaPapel(uint idPessoa, uint idEvento, uint idPapel)
         {
             var inscricao = _context.Inscricaopessoaeventos.FirstOrDefault(i => i.IdPessoa == idPessoa && i.IdEvento == idEvento && i.IdPapel == idPapel);
             if (inscricao != null)
@@ -29,7 +29,7 @@ namespace Service
             }
         }
         
-        public IEnumerable<Inscricaopessoaevento> GetInscricaoPessoaEvento(uint idEvento, int idPapel)
+        public IEnumerable<Inscricaopessoaevento> GetInscricaoPessoaEvento(uint idEvento, uint idPapel)
         {
             return _context.Inscricaopessoaeventos
                 .Include(i => i.IdPessoaNavigation)

@@ -18,11 +18,7 @@ public partial class Evento
     public sbyte InscricaoGratuita { get; set; }
 
     /// <summary>
-    /// C- CADASTRO
-    /// A- ATIVO
-    /// I - INATIVO
-    /// F- FINALIZADO
-    ///  
+    /// C- CADASTRO\nA- ATIVO\nI - INATIVO\nF- FINALIZADO\n 
     /// </summary>
     public string Status { get; set; } = null!;
 
@@ -30,7 +26,7 @@ public partial class Evento
 
     public DateTime DataFimInscricao { get; set; }
 
-    public decimal ValorInscricao { get; set; }
+    public decimal ValorInscricaoMaisBarata { get; set; }
 
     public string? Website { get; set; }
 
@@ -56,8 +52,6 @@ public partial class Evento
 
     public decimal FrequenciaMinimaCertificado { get; set; }
 
-    public int IdTipoEvento { get; set; }
-
     public int VagasOfertadas { get; set; }
 
     public int VagasReservadas { get; set; }
@@ -68,6 +62,8 @@ public partial class Evento
 
     public int CargaHoraria { get; set; }
 
+    public uint IdTipoEvento { get; set; }
+
     public virtual Estadosbrasil EstadoNavigation { get; set; } = null!;
 
     public virtual Tipoevento IdTipoEventoNavigation { get; set; } = null!;
@@ -77,8 +73,6 @@ public partial class Evento
     public virtual ICollection<Modelocertificado> Modelocertificados { get; set; } = new List<Modelocertificado>();
 
     public virtual ICollection<Modelocracha> Modelocrachas { get; set; } = new List<Modelocracha>();
-
-    public virtual ICollection<Participacaopessoaevento> Participacaopessoaeventos { get; set; } = new List<Participacaopessoaevento>();
 
     public virtual ICollection<Subevento> Subeventos { get; set; } = new List<Subevento>();
 

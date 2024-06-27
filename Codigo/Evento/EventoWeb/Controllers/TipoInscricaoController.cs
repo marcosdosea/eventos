@@ -34,7 +34,7 @@ namespace EventoWeb.Controllers
                 Descricao = e.Descricao,
                 Valor = e.Valor,
                 DataInicio = e.DataInicio,
-                Datafim = e.Datafim,
+                Datafim = e.DataFim,
                 UsadaEvento = e.UsadaEvento,
                 UsadaSubevento = e.UsadaSubevento 
 
@@ -99,7 +99,7 @@ namespace EventoWeb.Controllers
         // POST: TipoInscricaoController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, TipoInscricaocreateModel tipoInscricaoModel)
+        public ActionResult Edit(uint id, TipoInscricaocreateModel tipoInscricaoModel)
         {  
             var tipoinscricao = _mapper.Map<Tipoinscricao>(tipoInscricaoModel.TipoInscricao);
             tipoinscricao.Id = id;

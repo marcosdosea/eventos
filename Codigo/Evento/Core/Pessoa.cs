@@ -14,9 +14,7 @@ public partial class Pessoa
     public string Cpf { get; set; } = null!;
 
     /// <summary>
-    /// M - Masculino
-    /// F - Feminino
-    /// N - Não Informado
+    /// M - Masculino\nF - Feminino\nN - Não Informado
     /// </summary>
     public string Sexo { get; set; } = null!;
 
@@ -43,12 +41,6 @@ public partial class Pessoa
     public virtual Estadosbrasil? EstadoNavigation { get; set; }
 
     public virtual ICollection<Inscricaopessoaevento> Inscricaopessoaeventos { get; set; } = new List<Inscricaopessoaevento>();
-
-    public virtual ICollection<Inscricaopessoasubevento> Inscricaopessoasubeventos { get; set; } = new List<Inscricaopessoasubevento>();
-
-    public virtual ICollection<Participacaopessoaevento> Participacaopessoaeventos { get; set; } = new List<Participacaopessoaevento>();
-
-    public virtual ICollection<Participacaopessoasubevento> Participacaopessoasubeventos { get; set; } = new List<Participacaopessoasubevento>();
 
     public virtual ICollection<Pessoaareainteresse> Pessoaareainteresses { get; set; } = new List<Pessoaareainteresse>();
 }
