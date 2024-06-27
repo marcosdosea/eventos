@@ -63,8 +63,6 @@
 					</td>
 					<td>
 						@Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" }) |
-
-						@Html.ActionLink("Detalhes", "Details", new { id = item.Id }, new { @style = "text-decoration:none;" }) |
 						@{
 							var deleteModel = new EventoWeb.Models.DeleteModel
 							{
@@ -77,9 +75,11 @@
 							};
 						}
 
-						<a class="danger-normal" style="text-decoration:none;" href="#!" data-toggle="modal" data-target="#@deleteModel.ModalId">Delete</a>
+						<a class="danger-normal" style="text-decoration:none;" href="#!" data-toggle="modal" data-target="#@deleteModel.ModalId">Excluir</a>
 						@await Html.PartialAsync("_DeleteModal", deleteModel) |
-						@Html.ActionLink("Gestores", "CreateGestorEvento", new { id = item.Id }, new { @style = "text-decoration:none;" })
+						@Html.ActionLink("Gestores", "GestaoPapel", new { idEvento = item.Id,idPapel = 2 }, new { @style = "text-decoration:none;" })|
+						@Html.ActionLink("Colaboradores", "GestaoPapel", new { idEvento = item.Id, idPapel = 3}, new { @style = "text-decoration:none;" })|
+						@Html.ActionLink("Participantes", "GestaoPapel", new { idEvento = item.Id,idPapel = 4 }, new { @style = "text-decoration:none;" })
 					</td>
 				</tr>
 }

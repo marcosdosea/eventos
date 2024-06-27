@@ -1,19 +1,37 @@
-﻿@using System.Reflection.Metadata
-@using Core
-@model EventoWeb.Models.GestorEventoModel
+﻿@model EventoWeb.Models.GestaoPapelModel
 
 @{
-ViewData["Title"] = "Associar Gestor ao Evento";
+string papel = "";
+string papelPlural = "";
+
+switch (Model.IdPapel)
+{
+case 2:
+papel = "Gestor";
+papelPlural = "Gestores";
+break;
+case 3:
+papel = "Colaborador";
+papelPlural = "Colaboradores";
+break;
+case 4:
+papel = "Participante";
+papelPlural = "Participantes";
+break;
 }
 
-<h1 class="blue-normal">Cadastrar Gestores do Evento</h1>
+ViewData["Title"] = papelPlural;
+}
+
+<h1 class="blue-normal">Cadastrar @papelPlural do Evento</h1>
 <hr />
+
 <script>
     function validarFormulario() {
         var eventoSelecionado = document.getElementById("IdEvento").value;
         if (eventoSelecionado == 0) {
             alert("Por favor, selecione um evento.");
-            return false; 
+            return false;
         }
         return true;
     }
@@ -21,7 +39,7 @@ ViewData["Title"] = "Associar Gestor ao Evento";
 
 <div class="row">
     <div>
-        <form asp-action="CreateGestorEvento" method="post" onsubmit="return validarFormulario()"> 
+        <form asp-action="GestaoPapel" method="post" onsubmit="return validarFormulario()">
             <div class="row">
                 <div class="col-lg-3">
                     <div class="form-group">
@@ -29,11 +47,11 @@ ViewData["Title"] = "Associar Gestor ao Evento";
                         <select id="IdEvento" name="IdEvento" class="form-control" readonly>
                             @if (Model.Evento == null || Model.Evento.Id == 0)
                             {
-                                <option value="0">Não Informado</option>
+                            <option value="0">Não Informado</option>
                             }
                             else
                             {
-                                <option value="@Model.Evento.Id" selected>@Model.Evento.Nome</option>
+                            <option value="@Model.Evento.Id" selected>@Model.Evento.Nome</option>
                             }
                         </select>
                         @Html.HiddenFor(model => model.Evento.Id)
@@ -42,7 +60,7 @@ ViewData["Title"] = "Associar Gestor ao Evento";
             </div>
             <br />
             <h4 class="blue-normal">
-                Dados do Gestor
+                Dados do @papel
             </h4>
             <div class="row">
                 <div class="col-6 col-sm-6 col-md-3 col-lg-2">
@@ -75,42 +93,47 @@ ViewData["Title"] = "Associar Gestor ao Evento";
                 </div>
             </div>
             <br />
+
+            <input type="hidden" name="IdPapel" value="@Model.IdPapel" />
+
             <div class="d-flex flex-row-reverse">
                 <div class="form-group">
-                    <input type="submit" value="Adicionar Gestor" class="btn btn-lg btn-blue-normal" />
+                    <input type="submit" value="Adicionar @papel" class="btn btn-lg btn-blue-normal" />
                 </div>
-            </div> 
+            </div>
             <br />
         </form>
     </div>
 </div>
+
 <div class="row">
     <div class="col-md-12">
-        <h2 class="blue-normal">Lista de Gestores do Evento</h2>
+        <h2 class="blue-normal">Lista de @papelPlural do Evento</h2>
         <table class="table table-striped">
             <thead class="blue-normal blue-normal-bg-table">
-                <tr>
-                    <th>CPF</th>
-                    <th>Nome</th>
-                    <th>Ações</th>
-                </tr>
+            <tr>
+                <th>CPF</th>
+                <th>Nome</th>
+                <th>Ações</th>
+            </tr>
             </thead>
             <tbody>
-                @foreach (var inscricaopessoaevento in Model.Inscricoes)
-                {
-                    <tr>
-                        <td style="vertical-align: middle;">@FormatarCPF(inscricaopessoaevento.IdPessoaNavigation.Cpf)</td>
-                        <td style="vertical-align: middle;">@inscricaopessoaevento.IdPessoaNavigation.Nome</td>
-                        <td style="vertical-align: middle;">
-                            <form id="removeForm-@inscricaopessoaevento.IdPessoa" method="POST" action="/Evento/DeletePessoaPapel">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="IdPessoa" value="@inscricaopessoaevento.IdPessoa" />
-                                <input type="hidden" name="IdEvento" value="@Model.Evento.Id" />
-                                <a href="#confirmRemovalModal" data-toggle="modal" onclick="setModalValues('@inscricaopessoaevento.IdPessoaNavigation.Nome', '@Model.Evento.Nome', '@inscricaopessoaevento.IdPessoa', '@Model.Evento.Id')" class="text-danger" style="text-decoration: none; cursor: pointer;">Remover Gestor</a>
-                            </form>
-                        </td>
-                    </tr>
-                }
+            @foreach (var inscricaopessoaevento in Model.Inscricoes)
+            {
+            <tr>
+                <td style="vertical-align: middle;">@FormatarCPF(inscricaopessoaevento.IdPessoaNavigation.Cpf)</td>
+                <td style="vertical-align: middle;">@inscricaopessoaevento.IdPessoaNavigation.Nome</td>
+                <td style="vertical-align: middle;">
+                    <form id="removeForm-@inscricaopessoaevento.IdPessoa" method="POST" action="/Evento/DeletePessoaPapel">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="IdPessoa" value="@inscricaopessoaevento.IdPessoa" />
+                        <input type="hidden" name="IdEvento" value="@Model.Evento.Id" />
+                        <input type="hidden" name="IdPapel" value="@inscricaopessoaevento.IdPapel" />
+                        <a href="#confirmRemovalModal" data-toggle="modal" onclick="setModalValues('@inscricaopessoaevento.IdPessoaNavigation.Nome', '@Model.Evento.Nome', '@inscricaopessoaevento.IdPessoa', '@Model.Evento.Id')" class="text-danger" style="text-decoration: none; cursor: pointer;">Remover @papel</a>
+                    </form>
+                </td>
+            </tr>
+            }
             </tbody>
         </table>
     </div>
@@ -124,7 +147,7 @@ ViewData["Title"] = "Associar Gestor ao Evento";
                 <h5 class="modal-title" id="modalLabel">Confirmar Remoção</h5>
             </div>
             <div class="modal-body">
-                Quer realmente remover <strong><span id="pessoaNome"></span></strong> como gestor do evento: <strong><span id="eventoNome"></span></strong>?
+                Quer realmente remover <strong><span id="pessoaNome"></span></strong> como @papel do evento: <strong><span id="eventoNome"></span></strong>?
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-blue-normal" data-dismiss="modal">Cancelar</button>
@@ -139,7 +162,6 @@ ViewData["Title"] = "Associar Gestor ao Evento";
         document.getElementById('pessoaNome').textContent = pessoaNome;
         document.getElementById('eventoNome').textContent = eventoNome;
 
-
         var removeForm = document.getElementById('removeForm-' + pessoaId);
         document.getElementById('confirmRemovalButton').onclick = function () {
             removeForm.submit();
@@ -148,31 +170,11 @@ ViewData["Title"] = "Associar Gestor ao Evento";
 </script>
 
 @functions {
-    public static string FormatarCPF(string cpf)
-    {
-        if (string.IsNullOrEmpty(cpf) || cpf.Length != 11)
-            return cpf;
+public static string FormatarCPF(string cpf)
+{
+if (string.IsNullOrEmpty(cpf) || cpf.Length != 11)
+return cpf;
 
-        return Convert.ToUInt64(cpf).ToString(@"000\.000\.000\-00");
-    }
+return Convert.ToUInt64(cpf).ToString(@"000\.000\.000\-00");
 }
-<!--
-    <script>
-    function formatarCPF() {
-        var cpf = document.getElementById('Cpf');
-        var valor = cpf.value.replace(/\D/g, "");
-        var tamanho = valor.length;
-
-
-        if (tamanho >= 10) {
-            cpf.value = valor.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
-        } else if (tamanho >= 9) {
-            cpf.value = valor.replace(/(\d{3})(\d{3})(\d{3})/, "$1.$2.$3-");
-        } else if (tamanho >= 6) {
-            cpf.value = valor.replace(/(\d{3})(\d{3})/, "$1.$2.");
-        } else if (tamanho >= 3) {
-            cpf.value = valor.replace(/(\d{3})/, "$1.");
-        }
-    }
-</script>
--->
+}
