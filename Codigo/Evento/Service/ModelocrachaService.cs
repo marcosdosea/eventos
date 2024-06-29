@@ -1,11 +1,6 @@
 ﻿using Core;
 using Core.Service;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Service
 {
@@ -24,7 +19,7 @@ namespace Service
         /// <param name="modelocracha"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public int Create(Modelocracha modelocracha)
+        public uint Create(Modelocracha modelocracha)
         {
             _context.Add(modelocracha);
             _context.SaveChanges();
@@ -37,7 +32,7 @@ namespace Service
         /// <param name="modelocracha"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public void Delete(int id)
+        public void Delete(uint id)
         {
             var modelo = _context.Modelocrachas.Find(id);
             _context.Remove(modelo);
@@ -62,7 +57,7 @@ namespace Service
         /// <param name="modelocracha"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public Modelocracha Get(int id)
+        public Modelocracha Get(uint id)
         {
             return _context.Modelocrachas.Find(id);
         }

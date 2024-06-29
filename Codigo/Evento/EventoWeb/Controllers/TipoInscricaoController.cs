@@ -34,7 +34,7 @@ namespace EventoWeb.Controllers
                 Descricao = e.Descricao,
                 Valor = e.Valor,
                 DataInicio = e.DataInicio,
-                Datafim = e.DataFim,
+                Datafim = e.Datafim,
                 UsadaEvento = e.UsadaEvento,
                 UsadaSubevento = e.UsadaSubevento 
 

@@ -8,10 +8,10 @@ namespace Core.Service
 {
     public interface IModelocrachaService
     {
-        int Create(Modelocracha modelocracha);
+        uint Create(Modelocracha modelocracha);
         void Edit(Modelocracha modelocracha);
-        void Delete(int id);
-        Modelocracha Get(int id);
+        void Delete(uint id);
+        Modelocracha Get(uint id);
         IEnumerable<Modelocracha> GetAll();
     }
 }

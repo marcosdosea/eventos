@@ -5,7 +5,7 @@ namespace Core;
 
 public partial class Modelocertificado
 {
-    public int Id { get; set; }
+    public uint Id { get; set; }
 
     public byte[] LogotipoSuperior { get; set; } = null!;
 

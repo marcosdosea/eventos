@@ -31,11 +31,11 @@ namespace EventoWeb.Controllers
 			var listarEventosModel = listarEventos.Select(e => new EventoModel
 			{
 				Id = e.Id,
-				DataInicio = e.DataInicio,
+				DataInicio = (DateTime) e.DataInicio,
 				Nome = e.Nome,
 				Status = e.Status,
-				IdTipoEvento = e.IdTipoEvento,
-				NomeTipoEvento = _tipoEventoService.GetNomeById(e.IdTipoEvento)
+				IdTipoEvento = (uint) e.IdTipoEvento,
+				NomeTipoEvento = _tipoEventoService.GetNomeById((uint)e.IdTipoEvento)
 			}).ToList();
 
 			return View(listarEventosModel);
@@ -127,7 +127,7 @@ namespace EventoWeb.Controllers
 
         
         // GET: EventoController/CreateGestorEvento
-        public ActionResult GestaoPapel(uint idEvento, uint idPapel)
+        public ActionResult GestaoPapel(uint idEvento, int idPapel)
         {
             var gestorModel = new GestaoPapelModel
             {

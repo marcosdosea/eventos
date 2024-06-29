@@ -5,7 +5,7 @@ namespace Core;
 
 public partial class Modelocracha
 {
-    public int Id { get; set; }
+    public uint Id { get; set; }
 
     public byte[] Logotipo { get; set; } = null!;
 

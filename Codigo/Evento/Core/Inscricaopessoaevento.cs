@@ -5,20 +5,25 @@ namespace Core;
 
 public partial class Inscricaopessoaevento
 {
+    public uint Id { get; set; }
+
     public uint IdPessoa { get; set; }
 
     public uint IdEvento { get; set; }
 
-    public uint IdPapel { get; set; }
+    public int IdPapel { get; set; }
 
-    public uint IdTipoInscricao { get; set; }
+    public uint? IdTipoInscricao { get; set; }
 
     public DateTime DataInscricao { get; set; }
 
     public decimal ValorTotal { get; set; }
 
     /// <summary>
-    /// A - ATIVA\nC - CANCELADA\nS - SOLICITADA\n
+    /// A - ATIVA
+    /// C - CANCELADA
+    /// S - SOLICITADA
+    /// 
     /// </summary>
     public string Status { get; set; } = null!;
 
@@ -30,5 +35,7 @@ public partial class Inscricaopessoaevento
 
     public virtual Pessoa IdPessoaNavigation { get; set; } = null!;
 
-    public virtual Tipoinscricao IdTipoInscricaoNavigation { get; set; } = null!;
+    public virtual Tipoinscricao? IdTipoInscricaoNavigation { get; set; }
+
+    public virtual ICollection<Pagamento> Pagamentos { get; set; } = new List<Pagamento>();
 }

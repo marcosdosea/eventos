@@ -7,9 +7,7 @@ public partial class Pagamento
 {
     public uint Id { get; set; }
 
-    public uint IdPessoaInscricaoPessoaEvento { get; set; }
-
-    public uint IdEventoInscricaoPessoaEvento { get; set; }
+    public uint IdInscricaoPessoaEvento { get; set; }
 
     public decimal Valor { get; set; }
 
@@ -33,5 +31,5 @@ public partial class Pagamento
 
     public DateTime DataSolicitacao { get; set; }
 
-    public virtual Inscricaopessoaevento IdNavigation { get; set; } = null!;
+    public virtual Inscricaopessoaevento IdInscricaoPessoaEventoNavigation { get; set; } = null!;
 }

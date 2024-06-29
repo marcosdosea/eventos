@@ -11,7 +11,7 @@ public partial class Inscricaopessoasubevento
 
     public int IdPapel { get; set; }
 
-    public int? IdTipoInscricao { get; set; }
+    public uint? IdTipoInscricao { get; set; }
 
     public DateTime DataInscricao { get; set; }
 

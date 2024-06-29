@@ -23,11 +23,19 @@ public partial class EventoContext : DbContext
 
     public virtual DbSet<Inscricaopessoaevento> Inscricaopessoaeventos { get; set; }
 
+    public virtual DbSet<Inscricaopessoasubevento> Inscricaopessoasubeventos { get; set; }
+
     public virtual DbSet<Modelocertificado> Modelocertificados { get; set; }
 
     public virtual DbSet<Modelocracha> Modelocrachas { get; set; }
 
+    public virtual DbSet<Pagamento> Pagamentos { get; set; }
+
     public virtual DbSet<Papel> Papels { get; set; }
+
+    public virtual DbSet<Participacaopessoaevento> Participacaopessoaeventos { get; set; }
+
+    public virtual DbSet<Participacaopessoasubevento> Participacaopessoasubeventos { get; set; }
 
     public virtual DbSet<Pessoa> Pessoas { get; set; }
 
@@ -91,6 +99,31 @@ public partial class EventoContext : DbContext
             entity.Property(e => e.Nome)
                 .HasMaxLength(50)
                 .HasColumnName("nome");
+
+            entity.HasMany(d => d.Pessoaareainteresses).WithMany(p => p.EstadoEstadosBrasils)
+                .UsingEntity<Dictionary<string, object>>(
+                    "Estadosbrasilpessoaareainteresse",
+                    r => r.HasOne<Pessoaareainteresse>().WithMany()
+                        .HasForeignKey("IdPessoaPessoaAreaInteresse", "IdAreaInteressePessoaAreaInteresse")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_EstadosBrasilPessoaAreaInteresse_PessoaAreaInteresse1"),
+                    l => l.HasOne<Estadosbrasil>().WithMany()
+                        .HasForeignKey("EstadoEstadosBrasil")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_EstadosBrasilPessoaAreaInteresse_EstadosBrasil1"),
+                    j =>
+                    {
+                        j.HasKey("EstadoEstadosBrasil", "IdPessoaPessoaAreaInteresse", "IdAreaInteressePessoaAreaInteresse").HasName("PRIMARY");
+                        j.ToTable("estadosbrasilpessoaareainteresse");
+                        j.HasIndex(new[] { "EstadoEstadosBrasil" }, "fk_EstadosBrasilPessoaAreaInteresse_EstadosBrasil1_idx");
+                        j.HasIndex(new[] { "IdPessoaPessoaAreaInteresse", "IdAreaInteressePessoaAreaInteresse" }, "fk_EstadosBrasilPessoaAreaInteresse_PessoaAreaInteresse1_idx");
+                        j.IndexerProperty<string>("EstadoEstadosBrasil")
+                            .HasMaxLength(2)
+                            .IsFixedLength()
+                            .HasColumnName("estadoEstadosBrasil");
+                        j.IndexerProperty<uint>("IdPessoaPessoaAreaInteresse").HasColumnName("idPessoaPessoaAreaInteresse");
+                        j.IndexerProperty<uint>("IdAreaInteressePessoaAreaInteresse").HasColumnName("idAreaInteressePessoaAreaInteresse");
+                    });
         });
 
         modelBuilder.Entity<Evento>(entity =>
@@ -161,7 +194,7 @@ public partial class EventoContext : DbContext
                 .HasColumnName("rua");
             entity.Property(e => e.Status)
                 .HasDefaultValueSql("'C'")
-                .HasComment("C- CADASTRO\\nA- ATIVO\\nI - INATIVO\\nF- FINALIZADO\\n ")
+                .HasComment("C- CADASTRO\nA- ATIVO\nI - INATIVO\nF- FINALIZADO\n ")
                 .HasColumnType("enum('C','A','F')")
                 .HasColumnName("status");
             entity.Property(e => e.TempoMinutosReserva)
@@ -170,9 +203,9 @@ public partial class EventoContext : DbContext
             entity.Property(e => e.VagasDisponiveis).HasColumnName("vagasDisponiveis");
             entity.Property(e => e.VagasOfertadas).HasColumnName("vagasOfertadas");
             entity.Property(e => e.VagasReservadas).HasColumnName("vagasReservadas");
-            entity.Property(e => e.ValorInscricaoMaisBarata)
+            entity.Property(e => e.ValorInscricao)
                 .HasPrecision(10)
-                .HasColumnName("valorInscricaoMaisBarata");
+                .HasColumnName("valorInscricao");
             entity.Property(e => e.Website)
                 .HasMaxLength(200)
                 .HasColumnName("website");
@@ -190,31 +223,32 @@ public partial class EventoContext : DbContext
 
         modelBuilder.Entity<Inscricaopessoaevento>(entity =>
         {
-            entity.HasKey(e => new { e.IdPessoa, e.IdEvento }).HasName("PRIMARY");
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
 
             entity.ToTable("inscricaopessoaevento");
 
-            entity.HasIndex(e => e.IdPapel, "fk_InscricaoPessoaEvento_Papel1_idx");
-
-            entity.HasIndex(e => e.IdTipoInscricao, "fk_InscricaoPessoaEvento_TipoInscricao1_idx");
-
             entity.HasIndex(e => e.IdEvento, "fk_PessoaEvento_Evento1_idx");
+
+            entity.HasIndex(e => e.IdPapel, "fk_PessoaEvento_Papel1_idx");
 
             entity.HasIndex(e => e.IdPessoa, "fk_PessoaEvento_Pessoa_idx");
 
-            entity.Property(e => e.IdPessoa).HasColumnName("idPessoa");
-            entity.Property(e => e.IdEvento).HasColumnName("idEvento");
+            entity.HasIndex(e => e.IdTipoInscricao, "fk_PessoaEvento_TipoInscricao1_idx");
+
+            entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.DataInscricao)
                 .HasColumnType("datetime")
                 .HasColumnName("dataInscricao");
             entity.Property(e => e.FrequenciaFinal)
                 .HasPrecision(10)
                 .HasColumnName("frequenciaFinal");
+            entity.Property(e => e.IdEvento).HasColumnName("idEvento");
             entity.Property(e => e.IdPapel).HasColumnName("idPapel");
+            entity.Property(e => e.IdPessoa).HasColumnName("idPessoa");
             entity.Property(e => e.IdTipoInscricao).HasColumnName("idTipoInscricao");
             entity.Property(e => e.Status)
                 .HasDefaultValueSql("'S'")
-                .HasComment("A - ATIVA\\nC - CANCELADA\\nS - SOLICITADA\\n")
+                .HasComment("A - ATIVA\nC - CANCELADA\nS - SOLICITADA\n")
                 .HasColumnType("enum('A','C','S')")
                 .HasColumnName("status");
             entity.Property(e => e.ValorTotal)
@@ -229,7 +263,7 @@ public partial class EventoContext : DbContext
             entity.HasOne(d => d.IdPapelNavigation).WithMany(p => p.Inscricaopessoaeventos)
                 .HasForeignKey(d => d.IdPapel)
                 .OnDelete(DeleteBehavior.Restrict)
-                .HasConstraintName("fk_InscricaoPessoaEvento_Papel1");
+                .HasConstraintName("fk_PessoaEvento_Papel1");
 
             entity.HasOne(d => d.IdPessoaNavigation).WithMany(p => p.Inscricaopessoaeventos)
                 .HasForeignKey(d => d.IdPessoa)
@@ -239,7 +273,61 @@ public partial class EventoContext : DbContext
             entity.HasOne(d => d.IdTipoInscricaoNavigation).WithMany(p => p.Inscricaopessoaeventos)
                 .HasForeignKey(d => d.IdTipoInscricao)
                 .OnDelete(DeleteBehavior.Restrict)
-                .HasConstraintName("fk_InscricaoPessoaEvento_TipoInscricao1");
+                .HasConstraintName("fk_PessoaEvento_TipoInscricao1");
+        });
+
+        modelBuilder.Entity<Inscricaopessoasubevento>(entity =>
+        {
+            entity.HasKey(e => new { e.IdPessoa, e.IdSubEvento }).HasName("PRIMARY");
+
+            entity.ToTable("inscricaopessoasubevento");
+
+            entity.HasIndex(e => e.IdPapel, "fk_InscricaoPessoaSubEvento_Papel1_idx");
+
+            entity.HasIndex(e => e.IdTipoInscricao, "fk_InscricaoPessoaSubEvento_TipoInscricao1_idx");
+
+            entity.HasIndex(e => e.IdPessoa, "fk_PessoaSubEvento_Pessoa1_idx");
+
+            entity.HasIndex(e => e.IdSubEvento, "fk_PessoaSubEvento_SubEvento1_idx");
+
+            entity.Property(e => e.IdPessoa).HasColumnName("idPessoa");
+            entity.Property(e => e.IdSubEvento).HasColumnName("idSubEvento");
+            entity.Property(e => e.DataInscricao)
+                .HasColumnType("datetime")
+                .HasColumnName("dataInscricao");
+            entity.Property(e => e.FrequenciaFinal)
+                .HasPrecision(10)
+                .HasColumnName("frequenciaFinal");
+            entity.Property(e => e.IdPapel).HasColumnName("idPapel");
+            entity.Property(e => e.IdTipoInscricao).HasColumnName("idTipoInscricao");
+            entity.Property(e => e.Status)
+                .HasDefaultValueSql("'S'")
+                .HasComment("A - ATIVA\nC - CANCELADA\nS - SOLICITADA\n")
+                .HasColumnType("enum('A','C','S')")
+                .HasColumnName("status");
+            entity.Property(e => e.Valor)
+                .HasPrecision(10)
+                .HasColumnName("valor");
+
+            entity.HasOne(d => d.IdPapelNavigation).WithMany(p => p.Inscricaopessoasubeventos)
+                .HasForeignKey(d => d.IdPapel)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_InscricaoPessoaSubEvento_Papel1");
+
+            entity.HasOne(d => d.IdPessoaNavigation).WithMany(p => p.Inscricaopessoasubeventos)
+                .HasForeignKey(d => d.IdPessoa)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_PessoaSubEvento_Pessoa1");
+
+            entity.HasOne(d => d.IdSubEventoNavigation).WithMany(p => p.Inscricaopessoasubeventos)
+                .HasForeignKey(d => d.IdSubEvento)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_PessoaSubEvento_SubEvento1");
+
+            entity.HasOne(d => d.IdTipoInscricaoNavigation).WithMany(p => p.Inscricaopessoasubeventos)
+                .HasForeignKey(d => d.IdTipoInscricao)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_InscricaoPessoaSubEvento_TipoInscricao1");
         });
 
         modelBuilder.Entity<Modelocertificado>(entity =>
@@ -307,6 +395,45 @@ public partial class EventoContext : DbContext
                 .HasConstraintName("fk_ModeloCracha_Evento1");
         });
 
+        modelBuilder.Entity<Pagamento>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("pagamento");
+
+            entity.HasIndex(e => e.IdInscricaoPessoaEvento, "fk_Pagamento_InscricaoPessoaEvento1_idx");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.CodigoPagamento)
+                .HasMaxLength(500)
+                .HasColumnName("codigoPagamento");
+            entity.Property(e => e.DataPagamento)
+                .HasColumnType("datetime")
+                .HasColumnName("dataPagamento");
+            entity.Property(e => e.DataSolicitacao)
+                .HasColumnType("datetime")
+                .HasColumnName("dataSolicitacao");
+            entity.Property(e => e.Forma)
+                .HasDefaultValueSql("'P'")
+                .HasComment("D - DINHEIRO\nC- CARTAO\nB - BOLETO\nP - PIX")
+                .HasColumnType("enum('D','C','B','P')")
+                .HasColumnName("forma");
+            entity.Property(e => e.IdInscricaoPessoaEvento).HasColumnName("idInscricaoPessoaEvento");
+            entity.Property(e => e.Status)
+                .HasDefaultValueSql("'S'")
+                .HasComment("S- SOLICITADO\nC- CONFIRMADO")
+                .HasColumnType("enum('S','C')")
+                .HasColumnName("status");
+            entity.Property(e => e.Valor)
+                .HasPrecision(10)
+                .HasColumnName("valor");
+
+            entity.HasOne(d => d.IdInscricaoPessoaEventoNavigation).WithMany(p => p.Pagamentos)
+                .HasForeignKey(d => d.IdInscricaoPessoaEvento)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_Pagamento_InscricaoPessoaEvento1");
+        });
+
         modelBuilder.Entity<Papel>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
@@ -317,6 +444,68 @@ public partial class EventoContext : DbContext
             entity.Property(e => e.Nome)
                 .HasMaxLength(50)
                 .HasColumnName("nome");
+        });
+
+        modelBuilder.Entity<Participacaopessoaevento>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("participacaopessoaevento");
+
+            entity.HasIndex(e => e.IdEvento, "fk_PessoaEvento1_Evento1_idx");
+
+            entity.HasIndex(e => e.IdPessoa, "fk_PessoaEvento1_Pessoa1_idx");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Entrada)
+                .HasColumnType("datetime")
+                .HasColumnName("entrada");
+            entity.Property(e => e.IdEvento).HasColumnName("idEvento");
+            entity.Property(e => e.IdPessoa).HasColumnName("idPessoa");
+            entity.Property(e => e.Saida)
+                .HasColumnType("datetime")
+                .HasColumnName("saida");
+
+            entity.HasOne(d => d.IdEventoNavigation).WithMany(p => p.Participacaopessoaeventos)
+                .HasForeignKey(d => d.IdEvento)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_PessoaEvento1_Evento1");
+
+            entity.HasOne(d => d.IdPessoaNavigation).WithMany(p => p.Participacaopessoaeventos)
+                .HasForeignKey(d => d.IdPessoa)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_PessoaEvento1_Pessoa1");
+        });
+
+        modelBuilder.Entity<Participacaopessoasubevento>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("participacaopessoasubevento");
+
+            entity.HasIndex(e => e.IdPessoa, "fk_PessoaSubEvento_Pessoa2_idx");
+
+            entity.HasIndex(e => e.IdSubEvento, "fk_PessoaSubEvento_SubEvento2_idx");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Entrada)
+                .HasColumnType("datetime")
+                .HasColumnName("entrada");
+            entity.Property(e => e.IdPessoa).HasColumnName("idPessoa");
+            entity.Property(e => e.IdSubEvento).HasColumnName("idSubEvento");
+            entity.Property(e => e.Saida)
+                .HasColumnType("datetime")
+                .HasColumnName("saida");
+
+            entity.HasOne(d => d.IdPessoaNavigation).WithMany(p => p.Participacaopessoasubeventos)
+                .HasForeignKey(d => d.IdPessoa)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_PessoaSubEvento_Pessoa2");
+
+            entity.HasOne(d => d.IdSubEventoNavigation).WithMany(p => p.Participacaopessoasubeventos)
+                .HasForeignKey(d => d.IdSubEvento)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_PessoaSubEvento_SubEvento2");
         });
 
         modelBuilder.Entity<Pessoa>(entity =>
@@ -366,7 +555,7 @@ public partial class EventoContext : DbContext
                 .HasColumnName("rua");
             entity.Property(e => e.Sexo)
                 .HasDefaultValueSql("'N'")
-                .HasComment("M - Masculino\\nF - Feminino\\nN - Não Informado")
+                .HasComment("M - Masculino\nF - Feminino\nN - Não Informado")
                 .HasColumnType("enum('M','F','N')")
                 .HasColumnName("sexo");
             entity.Property(e => e.Telefone1)
@@ -448,15 +637,15 @@ public partial class EventoContext : DbContext
             entity.Property(e => e.PossuiCertificado).HasColumnName("possuiCertificado");
             entity.Property(e => e.Status)
                 .HasDefaultValueSql("'C'")
-                .HasComment("C- CADASTRO\\nA- ABERTO\\nF- FINALIZADO\\n ")
+                .HasComment("C- CADASTRO\nA- ABERTO\nF- FINALIZADO\n ")
                 .HasColumnType("enum('C','A','F')")
                 .HasColumnName("status");
             entity.Property(e => e.VagasDisponiveis).HasColumnName("vagasDisponiveis");
             entity.Property(e => e.VagasOfertadas).HasColumnName("vagasOfertadas");
             entity.Property(e => e.VagasReservadas).HasColumnName("vagasReservadas");
-            entity.Property(e => e.ValorInscricaoMaisBarata)
+            entity.Property(e => e.ValorInscricao)
                 .HasPrecision(10)
-                .HasColumnName("valorInscricaoMaisBarata");
+                .HasColumnName("valorInscricao");
 
             entity.HasOne(d => d.IdEventoNavigation).WithMany(p => p.Subeventos)
                 .HasForeignKey(d => d.IdEvento)
@@ -490,25 +679,21 @@ public partial class EventoContext : DbContext
             entity.HasIndex(e => e.IdEvento, "fk_TipoInscricao_Evento1_idx");
 
             entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.DataFim)
-                .HasColumnType("datetime")
-                .HasColumnName("dataFim");
             entity.Property(e => e.DataInicio)
                 .HasColumnType("datetime")
                 .HasColumnName("dataInicio");
+            entity.Property(e => e.Datafim)
+                .HasColumnType("datetime")
+                .HasColumnName("datafim");
             entity.Property(e => e.Descricao)
-                .HasMaxLength(300)
+                .HasMaxLength(200)
                 .HasColumnName("descricao");
             entity.Property(e => e.IdEvento).HasColumnName("idEvento");
             entity.Property(e => e.Nome)
-                .HasMaxLength(100)
+                .HasMaxLength(50)
                 .HasColumnName("nome");
-            entity.Property(e => e.UsadaEvento)
-                .HasDefaultValueSql("'1'")
-                .HasColumnName("usadaEvento");
-            entity.Property(e => e.UsadaSubevento)
-                .HasDefaultValueSql("'1'")
-                .HasColumnName("usadaSubevento");
+            entity.Property(e => e.UsadaEvento).HasColumnName("usadaEvento");
+            entity.Property(e => e.UsadaSubevento).HasColumnName("usadaSubevento");
             entity.Property(e => e.Valor)
                 .HasPrecision(10)
                 .HasColumnName("valor");
@@ -517,6 +702,27 @@ public partial class EventoContext : DbContext
                 .HasForeignKey(d => d.IdEvento)
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_TipoInscricao_Evento1");
+
+            entity.HasMany(d => d.IdSubEventos).WithMany(p => p.IdTipoInscricaos)
+                .UsingEntity<Dictionary<string, object>>(
+                    "Tipoinscricaosubevento",
+                    r => r.HasOne<Subevento>().WithMany()
+                        .HasForeignKey("IdSubEvento")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_TipoInscricaoSubEvento_SubEvento1"),
+                    l => l.HasOne<Tipoinscricao>().WithMany()
+                        .HasForeignKey("IdTipoInscricao")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_TipoInscricaoSubEvento_TipoInscricao1"),
+                    j =>
+                    {
+                        j.HasKey("IdTipoInscricao", "IdSubEvento").HasName("PRIMARY");
+                        j.ToTable("tipoinscricaosubevento");
+                        j.HasIndex(new[] { "IdSubEvento" }, "fk_TipoInscricaoSubEvento_SubEvento1_idx");
+                        j.HasIndex(new[] { "IdTipoInscricao" }, "fk_TipoInscricaoSubEvento_TipoInscricao1_idx");
+                        j.IndexerProperty<uint>("IdTipoInscricao").HasColumnName("idTipoInscricao");
+                        j.IndexerProperty<uint>("IdSubEvento").HasColumnName("idSubEvento");
+                    });
         });
 
         OnModelCreatingPartial(modelBuilder);

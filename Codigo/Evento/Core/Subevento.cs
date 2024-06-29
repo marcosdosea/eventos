@@ -20,7 +20,10 @@ public partial class Subevento
     public sbyte InscricaoGratuita { get; set; }
 
     /// <summary>
-    /// C- CADASTRO\nA- ABERTO\nF- FINALIZADO\n 
+    /// C- CADASTRO
+    /// A- ABERTO
+    /// F- FINALIZADO
+    ///  
     /// </summary>
     public string Status { get; set; } = null!;
 
@@ -28,7 +31,7 @@ public partial class Subevento
 
     public DateTime DataFimInscricao { get; set; }
 
-    public decimal ValorInscricaoMaisBarata { get; set; }
+    public decimal ValorInscricao { get; set; }
 
     public sbyte PossuiCertificado { get; set; }
 
@@ -47,4 +50,10 @@ public partial class Subevento
     public virtual Evento IdEventoNavigation { get; set; } = null!;
 
     public virtual Tipoevento IdTipoEventoNavigation { get; set; } = null!;
+
+    public virtual ICollection<Inscricaopessoasubevento> Inscricaopessoasubeventos { get; set; } = new List<Inscricaopessoasubevento>();
+
+    public virtual ICollection<Participacaopessoasubevento> Participacaopessoasubeventos { get; set; } = new List<Participacaopessoasubevento>();
+
+    public virtual ICollection<Tipoinscricao> IdTipoInscricaos { get; set; } = new List<Tipoinscricao>();
 }

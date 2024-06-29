@@ -29,7 +29,7 @@ namespace Service
             }
         }
         
-        public IEnumerable<Inscricaopessoaevento> GetInscricaoPessoaEvento(uint idEvento, uint idPapel)
+        public IEnumerable<Inscricaopessoaevento> GetInscricaoPessoaEvento(uint idEvento, int idPapel)
         {
             return _context.Inscricaopessoaeventos
                 .Include(i => i.IdPessoaNavigation)

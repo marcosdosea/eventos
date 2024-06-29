@@ -27,7 +27,7 @@ namespace EventoWeb.Controllers
         }
 
         // GET: ModelocrachaController/Details/5
-        public ActionResult Details(int id)
+        public ActionResult Details(uint id)
         {
             Modelocracha modelocracha = _modelocrachaService.Get(id);
             ModelocrachaModel modelocrachamodel = _mapper.Map<ModelocrachaModel>(modelocracha);
@@ -55,7 +55,7 @@ namespace EventoWeb.Controllers
         }
 
         // GET: ModelocrachaController/Edit/5
-        public ActionResult Edit(int id)
+        public ActionResult Edit(uint id)
         {
             return Details(id);
         }
@@ -74,7 +74,7 @@ namespace EventoWeb.Controllers
         }
 
         // GET: ModelocrachaController/Delete/5
-        public ActionResult Delete(int id)
+        public ActionResult Delete(uint id)
         {
             var modelocracha = _modelocrachaService.Get(id);
             var modelocrachaModel = _mapper.Map<ModelocrachaModel>(modelocracha);
@@ -84,7 +84,7 @@ namespace EventoWeb.Controllers
         // POST: ModelocrachaController/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, ModelocrachaModel modelocrachaModel)
+        public ActionResult Delete(uint id, ModelocrachaModel modelocrachaModel)
         {
             _modelocrachaService.Delete(id);
             return RedirectToAction(nameof(Index));
