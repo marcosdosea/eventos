@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
-using Core;
 using EventoWeb.Models;
+using Core;
 
 namespace EventoWeb.Mappers
 {
@@ -8,7 +8,11 @@ namespace EventoWeb.Mappers
     {
         public ModeloCrachaProfile()
         {
-            CreateMap<ModelocrachaModel,Modelocracha>().ReverseMap();
+            CreateMap<ModelocrachaModel, Modelocracha>()
+                .ForMember(dest => dest.Logotipo, opt => opt.MapFrom(src => src.Logotipo))
+                .ReverseMap();
         }
     }
+
+
 }
