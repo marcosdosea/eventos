@@ -264,7 +264,6 @@
     text-align: center;
 }
 
-/* Media queries for specific screen sizes */
 @media (min-width: 576px) and (max-width: 767.98px) {
     .eventos h1 {
         text-align: left;
@@ -385,6 +384,6 @@
         font-size: 1rem;
     }
     .btn {
-        font-size: 0.675rem;
+        font-size: 0.975rem;
     }
 }
