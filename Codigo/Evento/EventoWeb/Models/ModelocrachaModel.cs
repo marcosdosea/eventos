@@ -7,7 +7,7 @@ namespace EventoWeb.Models
         [Display(Name = "Código")]
         [Required(ErrorMessage = "Código do Modelo de Crachá é obrigatório")]
         [Key]
-        public int Id { get; set; }
+        public uint Id { get; set; }
 
         [Display(Name = "Logotipo do crachá ")]
         [Required(ErrorMessage = "Informe a logotipo")]

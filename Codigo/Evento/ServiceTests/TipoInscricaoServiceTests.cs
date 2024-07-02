@@ -31,7 +31,8 @@ namespace Service.Tests
                 {
                         Id = 1,
                         IdEvento = 1,
-                        Descricao = "Gratuita",
+                        Nome = "Gratuita",
+                        Descricao = "Incrição sem cobrança",
                         Valor = 0,
                         DataInicio = new DateTime(2024, 02, 2, 7, 30, 0),
                         Datafim = new DateTime(2024, 02, 7, 12, 30, 0),
@@ -42,7 +43,8 @@ namespace Service.Tests
                 {
                         Id = 2,
                         IdEvento = 3,
-                        Descricao = "Paga",
+                        Nome = "Paga",
+                        Descricao = "Incrição com cobrança",
                         Valor = 20,
                         DataInicio = new DateTime(2024, 05, 2, 7, 30, 0),
                         Datafim = new DateTime(2024, 05, 7, 12, 30, 0),
@@ -53,7 +55,8 @@ namespace Service.Tests
                 {
                         Id = 3,
                         IdEvento = 5,
-                        Descricao = "Meia Entrada",
+                        Nome = "Meia Entrada",
+                        Descricao = "Incrição com metade da cobrança",
                         Valor = 10,
                         DataInicio = new DateTime(2024, 09, 2, 7, 30, 0),
                         Datafim = new DateTime(2024, 09, 7, 12, 30, 0),
@@ -76,7 +79,8 @@ namespace Service.Tests
             {
                 Id = 4,
                 IdEvento = 5,
-                Descricao = "Meia Entrada",
+                Nome = "Meia Entrada",
+                Descricao = "Incrição com metade da cobrança",
                 Valor = 10,
                 DataInicio = new DateTime(2024, 09, 2, 7, 30, 0),
                 Datafim = new DateTime(2024, 09, 7, 12, 30, 0),
@@ -87,7 +91,8 @@ namespace Service.Tests
             Assert.AreEqual(4, _tipoInscricaoService.GetAll().Count());
             var tipoinscricao = _tipoInscricaoService.Get(3);
             Assert.AreEqual((uint)5, tipoinscricao.IdEvento);
-            Assert.AreEqual("Meia Entrada", tipoinscricao.Descricao);
+            Assert.AreEqual("Meia Entrada", tipoinscricao.Nome);
+            Assert.AreEqual("Incrição com metade da cobrança", tipoinscricao.Descricao);
             Assert.AreEqual((decimal)10, tipoinscricao.Valor);
             Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), tipoinscricao.DataInicio);
             Assert.AreEqual(DateTime.Parse("2024-09-07 12:30:00"), tipoinscricao.Datafim);
@@ -113,7 +118,8 @@ namespace Service.Tests
             var tipoinscricao = _tipoInscricaoService.Get(3);
             tipoinscricao.Id = 2;
             tipoinscricao.IdEvento = 3;
-            tipoinscricao.Descricao = "Paga";
+            tipoinscricao.Nome = "Paga";
+            tipoinscricao.Descricao = "Incrição com cobrança";
             tipoinscricao.Valor = 20;
             tipoinscricao.DataInicio = new DateTime(2024, 05, 2, 7, 30, 0);
             tipoinscricao.Datafim = new DateTime(2024, 05, 7, 12, 30, 0);
@@ -122,7 +128,8 @@ namespace Service.Tests
             //Assert
             tipoinscricao = _tipoInscricaoService.Get(2);
             Assert.AreEqual((uint)3, tipoinscricao.IdEvento);
-            Assert.AreEqual("Paga", tipoinscricao.Descricao);
+            Assert.AreEqual("Paga", tipoinscricao.Nome);
+            Assert.AreEqual("Incrição com cobrança", tipoinscricao.Descricao);
             Assert.AreEqual((decimal)20, tipoinscricao.Valor);
             Assert.AreEqual(DateTime.Parse("2024-05-02 07:30:00"), tipoinscricao.DataInicio);
             Assert.AreEqual(DateTime.Parse("2024-05-07 12:30:00"), tipoinscricao.Datafim);
@@ -136,7 +143,8 @@ namespace Service.Tests
             var tipoinscricao = _tipoInscricaoService.Get(2);
             Assert.IsNotNull(tipoinscricao);
             Assert.AreEqual((uint)3, tipoinscricao.IdEvento);
-            Assert.AreEqual("Paga", tipoinscricao.Descricao);
+            Assert.AreEqual("Paga", tipoinscricao.Nome);
+            Assert.AreEqual("Incrição com cobrança", tipoinscricao.Descricao);
             Assert.AreEqual((decimal)20, tipoinscricao.Valor);
             Assert.AreEqual(DateTime.Parse("2024-05-02 07:30:00"), tipoinscricao.DataInicio);
             Assert.AreEqual(DateTime.Parse("2024-05-07 12:30:00"), tipoinscricao.Datafim);
@@ -155,7 +163,8 @@ namespace Service.Tests
             Assert.AreEqual(3, listaTipoinscricao.Count());
             var firstTipoinscricao = listaTipoinscricao.First();
             Assert.AreEqual((uint)1, firstTipoinscricao.IdEvento);
-            Assert.AreEqual("Gratuita", firstTipoinscricao.Descricao);
+            Assert.AreEqual("Gratuita", firstTipoinscricao.Nome);
+            Assert.AreEqual("Incrição sem cobrança", firstTipoinscricao.Descricao);
             Assert.AreEqual((decimal)0, firstTipoinscricao.Valor);
             Assert.AreEqual(DateTime.Parse("2024-02-02 07:30:00"), firstTipoinscricao.DataInicio);
             Assert.AreEqual(DateTime.Parse("2024-02-07 12:30:00"), firstTipoinscricao.Datafim);
