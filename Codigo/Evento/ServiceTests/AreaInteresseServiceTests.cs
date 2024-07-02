@@ -19,7 +19,7 @@ namespace Service.Tests
         {
             //Arrange
             var builder = new DbContextOptionsBuilder<EventoContext>();
-            builder.UseInMemoryDatabase("Evento");
+            builder.UseInMemoryDatabase("evento");
             var options = builder.Options;
 
             _context = new EventoContext(options);
