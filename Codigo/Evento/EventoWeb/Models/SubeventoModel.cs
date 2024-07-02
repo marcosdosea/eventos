@@ -49,7 +49,7 @@ namespace EventoWeb.Models
         [Required(ErrorMessage = "Status do Subevento é obrigatório")]
         public string Status { get; set; } = null!;
 
-        [Display(Name = "Data de Inicio de Inscrição")]
+        [Display(Name = "Data Inicial de Inscrição")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
         public DateTime DataInicioInscricao { get; set; }
 

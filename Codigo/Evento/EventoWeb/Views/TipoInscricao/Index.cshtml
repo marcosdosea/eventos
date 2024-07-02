@@ -13,11 +13,15 @@
     </div>
 
     <h1 class="blue-normal">Verifique os Tipos de Inscrição de seus Eventos!</h1>
-    <h3>Tipos de Inscrição</h3>
-
+    <button type="button" class="btn-blue-normal btn btn-lg mb-2">
+        <a asp-action="Create" style="text-decoration:none; color:white">Novo Tipo de Inscrição</a>
+    </button>
     <table class="table table-striped">
         <thead class="blue-normal blue-normal-bg-table">
             <tr>
+                <th>
+                    @Html.DisplayNameFor(Model => Model.Nome)
+                </th>
                 <th>
                     @Html.DisplayNameFor(model => model.Descricao)
                 </th>
@@ -33,12 +37,6 @@
                 <th>
                     @Html.DisplayNameFor(model => model.Datafim)
                 </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.UsadaEvento)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.UsadaSubevento)
-                </th>
                 <th>Ações</th>
             </tr>
         </thead>
@@ -46,6 +44,9 @@
             @foreach (var item in Model)
             {
                 <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Nome)
+                    </td>
                     <td>
                         @Html.DisplayFor(modelItem => item.Descricao)
                     </td>
@@ -62,36 +63,6 @@
                         @Html.DisplayFor(modelItem => item.Datafim)
                     </td>
                     <td>
-                        @{
-                            string usadaEvento = "Desconhecido";
-                            switch (item.UsadaEvento)
-                            {
-                                case 2:
-                                    usadaEvento = "Não";
-                                    break;
-                                case 1:
-                                    usadaEvento = "Sim";
-                                    break;
-                            }
-                        }
-                        @usadaEvento
-                    </td>
-                    <td>
-                        @{
-                            string usadaSubvento = "Desconhecido";
-                            switch (item.UsadaSubevento)
-                            {
-                                case 2:
-                                    usadaSubvento = "Não";
-                                    break;
-                                case 1:
-                                    usadaSubvento = "Sim";
-                                    break;
-                            }
-                        }
-                        @usadaSubvento
-                    </td>
-                    <td>
                         @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" }) |
                         @{
                             var deleteModel = new EventoWeb.Models.DeleteModel
@@ -100,8 +71,8 @@
                     ActionName = "Delete",
                     ControllerName = "TipoInscricao",
                     RouteValues = item.Id,
-                    ConfirmMessage = $"Tem certeza que deseja excluir o tipo de inscrição \"{item.Descricao}\" do evento \"{item.NomeEvento}\"?",
-                    ItemName = item.Descricao
+                    ConfirmMessage = $"Tem certeza que deseja excluir o tipo de inscrição \"{item.Nome}\" do evento \"{item.NomeEvento}\"?",
+                    ItemName = item.Nome
                 };
                         }
 
@@ -113,11 +84,5 @@
             }
         </tbody>
     </table>
-    <h3 class="blue-normal ">Defina um novo Tipo de Inscrição ao seu Evento!</h3>
-    <button type="button" class="btn btn-lg btn-blue-normal text-white ">
-        <a asp-action="Create" class="text-white" style="text-decoration:none;">
-            Criar Tipo de Inscrição
-        </a>
-    </button>
 </div>
 

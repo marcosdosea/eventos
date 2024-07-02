@@ -25,10 +25,11 @@ namespace EventoWeb.Controllers
         // GET: TipoInscricaoController
         public ActionResult Index()
         {
-            var listaTipoInscricao = _tipoInscricaoService.GetAll().ToList(); ;
+            var listaTipoInscricao = _tipoInscricaoService.GetAll().ToList();
             var listaSubeventosModel = listaTipoInscricao.Select(e => new TipoInscricaoModel
             {
                 Id = e.Id,
+                Nome = e.Nome,
                 IdEvento = e.IdEvento,
                 NomeEvento = _eventoService.GetNomeById(e.IdEvento),
                 Descricao = e.Descricao,
@@ -43,7 +44,7 @@ namespace EventoWeb.Controllers
         }
 
         // GET: TipoInscricaoController/Details/5
-        public ActionResult Details(int id)
+        public ActionResult Details(uint id)
         {
             Tipoinscricao tipoinscricao = _tipoInscricaoService.Get(id);
             TipoInscricaoModel tipoInscricaoModel = _mapper.Map<TipoInscricaoModel>(tipoinscricao);
@@ -76,7 +77,7 @@ namespace EventoWeb.Controllers
         }
         
         // GET: TipoInscricaoController/Edit/5
-        public ActionResult Edit(int id)
+        public ActionResult Edit(uint id)
         {
             
             var tipoinscricao = _tipoInscricaoService.Get(id);
@@ -108,7 +109,7 @@ namespace EventoWeb.Controllers
         }
 
         // GET: TipoInscricaoController/Delete/5
-        public ActionResult Delete(int id)
+        public ActionResult Delete(uint id)
         {
             Tipoinscricao tipoinscricao = _tipoInscricaoService.Get(id);
            TipoInscricaoModel tipoInscricaoModel = _mapper.Map<TipoInscricaoModel>(tipoinscricao);
@@ -118,7 +119,7 @@ namespace EventoWeb.Controllers
         // POST: TipoInscricaoController/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, TipoInscricaoModel tipoInscricaoModel)
+        public ActionResult Delete(uint id, TipoInscricaoModel tipoInscricaoModel)
         {
             _tipoInscricaoService.Delete(id);
             return RedirectToAction(nameof(Index));

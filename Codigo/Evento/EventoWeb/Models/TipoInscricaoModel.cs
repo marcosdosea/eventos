@@ -9,7 +9,11 @@ namespace EventoWeb.Models
         [Display(Name = "Evento")]
         public uint IdEvento { get; set; }
 
-        [Display(Name = "Descrição")]
+		[Display(Name = "Nome")]
+		[StringLength(50)]
+		public string Nome { get; set; } = null!;
+
+		[Display(Name = "Descrição")]
         [StringLength(200)]
         public string Descricao { get; set; } = null!;
 
