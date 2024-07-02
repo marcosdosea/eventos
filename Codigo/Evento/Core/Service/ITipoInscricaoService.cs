@@ -4,8 +4,8 @@
     {
         uint Create(Tipoinscricao tipoInscricao);
         void Edit(Tipoinscricao tipoInscricao);
-        void Delete(int idTipoInscricao);
-        Tipoinscricao Get(int idTipoInscricao);
+        void Delete(uint idTipoInscricao);
+        Tipoinscricao Get(uint idTipoInscricao);
         IEnumerable<Tipoinscricao> GetAll();
         IEnumerable<Tipoinscricao> GetByEvento(int idEvento);
 
