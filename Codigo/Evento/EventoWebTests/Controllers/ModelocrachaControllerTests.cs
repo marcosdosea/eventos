@@ -58,7 +58,7 @@ namespace EventoWeb.Controllers.Tests
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ModelocrachaModel));
             ModelocrachaModel modelocrachaModel = (ModelocrachaModel)viewResult.ViewData.Model;
-            Assert.AreEqual(1, modelocrachaModel.Id);
+            Assert.AreEqual((uint)1, modelocrachaModel.Id);
             Assert.AreEqual((uint)1, modelocrachaModel.IdEvento);
             CollectionAssert.AreEqual(new byte[] { 0x20, 0x20 }, modelocrachaModel.Logotipo);
             Assert.AreEqual("Texto 1", modelocrachaModel.Texto);
@@ -116,7 +116,7 @@ namespace EventoWeb.Controllers.Tests
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ModelocrachaModel));
             ModelocrachaModel modelocrachaModel = (ModelocrachaModel)viewResult.ViewData.Model;
-            Assert.AreEqual(1, modelocrachaModel.Id);
+            Assert.AreEqual((uint)1, modelocrachaModel.Id);
             Assert.AreEqual((uint)1, modelocrachaModel.IdEvento);
             CollectionAssert.AreEqual(new byte[] { 0x20, 0x20 }, modelocrachaModel.Logotipo);
             Assert.AreEqual("Texto 1", modelocrachaModel.Texto);
@@ -147,7 +147,7 @@ namespace EventoWeb.Controllers.Tests
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ModelocrachaModel));
             ModelocrachaModel modelocrachaModel = (ModelocrachaModel)viewResult.ViewData.Model;
-            Assert.AreEqual(1, modelocrachaModel.Id);
+            Assert.AreEqual((uint)1, modelocrachaModel.Id);
             Assert.AreEqual((uint)1, modelocrachaModel.IdEvento);
         }
 

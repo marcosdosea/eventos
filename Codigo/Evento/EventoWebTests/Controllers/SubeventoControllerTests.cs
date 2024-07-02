@@ -72,7 +72,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual((decimal)0, subeventoModel.ValorInscricao);
             Assert.AreEqual((sbyte)1, subeventoModel.PossuiCertificado);
             Assert.AreEqual((decimal)1, subeventoModel.FrequenciaMinimaCertificado);
-            Assert.AreEqual((int)1, subeventoModel.IdTipoEvento);
+            Assert.AreEqual((uint)1, subeventoModel.IdTipoEvento);
             Assert.AreEqual((int)100, subeventoModel.VagasOfertadas);
             Assert.AreEqual((int)35, subeventoModel.VagasReservadas);
             Assert.AreEqual((int)65, subeventoModel.VagasDisponiveis);
@@ -141,7 +141,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual((decimal)0, subeventoModel.Subevento.ValorInscricao);
             Assert.AreEqual((sbyte)1, subeventoModel.Subevento.PossuiCertificado);
             Assert.AreEqual((decimal)1, subeventoModel.Subevento.FrequenciaMinimaCertificado);
-            Assert.AreEqual((int)1, subeventoModel.Subevento.IdTipoEvento);
+            Assert.AreEqual((uint)1, subeventoModel.Subevento.IdTipoEvento);
             Assert.AreEqual((int)100, subeventoModel.Subevento.VagasOfertadas);
             Assert.AreEqual((int)35, subeventoModel.Subevento.VagasReservadas);
             Assert.AreEqual((int)65, subeventoModel.Subevento.VagasDisponiveis);
@@ -184,7 +184,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual((decimal)0, subeventoModel.ValorInscricao);
             Assert.AreEqual((sbyte)1, subeventoModel.PossuiCertificado);
             Assert.AreEqual((decimal)1, subeventoModel.FrequenciaMinimaCertificado);
-            Assert.AreEqual((int)1, subeventoModel.IdTipoEvento);
+            Assert.AreEqual((uint)1, subeventoModel.IdTipoEvento);
             Assert.AreEqual((int)100, subeventoModel.VagasOfertadas);
             Assert.AreEqual((int)35, subeventoModel.VagasReservadas);
             Assert.AreEqual((int)65, subeventoModel.VagasDisponiveis);

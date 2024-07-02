@@ -136,7 +136,7 @@ namespace Service.Tests
             Assert.AreEqual((decimal)0, subevento.ValorInscricao);
             Assert.AreEqual((sbyte)0, subevento.PossuiCertificado);
             Assert.AreEqual((decimal)0, subevento.FrequenciaMinimaCertificado);
-            Assert.AreEqual((int)3, subevento.IdTipoEvento);
+            Assert.AreEqual((uint)3, subevento.IdTipoEvento);
             Assert.AreEqual((int)100, subevento.VagasOfertadas);
             Assert.AreEqual((int)35, subevento.VagasReservadas);
             Assert.AreEqual((int)65, subevento.VagasDisponiveis);
@@ -191,7 +191,7 @@ namespace Service.Tests
             Assert.AreEqual((decimal)0, subevento.ValorInscricao);
             Assert.AreEqual((sbyte)1, subevento.PossuiCertificado);
             Assert.AreEqual((decimal)1, subevento.FrequenciaMinimaCertificado);
-            Assert.AreEqual((int)1, subevento.IdTipoEvento);
+            Assert.AreEqual((uint)1, subevento.IdTipoEvento);
             Assert.AreEqual((int)100, subevento.VagasOfertadas);
             Assert.AreEqual((int)35, subevento.VagasReservadas);
             Assert.AreEqual((int)65, subevento.VagasDisponiveis);
@@ -215,7 +215,7 @@ namespace Service.Tests
             Assert.AreEqual((decimal)0, subevento.ValorInscricao);
             Assert.AreEqual((sbyte)1, subevento.PossuiCertificado);
             Assert.AreEqual((decimal)1, subevento.FrequenciaMinimaCertificado);
-            Assert.AreEqual((int)1, subevento.IdTipoEvento);
+            Assert.AreEqual((uint)1, subevento.IdTipoEvento);
             Assert.AreEqual((int)100, subevento.VagasOfertadas);
             Assert.AreEqual((int)35, subevento.VagasReservadas);
             Assert.AreEqual((int)65, subevento.VagasDisponiveis);
@@ -244,7 +244,7 @@ namespace Service.Tests
             Assert.AreEqual((decimal)0, firstSubevento.ValorInscricao);
             Assert.AreEqual((sbyte)1, firstSubevento.PossuiCertificado);
             Assert.AreEqual((decimal)1, firstSubevento.FrequenciaMinimaCertificado);
-            Assert.AreEqual((int)1, firstSubevento.IdTipoEvento);
+            Assert.AreEqual((uint)1, firstSubevento.IdTipoEvento);
             Assert.AreEqual((int)100, firstSubevento.VagasOfertadas);
             Assert.AreEqual((int)35, firstSubevento.VagasReservadas);
             Assert.AreEqual((int)65, firstSubevento.VagasDisponiveis);

@@ -62,7 +62,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(TipoInscricaoModel));
             TipoInscricaoModel tipoinscricaoModel = (TipoInscricaoModel)viewResult.ViewData.Model;
             Assert.AreEqual((uint)1, tipoinscricaoModel.IdEvento);
-            Assert.AreEqual("Gratuita", tipoinscricaoModel.Descricao);
+            Assert.AreEqual("Gratuita", tipoinscricaoModel.Nome);
+            Assert.AreEqual("Incrição sem cobrança", tipoinscricaoModel.Descricao);
             Assert.AreEqual((decimal)1, tipoinscricaoModel.Valor);
             Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), tipoinscricaoModel.DataInicio);
             Assert.AreEqual(DateTime.Parse("2024-09-07 12:30:00"), tipoinscricaoModel.Datafim);
@@ -121,7 +122,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(TipoInscricaocreateModel));
             TipoInscricaocreateModel tipoinscricaoModel = (TipoInscricaocreateModel)viewResult.ViewData.Model;
             Assert.AreEqual((uint)1, tipoinscricaoModel.TipoInscricao.IdEvento);
-            Assert.AreEqual("Gratuita", tipoinscricaoModel.TipoInscricao.Descricao);
+            Assert.AreEqual("Gratuita", tipoinscricaoModel.TipoInscricao.Nome);
+            Assert.AreEqual("Incrição sem cobrança", tipoinscricaoModel.TipoInscricao.Descricao);
             Assert.AreEqual((decimal)1, tipoinscricaoModel.TipoInscricao.Valor);
             Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), tipoinscricaoModel.TipoInscricao.DataInicio);
             Assert.AreEqual(DateTime.Parse("2024-09-07 12:30:00"), tipoinscricaoModel.TipoInscricao.Datafim);
@@ -154,7 +156,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(TipoInscricaoModel));
             TipoInscricaoModel tipoinscricaoModel = (TipoInscricaoModel)viewResult.ViewData.Model;
             Assert.AreEqual((uint)1, tipoinscricaoModel.IdEvento);
-            Assert.AreEqual("Gratuita", tipoinscricaoModel.Descricao);
+            Assert.AreEqual("Gratuita", tipoinscricaoModel.Nome);
+            Assert.AreEqual("Incrição sem cobrança", tipoinscricaoModel.Descricao);
             Assert.AreEqual((decimal)1, tipoinscricaoModel.Valor);
             Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), tipoinscricaoModel.DataInicio);
             Assert.AreEqual(DateTime.Parse("2024-09-07 12:30:00"), tipoinscricaoModel.Datafim);
@@ -183,7 +186,8 @@ namespace EventoWeb.Controllers.Tests
             {
                 Id = 1,
                 IdEvento = 1,
-                Descricao = "Gratuita",
+                Nome = "Gratuita",
+                Descricao = "Incrição sem cobrança",
                 Valor = 1,
                 DataInicio = new DateTime(2024, 09, 2, 7, 30, 0),
                 Datafim = new DateTime(2024, 09, 7, 12, 30, 0),
@@ -203,7 +207,8 @@ namespace EventoWeb.Controllers.Tests
             {
                 Id = 1,
                 IdEvento = 1,
-                Descricao = "Gratuita",
+                Nome = "Gratuita",
+                Descricao = "Incrição sem cobrança",
                 Valor = 1,
                 DataInicio = new DateTime(2024, 09, 2, 7, 30, 0),
                 Datafim = new DateTime(2024, 09, 7, 12, 30, 0),
@@ -221,7 +226,8 @@ namespace EventoWeb.Controllers.Tests
             {
                 Id = 1,
                 IdEvento = 1,
-                Descricao = "Gratuita",
+                Nome = "Gratuita",
+                Descricao = "Incrição sem cobrança",
                 Valor = 1,
                 DataInicio = new DateTime(2024, 09, 2, 7, 30, 0),
                 Datafim = new DateTime(2024, 09, 7, 12, 30, 0),
@@ -236,7 +242,8 @@ namespace EventoWeb.Controllers.Tests
             {
                 Id = 1,
                 IdEvento = 1,
-                Descricao = "Gratuita",
+                Nome = "Gratuita",
+                Descricao = "Incrição sem cobrança",
                 Valor = 1,
                 DataInicio = new DateTime(2024, 09, 2, 7, 30, 0),
                 Datafim = new DateTime(2024, 09, 7, 12, 30, 0),
@@ -253,7 +260,8 @@ namespace EventoWeb.Controllers.Tests
                 {
                         Id = 1,
                         IdEvento = 1,
-                        Descricao = "Gratuita",
+                        Nome = "Gratuita",
+                        Descricao = "Incrição sem cobrança",
                         Valor = 1,
                         DataInicio = new DateTime(2024, 09, 2, 7, 30, 0),
                         Datafim = new DateTime(2024, 09, 7, 12, 30, 0),
@@ -264,7 +272,8 @@ namespace EventoWeb.Controllers.Tests
                 {
                         Id = 3,
                         IdEvento = 5,
-                        Descricao = "Paga",
+                        Nome = "Paga",
+                        Descricao = "Incrição com cobrança",
                         Valor = 1,
                         DataInicio = new DateTime(2024, 09, 2, 7, 30, 0),
                         Datafim = new DateTime(2024, 09, 7, 12, 30, 0),
@@ -275,7 +284,8 @@ namespace EventoWeb.Controllers.Tests
                 {
                         Id = 5,
                         IdEvento = 3,
-                        Descricao = "Meia Entrada",
+                        Nome = "Meia Entrada",
+                        Descricao = "Incrição com metade da cobrança",
                         Valor = 1,
                         DataInicio = new DateTime(2024, 09, 2, 7, 30, 0),
                         Datafim = new DateTime(2024, 09, 7, 12, 30, 0),

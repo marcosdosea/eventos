@@ -186,7 +186,7 @@ namespace Service.Tests
             Assert.AreEqual("Universidade", evento.Complemento);
             Assert.AreEqual((sbyte)0, evento.PossuiCertificado);
             Assert.AreEqual((decimal)0, evento.FrequenciaMinimaCertificado);
-            Assert.AreEqual((int)3, evento.IdTipoEvento);
+            Assert.AreEqual((uint)3, evento.IdTipoEvento);
             Assert.AreEqual((int)100, evento.VagasOfertadas);
             Assert.AreEqual((int)35, evento.VagasReservadas);
             Assert.AreEqual((int)65, evento.VagasDisponiveis);
@@ -262,7 +262,7 @@ namespace Service.Tests
             Assert.AreEqual("Universidade", evento.Complemento);
             Assert.AreEqual((sbyte)1, evento.PossuiCertificado);
             Assert.AreEqual((decimal)1, evento.FrequenciaMinimaCertificado);
-            Assert.AreEqual((int)1, evento.IdTipoEvento);
+            Assert.AreEqual((uint)1, evento.IdTipoEvento);
             Assert.AreEqual((int)100, evento.VagasOfertadas);
             Assert.AreEqual((int)35, evento.VagasReservadas);
             Assert.AreEqual((int)65, evento.VagasDisponiveis);
@@ -296,7 +296,7 @@ namespace Service.Tests
             Assert.AreEqual("Universidade", evento.Complemento);
             Assert.AreEqual((sbyte)1, evento.PossuiCertificado);
             Assert.AreEqual((decimal)1, evento.FrequenciaMinimaCertificado);
-            Assert.AreEqual((int)1, evento.IdTipoEvento);
+            Assert.AreEqual((uint)1, evento.IdTipoEvento);
             Assert.AreEqual((int)100, evento.VagasOfertadas);
             Assert.AreEqual((int)35, evento.VagasReservadas);
             Assert.AreEqual((int)65, evento.VagasDisponiveis);
