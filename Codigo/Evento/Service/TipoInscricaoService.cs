@@ -42,7 +42,7 @@ namespace Service
         /// </summary>
         /// <param name="id">dados da area de interesse</param>
         /// <returns></returns>
-        public void Delete(int id)
+        public void Delete(uint id)
         {
             var tipoinscricao = _context.Tipoinscricaos.Find(id);
             _context.Remove(tipoinscricao);
@@ -54,7 +54,7 @@ namespace Service
         /// </summary>
         /// <param name="id">dados da area de interesse</param>
         /// <returns></returns>
-        public Tipoinscricao Get(int id)
+        public Tipoinscricao Get(uint id)
         {
             return _context.Tipoinscricaos.Find(id);
         }
