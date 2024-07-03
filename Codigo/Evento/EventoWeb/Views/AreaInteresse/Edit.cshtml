@@ -7,17 +7,10 @@
     <link rel="stylesheet" type="text/css" href="~/css/style.css">
 </head>
 
-<div class="col-10">
-    <div class="breadcrumb">
-        <a asp-controller="AreaInteresse" asp-action="Index" style="text-decoration:none; padding-right:6px">
-            <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Área de interesse</p>
-        </a>
-        <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
-        <p style="color:#6C757D;display:inline-block">Editar Área de interesse</p>
-    </div>
+<div>
     <h1 class="blue-normal">Editar Área de interesse</h1>
     <div class="row">
-        <div class="col-md-4">
+        <div>
             <form asp-action="Edit">
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <input type="hidden" asp-for="Id" />

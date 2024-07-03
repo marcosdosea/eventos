@@ -1,6 +1,8 @@
 ﻿using Core;
+using Core.DTO;
 using Core.Service;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Service.Tests
@@ -24,6 +26,10 @@ namespace Service.Tests
             _context = new EventoContext(options);
             _context.Database.EnsureDeleted();
             _context.Database.EnsureCreated();
+
+            _pessoaService = new PessoaService(_context);
+            _inscricaoService = new InscricaoService(_context);
+
             var eventos = new List<Evento>
                 {
                 new Evento
@@ -121,6 +127,33 @@ namespace Service.Tests
                     },
                 };
 
+                var pessoa = new Pessoa
+                {
+                    Id = 1,
+                    Nome = "João Vitor Sodré",
+                    NomeCracha = "Sodré",
+                    Cpf = "12244667",
+                    Sexo = "M",
+                    Cep = "45340086",
+                    Rua = "Avenida Principal",
+                    Bairro = "Centro",
+                    Cidade = "Irece",
+                    Estado = "BA",
+                    Numero = "s/n",
+                    Complemento = "casa",
+                    Email = "email@gmail.com",
+                    Telefone1 = "7999900113344",
+                    Telefone2 = "NULL",
+                };
+
+                var papel = new Papel
+                {
+                    Id = 1,
+                    Nome = "Gestor",
+                };
+
+            _context.AddRange(pessoa);
+            _context.AddRange(papel);
             _context.AddRange(eventos);
             _context.SaveChanges();
 
@@ -305,6 +338,14 @@ namespace Service.Tests
         }
 
         [TestMethod()]
+        public void GetEventoSimpleDtoTest()
+        {
+            var evento = _eventoService.GetEventoSimpleDto(2);
+            Assert.AreEqual((uint)2, evento.Id);
+            Assert.AreEqual("SEMAC", evento.Nome);
+        }
+
+        [TestMethod()]
         public void GetAllTest()
         {
             // Act
@@ -315,5 +356,45 @@ namespace Service.Tests
             Assert.AreEqual(3, listaEvento.Count());
             Assert.AreEqual((uint)1, listaEvento.First().Id);
         }
+
+        [TestMethod()]
+        public void GetByNomeTest()
+        {
+            var evento = _eventoService.GetByNome("SEMAC");
+            Assert.IsInstanceOfType(evento, typeof(IEnumerable<EventoDTO>));
+            Assert.IsNotNull(evento);
+            Assert.AreEqual(1, evento.Count());
+            Assert.AreEqual((uint)2, evento.First().Id);
+            Assert.AreEqual("SEMAC", evento.First().Nome);
+        }
+
+        [TestMethod()]
+        public void GetNomeByIdTest()
+        {
+            var evento = _eventoService.GetNomeById(2);
+            Assert.AreEqual("SEMAC", evento);
+        }
+
+        [TestMethod()]
+        public void CreateGestorModelTest()
+        {
+
+            // Arrange
+            var pessoa = _pessoaService.Get(1);
+            var evento = _eventoService.Get(1);
+
+
+            _eventoService.CreateGestorModel(pessoa, 7, 1);
+
+            var inscricao = _context.Inscricaopessoaeventos.FirstOrDefault();
+            Assert.IsNotNull(inscricao);
+            Assert.AreEqual(pessoa.Id, inscricao.IdPessoa);
+            Assert.AreEqual((uint)7, inscricao.IdEvento);
+            Assert.AreEqual((int)1, inscricao.IdPapel);
+            Assert.AreEqual("S", inscricao.Status);
+
+
+        }
+
     }
 }

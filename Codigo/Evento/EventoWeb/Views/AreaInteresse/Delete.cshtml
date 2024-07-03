@@ -9,31 +9,28 @@
 </head>
 
 <div class="main fluid">
-    <div class="breadcrumb">
-        <a asp-controller="Home" asp-action="Index"><img class="mb-1" src="/img/icon-wrapper.svg" /><p class="blue-normal" style="display:inline-block">Home</p></a>
-        <a asp-controller="Areainteresse" asp-action="Index" class="blue-normal text-decoration-none" style="display:inline-block;"><p>/Área de interesse</p></a>
-        <p style="color:#6C757D;display:inline-block">/Excluir área de interesse</p>
-    </div>
     <h1 class="blue-normal">Excluir uma área de interesse</h1>
 
-    <h3>Quer mesmo excluir este item?</h3>
+    <h3>Certeza que deseja excluir esta Área de Interesse?</h3>
     <div class="form">
         <dl class="row">
             <dt class="col-sm-2">
                 @Html.DisplayNameFor(model => model.Nome)
             </dt>
-            <p> </p>
             <dd class="col-sm-10">
                 @Html.DisplayFor(model => model.Nome)
             </dd>
         </dl>
-
-        <form asp-action="Delete">
-            <input type="hidden" asp-for="Id" />
-            <input type="submit" value="Excluir item" class="btn btn-mg btn-blue-normal" style="text-decoration:none; color:white" />
-            <button asp-action="Index"class="btn btn-mg btn-outline-danger">
-                <a>Cancelar</a>
-            </button>
-            </form>
+        <form asp-action="Delete" class="row">
+            <div class="d-flex flex-row-reverse">
+                <div class="form-group">
+                    <input type="submit" value="Excluir" class="btn btn-blue-normal color-white" />
+                </div>
+                <div class="form-group" style="margin-right: 10px;">
+                    <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
+                </div>
+            </div>
+        </form>
+        
     </div>
 </div>
