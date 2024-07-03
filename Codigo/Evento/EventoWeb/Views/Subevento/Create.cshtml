@@ -4,19 +4,12 @@
     ViewData["Title"] = "Create";
 }
 
-<div class="breadcrumb">
-    <a asp-controller="Subevento" asp-action="Index" style="text-decoration:none; padding-right:6px">
-        <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Subevento</p>
-    </a>
-    <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
-    <p style="color:#6C757D;display:inline-block">Novo Subevento</p>
-</div>
 
 <div class="row">
     
-    <h1 class="blue-normal">Cadastre seu Subevento</h1>
-    <hr />
-    <div class="col-md-8">
+    <h1 class="blue-normal">Novo Subevento</h1>
+    
+    <div>
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="row">
@@ -48,28 +41,30 @@
                 Datas
             </h4>
             <div class="row">
-                <div class="col-md-3">
+                <div class="col-md-6">
                     <div class="form-group">
                         <label asp-for="Subevento.DataInicio" class="control-label"></label>
                         <input asp-for="Subevento.DataInicio" class="form-control" />
                         <span asp-validation-for="Subevento.DataInicio" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-6">
                     <div class="form-group">
                         <label asp-for="Subevento.DataFim" class="control-label"></label>
                         <input asp-for="Subevento.DataFim" class="form-control" />
                         <span asp-validation-for="Subevento.DataFim" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="col-md-3">
+            </div>
+            <div class="row">
+                <div class="col-md-6">
                     <div class="form-group">
                         <label asp-for="Subevento.DataInicioInscricao" class="control-label"></label>
                         <input asp-for="Subevento.DataInicioInscricao" class="form-control" />
                         <span asp-validation-for="Subevento.DataInicioInscricao" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-6">
                     <div class="form-group">
                         <label asp-for="Subevento.DataFimInscricao" class="control-label"></label>
                         <input asp-for="Subevento.DataFimInscricao" class="form-control" />
