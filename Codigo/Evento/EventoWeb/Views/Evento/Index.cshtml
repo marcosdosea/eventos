@@ -7,6 +7,10 @@
 <div>
 	<h1 class="blue-normal">Seja Bem-vindo</h1>
 	<h3>Confira os eventos do sistema!</h3>
+	<button type="button" class="btn btn-lg btn-blue-normal mb-2"
+			onclick="location.href='@Url.Action("Create")'">
+		Novo evento
+	</button>
 	<table class="table table-striped">
 		<thead class="blue-normal blue-normal-bg-table">
 			<tr>
@@ -62,32 +66,19 @@
 						@Html.DisplayFor(modelItem => item.NomeTipoEvento)
 					</td>
 					<td>
-						@Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" }) |
-						@{
-							var deleteModel = new EventoWeb.Models.DeleteModel
-							{
-								ModalId = "deleteModal-" + item.Id,
-								ActionName = "Delete",
-								ControllerName = "Evento",
-								RouteValues = item.Id,
-								ConfirmMessage = $"Tem certeza que deseja excluir o evento \"{item.Nome}\"?",
-								ItemName = item.Nome
-							};
-						}
-
-						<a class="danger-normal" style="text-decoration:none;" href="#!" data-toggle="modal" data-target="#@deleteModel.ModalId">Excluir</a>
-						@await Html.PartialAsync("_DeleteModal", deleteModel) |
-						@Html.ActionLink("Gestores", "GestaoPapel", new { idEvento = item.Id,idPapel = 2 }, new { @style = "text-decoration:none;" })|
-						@Html.ActionLink("Colaboradores", "GestaoPapel", new { idEvento = item.Id, idPapel = 3}, new { @style = "text-decoration:none;" })|
+						@Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" })
+						&nbsp;&nbsp;
+						@Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @style = "text-decoration:none;", @class = "danger-normal" })
+						&nbsp;&nbsp;
+						@Html.ActionLink("Gestores", "GestaoPapel", new { idEvento = item.Id,idPapel = 2 }, new { @style = "text-decoration:none;" })
+						&nbsp;&nbsp;
+						@Html.ActionLink("Colaboradores", "GestaoPapel", new { idEvento = item.Id, idPapel = 3}, new { @style = "text-decoration:none;" })
+						&nbsp;&nbsp;
 						@Html.ActionLink("Participantes", "GestaoPapel", new { idEvento = item.Id,idPapel = 4 }, new { @style = "text-decoration:none;" })
 					</td>
 				</tr>
 }
 		</tbody>
 	</table>
-	<h3 class="blue-normal">Publique um novo evento</h3>
-	<button type="button" class="btn btn-lg btn-blue-normal"
-			onclick="location.href='@Url.Action("Create")'">
-		Criar evento
-	</button>
+	
 </div>
