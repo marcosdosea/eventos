@@ -451,10 +451,11 @@ header {
 }
 
 @media (max-width: 800px) {
-    .flex-column-container{
+ 
+    .flex-column-container .help-text{
         text-align: center;
     }
-    .flex-column-container .help-text{
+    .flex-column-container{
         text-align: center;
     }
     .bordered-container {
