@@ -26,7 +26,7 @@ namespace EventoWeb.Controllers
         public ActionResult Index()
         {
             var listaTipoInscricao = _tipoInscricaoService.GetAll().ToList();
-            var listaSubeventosModel = listaTipoInscricao.Select(e => new TipoInscricaoModel
+            var listaTipoInscricaoModel = listaTipoInscricao.Select(e => new TipoInscricaoModel
             {
                 Id = e.Id,
                 Nome = e.Nome,
@@ -40,7 +40,7 @@ namespace EventoWeb.Controllers
                 UsadaSubevento = e.UsadaSubevento 
 
             }).ToList();
-            return View(listaSubeventosModel);
+            return View(listaTipoInscricaoModel);
         }
 
         // GET: TipoInscricaoController/Details/5
@@ -112,7 +112,11 @@ namespace EventoWeb.Controllers
         public ActionResult Delete(uint id)
         {
             Tipoinscricao tipoinscricao = _tipoInscricaoService.Get(id);
-           TipoInscricaoModel tipoInscricaoModel = _mapper.Map<TipoInscricaoModel>(tipoinscricao);
+            TipoInscricaoModel tipoInscricaoModel = _mapper.Map<TipoInscricaoModel>(tipoinscricao);
+
+            string nomeEvento = _eventoService.GetNomeById(tipoinscricao.IdEvento);
+            tipoInscricaoModel.NomeEvento = nomeEvento;
+
             return View(tipoInscricaoModel);
         }
 
