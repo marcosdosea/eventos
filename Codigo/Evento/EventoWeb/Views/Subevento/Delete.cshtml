@@ -5,21 +5,9 @@
 }
 <div class="container-fluid no-padding">
     <div class="row">
-        <div class="breadcrumb">
-            <a asp-controller="Home" asp-action="Index" style="text-decoration:none; padding-right:6px">
-                <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Home</p>
-            </a>
-            <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
-            <a asp-controller="Subevento" asp-action="Index" style="text-decoration:none; padding-right:6px">
-                <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Subevento</p>
-            </a>
-            <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
-            <p style="color:#6C757D;display:inline-block">Deletar Subevento</p>
-        </div>
-        <h1 class="blue-normal">Deletar Subevento</h1>
-        <div class="col-md-8">
-            <h4>Informações do Subevento</h4>
-            <hr />
+        <h1 class="blue-normal">Excluir Subevento</h1>
+        <div>
+            <h3>Certeza que deseja excluir este Subevento?</h3>
             <dl class="row">
                 <dt class="col-sm-4">
                     @Html.DisplayNameFor(model => model.Nome)
@@ -28,10 +16,10 @@
                     @Html.DisplayFor(model => model.Nome)
                 </dd>
                 <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.IdEvento)
+                    @Html.DisplayNameFor(model => model.NomeEvento)
                 </dt>
                 <dd class="col-sm-6">
-                    @Html.DisplayFor(model => model.IdEvento)
+                    @Html.DisplayFor(model => model.NomeEvento)
                 </dd>
                 <dt class="col-sm-4">
                     @Html.DisplayNameFor(model => model.Descricao)
@@ -55,13 +43,46 @@
                     @Html.DisplayNameFor(model => model.InscricaoGratuita)
                 </dt>
                 <dd class="col-sm-6">
-                    @Html.DisplayFor(model => model.InscricaoGratuita)
+                    @{
+                        string inscricaoGratuita = "Desconhecido";
+                        switch (Model.InscricaoGratuita)
+                        {
+                            case 1:
+                                inscricaoGratuita = "Sim";
+                                break;
+                            case 0:
+                                inscricaoGratuita = "Não";
+                                break;
+
+                        }
+                    }
+                    @inscricaoGratuita
                 </dd>
                 <dt class="col-sm-4">
                     @Html.DisplayNameFor(model => model.Status)
                 </dt>
                 <dd class="col-sm-6">
-                    @Html.DisplayFor(model => model.Status)
+                   
+                    @{
+                        string statusDescricao = "Desconhecido";
+                        switch (Model.Status)
+                        {
+                            case "A":
+                                statusDescricao = "Ativo";
+                                break;
+                            case "C":
+                                statusDescricao = "Cadastro";
+                                break;
+                            case "F":
+                                statusDescricao = "Finalizado";
+                                break;
+                            case "I":
+                                statusDescricao = "Inativo";
+                                break;
+
+                        }
+                    }
+                    @statusDescricao
                 </dd>
                 <dt class="col-sm-4">
                     @Html.DisplayNameFor(model => model.DataInicioInscricao)
@@ -85,7 +106,20 @@
                     @Html.DisplayNameFor(model => model.PossuiCertificado)
                 </dt>
                 <dd class="col-sm-6">
-                    @Html.DisplayFor(model => model.PossuiCertificado)
+                    @{
+                        string possuiCertificado = "Desconhecido";
+                        switch (Model.PossuiCertificado)
+                        {
+                            case 1:
+                                possuiCertificado = "Sim";
+                                break;
+                            case 0:
+                                possuiCertificado = "Não";
+                                break;
+
+                        }
+                    }
+                    @possuiCertificado
                 </dd>
                 <dt class="col-sm-4">
                     @Html.DisplayNameFor(model => model.FrequenciaMinimaCertificado)
@@ -118,21 +152,22 @@
                     @Html.DisplayFor(model => model.CargaHoraria)
                 </dd>
                 <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.IdTipoEvento)
+                    @Html.DisplayNameFor(model => model.NomeTipoEvento)
                 </dt>
                 <dd class="col-sm-6">
-                    @Html.DisplayFor(model => model.IdTipoEvento)
+                    @Html.DisplayFor(model => model.NomeTipoEvento)
                 </dd>
             </dl>
 
-            <form asp-action="Delete" class="row justify-content-end">
-                <div class="col-2">
-                    <div>
-                        <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
+            <form asp-action="Delete" class="row">
+                <div class="d-flex flex-row-reverse">
+                    <div class="form-group">
+                        <input type="submit" value="Excluir" class="btn btn-danger" />
+                    </div>
+                    <div class="form-group" style="margin-right: 10px;">
+                        <a asp-action="Index" class="btn btn-outline-blue-normal">Cancelar</a>
                     </div>
                 </div>
-                <input type="hidden" asp-for="Id" />
-                <input type="submit" value="Deletar" class="col-2 btn btn-mg btn-blue-normal text-white btn-primary" />
             </form>
         </div>
     </div>

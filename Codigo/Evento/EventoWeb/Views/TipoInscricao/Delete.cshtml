@@ -1,4 +1,4 @@
-@model TipoInscricaoModel
+@model EventoWeb.Models.TipoInscricaoModel
 
 @{
     ViewData["Title"] = "Delete";
@@ -11,21 +11,9 @@
 
 <div class="container-fluid no-padding">
     <div class="row">
-        <div class="breadcrumb">
-            <a asp-controller="Home" asp-action="Index" style="text-decoration:none; padding-right:6px">
-                <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Home</p>
-            </a>
-            <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
-            <a asp-controller="TipoInscricao" asp-action="Index" style="text-decoration:none; padding-right:6px">
-                <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Tipo de Inscrição</p>
-            </a>
-            <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
-            <p style="color:#6C757D;display:inline-block">Deletar Tipo de Inscrição</p>
-        </div>
         <h1 class="blue-normal">Deletar Tipo de Inscrição</h1>
         <div>
-            <h4>Tipoinscricao</h4>
-            <hr />
+            <h3>Certeza que deseja excluir este Tipo de Inscrição?</h3>
             <dl class="row">
                 <dt class="col-sm-2">
                     @Html.DisplayNameFor(model => model.Id)
@@ -34,10 +22,16 @@
                     @Html.DisplayFor(model => model.Id)
                 </dd>
                 <dt class="col-sm-2">
-                    @Html.DisplayNameFor(model => model.IdEvento)
+                    @Html.DisplayNameFor(model => model.Nome)
                 </dt>
                 <dd class="col-sm-10">
-                    @Html.DisplayFor(model => model.IdEvento)
+                    @Html.DisplayFor(model => model.Nome)
+                </dd>
+                <dt class="col-sm-2">
+                    @Html.DisplayNameFor(model => model.NomeEvento)
+                </dt>
+                <dd class="col-sm-10">
+                    @Html.DisplayFor(model => model.NomeEvento)
                 </dd>
                 <dt class="col-sm-2">
                     @Html.DisplayNameFor(model => model.Descricao)
@@ -64,28 +58,56 @@
                     @Html.DisplayFor(model => model.Datafim)
                 </dd>
                 <dt class="col-sm-2">
-                    @Html.DisplayNameFor(model => model.UsadaEvento)
+                    Usado em @Html.DisplayNameFor(model => model.UsadaEvento)
                 </dt>
                 <dd class="col-sm-10">
-                    @Html.DisplayFor(model => model.UsadaEvento)
+                    @{
+                        string usadaevento = "Desconhecido";
+                        switch (Model.UsadaEvento)
+                        {
+                            case 1:
+                                usadaevento = "Sim";
+                                break;
+                            case 2:
+                                usadaevento = "Não";
+                                break;
+
+                        }
+                    }
+                    @usadaevento
                 </dd>
                 <dt class="col-sm-2">
-                    @Html.DisplayNameFor(model => model.UsadaSubevento)
+                    Usado em @Html.DisplayNameFor(model => model.UsadaSubevento)
                 </dt>
                 <dd class="col-sm-10">
-                    @Html.DisplayFor(model => model.UsadaSubevento)
+                    @{
+                        string usadasubevento = "Desconhecido";
+                        switch (Model.UsadaSubevento)
+                        {
+                            case 1:
+                                usadasubevento = "Sim";
+                                break;
+                            case 2:
+                                usadasubevento = "Não";
+                                break;
+                            
+                        }
+                    }
+                    @usadasubevento
                 </dd>
             </dl>
 
-            <form asp-action="Delete" class="row justify-content-end">
-                <div class="col-2">
-                    <div>
-                        <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
+            <form asp-action="Delete" class="row">
+                <div class="d-flex flex-row-reverse">
+                    <div class="form-group">
+                        <input type="submit" value="Excluir" class="btn btn-danger " />
+                    </div>
+                    <div class="form-group" style="margin-right: 10px;">
+                        <a asp-action="Index" class="btn btn-outline-blue-normal">Cancelar</a>
                     </div>
                 </div>
-                <input type="hidden" asp-for="Id" />
-                <input type="submit" value="Deletar" class="col-2 btn btn-mg btn-blue-normal text-white btn-primary" />
             </form>
         </div>
+
     </div>
 </div>
