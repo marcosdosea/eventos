@@ -1,8 +1,10 @@
 ﻿aside {
-    background-color: white;
     color: black;
-    padding-top: 2rem;
-    padding-left: 4rem;
+    height:auto;
+    justify-content:center;
+    align-items:center;
+    background-color:white;
+    position:relative;
 }
 
     aside ul, a, li {
@@ -14,7 +16,9 @@
         font-size: 1rem;
         padding-top: 0.4rem;
         padding-bottom: 0.4rem;
-        padding-right: 0.4rem;
+        padding-right: 0rem;
+        padding-left:1rem;
+        font-size:0.9rem;
     }
 
     aside a {
@@ -47,16 +51,11 @@
     }
 
     aside h4 {
-        font-weight: 500;
-    }
+        font-weight: 650;
+        padding-left:2rem;
+        padding-top:1rem;
+        }
 
-@media (max-width:768px) {
-    aside li {
-        display: none;
+    .container-sidebar-body{
+        margin:0;
     }
-
-    aside:hover li {
-        transition: ease-out 1s linear;
-        display: block;
-    }
-}
