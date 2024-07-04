@@ -33,7 +33,7 @@ namespace EventoWeb.Models
         public string Status { get; set; } = null!;
 
 
-        [Display(Name = "Data de Inicio de Inscrição")]
+        [Display(Name = "Data Inicial de Inscrição")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
         public DateTime DataInicioInscricao { get; set; }
 
@@ -105,7 +105,14 @@ namespace EventoWeb.Models
         public int VagasDisponiveis { get; set; }
 		public string NomeTipoEvento { get; set; }
 
-		[Display(Name = "Tempo de Reserva em Minutos")]
+		[Display(Name = "ID da Áreas de Interesse")]
+		[Required(ErrorMessage = "Informe as Áreas de Interesse do Evento")]
+		public uint IdAreaInteresse { get; set; }
+		public string NomeAreaInteresse { get; set; }
+
+        public string NomeEstado { get; set; }
+
+        [Display(Name = "Tempo de Reserva em Minutos")]
         [Required(ErrorMessage = "Informe o Tempo da Reserva de uma Vaga")]
         public int TempoMinutosReserva { get; set; }
 
