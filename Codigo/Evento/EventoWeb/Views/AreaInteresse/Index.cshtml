@@ -10,15 +10,11 @@
 </head>
 
 <div>
-    <div class="breadcrumb">
-        <p style="color:#6C757D;display:inline-block">햞ea de Interesse</p>
-    </div>
-
     <h1 class="blue-normal mb-2">
         Confira as 햞eas de Interesse do sistema!
     </h1>
     <button type="button" class="btn-blue-normal btn btn-lg mb-2">
-        <a asp-action="Create" style="text-decoration:none; color:white">Cadastrar 햞ea de Interesse</a>
+        <a asp-action="Create" style="text-decoration:none; color:white">Nova 햞ea de Interesse</a>
     </button>
     <div class="conteiner">
         <table class="table table-striped">
@@ -38,22 +34,9 @@
                         @Html.DisplayFor(modelItem => item.Nome)
                     </td>
                     <td>
-                            @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" }) |
-                            @{
-                                var deleteModel = new EventoWeb.Models.DeleteModel
-                                {
-                                    ModalId = "deleteModal-" + item.Id,
-                                    ActionName = "Delete",
-                                    ControllerName = "AreaInteresse",
-                                    RouteValues = item.Id,
-                                    ConfirmMessage = $"Tem certeza que deseja excluir a 햞ea de Interesse \"{item.Nome}\" ?",
-                                    ItemName = item.Nome
-                                };
-                            }
-
-                            <a class="danger-normal" style="text-decoration:none;" href="#!" data-toggle="modal" data-target="#@deleteModel.ModalId">Excluir</a>
-                            @await Html.PartialAsync("_DeleteModal", deleteModel)
-
+                            @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" })
+                            &nbsp;&nbsp;
+                            @Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @style = "text-decoration:none;", @class = "danger-normal" })
                     </td>
                 </tr>
             }
