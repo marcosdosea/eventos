@@ -10,6 +10,8 @@ public interface IPessoaService
     void Delete(uint id);
     Pessoa Get(uint id);
     IEnumerable<Pessoa> GetAll();
-    
     Pessoa GetByCpf(string nome);
+    bool CPFIsValid(string pessoaModelCpf);
+    string FormataCep(string cepFormatado);
+    string FormataCPF(string pessoaCpf);
 }

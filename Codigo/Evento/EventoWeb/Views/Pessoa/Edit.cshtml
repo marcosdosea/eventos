@@ -1,7 +1,7 @@
-@model PessoaModel
+@model PessoaCreateModel
 
 @{
-    ViewData["Title"] = "Edit";
+ViewData["Title"] = "Edit";
 }
 
 <h1>Edit</h1>
@@ -12,81 +12,96 @@
     <div class="col-md-4">
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="Pessoa.Id" />
+
             <div class="form-group">
-                <label asp-for="Nome" class="control-label"></label>
-                <input asp-for="Nome" class="form-control" />
-                <span asp-validation-for="Nome" class="text-danger"></span>
+                <label asp-for="Pessoa.Nome" class="control-label"></label>
+                <input asp-for="Pessoa.Nome" class="form-control" />
+                <span asp-validation-for="Pessoa.Nome" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label asp-for="NomeCracha" class="control-label"></label>
-                <input asp-for="NomeCracha" class="form-control" />
-                <span asp-validation-for="NomeCracha" class="text-danger"></span>
+                <label asp-for="Pessoa.NomeCracha" class="control-label"></label>
+                <input asp-for="Pessoa.NomeCracha" class="form-control" />
+                <span asp-validation-for="Pessoa.NomeCracha" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label asp-for="Cpf" class="control-label"></label>
-                <input asp-for="Cpf" class="form-control" />
-                <span asp-validation-for="Cpf" class="text-danger"></span>
+                <label asp-for="Pessoa.Cpf" class="control-label"></label>
+                <input asp-for="Pessoa.Cpf" class="form-control" />
+                <span asp-validation-for="Pessoa.Cpf" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label asp-for="Sexo" class="control-label"></label>
-                <select asp-for="Sexo" class="form-control">
+                <label asp-for="Pessoa.Sexo" class="control-label"></label>
+                <select asp-for="Pessoa.Sexo" class="form-control">
                     <option value="M">Masculino</option>
                     <option value="F">Feminino</option>
                     <option value="N">Não Informado</option>
                 </select>
-                <span asp-validation-for="Sexo" class="text-danger"></span>
+                <span asp-validation-for="Pessoa.Sexo" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label asp-for="Cep" class="control-label"></label>
-                <input asp-for="Cep" class="form-control" />
-                <span asp-validation-for="Cep" class="text-danger"></span>
+                <label asp-for="Pessoa.Cep" class="control-label"></label>
+                <input asp-for="Pessoa.Cep" class="form-control" />
+                <span asp-validation-for="Pessoa.Cep" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label asp-for="Rua" class="control-label"></label>
-                <input asp-for="Rua" class="form-control" />
-                <span asp-validation-for="Rua" class="text-danger"></span>
+                <label asp-for="Pessoa.Rua" class="control-label"></label>
+                <input asp-for="Pessoa.Rua" class="form-control" />
+                <span asp-validation-for="Pessoa.Rua" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label asp-for="Bairro" class="control-label"></label>
-                <input asp-for="Bairro" class="form-control" />
-                <span asp-validation-for="Bairro" class="text-danger"></span>
+                <label asp-for="Pessoa.Bairro" class="control-label"></label>
+                <input asp-for="Pessoa.Bairro" class="form-control" />
+                <span asp-validation-for="Pessoa.Bairro" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label asp-for="Cidade" class="control-label"></label>
-                <input asp-for="Cidade" class="form-control" />
-                <span asp-validation-for="Cidade" class="text-danger"></span>
+                <label asp-for="Pessoa.Cidade" class="control-label"></label>
+                <input asp-for="Pessoa.Cidade" class="form-control" />
+                <span asp-validation-for="Pessoa.Cidade" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label asp-for="Estado" class="control-label"></label>
-                <select asp-for="Estado" class="form-control" asp-items="ViewBag.Estado"></select>
-                <span asp-validation-for="Estado" class="text-danger"></span>
+                <label asp-for="Pessoa.Estado" class="control-label"></label>
+                <select asp-for="Pessoa.Estado" class="form-control" asp-items="@Model.Estados"></select>
+                <span asp-validation-for="Pessoa.Estado" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label asp-for="Numero" class="control-label"></label>
-                <input asp-for="Numero" class="form-control" />
-                <span asp-validation-for="Numero" class="text-danger"></span>
+                <label asp-for="Pessoa.Numero" class="control-label"></label>
+                <input asp-for="Pessoa.Numero" class="form-control" />
+                <span asp-validation-for="Pessoa.Numero" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label asp-for="Complemento" class="control-label"></label>
-                <input asp-for="Complemento" class="form-control" />
-                <span asp-validation-for="Complemento" class="text-danger"></span>
+                <label asp-for="Pessoa.Complemento" class="control-label"></label>
+                <input asp-for="Pessoa.Complemento" class="form-control" />
+                <span asp-validation-for="Pessoa.Complemento" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label asp-for="Email" class="control-label"></label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
+                <label asp-for="Pessoa.Email" class="control-label"></label>
+                <input asp-for="Pessoa.Email" class="form-control" />
+                <span asp-validation-for="Pessoa.Email" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label asp-for="Telefone1" class="control-label"></label>
-                <input asp-for="Telefone1" class="form-control" />
-                <span asp-validation-for="Telefone1" class="text-danger"></span>
+                <label asp-for="Pessoa.Telefone1" class="control-label"></label>
+                <input asp-for="Pessoa.Telefone1" class="form-control" />
+                <span asp-validation-for="Pessoa.Telefone1" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label asp-for="Telefone2" class="control-label"></label>
-                <input asp-for="Telefone2" class="form-control" />
-                <span asp-validation-for="Telefone2" class="text-danger"></span>
+                <label asp-for="Pessoa.Telefone2" class="control-label"></label>
+                <input asp-for="Pessoa.Telefone2" class="form-control" />
+                <span asp-validation-for="Pessoa.Telefone2" class="text-danger"></span>
             </div>
+
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>
@@ -99,5 +114,5 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+@{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }
