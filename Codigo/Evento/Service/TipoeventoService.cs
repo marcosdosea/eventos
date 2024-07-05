@@ -32,7 +32,7 @@ namespace Service
         /// <returns></returns>
         public void Delete(uint idTipoEvento)
         {
-            var tipoevento = context.Areainteresses.Find(idTipoEvento);
+            var tipoevento = context.Tipoeventos.Find(idTipoEvento);
             context.Remove(tipoevento);
             context.SaveChanges();
         }
