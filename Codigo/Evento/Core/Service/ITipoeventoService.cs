@@ -15,5 +15,6 @@ namespace Core.Service
         Tipoevento Get(uint idTipoEvento);
 		IEnumerable<Tipoevento> GetAll();
 		string GetNomeById(uint idTipoEvento);
+		string GetNomeById(uint? idTipoEvento);
 	}
 }

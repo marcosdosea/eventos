@@ -13,15 +13,17 @@ namespace EventoWeb.Controllers
         private readonly ITipoeventoService _tipoEventoService;
         private readonly IEventoService _eventoService;
         private readonly IInscricaoService _inscricaoService;
+        private readonly IAreaInteresseService _areaInteresseService;
         private readonly IMapper _mapper;
 
-        public EventoController(IEventoService eventoService, IMapper mapper, IEstadosbrasilService estadosbrasilService,IInscricaoService inscricaoService, ITipoeventoService tipoeventoService)
+        public EventoController(IEventoService eventoService, IMapper mapper, IEstadosbrasilService estadosbrasilService,IInscricaoService inscricaoService, ITipoeventoService tipoeventoService, IAreaInteresseService areaInteresseService)
         {
             _tipoEventoService = tipoeventoService;
             _estadosbrasilService = estadosbrasilService;
             _eventoService = eventoService;
             _inscricaoService = inscricaoService;
             _mapper = mapper;
+            _areaInteresseService = areaInteresseService;
         }
 
         // GET: EventoController
@@ -36,6 +38,7 @@ namespace EventoWeb.Controllers
 				Status = e.Status,
 				IdTipoEvento = (uint) e.IdTipoEvento,
 				NomeTipoEvento = _tipoEventoService.GetNomeById((uint)e.IdTipoEvento)
+
 			}).ToList();
 
 			return View(listarEventosModel);
@@ -55,11 +58,14 @@ namespace EventoWeb.Controllers
 			var eventoModel = new EventoModel();
 			var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
             var tiposEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
+            var areaInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
             var viewModel = new EventocreateModel
 			{
 				Evento = eventoModel,
 				Estados = new SelectList(estados, "Estado", "Nome"),
-                TiposEventos = new SelectList(tiposEventos, "Id", "Nome")
+                TiposEventos = new SelectList(tiposEventos, "Id", "Nome"),
+                AreaInteresse = new SelectList(areaInteresse, "Id","Nome")
+
             };
 
 			return View(viewModel);
@@ -87,11 +93,13 @@ namespace EventoWeb.Controllers
 			var eventoModel = _mapper.Map<EventoModel>(evento);
 			var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
 			var tiposEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
+            var areaInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
 			var viewModel = new EventocreateModel
 			{
 				Evento = eventoModel,
 				Estados = new SelectList(estados, "Estado", "Nome", eventoModel.Estado),
-				TiposEventos = new SelectList(tiposEventos, "Id", "Nome", eventoModel.Id)
+				TiposEventos = new SelectList(tiposEventos, "Id", "Nome", eventoModel.Id),
+                AreaInteresse = new SelectList(areaInteresse, "Id","Nome", eventoModel.Id)
 			};
 
 			return View(viewModel);
@@ -113,7 +121,11 @@ namespace EventoWeb.Controllers
         {
             var evento = _eventoService.Get(id);
             var eventoModel = _mapper.Map<EventoModel>(evento);
-            return View(eventoModel);
+
+            string nomeTipoEvento = _tipoEventoService.GetNomeById(evento.IdTipoEvento);
+			eventoModel.NomeTipoEvento = nomeTipoEvento;
+
+			return View(eventoModel);
         }
 
         // POST: EventoController/Delete/5

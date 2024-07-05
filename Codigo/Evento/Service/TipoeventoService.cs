@@ -74,5 +74,12 @@ namespace Service
 				   .Select(t => t.Nome)
 				   .FirstOrDefault();
 		}
+		public string GetNomeById(uint? idTipoEvento)
+		{
+			return context.Tipoeventos
+				   .Where(t => t.Id == idTipoEvento)
+				   .Select(t => t.Nome)
+				   .FirstOrDefault();
+		}
 	}
 }

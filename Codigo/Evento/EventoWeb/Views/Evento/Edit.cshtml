@@ -4,15 +4,9 @@
     ViewData["Title"] = "Edit";
 }
 
-<nav aria-label="breadcrumb">
-	<ol class="breadcrumb">
-		<li class="breadcrumb-item"><a asp-controller="Evento" asp-action="Index" style="text-decoration: none;">Eventos</a></li>
-		<li class="breadcrumb-item active" aria-current="page">Editar evento</li>
-	</ol>
-</nav>
 
-<h1 class="blue-normal">Editar</h1>
-<hr />
+
+<h1 class="blue-normal">Editar Evento</h1>
 <div class="row">
     <div class="col-md-8">
         <form asp-action="Edit">
@@ -220,6 +214,15 @@
 					<span asp-validation-for="Evento.Estado" class="text-danger"></span>
 				</div>
 			</div>
+			<div class="col-5">
+				<div class="form-group">
+					<label asp-for="Evento.IdAreaInteresse" class="control-label">Área de Interesse</label>
+					<select asp-for="Evento.IdAreaInteresse" class="form-control" asp-items="Model.AreaInteresse">
+						<option value="">Selecione a área de interesse do evento</option>
+					</select>
+					<span asp-validation-for="Evento.Estado" class="text-danger"></span>
+				</div>
+			</div>
 			<div class="row">
 				<div class="col-2">
 					<div class="form-group">
@@ -239,7 +242,7 @@
 			<br />
 			<div class="d-flex flex-row-reverse">
 				<div class="form-group">
-					<input type="submit" value="Salvar Alterações" class="btn btn-blue-normal color-white" />
+					<input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
 				</div>
 				<div class="form-group" style="margin-right: 10px;">
 					<a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
