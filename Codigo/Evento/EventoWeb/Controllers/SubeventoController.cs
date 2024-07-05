@@ -104,6 +104,13 @@ namespace EventoWeb.Controllers
             
             var subevento = _subeventoService.Get(id);
             var subeventoModel = _mapper.Map<SubeventoModel>(subevento);
+
+            string nomeEvento = _eventoService.GetNomeById(subevento.IdEvento);
+            subeventoModel.NomeEvento = nomeEvento;
+
+            string nomeTipoEvento = _tipoEventoService.GetNomeById(subevento.IdTipoEvento);
+            subeventoModel.NomeTipoEvento = nomeTipoEvento; ;
+
             return View(subeventoModel);
         }
         // POST: SubeventoController/Delete/5

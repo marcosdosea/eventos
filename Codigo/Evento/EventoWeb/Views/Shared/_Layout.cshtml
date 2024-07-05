@@ -1,104 +1,116 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-	<link rel="stylesheet" type="text/css" href="~/css/style.css">
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" type="text/css" href="~/css/style.css">
+    <link rel="stylesheet" type="text/css" href="~/css/_header_footer.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
 </head>
-
 <body>
-	<header>
-		<div class="outer-container">
-			<div class="inner-container">
-				<a href="/" title="Ir para a página inicial">
-					<img class="placeholder-image" src="/img/LOGOTIPO.png" alt="Logotipo" />
-				</a>
-				<div class="bordered-container search-container btn-search">
-					<div class="relative-container">
-						<i class="bi bi-search absolute-icon"></i>
-					</div>
-					<input type="text" class="search-input" placeholder="Pesquise eventos, shows, teatros, cursos...">
-				</div>
+    <div class="main-wrapper">
+        <header class="header">
+    <div class="header-container">
+        <div class="left-section">
+            <div class="logo">
+                <a href="/" title="Ir para a página inicial">
+                    <img class="placeholder-image" src="/img/LOGOTIPO.png" alt="Logotipo" />
+                </a>
+            </div>
+            
+        </div>
+        <div class="bordered-container search-container btn-search">
+                <div class="relative-container">
+                    <i class="bi bi-search absolute-icon"></i>
+                </div>
+                <input type="text" class="search-input" placeholder="Pesquise eventos, shows, teatros, cursos...">
+            </div>
+   
+        <div class="right-section">
+            <nav class="nav-links">
+                <i class="bi bi-geo-alt-fill"></i>
+                <a href="#">Localização</a>
+                <a href="#">Seu evento aqui</a>
+            </nav>
+            <div class="auth-buttons">
+                <button class="btn btn-login btn-primary">ENTRAR</button>
+                <button class="btn btn-signup btn-outline-primary">CADASTRE-SE</button>
+            </div>
+        </div>
+        <div class="menu-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <ul class="menu">
+            <li><a href="#">Localização</a></li>
+            <li><a href="#">Seu evento aqui</a></li>
+            <li><button class="btn btn-login btn-primary">ENTRAR</button></li>
+            <li><button class="btn btn-signup btn-outline-primary">CADASTRE-SE</button></li>
+        </ul>
+    </div>
+</header>
 
+        <div class="container flex-grow-1">
+            <main role="main" class="pb-3">
+                @RenderBody()
+            </main>
+        </div>
 
-			</div>
-			<div class="second-inner-container">
-				<div class="location-container">
-					<a href="#" class="location-link">
-						<i class="bi bi-geo-alt-fill"></i>
-						<span class="location-text">Localização</span>
-					</a>
-				</div>
-				<div class="event-text">Seu evento aqui</div>
-				<div class="sign-in-container">
-					<button class="btn btn-login btn-primary ">ENTRAR</button>
-					<button class="btn btn-cadastrar btn-outline-primary ">CADASTRE-SE</button>
-				</div>
-			</div>
-		</div>
-	</header>
-	<div class="container">
-		<main role="main" class="pb-3">
-			@RenderBody()
-		</main>
-	</div>
-	<!--
-			<footer class="footer">
-		<div class="footer-background">
-			<div class="custom-flex-container">
-					<div class="custom-column-flex align-items-left">
-						<div class="tittle-text-footer">Bora lá para<br />mais um evento?</div>
-						<div class="flex-column-container">
-							<div class="help-text">Precisa de ajuda?</div>
-						</div>
-						<div class="contact-container ml-auto">
-							<button class="btn btn-contact contact-text btn-custom-height">Fale com o Bora lá!</button>
-						</div>
-					</div>
-				<div class="spacer"></div>
-				<div class="flex-start-container">
-					<div class="column-flex-container">
-						<div class="institutional-text">Institucional</div>
-						<div class="about-text">Sobre nós</div>
-						<div class="brand-text">Marca</div>
-						<div class="about-us-text">Fale com o Bora lá</div>
-					</div>
-					<div class="column-flex-container">
-						<div class="terms-text">Termos</div>
-						<div class="half-price-law">Lei da Meia-Entrada</div>
-						<div class="terms-of-service-text">Termos de Serviço</div>
-						<div class="privacy-terms-text">Termos de Privacidade</div>
-					</div>
-				</div>
-					<div class="right-align-container">
-						<div class="social-media-container">
-							<div class="social-media-text">Redes Sociais</div>
-							<div class="flex-container">
-								<div class="icon-container">
-									<a href="https://www.instagram.com" target="_blank"><i class="bi bi-instagram"></i></a>
-								</div>
-								<div class="icon-container">
-									<a href="https://www.facebook.com" target="_blank"><i class="bi bi-facebook"></i></a>
-								</div>
-								<div class="icon-container">
-									<a href="https://www.linkedin.com" target="_blank"><i class="bi bi-linkedin"></i></a>
-								</div>
-							</div>
-						</div>
-					</div>
-			</div>
-		</div>
-	</footer>
-	-->
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-	<script src="~/lib/jquery/dist/jquery.min.js"></script>
-	<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-	<script src="~/js/site.js" asp-append-version="true"></script>
-	<script src="~/js/formHelpers.js"></script>
-	@await RenderSectionAsync("Scripts", required: false)
+        <footer class="footer">
+            <div class="footer-background">
+                <div class="custom-flex-container">
+                    <div class="custom-column-flex align-items-left">
+                        <div class="tittle-text-footer">Bora lá para<br />mais um evento?</div>
+                        <div class="flex-column-container">
+                            <div class="help-text">Precisa de ajuda?</div>
+                            <div class="contact-container ml-auto">
+                                <button class="btn btn-contact contact-text btn-custom-height">Fale com o Bora lá!</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-start-container">
+                        <div class="column-flex-container">
+                            <div class="institutional-text">Institucional</div>
+                            <div class="about">Sobre nós</div>
+                            <div class="about">Marca</div>
+                            <div class="about">Fale com o Bora lá</div>
+                        </div>
+                        <div class="column-flex-container">
+                            <div class="institutional-text">Termos</div>
+                            <div class="about">Lei da Meia-Entrada</div>
+                            <div class="about">Termos de Serviço</div>
+                            <div class="about">Termos de Privacidade</div>
+                        </div>
+                    </div>
+                    <div class="column-flex-container">
+                        <div class="institutional-text">Redes Sociais</div>
+                        <div class="flex-container">
+                            <div class="icon-container">
+                                <a href="https://www.instagram.com" target="_blank"><i class="bi bi-instagram"></i></a>
+                            </div>
+                            <div class="icon-container">
+                                <a href="https://www.facebook.com" target="_blank"><i class="bi bi-facebook"></i></a>
+                            </div>
+                            <div class="icon-container">
+                                <a href="https://www.linkedin.com" target="_blank"><i class="bi bi-linkedin"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/formHelpers.js"></script>
+    <script src="~/js/hamburguer.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

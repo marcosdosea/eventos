@@ -6,6 +6,10 @@ using EventoWeb.Mappers;
 using Core.Service;
 using Moq;
 using AutoMapper;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Runtime.ConstrainedExecution;
+using System.Security.Cryptography;
+using Core.DTO;
 namespace EventoWeb.Controllers.Tests
 {
     [TestClass()]
@@ -31,6 +35,10 @@ namespace EventoWeb.Controllers.Tests
                 .Returns(GetTargetEvento());
             mockService.Setup(service => service.Create(It.IsAny<Evento>()))
                 .Verifiable();
+
+            mockServiceInscricao.Setup(service => service.GetInscricaoPessoaEvento(1,1))
+    .Returns(GetTestInscricoes());
+
             controller = new EventoController(mockService.Object, mapper, mockServiceEstado.Object, mockServiceInscricao.Object, mockServiceTipoevento.Object);
         }
 
@@ -234,6 +242,43 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
         }
 
+        [TestMethod()]
+        public void GestaoPapel_Get_Valid()
+        {
+            // Act
+            var result = controller.GestaoPapel(GetTargetEventoModel().Id, GetTargetPapel().Id);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            ViewResult viewResult = (ViewResult)result;
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(GestaoPapelModel));
+        }
+
+        [TestMethod()]
+        public void GestaoPapel_Post_Valid()
+        {
+            // Act
+            var result = controller.GestaoPapel(GetNewGestaoPapel());
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
+            Assert.IsNull(redirectToActionResult.ControllerName);
+
+        }
+
+        [TestMethod()]
+        public void DeletePessoaPapel_Post_Valid()
+        {
+            // Act
+            var result = controller.DeletePessoaPapel(1, 1, 1);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
+            Assert.IsNull(redirectToActionResult.ControllerName);
+        }
+
         private EventocreateModel GetNewEvento()
         {
             var eventoModel = new EventoModel
@@ -272,6 +317,50 @@ namespace EventoWeb.Controllers.Tests
                 Evento = eventoModel,
             };
         }
+
+        private GestaoPapelModel GetNewGestaoPapel()
+        {
+            var pessoa = new Pessoa
+            {
+                Id = 1,
+                Nome = "João Vitor Sodré",
+                NomeCracha = "Sodré",
+                Cpf = "12246232367",
+                Sexo = "M",
+                Cep = "45340086",
+                Rua = "Avenida Principal",
+                Bairro = "Centro",
+                Cidade = "Irece",
+                Estado = "BA",
+                Numero = "s/n",
+                Complemento = "casa",
+                Email = "email@gmail.com",
+                Telefone1 = "7999900113344",
+                Telefone2 = "NULL",
+            };
+
+            var evento = new EventoSimpleDTO
+            {
+                Id = 1,
+                Nome = "SEMINFO",
+            };
+
+            var papel = new Papel
+            {
+                Id = 1,
+                Nome = "Gestor",
+            };
+
+            return new GestaoPapelModel
+            {
+                Pessoa = pessoa,
+                Evento = evento,
+                IdPapel = papel.Id,
+            };
+        }
+
+
+
         private static Evento GetTargetEvento()
         {
             return new Evento
@@ -304,6 +393,46 @@ namespace EventoWeb.Controllers.Tests
                 VagasDisponiveis = 65,
                 TempoMinutosReserva = 240,
                 CargaHoraria = 4,
+            };
+        }
+
+        private static EventoSimpleDTO GetTargetEventoSimple()
+        {
+            return new EventoSimpleDTO
+            {
+                Id = 1,
+                Nome = "SEMINFO",
+            };
+        }
+
+        private static Pessoa GetTargetPessoa()
+        {
+            return new Pessoa
+            {
+                Id = 1,
+                Nome = "João Vitor Sodré",
+                NomeCracha = "Sodré",
+                Cpf = "12246232367",
+                Sexo = "M",
+                Cep = "45340086",
+                Rua = "Avenida Principal",
+                Bairro = "Centro",
+                Cidade = "Irece",
+                Estado = "BA",
+                Numero = "s/n",
+                Complemento = "casa",
+                Email = "email@gmail.com",
+                Telefone1 = "7999900113344",
+                Telefone2 = "NULL",
+            };
+        }
+
+        private static Papel GetTargetPapel()
+        {
+            return new Papel
+            {
+                Id = 1,
+                Nome = "Gestor",
             };
         }
 
@@ -378,6 +507,105 @@ namespace EventoWeb.Controllers.Tests
                 VagasDisponiveis = 65,
                 TempoMinutosReserva = 240,
                 CargaHoraria = 4,
+            };
+        }
+
+
+        private IEnumerable<Inscricaopessoaevento> GetTestInscricoes()
+        {
+            var pessoa1 = new Pessoa    
+            {
+                Id = 1,
+                Nome = "João Vitor Sodré",
+                NomeCracha = "Sodré",
+                Cpf = "12246232367",
+                Sexo = "M",
+                Cep = "45340086",
+                Rua = "Avenida Principal",
+                Bairro = "Centro",
+                Cidade = "Irece",
+                Estado = "BA",
+                Numero = "s/n",
+                Complemento = "casa",
+                Email = "email@gmail.com",
+                Telefone1 = "7999900113344",
+                Telefone2 = "NULL",
+            };
+
+            var pessoa2 = new Pessoa
+            {
+                Id = 2,
+                Nome = "Nagibe Santos Wanus Junior",
+                NomeCracha = "Nagibe Junior",
+                Cpf = "12343455678",
+                Sexo = "M",
+                Cep = "45566000",
+                Rua = "Rua Severino Vieira",
+                Bairro = "Centro",
+                Cidade = "Esplanada",
+                Estado = "BA",
+                Numero = "147",
+                Complemento = "casa",
+                Email = "nagibejr@gmail.com",
+                Telefone1 = "75999643467",
+                Telefone2 = "NULL",
+            };
+
+            var pessoa3 = new Pessoa
+            {
+                Id = 3,
+                Nome = "Marcos Venicios da Palma Dias",
+                NomeCracha = "Marcos Venicios",
+                Cpf = "12244678667",
+                Sexo = "M",
+                Cep = "45340086",
+                Rua = "Rua da Linha",
+                Bairro = "Centro",
+                Cidade = "Esplanada",
+                Estado = "BA",
+                Numero = "s/n",
+                Complemento = "casa",
+                Email = "muzanpvp@gmail.com",
+                Telefone1 = "7999900113344",
+                Telefone2 = "NULL",
+            };
+
+            var evento = new EventoSimpleDTO
+            {
+                Id = 1,
+                Nome = "SEMINFO",
+            };
+
+            var papel = new Papel
+            {
+                Id = 1,
+                Nome = "Gestor",
+            };
+
+            return new List<Inscricaopessoaevento>
+            {
+                new Inscricaopessoaevento
+                {
+                    IdPessoa = pessoa1.Id,
+                    IdEvento = evento.Id,
+                    IdPapel = papel.Id,
+                },
+
+                new Inscricaopessoaevento
+                {
+                    IdPessoa = pessoa2.Id,
+                    IdEvento = evento.Id,
+                    IdPapel = papel.Id,
+                },
+                
+                new Inscricaopessoaevento
+                {
+                    IdPessoa = pessoa3.Id,
+                    IdEvento = evento.Id,
+                    IdPapel = papel.Id,
+                }
+
+
             };
         }
 

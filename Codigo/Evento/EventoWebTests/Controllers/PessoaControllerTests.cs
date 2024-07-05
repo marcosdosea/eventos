@@ -62,7 +62,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual((uint)1, pessoaModel.Id);
             Assert.AreEqual("João Vitor Sodré", pessoaModel.Nome);
             Assert.AreEqual("Sodré", pessoaModel.NomeCracha);
-            Assert.AreEqual("12244667", pessoaModel.Cpf);
+            Assert.AreEqual("12246232367", pessoaModel.Cpf);
             Assert.AreEqual("M", pessoaModel.Sexo);
             Assert.AreEqual("45340086", pessoaModel.Cep);
             Assert.AreEqual("Avenida Principal", pessoaModel.Rua);
@@ -132,7 +132,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual((uint)1, pessoaModel.Id);
             Assert.AreEqual("João Vitor Sodré", pessoaModel.Nome);
             Assert.AreEqual("Sodré", pessoaModel.NomeCracha);
-            Assert.AreEqual("12244667", pessoaModel.Cpf);
+            Assert.AreEqual("12246232367", pessoaModel.Cpf);
             Assert.AreEqual("M", pessoaModel.Sexo);
             Assert.AreEqual("45340086", pessoaModel.Cep);
             Assert.AreEqual("Avenida Principal", pessoaModel.Rua);
@@ -173,7 +173,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual((uint)1, pessoaModel.Id);
             Assert.AreEqual("João Vitor Sodré", pessoaModel.Nome);
             Assert.AreEqual("Sodré", pessoaModel.NomeCracha);
-            Assert.AreEqual("12244667", pessoaModel.Cpf);
+            Assert.AreEqual("12246232367", pessoaModel.Cpf);
             Assert.AreEqual("M", pessoaModel.Sexo);
             Assert.AreEqual("45340086", pessoaModel.Cep);
             Assert.AreEqual("Avenida Principal", pessoaModel.Rua);
@@ -207,7 +207,7 @@ namespace EventoWeb.Controllers.Tests
                 Id = 1,
                 Nome = "João Vitor Sodré",
                 NomeCracha = "Sodré",
-                Cpf = "12244667",
+                Cpf = "12246232367",
                 Sexo = "M",
                 Cep = "45340086",
                 Rua = "Avenida Principal",
@@ -228,7 +228,7 @@ namespace EventoWeb.Controllers.Tests
                 Id = 1,
                 Nome = "João Vitor Sodré",
                 NomeCracha = "Sodré",
-                Cpf = "12244667",
+                Cpf = "12246232367",
                 Sexo = "M",
                 Cep = "45340086",
                 Rua = "Avenida Principal",
@@ -250,7 +250,7 @@ namespace EventoWeb.Controllers.Tests
                 Id = 1,
                 Nome = "João Vitor Sodré",
                 NomeCracha = "Sodré",
-                Cpf = "12244667",
+                Cpf = "12246232367",
                 Sexo = "M",
                 Cep = "45340086",
                 Rua = "Avenida Principal",
@@ -274,7 +274,7 @@ namespace EventoWeb.Controllers.Tests
                         Id = 1,
                         Nome = "João Vitor Sodré",
                         NomeCracha = "Sodré",
-                        Cpf = "12244667",
+                        Cpf = "12246232367",
                         Sexo = "M",
                         Cep = "45340086",
                         Rua = "Avenida Principal",
@@ -292,7 +292,7 @@ namespace EventoWeb.Controllers.Tests
                         Id = 2,
                         Nome = "Nagibe Santos Wanus Junior",
                         NomeCracha = "Nagibe Junior",
-                        Cpf = "12345678",
+                        Cpf = "12345345678",
                         Sexo = "M",
                         Cep = "45566000",
                         Rua = "Rua Severino Vieira",
@@ -310,7 +310,7 @@ namespace EventoWeb.Controllers.Tests
                         Id = 3,
                         Nome = "Marcos Venicios da Palma Dias",
                         NomeCracha = "Marcos Venicios",
-                        Cpf = "12244667",
+                        Cpf = "12247894667",
                         Sexo = "M",
                         Cep = "45340086",
                         Rua = "Rua da Linha",

@@ -34,7 +34,7 @@ namespace Service.Tests
                         Id = 1,
                         Nome = "João Vitor Sodré",
                         NomeCracha = "Sodré",
-                        Cpf = "12244667",
+                        Cpf = "12246232367",
                         Sexo = "M",
                         Cep = "45340086",
                         Rua = "Avenida Principal",
@@ -52,7 +52,7 @@ namespace Service.Tests
                         Id = 2,
                         Nome = "Nagibe Santos Wanus Junior",
                         NomeCracha = "Nagibe Junior",
-                        Cpf = "12345678",
+                        Cpf = "12343455678",
                         Sexo = "M",
                         Cep = "45566000",
                         Rua = "Rua Severino Vieira",
@@ -70,7 +70,7 @@ namespace Service.Tests
                         Id = 3,
                         Nome = "Marcos Venicios da Palma Dias",
                         NomeCracha = "Marcos Venicios",
-                        Cpf = "12244667",
+                        Cpf = "12234544667",
                         Sexo = "M",
                         Cep = "45340086",
                         Rua = "Rua da Linha",
@@ -100,7 +100,7 @@ namespace Service.Tests
                 Id = 4,
                 Nome = "Marcos Venicios da Palma Dias",
                 NomeCracha = "Marcos Venicios",
-                Cpf = "12244667",
+                Cpf = "12234544667",
                 Sexo = "M",
                 Cep = "45340086",
                 Rua = "Rua da Linha",
@@ -118,7 +118,7 @@ namespace Service.Tests
             var pessoa = _pessoaService.Get(4);
             Assert.AreEqual("Marcos Venicios da Palma Dias", pessoa.Nome);
             Assert.AreEqual("Marcos Venicios", pessoa.NomeCracha);
-            Assert.AreEqual("12244667", pessoa.Cpf);
+            Assert.AreEqual("12234544667", pessoa.Cpf);
             Assert.AreEqual("M", pessoa.Sexo);
             Assert.AreEqual("45340086", pessoa.Cep);
             Assert.AreEqual("Rua da Linha", pessoa.Rua);
@@ -151,7 +151,7 @@ namespace Service.Tests
             pessoa.Id = 3;
             pessoa.Nome = "Marcos Venicios da Palma Dias";
             pessoa.NomeCracha = "Marcos Venicios";
-            pessoa.Cpf = "12244667";
+            pessoa.Cpf = "12234544667";
             pessoa.Sexo = "M";
             pessoa.Cep = "45340086";
             pessoa.Rua = "Rua da Linha";
@@ -168,7 +168,7 @@ namespace Service.Tests
             Assert.AreEqual((uint)3, pessoa.Id);
             Assert.AreEqual("Marcos Venicios da Palma Dias", pessoa.Nome);
             Assert.AreEqual("Marcos Venicios", pessoa.NomeCracha);
-            Assert.AreEqual("12244667", pessoa.Cpf);
+            Assert.AreEqual("12234544667", pessoa.Cpf);
             Assert.AreEqual("M", pessoa.Sexo);
             Assert.AreEqual("45340086", pessoa.Cep);
             Assert.AreEqual("Rua da Linha", pessoa.Rua);
@@ -190,7 +190,7 @@ namespace Service.Tests
             Assert.AreEqual((uint)2, pessoa.Id);
             Assert.AreEqual("Nagibe Santos Wanus Junior", pessoa.Nome);
             Assert.AreEqual("Nagibe Junior", pessoa.NomeCracha);
-            Assert.AreEqual("12345678", pessoa.Cpf);
+            Assert.AreEqual("12343455678", pessoa.Cpf);
             Assert.AreEqual("M", pessoa.Sexo);
             Assert.AreEqual("45566000", pessoa.Cep);
             Assert.AreEqual("Rua Severino Vieira", pessoa.Rua);

@@ -6,7 +6,6 @@ using System.Diagnostics;
 
 namespace EventoWeb.Controllers
 {
-
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -20,14 +19,15 @@ namespace EventoWeb.Controllers
             _mapper = mapper;
         }
 
-        // Aqui está a Index action que precisamos modificar
-     public IActionResult Index()
-{
-    var listarEventos = _eventoService.GetAll();
-    var listarEventosModel = _mapper.Map<List<EventoModel>>(listarEventos);
-    return View(listarEventosModel);
-}
+        // Ação Index para listar eventos
+        public IActionResult Index()
+        {
+            var listarEventos = _eventoService.GetAll();
+            var listarEventosModel = _mapper.Map<List<EventoModel>>(listarEventos);
+            return View(listarEventosModel);
+        }
 
+        // Outras ações do controlador
         public IActionResult Privacy()
         {
             return View();
