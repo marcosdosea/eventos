@@ -20,6 +20,7 @@ namespace EventoWeb.Controllers.Tests
         {
             // Arrange
             var mockService = new Mock<IPessoaService>();
+            var mockEstadosbrasilService = new Mock<IEstadosbrasilService>();
 
             IMapper mapper = new MapperConfiguration(cfg =>
             cfg.AddProfile(new PessoaProfile())).CreateMapper();
@@ -30,7 +31,7 @@ namespace EventoWeb.Controllers.Tests
                 .Returns(GetTargetPessoa());
             mockService.Setup(service => service.Create(It.IsAny<Pessoa>()))
                 .Verifiable();
-            controller = new PessoaController(mockService.Object, mapper);
+            controller = new PessoaController(mockService.Object, mockEstadosbrasilService.Object, mapper);
         }
 
         [TestMethod()]
@@ -62,9 +63,9 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual((uint)1, pessoaModel.Id);
             Assert.AreEqual("João Vitor Sodré", pessoaModel.Nome);
             Assert.AreEqual("Sodré", pessoaModel.NomeCracha);
-            Assert.AreEqual("12246232367", pessoaModel.Cpf);
+            Assert.AreEqual("122.462.323-67", pessoaModel.Cpf);
             Assert.AreEqual("M", pessoaModel.Sexo);
-            Assert.AreEqual("45340086", pessoaModel.Cep);
+            Assert.AreEqual("45340-086", pessoaModel.Cep);
             Assert.AreEqual("Avenida Principal", pessoaModel.Rua);
             Assert.AreEqual("Centro", pessoaModel.Bairro);
             Assert.AreEqual("Irece", pessoaModel.Cidade);
@@ -72,7 +73,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("s/n", pessoaModel.Numero);
             Assert.AreEqual("casa", pessoaModel.Complemento);
             Assert.AreEqual("email@gmail.com", pessoaModel.Email);
-            Assert.AreEqual("7999900113344", pessoaModel.Telefone1);
+            Assert.AreEqual("7999990011", pessoaModel.Telefone1);
             Assert.AreEqual("NULL", pessoaModel.Telefone2);
     }
 
@@ -127,14 +128,15 @@ namespace EventoWeb.Controllers.Tests
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
-            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(PessoaModel));
-            PessoaModel pessoaModel = (PessoaModel)viewResult.ViewData.Model;
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(PessoaCreateModel));
+            PessoaCreateModel PessoaModel = (PessoaCreateModel)viewResult.ViewData.Model;
+            var pessoaModel = PessoaModel.Pessoa;
             Assert.AreEqual((uint)1, pessoaModel.Id);
             Assert.AreEqual("João Vitor Sodré", pessoaModel.Nome);
             Assert.AreEqual("Sodré", pessoaModel.NomeCracha);
-            Assert.AreEqual("12246232367", pessoaModel.Cpf);
+            Assert.AreEqual("122.462.323-67", pessoaModel.Cpf);
             Assert.AreEqual("M", pessoaModel.Sexo);
-            Assert.AreEqual("45340086", pessoaModel.Cep);
+            Assert.AreEqual("45340-086", pessoaModel.Cep);
             Assert.AreEqual("Avenida Principal", pessoaModel.Rua);
             Assert.AreEqual("Centro", pessoaModel.Bairro);
             Assert.AreEqual("Irece", pessoaModel.Cidade);
@@ -142,7 +144,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("s/n", pessoaModel.Numero);
             Assert.AreEqual("casa", pessoaModel.Complemento);
             Assert.AreEqual("email@gmail.com", pessoaModel.Email);
-            Assert.AreEqual("7999900113344", pessoaModel.Telefone1);
+            Assert.AreEqual("7999990011", pessoaModel.Telefone1);
             Assert.AreEqual("NULL", pessoaModel.Telefone2);
         }
 
@@ -150,7 +152,7 @@ namespace EventoWeb.Controllers.Tests
         public void EditTest_Post_Valid()
         {
             // Act
-            var result = controller.Edit(GetTargetPessoaModel().Id, GetTargetPessoaModel());
+            var result = controller.Edit(GetTargetPessoaModel().Pessoa.Id, GetTargetPessoaModel());
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
@@ -173,9 +175,9 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual((uint)1, pessoaModel.Id);
             Assert.AreEqual("João Vitor Sodré", pessoaModel.Nome);
             Assert.AreEqual("Sodré", pessoaModel.NomeCracha);
-            Assert.AreEqual("12246232367", pessoaModel.Cpf);
+            Assert.AreEqual("122.462.323-67", pessoaModel.Cpf);
             Assert.AreEqual("M", pessoaModel.Sexo);
-            Assert.AreEqual("45340086", pessoaModel.Cep);
+            Assert.AreEqual("45340-086", pessoaModel.Cep);
             Assert.AreEqual("Avenida Principal", pessoaModel.Rua);
             Assert.AreEqual("Centro", pessoaModel.Bairro);
             Assert.AreEqual("Irece", pessoaModel.Cidade);
@@ -183,7 +185,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("s/n", pessoaModel.Numero);
             Assert.AreEqual("casa", pessoaModel.Complemento);
             Assert.AreEqual("email@gmail.com", pessoaModel.Email);
-            Assert.AreEqual("7999900113344", pessoaModel.Telefone1);
+            Assert.AreEqual("7999990011", pessoaModel.Telefone1);
             Assert.AreEqual("NULL", pessoaModel.Telefone2);
         }
 
@@ -191,7 +193,7 @@ namespace EventoWeb.Controllers.Tests
         public void DeleteTest_Get_Valid()
         {
             // Act
-            var result = controller.Delete(GetTargetPessoaModel().Id, GetTargetPessoaModel());
+            var result = controller.DeleteConfirmed(GetTargetPessoaModel().Pessoa.Id);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
@@ -200,25 +202,31 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
         }
 
-        private PessoaModel GetNewPessoa()
+        private PessoaCreateModel GetNewPessoa()
         {
-            return new PessoaModel
+            var pessoaModel = new PessoaModel
             {
                 Id = 1,
                 Nome = "João Vitor Sodré",
                 NomeCracha = "Sodré",
-                Cpf = "12246232367",
+                Cpf = "861.754.795-21",
                 Sexo = "M",
-                Cep = "45340086",
+                Cep = "48370-000",
                 Rua = "Avenida Principal",
                 Bairro = "Centro",
-                Cidade = "Irece",
-                Estado = "BA",
+                Cidade = "Esplanada",
+                Estado = "Bahia",
                 Numero = "s/n",
                 Complemento = "casa",
                 Email = "email@gmail.com",
-                Telefone1 = "7999900113344",
-                Telefone2 = "NULL",
+                Telefone1 = "7999990011",
+            };
+
+
+            return new PessoaCreateModel
+            {
+                Pessoa = pessoaModel,
+
             };
         }
         private static Pessoa GetTargetPessoa()
@@ -228,9 +236,9 @@ namespace EventoWeb.Controllers.Tests
                 Id = 1,
                 Nome = "João Vitor Sodré",
                 NomeCracha = "Sodré",
-                Cpf = "12246232367",
+                Cpf = "122.462.323-67",
                 Sexo = "M",
-                Cep = "45340086",
+                Cep = "45340-086",
                 Rua = "Avenida Principal",
                 Bairro = "Centro",
                 Cidade = "Irece",
@@ -238,21 +246,21 @@ namespace EventoWeb.Controllers.Tests
                 Numero = "s/n",
                 Complemento = "casa",
                 Email = "email@gmail.com",
-                Telefone1 = "7999900113344",
+                Telefone1 = "7999990011",
                 Telefone2 = "NULL",
             };
         }
 
-        private PessoaModel GetTargetPessoaModel()
+        private PessoaCreateModel GetTargetPessoaModel()
         {
-            return new PessoaModel
+            var pessoaModel = new PessoaModel 
             {
                 Id = 1,
                 Nome = "João Vitor Sodré",
                 NomeCracha = "Sodré",
-                Cpf = "12246232367",
+                Cpf = "122.462.323-67",
                 Sexo = "M",
-                Cep = "45340086",
+                Cep = "45340-086",
                 Rua = "Avenida Principal",
                 Bairro = "Centro",
                 Cidade = "Irece",
@@ -260,8 +268,31 @@ namespace EventoWeb.Controllers.Tests
                 Numero = "s/n",
                 Complemento = "casa",
                 Email = "email@gmail.com",
-                Telefone1 = "7999900113344",
+                Telefone1 = "7999990011",
                 Telefone2 = "NULL",
+            };
+
+            return new PessoaCreateModel
+            {
+                Pessoa = pessoaModel,
+            };
+        }
+
+        private IEnumerable<Estadosbrasil> GetTestsEstadosbrasil()
+        {
+            return new List<Estadosbrasil>
+            {
+                new Estadosbrasil
+                {
+                    Estado = "BA",
+                    Nome = "Bahia",
+                }, 
+
+                new Estadosbrasil
+                {
+                    Estado = "SE",
+                    Nome = "Sergipe",
+                }
             };
         }
 
@@ -274,9 +305,9 @@ namespace EventoWeb.Controllers.Tests
                         Id = 1,
                         Nome = "João Vitor Sodré",
                         NomeCracha = "Sodré",
-                        Cpf = "12246232367",
+                        Cpf = "122.462.323-67",
                         Sexo = "M",
-                        Cep = "45340086",
+                        Cep = "45340-086",
                         Rua = "Avenida Principal",
                         Bairro = "Centro",
                         Cidade = "Irece",
@@ -284,7 +315,7 @@ namespace EventoWeb.Controllers.Tests
                         Numero = "s/n",
                         Complemento = "casa",
                         Email = "email@gmail.com",
-                        Telefone1 = "7999900113344",
+                        Telefone1 = "7999990011",
                         Telefone2 = "NULL",
                     },
                 new Pessoa
@@ -292,9 +323,9 @@ namespace EventoWeb.Controllers.Tests
                         Id = 2,
                         Nome = "Nagibe Santos Wanus Junior",
                         NomeCracha = "Nagibe Junior",
-                        Cpf = "12345345678",
+                        Cpf = "123.453.456-78",
                         Sexo = "M",
-                        Cep = "45566000",
+                        Cep = "45566-000",
                         Rua = "Rua Severino Vieira",
                         Bairro = "Centro",
                         Cidade = "Esplanada",
@@ -302,7 +333,7 @@ namespace EventoWeb.Controllers.Tests
                         Numero = "147",
                         Complemento = "casa",
                         Email = "nagibejr@gmail.com",
-                        Telefone1 = "75999643467",
+                        Telefone1 = "7599643467",
                         Telefone2 = "NULL",
                     },
                 new Pessoa
@@ -310,9 +341,9 @@ namespace EventoWeb.Controllers.Tests
                         Id = 3,
                         Nome = "Marcos Venicios da Palma Dias",
                         NomeCracha = "Marcos Venicios",
-                        Cpf = "12247894667",
+                        Cpf = "122.478.946-67",
                         Sexo = "M",
-                        Cep = "45340086",
+                        Cep = "45340-086",
                         Rua = "Rua da Linha",
                         Bairro = "Centro",
                         Cidade = "Esplanada",
@@ -320,7 +351,7 @@ namespace EventoWeb.Controllers.Tests
                         Numero = "s/n",
                         Complemento = "casa",
                         Email = "muzanpvp@gmail.com",
-                        Telefone1 = "7999900113344",
+                        Telefone1 = "7999001133",
                         Telefone2 = "NULL",
                     },
             };
