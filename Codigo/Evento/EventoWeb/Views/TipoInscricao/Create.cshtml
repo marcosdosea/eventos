@@ -19,6 +19,11 @@
                         <input asp-for="TipoInscricao.Nome" class="form-control" />
                         <span asp-validation-for="TipoInscricao.Nome" class="text-danger"></span>
                     </div>
+                    <div class="form-group mb-2">
+                        <label asp-for="TipoInscricao.Descricao" class="control-label"></label>
+                        <textarea asp-for="TipoInscricao.Descricao" class="form-control" id="exampleFormControlTextarea1" rows="5"></textarea>
+                        <span asp-validation-for="TipoInscricao.Descricao" class="text-danger"></span>
+                    </div>
                     <div class="row">
                         <div class="col-md-8">
                             <div class="form-group mb-2">
@@ -35,28 +40,20 @@
                             </div>
                         </div>
                      </div>
-                    
-                    
-                    <div class="form-group mb-2">
-                        <label asp-for="TipoInscricao.Descricao" class="control-label"></label>
-                        <input asp-for="TipoInscricao.Descricao" class="form-control" />
-                        <span asp-validation-for="TipoInscricao.Descricao" class="text-danger"></span>
-                    </div>
-                    
                     <br />
                     <h4 class="blue-normal">
                         Datas
                     </h4>
                     <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-2">
+                        <div class="col-6">
+                            <div class="form-group">
                                 <label asp-for="TipoInscricao.DataInicio" class="control-label"></label>
                                 <input asp-for="TipoInscricao.DataInicio" class="form-control" type="date" />
                                 <span asp-validation-for="TipoInscricao.DataInicio" class="text-danger"></span>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-2">
+                        <div class="col-6">
+                            <div class="form-group">
                                 <label asp-for="TipoInscricao.Datafim" class="control-label"></label>
                                 <input asp-for="TipoInscricao.Datafim" class="form-control" type="date" />
                                 <span asp-validation-for="TipoInscricao.Datafim" class="text-danger"></span>

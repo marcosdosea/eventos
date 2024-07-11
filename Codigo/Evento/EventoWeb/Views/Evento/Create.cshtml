@@ -11,11 +11,12 @@
 	<div class="col-md-8">
 		<form asp-action="Create">
 			<div asp-validation-summary="ModelOnly" class="text-danger"></div>
-			<div class="col-4 form-group">
+			<div class= "form-group">
 				<label asp-for="Evento.Nome" class="control-label"></label>
 				<input asp-for="Evento.Nome" class="form-control" placeholder="Nome do evento" />
 				<span asp-validation-for="Evento.Nome" class="text-danger"></span>
 			</div>
+			<br />
 			<div class="row">
 				<div class="col-2">
 					<div class="form-group">
@@ -48,22 +49,22 @@
 			</div>
 			<br />
 			<h4 class="blue-normal">
-				Outros
+				Informações adicionais
 			</h4>
+			<!--<div>
+				<div class="form-group">
+					<label asp-for="Evento.IdAreaInteresse" class="control-label">Área de Interesse</label>
+					<select asp-for="Evento.IdAreaInteresse" class="form-control" asp-items="Model.AreaInteresse">
+						<option value="">Selecione a área de interesse</option>
+					</select>
+					<span asp-validation-for="Evento.Estado" class="text-danger"></span>
+				</div>
+			</div>-->
 			<div class="col-4">
 				<div class="form-group">
 					<label asp-for="Evento.IdTipoEvento" class="control-label">Tipo do Evento</label>
 					<select asp-for="Evento.IdTipoEvento" class="form-control" asp-items="Model.TiposEventos">
 						<option value="">Selecione o tipo de evento</option>
-					</select>
-					<span asp-validation-for="Evento.Estado" class="text-danger"></span>
-				</div>
-			</div>
-			<div class="col-4">
-				<div class="form-group">
-					<label asp-for="Evento.IdAreaInteresse" class="control-label">Área de Interesse</label>
-					<select asp-for="Evento.IdAreaInteresse" class="form-control" asp-items="Model.AreaInteresse">
-						<option value="">Selecione a área de interesse</option>
 					</select>
 					<span asp-validation-for="Evento.Estado" class="text-danger"></span>
 				</div>

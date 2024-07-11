@@ -9,46 +9,54 @@
     
     <h1 class="blue-normal">Novo Subevento</h1>
     
-    <div>
+    <div class="col-md-8">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label asp-for="Subevento.Nome" class="control-label"></label>
-                        <input asp-for="Subevento.Nome" class="form-control" placeholder="Nome do sub-evento" />
-                        <span asp-validation-for="Subevento.Nome" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label asp-for="Subevento.IdEvento" class="control-label">Eventos</label>
-                        <select asp-for="Subevento.IdEvento" class="form-control" asp-items="Model.Eventos">
-                            <option value="">Selecione o Evento</option>
-                        </select>
-                        <span asp-validation-for="Subevento.IdEvento" class="text-danger"></span>
-                    </div>
-                </div>
+            <div class="form-group">
+                <label asp-for="Subevento.Nome" class="control-label"></label>
+                <input asp-for="Subevento.Nome" class="form-control" placeholder="Nome do sub-evento" />
+                <span asp-validation-for="Subevento.Nome" class="text-danger"></span>
             </div>
-
+            <br />
+            <div class="form-group">
+                <label asp-for="Subevento.IdEvento" class="control-label">Eventos</label>
+                <select asp-for="Subevento.IdEvento" class="form-control" asp-items="Model.Eventos">
+                    <option value="">Selecione o Evento</option>
+                </select>
+                <span asp-validation-for="Subevento.IdEvento" class="text-danger"></span>
+            </div> 
+            <br />
             <div class="form-group">
                 <label asp-for="Subevento.Descricao" class="control-label"></label>
                 <textarea asp-for="Subevento.Descricao" class="form-control" id="exampleFormControlTextarea1" rows="3"></textarea>
                 <span asp-validation-for="Subevento.Descricao" class="text-danger"></span>
             </div>
             <br />
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="Subevento.Status" class="control-label"></label>
+                    <select asp-for="Subevento.Status" class="form-select" aria-label="Default select example">
+                        <option value="C">Cadastro</option>
+                        <option value="A">Ativo</option>
+                        <option value="F">Finalizado</option>
+                        <option value="I">Inativo</option>
+                    </select>
+                    <span asp-validation-for="Subevento.Status" class="text-danger"></span>
+                </div>
+            </div>
+            <br />
             <h4 class="blue-normal">
                 Datas
             </h4>
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="form-group">
                         <label asp-for="Subevento.DataInicio" class="control-label"></label>
                         <input asp-for="Subevento.DataInicio" class="form-control" />
                         <span asp-validation-for="Subevento.DataInicio" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="form-group">
                         <label asp-for="Subevento.DataFim" class="control-label"></label>
                         <input asp-for="Subevento.DataFim" class="form-control" />
@@ -57,14 +65,14 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="form-group">
                         <label asp-for="Subevento.DataInicioInscricao" class="control-label"></label>
                         <input asp-for="Subevento.DataInicioInscricao" class="form-control" />
                         <span asp-validation-for="Subevento.DataInicioInscricao" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="form-group">
                         <label asp-for="Subevento.DataFimInscricao" class="control-label"></label>
                         <input asp-for="Subevento.DataFimInscricao" class="form-control" />
@@ -74,29 +82,23 @@
             </div>
             <br />
             <div class="row">
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label asp-for="Subevento.Status" class="control-label"></label>
-                        <select asp-for="Subevento.Status" class="form-select" aria-label="Default select example">
-                            <option value="C">Cadastro</option>
-                            <option value="A">Ativo</option>
-                            <option value="F">Finalizado</option>
-                            <option value="I">Inativo</option>
-                        </select>
-                        <span asp-validation-for="Subevento.Status" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label asp-for="Subevento.InscricaoGratuita" class="control-label"></label>
-                        <select asp-for="Subevento.InscricaoGratuita" class="form-select" id="InscricaoGratuita" aria-label="Default select example">
-                            <option value="0">Não</option>
-                            <option value="1">Sim</option>
-                        </select>
+                <div class="col-md-3">
+                    <div class="form-group mb-2">
+                        <label asp-for="Subevento.InscricaoGratuita" class="control-label">Inscrição Gratuita</label>
+                        <div class="d-flex align-items-center">
+                            <div class="form-check me-2">
+                                <input asp-for="Subevento.InscricaoGratuita" class="form-check-input" type="radio" value="1" id="InscricaoGratuitaSim">
+                                <label class="form-check-label" for="InscricaoGratuitaSim">Sim</label>
+                            </div>
+                            <div class="form-check">
+                                <input asp-for="Subevento.InscricaoGratuita" class="form-check-input" type="radio" value="2" id="InscricaoGratuitaNao">
+                                <label class="form-check-label" for="InscricaoGratuitaNao">Não</label>
+                            </div>
+                        </div>
                         <span asp-validation-for="Subevento.InscricaoGratuita" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="form-group" id="valorInscricaoGroup">
                         <label asp-for="Subevento.ValorInscricao" class="control-label"></label>
                         <input type="text" asp-for="Subevento.ValorInscricao" class="form-control" onkeypress="return validateInput(event)">
@@ -106,10 +108,10 @@
             </div>
             <br />
             <h4 class="blue-normal">
-                Outros
+                Informações Adicionais
             </h4>
             <div class ="row">
-                <div class="">
+                <div class="col-md-6">
                     <div class="form-group">
                         <label asp-for="Subevento.IdTipoEvento" class="control-label">Tipos de Subevento</label>
                         <select asp-for="Subevento.IdTipoEvento" class="form-control" asp-items="Model.TiposEventos">
@@ -119,17 +121,24 @@
                     </div>
                 </div>
             </div>
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="form-group">
-                        <label asp-for="Subevento.PossuiCertificado" class="control-label"></label>
-                        <select asp-for="Subevento.PossuiCertificado" class="form-select" id="PossuiCertificado" aria-label="Default select example">
-                            <option value="0">Não</option>
-                            <option value="1">Sim</option>
-                        </select>
-                        <span asp-validation-for="Subevento.PossuiCertificado" class="text-danger"></span>
+            <br />
+            <div class="col-md-3">
+                <div class="form-group mb-3">
+                    <label asp-for="Subevento.PossuiCertificado" class="control-label">Possui Certificação?</label>
+                    <div class="d-flex align-items-center">
+                        <div class="form-check me-2">
+                            <input asp-for="Subevento.PossuiCertificado" class="form-check-input" type="radio" value="1" id="PossuiCertificadoSim">
+                            <label class="form-check-label" for="PossuiCertificadoSim">Sim</label>
+                        </div>
+                        <div class="form-check">
+                            <input asp-for="Subevento.PossuiCertificado" class="form-check-input" type="radio" value="0" id="PossuiCertificadoNao">
+                            <label class="form-check-label" for="PossuiCertificadoNao">Não</label>
+                        </div>
                     </div>
+                    <span asp-validation-for="Subevento.PossuiCertificado" class="text-danger"></span>
                 </div>
+            </div>
+            <div class="row">
                 <div class="col-md-3">
                     <div class="form-group" id="FrequenciaMinimaCertificado">
                         <label asp-for="Subevento.FrequenciaMinimaCertificado" class="control-label"></label>
@@ -139,16 +148,16 @@
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label asp-for="Subevento.VagasOfertadas" class="control-label"></label>
-                        <input asp-for="Subevento.VagasOfertadas" class="form-control" />
-                        <span asp-validation-for="Subevento.VagasOfertadas" class="text-danger"></span>
+                        <label asp-for="Subevento.CargaHoraria" class="control-label"></label>
+                        <input asp-for="Subevento.CargaHoraria" class="form-control" />
+                        <span asp-validation-for="Subevento.CargaHoraria" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
-                        <label asp-for="Subevento.CargaHoraria" class="control-label"></label>
-                        <input asp-for="Subevento.CargaHoraria" class="form-control" />
-                        <span asp-validation-for="Subevento.CargaHoraria" class="text-danger"></span>
+                        <label asp-for="Subevento.VagasOfertadas" class="control-label"></label>
+                        <input asp-for="Subevento.VagasOfertadas" class="form-control" />
+                        <span asp-validation-for="Subevento.VagasOfertadas" class="text-danger"></span>
                     </div>
                 </div>
             </div>
@@ -166,5 +175,12 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script>
+        toggleInputBased('InscricaoGratuita', 'valorInscricaoGroup', '1');
+        toggleInputBased('PossuiCertificado', 'FrequenciaMinimaCertificado', '0');
+    </script>
 }
+
