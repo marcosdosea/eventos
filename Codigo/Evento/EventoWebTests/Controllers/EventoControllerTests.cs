@@ -26,6 +26,7 @@ namespace EventoWeb.Controllers.Tests
             var mockServiceInscricao = new Mock<IInscricaoService>();
             var mockServiceTipoevento = new Mock<ITipoeventoService>();
             var mockServiceAreaInteresse = new Mock<IAreaInteresseService>();
+            var mockServicePessoa = new Mock<IPessoaService>();
 
             IMapper mapper = new MapperConfiguration(cfg =>
             cfg.AddProfile(new EventoProfile())).CreateMapper();
@@ -37,10 +38,10 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.Create(It.IsAny<Evento>()))
                 .Verifiable();
 
-            mockServiceInscricao.Setup(service => service.GetInscricaoPessoaEvento(1,1))
+            mockServiceInscricao.Setup(service => service.GetByEventoAndPapel(1,1))
     .Returns(GetTestInscricoes());
 
-            controller = new EventoController(mockService.Object, mapper, mockServiceEstado.Object, mockServiceInscricao.Object, mockServiceTipoevento.Object, mockServiceAreaInteresse.Object);
+            controller = new EventoController(mockService.Object, mapper, mockServiceEstado.Object, mockServiceInscricao.Object, mockServiceTipoevento.Object, mockServiceAreaInteresse.Object,mockServicePessoa.Object);
         }
 
         [TestMethod()]

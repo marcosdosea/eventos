@@ -12,11 +12,12 @@ namespace EventoWeb.Controllers
         private readonly IEstadosbrasilService _estadosbrasilService;
         private readonly ITipoeventoService _tipoEventoService;
         private readonly IEventoService _eventoService;
+        private readonly IPessoaService _pessoaService;
         private readonly IInscricaoService _inscricaoService;
         private readonly IAreaInteresseService _areaInteresseService;
         private readonly IMapper _mapper;
 
-        public EventoController(IEventoService eventoService, IMapper mapper, IEstadosbrasilService estadosbrasilService,IInscricaoService inscricaoService, ITipoeventoService tipoeventoService, IAreaInteresseService areaInteresseService)
+        public EventoController(IEventoService eventoService, IMapper mapper, IEstadosbrasilService estadosbrasilService,IInscricaoService inscricaoService, ITipoeventoService tipoeventoService, IAreaInteresseService areaInteresseService, IPessoaService pessoaService)
         {
             _tipoEventoService = tipoeventoService;
             _estadosbrasilService = estadosbrasilService;
@@ -24,6 +25,7 @@ namespace EventoWeb.Controllers
             _inscricaoService = inscricaoService;
             _mapper = mapper;
             _areaInteresseService = areaInteresseService;
+            _pessoaService = pessoaService;
         }
 
         // GET: EventoController
@@ -138,19 +140,19 @@ namespace EventoWeb.Controllers
         }
 
         
-        // GET: EventoController/CreateGestorEvento
+        // GET: EventoController/GestaoPapel
         public ActionResult GestaoPapel(uint idEvento, int idPapel)
         {
             var gestorModel = new GestaoPapelModel
             {
 	            IdPapel = idPapel,
                 Evento = _eventoService.GetEventoSimpleDto(idEvento),
-                Inscricoes = _inscricaoService.GetInscricaoPessoaEvento(idEvento,idPapel),
+                Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento,idPapel),
             };
             return View(gestorModel);
         }
 
-        // POST: EventoController/CreateGestorEvento
+        // POST: EventoController/GestaoPapel
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult GestaoPapel( GestaoPapelModel gestaoPapelModel)
@@ -159,7 +161,7 @@ namespace EventoWeb.Controllers
             var idEvento = gestaoPapelModel.Evento.Id;
             var idPapel = gestaoPapelModel.IdPapel;
             pessoa.NomeCracha = pessoa.Nome;
-            _eventoService.CreateGestorModel(pessoa, idEvento, idPapel);
+            _pessoaService.CreatePessoaPapel(pessoa, idEvento, idPapel);
             return RedirectToAction("GestaoPapel", new { idEvento, idPapel });
 
         } 

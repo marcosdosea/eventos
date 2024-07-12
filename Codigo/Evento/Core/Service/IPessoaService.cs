@@ -11,6 +11,8 @@ public interface IPessoaService
     Pessoa Get(uint id);
     IEnumerable<Pessoa> GetAll();
     Pessoa GetByCpf(string nome);
+    
+    void CreatePessoaPapel(Pessoa pessoa, uint IdEvento, int idPapel);
     bool CPFIsValid(string pessoaModelCpf);
     string FormataCep(string cepFormatado);
     string FormataCPF(string pessoaCpf);

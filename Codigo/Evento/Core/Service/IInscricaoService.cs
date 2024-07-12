@@ -9,7 +9,8 @@ namespace Core.Service
                 
                 void DeletePessoaPapel(uint idPessoa, uint idEvento, uint idPapel);
 
-                IEnumerable<Inscricaopessoaevento> GetInscricaoPessoaEvento(uint idEvento, int idPapel);
+                IEnumerable<Inscricaopessoaevento> GetByEventoAndPapel(uint idEvento, int idPapel);
+                
                 
         }
 }

@@ -27,7 +27,7 @@ namespace Service.Tests
             _context.Database.EnsureDeleted();
             _context.Database.EnsureCreated();
 
-            _pessoaService = new PessoaService(_context);
+            _pessoaService = new PessoaService(_context,_inscricaoService);
             _inscricaoService = new InscricaoService(_context);
 
             var eventos = new List<Evento>
@@ -157,7 +157,7 @@ namespace Service.Tests
             _context.AddRange(eventos);
             _context.SaveChanges();
 
-            _eventoService = new EventoService(_context, _pessoaService, _inscricaoService);
+            _eventoService = new EventoService(_context);
         }
 
         [TestMethod()]
@@ -384,7 +384,7 @@ namespace Service.Tests
             var evento = _eventoService.Get(1);
 
 
-            _eventoService.CreateGestorModel(pessoa, 7, 1);
+            _pessoaService.CreatePessoaPapel(pessoa, 7, 1);
 
             var inscricao = _context.Inscricaopessoaeventos.FirstOrDefault();
             Assert.IsNotNull(inscricao);
