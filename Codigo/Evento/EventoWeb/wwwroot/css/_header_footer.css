@@ -302,7 +302,36 @@ header {
     display: none;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1000px) {
+    .nav-links {
+        display: flex;
+        align-items: center;
+        margin-right: 20px;
+        white-space: nowrap;
+    }
+    
+    .nav-links a {
+        margin-left: 10px;
+        text-decoration: none;
+    }
+    
+    .nav-links i {
+        margin-right: 5px;
+
+    }
+
+    .logo{
+        margin-top: -40px;
+    }
+
+    .right-section {
+        margin-left: auto; 
+        display: flex;
+        order: -1;
+        margin-top: 10px;
+        align-items: center;
+        
+    }
   
     .column-flex-container .institutional-text {
         margin-top: 10px;
@@ -345,14 +374,78 @@ header {
         box-sizing: border-box;
     }
 
-    .auth-buttons {
+
+
+    
+}
+
+@media  (min-width: 600px) and (max-width: 1000px) {
+    .menu-icon{
         display: none;
     }
-
-    .nav-links {
-        display: none;
+ 
+    .tittle-text-footer {
+        font-size: 20px;
+        white-space: nowrap;
+        text-align: center;
     }
 
+    .footer-background {
+        flex-direction: column;
+    }
+
+    .custom-flex-container,
+    .flex-start-container,
+    .right-align-container {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    .flex-start-container {
+        gap: 10px;
+    }
+    
+    .help-text {
+        margin-bottom: 10px;
+    }
+
+
+    .flex-container {
+        justify-content: center;
+    }
+
+    .column-flex-container .institutional-text {
+        margin-top: 30px;
+        text-align: center;
+    }
+    .column-flex-container {
+        align-items: flex-start;
+        text-align: center;
+        margin-bottom: 10px;
+        white-space: nowrap;
+    }
+
+    .tittle-text-footer {
+        font-size: 20px;
+        white-space: nowrap;
+        text-align: center;
+    }
+
+    .contact-container {
+        margin: 0 auto;
+    }
+
+    .social-media-container {
+        text-align: center;
+    }
+}
+
+@media (max-width: 600px) {
+    .logo{
+        margin-top: auto;
+    }
     .menu-icon {
         display: block;
         cursor: pointer;
@@ -429,39 +522,6 @@ header {
     .menu-icon.open span:nth-child(3) {
         transform: translateY(-9px) rotate(-45deg);
     }
-}
-
-@media (max-width: 800px) {
- 
-    .flex-column-container .help-text{
-        text-align: center;
-    }
-    .flex-column-container{
-        text-align: center;
-    }
-    .bordered-container {
-        width: 100%; 
-        max-width: 100%; 
-        padding: 2px;
-        margin: 0 auto;
-        margin-top: 10px;
-    }
-
-    .contact-container {
-        text-align: center;
-    }
-
-    .search-input {
-        padding: 3px;
-        border: none;
-        background: none;
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        font-size: 16px;
-        line-height: 24px;
-        color: #232ED0;
-        outline: none;
-        box-sizing: border-box;
-    }
     .tittle-text-footer {
         font-size: 20px;
         white-space: nowrap;
@@ -518,9 +578,6 @@ header {
     .social-media-container {
         text-align: center;
     }
-}
-
-@media (max-width: 575.98px) {
     .bordered-container {
         width: 100%; 
         max-width: 100%; 
@@ -542,7 +599,7 @@ header {
     }
 
     .logo img {
-        height: 30px;
+        height: 40px;
         left: 0;
     }
 
@@ -572,5 +629,12 @@ header {
         align-items: center;
         text-align: center;
         margin-bottom: 10px;
+    }
+    .auth-buttons {
+        display: none;
+    }
+
+    .nav-links {
+        display: none;
     }
 }
