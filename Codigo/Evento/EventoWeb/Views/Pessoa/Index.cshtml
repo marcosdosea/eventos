@@ -4,104 +4,74 @@
     ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
-
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Nome)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.NomeCracha)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Cpf)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Sexo)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Cep)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Rua)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Bairro)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Cidade)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Numero)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Complemento)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Email)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Telefone1)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Telefone2)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
+<div>
+    <h1 class="blue-normal">Seja Bem-vindo</h1>
+    <button type="button" class="btn btn-lg btn-blue-normal mb-2"
+            onclick="location.href='@Url.Action("Create")'">
+        Adcionar pessoa
+    </button>
+    <table class="table table-striped">
+        <thead class="blue-normal blue-normal-bg-table">
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.Nome)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Cpf)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Email)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Sexo)
+                </th>
+                <th>
+                    Ações
+                </th>
+            </tr>
+        </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Nome)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.NomeCracha)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Cpf)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Sexo)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Cep)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Rua)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Bairro)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Cidade)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Numero)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Complemento)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Email)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Telefone1)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Telefone2)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+		<tbody>
+				@foreach (var item in Model)
+				{
+				<tr>
+					<td>
+							@Html.DisplayFor(modelItem => item.Nome)
+					</td>
+					<td>
+							@Html.DisplayFor(modelItem => item.Cpf)
+					</td>
+					<td>
+							@Html.DisplayFor(modelItem => item.Email)
+					</td>
+					<td>
+							@{
+								string sexoDescricao = "Desconhecido";
+								switch (item.Sexo)
+								{
+									case "M":
+										sexoDescricao = "Masculino";
+										break;
+									case "F":
+										sexoDescricao = "Feminino";
+										break;
+									case "N":
+										sexoDescricao = "Prefiro não dizer";
+										break;
+								}
+							}
+							@sexoDescricao
+					<td>
+							@Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" })
+						&nbsp;&nbsp;
+                            @Html.ActionLink("Detalhes", "Details", new { id = item.Id }, new { @style = "text-decoration:none;" })
+						&nbsp;&nbsp;
+                            @Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @style = "text-decoration:none;", @class = "danger-normal" })
+						&nbsp;&nbsp;
+					</td>
+				</tr>
+				}
+		</tbody>
+	</table>
+
+</div>
