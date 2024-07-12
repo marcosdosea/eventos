@@ -22,11 +22,11 @@ namespace EventoWeb.Models
         [Required(ErrorMessage = "Fale um pouco a respeito desse Sub-Evento")]
         public string Descricao { get; set; } = null!;
 
-        [Display(Name = "Data Inicial")]
+        [Display(Name = "Data Inicial do Subvento")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
         public DateTime DataInicio { get; set; }
 
-        [Display(Name = "Data Final")]
+        [Display(Name = "Data Final do Subvento")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
         public DateTime DataFim { get; set; }
 
@@ -58,7 +58,7 @@ namespace EventoWeb.Models
         public DateTime DataFimInscricao { get; set; }
 
         [Display(Name = "Valor da Inscrição", Prompt = "R$ 00.00")]
-        [Range(0.01, double.MaxValue, ErrorMessage = "O valor da inscrição deve ser maior que zero.")]
+        [Range(0.00, double.MaxValue, ErrorMessage = "O valor da inscrição deve ser zero ou maior que zero.")]
         [RegularExpression(@"^\d+(\.\d{1,2})?$", ErrorMessage = "Por favor, insira no máximo duas casas decimais e use '.' como separador decimal.")]
         public decimal ValorInscricao { get; set; }
 
