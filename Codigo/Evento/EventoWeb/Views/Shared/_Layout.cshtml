@@ -53,12 +53,27 @@
     </div>
 </header>
 
-        <div class="container flex-grow-1">
+
+            @if (ViewData["title"] != "BoraLá"){
+  <div class="row">
+    <div class="flex-row col-md-2">
+        @Html.Partial("_menu");
+        </div>
+           
+        <div class="container flex-grow-1 col-md-10">
             <main role="main" class="pb-3">
                 @RenderBody()
             </main>
-        </div>
-
+                </div>
+            </div>
+            }else{
+                    <div class="container flex-grow-1">
+                        <main role="main" class="pb-3">
+                            @RenderBody()
+                        </main>
+              </div>
+            }    
+        
         <footer class="footer">
             <div class="footer-background">
                 <div class="custom-flex-container">
