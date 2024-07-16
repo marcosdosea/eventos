@@ -248,7 +248,7 @@ namespace EventoWeb.Controllers.Tests
         public void GestaoPapel_Get_Valid()
         {
             // Act
-            var result = controller.GestaoPapel(GetTargetEventoModel().Id, GetTargetPapel().Id);
+            var result = controller.CreatePessoaPapel(GetTargetEventoModel().Id, GetTargetPapel().Id);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
@@ -260,7 +260,7 @@ namespace EventoWeb.Controllers.Tests
         public void GestaoPapel_Post_Valid()
         {
             // Act
-            var result = controller.GestaoPapel(GetNewGestaoPapel());
+            var result = controller.CreatePessoaPapel(GetNewGestaoPapel());
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));

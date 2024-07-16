@@ -140,8 +140,8 @@ namespace EventoWeb.Controllers
         }
 
         
-        // GET: EventoController/GestaoPapel
-        public ActionResult GestaoPapel(uint idEvento, int idPapel)
+        // GET: EventoController/CreatePessoaPapel
+        public ActionResult CreatePessoaPapel(uint idEvento, int idPapel)
         {
             var gestorModel = new GestaoPapelModel
             {
@@ -152,17 +152,17 @@ namespace EventoWeb.Controllers
             return View(gestorModel);
         }
 
-        // POST: EventoController/GestaoPapel
+        // POST: EventoController/CreatePessoaPapel
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult GestaoPapel( GestaoPapelModel gestaoPapelModel)
+        public ActionResult CreatePessoaPapel( GestaoPapelModel gestaoPapelModel)
         {
             var pessoa = gestaoPapelModel.Pessoa;
             var idEvento = gestaoPapelModel.Evento.Id;
             var idPapel = gestaoPapelModel.IdPapel;
             pessoa.NomeCracha = pessoa.Nome;
             _pessoaService.CreatePessoaPapel(pessoa, idEvento, idPapel);
-            return RedirectToAction("GestaoPapel", new { idEvento, idPapel });
+            return RedirectToAction("CreatePessoaPapel", new { idEvento, idPapel });
 
         } 
         // POST: EventoController/DeletePessoaPapel
@@ -170,7 +170,7 @@ namespace EventoWeb.Controllers
         {
             _inscricaoService.DeletePessoaPapel(idPessoa, idEvento, idPapel);
 
-            return RedirectToAction("GestaoPapel", new { idEvento, idPapel });
+            return RedirectToAction("CreatePessoaPapel", new { idEvento, idPapel });
         }
     }
 }
