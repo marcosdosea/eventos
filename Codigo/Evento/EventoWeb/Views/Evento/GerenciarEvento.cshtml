@@ -1,0 +1,72 @@
+﻿@model IEnumerable<EventoWeb.Models.EventoModel>
+
+@{
+    ViewData["Title"] = "Gerenciar Eventos";
+}
+
+
+<h1 class="blue-normal">Gerenciar Eventos</h1>
+<div>
+    <table>
+        <thead>
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.DataInicio)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Nome)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.NomeTipoEvento)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Status)
+                </th>
+                <th>
+                    Ações 
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+@foreach(var item in Model)
+{
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DataInicio)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Nome)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.NomeTipoEvento)
+                </td>
+                    <td>
+                        @{
+                            string statusDescricao = "Desconhecido";
+                            switch (item.Status)
+                            {
+                                case "A":
+                                    statusDescricao = "Ativo";
+                                    break;
+                                case "C":
+                                    statusDescricao = "Cadastro";
+                                    break;
+                                case "F":
+                                    statusDescricao = "Finalizado";
+                                    break;
+                                case "I":
+                                    statusDescricao = "Inativo";
+                                    break;
+                            }
+                        }
+                        @statusDescricao
+                    </td>
+                <td>
+                    @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" })
+                    &nbsp;&nbsp;
+                </td>
+            </tr>
+}
+        </tbody>
+    </table>
+</div>

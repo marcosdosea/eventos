@@ -3,6 +3,7 @@ using Core;
 using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace EventoWeb.Controllers
@@ -169,6 +170,30 @@ namespace EventoWeb.Controllers
             _inscricaoService.DeletePessoaPapel(idPessoa, idEvento, idPapel);
 
             return RedirectToAction("GestaoPapel", new { idEvento, idPapel });
+        }
+
+        // GET: EventoController/GerenciarEvento
+        public IActionResult GerenciarEvento()
+        {
+            var listarEventos = _eventoService.GetAll().ToList();
+            var gestorId = 
+            var listarEventosModel = listarEventos.Select(e => new EventoModel
+            {
+                Id = e.Id,
+                DataInicio = (DateTime)e.DataInicio,
+                Nome = e.Nome,
+                Status = e.Status,
+                IdTipoEvento = (uint)e.IdTipoEvento,
+                NomeTipoEvento = _tipoEventoService.GetNomeById((uint)e.IdTipoEvento)
+
+            }).ToList();
+            return View();
+        }
+
+        //GET: EventoController/GerenciarEventoListar
+        public IActionResult GerenciarEventoListar()
+        {
+            return View();
         }
     }
 }
