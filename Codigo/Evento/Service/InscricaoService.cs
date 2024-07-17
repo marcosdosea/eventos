@@ -29,7 +29,7 @@ namespace Service
             }
         }
         
-        public IEnumerable<Inscricaopessoaevento> GetInscricaoPessoaEvento(uint idEvento, int idPapel)
+        public IEnumerable<Inscricaopessoaevento> GetByEventoAndPapel(uint idEvento, int idPapel)
         {
             return _context.Inscricaopessoaeventos
                 .Include(i => i.IdPessoaNavigation)
@@ -37,6 +37,7 @@ namespace Service
                 .AsNoTracking()
                 .ToList();
         }
+        
         
     }
 }

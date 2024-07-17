@@ -8,13 +8,9 @@ namespace Service
     public class EventoService : IEventoService
     {
         private readonly EventoContext _context;
-        private readonly IPessoaService _pessoaService;
-        private readonly IInscricaoService _inscricaoService;
-        
-        public EventoService(EventoContext context,IPessoaService pessoaService,IInscricaoService inscricaoService)
+
+        public EventoService(EventoContext context)
         {
-            _pessoaService = pessoaService;
-            _inscricaoService = inscricaoService;
             _context = context;
         }
 
@@ -126,33 +122,5 @@ namespace Service
                    .Select(t => t.Nome)
                    .FirstOrDefault();
         }
-
-        public void CreateGestorModel(Pessoa pessoa, uint idEvento, int idPapel)
-        {   
-            var existingPessoa = _pessoaService.GetByCpf(pessoa.Cpf);
-
-            uint idPessoa;
-    
-            if(existingPessoa != null)
-            {
-                idPessoa = existingPessoa.Id;
-            }
-            else
-            {
-                idPessoa = _pessoaService.Create(pessoa);
-            }
-    
-            var novaInscricao = new Inscricaopessoaevento
-            {
-                IdPessoa = idPessoa,
-                IdEvento = idEvento,
-                IdPapel = idPapel,
-                DataInscricao = DateTime.Now, 
-                Status = "S", //(Solicitada)
-            };
-            _inscricaoService.CreateInscricaoEvento(novaInscricao);
-            
-        }
-
     }
 }

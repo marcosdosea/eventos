@@ -13,9 +13,12 @@ public class PessoaService : IPessoaService
     /// </summary>
     private readonly EventoContext _context;
 
-    public PessoaService(EventoContext context)
+    private readonly IInscricaoService _inscricaoService;
+
+    public PessoaService(EventoContext context,IInscricaoService inscricaoService)
     {
         this._context = context;
+        _inscricaoService = inscricaoService;
     }
     /// <summary>
     /// Insere uma nova pessoa na base de dados
@@ -80,6 +83,33 @@ public class PessoaService : IPessoaService
             select pessoa;
 
         return query.SingleOrDefault(); // Returns a single matching Pessoa or null if none found
+    }
+    
+    public void CreatePessoaPapel(Pessoa pessoa, uint idEvento, int idPapel)
+    {   
+        var existingPessoa = GetByCpf(pessoa.Cpf);
+
+        uint idPessoa;
+    
+        if(existingPessoa != null)
+        {
+            idPessoa = existingPessoa.Id;
+        }
+        else
+        {
+            idPessoa = Create(pessoa);
+        }
+    
+        var novaInscricao = new Inscricaopessoaevento
+        {
+            IdPessoa = idPessoa,
+            IdEvento = idEvento,
+            IdPapel = idPapel,
+            DataInscricao = DateTime.Now, 
+            Status = "S", //(Solicitada)
+        };
+        _inscricaoService.CreateInscricaoEvento(novaInscricao);
+            
     }
     
     public bool CPFIsValid(string cpf)
