@@ -121,6 +121,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsNull(redirectToActionResult.ControllerName);
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
         }
+
+        [TestMethod()]
         public void CreateTest_Invalid()
         {
             // Arrange
@@ -398,37 +400,6 @@ namespace EventoWeb.Controllers.Tests
             };
         }
 
-        private static EventoSimpleDTO GetTargetEventoSimple()
-        {
-            return new EventoSimpleDTO
-            {
-                Id = 1,
-                Nome = "SEMINFO",
-            };
-        }
-
-        private static Pessoa GetTargetPessoa()
-        {
-            return new Pessoa
-            {
-                Id = 1,
-                Nome = "João Vitor Sodré",
-                NomeCracha = "Sodré",
-                Cpf = "12246232367",
-                Sexo = "M",
-                Cep = "45340086",
-                Rua = "Avenida Principal",
-                Bairro = "Centro",
-                Cidade = "Irece",
-                Estado = "BA",
-                Numero = "s/n",
-                Complemento = "casa",
-                Email = "email@gmail.com",
-                Telefone1 = "7999900113344",
-                Telefone2 = "NULL",
-            };
-        }
-
         private static Papel GetTargetPapel()
         {
             return new Papel
@@ -515,14 +486,14 @@ namespace EventoWeb.Controllers.Tests
 
         private IEnumerable<Inscricaopessoaevento> GetTestInscricoes()
         {
-            var pessoa1 = new Pessoa    
+            var pessoa1 = new Pessoa
             {
                 Id = 1,
                 Nome = "João Vitor Sodré",
                 NomeCracha = "Sodré",
-                Cpf = "12246232367",
+                Cpf = "040.268.930-57",
                 Sexo = "M",
-                Cep = "45340086",
+                Cep = "48370-000",
                 Rua = "Avenida Principal",
                 Bairro = "Centro",
                 Cidade = "Irece",
@@ -530,18 +501,17 @@ namespace EventoWeb.Controllers.Tests
                 Numero = "s/n",
                 Complemento = "casa",
                 Email = "email@gmail.com",
-                Telefone1 = "7999900113344",
+                Telefone1 = "7999990011",
                 Telefone2 = "NULL",
             };
-
             var pessoa2 = new Pessoa
             {
                 Id = 2,
                 Nome = "Nagibe Santos Wanus Junior",
                 NomeCracha = "Nagibe Junior",
-                Cpf = "12343455678",
+                Cpf = "917.091.250-55",
                 Sexo = "M",
-                Cep = "45566000",
+                Cep = "45566-000",
                 Rua = "Rua Severino Vieira",
                 Bairro = "Centro",
                 Cidade = "Esplanada",
@@ -549,18 +519,17 @@ namespace EventoWeb.Controllers.Tests
                 Numero = "147",
                 Complemento = "casa",
                 Email = "nagibejr@gmail.com",
-                Telefone1 = "75999643467",
+                Telefone1 = "7599643467",
                 Telefone2 = "NULL",
             };
-
             var pessoa3 = new Pessoa
             {
                 Id = 3,
                 Nome = "Marcos Venicios da Palma Dias",
                 NomeCracha = "Marcos Venicios",
-                Cpf = "12244678667",
+                Cpf = "206.015.300-04",
                 Sexo = "M",
-                Cep = "45340086",
+                Cep = "45340-086",
                 Rua = "Rua da Linha",
                 Bairro = "Centro",
                 Cidade = "Esplanada",
@@ -568,7 +537,7 @@ namespace EventoWeb.Controllers.Tests
                 Numero = "s/n",
                 Complemento = "casa",
                 Email = "muzanpvp@gmail.com",
-                Telefone1 = "7999900113344",
+                Telefone1 = "7999001133",
                 Telefone2 = "NULL",
             };
 

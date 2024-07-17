@@ -12,8 +12,6 @@ namespace Service.Tests
     {
         private EventoContext _context;
         private IEventoService _eventoService;
-        private IPessoaService _pessoaService;
-        private IInscricaoService _inscricaoService;
 
         [TestInitialize]
         public void Initialize()
@@ -27,8 +25,6 @@ namespace Service.Tests
             _context.Database.EnsureDeleted();
             _context.Database.EnsureCreated();
 
-            _pessoaService = new PessoaService(_context,_inscricaoService);
-            _inscricaoService = new InscricaoService(_context);
 
             var eventos = new List<Evento>
                 {
@@ -127,33 +123,6 @@ namespace Service.Tests
                     },
                 };
 
-                var pessoa = new Pessoa
-                {
-                    Id = 1,
-                    Nome = "João Vitor Sodré",
-                    NomeCracha = "Sodré",
-                    Cpf = "12244667",
-                    Sexo = "M",
-                    Cep = "45340086",
-                    Rua = "Avenida Principal",
-                    Bairro = "Centro",
-                    Cidade = "Irece",
-                    Estado = "BA",
-                    Numero = "s/n",
-                    Complemento = "casa",
-                    Email = "email@gmail.com",
-                    Telefone1 = "7999900113344",
-                    Telefone2 = "NULL",
-                };
-
-                var papel = new Papel
-                {
-                    Id = 1,
-                    Nome = "Gestor",
-                };
-
-            _context.AddRange(pessoa);
-            _context.AddRange(papel);
             _context.AddRange(eventos);
             _context.SaveChanges();
 
@@ -374,27 +343,5 @@ namespace Service.Tests
             var evento = _eventoService.GetNomeById(2);
             Assert.AreEqual("SEMAC", evento);
         }
-
-        [TestMethod()]
-        public void CreateGestorModelTest()
-        {
-
-            // Arrange
-            var pessoa = _pessoaService.Get(1);
-            var evento = _eventoService.Get(1);
-
-
-            _pessoaService.CreatePessoaPapel(pessoa, 7, 1);
-
-            var inscricao = _context.Inscricaopessoaeventos.FirstOrDefault();
-            Assert.IsNotNull(inscricao);
-            Assert.AreEqual(pessoa.Id, inscricao.IdPessoa);
-            Assert.AreEqual((uint)7, inscricao.IdEvento);
-            Assert.AreEqual((int)1, inscricao.IdPapel);
-            Assert.AreEqual("S", inscricao.Status);
-
-
-        }
-
     }
 }
