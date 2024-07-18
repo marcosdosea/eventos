@@ -11,6 +11,7 @@
     <div class="col-md-8">
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+			<input type="hidden" asp-for="Evento.Id" />
 			<div class="form-group">
 				<label asp-for="Evento.Nome" class="control-label"></label>
 				<input asp-for="Evento.Nome" class="form-control" placeholder="Nome do evento" />
@@ -198,7 +199,7 @@
 			<h4 class="blue-normal">
 				Informações Adicionais
 			</h4>
-			<!--<div>
+			<div>
 				<div class="form-group">
 					<label asp-for="Evento.IdAreaInteresse" class="control-label">Área de Interesse</label>
 					<select asp-for="Evento.IdAreaInteresse" class="form-control" asp-items="Model.AreaInteresse">
@@ -207,7 +208,7 @@
 					<span asp-validation-for="Evento.IdAreaInteresse" class="text-danger"></span>
 				</div>
 			</div>
-			<br />-->
+			<br />
 			<div class="col-4">
 				<div class="form-group">
 					<label asp-for="Evento.IdTipoEvento" class="control-label">Tipo do Evento</label>

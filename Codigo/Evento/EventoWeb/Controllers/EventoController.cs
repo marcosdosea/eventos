@@ -112,7 +112,19 @@ namespace EventoWeb.Controllers
 		[ValidateAntiForgeryToken]
 		public ActionResult Edit(uint id, EventocreateModel viewModel)
 		{
+
 			var evento = _mapper.Map<Evento>(viewModel.Evento);
+            
+			var idAreaInteresse = viewModel.Evento.IdAreaInteresse;
+			var areaInteresse = _areaInteresseService.Get(idAreaInteresse);
+
+			if (evento.IdAreaInteresses == null)
+			{
+				evento.IdAreaInteresses = new List<Core.Areainteresse>();
+			}
+
+			evento.IdAreaInteresses.Clear(); 
+			evento.IdAreaInteresses.Add(areaInteresse);
 			_eventoService.Edit(evento);
 			return RedirectToAction(nameof(Index));
 		}
