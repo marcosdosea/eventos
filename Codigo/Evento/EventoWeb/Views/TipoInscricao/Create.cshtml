@@ -10,7 +10,7 @@
 
 <div class="container-fluid no-padding">
     <div class="row">
-        <h1 class="blue-normal">Novo Tipo de Inscrição</h1>
+        <h1 class="blue-normal">Novo Tipo de InscriÃ§Ã£o</h1>
         <div class="row">
             <div>
                 <form asp-action="Create" method="post">
@@ -54,14 +54,14 @@
                     <br />
                     <h4 class="blue-normal">Datas</h4>
                     <div class="row">
-                        <div class="col-3">
+                        <div class="col-2">
                             <div class="form-group">
                                 <label asp-for="TipoInscricao.DataInicio" class="control-label"></label>
                                 <input asp-for="TipoInscricao.DataInicio" class="form-control" type="date" />
                                 <span asp-validation-for="TipoInscricao.DataInicio" class="text-danger"></span>
                             </div>
                         </div>
-                        <div class="col-3">
+                        <div class="col-2">
                             <div class="form-group">
                                 <label asp-for="TipoInscricao.Datafim" class="control-label"></label>
                                 <input asp-for="TipoInscricao.Datafim" class="form-control" type="date" />
@@ -82,7 +82,7 @@
                                     </div>
                                     <div class="form-check">
                                         <input asp-for="TipoInscricao.UsadaEvento" class="form-check-input" type="radio" value="2" id="UsadaEventoNao">
-                                        <label class="form-check-label" for="UsadaEventoNao">Não</label>
+                                        <label class="form-check-label" for="UsadaEventoNao">NÃ£o</label>
                                     </div>
                                 </div>
                                 <span asp-validation-for="TipoInscricao.UsadaEvento" class="text-danger"></span>
@@ -98,7 +98,7 @@
                                     </div>
                                     <div class="form-check">
                                         <input asp-for="TipoInscricao.UsadaSubevento" class="form-check-input" type="radio" value="2" id="UsadaSubeventoNao">
-                                        <label class="form-check-label" for="UsadaSubeventoNao">Não</label>
+                                        <label class="form-check-label" for="UsadaSubeventoNao">NÃ£o</label>
                                     </div>
                                 </div>
                                 <span asp-validation-for="TipoInscricao.UsadaSubevento" class="text-danger"></span>
