@@ -4,7 +4,7 @@
     ViewData["Title"] = "BoraLá";
 }
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 
 <head>
     <meta charset="UTF-8">
@@ -118,20 +118,6 @@
                                         <h2>@evento.Nome</h2>
                                         @{
                                             string descricao = evento.Descricao;
-                                            int maxCaracteres = 30;
-                                            if (descricao.Length > maxCaracteres)
-                                            {
-                                                descricao = descricao.Substring(0, maxCaracteres);
-                                                int ultimoEspaco = descricao.LastIndexOf(" ");
-                                                if (ultimoEspaco != -1)
-                                                {
-                                                    descricao = descricao.Substring(0, ultimoEspaco) + "...";
-                                                }
-                                                else
-                                                {
-                                                    descricao += "...";
-                                                }
-                                            }
                                         }
                                         <p>@descricao</p>
                                         <button class="btn btn-blue-normal">Bora lá</button>
@@ -212,20 +198,6 @@
                                         <h2>@evento.Nome</h2>
                                         @{
                                             string descricao = evento.Descricao;
-                                            int maxCaracteres = 40;
-                                            if (descricao.Length > maxCaracteres)
-                                            {
-                                                descricao = descricao.Substring(0, maxCaracteres);
-                                                int ultimoEspaco = descricao.LastIndexOf(" ");
-                                                if (ultimoEspaco != -1)
-                                                {
-                                                    descricao = descricao.Substring(0, ultimoEspaco) + "...";
-                                                }
-                                                else
-                                                {
-                                                    descricao += "...";
-                                                }
-                                            }
                                         }
                                         <p>@descricao</p>
                                         <button class="btn btn-blue-normal">Bora lá</button>

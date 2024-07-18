@@ -113,6 +113,16 @@ header {
 .auth-buttons .btn {
     margin-left: 10px;
 }
+.user-buttons img {
+    margin-left: 17px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 54px;
+    height: 54px;
+
+}
+
 
 .main-wrapper {
     display: flex;
@@ -631,6 +641,9 @@ header {
         margin-bottom: 10px;
     }
     .auth-buttons {
+        display: none;
+    }
+    .user-buttons{
         display: none;
     }
 

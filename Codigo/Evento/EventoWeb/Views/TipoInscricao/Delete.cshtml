@@ -8,7 +8,6 @@
     <link rel="stylesheet" type="text/css" href="~/css/style.css">
 </head>
 
-
 <div class="container-fluid no-padding">
     <div class="row">
         <h1 class="blue-normal">Deletar Tipo de Inscrição</h1>
@@ -71,7 +70,6 @@
                             case 2:
                                 usadaevento = "Não";
                                 break;
-
                         }
                     }
                     @usadaevento
@@ -90,24 +88,26 @@
                             case 2:
                                 usadasubevento = "Não";
                                 break;
-                            
                         }
                     }
                     @usadasubevento
                 </dd>
             </dl>
 
-            <form asp-action="Delete" class="row">
+            <form asp-action="Delete" method="post">
+                <!-- Campo oculto para enviar o idEvento -->
+                <input type="hidden" name="idEvento" value="@Model.IdEvento" />
+                <input type="hidden" name="id" value="@Model.Id" />
+
                 <div class="d-flex flex-row-reverse">
                     <div class="form-group">
                         <input type="submit" value="Excluir" class="btn btn-danger " />
                     </div>
                     <div class="form-group" style="margin-right: 10px;">
-                        <a asp-action="Index" class="btn btn-outline-blue-normal">Cancelar</a>
+                        <a href="/TipoInscricao/Index?idEvento=@Model.IdEvento" class="btn btn-outline-blue-normal">Cancelar</a>
                     </div>
                 </div>
             </form>
         </div>
-
     </div>
 </div>

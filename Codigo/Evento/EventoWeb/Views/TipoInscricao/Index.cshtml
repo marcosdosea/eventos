@@ -3,71 +3,55 @@
 @{
     ViewData["Title"] = "Index";
 }
+
 <head>
     <link rel="stylesheet" type="text/css" href="~/css/style.css">
 </head>
 
 <div>
-    
-
     <h1 class="blue-normal">Verifique os Tipos de Inscrição de seus Eventos!</h1>
     <button type="button" class="btn-blue-normal btn btn-lg mb-2">
-        <a asp-action="Create" style="text-decoration:none; color:white">Novo Tipo de Inscrição</a>
+        <a asp-action="Create" asp-route-idEvento="@ViewData["EventoId"]" style="text-decoration:none; color:white">Novo Tipo de Inscrição</a>
     </button>
+
     <table class="table table-striped">
         <thead class="blue-normal blue-normal-bg-table">
             <tr>
-                <th>
-                    @Html.DisplayNameFor(Model => Model.Nome)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.Descricao)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.NomeEvento)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.Valor)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.DataInicio)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.Datafim)
-                </th>
+                <th>@Html.DisplayNameFor(Model => Model.Nome)</th>
+                <th>@Html.DisplayNameFor(model => model.Descricao)</th>
+                <th>@Html.DisplayNameFor(model => model.NomeEvento)</th>
+                <th>@Html.DisplayNameFor(model => model.Valor)</th>
+                <th>@Html.DisplayNameFor(model => model.DataInicio)</th>
+                <th>@Html.DisplayNameFor(model => model.Datafim)</th>
                 <th>Ações</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var item in Model)
+            @if (!Model.Any())
             {
                 <tr>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.Nome)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.Descricao)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.NomeEvento)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.Valor)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.DataInicio)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.Datafim)
-                    </td>
-                    <td>
-                        @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" })
-                        &nbsp;&nbsp;
-                        @Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @style = "text-decoration:none;", @class = "danger-normal" })
-                    </td>
+                    <td colspan="7">Não há tipos de inscrição cadastrados para o evento @ViewData["EventoNome"].</td>
                 </tr>
+            }
+            else
+            {
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@Html.DisplayFor(modelItem => item.Nome)</td>
+                        <td>@Html.DisplayFor(modelItem => item.Descricao)</td>
+                        <td>@Html.DisplayFor(modelItem => item.NomeEvento)</td>
+                        <td>@Html.DisplayFor(modelItem => item.Valor)</td>
+                        <td>@Html.DisplayFor(modelItem => item.DataInicio)</td>
+                        <td>@Html.DisplayFor(modelItem => item.Datafim)</td>
+                        <td>
+                            @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" })
+                            &nbsp;&nbsp;
+                            @Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @style = "text-decoration:none;", @class = "danger-normal" })
+                        </td>
+                    </tr>
+                }
             }
         </tbody>
     </table>
 </div>
-
