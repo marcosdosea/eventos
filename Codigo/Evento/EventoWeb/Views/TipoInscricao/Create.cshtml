@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Create";
 }
+
 <head>
     <link rel="stylesheet" type="text/css" href="~/css/style.css">
 </head>
@@ -11,9 +12,14 @@
     <div class="row">
         <h1 class="blue-normal">Novo Tipo de Inscrição</h1>
         <div class="row">
-            <div class="col-md-4 ">
-                <form asp-action="Create">
+            <div class="col-md-4">
+                <form asp-action="Create" method="post">
+                    @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+                    <!-- Campo oculto para enviar o IdEvento -->
+                    <input type="hidden" asp-for="TipoInscricao.IdEvento" />
+
                     <div class="form-group mb-2">
                         <label asp-for="TipoInscricao.Nome" class="control-label"></label>
                         <input asp-for="TipoInscricao.Nome" class="form-control" />
@@ -28,7 +34,12 @@
                         <div class="col-md-8">
                             <div class="form-group mb-2">
                                 <label asp-for="TipoInscricao.IdEvento" class="control-label"></label>
-                                <select asp-for="TipoInscricao.IdEvento" class="form-control" asp-items="Model.Evento"></select>
+                                <select asp-for="TipoInscricao.IdEvento" class="form-control" asp-items="Model.Evento" disabled>
+                                    
+                                    <option value="@Model.TipoInscricao.IdEvento" selected>
+                                        @Model.Evento.FirstOrDefault(e => e.Value == Model.TipoInscricao.IdEvento.ToString())?.Text
+                                    </option>
+                                </select>
                                 <span asp-validation-for="TipoInscricao.IdEvento" class="text-danger"></span>
                             </div>
                         </div>
@@ -39,11 +50,9 @@
                                 <span asp-validation-for="TipoInscricao.Valor" class="text-danger"></span>
                             </div>
                         </div>
-                     </div>
+                    </div>
                     <br />
-                    <h4 class="blue-normal">
-                        Datas
-                    </h4>
+                    <h4 class="blue-normal">Datas</h4>
                     <div class="row">
                         <div class="col-6">
                             <div class="form-group">
@@ -61,9 +70,7 @@
                         </div>
                     </div>
                     <br />
-                    <h4 class="blue-normal">
-                        Usado em
-                    </h4>
+                    <h4 class="blue-normal">Usado em</h4>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group mb-2">
@@ -104,7 +111,7 @@
                             <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
                         </div>
                         <div class="form-group" style="margin-right: 10px;">
-                            <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
+                            <a href="/TipoInscricao/Index?idEvento=@Model.TipoInscricao.IdEvento" class="btn btn-outline-danger">Cancelar</a>
                         </div>
                     </div>
                 </form>
