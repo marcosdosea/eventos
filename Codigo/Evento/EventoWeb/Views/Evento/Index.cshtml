@@ -70,6 +70,8 @@
 						&nbsp;&nbsp;
 						@Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @style = "text-decoration:none;", @class = "danger-normal" })
 						&nbsp;&nbsp;
+						@Html.ActionLink("Tipo Inscrição", "Index", "TipoInscricao", new { idEvento = item.Id, idPapel = 2 }, new { @style = "text-decoration:none;" })
+						&nbsp;&nbsp;
 						@Html.ActionLink("Gestores", "CreatePessoaPapel", new { idEvento = item.Id,idPapel = 2 }, new { @style = "text-decoration:none;" })
 						&nbsp;&nbsp;
 						@Html.ActionLink("Colaboradores", "CreatePessoaPapel", new { idEvento = item.Id, idPapel = 3}, new { @style = "text-decoration:none;" })

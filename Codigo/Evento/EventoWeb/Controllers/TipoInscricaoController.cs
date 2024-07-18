@@ -23,25 +23,38 @@ namespace EventoWeb.Controllers
 
 
         // GET: TipoInscricaoController
-        public ActionResult Index()
+        public ActionResult Index(uint? idEvento)
         {
-            var listaTipoInscricao = _tipoInscricaoService.GetAll().ToList();
-            var listaTipoInscricaoModel = listaTipoInscricao.Select(e => new TipoInscricaoModel
+            if (idEvento.HasValue)
             {
-                Id = e.Id,
-                Nome = e.Nome,
-                IdEvento = e.IdEvento,
-                NomeEvento = _eventoService.GetNomeById(e.IdEvento),
-                Descricao = e.Descricao,
-                Valor = e.Valor,
-                DataInicio = e.DataInicio,
-                Datafim = e.Datafim,
-                UsadaEvento = e.UsadaEvento,
-                UsadaSubevento = e.UsadaSubevento 
+                var listaTipoInscricao = _tipoInscricaoService.GetByEvento(idEvento.Value).ToList();
+                var listaTipoInscricaoModel = listaTipoInscricao.Select(e => new TipoInscricaoModel
+                {
+                    Id = e.Id,
+                    Nome = e.Nome,
+                    IdEvento = e.IdEvento,
+                    NomeEvento = _eventoService.GetNomeById(e.IdEvento),
+                    Descricao = e.Descricao,
+                    Valor = e.Valor,
+                    DataInicio = e.DataInicio,
+                    Datafim = e.Datafim,
+                    UsadaEvento = e.UsadaEvento,
+                    UsadaSubevento = e.UsadaSubevento
+                }).ToList();
 
-            }).ToList();
-            return View(listaTipoInscricaoModel);
+                ViewData["EventoId"] = idEvento.Value;
+                ViewData["EventoNome"] = _eventoService.GetNomeById(idEvento.Value);
+
+                return View(listaTipoInscricaoModel);
+            }
+            else
+            {
+                return RedirectToAction("Index", "Evento"); 
+            }
         }
+
+
+
 
         // GET: TipoInscricaoController/Details/5
         public ActionResult Details(uint id)
@@ -52,9 +65,12 @@ namespace EventoWeb.Controllers
         }
 
         // GET: TipoInscricaoController/Create
-        public ActionResult Create()
+        public ActionResult Create(uint idEvento)
         {
-            var tipoInscricaoModel = new TipoInscricaoModel();
+            var tipoInscricaoModel = new TipoInscricaoModel
+            {
+                IdEvento = idEvento
+            };
             var eventos = _eventoService.GetAll().OrderBy(e => e.Nome);
             var viewModel = new TipoInscricaocreateModel
             {
@@ -66,26 +82,31 @@ namespace EventoWeb.Controllers
         }
 
 
+
         // POST: TipoInscricaoController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Create(TipoInscricaocreateModel tipoInscricaoModel)
         {
-            var tipoinscricao = _mapper.Map<Tipoinscricao>(tipoInscricaoModel.TipoInscricao);
-            _tipoInscricaoService.Create(tipoinscricao);
-            return RedirectToAction(nameof(Index));
+            
+                var tipoinscricao = _mapper.Map<Tipoinscricao>(tipoInscricaoModel.TipoInscricao);
+                _tipoInscricaoService.Create(tipoinscricao);
+                return RedirectToAction(nameof(Index), new { idEvento = tipoInscricaoModel.TipoInscricao.IdEvento });
+           
         }
-        
+
+
+
+
         // GET: TipoInscricaoController/Edit/5
         public ActionResult Edit(uint id)
         {
-            
             var tipoinscricao = _tipoInscricaoService.Get(id);
-            if(tipoinscricao == null)
+            if (tipoinscricao == null)
             {
                 return NotFound();
             }
-           
+
             var tipoInscricaoModel = _mapper.Map<TipoInscricaoModel>(tipoinscricao);
             var eventos = _eventoService.GetAll().OrderBy(e => e.Nome);
             var viewModel = new TipoInscricaocreateModel
@@ -94,19 +115,22 @@ namespace EventoWeb.Controllers
                 Evento = new SelectList(eventos, "Id", "Nome")
             };
             return View(viewModel);
-
         }
 
         // POST: TipoInscricaoController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Edit(uint id, TipoInscricaocreateModel tipoInscricaoModel)
-        {  
+        {
             var tipoinscricao = _mapper.Map<Tipoinscricao>(tipoInscricaoModel.TipoInscricao);
             tipoinscricao.Id = id;
             _tipoInscricaoService.Edit(tipoinscricao);
-            return RedirectToAction(nameof(Index));
+
+            // Redireciona para a tela correta com o idEvento
+            return RedirectToAction(nameof(Index), new { idEvento = tipoInscricaoModel.TipoInscricao.IdEvento });
         }
+
+
 
         // GET: TipoInscricaoController/Delete/5
         public ActionResult Delete(uint id)
@@ -123,10 +147,11 @@ namespace EventoWeb.Controllers
         // POST: TipoInscricaoController/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(uint id, TipoInscricaoModel tipoInscricaoModel)
+        public ActionResult Delete(uint id, uint idEvento)
         {
             _tipoInscricaoService.Delete(id);
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Index), new { idEvento = idEvento });
         }
+
     }
 }

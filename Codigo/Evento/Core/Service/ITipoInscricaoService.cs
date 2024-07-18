@@ -7,7 +7,7 @@
         void Delete(uint idTipoInscricao);
         Tipoinscricao Get(uint idTipoInscricao);
         IEnumerable<Tipoinscricao> GetAll();
-        IEnumerable<Tipoinscricao> GetByEvento(int idEvento);
+        IEnumerable<Tipoinscricao> GetByEvento(uint idEvento);
 
     }
 }
