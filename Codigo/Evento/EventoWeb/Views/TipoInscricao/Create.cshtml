@@ -12,7 +12,7 @@
     <div class="row">
         <h1 class="blue-normal">Novo Tipo de Inscrição</h1>
         <div class="row">
-            <div class="col-md-4">
+            <div>
                 <form asp-action="Create" method="post">
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -31,7 +31,7 @@
                         <span asp-validation-for="TipoInscricao.Descricao" class="text-danger"></span>
                     </div>
                     <div class="row">
-                        <div class="col-md-8">
+                        <div class="col-md-10">
                             <div class="form-group mb-2">
                                 <label asp-for="TipoInscricao.IdEvento" class="control-label"></label>
                                 <select asp-for="TipoInscricao.IdEvento" class="form-control" asp-items="Model.Evento" disabled>
@@ -43,7 +43,7 @@
                                 <span asp-validation-for="TipoInscricao.IdEvento" class="text-danger"></span>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-2">
                             <div class="form-group mb-2">
                                 <label asp-for="TipoInscricao.Valor" class="control-label"></label>
                                 <input type="number" asp-for="TipoInscricao.Valor" class="form-control" />
@@ -54,14 +54,14 @@
                     <br />
                     <h4 class="blue-normal">Datas</h4>
                     <div class="row">
-                        <div class="col-6">
+                        <div class="col-3">
                             <div class="form-group">
                                 <label asp-for="TipoInscricao.DataInicio" class="control-label"></label>
                                 <input asp-for="TipoInscricao.DataInicio" class="form-control" type="date" />
                                 <span asp-validation-for="TipoInscricao.DataInicio" class="text-danger"></span>
                             </div>
                         </div>
-                        <div class="col-6">
+                        <div class="col-3">
                             <div class="form-group">
                                 <label asp-for="TipoInscricao.Datafim" class="control-label"></label>
                                 <input asp-for="TipoInscricao.Datafim" class="form-control" type="date" />
@@ -72,7 +72,7 @@
                     <br />
                     <h4 class="blue-normal">Usado em</h4>
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-2">
                             <div class="form-group mb-2">
                                 <label asp-for="TipoInscricao.UsadaEvento" class="control-label">Evento</label>
                                 <div class="d-flex align-items-center">
@@ -88,7 +88,7 @@
                                 <span asp-validation-for="TipoInscricao.UsadaEvento" class="text-danger"></span>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-2">
                             <div class="form-group mb-3">
                                 <label asp-for="TipoInscricao.UsadaSubevento" class="control-label">Subevento</label>
                                 <div class="d-flex align-items-center">
