@@ -4,17 +4,36 @@
 	ViewData["Title"] = "Create";
 }
 
-
-
 <h1 class="blue-normal">Novo evento</h1>
 <div class="row">
-	<div class="col-md-8">
+	<div>
 		<form asp-action="Create">
 			<div asp-validation-summary="ModelOnly" class="text-danger"></div>
 			<div class= "form-group">
 				<label asp-for="Evento.Nome" class="control-label"></label>
 				<input asp-for="Evento.Nome" class="form-control" placeholder="Nome do evento" />
 				<span asp-validation-for="Evento.Nome" class="text-danger"></span>
+			</div>
+			<br />
+			<div class="row">
+				<div class="col-md-3">
+					<div class="form-group">
+						<label asp-for="Evento.Estado" class="control-label"></label>
+						<select asp-for="Evento.Estado" class="form-control" asp-items="Model.Estados">
+							<option value="">Selecione o estado</option>
+						</select>
+						<span asp-validation-for="Evento.Estado" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label asp-for="Evento.IdTipoEvento" class="control-label">Tipo do Evento</label>
+						<select asp-for="Evento.IdTipoEvento" class="form-control" asp-items="Model.TiposEventos">
+							<option value="">Selecione o tipo de evento</option>
+						</select>
+						<span asp-validation-for="Evento.Estado" class="text-danger"></span>
+					</div>
+					</div>
 			</div>
 			<br />
 			<div class="row">
@@ -30,45 +49,7 @@
 						<span asp-validation-for="Evento.Status" class="text-danger"></span>
 					</div>
 				</div>
-				
-			</div>
-			<br/>
-			<h4 class="blue-normal">
-				Localização
-			</h4>
-			<div class="row">
-				<div class="col-md-3">
-					<div class="form-group">
-						<label asp-for="Evento.Estado" class="control-label"></label>
-						<select asp-for="Evento.Estado" class="form-control" asp-items="Model.Estados">
-							<option value="">Selecione o estado</option>
-						</select>
-						<span asp-validation-for="Evento.Estado" class="text-danger"></span>
-					</div>
 				</div>
-			</div>
-			<br />
-			<h4 class="blue-normal">
-				Informações adicionais
-			</h4>
-			<!--<div>
-				<div class="form-group">
-					<label asp-for="Evento.IdAreaInteresse" class="control-label">Área de Interesse</label>
-					<select asp-for="Evento.IdAreaInteresse" class="form-control" asp-items="Model.AreaInteresse">
-						<option value="">Selecione a área de interesse</option>
-					</select>
-					<span asp-validation-for="Evento.Estado" class="text-danger"></span>
-				</div>
-			</div>-->
-			<div class="col-4">
-				<div class="form-group">
-					<label asp-for="Evento.IdTipoEvento" class="control-label">Tipo do Evento</label>
-					<select asp-for="Evento.IdTipoEvento" class="form-control" asp-items="Model.TiposEventos">
-						<option value="">Selecione o tipo de evento</option>
-					</select>
-					<span asp-validation-for="Evento.Estado" class="text-danger"></span>
-				</div>
-			</div>
 			<br />
 			<div class="d-flex flex-row-reverse">
 				<div class="form-group">
