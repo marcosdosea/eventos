@@ -4,39 +4,41 @@
     ViewData["Title"] = "Edit";
 }
 
-
-
 <h1 class="blue-normal">Editar Evento</h1>
 <div class="row">
-    <div class="col-md-8">
+    <div>
         <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+	        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+	         <input type="hidden" asp-for="Evento.Id"/>
 			<div class="form-group">
 				<label asp-for="Evento.Nome" class="control-label"></label>
 				<input asp-for="Evento.Nome" class="form-control" placeholder="Nome do evento" />
 				<span asp-validation-for="Evento.Nome" class="text-danger"></span>
 			</div>
-			<br />
-			<div class="form-group">
-				<label asp-for="Evento.Descricao" class="control-label"></label>
-				<textarea asp-for="Evento.Descricao" class="form-control" id="exampleFormControlTextarea1" rows="5"></textarea>
-				<span asp-validation-for="Evento.Descricao" class="text-danger"></span>
-			</div>
-			<br />
-			<div class="form-group">
-					<label asp-for="Evento.Website" class="control-label"></label>
-					<input asp-for="Evento.Website" class="form-control" placeholder="Site do evento" />
-					<span asp-validation-for="Evento.Website" class="text-danger"></span>
-			</div>
-			<br />
-			<div class="form-group">
-					<label asp-for="Evento.EmailEvento" class="control-label">E-mail</label>
-					<input asp-for="Evento.EmailEvento" class="form-control" placeholder="E-mail para contato do evento" />
-					<span asp-validation-for="Evento.EmailEvento" class="text-danger"></span>
-			</div>
-			<br />
+			<br/>
 			<div class="row">
-				<div class="col-3">
+				<div class="col-md-3">
+					<div class="form-group">
+						<label asp-for="Evento.Estado" class="control-label"></label>
+						<select asp-for="Evento.Estado" class="form-control" asp-items="Model.Estados">
+							<option value="">Selecione o estado</option>
+						</select>
+						<span asp-validation-for="Evento.Estado" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label asp-for="Evento.IdTipoEvento" class="control-label">Tipo do Evento</label>
+						<select asp-for="Evento.IdTipoEvento" class="form-control" asp-items="Model.TiposEventos">
+							<option value="">Selecione o tipo de evento</option>
+						</select>
+						<span asp-validation-for="Evento.Estado" class="text-danger"></span>
+					</div>
+				</div>
+			</div>
+			<br/>
+			<div class="row">
+				<div class="col-2">
 					<div class="form-group">
 						<label asp-for="Evento.Status" class="control-label"></label>
 						<select asp-for="Evento.Status" class="form-select" aria-label="Default select example">
@@ -49,215 +51,7 @@
 					</div>
 				</div>
 			</div>
-			<br />
-			<div class="row">
-				<div class="col-md-4">
-					<div class="form-group">
-						<label asp-for="Evento.InscricaoGratuita" class="control-label">Inscrição Gratuita</label>
-						<div class="d-flex align-items-center">
-							<div class="form-check me-2">
-								<input asp-for="Evento.InscricaoGratuita" class="form-check-input" type="radio" value="1" id="InscricaoGratuitaSim">
-								<label class="form-check-label" for="InscricaoGratuitaSim">Sim</label>
-							</div>
-							<div class="form-check">
-								<input asp-for="Evento.InscricaoGratuita" class="form-check-input" type="radio" value="0" id="InscricaoGratuitaNao">
-								<label class="form-check-label" for="InscricaoGratuitaNao">Não</label>
-							</div>
-						</div>
-						<span asp-validation-for="Evento.InscricaoGratuita" class="text-danger"></span>
-					</div>
-				</div>
-				<div class="col-md-6">
-					<div class="form-group mb-3">
-						<label asp-for="Evento.EventoPublico" class="control-label">Evento Publico</label>
-						<div class="d-flex align-items-center">
-							<div class="form-check me-2">
-								<input asp-for="Evento.EventoPublico" class="form-check-input" type="radio" value="1" id="EventoPublicoSim">
-								<label class="form-check-label" for="EventoPublicoSim">Sim</label>
-							</div>
-							<div class="form-check">
-								<input asp-for="Evento.EventoPublico" class="form-check-input" type="radio" value="0" id="EventoPublicoNao">
-								<label class="form-check-label" for="EventoPublicoNao">Não</label>
-							</div>
-						</div>
-						<span asp-validation-for="Evento.EventoPublico" class="text-danger"></span>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-3">
-					<div class="form-group" id="valorInscricaoGroup">
-						<label asp-for="Evento.ValorInscricao" class="control-label">Valor da Inscrição</label>
-						<input type="text" asp-for="Evento.ValorInscricao" class="form-control" onkeypress="return validateInput(event)">
-						<span asp-validation-for="Evento.ValorInscricao" class="text-danger"></span>
-					</div>
-				</div>
-			</div>
-			<br />
-			<h4 class="blue-normal">
-				Datas
-			</h4>
-			<div class="row">
-				<div class="col-md-4">
-					<div class="form-group">
-						<label asp-for="Evento.DataInicio" class="control-label"></label>
-						<input asp-for="Evento.DataInicio" class="form-control" />
-						<span asp-validation-for="Evento.DataInicio" class="text-danger"></span>
-					</div>
-				</div>
-				<div class="col-md-4">
-					<div class="form-group">
-						<label asp-for="Evento.DataFim" class="control-label"></label>
-						<input asp-for="Evento.DataFim" class="form-control" />
-						<span asp-validation-for="Evento.DataFim" class="text-danger"></span>
-					</div>
-				</div>
-			</div>
-			<br />
-			<div class="row">
-				<div class="col-md-4">
-					<div class="form-group">
-						<label asp-for="Evento.DataInicioInscricao" class="control-label"></label>
-						<input asp-for="Evento.DataInicioInscricao" class="form-control" />
-						<span asp-validation-for="Evento.DataInicioInscricao" class="text-danger"></span>
-					</div>
-				</div>
-				<div class="col-md-4">
-					<div class="form-group">
-						<label asp-for="Evento.DataFimInscricao" class="control-label"></label>
-						<input asp-for="Evento.DataFimInscricao" class="form-control" />
-						<span asp-validation-for="Evento.DataFimInscricao" class="text-danger"></span>
-					</div>
-				</div>
-			</div>
-			<br />
-			<h4 class="blue-normal">
-				Localização
-			</h4>
-			<div class="col-md-3">
-				<div class="form-group">
-					<label asp-for="Evento.Cep" class="control-label"></label>
-					<input asp-for="Evento.Cep" class="form-control" />
-					<span asp-validation-for="Evento.Cep" class="text-danger"></span>
-				</div>
-			</div>
-			<br />
-			<div class="row">
-				<div class="col-md-3">
-					<div class="form-group">
-						<label asp-for="Evento.Estado" class="control-label"></label>
-						<select asp-for="Evento.Estado" class="form-control" asp-items="Model.Estados">
-							<option value="">Selecione o estado</option>
-						</select>
-						<span asp-validation-for="Evento.Estado" class="text-danger"></span>
-					</div>
-				</div>
-				<div class="col-md-6">
-					<div class="form-group">
-						<label asp-for="Evento.Cidade" class="control-label"></label>
-						<input asp-for="Evento.Cidade" class="form-control" />
-						<span asp-validation-for="Evento.Cidade" class="text-danger"></span>
-					</div>
-				</div>
-			</div>
-			<br />
-			<div class="row">
-				<div class="col-md-6">
-					<div class="form-group">
-						<label asp-for="Evento.Bairro" class="control-label"></label>
-						<input asp-for="Evento.Bairro" class="form-control" />
-						<span asp-validation-for="Evento.Bairro" class="text-danger"></span>
-					</div>
-				</div>
-				<div class="col-md-6">
-					<div class="form-group">
-						<label asp-for="Evento.Rua" class="control-label"></label>
-						<input asp-for="Evento.Rua" class="form-control" />
-						<span asp-validation-for="Evento.Rua" class="text-danger"></span>
-					</div>
-				</div>	
-			</div>
-			<br />
-			<div class="row">
-				<div class="col-md-6">
-					<div class="form-group">
-						<label asp-for="Evento.Complemento" class="control-label"></label>
-						<input asp-for="Evento.Complemento" class="form-control" />
-						<span asp-validation-for="Evento.Complemento" class="text-danger"></span>
-					</div>
-				</div>
-				<div class="col-md-2">
-					<div class="form-group">
-						<label asp-for="Evento.Numero" class="control-label"></label>
-						<input asp-for="Evento.Numero" class="form-control" />
-						<span asp-validation-for="Evento.Numero" class="text-danger"></span>
-					</div>
-				</div>
-			</div>
-			<br />
-			<h4 class="blue-normal">
-				Informações Adicionais
-			</h4>
-			<!--<div>
-				<div class="form-group">
-					<label asp-for="Evento.IdAreaInteresse" class="control-label">Área de Interesse</label>
-					<select asp-for="Evento.IdAreaInteresse" class="form-control" asp-items="Model.AreaInteresse">
-						<option value="">Selecione a área de interesse do evento</option>
-					</select>
-					<span asp-validation-for="Evento.IdAreaInteresse" class="text-danger"></span>
-				</div>
-			</div>
-			<br />-->
-			<div class="col-4">
-				<div class="form-group">
-					<label asp-for="Evento.IdTipoEvento" class="control-label">Tipo do Evento</label>
-					<select asp-for="Evento.IdTipoEvento" class="form-control" asp-items="Model.TiposEventos">
-						<option value="">Selecione o tipo de evento</option>
-					</select>
-					<span asp-validation-for="Evento.IdTipoEvento" class="text-danger"></span>
-				</div>
-			</div>
-			<br />
-			<div class="col-md-6">
-				<div class="form-group mb-3">
-					<label asp-for="Evento.PossuiCertificado" class="control-label">Possui Certificação?</label>
-					<div class="d-flex align-items-center">
-						<div class="form-check me-2">
-							<input asp-for="Evento.PossuiCertificado" class="form-check-input" type="radio" value="1" id="PossuiCertificadoSim">
-							<label class="form-check-label" for="PossuiCertificadoSim">Sim</label>
-						</div>
-						<div class="form-check">
-							<input asp-for="Evento.PossuiCertificado" class="form-check-input" type="radio" value="0" id="PossuiCertificadoNao">
-							<label class="form-check-label" for="PossuiCertificadoNao">Não</label>
-						</div>
-					</div>
-					<span asp-validation-for="Evento.PossuiCertificado" class="text-danger"></span>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-3">
-					<div class="form-group" id="FrequenciaMinimaCertificado">
-						<label asp-for="Evento.FrequenciaMinimaCertificado" class="control-label">Frequência Min.</label>
-						<input asp-for="Evento.FrequenciaMinimaCertificado" class="form-control" onkeypress="return validateInput(event)" />
-						<span asp-validation-for="Evento.FrequenciaMinimaCertificado" class="text-danger"></span>
-					</div>
-				</div>
-				<div class="col-3">
-					<div class="form-group">
-						<label asp-for="Evento.CargaHoraria" class="control-label"></label>
-						<input asp-for="Evento.CargaHoraria" class="form-control" />
-						<span asp-validation-for="Evento.CargaHoraria" class="text-danger"></span>
-					</div>
-				</div>
-				<div class="col-3">
-					<div class="form-group">
-						<label asp-for="Evento.VagasOfertadas" class="control-label"></label>
-						<input asp-for="Evento.VagasOfertadas" class="form-control" />
-						<span asp-validation-for="Evento.VagasOfertadas" class="text-danger"></span>
-					</div>
-				</div>
-			</div>
-			<br />
+			<br/>
 			<div class="d-flex flex-row-reverse">
 				<div class="form-group">
 					<input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
