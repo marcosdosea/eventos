@@ -1,23 +1,30 @@
 ﻿@model IEnumerable<EventoWeb.Models.EventoModel>
 
+
 @{
-    ViewData["Title"] = "Gerenciar Eventos";
+    ViewData["Title"] = "Gerenciar evento";
+    ViewData["Id"] = "ID";
+    ViewData["DataInicio"] = "Data";
+    ViewData["Nome"] = "Evento";
+    ViewData["NomeTipoEvento"] = "Tipo";
 }
 
-
-<h1 class="blue-normal">Gerenciar Eventos</h1>
+<h1 class="blue-normal">@ViewData["Title"]</h1>
 <div>
-    <table>
-        <thead>
+    <table class="table table-striped">
+        <thead class="blue-normal blue-normal-bg-table">
             <tr>
                 <th>
-                    @Html.DisplayNameFor(model => model.DataInicio)
+                    @ViewData["Id"]
                 </th>
                 <th>
-                    @Html.DisplayNameFor(model => model.Nome)
+                   @ViewData["DataInicio"]
                 </th>
                 <th>
-                    @Html.DisplayNameFor(model => model.NomeTipoEvento)
+                   @ViewData["Nome"]
+                </th>
+                <th>
+                    @ViewData["NomeTipoEvento"]
                 </th>
                 <th>
                     @Html.DisplayNameFor(model => model.Status)
@@ -31,6 +38,9 @@
 @foreach(var item in Model)
 {
             <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Id)
+                </td>
                 <td>
                     @Html.DisplayFor(modelItem => item.DataInicio)
                 </td>
@@ -62,11 +72,10 @@
                         @statusDescricao
                     </td>
                 <td>
-                    @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" })
-                    &nbsp;&nbsp;
+                        @Html.ActionLink("Selecionar", "GerenciarEventoListar", new { idEvento = item.Id }, new { @style = "text-decoration:none;" })
                 </td>
             </tr>
-}
+} 
         </tbody>
     </table>
 </div>

@@ -172,28 +172,31 @@ namespace EventoWeb.Controllers
             return RedirectToAction("GestaoPapel", new { idEvento, idPapel });
         }
 
-        // GET: EventoController/GerenciarEvento
+        //GET: EventoController/GerenciarEvento
         public IActionResult GerenciarEvento()
         {
-            var listarEventos = _eventoService.GetAll().ToList();
-            var gestorId = 
-            var listarEventosModel = listarEventos.Select(e => new EventoModel
-            {
-                Id = e.Id,
-                DataInicio = (DateTime)e.DataInicio,
-                Nome = e.Nome,
-                Status = e.Status,
-                IdTipoEvento = (uint)e.IdTipoEvento,
-                NomeTipoEvento = _tipoEventoService.GetNomeById((uint)e.IdTipoEvento)
+			var listarEventos = _eventoService.GetAll().ToList();
+			var listarEventosModel = listarEventos.Select(e => new EventoModel
+			{
+				Id = e.Id,
+				DataInicio = (DateTime)e.DataInicio,
+				Nome = e.Nome,
+				Status = e.Status,
+				IdTipoEvento = (uint)e.IdTipoEvento,
+				NomeTipoEvento = _tipoEventoService.GetNomeById((uint)e.IdTipoEvento)
 
-            }).ToList();
-            return View();
-        }
+			}).ToList();
+
+			return View(listarEventosModel);
+		}
 
         //GET: EventoController/GerenciarEventoListar
-        public IActionResult GerenciarEventoListar()
+        public ActionResult GerenciarEventoListar(uint idEvento)
         {
-            return View();
+            Evento evento = _eventoService.Get(idEvento);
+            EventoModel eventoModel = _mapper.Map<EventoModel>(evento);
+            return View(eventoModel);
+
         }
     }
 }

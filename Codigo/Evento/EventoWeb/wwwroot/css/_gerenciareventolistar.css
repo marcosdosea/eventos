@@ -1,0 +1,43 @@
+﻿.card {
+    width: 12rem;
+    height: 12rem;
+    border-radius: 0.5rem;
+    box-shadow: 1rem;
+    align-content: end;
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.card-img{
+    align-self:center;
+      width: 30%;
+    height: 90%;
+    object-fit:contain;
+}
+
+.card-img-bottom {
+    align-self: center;
+    width: 25%;
+    height: 90%;
+    object-fit: contain;
+}
+
+.card-img-overlay{
+    align-content:end;
+    text-align:center;
+}
+
+.card-body{
+    height:0.5rem;
+    align-content:end;
+    text-align:center;
+}
+
+.container {
+    flex-direction: row;
+    flex-wrap: wrap;
+    display: flex;
+    align-self:start;
+}
