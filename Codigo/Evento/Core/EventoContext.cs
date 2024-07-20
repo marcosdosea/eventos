@@ -242,6 +242,9 @@ public partial class EventoContext : DbContext
             entity.Property(e => e.IdPapel).HasColumnName("idPapel");
             entity.Property(e => e.IdPessoa).HasColumnName("idPessoa");
             entity.Property(e => e.IdTipoInscricao).HasColumnName("idTipoInscricao");
+            entity.Property(e => e.NomeCracha)
+                .HasMaxLength(20)
+                .HasColumnName("nomeCracha");
             entity.Property(e => e.Status)
                 .HasDefaultValueSql("'S'")
                 .HasComment("A - ATIVA\nC - CANCELADA\nS - SOLICITADA\n")
@@ -555,10 +558,10 @@ public partial class EventoContext : DbContext
                 .HasColumnType("enum('M','F','N')")
                 .HasColumnName("sexo");
             entity.Property(e => e.Telefone1)
-                .HasMaxLength(10)
+                .HasMaxLength(12)
                 .HasColumnName("telefone1");
             entity.Property(e => e.Telefone2)
-                .HasMaxLength(10)
+                .HasMaxLength(12)
                 .HasColumnName("telefone2");
 
             entity.HasOne(d => d.EstadoNavigation).WithMany(p => p.Pessoas)
@@ -600,9 +603,13 @@ public partial class EventoContext : DbContext
 
             entity.ToTable("subevento");
 
+            entity.HasIndex(e => e.CargaHoraria, "cargaHoraria_UNIQUE").IsUnique();
+
             entity.HasIndex(e => e.IdEvento, "fk_SubEvento_Evento1_idx");
 
             entity.HasIndex(e => e.IdTipoEvento, "fk_SubEvento_TipoEvento1_idx");
+
+            entity.HasIndex(e => e.IdTipoEvento, "idTipoEvento_UNIQUE").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.CargaHoraria).HasColumnName("cargaHoraria");
@@ -648,8 +655,8 @@ public partial class EventoContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_SubEvento_Evento1");
 
-            entity.HasOne(d => d.IdTipoEventoNavigation).WithMany(p => p.Subeventos)
-                .HasForeignKey(d => d.IdTipoEvento)
+            entity.HasOne(d => d.IdTipoEventoNavigation).WithOne(p => p.Subevento)
+                .HasForeignKey<Subevento>(d => d.IdTipoEvento)
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_SubEvento_TipoEvento1");
         });

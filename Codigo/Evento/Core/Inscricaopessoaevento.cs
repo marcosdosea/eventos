@@ -29,6 +29,8 @@ public partial class Inscricaopessoaevento
 
     public decimal FrequenciaFinal { get; set; }
 
+    public string? NomeCracha { get; set; }
+
     public virtual Evento IdEventoNavigation { get; set; } = null!;
 
     public virtual Papel IdPapelNavigation { get; set; } = null!;
