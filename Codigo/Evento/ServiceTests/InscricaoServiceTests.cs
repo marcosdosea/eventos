@@ -251,8 +251,8 @@ namespace Service.Tests
                 FrequenciaFinal = 0,
             });
             // Assert
-            Assert.AreEqual(4, _inscricaoService.GetInscricaoPessoaEvento(1, 1).Count());
-            var listaInscricao = _inscricaoService.GetInscricaoPessoaEvento(1,1);
+            Assert.AreEqual(4, _inscricaoService.GetByEventoAndPapel(1, 1).Count());
+            var listaInscricao = _inscricaoService.GetByEventoAndPapel(1,1);
             // Assert
             Assert.IsInstanceOfType(listaInscricao, typeof(IEnumerable<Inscricaopessoaevento>));
             Assert.IsNotNull(listaInscricao);
@@ -274,7 +274,7 @@ namespace Service.Tests
             // Act
             _inscricaoService.DeletePessoaPapel(1, 1, 1);
             // Assert
-            var inscricoes = _inscricaoService.GetInscricaoPessoaEvento(1, 1);
+            var inscricoes = _inscricaoService.GetByEventoAndPapel(1, 1);
             Assert.IsNotNull(inscricoes);
             Assert.AreEqual(2, inscricoes.Count());
         }
@@ -282,7 +282,7 @@ namespace Service.Tests
         [TestMethod()]
         public void GetTest()
         {
-            var listaInscricao = _inscricaoService.GetInscricaoPessoaEvento(1, 1);
+            var listaInscricao = _inscricaoService.GetByEventoAndPapel(1, 1);
             Assert.IsInstanceOfType(listaInscricao, typeof(IEnumerable<Inscricaopessoaevento>));
             Assert.IsNotNull(listaInscricao);
             Assert.AreEqual(3, listaInscricao.Count());

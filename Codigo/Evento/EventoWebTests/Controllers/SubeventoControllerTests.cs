@@ -101,6 +101,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsNull(redirectToActionResult.ControllerName);
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
         }
+
+        [TestMethod()]
         public void CreateTest_Invalid()
         {
             // Arrange

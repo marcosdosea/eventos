@@ -9,6 +9,7 @@ ViewData["Title"] = "Edit";
     <div class="col-md-8">
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Pessoa.Id" />
             <div class="row">
                 <div class="col-6 form-group">
                     <label asp-for="Pessoa.Nome" class="control-label"></label>

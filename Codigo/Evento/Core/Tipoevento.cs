@@ -11,5 +11,5 @@ public partial class Tipoevento
 
     public virtual ICollection<Evento> Eventos { get; set; } = new List<Evento>();
 
-    public virtual ICollection<Subevento> Subeventos { get; set; } = new List<Subevento>();
+    public virtual Subevento? Subevento { get; set; }
 }

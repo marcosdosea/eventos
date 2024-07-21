@@ -74,7 +74,7 @@ namespace Service
         /// </summary>
         /// <param name="nome">dados da area de interesse</param>
         /// <returns></returns>
-        public IEnumerable<Tipoinscricao> GetByEvento(int id)
+        public IEnumerable<Tipoinscricao> GetByEvento(uint id)
         {
             var evento = _context.Eventos.Include(e => e.Tipoinscricaos)
                 .FirstOrDefault(e => e.Id == id);

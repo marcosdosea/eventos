@@ -12,11 +12,12 @@ namespace EventoWeb.Controllers
         private readonly IEstadosbrasilService _estadosbrasilService;
         private readonly ITipoeventoService _tipoEventoService;
         private readonly IEventoService _eventoService;
+        private readonly IPessoaService _pessoaService;
         private readonly IInscricaoService _inscricaoService;
         private readonly IAreaInteresseService _areaInteresseService;
         private readonly IMapper _mapper;
 
-        public EventoController(IEventoService eventoService, IMapper mapper, IEstadosbrasilService estadosbrasilService,IInscricaoService inscricaoService, ITipoeventoService tipoeventoService, IAreaInteresseService areaInteresseService)
+        public EventoController(IEventoService eventoService, IMapper mapper, IEstadosbrasilService estadosbrasilService,IInscricaoService inscricaoService, ITipoeventoService tipoeventoService, IAreaInteresseService areaInteresseService, IPessoaService pessoaService)
         {
             _tipoEventoService = tipoeventoService;
             _estadosbrasilService = estadosbrasilService;
@@ -24,6 +25,7 @@ namespace EventoWeb.Controllers
             _inscricaoService = inscricaoService;
             _mapper = mapper;
             _areaInteresseService = areaInteresseService;
+            _pessoaService = pessoaService;
         }
 
         // GET: EventoController
@@ -110,7 +112,19 @@ namespace EventoWeb.Controllers
 		[ValidateAntiForgeryToken]
 		public ActionResult Edit(uint id, EventocreateModel viewModel)
 		{
+
 			var evento = _mapper.Map<Evento>(viewModel.Evento);
+            
+			var idAreaInteresse = viewModel.Evento.IdAreaInteresse;
+			var areaInteresse = _areaInteresseService.Get(idAreaInteresse);
+
+			if (evento.IdAreaInteresses == null)
+			{
+				evento.IdAreaInteresses = new List<Core.Areainteresse>();
+			}
+
+			evento.IdAreaInteresses.Clear(); 
+			evento.IdAreaInteresses.Add(areaInteresse);
 			_eventoService.Edit(evento);
 			return RedirectToAction(nameof(Index));
 		}
@@ -138,29 +152,29 @@ namespace EventoWeb.Controllers
         }
 
         
-        // GET: EventoController/CreateGestorEvento
-        public ActionResult GestaoPapel(uint idEvento, int idPapel)
+        // GET: EventoController/CreatePessoaPapel
+        public ActionResult CreatePessoaPapel(uint idEvento, int idPapel)
         {
             var gestorModel = new GestaoPapelModel
             {
 	            IdPapel = idPapel,
                 Evento = _eventoService.GetEventoSimpleDto(idEvento),
-                Inscricoes = _inscricaoService.GetInscricaoPessoaEvento(idEvento,idPapel),
+                Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento,idPapel),
             };
             return View(gestorModel);
         }
 
-        // POST: EventoController/CreateGestorEvento
+        // POST: EventoController/CreatePessoaPapel
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult GestaoPapel( GestaoPapelModel gestaoPapelModel)
+        public ActionResult CreatePessoaPapel( GestaoPapelModel gestaoPapelModel)
         {
             var pessoa = gestaoPapelModel.Pessoa;
             var idEvento = gestaoPapelModel.Evento.Id;
             var idPapel = gestaoPapelModel.IdPapel;
             pessoa.NomeCracha = pessoa.Nome;
-            _eventoService.CreateGestorModel(pessoa, idEvento, idPapel);
-            return RedirectToAction("GestaoPapel", new { idEvento, idPapel });
+            _pessoaService.CreatePessoaPapel(pessoa, idEvento, idPapel);
+            return RedirectToAction("CreatePessoaPapel", new { idEvento, idPapel });
 
         } 
         // POST: EventoController/DeletePessoaPapel
@@ -168,7 +182,7 @@ namespace EventoWeb.Controllers
         {
             _inscricaoService.DeletePessoaPapel(idPessoa, idEvento, idPapel);
 
-            return RedirectToAction("GestaoPapel", new { idEvento, idPapel });
+            return RedirectToAction("CreatePessoaPapel", new { idEvento, idPapel });
         }
     }
 }
