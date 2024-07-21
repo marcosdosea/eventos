@@ -1,62 +1,68 @@
-﻿
-@*
+﻿@*
 *@
 <link rel="stylesheet" type="text/css" href="~/css/_menu.css">
 
-<aside>
-    <h4 class="blue-normal strong">Menu</h4>
-    <ul>
-        <a href="">
-        <li class="blue-normal">Colaborador</li>
-        </a>
-        <a href="">
-        <li class="">Inscrições</li>
-        </a>
-        <a href="">
-        <li class="">Participantes</li>
-        </a>
-        <a href="">
-        <li class="">Frequência</li>
-        </a>
-        <a href="">
-        <li class="blue-normal">Gestor de Evento</li>
-        </a>
-        <a href="">
-        <li class="">Inscrições</li>
-        </a>
-        <a href="">
-        <li class="">Participantes</li>
-        </a>
-        <a href="">
-        <li class="">Colaboradores</li>
-        </a>
-        <a asp-controller="Evento" asp-action="Index">
-        <li class="blue-normal">Evento</li>
-        </a>
-        <a href="">
-        <li class="">SubEventos</li>
-        </a>
-        <a asp-controller="TipoInscricao" asp-action="Index">
-        <li class="">Tipo Inscrições</li>
-        </a>
-        <a href="">
-        <li class="">Modelo Crachá</li>
-        </a>
-        <a href="">
-        <li class="">Modelo Certificado</li>
-        </a>
-        <a href="">
-        <li class="blue-normal">Administrador</li>
-        </a>
-        <a href="">
-        <li class="">Inscrições</li>
-        </a>
-        <a asp-controller="AreaInteresse" asp-action="Index">
-        <li class="">Área de interesse</li>
-        </a>
-        <a href="">
-        <li class="">Gestores Sistema</li>
-        </a>
-
-    </ul>
+<aside id="menu-container">
+    <div id="menu-content">
+       <div class="menu_header">
+            <h4 class="blue-normal strong">Menu</h4>
+            <button class="close-menu" id="close-menu">&times;</button>
+        </div>
+        
+        <ul>
+            <a href="">
+                <li class="blue-normal">Colaborador</li>
+            </a>
+            <a href="">
+                <li class="">Inscrições</li>
+            </a>
+            <a href="">
+                <li class="">Participantes</li>
+            </a>
+            <a href="">
+                <li class="">Frequência</li>
+            </a>
+            <a href="">
+                <li class="blue-normal">Gestor de Evento</li>
+            </a>
+            <a href="">
+                <li class="">Inscrições</li>
+            </a>
+            <a href="">
+                <li class="">Participantes</li>
+            </a>
+            <a href="">
+                <li class="">Colaboradores</li>
+            </a>
+            <a asp-controller="Evento" asp-action="Index">
+                <li class="blue-normal">Evento</li>
+            </a>
+            <a href="">
+                <li class="">SubEventos</li>
+            </a>
+            <a asp-controller="TipoInscricao" asp-action="Index">
+                <li class="">Tipo Inscrições</li>
+            </a>
+            <a href="">
+                <li class="">Modelo Crachá</li>
+            </a>
+            <a href="">
+                <li class="">Modelo Certificado</li>
+            </a>
+            <a href="">
+                <li class="blue-normal">Administrador</li>
+            </a>
+            <a href="">
+                <li class="">Inscrições</li>
+            </a>
+            <a asp-controller="AreaInteresse" asp-action="Index">
+                <li class="">Área de interesse</li>
+            </a>
+            <a href="">
+                <li class="">Gestores Sistema</li>
+            </a>
+        </ul>
+    </div>
 </aside>
+
+   <script src="~/js/menu_hamburguer.js"></script>

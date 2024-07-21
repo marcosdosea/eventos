@@ -44,7 +44,6 @@
 .categorias-list li {
     flex: 0 0 auto;
     text-align: center;
-    max-width: 6.25rem;
     overflow-x: hidden;
 }
 
