@@ -46,58 +46,59 @@ namespace EventoWeb.Controllers
             SubeventoModel subeventoModel = _mapper.Map<SubeventoModel>(subevento);
             return View(subeventoModel);
         }
-        // GET: SubeventoController/Create
-        public ActionResult Create()
+        // GET: SubeventoController/CreateOrEdit/{idEvento}/{idSubevento?}
+        public ActionResult CreateOrEdit(uint idEvento, uint? idSubevento)
         {
-            var subeventoModel = new SubeventoModel();
-            var tipoEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
-            var eventos = _eventoService.GetAll().OrderBy(e => e.Nome);
-            var viewModel = new SubeventocreateModel
+            SubeventoModel subeventoModel;
+            if (idSubevento.HasValue)
             {
-                Subevento = subeventoModel,
-                Eventos = new SelectList(eventos,"Id", "Nome"),
-                TiposEventos = new SelectList(tipoEventos, "Id", "Nome")
-            };
-            return View(viewModel);
-        }
-        // POST: SubeventoController/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(SubeventocreateModel subeventoModel)
-        {
-            var subevento = _mapper.Map<Subevento>(subeventoModel.Subevento);
-            _subeventoService.Create(subevento);
-            return RedirectToAction(nameof(Index));
-        }
-        // GET: SubeventoController/Edit/5
-        public ActionResult Edit(uint id)
-        {
-            var subevento = _subeventoService.Get(id);
-            if(subevento == null)
-            {
-                return NotFound();
+                var subevento = _subeventoService.Get(idSubevento.Value);
+                if (subevento == null)
+                {
+                    return NotFound();
+                }
+                subeventoModel = _mapper.Map<SubeventoModel>(subevento);
             }
-            var subeventoModel = _mapper.Map<SubeventoModel>(subevento);
+            else
+            {
+                subeventoModel = new SubeventoModel();
+            }
+
             var tipoEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
-            var eventos = _eventoService.GetAll().OrderBy(e => e.Nome);
-            var viewModel = new SubeventocreateModel
+            var evento = _eventoService.GetEventoSimpleDto(idEvento);
+    
+            var viewModel = new SubeventoCreateModel()
             {
                 Subevento = subeventoModel,
-                Eventos = new SelectList(eventos, "Id", "Nome"),
-                TiposEventos = new SelectList(tipoEventos, "Id", "Nome")
+                Evento = evento,
+                TiposEventos = new SelectList(tipoEventos, "Id", "Nome"),
             };
+
             return View(viewModel);
         }
-        // POST: SubeventoController/Edit/5
+
+        // POST: SubeventoController/CreateOrEdit/{idEvento}/{idSubevento?}
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(uint id, SubeventocreateModel subeventoModel)
+        public ActionResult CreateOrEdit(uint idEvento, uint? idSubevento, SubeventoCreateModel subeventoModel)
         {
             var subevento = _mapper.Map<Subevento>(subeventoModel.Subevento);
-            subevento.Id = id;
-            _subeventoService.Edit(subevento);
-            return RedirectToAction(nameof(Index));
+
+            if (idSubevento.HasValue)
+            {
+                subevento.IdEvento = idEvento;
+                subevento.Id = idSubevento.Value;
+                _subeventoService.Edit(subevento);
+            }
+            else
+            {
+                subevento.IdEvento = idEvento;
+                _subeventoService.Create(subevento);
+            }
+
+            return RedirectToAction("index");
         }
+
         // GET: SubeventoController/Delete/5
         public ActionResult Delete(uint id)
         {

@@ -81,6 +81,8 @@
 						@Html.ActionLink("Colaboradores", "CreatePessoaPapel", new { idEvento = item.Id, idPapel = 3}, new { @style = "text-decoration:none;" })
 						&nbsp;&nbsp;
 						@Html.ActionLink("Participantes", "CreatePessoaPapel", new { idEvento = item.Id,idPapel = 4 }, new { @style = "text-decoration:none;" })
+
+						@Html.ActionLink("Subeventos", "CreateOrEdit","Subevento", new { idEvento = item.Id}, new { @style = "text-decoration:none;" })
 					</td>
 				</tr>
 }
