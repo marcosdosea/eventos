@@ -133,11 +133,12 @@ header {
 .footer-background {
     width: 100%;
     display: flex;
+    z-index: 1000;
     justify-content: space-between;
     align-items: center;
     background-color: #232ed0;
     color: white;
-    padding: 20px 0;
+    padding: 20px 55px;
 }
 
 .custom-flex-container {
@@ -181,8 +182,8 @@ header {
     background-color: #232ed0;
     color: white;
     text-align: left;
-    padding: 20px 55px;
     width: 100%;
+    padding: 20px 0;
     margin-top: auto;
 }
 
@@ -311,6 +312,19 @@ header {
 .menu {
     display: none;
 }
+.menu-gerencia {
+    display: none;
+    cursor: pointer;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+}
+.menu-gerencia span {
+    display: block;
+    width: 25px;
+    height: 3px;
+    background-color: #333;
+}
 
 @media (max-width: 1000px) {
     .nav-links {
@@ -389,7 +403,7 @@ header {
     
 }
 
-@media  (min-width: 600px) and (max-width: 1000px) {
+@media  (min-width: 650px) and (max-width: 1000px) {
     .menu-icon{
         display: none;
     }
@@ -402,6 +416,7 @@ header {
 
     .footer-background {
         flex-direction: column;
+        align-items: center;
     }
 
     .custom-flex-container,
@@ -452,7 +467,8 @@ header {
     }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 650px) {
+  
     .logo{
         margin-top: auto;
     }
@@ -460,8 +476,8 @@ header {
         display: block;
         cursor: pointer;
         position: absolute;
-        top: 10px;
-        right: 10px;
+        top: 25px;
+        right: 20px;
         z-index: 1001;
     }
 
@@ -540,6 +556,7 @@ header {
 
     .footer-background {
         flex-direction: column;
+        align-items: center; /* Centraliza os itens no footer */
     }
 
     .custom-flex-container,
@@ -630,6 +647,7 @@ header {
 
     .footer-background {
         flex-direction: column;
+        align-items: center; /* Centraliza os itens no footer */
     }
 
     .custom-flex-container,
