@@ -116,15 +116,16 @@ ViewData["Title"] = "Edit";
                     <span asp-validation-for="Pessoa.Complemento" class="text-danger"></span>
                 </div>
             </div>
-
             <br />
-            <div class="d-flex flex-row-reverse">
-                <div class="form-group">
-                    <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
-                </div>
+            <div class="d-flex justify-content-end">
+            <div class="d-flex flex-row">
                 <div class="form-group" style="margin-right: 10px;">
                     <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
                 </div>
+                <div class="form-group">
+                    <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
+                </div>
+            </div>
             </div>
         </form>
     </div>
