@@ -4,6 +4,9 @@
     ViewData["Title"] = "Details";
 }
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+
 <head>
     <link rel="stylesheet" type="text/css" href="~/css/style.css">
 </head>
@@ -16,13 +19,13 @@
             </a>
             <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
             <a asp-controller="TipoInscricao" asp-action="Index" style="text-decoration:none; padding-right:6px">
-                <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Tipo de Inscrição</p>
+                <p class="blue-normal" style="color:#0D6EFD; display:inline-block">Tipo de InscriÃ§Ã£o</p>
             </a>
             <p style="color:#6C757D;display:inline-block;padding-right:6px">/</p>
-            <p style="color:#6C757D;display:inline-block">Detalhes Tipo de Inscrição</p>
+            <p style="color:#6C757D;display:inline-block">Detalhes Tipo de InscriÃ§Ã£o</p>
         </div>
 
-        <h1 class="blue-normal">Detalhes Tipo de Inscrição</h1>
+        <h1 class="blue-normal">Detalhes Tipo de InscriÃ§Ã£o</h1>
         <div>
             <dl class="row">
                 <dt class="col-sm-2">
@@ -77,17 +80,16 @@
         </div>
        
         <div class="row justify-content-end">
+            <button type="button" class=" col-2 btn btn-mg btn-blue-normal text-white ">
+                <a asp-action="Edit" asp-route-id="@Model?.Id" class="text-white" style="text-decoration:none;">
+                    Editar Tipo de InscriÃ§Ã£o
+                </a>
+            </button>
             <div class="col-2">
                 <div>
                     <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
                 </div>
             </div>
-            <button type="button" class=" col-2 btn btn-mg btn-blue-normal text-white ">
-                <a asp-action="Edit" asp-route-id="@Model?.Id" class="text-white" style="text-decoration:none;">
-                    Editar Tipo de Inscrição
-                </a>
-            </button>
-
         </div>
     </div>
 </div>

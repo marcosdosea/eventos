@@ -4,6 +4,9 @@
     ViewData["Title"] = "Edit";
 }
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+
 <h1 class="blue-normal">Editar Evento</h1>
 <div class="row">
     <div>
@@ -20,7 +23,7 @@
 				<div class="col-md-3">
 					<div class="form-group">
 						<label asp-for="Evento.Estado" class="control-label"></label>
-						<select asp-for="Evento.Estado" class="form-control" asp-items="Model.Estados">
+						<select asp-for="Evento.Estado" class="form-select" asp-items="Model.Estados">
 							<option value="">Selecione o estado</option>
 						</select>
 						<span asp-validation-for="Evento.Estado" class="text-danger"></span>
@@ -29,7 +32,7 @@
 				<div class="col-md-3">
 					<div class="form-group">
 						<label asp-for="Evento.IdTipoEvento" class="control-label">Tipo do Evento</label>
-						<select asp-for="Evento.IdTipoEvento" class="form-control" asp-items="Model.TiposEventos">
+						<select asp-for="Evento.IdTipoEvento" class="form-select" asp-items="Model.TiposEventos">
 							<option value="">Selecione o tipo de evento</option>
 						</select>
 						<span asp-validation-for="Evento.Estado" class="text-danger"></span>
@@ -54,10 +57,10 @@
 			<br/>
 			<div class="d-flex flex-row-reverse">
 				<div class="form-group">
-					<input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
+					<a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
 				</div>
 				<div class="form-group" style="margin-right: 10px;">
-					<a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
+					<input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
 				</div>
 			</div>
         </form>

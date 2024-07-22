@@ -3,7 +3,6 @@ using Core;
 using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace EventoWeb.Controllers
@@ -116,7 +115,7 @@ namespace EventoWeb.Controllers
 
 			var evento = _mapper.Map<Evento>(viewModel.Evento);
             
-			var idAreaInteresse = viewModel.Evento.IdAreaInteresse;
+			/*var idAreaInteresse = viewModel.Evento.IdAreaInteresse;
 			var areaInteresse = _areaInteresseService.Get(idAreaInteresse);
 
 			if (evento.IdAreaInteresses == null)
@@ -125,7 +124,7 @@ namespace EventoWeb.Controllers
 			}
 
 			evento.IdAreaInteresses.Clear(); 
-			evento.IdAreaInteresses.Add(areaInteresse);
+			evento.IdAreaInteresses.Add(areaInteresse);*/
 			_eventoService.Edit(evento);
 			return RedirectToAction(nameof(Index));
 		}
@@ -184,33 +183,6 @@ namespace EventoWeb.Controllers
             _inscricaoService.DeletePessoaPapel(idPessoa, idEvento, idPapel);
 
             return RedirectToAction("CreatePessoaPapel", new { idEvento, idPapel });
-        }
-
-        //GET: EventoController/GerenciarEvento
-        public IActionResult GerenciarEvento()
-        {
-			var listarEventos = _eventoService.GetAll().ToList();
-			var listarEventosModel = listarEventos.Select(e => new EventoModel
-			{
-				Id = e.Id,
-				DataInicio = (DateTime)e.DataInicio,
-				Nome = e.Nome,
-				Status = e.Status,
-				IdTipoEvento = (uint)e.IdTipoEvento,
-				NomeTipoEvento = _tipoEventoService.GetNomeById((uint)e.IdTipoEvento)
-
-			}).ToList();
-
-			return View(listarEventosModel);
-		}
-
-        //GET: EventoController/GerenciarEventoListar
-        public ActionResult GerenciarEventoListar(uint idEvento)
-        {
-            Evento evento = _eventoService.Get(idEvento);
-            EventoModel eventoModel = _mapper.Map<EventoModel>(evento);
-            return View(eventoModel);
-
         }
     }
 }

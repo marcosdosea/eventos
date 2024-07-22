@@ -4,13 +4,16 @@
     ViewData["Title"] = "Create";
 }
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+
 <head>
     <link rel="stylesheet" type="text/css" href="~/css/style.css">
 </head>
 
 <div class="container-fluid no-padding">
     <div class="row">
-        <h1 class="blue-normal">Novo Tipo de Inscrição</h1>
+        <h1 class="blue-normal">Novo Tipo de InscriÃ§Ã£o</h1>
         <div class="row">
             <div class="col-md-4">
                 <form asp-action="Create" method="post">
@@ -82,7 +85,7 @@
                                     </div>
                                     <div class="form-check">
                                         <input asp-for="TipoInscricao.UsadaEvento" class="form-check-input" type="radio" value="2" id="UsadaEventoNao">
-                                        <label class="form-check-label" for="UsadaEventoNao">Não</label>
+                                        <label class="form-check-label" for="UsadaEventoNao">NÃ£o</label>
                                     </div>
                                 </div>
                                 <span asp-validation-for="TipoInscricao.UsadaEvento" class="text-danger"></span>
@@ -98,7 +101,7 @@
                                     </div>
                                     <div class="form-check">
                                         <input asp-for="TipoInscricao.UsadaSubevento" class="form-check-input" type="radio" value="2" id="UsadaSubeventoNao">
-                                        <label class="form-check-label" for="UsadaSubeventoNao">Não</label>
+                                        <label class="form-check-label" for="UsadaSubeventoNao">NÃ£o</label>
                                     </div>
                                 </div>
                                 <span asp-validation-for="TipoInscricao.UsadaSubevento" class="text-danger"></span>
@@ -108,10 +111,10 @@
                     <br />
                     <div class="d-flex flex-row-reverse">
                         <div class="form-group">
-                            <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
+                            <a href="/TipoInscricao/Index?idEvento=@Model.TipoInscricao.IdEvento" class="btn btn-outline-danger">Cancelar</a>
                         </div>
                         <div class="form-group" style="margin-right: 10px;">
-                            <a href="/TipoInscricao/Index?idEvento=@Model.TipoInscricao.IdEvento" class="btn btn-outline-danger">Cancelar</a>
+                            <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
                         </div>
                     </div>
                 </form>

@@ -4,6 +4,9 @@
     ViewData["Title"] = "Delete";
 }
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+
 <div class="container-fluid no-padding">
     <div class="row">
         <h1 class="blue-normal">Excluir Evento</h1>
@@ -234,10 +237,10 @@
             <form asp-action="Delete" class="row">
                 <div class="d-flex flex-row-reverse">
                     <div class="form-group">
-                        <input type="submit" value="Excluir" class="btn btn-danger" />
+                        <a asp-action="Index" class="btn btn-outline-blue-normal">Cancelar</a>
                     </div>
                     <div class="form-group" style="margin-right: 10px;">
-                        <a asp-action="Index" class="btn btn-outline-blue-normal">Cancelar</a>
+                        <input type="submit" value="Excluir" class="btn btn-danger" />
                     </div>
                 </div>
             </form>

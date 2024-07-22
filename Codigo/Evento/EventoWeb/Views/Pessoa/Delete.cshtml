@@ -4,121 +4,125 @@
     ViewData["Title"] = "Delete";
 }
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+
 <div class="container-fluid no-padding">
-    <div class="row">
-        <h1 class="blue-normal">Excluir Pessoa</h1>
-        <div>
-            <h3>Certeza que deseja excluir esta Pessoa?</h3>
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Nome)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Nome)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.NomeCracha)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.NomeCracha)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Cpf)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Cpf)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Sexo)
-        </dt>
-        <dd class="col-sm-10">
-            @{
-                string sexoDescricao = "Desconhecido";
-                switch (Model.Sexo)
-                {
-                    case "M":
-                        sexoDescricao = "Masculino";
-                        break;
-                    case "F":
-                        sexoDescricao = "Feminino";
-                        break;
-                    case "N":
-                        sexoDescricao = "Prefiro n„o dizer";
-                        break;
+<div class="row">
+    <h1 class="blue-normal">Excluir Pessoa</h1>
+    <div>
+        <h3>Certeza que deseja excluir esta Pessoa?</h3>
+        <dl class="row">
+            <dt class = "col-sm-2">
+                @Html.DisplayNameFor(model => model.Nome)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.Nome)
+            </dd>
+            <dt class = "col-sm-2">
+                @Html.DisplayNameFor(model => model.NomeCracha)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.NomeCracha)
+            </dd>
+            <dt class = "col-sm-2">
+                @Html.DisplayNameFor(model => model.Cpf)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.Cpf)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Sexo)
+            </dt>
+            <dd class="col-sm-10">
+                @{
+                    string sexoDescricao = "Desconhecido";
+                    switch (Model.Sexo)
+                    {
+                        case "M":
+                            sexoDescricao = "Masculino";
+                            break;
+                        case "F":
+                            sexoDescricao = "Feminino";
+                            break;
+                        case "N":
+                            sexoDescricao = "Prefiro n√£o dizer";
+                            break;
+                    }
                 }
-            }
-            @sexoDescricao
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Email)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Email)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Telefone1)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Telefone1)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Telefone2)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Telefone2)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Cep)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Cep)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Estado)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Estado)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Cidade)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Cidade)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Bairro)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Bairro)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Rua)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Rua)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Numero)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Numero)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Complemento)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Complemento)
-        </dd>
-    </dl>
-</div>
+                @sexoDescricao
+            </dd>
+            <dt class = "col-sm-2">
+                @Html.DisplayNameFor(model => model.Email)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.Email)
+            </dd>
+            <dt class = "col-sm-2">
+                @Html.DisplayNameFor(model => model.Telefone1)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.Telefone1)
+            </dd>
+            <dt class = "col-sm-2">
+                @Html.DisplayNameFor(model => model.Telefone2)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.Telefone2)
+            </dd>
+            <dt class = "col-sm-2">
+                @Html.DisplayNameFor(model => model.Cep)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.Cep)
+            </dd>
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Estado)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.Estado)
+            </dd>
+            <dt class = "col-sm-2">
+                @Html.DisplayNameFor(model => model.Cidade)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.Cidade)
+            </dd>
+            <dt class = "col-sm-2">
+                @Html.DisplayNameFor(model => model.Bairro)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.Bairro)
+            </dd>
+            <dt class = "col-sm-2">
+                @Html.DisplayNameFor(model => model.Rua)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.Rua)
+            </dd>
+            <dt class = "col-sm-2">
+                @Html.DisplayNameFor(model => model.Numero)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.Numero)
+            </dd>
+            <dt class = "col-sm-2">
+                @Html.DisplayNameFor(model => model.Complemento)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.Complemento)
+            </dd>
+        </dl>
+    </div>
     <form asp-action="Delete" class="row">
         <div class="d-flex flex-row-reverse">
             <div class="form-group">
-                <input type="submit" value="Excluir" class="btn btn-danger" />
+                <a asp-action="Index" class="btn btn-outline-blue-normal">Cancelar</a>
             </div>
             <div class="form-group" style="margin-right: 10px;">
-                <a asp-action="Index" class="btn btn-outline-blue-normal">Cancelar</a>
+                <input type="submit" value="Excluir" class="btn btn-danger" />
             </div>
         </div>
     </form>
+</div>
 </div>
