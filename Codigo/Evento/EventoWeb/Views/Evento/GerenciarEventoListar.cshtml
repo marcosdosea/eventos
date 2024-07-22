@@ -1,0 +1,51 @@
+﻿@model EventoModel
+
+<link rel="stylesheet" type="text/css" href="~/css/_gerenciareventolistar.css">
+
+@{
+    ViewData["Title"] = "GerenciarEventoListar";
+}
+
+<h1 class="blue-normal">Gerenciar evento</h1>
+<span>Nome: @Model.Nome</span>
+<p>Data: @Model.DataInicio</p>
+<div class="container">
+    <div class="card">
+        <img src="~/ícones/Inscricoes.png" class="card-img-bottom" alt="...">
+        <div class="card-img-overlay">
+            <p class="card-text">Inscrições</p>
+        </div>
+    </div>
+    <a>
+    <div class="card">
+        <img src="~/ícones/Participantes.png" class="card-img-bottom" alt="...">
+        <div class="card-img-overlay">
+            <p class="card-text">Participantes</p>
+        </div>
+    </div>
+    </a>
+    <a>
+    <div class="card">
+        <img src="~/ícones/Colaboradores.png" class="card-img-bottom" alt="...">
+        <div class="card-img-overlay">
+            <p class="card-text">Colaboradores</p>
+        </div>
+    </div>
+    </a>
+    <a>
+    <div class="card">
+        <img src="~/ícones/Evento.png" class="card-img-bottom" alt="...">
+        <div class="card-img-overlay">
+            <p class="card-text">Evento</p>
+        </div>
+    </div>
+    </a>
+    <a>
+    <div class="card">
+        <img src="~/ícones/Subeventos.png" class="card-img-bottom" alt="...">
+        <div class="card-img-overlay">
+            <p class="card-text">Subeventos</p>
+        </div>
+    </div>
+    </a>
+</div>

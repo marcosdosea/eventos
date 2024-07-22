@@ -1,0 +1,81 @@
+﻿@model IEnumerable<EventoWeb.Models.EventoModel>
+
+
+@{
+    ViewData["Title"] = "Gerenciar evento";
+    ViewData["Id"] = "ID";
+    ViewData["DataInicio"] = "Data";
+    ViewData["Nome"] = "Evento";
+    ViewData["NomeTipoEvento"] = "Tipo";
+}
+
+<h1 class="blue-normal">@ViewData["Title"]</h1>
+<div>
+    <table class="table table-striped">
+        <thead class="blue-normal blue-normal-bg-table">
+            <tr>
+                <th>
+                    @ViewData["Id"]
+                </th>
+                <th>
+                   @ViewData["DataInicio"]
+                </th>
+                <th>
+                   @ViewData["Nome"]
+                </th>
+                <th>
+                    @ViewData["NomeTipoEvento"]
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Status)
+                </th>
+                <th>
+                    Ações 
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+@foreach(var item in Model)
+{
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Id)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DataInicio)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Nome)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.NomeTipoEvento)
+                </td>
+                    <td>
+                        @{
+                            string statusDescricao = "Desconhecido";
+                            switch (item.Status)
+                            {
+                                case "A":
+                                    statusDescricao = "Ativo";
+                                    break;
+                                case "C":
+                                    statusDescricao = "Cadastro";
+                                    break;
+                                case "F":
+                                    statusDescricao = "Finalizado";
+                                    break;
+                                case "I":
+                                    statusDescricao = "Inativo";
+                                    break;
+                            }
+                        }
+                        @statusDescricao
+                    </td>
+                <td>
+                        @Html.ActionLink("Selecionar", "GerenciarEventoListar", new { idEvento = item.Id }, new { @style = "text-decoration:none;" })
+                </td>
+            </tr>
+} 
+        </tbody>
+    </table>
+</div>
