@@ -8,35 +8,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="3a6353e9-5f3c-4717-a3f5-240ee2f7d1c1" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/EventoWeb/Controllers/EventoController.cs" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Controllers/EventoController.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.Evento/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Evento/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/EventoWeb/Views/AreaInteresse/Create.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/AreaInteresse/Create.cshtml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/EventoWeb/Views/AreaInteresse/Delete.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/AreaInteresse/Delete.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/EventoWeb/Views/AreaInteresse/Details.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/AreaInteresse/Details.cshtml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/EventoWeb/Views/AreaInteresse/Edit.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/AreaInteresse/Edit.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/EventoWeb/Views/AreaInteresse/Index.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/AreaInteresse/Index.cshtml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/EventoWeb/Views/Evento/Create.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/Evento/Create.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/EventoWeb/Views/Evento/CreatePessoaPapel.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/Evento/CreatePessoaPapel.cshtml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/EventoWeb/Views/Evento/Delete.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/Evento/Delete.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/EventoWeb/Views/Evento/Details.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/Evento/Details.cshtml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/EventoWeb/Views/Evento/Edit.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/Evento/Edit.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/EventoWeb/Views/Evento/Index.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/Evento/Index.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/EventoWeb/Views/Modelocracha/Create.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/Modelocracha/Create.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/EventoWeb/Views/Modelocracha/Delete.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/Modelocracha/Delete.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/EventoWeb/Views/Modelocracha/Details.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/Modelocracha/Details.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/EventoWeb/Views/Modelocracha/Edit.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/Modelocracha/Edit.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/EventoWeb/Views/Modelocracha/Index.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/Modelocracha/Index.cshtml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/EventoWeb/Views/Pessoa/Create.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/Pessoa/Create.cshtml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/EventoWeb/Views/Pessoa/Delete.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/Pessoa/Delete.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/EventoWeb/Views/Pessoa/Details.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/Pessoa/Details.cshtml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/EventoWeb/Views/Pessoa/Edit.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/Pessoa/Edit.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/EventoWeb/Views/Pessoa/Index.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/Pessoa/Index.cshtml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/EventoWeb/Views/Subevento/Create.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/Subevento/Create.cshtml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/EventoWeb/Views/Subevento/Delete.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/Subevento/Delete.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/EventoWeb/Views/Subevento/Details.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/Subevento/Details.cshtml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/EventoWeb/Views/Subevento/Edit.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/Subevento/Edit.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/EventoWeb/Views/Subevento/Index.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/Subevento/Index.cshtml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/EventoWeb/Views/TipoInscricao/Create.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/TipoInscricao/Create.cshtml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/EventoWeb/Views/TipoInscricao/Delete.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/TipoInscricao/Delete.cshtml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/EventoWeb/Views/TipoInscricao/Details.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/TipoInscricao/Details.cshtml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/EventoWeb/Views/TipoInscricao/Edit.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/TipoInscricao/Edit.cshtml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/EventoWeb/Views/TipoInscricao/Index.cshtml" beforeDir="false" afterPath="$PROJECT_DIR$/EventoWeb/Views/TipoInscricao/Index.cshtml" afterDir="false" />
     </list>
@@ -64,7 +50,7 @@
     ".NET Launch Settings Profile.EventoWeb.executor": "Run",
     "ASKED_ADD_EXTERNAL_FILES": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "Branch__Jordan__193",
     "last_opened_file_path": "/Users/jordanaquino/Downloads/Projetos/eventos",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -109,7 +95,7 @@
       <updated>1721169897494</updated>
       <workItem from="1721169897949" duration="5242000" />
       <workItem from="1721342035990" duration="7545000" />
-      <workItem from="1721664684986" duration="8699000" />
+      <workItem from="1721664684986" duration="10565000" />
     </task>
     <servers />
   </component>
