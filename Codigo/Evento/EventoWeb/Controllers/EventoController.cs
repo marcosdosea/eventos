@@ -115,7 +115,7 @@ namespace EventoWeb.Controllers
 
 			var evento = _mapper.Map<Evento>(viewModel.Evento);
             
-			var idAreaInteresse = viewModel.Evento.IdAreaInteresse;
+			/*var idAreaInteresse = viewModel.Evento.IdAreaInteresse;
 			var areaInteresse = _areaInteresseService.Get(idAreaInteresse);
 
 			if (evento.IdAreaInteresses == null)
@@ -124,7 +124,7 @@ namespace EventoWeb.Controllers
 			}
 
 			evento.IdAreaInteresses.Clear(); 
-			evento.IdAreaInteresses.Add(areaInteresse);
+			evento.IdAreaInteresses.Add(areaInteresse);*/
 			_eventoService.Edit(evento);
 			return RedirectToAction(nameof(Index));
 		}

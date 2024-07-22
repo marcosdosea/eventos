@@ -4,6 +4,9 @@
     ViewData["Title"] = "Delete";
 }
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+
 <head>
     <link rel="stylesheet" type="text/css" href="~/css/style.css">
 </head>
@@ -99,11 +102,11 @@
                 <input type="hidden" name="idEvento" value="@Model.IdEvento" />
                 <input type="hidden" name="id" value="@Model.Id" />
 
-                <div class="d-flex flex-row-reverse">
-                    <div class="form-group">
+                <div class="d-flex flex-row">
+                    <div class="form-group" style="margin-right: 10px;">
                         <input type="submit" value="Excluir" class="btn btn-danger " />
                     </div>
-                    <div class="form-group" style="margin-right: 10px;">
+                    <div class="form-group">
                         <a href="/TipoInscricao/Index?idEvento=@Model.IdEvento" class="btn btn-outline-blue-normal">Cancelar</a>
                     </div>
                 </div>
