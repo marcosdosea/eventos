@@ -12,7 +12,7 @@
     <div class="row">
         <h1 class="blue-normal">Editar Tipo de Inscrição</h1>
         <div class="row">
-            <div class="col-md-4">
+            <div>
                 <form asp-action="Edit" method="post">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <input type="hidden" asp-for="TipoInscricao.Id" />
@@ -33,14 +33,14 @@
                     </div>
                     <div class="row">
                         
-                        <div class="col-md-8">
+                        <div class="col-md-10">
                             <div class="form-group mb-2">
                                 <label asp-for="TipoInscricao.IdEvento" class="control-label"></label>
                                 <select asp-for="TipoInscricao.IdEvento" class="form-control" asp-items="Model.Evento"></select>
                                 <span asp-validation-for="TipoInscricao.IdEvento" class="text-danger"></span>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-2">
                             <div class="form-group" id="valorInscricaoGroup">
                                 <label asp-for="TipoInscricao.Valor" class="control-label"></label>
                                 <input type="text" asp-for="TipoInscricao.Valor" class="form-control" onkeypress="return validateInput(event)">
@@ -53,14 +53,14 @@
                         Datas
                     </h4>
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-2">
                             <div class="form-group mb-2">
                                 <label asp-for="TipoInscricao.DataInicio" class="control-label"></label>
                                 <input asp-for="TipoInscricao.DataInicio" class="form-control" type="date" />
                                 <span asp-validation-for="TipoInscricao.DataInicio" class="text-danger"></span>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-2">
                             <div class="form-group mb-2">
                                 <label asp-for="TipoInscricao.Datafim" class="control-label"></label>
                                 <input asp-for="TipoInscricao.Datafim" class="form-control" type="date" />
@@ -69,21 +69,17 @@
                         </div>
                     </div>
                     <br />
-                    <h4 class="blue-normal">
-                        Usado em
-                    </h4>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group mb-2">
-                                <label asp-for="TipoInscricao.UsadaEvento" class="control-label">Evento</label>
                                 <div class="d-flex align-items-center">
-                                    <div class="form-check me-2">
-                                        <input asp-for="TipoInscricao.UsadaEvento" class="form-check-input" type="radio" value="1" id="UsadaEventoSim">
-                                        <label class="form-check-label" for="UsadaEventoSim">Sim</label>
-                                    </div>
                                     <div class="form-check">
-                                        <input asp-for="TipoInscricao.UsadaEvento" class="form-check-input" type="radio" value="2" id="UsadaEventoNao">
-                                        <label class="form-check-label" for="UsadaEventoNao">Não</label>
+                                        <!-- Checkbox que marca se o evento será usado (valor 1) -->
+                                        <input class="form-check-input" type="checkbox" value="1" id="UsadaEvento" name="TipoInscricao.UsadaEvento"
+                                        @(Model.TipoInscricao.UsadaEvento == 1 ? "checked" : "")>
+                                        <label class="form-check-label" for="UsadaEvento">Usado em Evento</label>
+                                        <!-- Campo oculto para enviar valor 0 quando o checkbox não está marcado -->
+                                        <input type="hidden" name="TipoInscricao.UsadaEvento" value="0">
                                     </div>
                                 </div>
                                 <span asp-validation-for="TipoInscricao.UsadaEvento" class="text-danger"></span>
@@ -91,15 +87,14 @@
                         </div>
                         <div class="col-md-6">
                             <div class="form-group mb-3">
-                                <label asp-for="TipoInscricao.UsadaSubevento" class="control-label">Subevento</label>
                                 <div class="d-flex align-items-center">
-                                    <div class="form-check me-2">
-                                        <input asp-for="TipoInscricao.UsadaSubevento" class="form-check-input" type="radio" value="1" id="UsadaSubeventoSim">
-                                        <label class="form-check-label" for="UsadaSubeventoSim">Sim</label>
-                                    </div>
                                     <div class="form-check">
-                                        <input asp-for="TipoInscricao.UsadaSubevento" class="form-check-input" type="radio" value="2" id="UsadaSubeventoNao">
-                                        <label class="form-check-label" for="UsadaSubeventoNao">Não</label>
+                                        <!-- Checkbox que marca se o subevento será usado (valor 1) -->
+                                        <input class="form-check-input" type="checkbox" value="1" id="UsadaSubevento" name="TipoInscricao.UsadaSubevento"
+                                        @(Model.TipoInscricao.UsadaSubevento == 1 ? "checked" : "")>
+                                        <label class="form-check-label" for="UsadaSubevento">Usado em Subevento</label>
+                                        <!-- Campo oculto para enviar valor 0 quando o checkbox não está marcado -->
+                                        <input type="hidden" name="TipoInscricao.UsadaSubevento" value="0">
                                     </div>
                                 </div>
                                 <span asp-validation-for="TipoInscricao.UsadaSubevento" class="text-danger"></span>
@@ -120,6 +115,16 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.getElementById('UsadaEvento').addEventListener('change', function () {
+        this.nextElementSibling.value = this.checked ? 1 : 0; // Ajusta o valor do campo oculto baseado no estado do checkbox
+    });
+    document.getElementById('UsadaSubevento').addEventListener('change', function () {
+        this.nextElementSibling.value = this.checked ? 1 : 0; // Ajusta o valor do campo oculto baseado no estado do checkbox
+    });
+</script>
+
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
