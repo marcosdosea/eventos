@@ -68,8 +68,8 @@ namespace EventoWeb.Models
         [Display(Name = "Frequência Minima")]
         public decimal FrequenciaMinimaCertificado { get; set; }
 
-        [Display(Name = "Vagas Ofertadas")]
-        [Required(ErrorMessage = "Informe a quantidade de Vagas Ofertadas pra esse subevento")]
+        [Required]
+        [Range(0, int.MaxValue, ErrorMessage = "O número de vagas ofertadas deve ser um número inteiro positivo.")]
         public int VagasOfertadas { get; set; }
 
         [Display(Name = "Vagas Reservadas")]
@@ -81,7 +81,8 @@ namespace EventoWeb.Models
         public int VagasDisponiveis { get; set; }
 
         [Display(Name = "Carga Horária")]
-        [Required(ErrorMessage = "Informe a Carga Horária do Subevento")]
+        [Required]
+        [Range(0, int.MaxValue, ErrorMessage = "A carga horária deve ser um número inteiro positivo.")]
         public int CargaHoraria { get; set; }
 
         [Display(Name = "ID do Tipo do Evento")]

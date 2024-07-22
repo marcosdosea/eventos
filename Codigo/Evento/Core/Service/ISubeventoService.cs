@@ -10,6 +10,7 @@ namespace Core.Service
         Subevento Get(uint id);
         IEnumerable<Subevento> GetAll();
         IEnumerable<SubeventoDTO> GetByNome(string nome);
+        IEnumerable<SubeventoEventoDTO> GetByIdEvento(uint idEvento);
     }
 }
 
