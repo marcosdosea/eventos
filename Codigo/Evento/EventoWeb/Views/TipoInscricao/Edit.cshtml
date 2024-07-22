@@ -14,7 +14,7 @@
 
 <div class="container-fluid no-padding">
     <div class="row">
-        <h1 class="blue-normal">Editar Tipo de Inscrição</h1>
+        <h1 class="blue-normal">Editar Tipo de Inscriï¿½ï¿½o</h1>
         <div class="row">
             <div>
                 <form asp-action="Edit" method="post">
@@ -23,7 +23,7 @@
                     
                     <br />
                     <h4 class="blue-normal">
-                        Informações Gerais
+                        Informaï¿½ï¿½es Gerais
                     </h4>
                     <div class="form-group mb-2">
                             <label asp-for="TipoInscricao.Nome" class="control-label"></label>
@@ -78,11 +78,11 @@
                             <div class="form-group mb-2">
                                 <div class="d-flex align-items-center">
                                     <div class="form-check">
-                                        <!-- Checkbox que marca se o evento será usado (valor 1) -->
+                                        <!-- Checkbox que marca se o evento serï¿½ usado (valor 1) -->
                                         <input class="form-check-input" type="checkbox" value="1" id="UsadaEvento" name="TipoInscricao.UsadaEvento"
                                         @(Model.TipoInscricao.UsadaEvento == 1 ? "checked" : "")>
                                         <label class="form-check-label" for="UsadaEvento">Usado em Evento</label>
-                                        <!-- Campo oculto para enviar valor 0 quando o checkbox não está marcado -->
+                                        <!-- Campo oculto para enviar valor 0 quando o checkbox nï¿½o estï¿½ marcado -->
                                         <input type="hidden" name="TipoInscricao.UsadaEvento" value="0">
                                     </div>
                                 </div>
@@ -93,11 +93,11 @@
                             <div class="form-group mb-3">
                                 <div class="d-flex align-items-center">
                                     <div class="form-check">
-                                        <!-- Checkbox que marca se o subevento será usado (valor 1) -->
+                                        <!-- Checkbox que marca se o subevento serï¿½ usado (valor 1) -->
                                         <input class="form-check-input" type="checkbox" value="1" id="UsadaSubevento" name="TipoInscricao.UsadaSubevento"
                                         @(Model.TipoInscricao.UsadaSubevento == 1 ? "checked" : "")>
                                         <label class="form-check-label" for="UsadaSubevento">Usado em Subevento</label>
-                                        <!-- Campo oculto para enviar valor 0 quando o checkbox não está marcado -->
+                                        <!-- Campo oculto para enviar valor 0 quando o checkbox nï¿½o estï¿½ marcado -->
                                         <input type="hidden" name="TipoInscricao.UsadaSubevento" value="0">
                                     </div>
                                 </div>
