@@ -4,6 +4,9 @@
 	ViewData["Title"] = "Create";
 }
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+
 <h1 class="blue-normal">Novo evento</h1>
 <div class="row">
 	<div>
@@ -19,7 +22,7 @@
 				<div class="col-md-3">
 					<div class="form-group">
 						<label asp-for="Evento.Estado" class="control-label"></label>
-						<select asp-for="Evento.Estado" class="form-control" asp-items="Model.Estados">
+						<select asp-for="Evento.Estado" class="form-select" asp-items="Model.Estados">
 							<option value="">Selecione o estado</option>
 						</select>
 						<span asp-validation-for="Evento.Estado" class="text-danger"></span>
@@ -28,7 +31,7 @@
 				<div class="col-md-3">
 					<div class="form-group">
 						<label asp-for="Evento.IdTipoEvento" class="control-label">Tipo do Evento</label>
-						<select asp-for="Evento.IdTipoEvento" class="form-control" asp-items="Model.TiposEventos">
+						<select asp-for="Evento.IdTipoEvento" class="form-select" asp-items="Model.TiposEventos">
 							<option value="">Selecione o tipo de evento</option>
 						</select>
 						<span asp-validation-for="Evento.Estado" class="text-danger"></span>
@@ -40,25 +43,23 @@
 				<div class="col-2">
 					<div class="form-group">
 						<label asp-for="Evento.Status" class="control-label"></label>
-						<select asp-for="Evento.Status" class="form-select" aria-label="Default select example">
-							<option value="C">Cadastro</option>
-							<option value="A">Ativo</option>
-							<option value="F">Finalizado</option>
-							<option value="I">Inativo</option>
-						</select>
+						<input type="hidden" asp-for="Evento.Status" value="C">
+						<span class="form-control">Cadastro</span>
 						<span asp-validation-for="Evento.Status" class="text-danger"></span>
 					</div>
 				</div>
-				</div>
+			</div>
 			<br />
-			<div class="d-flex flex-row-reverse">
-				<div class="form-group">
-					<input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
+			<div class="d-flex justify-content-end">
+				<div class="d-flex flex-row">
+					<div class="form-group" style="margin-right: 10px;">
+						<input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
+					</div>
+					<div class="form-group">
+						<a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
+					</div>
 				</div>
-				<div class="form-group" style="margin-right: 10px;">
-					<a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
-				</div>
-			</div>		
+			</div>
 		</form>
 	</div>
 </div>

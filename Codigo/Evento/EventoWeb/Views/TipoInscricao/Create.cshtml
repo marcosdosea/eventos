@@ -4,6 +4,9 @@
     ViewData["Title"] = "Create";
 }
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+
 <head>
     <link rel="stylesheet" type="text/css" href="~/css/style.css">
 </head>
@@ -103,13 +106,15 @@
                         </div>
                     </div>
                     <br />
-                    <div class="d-flex flex-row-reverse">
+                    <div class="d-flex justify-content-end">
+                    <div class="d-flex flex-row">
                         <div class="form-group">
-                            <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
-                        </div>
-                        <div class="form-group" style="margin-right: 10px;">
                             <a href="/TipoInscricao/Index?idEvento=@Model.TipoInscricao.IdEvento" class="btn btn-outline-danger">Cancelar</a>
                         </div>
+                        <div class="form-group" style="margin-right: 10px;">
+                            <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
+                        </div>
+                    </div>
                     </div>
                 </form>
             </div>

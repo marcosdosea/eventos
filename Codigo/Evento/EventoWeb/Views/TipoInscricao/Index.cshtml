@@ -4,14 +4,17 @@
     ViewData["Title"] = "Index";
 }
 
+<!DOCTYPE html>
+<html lang="pt-BR">
+
 <head>
     <link rel="stylesheet" type="text/css" href="~/css/style.css">
 </head>
 
 <div>
-    <h1 class="blue-normal">Verifique os Tipos de Inscrição de seus Eventos!</h1>
+    <h1 class="blue-normal">Verifique os Tipos de InscriÃ§Ã£o de seus Eventos!</h1>
     <button type="button" class="btn-blue-normal btn btn-lg mb-2">
-        <a asp-action="Create" asp-route-idEvento="@ViewData["EventoId"]" style="text-decoration:none; color:white">Novo Tipo de Inscrição</a>
+        <a asp-action="Create" asp-route-idEvento="@ViewData["EventoId"]" style="text-decoration:none; color:white">Novo Tipo de InscriÃ§Ã£o</a>
     </button>
 
     <table class="table table-striped">
@@ -23,14 +26,14 @@
                 <th>@Html.DisplayNameFor(model => model.Valor)</th>
                 <th>@Html.DisplayNameFor(model => model.DataInicio)</th>
                 <th>@Html.DisplayNameFor(model => model.Datafim)</th>
-                <th>Ações</th>
+                <th>AÃ§Ãµes</th>
             </tr>
         </thead>
         <tbody>
             @if (!Model.Any())
             {
                 <tr>
-                    <td colspan="7">Não há tipos de inscrição cadastrados para o evento @ViewData["EventoNome"].</td>
+                    <td colspan="7">NÃ£o hÃ¡ tipos de inscriÃ§Ã£o cadastrados para o evento @ViewData["EventoNome"].</td>
                 </tr>
             }
             else
