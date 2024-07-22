@@ -70,7 +70,7 @@
                         @Html.DisplayFor(modelItem => item.NomeTipoEvento)
                     </td>
                     <td>
-                        @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" })
+                        @Html.ActionLink("Editar", "CreateOrEdit", new {idEvento = item.IdEvento ,idSubevento = item.Id }, new { @style = "text-decoration:none;" })
                         &nbsp;&nbsp;
                         @Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @style = "text-decoration:none;", @class = "danger-normal" })
                     </td>

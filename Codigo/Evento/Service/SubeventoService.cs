@@ -90,6 +90,29 @@ namespace Service
                         };
             return query;
         }
+        /// <summary>
+        /// Obter eventos que iniciam com o nome
+        /// </summary>
+        /// <param name="nome">nome do subevento</param>
+        /// <returns>lista de subeventos</returns>
+        public IEnumerable<SubeventoEventoDTO> GetByIdEvento(uint idEvento)
+        {
+            var query = from subevento in _context.Subeventos
+                where subevento.IdEvento == idEvento
+                orderby subevento.Nome
+                select new SubeventoEventoDTO
+                {
+                    Nome = subevento.Nome,
+                    ValorInscricao = subevento.ValorInscricao,
+                    DataInicio = subevento.DataInicio,
+                    DataFim = subevento.DataFim,
+                    IdTipoInscricaos = subevento.IdTipoInscricaos
+                };
+
+            return query.ToList();
+        }
+
+
     }
 }
 

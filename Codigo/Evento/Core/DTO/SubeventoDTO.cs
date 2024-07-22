@@ -20,4 +20,19 @@
 
         public DateTime DataFim { get; set; }
     }
+    public  class SubeventoEventoDTO
+    {
+
+        public string Nome { get; set; } = null!;
+
+        public DateTime DataInicio { get; set; }
+
+        public DateTime DataFim { get; set; }
+    
+        public decimal ValorInscricao { get; set; }
+
+        public uint IdTipoEvento { get; set; }
+
+        public virtual ICollection<Tipoinscricao> IdTipoInscricaos { get; set; } = new List<Tipoinscricao>();
+    }
 }
