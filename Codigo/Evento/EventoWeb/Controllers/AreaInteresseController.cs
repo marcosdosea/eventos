@@ -3,9 +3,11 @@ using Core;
 using Core.Service;
 using Microsoft.AspNetCore.Mvc;
 using EventoWeb.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EventoWeb.Controllers;
 
+[Authorize(Roles ="ADMINISTRADOR")]
 public class AreaInteresseController : Controller
 {
     private readonly IAreaInteresseService _areaInteresseService;
