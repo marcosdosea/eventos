@@ -25,11 +25,16 @@ namespace EventoWeb.Controllers.Tests
             cfg.AddProfile(new SubeventoProfile())).CreateMapper();
 
             mockService.Setup(service => service.GetAll())
-                .Returns(GetTestSubeventos());
+                            .Returns(GetTestSubeventos());
             mockService.Setup(service => service.Get(1))
                 .Returns(GetTargetSubevento());
             mockService.Setup(service => service.Create(It.IsAny<Subevento>()))
                 .Verifiable();
+            mockServiceEvento.Setup(service => service.GetNomeById(1))
+                .Returns("SEMINFO");
+            mockServiceTipoevento.Setup(service => service.GetNomeById(1))
+                .Returns("Tecnologia");
+
             controller = new SubeventoController(mockService.Object, mapper, mockServiceEvento.Object, mockServiceTipoevento.Object);
         }
 
@@ -83,23 +88,25 @@ namespace EventoWeb.Controllers.Tests
         public void CreateTest()
         {
             // Act
-            var result = controller.Create();
+            var result = controller.CreateOrEdit(1,null);
 
             // Assert 
             Assert.IsInstanceOfType(result, typeof(ViewResult));
+            ViewResult viewResult = (ViewResult)result;
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(SubeventoCreateModel));
         }
 
         [TestMethod()]
         public void CreateTest_Valid()
         {
             // Act
-            var result = controller.Create(GetNewSubevento());
+            var result = controller.CreateOrEdit(1,null,GetNewSubevento());
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.IsNull(redirectToActionResult.ControllerName);
-            Assert.AreEqual("Index", redirectToActionResult.ActionName);
+            Assert.AreEqual("index", redirectToActionResult.ActionName);
         }
 
         [TestMethod()]
@@ -109,14 +116,14 @@ namespace EventoWeb.Controllers.Tests
             controller.ModelState.AddModelError("Nome", "Nome do Subevento é obrigatório");
 
             // Act
-            var result = controller.Create(GetNewSubevento());
+            var result = controller.CreateOrEdit(1, null, GetNewSubevento());
 
             // Assert
             Assert.AreEqual(1, controller.ModelState.ErrorCount);
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.IsNull(redirectToActionResult.ControllerName);
-            Assert.AreEqual("Index", redirectToActionResult.ActionName);
+            Assert.AreEqual("index", redirectToActionResult.ActionName);
         }
 
 
@@ -124,13 +131,13 @@ namespace EventoWeb.Controllers.Tests
         public void EditTest_Get_Valid()
         {
             // Act
-            var result = controller.Edit(1);
+            var result = controller.CreateOrEdit(1,1);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
-            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(SubeventocreateModel));
-            SubeventocreateModel subeventoModel = (SubeventocreateModel)viewResult.ViewData.Model;
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(SubeventoCreateModel));
+            SubeventoCreateModel subeventoModel = (SubeventoCreateModel)viewResult.ViewData.Model;
             Assert.AreEqual((uint)1, subeventoModel.Subevento.IdEvento);
             Assert.AreEqual("SEMINFO", subeventoModel.Subevento.Nome);
             Assert.AreEqual("Evento para a semana da tecnologia", subeventoModel.Subevento.Descricao);
@@ -154,17 +161,17 @@ namespace EventoWeb.Controllers.Tests
         public void EditTest_Post_Valid()
         {
             // Act
-            var result = controller.Edit(GetTargetSubeventoModelEdit().Subevento.Id, GetTargetSubeventoModelEdit());
+            var result = controller.CreateOrEdit(GetTargetSubeventoModelEdit().Subevento.IdEvento, GetTargetSubeventoModelEdit().Subevento.Id,GetNewSubevento());
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.IsNull(redirectToActionResult.ControllerName);
-            Assert.AreEqual("Index", redirectToActionResult.ActionName);
+            Assert.AreEqual("index", redirectToActionResult.ActionName);
         }
 
         [TestMethod()]
-        public void DeleteTest_Post_Valid()
+        public void DeleteTest_Get_Valid()
         {
             // Act
             var result = controller.Delete(1);
@@ -194,7 +201,7 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public void DeleteTest_Get_Valid()
+        public void DeleteTest_Post_Valid()
         {
             // Act
             var result = controller.Delete(GetTargetSubeventoModel().Id, GetTargetSubeventoModel());
@@ -210,7 +217,6 @@ namespace EventoWeb.Controllers.Tests
         {
             var subeventoModel = new SubeventoModel
             {
-                Id = 1,
                 IdEvento = 1,
                 Nome = "SEMINFO",
                 Descricao = "Evento para a semana da tecnologia",
@@ -282,7 +288,7 @@ namespace EventoWeb.Controllers.Tests
                 VagasDisponiveis = 65,
                 CargaHoraria = 4,
             };
-            return new SubeventocreateModel
+            return new SubeventoCreateModel
             {
                 Subevento = subeventoModel,
             };
@@ -310,6 +316,106 @@ namespace EventoWeb.Controllers.Tests
                 VagasReservadas = 35,
                 VagasDisponiveis = 65,
                 CargaHoraria = 4,
+            };
+        }
+
+        private IEnumerable<Evento> GetTestEventos()
+        {
+            return new List<Evento>
+            {
+                new Evento
+                {
+                    Id = 1,
+                    Nome = "SEMINFO",
+                    Descricao = "Evento para a semana da tecnologia",
+                    DataInicio = new DateTime(2024, 10, 2, 7, 30, 0),
+                    DataFim = new DateTime(2024, 10, 7, 12, 30, 0),
+                    InscricaoGratuita = 1,
+                    Status = "A",
+                    DataInicioInscricao = new DateTime(2024, 09, 2, 7, 30, 0),
+                    DataFimInscricao = new DateTime(2024, 09, 7, 12, 30, 0),
+                    ValorInscricao = 0,
+                    Website = "www.itatechjr.com.br",
+                    EmailEvento = "DSI@academico.ufs.br",
+                    EventoPublico = 1,
+                    Cep = "49506036",
+                    Estado = "SE",
+                    Cidade = "Itabaiana",
+                    Bairro = "Porto",
+                    Rua = " Av. Vereador Olímpio Grande",
+                    Numero = "s/n",
+                    Complemento = "Universidade",
+                    PossuiCertificado = 1,
+                    FrequenciaMinimaCertificado = 1,
+                    IdTipoEvento = 1,
+                    VagasOfertadas = 100,
+                    VagasReservadas = 35,
+                    VagasDisponiveis = 65,
+                    TempoMinutosReserva = 240,
+                    CargaHoraria = 4,
+                    },
+                new Evento
+                {
+                        Id = 3,
+                        Nome = "SEMAC",
+                        Descricao = "Semana academica de cursos",
+                        DataInicio = new DateTime(2024, 10, 2, 7, 30, 0),
+                        DataFim = new DateTime(2024, 10, 7, 12, 30, 0),
+                        InscricaoGratuita = 1,
+                        Status = "F",
+                        DataInicioInscricao = new DateTime(2024, 02, 2, 7, 30, 0),
+                        DataFimInscricao = new DateTime(2024, 02, 7, 12, 30, 0),
+                        ValorInscricao = 0,
+                        Website = "www.itatechjr.com.br",
+                        EmailEvento = "DSI@academico.ufs.br",
+                        EventoPublico = 1,
+                        Cep = "49506036",
+                        Estado = "SE",
+                        Cidade = "Itabaiana",
+                        Bairro = "Porto",
+                        Rua = " Av. Vereador Olímpio Grande",
+                        Numero = "s/n",
+                        Complemento = "Universidade",
+                        PossuiCertificado = 1,
+                        FrequenciaMinimaCertificado = 1,
+                        IdTipoEvento = 1,
+                        VagasOfertadas = 100,
+                        VagasReservadas = 35,
+                        VagasDisponiveis = 65,
+                        TempoMinutosReserva = 240,
+                        CargaHoraria = 4,
+                    },
+                new Evento
+                {
+                        Id = 5,
+                        Nome = "Balada do DJ Ikaruz",
+                        Descricao = "Festa Fechada",
+                        DataInicio = new DateTime(2024, 10, 2, 7, 30, 0),
+                        DataFim = new DateTime(2024, 10, 7, 12, 30, 0),
+                        InscricaoGratuita = 1,
+                        Status = "C",
+                        DataInicioInscricao = new DateTime(2024, 09, 2, 7, 30, 0),
+                        DataFimInscricao = new DateTime(2024, 09, 3, 7, 30, 0),
+                        ValorInscricao = 0,
+                        Website = "www.dj.com.br",
+                        EmailEvento = "DJ@gmail.com",
+                        EventoPublico = 1,
+                        Cep = "49506036",
+                        Estado = "SE",
+                        Cidade = "Itabaiana",
+                        Bairro = "Porto",
+                        Rua = " Av. Vereador Olímpio Grande",
+                        Numero = "s/n",
+                        Complemento = "Universidade",
+                        PossuiCertificado = 0,
+                        FrequenciaMinimaCertificado = 0,
+                        IdTipoEvento = 3,
+                        VagasOfertadas = 100,
+                        VagasReservadas = 35,
+                        VagasDisponiveis = 65,
+                        TempoMinutosReserva = 240,
+                        CargaHoraria = 12,
+                    },
             };
         }
 
