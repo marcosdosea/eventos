@@ -206,7 +206,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
         }
 
-        private SubeventocreateModel GetNewSubevento()
+        private SubeventoCreateModel GetNewSubevento()
         {
             var subeventoModel = new SubeventoModel
             {
@@ -229,7 +229,7 @@ namespace EventoWeb.Controllers.Tests
                 VagasDisponiveis = 65,
                 CargaHoraria = 4,
             };
-            return new SubeventocreateModel
+            return new SubeventoCreateModel
             {
                 Subevento = subeventoModel,
             };
@@ -259,7 +259,7 @@ namespace EventoWeb.Controllers.Tests
             };
         }
 
-        private SubeventocreateModel GetTargetSubeventoModelEdit()
+        private SubeventoCreateModel GetTargetSubeventoModelEdit()
         {
             var subeventoModel = new SubeventoModel
             {

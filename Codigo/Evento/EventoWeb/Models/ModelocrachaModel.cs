@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Util;
 
 namespace EventoWeb.Models
 {
@@ -11,7 +12,8 @@ namespace EventoWeb.Models
 
         [Display(Name = "Logotipo do crachá ")]
         [Required(ErrorMessage = "Informe a logotipo")]
-        public byte[] Logotipo { get; set; } = null!;
+        [ImagemUpload]
+        public IFormFile Logotipo { get; set; } = null!;
 
         [Display(Name = "Texto do crachá ")]
         [Required(ErrorMessage = "Informe o texto do crachá")]

@@ -48,7 +48,27 @@ namespace EventoWeb.Controllers
         {
             if (ModelState.IsValid)
             {
+                byte[] logoTipoSource = null;
+                if (modelocrachaModel.Logotipo.Length > 0)
+                {
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        modelocrachaModel.Logotipo.CopyTo(memoryStream);
+                        // Upload the file if less than 1 MB  
+                        if (memoryStream.Length < 1046026)
+                        {
+
+                            logoTipoSource = memoryStream.ToArray();
+                        }
+                        else
+                        {
+                            ModelState.AddModelError("File", "O arquivo é muito grande.");
+                        }
+                    }
+                }
+
                 var modelocracha = _mapper.Map<Modelocracha>(modelocrachaModel);
+                modelocracha.Logotipo = logoTipoSource;
                 _modelocrachaService.Create(modelocracha);
             }
             return RedirectToAction(nameof(Index));
