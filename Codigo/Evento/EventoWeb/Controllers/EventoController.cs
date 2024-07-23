@@ -184,5 +184,77 @@ namespace EventoWeb.Controllers
 
             return RedirectToAction("CreatePessoaPapel", new { idEvento, idPapel });
         }
+
+        //GET: EventoController/GerenciarEvento
+        public IActionResult GerenciarEvento()
+        {
+            var listarEventos = _eventoService.GetAll().ToList();
+            var listarEventosModel = listarEventos.Select(e => new EventoModel
+            {
+                Id = e.Id,
+                DataInicio = (DateTime)e.DataInicio,
+                Nome = e.Nome,
+                Status = e.Status,
+                IdTipoEvento = (uint)e.IdTipoEvento,
+                NomeTipoEvento = _tipoEventoService.GetNomeById((uint)e.IdTipoEvento)
+            }).ToList();
+
+            return View(listarEventosModel);
+        }
+
+        //GET: EventoController/GerenciarEventoListar
+        public ActionResult GerenciarEventoListar(uint idEvento)
+        {
+            Evento evento = _eventoService.Get(idEvento);
+            EventoModel eventoModel = _mapper.Map<EventoModel>(evento);
+            return View(eventoModel);
+
+        }
+
+        // GET: EventoController/GestorEditarEvento/5
+        public ActionResult GestorEditarEvento(uint id)
+        {
+            var evento = _eventoService.Get(id);
+            if (evento == null)
+            {
+                return NotFound();
+            }
+
+            var eventoModel = _mapper.Map<EventoModel>(evento);
+            var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
+            var tiposEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
+            var areaInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
+            var viewModel = new EventocreateModel
+            {
+                Evento = eventoModel,
+                Estados = new SelectList(estados, "Estado", "Nome", eventoModel.Estado),
+                TiposEventos = new SelectList(tiposEventos, "Id", "Nome", eventoModel.Id),
+                AreaInteresse = new SelectList(areaInteresse, "Id", "Nome", eventoModel.Id)
+            };
+
+            return View(viewModel);
+        }
+
+        // POST: EventoController/GestorEditarEvento/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult GestorEditarEvento(uint id, EventocreateModel viewModel)
+        {
+
+            var evento = _mapper.Map<Evento>(viewModel.Evento);
+
+            var idAreaInteresse = viewModel.Evento.IdAreaInteresse;
+			var areaInteresse = _areaInteresseService.Get(idAreaInteresse);
+
+			if (evento.IdAreaInteresses == null)
+			{
+				evento.IdAreaInteresses = new List<Core.Areainteresse>();
+			}
+
+			evento.IdAreaInteresses.Clear(); 
+			evento.IdAreaInteresses.Add(areaInteresse);
+            _eventoService.Edit(evento);
+            return RedirectToAction(nameof(Index));
+        }
     }
 }
