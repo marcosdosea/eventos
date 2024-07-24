@@ -32,14 +32,27 @@
     align-items: center;
 }
 
+.a {
+    text-decoration: none;
+}
+
 @media (max-width: 1100px) {
-    .custom-hide {
+
+    .menu-area-principal {
         display: none;
+    }
+
+    .input-group {
+        margin: 2vh;
+    }
+
+    .buton-menu{
+        margin: 2vh;
     }
 }
 
-@media (min-width: 1100px) {
+@media (min-width: 180px){
     .menu-view {
-         display: block;
+        display: none;
     }
 }
