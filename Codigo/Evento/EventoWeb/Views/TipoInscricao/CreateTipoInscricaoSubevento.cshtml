@@ -1,0 +1,117 @@
+@model EventoWeb.Models.TipoInscricaoSubeventoModel
+
+@{
+    ViewData["Title"] = "CreateTipoInscricaoSubevento";
+}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <link rel="stylesheet" type="text/css" href="~/css/style.css">
+</head>
+
+<body>
+<div class="container-fluid no-padding">
+    <div class="row">
+        <h1 class="blue-normal">Cadastro de Tipos de Inscrição de Subeventos</h1>
+        <div class="row">
+            <div>
+                <form asp-action="CreateTipoInscricaoSubevento" method="post">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                    <div class="row">
+                        <div class="col-2">
+                            <div class="form-group">
+                                <label for="IdSubevento" class="control-label">Subevento</label>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="form-group">
+                                <select id="idSubevento" name="IdSubevento" class="form-control" readonly>
+                                    @if (Model.Subevento.Id == null || Model.Subevento.Id == 0)
+                                    {
+                                    <option value="0">Não Informado</option>
+                                    }
+                                    else
+                                    {
+                                    <option value="@Model.Subevento.Id" selected>@Model.Subevento.Nome</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">    
+                        <div class="col-2">
+                            <div class="form-group">
+                                <label asp-for="IdTipoInscricao" class="control-label">Tipo de Inscrição</label>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="form-group">
+                                <select asp-for="IdTipoInscricao" class="form-control">
+                                    @if (!Model.TiposInscricaos.Any())
+                                    {
+                                    <option value="">Nenhum Disponível</option>
+                                    }
+                                    else
+                                    {
+                                    <option value="">Selecione um Tipo</option>
+                                    @foreach (var item in Model.TiposInscricaos)
+                                    {
+                                    <option value="@item.Value">@item.Text</option>
+                                    }
+                                    }
+                                </select>
+                                <span asp-validation-for="IdTipoInscricao" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="form-group" style="margin-right: 10px;">
+                                <input type="submit" value="Adicionar" class="btn btn-blue-normal color-white"/>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <table class="table table-striped">
+        <thead class="blue-normal blue-normal-bg-table">
+        <tr>
+            <th>Tipo</th>
+            <th>Valor</th>
+            <th>Data Início</th>
+            <th>Data Fim</th>
+            <th>Ações</th>
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var tipoInscricaoSubevento in Model.TiposInscricaosSubevento)
+        {
+        <tr>
+            <td style="vertical-align: middle;">@tipoInscricaoSubevento.Nome</td>
+            <td style="vertical-align: middle;">@tipoInscricaoSubevento.Valor.ToString("C")</td> 
+            <td style="vertical-align: middle;">@tipoInscricaoSubevento.DataInicio.ToString("dd/MM/yyyy")</td>
+            <td style="vertical-align: middle;">@tipoInscricaoSubevento.Datafim.ToString("dd/MM/yyyy")</td>
+            <td style="vertical-align: middle;">
+                <form asp-action="DeleteTipoInscricaoSubevento" method="post" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir?');">
+                    <input type="hidden" name="idSubevento" value="@Model.Subevento.Id" />
+                    <input type="hidden" name="idTipoInscricao" value="@tipoInscricaoSubevento.Id" />
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                </form>
+
+            </td>
+        </tr>
+        }
+        </tbody>
+    </table>
+</div>
+
+
+</body>
+
+</html>
