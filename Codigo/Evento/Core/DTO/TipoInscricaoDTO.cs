@@ -1,9 +1,11 @@
 namespace Core.DTO
 {
-    public class TipoInscicaoDTO
+    public class TipoInscricaoDTO
     {
-        public int Id { get; set; }
-    
+        public uint Id { get; set; }
+
+        public string Nome { get; set; } = null!;
+
         public uint IdEvento { get; set; }
 
         public string Descricao { get; set; } = null!;
