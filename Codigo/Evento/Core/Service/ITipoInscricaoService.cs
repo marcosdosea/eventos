@@ -1,6 +1,4 @@
-﻿using Core.DTO;
-
-namespace Core
+﻿namespace Core
 {
     public interface ITipoInscricaoService
     {
@@ -10,13 +8,6 @@ namespace Core
         Tipoinscricao Get(uint idTipoInscricao);
         IEnumerable<Tipoinscricao> GetAll();
         IEnumerable<Tipoinscricao> GetByEvento(uint idEvento);
-        
-        IEnumerable<TipoInscricaoDTO> GetByEventoUsadaSubevento(uint idEvento);
-
-        IEnumerable<TipoInscricaoDTO> GetTiposInscricaosSubevento(uint idSubevento);
-
-        void AssociacaoTipoInscricaoSubecento(uint Idsubevento, uint IdtipoInscricao);
-        void DeleteTipoInscricaoSubevento(uint Idsubevento, uint IdtipoInscricao);
 
     }
 }

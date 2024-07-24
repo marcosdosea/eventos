@@ -10,6 +10,7 @@ ViewData["Title"] = "CreateOrEdit";
 <div class="row">
     <div>
         <form asp-action="CreateOrEdit" method="post">
+            <input type="hidden" name="idEvento" value="@Model.Evento.Id" />
             @if (Model.Subevento.Id != 0)
             {
             <input type="hidden" name="idSubevento" value="@Model.Subevento.Id" />
@@ -28,7 +29,6 @@ ViewData["Title"] = "CreateOrEdit";
                                 <option value="@Model.Evento.Id" selected>@Model.Evento.Nome</option>
                             }
                         </select>
-                        @Html.HiddenFor(model => model.Evento.Id)
                     </div>
                 </div>
             </div>
