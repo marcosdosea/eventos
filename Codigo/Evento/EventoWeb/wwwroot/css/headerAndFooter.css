@@ -1,0 +1,45 @@
+﻿header {
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    position: fixed;
+    top: 0;
+    z-index: 1000;
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 95%;
+    margin: 0 auto;
+    padding: 16px 0px;
+}
+
+.logo img {
+    height: 44px;
+}
+
+.custom-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--blue-normal);
+}
+
+.custom-flex-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+@media (max-width: 1100px) {
+    .custom-hide {
+        display: none;
+    }
+}
+
+@media (min-width: 1100px) {
+    .menu-view {
+         display: block;
+    }
+}
