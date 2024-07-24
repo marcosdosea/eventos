@@ -13,39 +13,48 @@
     <div class="card">
         <img src="~/ícones/Inscricoes.png" class="card-img-bottom" alt="...">
         <div class="card-img-overlay">
-            <p class="card-text">Inscrições</p>
+            <td>
+                @Html.ActionLink("Tipo Inscrição", "Index", "TipoInscricao", new { idEvento = @Model.Id}, new { @style = "text-decoration:none;" })
+            </td>
         </div>
     </div>
-    <a>
+    
     <div class="card">
         <img src="~/ícones/Participantes.png" class="card-img-bottom" alt="...">
         <div class="card-img-overlay">
-            <p class="card-text">Participantes</p>
+                <td>
+                    @Html.ActionLink("Participantes", "CreatePessoaPapel", new { idEvento = @Model.Id, idPapel = 4 }, new { @style = "text-decoration:none;" })
+                </td>
         </div>
     </div>
-    </a>
-    <a>
+    
+    
     <div class="card">
         <img src="~/ícones/Colaboradores.png" class="card-img-bottom" alt="...">
         <div class="card-img-overlay">
-            <p class="card-text">Colaboradores</p>
+                <td>
+                    
+                    @Html.ActionLink("Colaboradores", "CreatePessoaPapel", new { idEvento = @Model.Id, idPapel = 3 }, new { @style = "text-decoration:none;" })
+                </td>
         </div>
     </div>
-    </a>
-    <a>
+    
     <div class="card">
         <img src="~/ícones/Evento.png" class="card-img-bottom" alt="...">
         <div class="card-img-overlay">
-            <p class="card-text">Evento</p>
+                <td>
+                    @Html.ActionLink("Evento", "GestorEditarEvento", new { id = @Model.Id }, new { @style = "text-decoration:none;" })
+                </td>
         </div>
     </div>
-    </a>
-    <a>
+    
     <div class="card">
         <img src="~/ícones/Subeventos.png" class="card-img-bottom" alt="...">
         <div class="card-img-overlay">
-            <p class="card-text">Subeventos</p>
+                <td>
+                    @Html.ActionLink("Subeventos", "CreateOrEdit", "Subevento", new { idEvento = @Model.Id }, new { @style = "text-decoration:none;" })
+                </td>
         </div>
     </div>
-    </a>
+    
 </div>

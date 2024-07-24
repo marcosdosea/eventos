@@ -141,7 +141,11 @@ ViewData["Title"] = papelPlural;
         </table>
     </div>
 </div>
-
+<div class="d-flex flex-row-reverse">
+    <div class="form-group" style="margin-right: 10px;">
+        <a asp-controller="Evento" asp-action="GerenciarEventoListar" asp-route-idEvento="@Model.Evento.Id" class="btn btn-lg btn-blue-normal">Voltar</a>
+    </div>
+</div>
 <!-- Modal -->
 <div class="modal fade" id="confirmRemovalModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
     <div class="modal-dialog">
