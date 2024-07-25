@@ -6,6 +6,10 @@ using EventoWeb.Models;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using EventoWeb.Mappers;
+using System.Collections.Generic;
+using System.IO;
+using Microsoft.AspNetCore.Http;
+using System;
 
 namespace EventoWeb.Controllers.Tests
 {
@@ -60,7 +64,6 @@ namespace EventoWeb.Controllers.Tests
             ModelocrachaModel modelocrachaModel = (ModelocrachaModel)viewResult.ViewData.Model;
             Assert.AreEqual((uint)1, modelocrachaModel.Id);
             Assert.AreEqual((uint)1, modelocrachaModel.IdEvento);
-            CollectionAssert.AreEqual(new byte[] { 0x20, 0x20 }, modelocrachaModel.Logotipo);
             Assert.AreEqual("Texto 1", modelocrachaModel.Texto);
             Assert.AreEqual(1, modelocrachaModel.Qrcode);
         }
@@ -118,7 +121,6 @@ namespace EventoWeb.Controllers.Tests
             ModelocrachaModel modelocrachaModel = (ModelocrachaModel)viewResult.ViewData.Model;
             Assert.AreEqual((uint)1, modelocrachaModel.Id);
             Assert.AreEqual((uint)1, modelocrachaModel.IdEvento);
-            CollectionAssert.AreEqual(new byte[] { 0x20, 0x20 }, modelocrachaModel.Logotipo);
             Assert.AreEqual("Texto 1", modelocrachaModel.Texto);
             Assert.AreEqual(1, modelocrachaModel.Qrcode);
         }
@@ -166,15 +168,28 @@ namespace EventoWeb.Controllers.Tests
 
         private ModelocrachaModel GetNewModelocracha()
         {
+            var formFileMock = new Mock<IFormFile>();
+            var content = "Hello World from a Fake File";
+            var fileName = "test.png";
+            var ms = new MemoryStream();
+            var writer = new StreamWriter(ms);
+            writer.Write(content);
+            writer.Flush();
+            ms.Position = 0;
+            formFileMock.Setup(_ => _.OpenReadStream()).Returns(ms);
+            formFileMock.Setup(_ => _.FileName).Returns(fileName);
+            formFileMock.Setup(_ => _.Length).Returns(ms.Length);
+
             return new ModelocrachaModel
             {
                 Id = 7,
                 IdEvento = 4,
-                Logotipo = new byte[] { 0x70, 0x70 },
+                Logotipo = formFileMock.Object,
                 Texto = "Texto 4",
                 Qrcode = 1
             };
         }
+
 
         private static Modelocracha GetTargetModelocracha()
         {
@@ -190,11 +205,16 @@ namespace EventoWeb.Controllers.Tests
 
         private ModelocrachaModel GetTargetModelocrachaModel()
         {
+            var formFileMock = new Mock<IFormFile>();
+            var ms = new MemoryStream(new byte[] { 0x20, 0x20 });
+            formFileMock.Setup(_ => _.OpenReadStream()).Returns(ms);
+            formFileMock.Setup(_ => _.Length).Returns(ms.Length);
+
             return new ModelocrachaModel
             {
                 Id = 1,
                 IdEvento = 1,
-                Logotipo = new byte[] { 0x20, 0x20 },
+                Logotipo = formFileMock.Object,
                 Texto = "Texto 1",
                 Qrcode = 1
             };
@@ -202,7 +222,7 @@ namespace EventoWeb.Controllers.Tests
 
         private IEnumerable<Modelocracha> GetTestModelocracha()
         {
-                return new List<Modelocracha>
+            return new List<Modelocracha>
             {
                 new Modelocracha
                 {
