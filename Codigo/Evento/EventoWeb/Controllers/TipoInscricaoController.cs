@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Core;
+using Core.DTO;
 using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -12,12 +13,14 @@ namespace EventoWeb.Controllers
     {
         private readonly ITipoInscricaoService _tipoInscricaoService;
         private readonly IEventoService _eventoService;
+        private readonly ISubeventoService _subeventoService;
         private readonly IMapper _mapper;
 
-        public TipoInscricaoController(ITipoInscricaoService tipoInscricaoService, IMapper mapper,IEventoService eventoService)
+        public TipoInscricaoController(ITipoInscricaoService tipoInscricaoService, IMapper mapper,IEventoService eventoService,ISubeventoService subeventoService)
         {
             this._tipoInscricaoService = tipoInscricaoService;
             this._eventoService = eventoService;
+            this._subeventoService = subeventoService;
             this._mapper = mapper;
         }
 
@@ -152,6 +155,37 @@ namespace EventoWeb.Controllers
             _tipoInscricaoService.Delete(id);
             return RedirectToAction(nameof(Index), new { idEvento = idEvento });
         }
+        
+        // GET: TipoInscricaoController/CreateTipoInscricaoSubevento
+        public ActionResult CreateTipoInscricaoSubevento(uint idSubevento)
+        {
+            var subevento = _subeventoService.Get(idSubevento);
+            var tiposInscricaos = _tipoInscricaoService.GetByEventoUsadaSubevento(subevento.IdEvento);
+            var tiposInscricaosSubevento = _tipoInscricaoService.GetTiposInscricaosSubevento(idSubevento);
+            var view = new TipoInscricaoSubeventoModel()
+            {
+                Subevento = subevento,
+                TiposInscricaos = new SelectList(tiposInscricaos, "Id", "Nome"),
+                TiposInscricaosSubevento = tiposInscricaosSubevento
+            };
+            return View(view);    
+        }
+        // POST: TipoInscricaoController/CreateTipoInscricaoSubevento   
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult CreateTipoInscricaoSubevento(uint idSubevento, uint IdTipoInscricao)
+        {
+            _tipoInscricaoService.AssociacaoTipoInscricaoSubecento(idSubevento, IdTipoInscricao);
+            return RedirectToAction("CreateTipoInscricaoSubevento", new { idSubevento });
+        }
+        
+        
+        // POST: TipoInscricaoController/DeleteTipoInscricaoSubevento
+        public IActionResult DeleteTipoInscricaoSubevento(uint idSubevento,uint IdTipoInscricao)
+        {
+            _tipoInscricaoService.DeleteTipoInscricaoSubevento(idSubevento, IdTipoInscricao);
 
+            return RedirectToAction("CreateTipoInscricaoSubevento", new { idSubevento }); 
+        }
     }
 }
