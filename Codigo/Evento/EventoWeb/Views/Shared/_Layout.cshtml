@@ -63,45 +63,41 @@
 		</main>
 	</div>
 	<footer class="footer">
-		<div class="footer-background">
-			<div class="custom-flex-container">
-				<div class="custom-column-flex align-items-left">
-					<div class="tittle-text-footer">Bora lá para<br />mais um evento?</div>
-					<div class="flex-column-container">
-						<div class="help-text">Precisa de ajuda?</div>
-						<div class="contact-container ml-auto">
-							<button class="btn btn-contact contact-text btn-custom-height">
-								Fale com o Bora
-								lá!
-							</button>
-						</div>
-					</div>
+		<div class="container ">
+			<div class="row">
+				<div class="col-md-3 text-center text-md-start mb-3 mb-md-0">
+					<h4><strong>Bora lá para</strong></h4>
+					<h4>
+						mais um evento?
+					</h4>
+					<p>Precisa de ajuda?</p>
+					<a href="#" class="btn btn-whithe">Fale com o Bora lá!</a>
 				</div>
-				<div class="flex-start-container">
-					<div class="column-flex-container">
-						<div class="institutional-text">Institucional</div>
-						<div class="about">Sobre nós</div>
-						<div class="about">Marca</div>
-						<div class="about">Fale com o Bora lá</div>
-					</div>
-					<div class="column-flex-container">
-						<div class="institutional-text">Termos</div>
-						<div class="about">Lei da Meia-Entrada</div>
-						<div class="about">Termos de Serviço</div>
-						<div class="about">Termos de Privacidade</div>
-					</div>
+				<div class="col-md-3 text-center text-md-start mb-3 mb-md-0 link-footer">
+					<h5><strong>Institucional</strong></h5>
+					<a href="#">Sobre nós</a>
+					<br />
+					<a href="#">Falar com o Bora lá</a>
 				</div>
-				<div class="column-flex-container">
-					<div class="institutional-text">Redes Sociais</div>
-					<div class="flex-container">
-						<div class="icon-container">
-							<a href="https://www.instagram.com" target="_blank"><i class="bi bi-instagram"></i></a>
+				<div class="col-md-3 text-center text-md-start mb-3 mb-md-0 link-footer">
+					<h5><strong>Termos</strong></h5>
+					<a href="#">Lei da meia entrada</a>
+					<br />
+					<a href="#">Termos de serviços</a>
+					<br />
+					<a href="#">Termos de Privacidade</a>
+				</div>
+				<div class="col-md-3 text-center text-md-start mb-3 mb-md-0">
+					<h5><strong>Redes Sociais</strong></h5>
+					<div class="flex-row d-flex justify-content-center justify-content-md-start">
+						<div class="icon-container me-3"> 
+							<a href="https://www.instagram.com" target="_blank" class="text-white"><i class="bi bi-instagram"></i></a>
+						</div>
+						<div class="icon-container me-3">
+							<a href="https://www.facebook.com" target="_blank" class="text-white"><i class="bi bi-facebook"></i></a>
 						</div>
 						<div class="icon-container">
-							<a href="https://www.facebook.com" target="_blank"><i class="bi bi-facebook"></i></a>
-						</div>
-						<div class="icon-container">
-							<a href="https://www.linkedin.com" target="_blank"><i class="bi bi-linkedin"></i></a>
+							<a href="https://www.linkedin.com" target="_blank" class="text-white"><i class="bi bi-linkedin"></i></a>
 						</div>
 					</div>
 				</div>
@@ -116,8 +112,6 @@
 	<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 	<script src="~/js/site.js" asp-append-version="true"></script>
 	<script src="~/js/formHelpers.js"></script>
-	<script src="~/js/hamburguer.js"></script>
-	<script src="~/js/mobileMenu.js"></script>
 	@await RenderSectionAsync("Scripts", required: false)
 </body>
 

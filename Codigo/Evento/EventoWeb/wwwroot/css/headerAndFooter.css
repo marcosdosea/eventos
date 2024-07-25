@@ -32,8 +32,23 @@
     align-items: center;
 }
 
-.a {
+.link-footer a{
+    color: #FFF;
     text-decoration: none;
+}
+
+.footer{
+    background: #0026ff;
+    color: aliceblue;
+    padding: 60px;
+}
+
+.icon-container {
+    color: #ffffff;
+}
+
+.icon-container a:hover {
+    color: #d3d3d3;
 }
 
 @media (max-width: 1100px) {
