@@ -14,7 +14,7 @@
 
 <div class="container-fluid no-padding">
     <div class="row">
-        <h1 class="blue-normal">Editar Tipo de Inscri��o</h1>
+        <h1 class="blue-normal">Editar Tipo de Inscrição</h1>
         <div class="row">
             <div>
                 <form asp-action="Edit" method="post">
@@ -23,7 +23,7 @@
                     
                     <br />
                     <h4 class="blue-normal">
-                        Informa��es Gerais
+                        Informações Gerais
                     </h4>
                     <div class="form-group mb-2">
                             <label asp-for="TipoInscricao.Nome" class="control-label"></label>
@@ -74,7 +74,7 @@
                     </div>
                     <br />
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <div class="form-group mb-2">
                                 <div class="d-flex align-items-center">
                                     <div class="form-check">
@@ -89,7 +89,7 @@
                                 <span asp-validation-for="TipoInscricao.UsadaEvento" class="text-danger"></span>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <div class="form-group mb-3">
                                 <div class="d-flex align-items-center">
                                     <div class="form-check">
@@ -122,17 +122,18 @@
     </div>
 </div>
 
-<script>
-    document.getElementById('UsadaEvento').addEventListener('change', function () {
-        this.nextElementSibling.value = this.checked ? 1 : 0; // Ajusta o valor do campo oculto baseado no estado do checkbox
-    });
-    document.getElementById('UsadaSubevento').addEventListener('change', function () {
-        this.nextElementSibling.value = this.checked ? 1 : 0; // Ajusta o valor do campo oculto baseado no estado do checkbox
-    });
-</script>
 
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        document.getElementById('UsadaEvento').addEventListener('change', function () {
+            this.nextElementSibling.value = this.checked ? 1 : 0; // Ajusta o valor do campo oculto baseado no estado do checkbox
+        });
+        document.getElementById('UsadaSubevento').addEventListener('change', function () {
+            this.nextElementSibling.value = this.checked ? 1 : 0; // Ajusta o valor do campo oculto baseado no estado do checkbox
+        });
+    </script>
+
 }

@@ -74,7 +74,7 @@
                     </div>
                     <br />
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <div class="form-group mb-2">
                                 <div class="d-flex align-items-center">
                                     <div class="form-check">
@@ -89,7 +89,7 @@
                                 <span asp-validation-for="TipoInscricao.UsadaEvento" class="text-danger"></span>
                             </div>
                         </div>
-                        <div class="col-md-6">
+                        <div class="col-md-3">
                             <div class="form-group mb-3">
                                 <div class="d-flex align-items-center">
                                     <div class="form-check">
@@ -107,31 +107,32 @@
                     </div>
                     <br />
                     <div class="d-flex justify-content-end">
-                    <div class="d-flex flex-row">
-                        <div class="form-group">
-                            <a href="/TipoInscricao/Index?idEvento=@Model.TipoInscricao.IdEvento" class="btn btn-outline-danger">Cancelar</a>
+                        <div class="d-flex flex-row">
+                            <div class="form-group" style="margin-right: 10px;">
+                                <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
+                            </div>
+                            <div class="form-group">
+                                <a href="/TipoInscricao/Index?idEvento=@Model.TipoInscricao.IdEvento" class="btn btn-outline-danger">Cancelar</a>
+                            </div>
                         </div>
-                        <div class="form-group" style="margin-right: 10px;">
-                            <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
-                        </div>
-                    </div>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
-<script>
-    document.getElementById('UsadaEvento').addEventListener('change', function () {
-        this.nextElementSibling.value = this.checked ? 1 : 0; // Ajusta o valor do campo oculto baseado no estado do checkbox
-    });
-    document.getElementById('UsadaSubevento').addEventListener('change', function () {
-        this.nextElementSibling.value = this.checked ? 1 : 0; // Ajusta o valor do campo oculto baseado no estado do checkbox
-    });
-</script>
+
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script>
+        document.getElementById('UsadaEvento').addEventListener('change', function () {
+            this.nextElementSibling.value = this.checked ? 1 : 0; // Ajusta o valor do campo oculto baseado no estado do checkbox
+        });
+        document.getElementById('UsadaSubevento').addEventListener('change', function () {
+            this.nextElementSibling.value = this.checked ? 1 : 0; // Ajusta o valor do campo oculto baseado no estado do checkbox
+        });
+    </script>
 }
 

@@ -13,11 +13,11 @@ namespace EventoWeb.Models
         [Required(ErrorMessage = "Nome do Evento é obrigatório")]
         
         public string Nome { get; set; } = null!;
-        [Display(Name = "Data Inicial do Evento")]
+        [Display(Name = "Data Inicial")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
         
         public DateTime DataInicio { get; set; }
-        [Display(Name = "Data Final do Evento")]
+        [Display(Name = "Data Final")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
         public DateTime DataFim { get; set; }
 
