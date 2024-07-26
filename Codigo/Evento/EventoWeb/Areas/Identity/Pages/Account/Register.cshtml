@@ -1,67 +1,102 @@
 ﻿@page
 @model RegisterModel
-@{
-    ViewData["Title"] = "Register";
-}
 
-<h1>@ViewData["Title"]</h1>
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css" rel="stylesheet">
+
+@{
+ViewData["Title"] = "Register";
+}
+<br/>
 
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-5">
         <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
-            <h2>Create a new account.</h2>
-            <hr />
+            <h1 class="grey-dark" style="margin-top: 96px; margin-bottom: 12px; text-align: center;">Já possui uma conta?</h1>
+            <h5 class="grey-light-active" style="margin-bottom: 32px; text-align: center;">Bem vindo! Insira seus dados</h5>
             <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+            <h5>Email</h5>
             <div class="form-floating mb-3">
                 <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
-                <label asp-for="Input.Email">Email</label>
+                <label asp-for="Input.Email" class="form-label grey-light-active">Email</label>
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
             </div>
+            <h5>Senha</h5>
             <div class="form-floating mb-3">
-                <input asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
-                <label asp-for="Input.Password">Password</label>
+                <input id="password" type="password" asp-for="Input.Password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                <label asp-for="Input.Password" class="form-label grey-light-active">Senha</label>
                 <span asp-validation-for="Input.Password" class="text-danger"></span>
+                <i class="bi bi-eye-slash position-absolute" id="togglePassword" style="top: 50%; right: 15px; cursor: pointer; transform: translateY(-50%);"></i>
             </div>
             <div class="form-floating mb-3">
-                <input asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
-                <label asp-for="Input.ConfirmPassword">Confirm Password</label>
+                <input id="confirmPassword" type="password" asp-for="Input.ConfirmPassword" class="form-control" autocomplete="new-password" aria-required="true" placeholder="password" />
+                <label asp-for="Input.ConfirmPassword" class="form-label grey-light-active">Confirme sua senha</label>
                 <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                <i class="bi bi-eye-slash position-absolute" id="toggleConfirmPassword" style="top: 50%; right: 15px; cursor: pointer; transform: translateY(-50%);"></i>
             </div>
-            <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
+            <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-blue-normal">Bora lá</button>
+            <div class="d-flex justify-content-center align-items-center" style="margin-top: 32px; margin-bottom: 96px;">
+                <div class="mb-3" style="text-align: center;">
+                    <h6 class="grey-light-active mb-0">Já possui uma conta?</h6>
+                </div>
+                <div class="mb-3" style="text-align: center; margin-left: 10px;">
+                    <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Fazer login</a>
+                </div>
+            </div>
         </form>
     </div>
     <div class="col-md-6 col-md-offset-2">
+        <div class="col-auto" style="margin-top: 180px; margin-left: 140px; width: 611.172px; height: 237px; flex-shrink: 0;">
+            <img src="~/img/LOGOTIPO.svg" class="img-fluid">
+        </div>
         <section>
-            <h3>Use another service to register.</h3>
-            <hr />
             @{
-                if ((Model.ExternalLogins?.Count ?? 0) == 0)
-                {
-                    <div>
-                        <p>
-                            There are no external authentication services configured. See this <a href="https://go.microsoft.com/fwlink/?LinkID=532715">article
-                            about setting up this ASP.NET application to support logging in via external services</a>.
-                        </p>
-                    </div>
-                }
-                else
-                {
-                    <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
-                        <div>
-                            <p>
-                                @foreach (var provider in Model.ExternalLogins!)
-                                {
-                                    <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
-                                }
-                            </p>
-                        </div>
-                    </form>
-                }
+            if ((Model.ExternalLogins?.Count ?? 0) == 0)
+            {
+            }
+            else
+            {
+            <form id="external-account" asp-page="./ExternalLogin" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="form-horizontal">
+                <div>
+                    <p>
+                        @foreach (var provider in Model.ExternalLogins!)
+                        {
+                        <button type="submit" class="btn btn-primary" name="provider" value="@provider.Name" title="Log in using your @provider.DisplayName account">@provider.DisplayName</button>
+                        }
+                    </p>
+                </div>
+            </form>
+            }
             }
         </section>
     </div>
 </div>
 
+<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+
+<script>
+    document.getElementById('togglePassword').addEventListener('click', function (e) {
+        const passwordInput = document.getElementById('password');
+        const icon = this;
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        icon.classList.toggle('bi-eye');
+        icon.classList.toggle('bi-eye-slash');
+    });
+
+    document.getElementById('toggleConfirmPassword').addEventListener('click', function (e) {
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const icon = this;
+        const type = confirmPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        confirmPasswordInput.setAttribute('type', type);
+        icon.classList.toggle('bi-eye');
+        icon.classList.toggle('bi-eye-slash');
+    });
+</script>
+
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+<partial name="_ValidationScriptsPartial" />
 }
+
