@@ -35,7 +35,7 @@
             <div class="row">
                 <div class="col-8 col-sm-8 col-md-8 col-lg-8">
                     <div class="form-group">
-                        <label asp-for="Subevento.Nome" class="control-label">Nome do evento</label>
+                        <label asp-for="Subevento.Nome" class="control-label">Nome Subevento</label>
                         <input asp-for="Subevento.Nome" class="form-control" placeholder="Nome do sub-evento" />
                         <span asp-validation-for="Subevento.Nome" class="text-danger"></span>
                     </div>
@@ -62,14 +62,14 @@
                 <div class="row">
                     <div class="col-md-3">
                         <div class="form-group">
-                            <label asp-for="Subevento.DataInicio" class="control-label">Início do subevento</label>
+                            <label asp-for="Subevento.DataInicio" class="control-label">Data Início</label>
                             <input asp-for="Subevento.DataInicio" class="form-control" style="width:13rem; type="date" />
                             <span asp-validation-for="Subevento.DataInicio" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="form-group">
-                            <label asp-for="Subevento.DataFim" class="control-label">Fim do subevento</label>
+                            <label asp-for="Subevento.DataFim" class="control-label">Data Fim</label>
                             <input asp-for="Subevento.DataFim" class="form-control" style="width:13rem; type="date" />
                             <span asp-validation-for="Subevento.DataFim" class="text-danger"></span>
                         </div>
@@ -179,18 +179,13 @@
             <div class="col-md-6">
                 <!-- Espaço em branco -->
             </div>
-            <div class="row">
-                <div class="col-md-10">
-                    <!-- Espaço em branco-->
-                </div>
-                <div class="col-md-1 mt-4">
-                    <div class="form-group">
-                        <input type="submit" value="Salvar" class="btn btn-primary" />
+            <div class="d-flex justify-content-end">
+                <div class="d-flex flex-row">
+                    <div class="form-group" style="margin-right: 10px;">
+                        <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
                     </div>
-                </div>
-                <div class="col-md-1 mt-4">
                     <div class="form-group">
-                        <a asp-action="Index" class="btn btn-secondary">Voltar</a>
+                        <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
                     </div>
                 </div>
             </div>
