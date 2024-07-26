@@ -1,23 +1,22 @@
 ﻿@model EventoWeb.Models.SubeventoCreateModel
 
 @{
-ViewData["Title"] = "CreateOrEdit";
+    ViewData["Title"] = "CreateOrEdit";
 }
 
-<h1 class="blue-normal">Cadastrar Subevento</h1>
+<h1 class="blue-normal">Cadastro de SubEvento</h1>
 <hr />
-
 <div class="row">
     <div>
         <form asp-action="CreateOrEdit" method="post">
             @if (Model.Subevento.Id != 0)
             {
-            <input type="hidden" name="idSubevento" value="@Model.Subevento.Id" />
+                <input type="hidden" name="idSubevento" value="@Model.Subevento.Id" />
             }
             <div class="row">
                 <div class="col-lg-3">
                     <div class="form-group">
-                        <label for="IdEvento" class="control-label">Evento</label>
+                        <label for="IdEvento" class="control-label">Nome</label>
                         <select id="IdEvento" name="IdEvento" class="form-control" readonly>
                             @if (Model.Evento == null || Model.Evento.Id == 0)
                             {
@@ -32,17 +31,16 @@ ViewData["Title"] = "CreateOrEdit";
                     </div>
                 </div>
             </div>
-            <br/>
-            <h4 class="blue-normal">Dados do Subevento</h4>
+            <br />
             <div class="row">
                 <div class="col-8 col-sm-8 col-md-8 col-lg-8">
                     <div class="form-group">
-                        <label asp-for="Subevento.Nome" class="control-label">Nome</label>
-                        <input asp-for="Subevento.Nome" class="form-control" placeholder="Nome do sub-evento"/>
+                        <label asp-for="Subevento.Nome" class="control-label">Nome Subevento</label>
+                        <input asp-for="Subevento.Nome" class="form-control" placeholder="Nome do sub-evento" />
                         <span asp-validation-for="Subevento.Nome" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="col-4">
+                <div class="col-md-4">
                     <div class="form-group">
                         <label asp-for="Subevento.IdTipoEvento" class="control-label">Tipo de Subevento</label>
                         <select asp-for="Subevento.IdTipoEvento" class="form-control" asp-items="Model.TiposEventos">
@@ -53,147 +51,162 @@ ViewData["Title"] = "CreateOrEdit";
                 </div>
             </div>
             <div class="row">
-                <div class="col-12">
+                <div class="col-md-12">
                     <div class="form-group">
                         <label asp-for="Subevento.Descricao" class="control-label">Descrição</label>
                         <textarea asp-for="Subevento.Descricao" class="form-control" rows="3"></textarea>
                         <span asp-validation-for="Subevento.Descricao" class="text-danger"></span>
                     </div>
                 </div>
-            </div>
-            <div class="row">
-                <div class="col-3">
-                    <div class="form-group">
-                        <label asp-for="Subevento.DataInicio" class="control-label">Data de Início</label>
-                        <input asp-for="Subevento.DataInicio" class="form-control" type="date"/>
-                        <span asp-validation-for="Subevento.DataInicio" class="text-danger"></span>
+            </div>       
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label asp-for="Subevento.DataInicio" class="control-label">Data Início</label>
+                            <input asp-for="Subevento.DataInicio" class="form-control" style="width:13rem; type="date" />
+                            <span asp-validation-for="Subevento.DataInicio" class="text-danger"></span>
+                        </div>
                     </div>
-                </div>
-                <div class="col-3">
-                    <div class="form-group">
-                        <label asp-for="Subevento.DataFim" class="control-label">Data de Fim</label>
-                        <input asp-for="Subevento.DataFim" class="form-control" type="date"/>
-                        <span asp-validation-for="Subevento.DataFim" class="text-danger"></span>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label asp-for="Subevento.DataFim" class="control-label">Data Fim</label>
+                            <input asp-for="Subevento.DataFim" class="form-control" style="width:13rem; type="date" />
+                            <span asp-validation-for="Subevento.DataFim" class="text-danger"></span>
+                        </div>
                     </div>
-                </div>
-                <div class="col-3">
-                    <div class="form-group">
-                        <label asp-for="Subevento.InscricaoGratuita" class="control-label">Inscrição Gratuita?</label>
-                        <div class="d-flex align-items-center">
-                            <div class="form-check me-2">
-                                <input asp-for="Subevento.InscricaoGratuita" class="form-check-input" type="radio" value="2" id="InscricaoGratuitaSim")>
-                                <label class="form-check-label" for="InscricaoGratuitaSim">Sim</label>
+                    <div class="col-md-3 mt-4">
+                        <div class="form-group mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="form-check">
+                                    <!-- Checkbox que marca se a inscrição será gratuita (valor 1) -->
+                                    <input class="form-check-input" type="checkbox" value="1" id="Gratuito" name="Subevento.Gratuito"
+                                    @(Model.Subevento.InscricaoGratuita == 1 ? "checked" : "")>
+                                    <label class="form-check-label" for="UsadaEvento">Gratuito</label>
+                                    <!-- Campo oculto para enviar valor 0 quando o checkbox não está marcado -->
+                                    <input type="hidden" name="Subevento.Gratuito" value="0">
+                                </div>
                             </div>
-                            <div class="form-check">
-                                <input asp-for="Subevento.InscricaoGratuita" class="form-check-input" type="radio" value="1" id="InscricaoGratuitaNao">
-                                <label class="form-check-label" for="InscricaoGratuitaNao">Não</label>
+                            <span asp-validation-for="Subevento.InscricaoGratuita" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mt-4">
+                        <div class="form-group mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="form-check">
+                                    <!-- Checkbox que marca se o subevento será usado (valor 1) -->
+                                    <input class="form-check-input" type="checkbox" value="1" id="Certificado" name="Subevento.Certificado"
+                                    @(Model.Subevento.PossuiCertificado == 1 ? "checked" : "")>
+                                    <label class="form-check-label" for="UsadaSubevento">Possui certificado</label>
+                                    <!-- Campo oculto para enviar valor 0 quando o checkbox não está marcado -->
+                                    <input type="hidden" name="Subevento.Certificado" value="0">
+                                </div>
                             </div>
-                        </div>
-                        <span asp-validation-for="Subevento.InscricaoGratuita" class="text-danger"></span>
-                    </div>
-                </div>
-            <div class="col-3">
-                <div class="form-group mb-3">
-                    <label asp-for="Subevento.PossuiCertificado" class="control-label">Possui Certificação?</label>
-                    <div class="d-flex align-items-center">
-                        <div class="form-check me-2">
-                            <input asp-for="Subevento.PossuiCertificado" class="form-check-input" type="radio" value="2" id="PossuiCertificadoSim" >
-                            <label class="form-check-label" for="PossuiCertificadoSim">Sim</label>
-                        </div>
-                        <div class="form-check">
-                            <input asp-for="Subevento.PossuiCertificado" class="form-check-input" type="radio" value="1" id="PossuiCertificadoNao">
-                            <label class="form-check-label" for="PossuiCertificadoNao">Não</label>
+                            <span asp-validation-for="Subevento.PossuiCertificado" class="text-danger"></span>
                         </div>
                     </div>
-                    <span asp-validation-for="Subevento.PossuiCertificado" class="text-danger"></span>
                 </div>
-            </div>
-            </div>
-            <br/>
+            <br />        
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="Subevento.Status" class="control-label">Status</label>
+                            <select asp-for="Subevento.Status" class="form-select">
+                                <option value="C">Cadastro</option>
+                                <option value="A">Ativo</option>
+                                <option value="F">Finalizado</option>
+                                <option value="I">Inativo</option>
+                            </select>
+                            <span asp-validation-for="Subevento.Status" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="Subevento.DataInicioInscricao" class="control-label">Início das inscrições</label>
+                            <input asp-for="Subevento.DataInicioInscricao" class="form-control" style="width:13rem; type="date" />
+                            <span asp-validation-for="Subevento.DataInicioInscricao" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="Subevento.DataFimInscricao" class="control-label">Fim das inscrições</label>
+                            <input asp-for="Subevento.DataFimInscricao" class="form-control" style="width:13rem; type="date" />
+                            <span asp-validation-for="Subevento.DataFimInscricao" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>      
             <div class="row">
-                <div class="col-4">
-                    <div class="form-group">
-                        <label asp-for="Subevento.Status" class="control-label">Status</label>
-                        <select asp-for="Subevento.Status" class="form-select">
-                            <option value="C">Cadastro</option>
-                            <option value="A">Ativo</option>
-                            <option value="F">Finalizado</option>
-                            <option value="I">Inativo</option>
-                        </select>
-                        <span asp-validation-for="Subevento.Status" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="form-group">
-                        <label asp-for="Subevento.DataInicioInscricao" class="control-label">Início das Inscrições</label>
-                        <input asp-for="Subevento.DataInicioInscricao" class="form-control" type="date"/>
-                        <span asp-validation-for="Subevento.DataInicioInscricao" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="col-4">
-                    <div class="form-group">
-                        <label asp-for="Subevento.DataFimInscricao" class="control-label">Fim das Inscrições</label>
-                        <input asp-for="Subevento.DataFimInscricao" class="form-control" type="date"/>
-                        <span asp-validation-for="Subevento.DataFimInscricao" class="text-danger"></span>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-4">
+                <div class="col-md-4">
                     <div class="form-group" id="FrequenciaMinimaCertificado">
-                        <label asp-for="Subevento.FrequenciaMinimaCertificado" class="control-label">Frequência Mínima Emissão Certificado</label>
-                        <div class="input-group">
-                            <input asp-for="Subevento.FrequenciaMinimaCertificado" class="form-control" type="number" step="0.01" min="0" max="100"/>
-                            <span class="input-group-text">%</span>
+                        <label asp-for="Subevento.FrequenciaMinimaCertificado" class="control-label">Frequência mínima de emissão de certificado</label>
+                        <div class="input-group" style="width:10rem;">
+                            <input asp-for="Subevento.FrequenciaMinimaCertificado" class="form-control" style="border-right-style:none;" type="number" value="" step="0.01" min="0" max="100" />
+                            <span class="input-group-text" style="background-color:white;">%</span>
                         </div>
                         <span asp-validation-for="Subevento.FrequenciaMinimaCertificado" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="col-4">
-                    <div class="form-group">
-                        <label asp-for="Subevento.VagasOfertadas" class="control-label">Vagas Ofertadas</label>
+                <div class="col-md-4">
+                    <div class="form-group" style="width:13rem;">
+                        <label asp-for="Subevento.VagasOfertadas" class="control-label">Vagas ofertadas</label>
                         <input asp-for="Subevento.VagasOfertadas" class="form-control" type="number" step="1" min="0" />
                         <span asp-validation-for="Subevento.VagasOfertadas" class="text-danger"></span>
                     </div>
                 </div>
-                <div class="col-4">
-                    <div class="form-group">
-                        <label asp-for="Subevento.CargaHoraria" class="control-label">Carga Horária</label>
+                <div class="col-md-4">
+                    <div class="form-group" style="width:13rem;">
+                        <label asp-for="Subevento.CargaHoraria" class="control-label">Carga horária</label>
                         <input asp-for="Subevento.CargaHoraria" class="form-control" type="number" step="1" min="0" />
                         <span asp-validation-for="Subevento.CargaHoraria" class="text-danger"></span>
                     </div>
                 </div>
             </div>
             <div class="row">
-                <div class="col-4">
+                <div class="col-md-4">
                     <div class="form-group" id="valorInscricaoGroup">
-                        <label asp-for="Subevento.ValorInscricao" class="control-label">Menor Valor de Inscrição</label>
-                        <div class="input-group">
-                            <span class="input-group-text">R$</span>
-                            <input asp-for="Subevento.ValorInscricao" class="form-control" type="number" id="valorInscricao" />
-                        </div>
-                        <span asp-validation-for="Subevento.ValorInscricao" class="text-danger"></span>
+                        <span>
+                            <label asp-for="Subevento.ValorInscricao" class="control-label">Menor valor de inscrição (R$)</label>
+                            <div class="input-group" style="width:10rem;">
+                                <span class="input-group-text" style="background-color:white;">R$</span>
+                                <input asp-for="Subevento.ValorInscricao" class="form-control" style="border-left-style:none;" type="number" id="valorInscricao" />
+                            </div>
+                        </span>
+
                     </div>
+
                 </div>
-                <div class="col-6">
-                    <!-- Espaço em branco -->
-                </div>
-                <div class="col-1 mt-4">
-                    <div class="form-group">
-                        <input type="submit" value="Salvar" class="btn btn-primary"/>
+                <span asp-validation-for="Subevento.ValorInscricao" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <!-- Espaço em branco -->
+            </div>
+            <div class="d-flex justify-content-end">
+                <div class="d-flex flex-row">
+                    <div class="form-group" style="margin-right: 10px;">
+                        <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
                     </div>
-                </div>
-                <div class="col-1 mt-4">
                     <div class="form-group">
-                        <a asp-action="Index" class="btn btn-secondary">Voltar</a>
+                        <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
                     </div>
                 </div>
             </div>
-            <br/>
+            <br />
         </form>
     </div>
 </div>
 
+<script>
+    //Marcar e desmarcar checkbox--
+
+    document.getElementById('Gratuito').addEventListener('change', function () {
+        this.nextElementSibling.value = this.checked ? 1 : 0; // Ajusta o valor do campo oculto baseado no estado do checkbox
+    });
+    document.getElementById('Certificado').addEventListener('change', function () {
+        this.nextElementSibling.value = this.checked ? 1 : 0; // Ajusta o valor do campo oculto baseado no estado do checkbox
+    });
+</script>
+
 @section Scripts {
-@{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }
