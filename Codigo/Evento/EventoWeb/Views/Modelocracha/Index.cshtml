@@ -8,56 +8,59 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 
-<h1>Index</h1>
+<div>
+    <h1 class="blue-normal">Modelos de crachas disponiveis</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Id)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Logotipo)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Texto)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Qrcode)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IdEvento)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Id)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Logotipo)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Texto)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Qrcode)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IdEvento)
-            </td>
-            <td>
-                @Html.ActionLink("Edit", "Edit", new {id=item.Id}) |
-                    @Html.ActionLink("Details", "Details", new { id = item.Id }) |
-                    @Html.ActionLink("Delete", "Delete", new { id = item.Id })
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+    <button type="button" class="btn btn-lg btn-blue-normal mb-2"
+            onclick="location.href='@Url.Action("Create")'">
+        Adcionar modelo
+    </button>
+    <table class="table table-striped">
+        <thead class="blue-normal blue-normal-bg-table">
+            <tr>
+                <th>
+                    @Html.DisplayNameFor(model => model.IdEvento)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Texto)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Logotipo)
+                </th>
+
+                <th>
+                    Ações
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.NomeEvento)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Texto)
+                    </td>
+                    <td>
+                        @if (!string.IsNullOrEmpty(item.LogotipoBase64))
+                        {
+                            <img src="data:image/png;base64,@item.LogotipoBase64" alt="Logotipo" style="width:200px;height:100px;object-fit:contain;" />
+                        }
+                    </td>
+
+
+                    <td>
+                        @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" })
+                        &nbsp;&nbsp;
+                        @Html.ActionLink("Detalhes", "Details", new { id = item.Id }, new { @style = "text-decoration:none;" })
+                        &nbsp;&nbsp;
+                        @Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @style = "text-decoration:none;", @class = "danger-normal" })
+                        &nbsp;&nbsp;
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -17,7 +17,5 @@ namespace Core.DTO
         public sbyte Qrcode { get; set; }
 
         public uint IdEvento { get; set; }
-
-        public virtual Evento IdEventoNavigation { get; set; } = null!;
     }
 }

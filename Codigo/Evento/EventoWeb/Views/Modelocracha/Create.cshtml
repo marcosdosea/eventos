@@ -1,55 +1,62 @@
-﻿@model EventoWeb.Models.ModelocrachaModel
+﻿@model EventoWeb.Models.ModelocrachaCreateModel
 
 @{
     ViewData["Title"] = "Create";
 }
 
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 
-<h1>Create</h1>
-
-<h4>ModelocrachaModel</h4>
-<hr />
+<h1 class="blue-normal">Novo modelo de crachá</h1>
 <div class="row">
-    <div class="col-md-4">
+    <div>
         <form asp-action="Create" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
-                <label asp-for="Id" class="control-label"></label>
-                <input asp-for="Id" class="form-control" />
-                <span asp-validation-for="Id" class="text-danger"></span>
+                <label asp-for="Modelocracha.Texto" class="control-label"></label>
+                <input asp-for="Modelocracha.Texto" class="form-control" placeholder="Nome no crachá"/>
+                <span asp-validation-for="Modelocracha.Texto" class="text-danger"></span>
+            </div>     
+            <br />
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label asp-for="Modelocracha.IdEvento" class="control-label">Evento</label>
+                        <select asp-for="Modelocracha.IdEvento" asp-items="Model.Eventos" class="form-select">
+                            <option value="">Selecione o evento</option>
+                        </select>
+                        <span asp-validation-for="Modelocracha.IdEvento" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-5">
+                    <div class="form-group">
+                        <label asp-for="Modelocracha.Logotipo" class="control-label"></label>
+                        <input type="file" asp-for="Modelocracha.Logotipo" class="form-control" accept=".png,.jpg,.jpeg,.gif,.tif" />
+                        <span asp-validation-for="Modelocracha.Logotipo" class="text-danger"></span>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Logotipo" class="control-label"></label>
-                <input type="file" asp-for="Logotipo" class="form-control" accept=".png,.jpg,.jpeg,.gif,.tif" />
-                <span asp-validation-for="Logotipo" class="text-danger"></span>
+            <br />
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label asp-for="Modelocracha.Qrcode" class="control-label"></label>
+                    <input asp-for="Modelocracha.Qrcode" class="form-control" />
+                    <span asp-validation-for="Modelocracha.Qrcode" class="text-danger"></span>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Texto" class="control-label"></label>
-                <input asp-for="Texto" class="form-control" />
-                <span asp-validation-for="Texto" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Qrcode" class="control-label"></label>
-                <input asp-for="Qrcode" class="form-control" />
-                <span asp-validation-for="Qrcode" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="IdEvento" class="control-label"></label>
-                <input asp-for="IdEvento" class="form-control" />
-                <span asp-validation-for="IdEvento" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+            <br />
+            <div class="d-flex justify-content-end">
+                <div class="d-flex flex-row">
+                    <div class="form-group" style="margin-right: 10px;">
+                        <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
+                    </div>
+                    <div class="form-group">
+                        <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
+                    </div>
+                </div>
             </div>
         </form>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
 </div>
 
 @section Scripts {
