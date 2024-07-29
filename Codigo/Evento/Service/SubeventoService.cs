@@ -102,17 +102,15 @@ namespace Service
                 orderby subevento.Nome
                 select new SubeventoEventoDTO
                 {
+                    Id = subevento.Id,
                     Nome = subevento.Nome,
-                    ValorInscricao = subevento.ValorInscricao,
-                    DataInicio = subevento.DataInicio,
-                    DataFim = subevento.DataFim,
-                    IdTipoInscricaos = subevento.IdTipoInscricaos
+                    VagasOfertadas = subevento.VagasOfertadas,
+                    VagasDisponiveis = subevento.VagasDisponiveis,
+                    NomeTipoEvento = subevento.IdTipoEventoNavigation.Nome
                 };
 
             return query.ToList();
         }
-
-
     }
 }
 

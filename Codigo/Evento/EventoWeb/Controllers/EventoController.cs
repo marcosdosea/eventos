@@ -15,9 +15,10 @@ namespace EventoWeb.Controllers
         private readonly IPessoaService _pessoaService;
         private readonly IInscricaoService _inscricaoService;
         private readonly IAreaInteresseService _areaInteresseService;
+        private readonly ISubeventoService _subeventoService;
         private readonly IMapper _mapper;
 
-        public EventoController(IEventoService eventoService, IMapper mapper, IEstadosbrasilService estadosbrasilService,IInscricaoService inscricaoService, ITipoeventoService tipoeventoService, IAreaInteresseService areaInteresseService, IPessoaService pessoaService)
+        public EventoController(IEventoService eventoService, IMapper mapper, IEstadosbrasilService estadosbrasilService,IInscricaoService inscricaoService, ITipoeventoService tipoeventoService, IAreaInteresseService areaInteresseService, IPessoaService pessoaService,ISubeventoService subeventoService)
         {
             _tipoEventoService = tipoeventoService;
             _estadosbrasilService = estadosbrasilService;
@@ -26,6 +27,7 @@ namespace EventoWeb.Controllers
             _mapper = mapper;
             _areaInteresseService = areaInteresseService;
             _pessoaService = pessoaService;
+            _subeventoService = subeventoService;
         }
 
         // GET: EventoController
@@ -186,7 +188,7 @@ namespace EventoWeb.Controllers
         }
 
         //GET: EventoController/GerenciarEvento
-        public IActionResult GerenciarEvento()
+        public IActionResult GerenciarEventoListar()
         {
             var listarEventos = _eventoService.GetAll().ToList();
             var listarEventosModel = listarEventos.Select(e => new EventoModel
@@ -203,11 +205,15 @@ namespace EventoWeb.Controllers
         }
 
         //GET: EventoController/GerenciarEventoListar
-        public ActionResult GerenciarEventoListar(uint idEvento)
+        public ActionResult GerenciarEvento(uint idEvento)
         {
-            Evento evento = _eventoService.Get(idEvento);
-            EventoModel eventoModel = _mapper.Map<EventoModel>(evento);
-            return View(eventoModel);
+            Evento evento = _eventoService.Get(idEvento); 
+            var viewModel = new GerenciarEventoModel()
+            {
+	            Evento = _mapper.Map<EventoModel>(evento),
+	            Subeventos = _subeventoService.GetByIdEvento(idEvento)
+            };
+            return View(viewModel);
 
         }
 

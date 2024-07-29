@@ -13,13 +13,15 @@ namespace EventoWeb.Controllers
         private readonly ISubeventoService _subeventoService;
         private readonly IEventoService _eventoService;
         private readonly ITipoeventoService _tipoEventoService;
+        private readonly ITipoInscricaoService _tipoInscricaoService;
         private readonly IMapper _mapper;
-        public SubeventoController(ISubeventoService subeventoService, IMapper mapper, IEventoService eventoService, ITipoeventoService tipoeventoService)
+        public SubeventoController(ISubeventoService subeventoService, IMapper mapper, IEventoService eventoService, ITipoeventoService tipoeventoService,ITipoInscricaoService tipoInscricaoService)
         {
             _subeventoService = subeventoService;
             _eventoService = eventoService;
             _tipoEventoService = tipoeventoService;
             _mapper = mapper;
+            _tipoInscricaoService = tipoInscricaoService;
         }
         // GET: SubeventoController
         public ActionResult Index()
@@ -119,9 +121,18 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Delete(uint id, SubeventoModel subeventoModel)
         {
-            
+            var tiposInscricao = _tipoInscricaoService.GetTiposInscricaosSubevento(id);
+
+            if (tiposInscricao.Any())
+            {
+                foreach (var tipoInscricao in tiposInscricao)
+                {
+                    _tipoInscricaoService.DeleteTipoInscricaoSubevento(id, tipoInscricao.Id);
+                }
+            }
             _subeventoService.Delete(id);
             return RedirectToAction(nameof(Index));
         }
+
     }
 }

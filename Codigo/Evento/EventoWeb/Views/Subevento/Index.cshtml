@@ -76,8 +76,6 @@
                         @Html.ActionLink("Editar", "CreateOrEdit", new {idEvento = item.IdEvento ,idSubevento = item.Id }, new { @style = "text-decoration:none;" })
                         &nbsp;&nbsp;
                         @Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @style = "text-decoration:none;", @class = "danger-normal" })
-
-                        @Html.ActionLink("Tipo Inscrição", "CreateTipoInscricaoSubevento", "TipoInscricao", new { idEvento = item.IdEvento, idSubevento = item.Id }, new { @style = "text-decoration:none;" })
                     </td>
                 </tr>
             }
