@@ -37,12 +37,6 @@
     text-decoration: none;
 }
 
-.footer {
-    background: #0026ff;
-    color: aliceblue;
-    padding: 60px;
-}
-
 .icon-container {
     color: #ffffff;
 }
@@ -95,4 +89,8 @@
     .menu-view {
         display: none;
     }
+}
+
+.footer {
+    flex-shrink: 0;
 }
