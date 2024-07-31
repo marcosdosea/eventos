@@ -303,17 +303,15 @@ CREATE TABLE IF NOT EXISTS `evento`.`SubEvento` (
   `dataFimInscricao` DATETIME NOT NULL,
   `valorInscricao` DECIMAL(10,2) NOT NULL DEFAULT 0,
   `possuiCertificado` TINYINT NOT NULL DEFAULT 0,
-  `frequenciaMinimaCertificado` DECIMAL(10,2) NOT NULL DEFAULT 0,
-  `vagasOfertadas` INT NOT NULL DEFAULT 0,
-  `vagasReservadas` INT NOT NULL DEFAULT 0,
-  `vagasDisponiveis` INT NOT NULL DEFAULT 0,
-  `cargaHoraria` INT NOT NULL DEFAULT 0,
+  `frequenciaMinimaCertificado` DECIMAL(10,2) UNSIGNED NOT NULL DEFAULT 0,
+  `vagasOfertadas` INT UNSIGNED NOT NULL DEFAULT 0,
+  `vagasReservadas` INT UNSIGNED NOT NULL DEFAULT 0,
+  `vagasDisponiveis` INT UNSIGNED NOT NULL DEFAULT 0,
+  `cargaHoraria` INT UNSIGNED NOT NULL DEFAULT 0,
   `idTipoEvento` INT UNSIGNED NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_SubEvento_Evento1_idx` (`idEvento` ASC),
   INDEX `fk_SubEvento_TipoEvento1_idx` (`idTipoEvento` ASC),
-  UNIQUE INDEX `idTipoEvento_UNIQUE` (`idTipoEvento` ASC),
-  UNIQUE INDEX `cargaHoraria_UNIQUE` (`cargaHoraria` ASC),
   CONSTRAINT `fk_SubEvento_Evento1`
     FOREIGN KEY (`idEvento`)
     REFERENCES `evento`.`Evento` (`id`)

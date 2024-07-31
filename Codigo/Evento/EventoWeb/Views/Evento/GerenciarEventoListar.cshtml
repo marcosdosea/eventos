@@ -1,60 +1,81 @@
-﻿@model EventoModel
+﻿@model IEnumerable<EventoWeb.Models.EventoModel>
 
-<link rel="stylesheet" type="text/css" href="~/css/_gerenciareventolistar.css">
 
 @{
-    ViewData["Title"] = "GerenciarEventoListar";
+    ViewData["Title"] = "Gerenciar evento Listar";
+    ViewData["Id"] = "ID";
+    ViewData["DataInicio"] = "Data";
+    ViewData["Nome"] = "Evento";
+    ViewData["NomeTipoEvento"] = "Tipo";
 }
 
-<h1 class="blue-normal">Gerenciar evento</h1>
-<span>Nome: @Model.Nome</span>
-<p>Data: @Model.DataInicio</p>
-<div class="container">
-    <div class="card">
-        <img src="~/ícones/Inscricoes.png" class="card-img-bottom" alt="...">
-        <div class="card-img-overlay">
-            <td>
-                @Html.ActionLink("Tipo Inscrição", "Index", "TipoInscricao", new { idEvento = @Model.Id}, new { @style = "text-decoration:none;" })
-            </td>
-        </div>
-    </div>
-    
-    <div class="card">
-        <img src="~/ícones/Participantes.png" class="card-img-bottom" alt="...">
-        <div class="card-img-overlay">
+<h1 class="blue-normal">@ViewData["Title"]</h1>
+<div>
+    <table class="table table-striped">
+        <thead class="blue-normal blue-normal-bg-table">
+            <tr>
+                <th>
+                    @ViewData["Id"]
+                </th>
+                <th>
+                   @ViewData["DataInicio"]
+                </th>
+                <th>
+                   @ViewData["Nome"]
+                </th>
+                <th>
+                    @ViewData["NomeTipoEvento"]
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Status)
+                </th>
+                <th>
+                    Ações 
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+@foreach(var item in Model)
+{
+            <tr>
                 <td>
-                    @Html.ActionLink("Participantes", "CreatePessoaPapel", new { idEvento = @Model.Id, idPapel = 4 }, new { @style = "text-decoration:none;" })
+                    @Html.DisplayFor(modelItem => item.Id)
                 </td>
-        </div>
-    </div>
-    
-    
-    <div class="card">
-        <img src="~/ícones/Colaboradores.png" class="card-img-bottom" alt="...">
-        <div class="card-img-overlay">
                 <td>
-                    
-                    @Html.ActionLink("Colaboradores", "CreatePessoaPapel", new { idEvento = @Model.Id, idPapel = 3 }, new { @style = "text-decoration:none;" })
+                    @Html.DisplayFor(modelItem => item.DataInicio)
                 </td>
-        </div>
-    </div>
-    
-    <div class="card">
-        <img src="~/ícones/Evento.png" class="card-img-bottom" alt="...">
-        <div class="card-img-overlay">
                 <td>
-                    @Html.ActionLink("Evento", "GestorEditarEvento", new { id = @Model.Id }, new { @style = "text-decoration:none;" })
+                    @Html.DisplayFor(modelItem => item.Nome)
                 </td>
-        </div>
-    </div>
-    
-    <div class="card">
-        <img src="~/ícones/Subeventos.png" class="card-img-bottom" alt="...">
-        <div class="card-img-overlay">
                 <td>
-                    @Html.ActionLink("Subeventos", "CreateOrEdit", "Subevento", new { idEvento = @Model.Id }, new { @style = "text-decoration:none;" })
+                    @Html.DisplayFor(modelItem => item.NomeTipoEvento)
                 </td>
-        </div>
-    </div>
-    
+                    <td>
+                        @{
+                            string statusDescricao = "Desconhecido";
+                            switch (item.Status)
+                            {
+                                case "A":
+                                    statusDescricao = "Ativo";
+                                    break;
+                                case "C":
+                                    statusDescricao = "Cadastro";
+                                    break;
+                                case "F":
+                                    statusDescricao = "Finalizado";
+                                    break;
+                                case "I":
+                                    statusDescricao = "Inativo";
+                                    break;
+                            }
+                        }
+                        @statusDescricao
+                    </td>
+                <td>
+                        @Html.ActionLink("Selecionar", "GerenciarEvento", new { idEvento = item.Id }, new { @style = "text-decoration:none;" })
+                </td>
+            </tr>
+} 
+        </tbody>
+    </table>
 </div>
