@@ -8,11 +8,12 @@ public class ModeloCrachaProfile : Profile
 {
     public ModeloCrachaProfile()
     {
-        CreateMap<Modelocracha, ModelocrachaModel>()
-            .ForMember(dest => dest.Logotipo, opt => opt.MapFrom(src => ByteArrayToFormFile(src.Logotipo, "logotipo.png")));
-
         CreateMap<ModelocrachaModel, Modelocracha>()
-            .ForMember(dest => dest.Logotipo, opt => opt.MapFrom(src => FormFileToByteArray(src.Logotipo)));
+        .ForMember(dest => dest.Logotipo, opt => opt.MapFrom(src => src.Logotipo != null ? FormFileToByteArray(src.Logotipo) : null))
+        .ReverseMap()
+        .ForMember(dest => dest.Logotipo, opt => opt.MapFrom(src => ByteArrayToFormFile(src.Logotipo, "logotipo.png")))
+        .ForMember(dest => dest.LogotipoBase64, opt => opt.MapFrom(src => Convert.ToBase64String(src.Logotipo)));
+
     }
 
     private static IFormFile ByteArrayToFormFile(byte[] byteArray, string fileName)

@@ -1,4 +1,4 @@
-﻿@model EventoWeb.Models.ModelocrachaModel
+﻿@model EventoWeb.Models.ModelocrachaCreateModel
 
 @{
     ViewData["Title"] = "Edit";
@@ -8,50 +8,107 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 
-<h1>Edit</h1>
+<h1 class="blue-normal">Editar o modelo do crachá</h1>
 
-<h4>ModelocrachaModel</h4>
-<hr />
 <div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
+    <div class="col-md-12">
+        <form asp-action="Create" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Id" class="control-label"></label>
-                <input asp-for="Id" class="form-control" />
-                <span asp-validation-for="Id" class="text-danger"></span>
+            <div class="row">
+                <div class="col-lg-3 d-none">
+                    <div class="form-group">
+                        <label for="IdEvento" class="control-label">Nome</label>
+                        <select id="IdEvento" name="IdEvento" class="form-control" readonly>
+                            @if (Model.Evento == null || Model.Evento.Id == 0)
+                            {
+                                <option value="0">Não Informado</option>
+                            }
+                            else
+                            {
+                                <option value="@Model.Evento.Id" selected>@Model.Evento.Nome</option>
+                            }
+                        </select>
+                        @Html.HiddenFor(model => model.Evento.Id)
+                    </div>
+                </div>
             </div>
             <div class="form-group">
-                <label asp-for="Logotipo" class="control-label"></label>
-                <input asp-for="Logotipo" class="form-control" />
-                <span asp-validation-for="Logotipo" class="text-danger"></span>
+                <label asp-for="Modelocracha.Texto" class="control-label"></label>
+                <textarea asp-for="Modelocracha.Texto" class="form-control" id="exampleFormControlTextarea1" rows="2"></textarea>
+                <span asp-validation-for="Modelocracha.Texto" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Texto" class="control-label"></label>
-                <input asp-for="Texto" class="form-control" />
-                <span asp-validation-for="Texto" class="text-danger"></span>
+            <br />
+            <div class="form-group row">
+                <div class="col-md-6">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label asp-for="Modelocracha.Logotipo" class="control-label"></label>
+                            <input type="file" asp-for="Modelocracha.Logotipo" class="form-control" accept=".png,.jpg,.jpeg,.gif,.tif" id="fileInput" />
+                            <span asp-validation-for="Modelocracha.Logotipo" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <br />
+                    <div class="form-group mb-2">
+                        <div class="d-flex align-items-center">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="1" id="Qrcode" name="Modelocracha.Qrcode"
+                                @(Model.Modelocracha.Qrcode == 1 ? "checked" : "")>
+                                <label class="form-check-label" for="Qrcode">QrCode</label>
+                                <input type="hidden" name="Modelocracha.Qrcode" value="0">
+                            </div>
+                        </div>
+                        <span asp-validation-for="Modelocracha.Qrcode" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6 d-flex justify-content-end">
+                    <div class="form-group mb-2">
+                        <div class="card" id="imagePreview" style="width:200px;height:150px;">
+                            <img id="previewImg" src="" style="width: 100%;height: 100%;object-fit:contain; display: none;" />
+                            <div class="card-img-overlay d-flex align-items-center justify-content-center">
+                                <i id="placeholderIcon" class="bi bi-person" style="font-size: 3rem; color: #aaa;"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Qrcode" class="control-label"></label>
-                <input asp-for="Qrcode" class="form-control" />
-                <span asp-validation-for="Qrcode" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="IdEvento" class="control-label"></label>
-                <input asp-for="IdEvento" class="form-control" />
-                <span asp-validation-for="IdEvento" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+            <br />
+            <div class="d-flex justify-content-end">
+                <div class="d-flex flex-row">
+                    <div class="form-group" style="margin-right: 10px;">
+                        <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
+                    </div>
+                    <div class="form-group">
+                        <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
+                    </div>
+                </div>
             </div>
         </form>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }
+
+<script>
+    function updateImagePreview(src) {
+        var img = document.getElementById('previewImg');
+        var icon = document.getElementById('placeholderIcon');
+        img.src = src;
+        img.style.display = 'block';
+        icon.style.display = 'none';
+    }
+
+    document.getElementById('fileInput').addEventListener('change', function () {
+        var file = this.files[0];
+        if (file) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                updateImagePreview(e.target.result);
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+</script>

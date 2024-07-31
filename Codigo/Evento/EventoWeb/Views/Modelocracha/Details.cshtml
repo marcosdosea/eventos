@@ -8,23 +8,15 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 
-<h1>Details</h1>
+<h1 class="blue-normal">Detalhes do Modelo</h1>
 
 <div>
-    <h4>ModelocrachaModel</h4>
-    <hr />
     <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Id)
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.IdEvento)
         </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Logotipo)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Logotipo)
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.NomeEvento)
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Texto)
@@ -32,21 +24,38 @@
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Texto)
         </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Logotipo)
+        </dt>
+        <dd class="col-sm-10">
+            @if (!string.IsNullOrEmpty(Model.LogotipoBase64))
+            {
+                <img src="data:image/png;base64,@Model.LogotipoBase64" alt="Logotipo" style="width:200px;height:200px;object-fit:contain;" />
+            }
+            else
+            {
+                <span>Sem logotipo</span>
+            }
+        </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.Qrcode)
         </dt>
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.Qrcode)
         </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.IdEvento)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.IdEvento)
-        </dd>
     </dl>
 </div>
 <div>
-    @Html.ActionLink("Edit", "Edit", new {id = Model.Id }) |
-    <a asp-action="Index">Back to List</a>
+    <div class="row">
+        <div class="col-1">
+            <div>
+                <a asp-action="Index" class="btn btn-outline-danger">Voltar</a>
+            </div>
+        </div>
+        <div class="col-1">
+            <button type="button" class="btn btn-blue-normal" onclick="location.href='@Url.Action("Edit", new { id = Model.Id })'">
+                Editar
+            </button>
+        </div>
+    </div>
 </div>

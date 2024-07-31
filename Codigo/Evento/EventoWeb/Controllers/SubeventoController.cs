@@ -26,7 +26,7 @@ namespace EventoWeb.Controllers
         // GET: SubeventoController
         public ActionResult Index()
         {
-            var listaSubeventos = _subeventoService.GetAll().ToList(); ;
+            var listaSubeventos = _subeventoService.GetAll().ToList();
             var listaSubeventosModel = listaSubeventos.Select(e => new SubeventoModel
             {
                 Id = e.Id,
