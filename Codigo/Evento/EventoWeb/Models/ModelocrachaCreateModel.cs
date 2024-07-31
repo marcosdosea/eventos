@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Core.DTO;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace EventoWeb.Models
 {
     public class ModelocrachaCreateModel
     {
         public ModelocrachaModel Modelocracha { get; set; }
-        public SelectList Eventos { get; set; }
+        public EventoSimpleDTO Evento { get; set; }
     }
 }

@@ -10,7 +10,6 @@ public class ModeloCrachaProfile : Profile
     {
         CreateMap<ModelocrachaModel, Modelocracha>()
         .ForMember(dest => dest.Logotipo, opt => opt.MapFrom(src => src.Logotipo != null ? FormFileToByteArray(src.Logotipo) : null))
-        .ForMember(dest => dest.IdEventoNavigation, opt => opt.Ignore())
         .ReverseMap()
         .ForMember(dest => dest.Logotipo, opt => opt.MapFrom(src => ByteArrayToFormFile(src.Logotipo, "logotipo.png")))
         .ForMember(dest => dest.LogotipoBase64, opt => opt.MapFrom(src => Convert.ToBase64String(src.Logotipo)));

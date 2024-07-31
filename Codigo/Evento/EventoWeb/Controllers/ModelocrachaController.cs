@@ -49,14 +49,14 @@ namespace EventoWeb.Controllers
         }
 
         // GET: ModelocrachaController/Create
-        public ActionResult Create()
+        public ActionResult Create(uint idEvento)
         {
             var modelocrachaModel = new ModelocrachaModel();
-            var evento = _eventoService.GetAll().OrderBy(e => e.Nome);
+            var evento = _eventoService.GetEventoSimpleDto(idEvento);
             var viewModel = new ModelocrachaCreateModel
             {
                 Modelocracha = modelocrachaModel,
-                Eventos = new SelectList(evento, "Id", "Nome")
+                Evento = evento
             };
             return View(viewModel);
         }
@@ -68,7 +68,7 @@ namespace EventoWeb.Controllers
         {
             ModelState.Remove("Modelocracha.LogotipoBase64");
             ModelState.Remove("Modelocracha.NomeEvento");
-            ModelState.Remove("Eventos");
+            ModelState.Remove("Evento.nome");
             if (ModelState.IsValid)
             {
                 byte[] logoTipoSource = null;
@@ -90,6 +90,7 @@ namespace EventoWeb.Controllers
                     }
                 }
 
+                modelocrachaModel.Modelocracha.IdEvento = modelocrachaModel.Evento.Id;
                 var modelocracha = _mapper.Map<Modelocracha>(modelocrachaModel.Modelocracha);
                 modelocracha.Logotipo = logoTipoSource;
                 _modelocrachaService.Create(modelocracha);
@@ -107,11 +108,11 @@ namespace EventoWeb.Controllers
                 return NotFound();
             }
             var modelocrachaModel = _mapper.Map<ModelocrachaModel>(modelocracha);
-            var eventos = _eventoService.GetAll().OrderBy(e => e.Nome);
+            var evento = _eventoService.GetEventoSimpleDto(modelocracha.IdEvento);
             var viewModel = new ModelocrachaCreateModel
             {
                 Modelocracha = modelocrachaModel,
-                Eventos = new SelectList(eventos, "Id", "Nome", modelocrachaModel.Id)
+                Evento = evento
             };
             return View(viewModel);
         }
