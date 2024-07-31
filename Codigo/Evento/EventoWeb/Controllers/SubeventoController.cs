@@ -98,7 +98,7 @@ namespace EventoWeb.Controllers
                 _subeventoService.Create(subevento);
             }
 
-            return RedirectToAction("index");
+            return RedirectToAction("GerenciarEvento", "Evento", new { idEvento = idEvento });
         }
 
         // GET: SubeventoController/Delete/5
