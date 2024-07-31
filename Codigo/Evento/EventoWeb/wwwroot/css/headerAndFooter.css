@@ -55,6 +55,36 @@
     padding-bottom: .0rem;
 }
 
+.offcanvas-title{
+    font-size: 24px;
+    color: var(--Foundation-Blue-Normal, #232ED0);
+    font-weight: 600;
+    line-height: 120%
+}
+.nav-link.opcao:hover {
+    border-right: 3px solid var(--Foundation-Blue-Normal, #232ED0);
+    background: var(--Foundation-Blue-Light, #E9EAFA);
+ 
+}
+.nav-link.titulo {
+    color: #232ED0;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 150%; /* 24px */
+}
+
+.nav-link.opcao {
+    color: var(--Foundation-Grey-Normal, #1A1A1A);
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 150%; /* 24px */
+    display: flex;
+    align-items: center;
+   
+}
+
 .custom-toggler {
     border: none;
     outline: none;

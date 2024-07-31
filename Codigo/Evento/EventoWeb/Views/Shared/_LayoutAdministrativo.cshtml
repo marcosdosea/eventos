@@ -3,85 +3,121 @@
 <html lang="pt-BR">
 
 <head>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-	<link rel="stylesheet" type="text/css" href="~/css/style.css">
-	<link rel="stylesheet" type="text/css" href="~/css/headerAndFooter.css">
-	<link rel="stylesheet"
-		  href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" type="text/css" href="~/css/style.css">
+    <link rel="stylesheet" type="text/css" href="~/css/headerAndFooter.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
 </head>
 
 <body>
-	<header class="p-3 mb-3 border-bottom">
-		<div class="container">
-			<div class="d-flex justify-content-lg-between justify-content-lg-start">
-				<button class="navbar-toggler navbar-light custom-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
-					<span class="navbar-toggler-icon"></span>
-				</button>
-				<div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
-					<div class="offcanvas-header">
-						<h5 class="offcanvas-title" id="offcanvasNavbarLabel">Menu</h5>
-						<button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-					</div>
-					<div class="offcanvas-body">
-						<ul class="navbar-nav justify-content-start flex-grow-1 pe-3">
-							<li class="nav-item">
-								<a class="nav-link active" aria-current="page" href="#">Eventos</a>
-							</li>
-							<li class="nav-item">
-								<a class="nav-link" href="/areainteresse">Evento aqui</a>
-							</li>
-						</ul>
-					</div>
-				</div>
-				<div class="container-fluid">
-					<div class="logo me-3">
-						<a href="/" title="Ir para a página inicial">
-							<img src="/img/LOGOTIPO.png" alt="Logotipo" />
-						</a>
-					</div>
-				</div>
-				<div class="flex-shrink-0 dropdown align-content-center">
-					<a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser2" data-bs-toggle="dropdown" aria-expanded="false">
-						Olá, Bem-vindo!
-						<img src="/img/img-user.svg" alt="User" width="32" height="32" class="rounded-circle ms-2">
-					</a>
-					<ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser2">
-						<li>
-							<a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Gerenciar Conta</a>
-						</li>
-						<li><hr class="dropdown-divider"></li>
-						<li>
-							<form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-								<button id="logout" type="submit" class="dropdown-item">Sair</button>
-							</form>
-						</li>
-					</ul>
-				</div>
-			</div>
-		</div>
-	</header>
+    <header class="p-3 mb-3 border-bottom">
+        <div class="container">
+            <div class="d-flex justify-content-lg-between justify-content-lg-start">
+                <button class="navbar-toggler navbar-light custom-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+                    <div class="offcanvas-header">
+                        <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Menu</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                    </div>
+                    <div class="offcanvas-body">
+                        <ul class="navbar-nav justify-content-start flex-grow-1 pe-3">
+                            <li class="nav-item">
+                                <a class="nav-link active titulo" >Colaborador</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link opcao" href="#">Inscrições</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link opcao" href="#">Participantes</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link opcao" href="#">Frequência</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link active titulo" >Evento</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link opcao" asp-area="" asp-controller="Subevento" asp-action="Index">SubEventos</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link opcao" aria-current="page" href="/TipoInscricao">Tipo Inscrição</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link opcao" href="/Modelocracha">Modelo Crachá</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link opcao" href="#">Modelo Certificado</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link active titulo" >Administrador</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link opcao" href="#">Incrições</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link opcao" asp-area="" asp-controller="AreaInteresse" asp-action="Index">Área de Interesse</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link opcao" asp-controller="Pessoa" asp-action="Index">Gestores Sistema</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
 
-	<div class="container conteudo">
-		<main role="main" class="pb-3">
-			@RenderBody()
-		</main>
-	</div>
+                <div class="container-fluid">
+                    <div class="logo me-3">
+                        <a href="/" title="Ir para a página inicial">
+                            <img src="/img/LOGOTIPO.png" alt="Logotipo" />
+                        </a>
+                    </div>
+                </div>
+                <div class="flex-shrink-0 dropdown align-content-center">
+                    <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser2" data-bs-toggle="dropdown" aria-expanded="false">
+                        Olá, Bem-vindo!
+                        <img src="/img/img-user.svg" alt="User" width="32" height="32" class="rounded-circle ms-2">
+                    </a>
+                    <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser2">
+                        <li>
+                            <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Gerenciar Conta</a>
+                        </li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                                <button id="logout" type="submit" class="dropdown-item">Sair</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </header>
 
-	<footer class="container footer">
-		<div class="container">
-			&copy; @DateTime.Now.Year
-		</div>
-	</footer>
+    <div class="container conteudo">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
 
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-	<script src="~/lib/jquery/dist/jquery.min.js"></script>
-	<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-	<script src="~/js/site.js" asp-append-version="true"></script>
-	<script src="~/js/formHelpers.js"></script>
-	@await RenderSectionAsync("Scripts", required: false)
+    <footer class="container footer">
+        <div class="container">
+            &copy; @DateTime.Now.Year
+        </div>
+    </footer>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/formHelpers.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
+
 </html>
