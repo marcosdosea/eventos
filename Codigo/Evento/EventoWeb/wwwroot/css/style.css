@@ -189,6 +189,16 @@ body {
     border-color: #232ed0;
  }
 
+.btn-whithe {
+    background-color: #FFFFFF;
+    color: #232ed0;
+}
+
+.btn-whithe:hover {
+    background-color: #151c7d;
+    color: #FFFFFF;
+}
+
 .btn-blue-normal {
     background-color: #232ed0;
     color: #FFFFFF;

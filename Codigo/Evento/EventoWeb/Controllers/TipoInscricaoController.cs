@@ -162,6 +162,7 @@ namespace EventoWeb.Controllers
             var subevento = _subeventoService.Get(idSubevento);
             var tiposInscricaos = _tipoInscricaoService.GetByEventoUsadaSubevento(subevento.IdEvento);
             var tiposInscricaosSubevento = _tipoInscricaoService.GetTiposInscricaosSubevento(idSubevento);
+            ViewData["EventoId"] = subevento.IdEvento;
             var view = new TipoInscricaoSubeventoModel()
             {
                 Subevento = subevento,
@@ -176,6 +177,7 @@ namespace EventoWeb.Controllers
         public ActionResult CreateTipoInscricaoSubevento(uint idSubevento, uint IdTipoInscricao)
         {
             _tipoInscricaoService.AssociacaoTipoInscricaoSubecento(idSubevento, IdTipoInscricao);
+            var subevento = _subeventoService.Get(idSubevento);
             return RedirectToAction("CreateTipoInscricaoSubevento", new { idSubevento });
         }
         
@@ -184,7 +186,7 @@ namespace EventoWeb.Controllers
         public IActionResult DeleteTipoInscricaoSubevento(uint idSubevento,uint IdTipoInscricao)
         {
             _tipoInscricaoService.DeleteTipoInscricaoSubevento(idSubevento, IdTipoInscricao);
-
+            var subevento = _subeventoService.Get(idSubevento);
             return RedirectToAction("CreateTipoInscricaoSubevento", new { idSubevento }); 
         }
     }

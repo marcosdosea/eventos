@@ -13,7 +13,7 @@ header {
     align-items: center;
     max-width: 95%;
     margin: 0 auto;
-    padding: 10px 0px;
+    padding: 16px 0px;
 }
 
 .left-section {
@@ -25,6 +25,7 @@ header {
 .logo img {
     height: 40px;
 }
+
 .bi-geo-alt-fill {
     color: #232ED0;
 }

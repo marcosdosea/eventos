@@ -22,17 +22,14 @@
     }
     public  class SubeventoEventoDTO
     {
-
+        public uint Id { get; set; }
+        
         public string Nome { get; set; } = null!;
-
-        public DateTime DataInicio { get; set; }
-
-        public DateTime DataFim { get; set; }
-    
-        public decimal ValorInscricao { get; set; }
-
-        public uint IdTipoEvento { get; set; }
-
-        public virtual ICollection<Tipoinscricao> IdTipoInscricaos { get; set; } = new List<Tipoinscricao>();
+        
+        public int VagasOfertadas { get; set; }
+        
+        public int VagasDisponiveis { get; set; }
+        
+        public string NomeTipoEvento { get; set; }
     }
 }
