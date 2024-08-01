@@ -30,7 +30,13 @@ namespace EventoWeb.Controllers
             {
                 var model = _mapper.Map<ModelocrachaModel>(m);
                 var evento = _eventoService.Get(m.IdEvento);
-                model.NomeEvento = evento != null ? evento.Nome : "Evento não encontrado"; return model;
+                model.NomeEvento = evento != null ? evento.Nome : "Evento não encontrado"; 
+                if (model.Qrcode == 1)
+                {
+                    var qrCodeBytes = QrCodeGenerator.GenerateQr(model.Texto);
+                    model.QrCodeBase64 = Convert.ToBase64String(qrCodeBytes);
+                }
+                return model;
             }).ToList();
             return View(listaModeloCrachaModel);
         }
@@ -48,7 +54,6 @@ namespace EventoWeb.Controllers
                 ? Convert.ToBase64String(modelocracha.Logotipo)
                 : null;
 
-            // Gerar QR code para exibição na view
             if (modelocracha.Qrcode == 1)
             {
                 var qrCodeBytes = QrCodeGenerator.GenerateQr(modelocracha.Texto);
