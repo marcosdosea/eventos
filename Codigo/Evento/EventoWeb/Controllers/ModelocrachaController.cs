@@ -5,6 +5,7 @@ using EventoWeb.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Service;
+using Util;
 
 namespace EventoWeb.Controllers
 {
@@ -39,12 +40,21 @@ namespace EventoWeb.Controllers
         public ActionResult Details(uint id)
         {
             var modelocracha = _modelocrachaService.Get(id);
+            var evento = _eventoService.GetEventoSimpleDto(modelocracha.IdEvento);
             var modelocrachaModel = _mapper.Map<ModelocrachaModel>(modelocracha);
 
             modelocrachaModel.NomeEvento = _eventoService.GetNomeById(modelocracha.IdEvento);
             modelocrachaModel.LogotipoBase64 = modelocracha.Logotipo != null
                 ? Convert.ToBase64String(modelocracha.Logotipo)
                 : null;
+
+            // Gerar QR code para exibição na view
+            if (modelocracha.Qrcode == 1)
+            {
+                var qrCodeBytes = QrCodeGenerator.GenerateQr(modelocracha.Texto);
+                modelocrachaModel.QrCodeBase64 = Convert.ToBase64String(qrCodeBytes);
+            }
+
             return View(modelocrachaModel);
         }
 
@@ -66,9 +76,6 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create(ModelocrachaCreateModel modelocrachaModel)
         {
-            ModelState.Remove("Modelocracha.LogotipoBase64");
-            ModelState.Remove("Modelocracha.NomeEvento");
-            ModelState.Remove("Evento.nome");
             if (ModelState.IsValid)
             {
                 byte[] logoTipoSource = null;
@@ -123,8 +130,8 @@ namespace EventoWeb.Controllers
         public ActionResult Edit(uint id, ModelocrachaCreateModel viewModel)
             {
             viewModel.Modelocracha.Id = id;
+            viewModel.Modelocracha.IdEvento = viewModel.Evento.Id;
             var modelo = _mapper.Map<Modelocracha>(viewModel.Modelocracha);
-            var evento = _eventoService.Get(modelo.IdEvento);
             _modelocrachaService.Edit(modelo);
             return RedirectToAction(nameof(Index));
         }
@@ -140,6 +147,11 @@ namespace EventoWeb.Controllers
                 ? Convert.ToBase64String(modelocracha.Logotipo)
                 : null;
 
+            if (modelocracha.Qrcode == 1)
+            {
+                var qrCodeBytes = QrCodeGenerator.GenerateQr(modelocracha.Texto);
+                modelocrachaModel.QrCodeBase64 = Convert.ToBase64String(qrCodeBytes);
+            }
             return View(modelocrachaModel);
         }
 

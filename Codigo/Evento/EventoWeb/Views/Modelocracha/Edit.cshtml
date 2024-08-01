@@ -12,10 +12,10 @@
 
 <div class="row">
     <div class="col-md-12">
-        <form asp-action="Create" enctype="multipart/form-data">
+        <form asp-action="Edit" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="row">
-                <div class="col-lg-3 d-none">
+                <div class="col-lg-3">
                     <div class="form-group">
                         <label for="IdEvento" class="control-label">Nome</label>
                         <select id="IdEvento" name="IdEvento" class="form-control" readonly>
@@ -29,6 +29,7 @@
                             }
                         </select>
                         @Html.HiddenFor(model => model.Evento.Id)
+                        @Html.HiddenFor(model => model.Evento.Nome)
                     </div>
                 </div>
             </div>
