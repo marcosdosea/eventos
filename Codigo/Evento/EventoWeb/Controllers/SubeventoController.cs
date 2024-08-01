@@ -4,6 +4,7 @@ using Core;
 using Core.Service;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Service;
 
 
 namespace EventoWeb.Controllers
@@ -13,13 +14,15 @@ namespace EventoWeb.Controllers
         private readonly ISubeventoService _subeventoService;
         private readonly IEventoService _eventoService;
         private readonly ITipoeventoService _tipoEventoService;
+        private readonly IInscricaoService _inscricaoService; 
         private readonly IMapper _mapper;
-        public SubeventoController(ISubeventoService subeventoService, IMapper mapper, IEventoService eventoService, ITipoeventoService tipoeventoService)
+        public SubeventoController(ISubeventoService subeventoService, IMapper mapper, IEventoService eventoService, ITipoeventoService tipoeventoService, IInscricaoService inscricaoService)
         {
             _subeventoService = subeventoService;
             _eventoService = eventoService;
             _tipoEventoService = tipoeventoService;
             _mapper = mapper;
+            _inscricaoService = inscricaoService;
         }
         // GET: SubeventoController
         public ActionResult Index()
@@ -121,6 +124,38 @@ namespace EventoWeb.Controllers
         {
             
             _subeventoService.Delete(id);
+            return RedirectToAction(nameof(Index));
+        }
+
+        //GET: SubeventoController/RegistrarFrequencia
+        public IActionResult RegistrarFrequencia(uint idSubEvento, uint idPessoa, uint idEvento)
+        {
+            var Inscricao = _inscricaoService.GetInscricaoBySubEvento(idSubEvento, idPessoa);
+            var messageError = "O evento ainda não foi finalizado!";
+            var evento = _eventoService.Get(idEvento);
+            ViewBag.Message = messageError;
+            if (Inscricao != null && evento.Status == "F")
+            {
+                return View(Inscricao);
+            }
+            else
+            {
+                return Content("<script>alert('O evento ainda não foi finalizado!');</script>", "text/javascript");
+            }
+        }
+
+
+        //POST: SubeventoController/RegistrarFrequencia
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult RegistrarFrequencia(uint idEvento, InscricaoPessoaSubEventoModel inscricaopessoasubeventomodel,decimal frequencia)
+        {
+            var subevento = _subeventoService.Get(idEvento);
+            if (subevento.Status == "F")
+            {
+                var inscricao = _mapper.Map<Inscricaopessoasubevento>(inscricaopessoasubeventomodel);
+                _inscricaoService.RegistrarFrequenciaSubevento(inscricao,frequencia);
+            }
             return RedirectToAction(nameof(Index));
         }
     }

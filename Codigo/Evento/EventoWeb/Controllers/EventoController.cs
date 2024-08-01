@@ -4,6 +4,7 @@ using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Service;
 
 namespace EventoWeb.Controllers
 {
@@ -256,5 +257,30 @@ namespace EventoWeb.Controllers
             _eventoService.Edit(evento);
             return RedirectToAction(nameof(Index));
         }
+
+        //GET: EventoController/RegistrarFrequencia
+        public IActionResult RegistrarFrequencia(uint idEvento, uint idPessoa)
+        {
+            var inscricao = _inscricaoService.GetInscricaoByEvento(idEvento, idPessoa);
+            var evento = _eventoService.Get(idEvento);
+
+            if (inscricao != null && evento.Status == "F")
+            {
+                return View(inscricao);
+            }
+            return NotFound();
+        }
+
+        //POST: EventoController/RegistrarFrequencia
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult RegistrarFrequencia(InscricaoPessoaEventoModel inscricaopessoaeventomodel, decimal frequencia)
+        {
+            var inscricao = _mapper.Map<Inscricaopessoaevento>(inscricaopessoaeventomodel);
+            _inscricaoService.RegistrarFrequenciaEvento(inscricao, frequencia);
+            
+            return RedirectToAction(nameof(RegistrarFrequencia));
+        }
+        
     }
 }

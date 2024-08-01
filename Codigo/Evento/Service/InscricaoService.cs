@@ -1,6 +1,7 @@
 using Core;
 using Core.Service;
 using Microsoft.EntityFrameworkCore;
+using ZstdSharp.Unsafe;
 
 namespace Service
 {
@@ -38,6 +39,28 @@ namespace Service
                 .ToList();
         }
         
+        public void RegistrarFrequenciaEvento(Inscricaopessoaevento inscricaopessoaevento, decimal frequencia)
+        {
+            inscricaopessoaevento.FrequenciaFinal = frequencia;
+            _context.Update(inscricaopessoaevento);
+            _context.SaveChanges();
+        }
+
+        public void RegistrarFrequenciaSubevento(Inscricaopessoasubevento inscricaopessoasubevento, decimal frequencia)
+        {
+            inscricaopessoasubevento.FrequenciaFinal = frequencia;
+            _context.Update(inscricaopessoasubevento);
+            _context.SaveChanges();
+        }
         
+        public Inscricaopessoaevento GetInscricaoByEvento(uint idEvento, uint idPessoa)
+        {
+            return _context.Inscricaopessoaeventos.Find(idPessoa);
+        }
+
+        public Inscricaopessoasubevento GetInscricaoBySubEvento(uint idEvento, uint idPessoa)
+        {
+            return _context.Inscricaopessoasubeventos.Find(idPessoa);
+        }
     }
 }

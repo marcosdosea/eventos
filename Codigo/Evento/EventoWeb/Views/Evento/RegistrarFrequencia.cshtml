@@ -1,0 +1,65 @@
+﻿@model EventoWeb.Models.InscricaoPessoaEventoModel
+
+@{
+    ViewData["Title"] = "RegistrarFrequencia";
+}
+
+<h1>RegistrarFrequencia</h1>
+
+<h4>InscricaoPessoaEventoModel</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="RegistrarFrequencia">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>          
+            <div class="form-group">
+                <label asp-for="FrequenciaFinal" class="control-label"></label>
+                <input asp-for="FrequenciaFinal" class="form-control" />
+                <span asp-validation-for="FrequenciaFinal" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+<table class="table table-striped">
+	<thead class="blue-normal blue-normal-bg-table">
+		<tr>
+			<th>
+				@Html.DisplayNameFor(model => model.NomeCracha)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.FrequenciaFinal)
+			</th>
+			<th>
+				@Html.DisplayNameFor(model => model.Status)
+			</th>
+		</tr>
+	</thead>
+	<tbody>
+		
+			<tr>
+				<td>
+					@Html.DisplayFor(model => model.NomeCracha)
+				</td>
+				<td>
+					@Html.DisplayFor(model => model.FrequenciaFinal)
+				</td>
+				<td>
+					@Html.DisplayFor(model => model.Status)
+				</td>
+				
+			</tr>
+		}
+	</tbody>
+</table>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
