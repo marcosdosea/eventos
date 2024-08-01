@@ -17,5 +17,7 @@ namespace Core.Service
         IEnumerable<EventoDTO> GetByNome(string Nome);
         
         string GetNomeById(uint id);
+
+        void AtualizarVagasDisponiveis(uint idEvento);
     }
 }
