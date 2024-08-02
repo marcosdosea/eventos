@@ -14,13 +14,13 @@ namespace EventoWeb.Models
 
 		[Required]
 		[Display(Name = "Nome")]
-		[StringLength(50)]
+		[StringLength(50, MinimumLength = 0, ErrorMessage = "O campo Nome deve ter no máximo 50 caracteres")]
 		public string Nome { get; set; } = null!;
 
 		[Required]
 		[Display(Name = "Descrição")]
-        [StringLength(200)]
-        public string Descricao { get; set; } = null!;
+		[StringLength(200, MinimumLength = 0, ErrorMessage = "O campo Descrição deve ter")]
+		public string Descricao { get; set; } = null!;
 
 		[Required]
 		[Display(Name = "Valor", Prompt = "R$ 00.00")]

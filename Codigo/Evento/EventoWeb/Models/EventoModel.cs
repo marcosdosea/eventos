@@ -11,8 +11,8 @@ namespace EventoWeb.Models
 
         [Display(Name = "Nome")]
         [Required(ErrorMessage = "Nome do Evento é obrigatório")]
-        
-        public string Nome { get; set; } = null!;
+		[StringLength(200, MinimumLength = 0, ErrorMessage = "O campo Nome deve ter 200 caracteres no máximo")]
+		public string Nome { get; set; } = null!;
 
 		[Required]
 		[Display(Name = "Data Inicial")]
@@ -27,7 +27,8 @@ namespace EventoWeb.Models
 
         [Display(Name = "Descrição")]
         [Required(ErrorMessage = "Fale um pouco a respeito desse Evento")]
-        public string Descricao { get; set; } = null!;
+		[StringLength(5000, MinimumLength = 0, ErrorMessage = "O campo Descrição deve ter no máximo 5000 caracteres")]
+		public string Descricao { get; set; } = null!;
 
 		[Required]
 		[Display(Name = "Inscrição Gratuita")]
@@ -75,21 +76,26 @@ namespace EventoWeb.Models
 
         [Display(Name = "Cidade")]
         [Required(ErrorMessage = "Informe a Cidade onde o Evento será realizado")]
-        public string Cidade { get; set; } = null!;
+		[StringLength(50, MinimumLength = 0, ErrorMessage = "O campo Cidade deve ter 50 caracteres no máximo")]
+		public string Cidade { get; set; } = null!;
 
         [Display(Name = "Bairro")]
         [Required(ErrorMessage = "Informe o Bairro onde o Evento será realizado")]
-        public string Bairro { get; set; } = null!;
+		[StringLength(50, MinimumLength = 0, ErrorMessage = "O campo Bairro deve ter 50 caracteres no máximo")]
+		public string Bairro { get; set; } = null!;
 
         [Display(Name = "Rua")]
         [Required(ErrorMessage = "Informe a Rua onde o Evento será realizado")]
-        public string Rua { get; set; } = null!;
+		[StringLength(50, MinimumLength = 0, ErrorMessage = "O campo Rua deve ter no máximo 50 caracteres")]
+		public string Rua { get; set; } = null!;
 
         [Display(Name = "Numero")]
-        public string? Numero { get; set; }
+		[StringLength(50, MinimumLength = 0, ErrorMessage = "O campo Numero deve ter 50 caracteres no máximo")]
+		public string? Numero { get; set; }
 
         [Display(Name = "Complemento")]
-        public string? Complemento { get; set; }
+		[StringLength(50, MinimumLength = 0, ErrorMessage = "O campo Complemento deve ter 50 caracteres no máximo")]
+		public string? Complemento { get; set; }
 
 		[Required]
 		[Display(Name = "Há Certificação?")]
@@ -129,6 +135,7 @@ namespace EventoWeb.Models
 
         [Display(Name = "Carga Horária")]
         [Required(ErrorMessage = "Informe a Carga Horária do Evento")]
-        public int CargaHoraria { get; set; }
+		[Range(0, int.MaxValue, ErrorMessage = "A carga horária deve ser um número inteiro positivo.")]
+		public int CargaHoraria { get; set; }
     }
 }

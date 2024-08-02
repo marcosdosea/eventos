@@ -23,7 +23,8 @@ namespace EventoWeb.Models
 
         [Display(Name = "Texto")]
         [Required(ErrorMessage = "Informe o texto do crachá")]
-        public string Texto { get; set; } = null!;
+		[StringLength(200, MinimumLength = 0, ErrorMessage = "O campo Texto deve ter no máximo 200 caracteres")]
+		public string Texto { get; set; } = null!;
 
 		[Required]
 		[Display(Name = "Qrcode")]

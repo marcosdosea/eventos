@@ -16,10 +16,12 @@ namespace EventoWeb.Models
 
         [Display(Name = "Nome")]
         [Required(ErrorMessage = "Nome do Subevento é obrigatório")]
-        public string Nome { get; set; } = null!;
+		[StringLength(200, MinimumLength = 0, ErrorMessage = "O campo Nome deve ter 200 caracteres no máximo")]
+		public string Nome { get; set; } = null!;
 
         [Display(Name = "Descrição")]
-        [Required(ErrorMessage = "Fale um pouco a respeito desse Sub-Evento")]
+		[StringLength(5000, MinimumLength = 0, ErrorMessage = "O campo Descrição deve ter 5000 caracteres no máximo")]
+		[Required(ErrorMessage = "Fale um pouco a respeito desse Sub-Evento")]
         public string Descricao { get; set; } = null!;
 
         [Display(Name = "Data Inicial do Subvento")]
@@ -107,4 +109,3 @@ namespace EventoWeb.Models
     }
 
 }
-

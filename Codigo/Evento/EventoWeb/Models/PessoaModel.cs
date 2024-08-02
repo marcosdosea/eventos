@@ -8,11 +8,13 @@ public class PessoaModel
     [Key]
     public uint Id { get; set; }
 
-    [Display(Name = "Nome")]
+	[StringLength(50, MinimumLength = 0, ErrorMessage = "O campo Nome deve ter máximo 50 caracteres")]
+	[Display(Name = "Nome")]
     [Required(ErrorMessage = "Nome é obrigatório")]
     public string Nome { get; set; } = null!;
 
-    [Display(Name = "Nome no Crachá")]
+	[StringLength(20, MinimumLength = 0, ErrorMessage = "O campo NomeCracha deve ter no máximo 20 caracteres")]
+	[Display(Name = "Nome no Crachá")]
     [Required(ErrorMessage = "Informe o Nome para o crachá do evento")]
     public string NomeCracha { get; set; } = null!;
 
@@ -21,7 +23,6 @@ public class PessoaModel
     [RegularExpression(@"^\d{3}.\d{3}.\d{3}-\d{2}$", ErrorMessage = "O CPF deve estar no formato 000.000.000-00.")]
     [StringLength(14, MinimumLength = 14, ErrorMessage = "O campo CPF deve ter 11 caracteres")]
     public string Cpf { get; set; } = null!;
-
 
     [Display(Name = "Sexo")]
     [Required(ErrorMessage = "Informe o sexo")]
@@ -33,33 +34,44 @@ public class PessoaModel
     [StringLength(9, MinimumLength = 9, ErrorMessage = "O campo CEP deve ter 8 caracteres")]
     public string Cep { get; set; } = null!;
 
-    [Display(Name = "Estado")]
+	[StringLength(2, MinimumLength = 2, ErrorMessage = "Insira um Estado válido")]
+	[Display(Name = "Estado")]
     [Required(ErrorMessage = "Informe o Estado onde o Evento será realizado")]
     public string Estado { get; set; } = null!;
 
-    [Display(Name = "Cidade")]
+	[StringLength(50, MinimumLength = 0, ErrorMessage = "O campo Cidade deve ter 50 caracteres no máximo")]
+	[Display(Name = "Cidade")]
     [Required(ErrorMessage = "Informe a Cidade onde o Evento será realizado")]
     public string Cidade { get; set; } = null!;
 
-    [Display(Name = "Bairro")]
+	[StringLength(50, MinimumLength = 0, ErrorMessage = "O campo Bairro deve ter 50 caracteres no máximo")]
+	[Display(Name = "Bairro")]
     [Required(ErrorMessage = "Informe o Bairro onde o Evento será realizado")]
     public string Bairro { get; set; } = null!;
 
-    [Display(Name = "Rua")]
+	[StringLength(50, MinimumLength = 0, ErrorMessage = "O campo Rua deve ter 50 caracteres no máximo")]
+	[Display(Name = "Rua")]
     [Required(ErrorMessage = "Informe a Rua onde o Evento será realizado")]
     public string Rua { get; set; } = null!;
 
+	[StringLength(10, MinimumLength = 0, ErrorMessage = "O campo Numero deve ter 10 caracteres no máximo")]
 	[Display(Name = "Numero", Prompt = "Sem número, deixe o campo vazio")]
     public string? Numero { get; set; }
 
-    [Display(Name = "Complemento")]
+	[StringLength(50, MinimumLength = 0, ErrorMessage = "O campo Complemento deve ter 50 caracteres no máximo")]
+	[Display(Name = "Complemento")]
     public string? Complemento { get; set; }
 
-    [Display(Name = "e-mail")]
+    [Required]
+	[StringLength(50, MinimumLength = 15, ErrorMessage = "O campo Email deve ter 12 caracteres no máximo")]
+	[Display(Name = "e-mail")]
     public string Email { get; set; } = null!;
 
-    [Display(Name = "Telefone")]
+	[StringLength(12, MinimumLength = 12, ErrorMessage = "O campo telefone1 deve ter 12 digitos no máximo")]
+	[Display(Name = "Telefone")]
     public string? Telefone1 { get; set; }
-    [Display(Name = "Telefone")]
+
+	[StringLength(12, MinimumLength = 12, ErrorMessage = "O campo telefone2 deve ter 12 digitos no máximo")]
+	[Display(Name = "Telefone")]
     public string? Telefone2 { get; set; }
 }

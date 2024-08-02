@@ -10,5 +10,6 @@ public class AreaInteresseModel
 
     [Display(Name = "Nome")]
     [Required(ErrorMessage = "Nome do Evento é obrigatório")]
-    public string Nome { get; set; } = null!;
+	[StringLength(100, MinimumLength = 0, ErrorMessage = "O campo Nome deve ter 100 caracteres no máximo")]
+	public string Nome { get; set; } = null!;
 }
