@@ -117,18 +117,11 @@ namespace EventoWeb.Controllers
 
 			var evento = _mapper.Map<Evento>(viewModel.Evento);
             
-			/*var idAreaInteresse = viewModel.Evento.IdAreaInteresse;
-			var areaInteresse = _areaInteresseService.Get(idAreaInteresse);
-
-			if (evento.IdAreaInteresses == null)
-			{
-				evento.IdAreaInteresses = new List<Core.Areainteresse>();
-			}
-
-			evento.IdAreaInteresses.Clear(); 
-			evento.IdAreaInteresses.Add(areaInteresse);*/
 			_eventoService.Edit(evento);
-			return RedirectToAction(nameof(Index));
+
+            // Atualiza a quantidade de vagas disponíveis
+            _eventoService.AtualizarVagasDisponiveis(evento.Id);
+            return RedirectToAction(nameof(Index));
 		}
 
 
@@ -169,20 +162,25 @@ namespace EventoWeb.Controllers
         // POST: EventoController/CreatePessoaPapel
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult CreatePessoaPapel( GestaoPapelModel gestaoPapelModel)
+        public ActionResult CreatePessoaPapel(GestaoPapelModel gestaoPapelModel)
         {
             var pessoa = gestaoPapelModel.Pessoa;
             var idEvento = gestaoPapelModel.Evento.Id;
             var idPapel = gestaoPapelModel.IdPapel;
             pessoa.NomeCracha = pessoa.Nome;
             _pessoaService.CreatePessoaPapel(pessoa, idEvento, idPapel);
-            return RedirectToAction("CreatePessoaPapel", new { idEvento, idPapel });
 
-        } 
+            _eventoService.AtualizarVagasDisponiveis(idEvento);
+
+            return RedirectToAction("CreatePessoaPapel", new { idEvento, idPapel });
+        }
+
         // POST: EventoController/DeletePessoaPapel
         public IActionResult DeletePessoaPapel(uint idPessoa, uint idEvento, uint idPapel)
         {
             _inscricaoService.DeletePessoaPapel(idPessoa, idEvento, idPapel);
+
+            _eventoService.AtualizarVagasDisponiveis(idEvento);
 
             return RedirectToAction("CreatePessoaPapel", new { idEvento, idPapel });
         }
@@ -260,7 +258,8 @@ namespace EventoWeb.Controllers
 			evento.IdAreaInteresses.Clear(); 
 			evento.IdAreaInteresses.Add(areaInteresse);
             _eventoService.Edit(evento);
-            return RedirectToAction(nameof(Index));
+            _eventoService.AtualizarVagasDisponiveis(evento.Id);
+            return RedirectToAction("GerenciarEvento", "Evento", new { idEvento = id });
         }
     }
 }
