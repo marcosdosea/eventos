@@ -18,7 +18,7 @@ namespace EventoWeb.Models
 
         [Display(Name = "Logotipo")]
         [BindNever]
-        public string LogotipoBase64 { get; set; }
+        public string? LogotipoBase64 { get; set; }
 
         [Display(Name = "Texto")]
         [Required(ErrorMessage = "Informe o texto do crachá")]
@@ -31,6 +31,9 @@ namespace EventoWeb.Models
         [Required(ErrorMessage = "Informe qual o Evento")]
         public uint IdEvento { get; set; }
 
-        public string NomeEvento { get; set; }
+        public string? NomeEvento { get; set; }
+
+        [Display(Name = "QR Code")]
+        public string? QrCodeBase64 { get; set; }
     }
 }
