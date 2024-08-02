@@ -160,12 +160,10 @@
     color: #550622;
 }
 
-/*Branco*/
 .color-white {
     color: #ffffff;
 }
 
-/* Estilos de Background */
 body {
     background-color: #F7F8FF;
 }
@@ -173,9 +171,6 @@ body {
 .blue-normal-bg-table {
     background-color: #e9eafa;
 }
-
-/* Estilos de Botões variados */
-
 
 .btn-outline-blue-normal {
     color: #232ed0;
