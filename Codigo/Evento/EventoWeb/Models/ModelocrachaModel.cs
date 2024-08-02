@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Util;
 
@@ -19,7 +19,7 @@ namespace EventoWeb.Models
 		[Required]
 		[Display(Name = "Logotipo")]
         [BindNever]
-        public string LogotipoBase64 { get; set; }
+        public string? LogotipoBase64 { get; set; }
 
         [Display(Name = "Texto")]
         [Required(ErrorMessage = "Informe o texto do crachá")]
@@ -33,8 +33,10 @@ namespace EventoWeb.Models
         [Display(Name = "Evento")]
         [Required(ErrorMessage = "Informe qual o Evento")]
         public uint IdEvento { get; set; }
-
 		[Required]
-		public string NomeEvento { get; set; }
+        public string? NomeEvento { get; set; }
+
+        [Display(Name = "QR Code")]
+        public string? QrCodeBase64 { get; set; }
     }
 }

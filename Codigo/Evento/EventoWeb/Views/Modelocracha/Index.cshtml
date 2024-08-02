@@ -29,6 +29,10 @@
                 </th>
 
                 <th>
+                    @Html.DisplayNameFor(model => model.Qrcode)
+                </th>
+
+                <th>
                     Ações
                 </th>
             </tr>
@@ -47,9 +51,22 @@
                         @if (!string.IsNullOrEmpty(item.LogotipoBase64))
                         {
                             <img src="data:image/png;base64,@item.LogotipoBase64" alt="Logotipo" style="width:200px;height:100px;object-fit:contain;" />
+                        }                                            
+                        else
+                        {
+                            <span>Sem logotipo</span>
                         }
                     </td>
-
+                    <td>
+                        @if (!string.IsNullOrEmpty(item.QrCodeBase64))
+                        {
+                            <img src="data:image/png;base64,@item.QrCodeBase64" alt="QR Code" style="width:150px;height:100px;object-fit:contain;" />
+                        }
+                        else
+                        {
+                            <span>Sem QR Code</span>
+                        }
+                    </td>
 
                     <td>
                         @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" })
