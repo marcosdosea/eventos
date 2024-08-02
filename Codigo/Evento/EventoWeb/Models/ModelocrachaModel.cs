@@ -16,10 +16,9 @@ namespace EventoWeb.Models
         [ImagemUpload]
         public IFormFile Logotipo { get; set; } = null!;
 
-		[Required]
 		[Display(Name = "Logotipo")]
         [BindNever]
-        public string LogotipoBase64 { get; set; }
+        public string? LogotipoBase64 { get; set; }
 
         [Display(Name = "Texto")]
         [Required(ErrorMessage = "Informe o texto do crachá")]
@@ -33,8 +32,6 @@ namespace EventoWeb.Models
         [Display(Name = "Evento")]
         [Required(ErrorMessage = "Informe qual o Evento")]
         public uint IdEvento { get; set; }
-
-		[Required]
 		public string NomeEvento { get; set; }
     }
 }
