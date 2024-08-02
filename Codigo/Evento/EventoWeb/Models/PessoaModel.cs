@@ -16,16 +16,19 @@ public class PessoaModel
     [Required(ErrorMessage = "Informe o Nome para o crachá do evento")]
     public string NomeCracha { get; set; } = null!;
 
-    [Display(Name = "CPF", Prompt = "000.000.000-00")]
+	[Required]
+	[Display(Name = "CPF", Prompt = "000.000.000-00")]
     [RegularExpression(@"^\d{3}.\d{3}.\d{3}-\d{2}$", ErrorMessage = "O CPF deve estar no formato 000.000.000-00.")]
     [StringLength(14, MinimumLength = 14, ErrorMessage = "O campo CPF deve ter 11 caracteres")]
     public string Cpf { get; set; } = null!;
+
 
     [Display(Name = "Sexo")]
     [Required(ErrorMessage = "Informe o sexo")]
     public string Sexo { get; set; } = null!;
 
-    [Display(Name = "CEP", Prompt = "00000-000")]
+	[Required]
+	[Display(Name = "CEP", Prompt = "00000-000")]
     [RegularExpression(@"^\d{5}-\d{3}$", ErrorMessage = "O CEP deve estar no formato 00000-000.")]
     [StringLength(9, MinimumLength = 9, ErrorMessage = "O campo CEP deve ter 8 caracteres")]
     public string Cep { get; set; } = null!;
@@ -46,7 +49,7 @@ public class PessoaModel
     [Required(ErrorMessage = "Informe a Rua onde o Evento será realizado")]
     public string Rua { get; set; } = null!;
 
-    [Display(Name = "Numero", Prompt = "Sem número, deixe o campo vazio")]
+	[Display(Name = "Numero", Prompt = "Sem número, deixe o campo vazio")]
     public string? Numero { get; set; }
 
     [Display(Name = "Complemento")]

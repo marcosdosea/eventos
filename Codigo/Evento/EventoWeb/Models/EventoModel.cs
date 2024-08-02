@@ -13,11 +13,15 @@ namespace EventoWeb.Models
         [Required(ErrorMessage = "Nome do Evento é obrigatório")]
         
         public string Nome { get; set; } = null!;
-        [Display(Name = "Data Inicial")]
+
+		[Required]
+		[Display(Name = "Data Inicial")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
         
         public DateTime DataInicio { get; set; }
-        [Display(Name = "Data Final")]
+
+		[Required]
+		[Display(Name = "Data Final")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
         public DateTime DataFim { get; set; }
 
@@ -25,23 +29,26 @@ namespace EventoWeb.Models
         [Required(ErrorMessage = "Fale um pouco a respeito desse Evento")]
         public string Descricao { get; set; } = null!;
 
-        [Display(Name = "Inscrição Gratuita")]
+		[Required]
+		[Display(Name = "Inscrição Gratuita")]
         public sbyte InscricaoGratuita { get; set; }
 
         [Display(Name = "Status")]
         [Required(ErrorMessage = "Status do Evento é obrigatório")]
         public string Status { get; set; } = null!;
 
-
-        [Display(Name = "Data Inicial de Inscrição")]
+		[Required]
+		[Display(Name = "Data Inicial de Inscrição")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
         public DateTime DataInicioInscricao { get; set; }
 
-        [Display(Name = "Data Final de Inscrição")]
+		[Required]
+		[Display(Name = "Data Final de Inscrição")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
         public DateTime DataFimInscricao { get; set; }
 
-        [Display(Name = "Valor da Inscrição", Prompt = "R$ 00.00")]
+		[Required]
+		[Display(Name = "Valor da Inscrição", Prompt = "R$ 00.00")]
         [Range(0.00, double.MaxValue, ErrorMessage = "O valor da inscrição deve ser zero ou maior que zero.")]
         [RegularExpression(@"^\d+(\.\d{1,2})?$", ErrorMessage = "Por favor, insira no máximo duas casas decimais e use '.' como separador decimal.")]
         public decimal ValorInscricao { get; set; }
@@ -52,10 +59,12 @@ namespace EventoWeb.Models
         [Display(Name = "e-mail")]
         public string? EmailEvento { get; set; }
 
-        [Display(Name = "Evento Publico")]
+		[Required]
+		[Display(Name = "Evento Publico")]
         public sbyte EventoPublico { get; set; }
 
-        [Display(Name = "CEP")]
+		[Required]
+		[Display(Name = "CEP")]
         [RegularExpression(@"^\d{8}$", ErrorMessage = "O CEP deve estar no formato 00000000.")]
         [StringLength(8, MinimumLength = 8, ErrorMessage = "O campo CEP deve ter 8 caracteres")]
         public string Cep { get; set; } = null!;
@@ -82,10 +91,12 @@ namespace EventoWeb.Models
         [Display(Name = "Complemento")]
         public string? Complemento { get; set; }
 
-        [Display(Name = "Há Certificação?")]
+		[Required]
+		[Display(Name = "Há Certificação?")]
         public sbyte PossuiCertificado { get; set; }
 
-        [Display(Name = "Frequência Minima para Receber a Certificação")]
+		[Required]
+		[Display(Name = "Frequência Minima para Receber a Certificação")]
         public decimal FrequenciaMinimaCertificado { get; set; }
 
         [Display(Name = "ID do Tipo do Evento")]

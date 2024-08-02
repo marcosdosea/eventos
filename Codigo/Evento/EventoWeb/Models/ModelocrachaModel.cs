@@ -16,7 +16,8 @@ namespace EventoWeb.Models
         [ImagemUpload]
         public IFormFile Logotipo { get; set; } = null!;
 
-        [Display(Name = "Logotipo")]
+		[Required]
+		[Display(Name = "Logotipo")]
         [BindNever]
         public string LogotipoBase64 { get; set; }
 
@@ -24,13 +25,15 @@ namespace EventoWeb.Models
         [Required(ErrorMessage = "Informe o texto do crachá")]
         public string Texto { get; set; } = null!;
 
-        [Display(Name = "Qrcode")]
+		[Required]
+		[Display(Name = "Qrcode")]
         public sbyte Qrcode { get; set; }
 
         [Display(Name = "Evento")]
         [Required(ErrorMessage = "Informe qual o Evento")]
         public uint IdEvento { get; set; }
 
-        public string NomeEvento { get; set; }
+		[Required]
+		public string NomeEvento { get; set; }
     }
 }
