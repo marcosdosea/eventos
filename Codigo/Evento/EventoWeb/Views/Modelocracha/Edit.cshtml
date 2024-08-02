@@ -17,7 +17,7 @@
             <div class="row">
                 <div class="col-lg-3">
                     <div class="form-group">
-                        <label for="IdEvento" class="control-label">Nome</label>
+                        <label for="IdEvento" class="control-label">Nome do evento</label>
                         <select id="IdEvento" name="IdEvento" class="form-control" readonly>
                             @if (Model.Evento == null || Model.Evento.Id == 0)
                             {
@@ -33,6 +33,7 @@
                     </div>
                 </div>
             </div>
+            <br />
             <div class="form-group">
                 <label asp-for="Modelocracha.Texto" class="control-label"></label>
                 <textarea asp-for="Modelocracha.Texto" class="form-control" id="exampleFormControlTextarea1" rows="2"></textarea>
