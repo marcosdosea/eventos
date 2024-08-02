@@ -23,6 +23,8 @@ namespace EventoWeb.Controllers.Tests
         {
             // Arrange
             var mockService = new Mock<IModelocrachaService>();
+            var mockServiceEvento = new Mock<IEventoService>();
+
 
             IMapper mapper = new MapperConfiguration(cfg =>
             cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
@@ -33,7 +35,7 @@ namespace EventoWeb.Controllers.Tests
                 .Returns(GetTargetModelocracha());
             mockService.Setup(service => service.Create(It.IsAny<Modelocracha>()))
                 .Verifiable();
-            controller = new ModelocrachaController(mockService.Object, mapper);
+            controller = new ModelocrachaController(mockService.Object, mockServiceEvento.Object, mapper);
         }
 
         [TestMethod]
@@ -117,19 +119,19 @@ namespace EventoWeb.Controllers.Tests
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
-            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ModelocrachaModel));
-            ModelocrachaModel modelocrachaModel = (ModelocrachaModel)viewResult.ViewData.Model;
-            Assert.AreEqual((uint)1, modelocrachaModel.Id);
-            Assert.AreEqual((uint)1, modelocrachaModel.IdEvento);
-            Assert.AreEqual("Texto 1", modelocrachaModel.Texto);
-            Assert.AreEqual(1, modelocrachaModel.Qrcode);
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ModelocrachaCreateModel));
+            ModelocrachaCreateModel modelocrachaModel = (ModelocrachaCreateModel)viewResult.ViewData.Model;
+            Assert.AreEqual((uint)1, modelocrachaModel.Modelocracha.Id);
+            Assert.AreEqual((uint)1, modelocrachaModel.Modelocracha.IdEvento);
+            Assert.AreEqual("Texto 1", modelocrachaModel.Modelocracha.Texto);
+            Assert.AreEqual(1, modelocrachaModel.Modelocracha.Qrcode);
         }
 
         [TestMethod]
         public void EditTest_Post_Valid()
         {
             // Act
-            var result = controller.Edit(GetTargetModelocrachaModel().Id, GetTargetModelocrachaModel());
+            var result = controller.Edit(GetTargetEditModelocrachaModel().Modelocracha.Id, GetTargetEditModelocrachaModel());
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
@@ -157,7 +159,7 @@ namespace EventoWeb.Controllers.Tests
         public void DeleteTest_Get_Valid()
         {
             // Act
-            var result = controller.Delete(GetTargetModelocrachaModel().Id, GetTargetModelocrachaModel());
+            var result = controller.Delete(GetTargetDeleteModelocrachaModel().Id, GetTargetDeleteModelocrachaModel());
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
@@ -166,7 +168,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
         }
 
-        private ModelocrachaModel GetNewModelocracha()
+        private ModelocrachaCreateModel GetNewModelocracha()
         {
             var formFileMock = new Mock<IFormFile>();
             var content = "Hello World from a Fake File";
@@ -180,13 +182,17 @@ namespace EventoWeb.Controllers.Tests
             formFileMock.Setup(_ => _.FileName).Returns(fileName);
             formFileMock.Setup(_ => _.Length).Returns(ms.Length);
 
-            return new ModelocrachaModel
+            var modelocrachaModel =  new ModelocrachaModel
             {
                 Id = 7,
                 IdEvento = 4,
                 Logotipo = formFileMock.Object,
                 Texto = "Texto 4",
                 Qrcode = 1
+            };
+            return new ModelocrachaCreateModel
+            {
+                Modelocracha = modelocrachaModel,
             };
         }
 
@@ -203,7 +209,29 @@ namespace EventoWeb.Controllers.Tests
             };
         }
 
-        private ModelocrachaModel GetTargetModelocrachaModel()
+        private ModelocrachaCreateModel GetTargetEditModelocrachaModel()
+        {
+            var formFileMock = new Mock<IFormFile>();
+            var ms = new MemoryStream(new byte[] { 0x20, 0x20 });
+            formFileMock.Setup(_ => _.OpenReadStream()).Returns(ms);
+            formFileMock.Setup(_ => _.Length).Returns(ms.Length);
+
+            var modelocrachaModel = new ModelocrachaModel
+            {
+                Id = 1,
+                IdEvento = 1,
+                Logotipo = formFileMock.Object,
+                Texto = "Texto 1",
+                Qrcode = 1
+            };
+
+            return new ModelocrachaCreateModel
+            {
+                Modelocracha = modelocrachaModel,
+            };
+        }
+
+        private ModelocrachaModel GetTargetDeleteModelocrachaModel()
         {
             var formFileMock = new Mock<IFormFile>();
             var ms = new MemoryStream(new byte[] { 0x20, 0x20 });

@@ -21,13 +21,14 @@
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="row">
-                        <div class="col-2">
+                        <!--<div class="col-2">
                             <div class="form-group">
-                                <label for="IdSubevento" class="control-label">Subevento</label>
+                                
                             </div>
-                        </div>
+                        </div>-->
                         <div class="col-3">
                             <div class="form-group">
+                                 <label for="IdSubevento" class="control-label">Subevento</label>
                                 <select id="idSubevento" name="IdSubevento" class="form-control" readonly>
                                     @if (Model.Subevento.Id == null || Model.Subevento.Id == 0)
                                     {
@@ -40,15 +41,16 @@
                                 </select>
                             </div>
                         </div>
-                    </div>
-                    <div class="row">    
-                        <div class="col-2">
+                    <!--</div>
+                    <div class="row">-->    
+                        <!--<div class="col-2">
                             <div class="form-group">
-                                <label asp-for="IdTipoInscricao" class="control-label">Tipo de Inscrição</label>
+                                
                             </div>
-                        </div>
+                        </div>-->
                         <div class="col-4">
                             <div class="form-group">
+                                <label asp-for="IdTipoInscricao" class="control-label">Tipo de Inscrição</label>
                                 <select asp-for="IdTipoInscricao" class="form-control">
                                     @if (!Model.TiposInscricaos.Any())
                                     {
@@ -66,7 +68,7 @@
                                 <span asp-validation-for="IdTipoInscricao" class="text-danger"></span>
                             </div>
                         </div>
-                        <div class="col-3">
+                        <div class="col-3" style="margin-top: 1.5rem">
                             <div class="form-group" style="margin-right: 10px;">
                                 <input type="submit" value="Adicionar" class="btn btn-blue-normal color-white"/>
                             </div>
@@ -76,8 +78,8 @@
             </div>
         </div>
     </div>
+    <br />
 </div>
-
 <div class="row">
     <table class="table table-striped">
         <thead class="blue-normal blue-normal-bg-table">
@@ -110,7 +112,11 @@
         </tbody>
     </table>
 </div>
-
+    <div class="d-flex justify-content-end">
+        <button type="button" class="btn-blue-normal btn btn-lg mb-2 ">
+            <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@ViewData["EventoId"]" style="text-decoration:none; color:white">Voltar</a>
+        </button>
+    </div>
 
 </body>
 

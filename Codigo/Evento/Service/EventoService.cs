@@ -122,5 +122,24 @@ namespace Service
                    .Select(t => t.Nome)
                    .FirstOrDefault();
         }
+
+        public void AtualizarVagasDisponiveis(uint idEvento)
+        {
+            
+            var evento = _context.Eventos
+                .Include(e => e.Inscricaopessoaeventos)
+                .FirstOrDefault(e => e.Id == idEvento);
+
+            if (evento != null)
+            {
+                
+                var quantidadeParticipantes = evento.Inscricaopessoaeventos
+                    .Count(i => i.IdPapel == 4); 
+
+                evento.VagasDisponiveis = evento.VagasOfertadas - quantidadeParticipantes;
+
+                _context.SaveChanges();
+            }
+        }
     }
 }

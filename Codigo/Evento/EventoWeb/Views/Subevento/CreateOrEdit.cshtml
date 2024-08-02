@@ -16,7 +16,7 @@
             <div class="row">
                 <div class="col-lg-3">
                     <div class="form-group">
-                        <label for="IdEvento" class="control-label">Nome</label>
+                        <label for="IdEvento" class="control-label">Evento</label>
                         <select id="IdEvento" name="IdEvento" class="form-control" readonly>
                             @if (Model.Evento == null || Model.Evento.Id == 0)
                             {
@@ -185,7 +185,7 @@
                         <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
                     </div>
                     <div class="form-group">
-                        <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
+                        <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Model.Evento.Id" class="btn btn-outline-danger">Voltar</a>
                     </div>
                 </div>
             </div>
