@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Util;
 
@@ -32,6 +32,14 @@ namespace EventoWeb.Models
         [Display(Name = "Evento")]
         [Required(ErrorMessage = "Informe qual o Evento")]
         public uint IdEvento { get; set; }
+<<<<<<< HEAD
 		public string NomeEvento { get; set; }
+=======
+		[Required]
+        public string? NomeEvento { get; set; }
+
+        [Display(Name = "QR Code")]
+        public string? QrCodeBase64 { get; set; }
+>>>>>>> d914ce4fdb0719d3399c11989d3c2815d0556d51
     }
 }
