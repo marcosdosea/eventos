@@ -1,89 +1,132 @@
-﻿@model IEnumerable<EventoWeb.Models.EventoModel>
+@model IEnumerable<EventoWeb.Models.EventoModel>
 
 @{
     ViewData["Title"] = "Index";
 }
+<link href="~/lib/datatable/css/datatables.min.css" rel="stylesheet" />
+<style>
+    .dataTables_filter {
+        float: right;
+        margin-bottom: 16px;
+    }
 
+    .dataTables_length {
+        float: left;
+        margin-bottom: 16px;
+    }
 
-<!DOCTYPE html>
-<html lang="pt-BR">
+    .dataTables_wrapper .dataTables_paginate .paginate_button {
+        padding: 0.2em 0.5em; /* Ajuste conforme necessário */
+        margin-left: 2px;
+        color: white !important;
+        background-color: #232ed0;
+        border: none;
+        border-radius: 3px;
+    }
 
-<div>
-	<h1 class="blue-normal">Seja Bem-vindo</h1>
-	<h3>Confira os eventos do sistema!</h3>
-	<button type="button" class="btn btn-lg btn-blue-normal mb-2"
-			onclick="location.href='@Url.Action("Create")'">
-		Novo evento
-	</button>
-	<table class="table table-striped">
-		<thead class="blue-normal blue-normal-bg-table">
-			<tr>
-				<th>
-					@Html.DisplayNameFor(model => model.DataInicio)
-				</th>
-				<th>
-					@Html.DisplayNameFor(model => model.Nome)
-				</th>
-				<th>
-					@Html.DisplayNameFor(model => model.Status)
-				</th>
-				<th>
-					Tipo do Evento
-				</th>
-				<th>
-					Ações
-				</th>
-			</tr>
-		</thead>
-		<tbody>
-@foreach (var item in Model)
-{
-				<tr>
-					<td>
-						@Html.DisplayFor(modelItem => item.DataInicio)
-					</td>
-					<td>
-						@Html.DisplayFor(modelItem => item.Nome)
-					</td>
-					<td>
-			@{
-				string statusDescricao = "Desconhecido";
-				switch (item.Status)
-				{
-					case "A":
-						statusDescricao = "Ativo";
-						break;
-					case "C":
-						statusDescricao = "Cadastro";
-						break;
-					case "F":
-						statusDescricao = "Finalizado";
-						break;
-					case "I":
-						statusDescricao = "Inativo";
-						break;
-				}
-			}
-			@statusDescricao
-					</td>
-					<td>
-						@Html.DisplayFor(modelItem => item.NomeTipoEvento)
-					</td>
-					<td>
-						@Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" })
-						&nbsp;&nbsp;
-						@Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @style = "text-decoration:none;", @class = "danger-normal" })
-						&nbsp;
-						@Html.ActionLink("Gestores", "CreatePessoaPapel", new { idEvento = item.Id,idPapel = 2 }, new { @style = "text-decoration:none;" })
-						&nbsp;
-						@Html.ActionLink("Participantes", "CreatePessoaPapel", new { idEvento = item.Id,idPapel = 4 }, new { @style = "text-decoration:none;" })
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+        background-color: #232ed0;
+    }
 
-						@Html.ActionLink("Subeventos", "CreateOrEdit","Subevento", new { idEvento = item.Id}, new { @style = "text-decoration:none;" })
-						@Html.ActionLink("Crachas", "Create", "Modelocracha", new { idEvento = item.Id }, new { @style = "text-decoration:none;" })
-					</td>
-				</tr>
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+        background-color: #232ed0;
+        color: white !important;
+    }
+
+    .dataTables_filter input:focus {
+        border-color: #232ed0;
+        box-shadow: none;
+        outline: none;
+    }
+</style>
+<div class="container">
+    <h1 class="blue-normal">Seja Bem-vindo</h1>
+    <h3>Confira os eventos do sistema!</h3>
+    <div class="btn-container">
+        <button type="button" class="btn btn-lg btn-blue-normal mb-2" onclick="location.href='@Url.Action("Create")'">
+            Novo evento
+        </button>
+    </div>
+    <br />
+    <table id="tableEvento" class="table table-striped table-bordered dt-responsive nowrap">
+        <thead>
+            <tr class="blue-normal blue-normal-bg-table">
+                <th>@Html.DisplayNameFor(model => model.DataInicio)</th>
+                <th>@Html.DisplayNameFor(model => model.Nome)</th>
+                <th>@Html.DisplayNameFor(model => model.Status)</th>
+                <th>Tipo do Evento</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@Html.DisplayFor(modelItem => item.DataInicio)</td>
+                    <td>@Html.DisplayFor(modelItem => item.Nome)</td>
+                    <td>
+                        @{
+                            string statusDescricao = "Desconhecido";
+                            switch (item.Status)
+                            {
+                                case "A":
+                                    statusDescricao = "Ativo";
+                                    break;
+                                case "C":
+                                    statusDescricao = "Cadastro";
+                                    break;
+                                case "F":
+                                    statusDescricao = "Finalizado";
+                                    break;
+                                case "I":
+                                    statusDescricao = "Inativo";
+                                    break;
+                            }
+                        }
+                        @statusDescricao
+                    </td>
+                    <td>@Html.DisplayFor(modelItem => item.NomeTipoEvento)</td>
+                    <td>
+                        @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" })
+                        &nbsp;&nbsp;
+                        @Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @style = "text-decoration:none;", @class = "danger-normal" })
+                        &nbsp;&nbsp;
+                        @Html.ActionLink("Tipo Inscrição", "Index", "TipoInscricao", new { idEvento = item.Id, idPapel = 2 }, new { @style = "text-decoration:none;" })
+                        &nbsp;&nbsp;
+                        @Html.ActionLink("Gestores", "CreatePessoaPapel", new { idEvento = item.Id, idPapel = 2 }, new { @style = "text-decoration:none;" })
+                        &nbsp;&nbsp;
+                        @Html.ActionLink("Colaboradores", "CreatePessoaPapel", new { idEvento = item.Id, idPapel = 3 }, new { @style = "text-decoration:none;" })
+                        &nbsp;&nbsp;
+                        @Html.ActionLink("Participantes", "CreatePessoaPapel", new { idEvento = item.Id, idPapel = 4 }, new { @style = "text-decoration:none;" })
+                        &nbsp;&nbsp;
+                        @Html.ActionLink("Subeventos", "CreateOrEdit", "Subevento", new { idEvento = item.Id }, new { @style = "text-decoration:none;" })
+                        &nbsp;&nbsp;
+                        @Html.ActionLink("Crachas", "Create", "Modelocracha", new { idEvento = item.Id }, new { @style = "text-decoration:none;" })
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/datatable/js/datatables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#tableEvento').DataTable({
+                columnDefs: [
+                    { orderable: true, targets: [0, 1, 2, 3] }
+                ],
+                searching: true,
+                ordering: true,
+                paging: true,
+                language: {
+                    url: '@Url.Content("~/lib/datatable/js/pt-BR.json")'
+                }
+            });
+        });
+    </script>
 }
-		</tbody>
-	</table>
-	
 </div>
