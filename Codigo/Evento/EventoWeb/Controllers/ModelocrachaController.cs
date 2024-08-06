@@ -84,20 +84,20 @@ namespace EventoWeb.Controllers
             if (ModelState.IsValid)
             {
                 byte[] logoTipoSource = null;
-                if (modelocrachaModel.Modelocracha.Logotipo.Length > 0)
+                if (modelocrachaModel.Modelocracha.Logotipo != null && modelocrachaModel.Modelocracha.Logotipo.Length > 0)
                 {
                     using (var memoryStream = new MemoryStream())
                     {
                         modelocrachaModel.Modelocracha.Logotipo.CopyTo(memoryStream);
-                        // Upload the file if less than 1 MB  
-                        if (memoryStream.Length < 1046026)
-                        {
 
+                        if (memoryStream.Length <= 65535) 
+                        {
                             logoTipoSource = memoryStream.ToArray();
                         }
                         else
                         {
-                            ModelState.AddModelError("File", "O arquivo é muito grande.");
+                            ModelState.AddModelError("Modelocracha.Logotipo", "O arquivo é muito grande. Deve ser menor que 64 KB.");
+                            return View(modelocrachaModel); // Retorna a view com a mensagem de erro
                         }
                     }
                 }
@@ -105,11 +105,23 @@ namespace EventoWeb.Controllers
                 modelocrachaModel.Modelocracha.IdEvento = modelocrachaModel.Evento.Id;
                 var modelocracha = _mapper.Map<Modelocracha>(modelocrachaModel.Modelocracha);
                 modelocracha.Logotipo = logoTipoSource;
-                _modelocrachaService.Create(modelocracha);
+
+                try
+                {
+                    _modelocrachaService.Create(modelocracha);
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "Ocorreu um erro ao salvar o modelo de crachá. Tente novamente.");
+                    return View(modelocrachaModel);
+                }
+
                 return RedirectToAction(nameof(Index));
             }
-            return RedirectToAction(nameof(Index));
+
+            return View(modelocrachaModel);
         }
+
 
         // GET: ModelocrachaController/Edit/5
         public ActionResult Edit(uint id)
@@ -135,10 +147,45 @@ namespace EventoWeb.Controllers
         public ActionResult Edit(uint id, ModelocrachaCreateModel viewModel)
             {
             viewModel.Modelocracha.Id = id;
-            viewModel.Modelocracha.IdEvento = viewModel.Evento.Id;
-            var modelo = _mapper.Map<Modelocracha>(viewModel.Modelocracha);
-            _modelocrachaService.Edit(modelo);
-            return RedirectToAction(nameof(Index));
+            if (ModelState.IsValid)
+            {
+                byte[] logoTipoSource = null;
+                if (viewModel.Modelocracha.Logotipo != null && viewModel.Modelocracha.Logotipo.Length > 0)
+                {
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        viewModel.Modelocracha.Logotipo.CopyTo(memoryStream);
+
+                        if (memoryStream.Length <= 65535)
+                        {
+                            logoTipoSource = memoryStream.ToArray();
+                        }
+                        else
+                        {
+                            ModelState.AddModelError("Modelocracha.Logotipo", "O arquivo é muito grande. Deve ser menor que 64 KB.");
+                            return View(viewModel); // Retorna a view com a mensagem de erro
+                        }
+                    }
+                }
+
+                viewModel.Modelocracha.IdEvento = viewModel.Evento.Id;
+                var modelocracha = _mapper.Map<Modelocracha>(viewModel.Modelocracha);
+                modelocracha.Logotipo = logoTipoSource;
+
+                try
+                {
+                    _modelocrachaService.Edit(modelocracha);
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "Ocorreu um erro ao salvar o modelo de crachá. Tente novamente.");
+                    return View(viewModel);
+                }
+
+                return RedirectToAction(nameof(Index));
+            }
+
+            return View(viewModel);
         }
 
         // GET: ModelocrachaController/Delete/5

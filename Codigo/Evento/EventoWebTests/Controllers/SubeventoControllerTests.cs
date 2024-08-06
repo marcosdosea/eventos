@@ -20,8 +20,9 @@ namespace EventoWeb.Controllers.Tests
             var mockService = new Mock<ISubeventoService>();
             var mockServiceEvento = new Mock<IEventoService>();
             var mockServiceTipoevento = new Mock<ITipoeventoService>();
+            var mockServiceTipoInscricao = new Mock<ITipoInscricaoService>();
 
-        IMapper mapper = new MapperConfiguration(cfg =>
+            IMapper mapper = new MapperConfiguration(cfg =>
             cfg.AddProfile(new SubeventoProfile())).CreateMapper();
 
             mockService.Setup(service => service.GetAll())
@@ -35,7 +36,7 @@ namespace EventoWeb.Controllers.Tests
             mockServiceTipoevento.Setup(service => service.GetNomeById(1))
                 .Returns("Tecnologia");
 
-            controller = new SubeventoController(mockService.Object, mapper, mockServiceEvento.Object, mockServiceTipoevento.Object);
+            controller = new SubeventoController(mockService.Object, mapper, mockServiceEvento.Object, mockServiceTipoevento.Object, mockServiceTipoInscricao.Object);
         }
 
         [TestMethod()]
@@ -105,8 +106,7 @@ namespace EventoWeb.Controllers.Tests
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
-            Assert.IsNull(redirectToActionResult.ControllerName);
-            Assert.AreEqual("index", redirectToActionResult.ActionName);
+            Assert.AreEqual("GerenciarEvento", redirectToActionResult.ActionName);
         }
 
         [TestMethod()]
@@ -122,8 +122,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual(1, controller.ModelState.ErrorCount);
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
-            Assert.IsNull(redirectToActionResult.ControllerName);
-            Assert.AreEqual("index", redirectToActionResult.ActionName);
+            Assert.AreEqual("GerenciarEvento", redirectToActionResult.ActionName);
         }
 
 
@@ -166,8 +165,7 @@ namespace EventoWeb.Controllers.Tests
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
-            Assert.IsNull(redirectToActionResult.ControllerName);
-            Assert.AreEqual("index", redirectToActionResult.ActionName);
+            Assert.AreEqual("GerenciarEvento", redirectToActionResult.ActionName);
         }
 
         [TestMethod()]
