@@ -13,7 +13,8 @@ namespace EventoWeb.Models
 
         [Display(Name = "Logotipo")]
         [Required(ErrorMessage = "Informe a logotipo")]
-        [ImagemUpload]
+        [ImagemUpload(ErrorMessage = "A imagem deve estar nos formatos PNG, JPG, JPEG, TIF ou GIF e ter menos de 1 MB.")]
+
         public IFormFile Logotipo { get; set; } = null!;
 
         [Display(Name = "Logotipo")]
