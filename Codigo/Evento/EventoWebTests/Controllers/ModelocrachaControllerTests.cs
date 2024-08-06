@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.AspNetCore.Http;
 using System;
+using Core.DTO;
+using MySqlX.XDevAPI.Common;
 
 namespace EventoWeb.Controllers.Tests
 {
@@ -35,6 +37,8 @@ namespace EventoWeb.Controllers.Tests
                 .Returns(GetTargetModelocracha());
             mockService.Setup(service => service.Create(It.IsAny<Modelocracha>()))
                 .Verifiable();
+            mockServiceEvento.Setup(service => service.GetAll())
+                .Returns(GetTestEventos());
             controller = new ModelocrachaController(mockService.Object, mockServiceEvento.Object, mapper);
         }
 
@@ -74,7 +78,7 @@ namespace EventoWeb.Controllers.Tests
         public void CreateTest()
         {
             // Act
-            var result = controller.Create();
+            var result = controller.Create(1);
 
             // Assert 
             Assert.IsInstanceOfType(result, typeof(ViewResult));
@@ -97,17 +101,16 @@ namespace EventoWeb.Controllers.Tests
         public void CreateTest_Invalid()
         {
             // Arrange
-            controller.ModelState.AddModelError("Texto", "Texto do Modelo de Cracha é obrigatório");
+            controller.ModelState.AddModelError("Texto", "Informe o texto do crachá");
 
             // Act
             var result = controller.Create(GetNewModelocracha());
 
             // Assert
             Assert.AreEqual(1, controller.ModelState.ErrorCount);
-            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
-            RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
-            Assert.IsNull(redirectToActionResult.ControllerName);
-            Assert.AreEqual("Index", redirectToActionResult.ActionName);
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            ViewResult viewResult = (ViewResult)result;
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ModelocrachaCreateModel));
         }
 
         [TestMethod]
@@ -190,12 +193,18 @@ namespace EventoWeb.Controllers.Tests
                 Texto = "Texto 4",
                 Qrcode = 1
             };
+
+            var evento = new EventoSimpleDTO
+            {
+                Id = 1,
+                Nome = "SEMINFO"
+            };
             return new ModelocrachaCreateModel
             {
                 Modelocracha = modelocrachaModel,
+                Evento = evento
             };
         }
-
 
         private static Modelocracha GetTargetModelocracha()
         {
@@ -221,13 +230,19 @@ namespace EventoWeb.Controllers.Tests
                 Id = 1,
                 IdEvento = 1,
                 Logotipo = formFileMock.Object,
-                Texto = "Texto 1",
+                Texto = "SEMINFO",
                 Qrcode = 1
             };
 
+            var evento = new EventoSimpleDTO
+            {
+                Id = 1,
+                Nome = "SEMINFO"
+            };
             return new ModelocrachaCreateModel
             {
                 Modelocracha = modelocrachaModel,
+                Evento = evento
             };
         }
 
@@ -248,6 +263,43 @@ namespace EventoWeb.Controllers.Tests
             };
         }
 
+        private IEnumerable<Evento> GetTestEventos()
+        {
+            return new List<Evento>
+            {
+                new Evento
+                {
+                    Id = 1,
+                    Nome = "SEMINFO",
+                    Descricao = "Evento para a semana da tecnologia",
+                    DataInicio = new DateTime(2024, 10, 2, 7, 30, 0),
+                    DataFim = new DateTime(2024, 10, 7, 12, 30, 0),
+                    InscricaoGratuita = 1,
+                    Status = "A",
+                    DataInicioInscricao = new DateTime(2024, 09, 2, 7, 30, 0),
+                    DataFimInscricao = new DateTime(2024, 09, 7, 12, 30, 0),
+                    ValorInscricao = 0,
+                    Website = "www.itatechjr.com.br",
+                    EmailEvento = "DSI@academico.ufs.br",
+                    EventoPublico = 1,
+                    Cep = "49506036",
+                    Estado = "SE",
+                    Cidade = "Itabaiana",
+                    Bairro = "Porto",
+                    Rua = " Av. Vereador Olímpio Grande",
+                    Numero = "s/n",
+                    Complemento = "Universidade",
+                    PossuiCertificado = 1,
+                    FrequenciaMinimaCertificado = 1,
+                    IdTipoEvento = 1,
+                    VagasOfertadas = 100,
+                    VagasReservadas = 35,
+                    VagasDisponiveis = 65,
+                    TempoMinutosReserva = 240,
+                    CargaHoraria = 4,
+                }
+            };
+        }
         private IEnumerable<Modelocracha> GetTestModelocracha()
         {
             return new List<Modelocracha>
