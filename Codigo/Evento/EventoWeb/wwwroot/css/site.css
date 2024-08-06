@@ -3,15 +3,67 @@ html, body {
     margin: 0;
 }
 
-body{
+body {
     display: flex;
     flex-direction: column;
 }
 
-.conteudo{
+.conteudo {
     flex: 1 0 auto;
 }
 
 html {
     padding-top: 90px;
+}
+
+/* DataTables Filter */
+.dataTables_filter {
+    float: right;
+    margin-bottom: 16px;
+}
+
+/* DataTables Length */
+.dataTables_length {
+    float: left;
+    margin-bottom: 16px;
+}
+
+/* DataTables Pagination */
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    padding: 0.2em 0.5em;
+    margin-left: 2px;
+    color: white !important;
+    background-color: #232ed0;
+    border: none;
+    border-radius: 3px;
+}
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+        background-color: #232ed0;
+    }
+
+    .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+        background-color: #232ed0;
+        color: white !important;
+    }
+
+/* Focused Input in DataTables Filter */
+.dataTables_filter input:focus {
+    border-color: #232ed0;
+    box-shadow: none;
+    outline: none;
+}
+
+/* Remover bordas entre linhas */
+#tableTipoInscricao tbody tr,
+#tableEvento tbody tr {
+    border-bottom: none;
+}
+
+#tableTipoInscricao thead tr,
+#tableEvento thead tr,
+#tableGestorEventListar thead tr,
+#tablePessoa thead tr,
+#tableModeloCracha thead tr {
+    border-bottom: 2px solid #232ed0;
 }

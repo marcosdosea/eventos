@@ -1,6 +1,5 @@
 ﻿@model IEnumerable<EventoWeb.Models.EventoModel>
 
-
 @{
     ViewData["Title"] = "Gerenciar evento Listar";
     ViewData["Id"] = "ID";
@@ -9,9 +8,11 @@
     ViewData["NomeTipoEvento"] = "Tipo";
 }
 
+<link href="~/lib/datatable/css/datatables.min.css" rel="stylesheet" />
+
 <h1 class="blue-normal">@ViewData["Title"]</h1>
 <div>
-    <table class="table table-striped">
+    <table id="tableGestorEventListar" class="table table-striped">
         <thead class="blue-normal blue-normal-bg-table">
             <tr>
                 <th>
@@ -79,3 +80,25 @@
         </tbody>
     </table>
 </div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/datatable/js/datatables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#tableGestorEventListar').DataTable({
+                columnDefs: [
+                    { orderable: true, targets: [0, 1] },
+                    { orderable: false, targets: [2, 3, 4, 5] }
+                ],
+                searching: true,
+                ordering: true,
+                paging: true,
+                language: {
+                    url: '@Url.Content("~/lib/datatable/js/pt-BR.json")'
+                }
+            });
+        });
+    </script>
+}
