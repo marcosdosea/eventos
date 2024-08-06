@@ -11,37 +11,45 @@ namespace EventoWeb.Models
 
         [Display(Name = "Nome")]
         [Required(ErrorMessage = "Nome do Evento é obrigatório")]
-        
-        public string Nome { get; set; } = null!;
-        [Display(Name = "Data Inicial")]
+		[StringLength(200, MinimumLength = 0, ErrorMessage = "O campo Nome deve ter 200 caracteres no máximo")]
+		public string Nome { get; set; } = null!;
+
+		[Required]
+		[Display(Name = "Data Inicial")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
         
         public DateTime DataInicio { get; set; }
-        [Display(Name = "Data Final")]
+
+		[Required]
+		[Display(Name = "Data Final")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
         public DateTime DataFim { get; set; }
 
         [Display(Name = "Descrição")]
         [Required(ErrorMessage = "Fale um pouco a respeito desse Evento")]
-        public string Descricao { get; set; } = null!;
+		[StringLength(5000, MinimumLength = 0, ErrorMessage = "O campo Descrição deve ter no máximo 5000 caracteres")]
+		public string Descricao { get; set; } = null!;
 
-        [Display(Name = "Inscrição Gratuita")]
+		[Required]
+		[Display(Name = "Inscrição Gratuita")]
         public sbyte InscricaoGratuita { get; set; }
 
         [Display(Name = "Status")]
         [Required(ErrorMessage = "Status do Evento é obrigatório")]
         public string Status { get; set; } = null!;
 
-
-        [Display(Name = "Data Inicial de Inscrição")]
+		[Required]
+		[Display(Name = "Data Inicial de Inscrição")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
         public DateTime DataInicioInscricao { get; set; }
 
-        [Display(Name = "Data Final de Inscrição")]
+		[Required]
+		[Display(Name = "Data Final de Inscrição")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
         public DateTime DataFimInscricao { get; set; }
 
-        [Display(Name = "Valor da Inscrição", Prompt = "R$ 00.00")]
+		[Required]
+		[Display(Name = "Valor da Inscrição", Prompt = "R$ 00.00")]
         [Range(0.00, double.MaxValue, ErrorMessage = "O valor da inscrição deve ser zero ou maior que zero.")]
         [RegularExpression(@"^\d+(\.\d{1,2})?$", ErrorMessage = "Por favor, insira no máximo duas casas decimais e use '.' como separador decimal.")]
         public decimal ValorInscricao { get; set; }
@@ -52,10 +60,12 @@ namespace EventoWeb.Models
         [Display(Name = "e-mail")]
         public string? EmailEvento { get; set; }
 
-        [Display(Name = "Evento Publico")]
+		[Required]
+		[Display(Name = "Evento Publico")]
         public sbyte EventoPublico { get; set; }
 
-        [Display(Name = "CEP")]
+		[Required]
+		[Display(Name = "CEP")]
         [RegularExpression(@"^\d{8}$", ErrorMessage = "O CEP deve estar no formato 00000000.")]
         [StringLength(8, MinimumLength = 8, ErrorMessage = "O campo CEP deve ter 8 caracteres")]
         public string Cep { get; set; } = null!;
@@ -66,26 +76,33 @@ namespace EventoWeb.Models
 
         [Display(Name = "Cidade")]
         [Required(ErrorMessage = "Informe a Cidade onde o Evento será realizado")]
-        public string Cidade { get; set; } = null!;
+		[StringLength(50, MinimumLength = 0, ErrorMessage = "O campo Cidade deve ter 50 caracteres no máximo")]
+		public string Cidade { get; set; } = null!;
 
         [Display(Name = "Bairro")]
         [Required(ErrorMessage = "Informe o Bairro onde o Evento será realizado")]
-        public string Bairro { get; set; } = null!;
+		[StringLength(50, MinimumLength = 0, ErrorMessage = "O campo Bairro deve ter 50 caracteres no máximo")]
+		public string Bairro { get; set; } = null!;
 
         [Display(Name = "Rua")]
         [Required(ErrorMessage = "Informe a Rua onde o Evento será realizado")]
-        public string Rua { get; set; } = null!;
+		[StringLength(50, MinimumLength = 0, ErrorMessage = "O campo Rua deve ter no máximo 50 caracteres")]
+		public string Rua { get; set; } = null!;
 
         [Display(Name = "Numero")]
-        public string? Numero { get; set; }
+		[StringLength(50, MinimumLength = 0, ErrorMessage = "O campo Numero deve ter 50 caracteres no máximo")]
+		public string? Numero { get; set; }
 
         [Display(Name = "Complemento")]
-        public string? Complemento { get; set; }
+		[StringLength(50, MinimumLength = 0, ErrorMessage = "O campo Complemento deve ter 50 caracteres no máximo")]
+		public string? Complemento { get; set; }
 
-        [Display(Name = "Há Certificação?")]
+		[Required]
+		[Display(Name = "Há Certificação?")]
         public sbyte PossuiCertificado { get; set; }
 
-        [Display(Name = "Frequência Minima para Receber a Certificação")]
+		[Required]
+		[Display(Name = "Frequência Minima para Receber a Certificação")]
         public decimal FrequenciaMinimaCertificado { get; set; }
 
         [Display(Name = "ID do Tipo do Evento")]
@@ -118,6 +135,7 @@ namespace EventoWeb.Models
 
         [Display(Name = "Carga Horária")]
         [Required(ErrorMessage = "Informe a Carga Horária do Evento")]
-        public int CargaHoraria { get; set; }
+		[Range(0, int.MaxValue, ErrorMessage = "A carga horária deve ser um número inteiro positivo.")]
+		public int CargaHoraria { get; set; }
     }
 }

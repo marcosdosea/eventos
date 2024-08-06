@@ -11,96 +11,98 @@
 <h1 class="blue-normal">Gerenciar evento</h1>
 <span>Nome: @Model.Evento.Nome</span>
 <p>Data: @Model.Evento.DataInicio</p>
-<div class="container">
-    <div class="card">
-        <img src="~/ícones/Inscricoes.png" class="card-img-bottom" alt="...">
-        <div class="card-img-overlay">
-            <td>
-                @Html.ActionLink("Tipo Inscrição", "Index", "TipoInscricao", new { idEvento = @Model.Evento.Id}, new { @style = "text-decoration:none;" })
-            </td>
-        </div>
-    </div>
-    
-    <div class="card">
-        <img src="~/ícones/Participantes.png" class="card-img-bottom" alt="...">
-        <div class="card-img-overlay">
-            <td>
-                @Html.ActionLink("Participantes", "CreatePessoaPapel", new { idEvento = @Model.Evento.Id, idPapel = 4 }, new { @style = "text-decoration:none;" })
-            </td>
-        </div>
-    </div>
-    
-    
-    <div class="card">
-        <img src="~/ícones/Colaboradores.png" class="card-img-bottom" alt="...">
-        <div class="card-img-overlay">
-            <td>
-                    
-                @Html.ActionLink("Colaboradores", "CreatePessoaPapel", new { idEvento = @Model.Evento.Id, idPapel = 3 }, new { @style = "text-decoration:none;" })
-            </td>
-        </div>
-    </div>
-    
-    <div class="card">
-        <img src="~/ícones/Evento.png" class="card-img-bottom" alt="...">
-        <div class="card-img-overlay">
-            <td>
-                @Html.ActionLink("Evento", "GestorEditarEvento", new { id = @Model.Evento.Id }, new { @style = "text-decoration:none;" })
-            </td>
-        </div>
-    </div>
-</div>
-
-<button type="button" class="btn-blue-normal btn btn-lg mb-2" onclick="window.location.href='@Url.Action("CreateOrEdit", "Subevento",new { idEvento = Model.Evento.Id})'" style="margin-top: 10px">
-    Novo Subevento
-</button>
-
-<div class="row" style="margin-top: 10px">
-    <table class="table table-striped">
-        <thead class="blue-normal blue-normal-bg-table">
-        <tr>
-            <th>Tipo</th>
-            <th>Nome</th>
-            <th>Vagas Ofertadas</th>
-            <th>Vagas Disponíveis</th>
-            <th>Ações</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach (var subevento in Model.Subeventos)
-        {
-            <tr>
-                <td style="vertical-align: middle;">@subevento.NomeTipoEvento</td>
-                <td style="vertical-align: middle;">@subevento.Nome</td> 
-                <td style="vertical-align: middle;">@subevento.VagasOfertadas</td>
-                <td style="vertical-align: middle;">@subevento.VagasDisponiveis</td>
-                <td style="vertical-align: middle;">
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        @Html.ActionLink("Editar", "CreateOrEdit", "Subevento",
-                            new { idEvento = Model.Evento.Id, idSubevento = subevento.Id },
-                            new { @style = "text-decoration:none;" })
-
-                        @using (Html.BeginForm("Delete", "Subevento", FormMethod.Post, new { @style = "display:inline;" }))
-                        {
-                            @Html.AntiForgeryToken()
-                            <input type="hidden" name="id" value="@subevento.Id"/>
-                            <a href="" onclick="if (confirm('Tem certeza que deseja excluir?')) { this.closest('form').submit(); } return false;" style="color: #dc3545; text-decoration: none; cursor: pointer;">
-                                Excluir
-                            </a>
-                        }
-
-                        @Html.ActionLink("Tipo Inscrição", "CreateTipoInscricaoSubevento", "TipoInscricao",
-                            new { idEvento = Model.Evento.Id, idSubevento = subevento.Id },
-                            new { @style = "text-decoration:none;" })
-                    </div>
+<div class="col-12">
+    <div class="container">
+        <div class="card">
+            <img src="~/ícones/Inscricoes.png" class="card-img-bottom" alt="...">
+            <div class="card-img-overlay">
+                <td>
+                    @Html.ActionLink("Tipo Inscrição", "Index", "TipoInscricao", new { idEvento = @Model.Evento.Id}, new { @style = "text-decoration:none;" })
                 </td>
+            </div>
+        </div>
+    
+        <div class="card">
+            <img src="~/ícones/Participantes.png" class="card-img-bottom" alt="...">
+            <div class="card-img-overlay">
+                <td>
+                    @Html.ActionLink("Participantes", "CreatePessoaPapel", new { idEvento = @Model.Evento.Id, idPapel = 4 }, new { @style = "text-decoration:none;" })
+                </td>
+            </div>
+        </div>
+    
+    
+        <div class="card">
+            <img src="~/ícones/Colaboradores.png" class="card-img-bottom" alt="...">
+            <div class="card-img-overlay">
+                <td>
+                    
+                    @Html.ActionLink("Colaboradores", "CreatePessoaPapel", new { idEvento = @Model.Evento.Id, idPapel = 3 }, new { @style = "text-decoration:none;" })
+                </td>
+            </div>
+        </div>
+    
+        <div class="card">
+            <img src="~/ícones/Evento.png" class="card-img-bottom" alt="...">
+            <div class="card-img-overlay">
+                <td>
+                    @Html.ActionLink("Evento", "GestorEditarEvento", new { id = @Model.Evento.Id }, new { @style = "text-decoration:none;" })
+                </td>
+            </div>
+        </div>
+    </div>
+
+    <button type="button" class="btn-blue-normal btn btn-lg mb-2" onclick="window.location.href='@Url.Action("CreateOrEdit", "Subevento",new { idEvento = Model.Evento.Id})'" style="margin-top: 10px">
+        Novo Subevento
+    </button>
+
+    <div class="row" style="margin-top: 10px">
+        <table class="table table-striped">
+            <thead class="blue-normal blue-normal-bg-table">
+            <tr>
+                <th>Tipo</th>
+                <th>Nome</th>
+                <th>Vagas Ofertadas</th>
+                <th>Vagas Disponíveis</th>
+                <th>Ações</th>
             </tr>
-        }
-    </table>
-    <br />
-    <div class="d-flex justify-content-end">
-        <button type="button" class="btn-blue-normal btn btn-lg mb-2 ">
-            <a asp-controller="Evento" asp-action="GerenciarEventoListar" asp-route-idEvento="@ViewData["EventoId"]" style="text-decoration:none; color:white">Voltar</a>
-        </button>
+            </thead>
+            <tbody>
+            @foreach (var subevento in Model.Subeventos)
+            {
+                <tr>
+                    <td style="vertical-align: middle;">@subevento.NomeTipoEvento</td>
+                    <td style="vertical-align: middle;">@subevento.Nome</td> 
+                    <td style="vertical-align: middle;">@subevento.VagasOfertadas</td>
+                    <td style="vertical-align: middle;">@subevento.VagasDisponiveis</td>
+                    <td style="vertical-align: middle;">
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            @Html.ActionLink("Editar", "CreateOrEdit", "Subevento",
+                                new { idEvento = Model.Evento.Id, idSubevento = subevento.Id },
+                                new { @style = "text-decoration:none;" })
+
+                            @using (Html.BeginForm("Delete", "Subevento", FormMethod.Post, new { @style = "display:inline;" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@subevento.Id"/>
+                                <a href="" onclick="if (confirm('Tem certeza que deseja excluir?')) { this.closest('form').submit(); } return false;" style="color: #dc3545; text-decoration: none; cursor: pointer;">
+                                    Excluir
+                                </a>
+                            }
+
+                            @Html.ActionLink("Tipo Inscrição", "CreateTipoInscricaoSubevento", "TipoInscricao",
+                                new { idEvento = Model.Evento.Id, idSubevento = subevento.Id },
+                                new { @style = "text-decoration:none;" })
+                        </div>
+                    </td>
+                </tr>
+            }
+        </table>
+        <br />
+        <div class="d-flex justify-content-end">
+            <button type="button" class="btn-blue-normal btn btn-lg mb-2 ">
+                <a asp-controller="Evento" asp-action="GerenciarEventoListar" asp-route-idEvento="@ViewData["EventoId"]" style="text-decoration:none; color:white">Voltar</a>
+            </button>
+        </div>
     </div>
 </div>
