@@ -37,13 +37,13 @@ public partial class Subevento
 
     public decimal FrequenciaMinimaCertificado { get; set; }
 
-    public int VagasOfertadas { get; set; }
+    public uint VagasOfertadas { get; set; }
 
-    public int VagasReservadas { get; set; }
+    public uint VagasReservadas { get; set; }
 
-    public int VagasDisponiveis { get; set; }
+    public uint VagasDisponiveis { get; set; }
 
-    public int CargaHoraria { get; set; }
+    public uint CargaHoraria { get; set; }
 
     public uint IdTipoEvento { get; set; }
 

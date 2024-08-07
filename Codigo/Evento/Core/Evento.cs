@@ -68,6 +68,8 @@ public partial class Evento
 
     public int CargaHoraria { get; set; }
 
+    public byte[]? ImagemPortal { get; set; }
+
     public virtual Estadosbrasil? EstadoNavigation { get; set; }
 
     public virtual Tipoevento? IdTipoEventoNavigation { get; set; }

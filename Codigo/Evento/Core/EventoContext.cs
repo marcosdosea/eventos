@@ -47,6 +47,7 @@ public partial class EventoContext : DbContext
 
     public virtual DbSet<Tipoinscricao> Tipoinscricaos { get; set; }
 
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Areainteresse>(entity =>
@@ -177,6 +178,9 @@ public partial class EventoContext : DbContext
                 .HasPrecision(10)
                 .HasColumnName("frequenciaMinimaCertificado");
             entity.Property(e => e.IdTipoEvento).HasColumnName("idTipoEvento");
+            entity.Property(e => e.ImagemPortal)
+                .HasColumnType("blob")
+                .HasColumnName("imagemPortal");
             entity.Property(e => e.InscricaoGratuita).HasColumnName("inscricaoGratuita");
             entity.Property(e => e.Nome)
                 .HasMaxLength(200)
@@ -540,6 +544,9 @@ public partial class EventoContext : DbContext
                 .HasMaxLength(2)
                 .IsFixedLength()
                 .HasColumnName("estado");
+            entity.Property(e => e.Foto)
+                .HasColumnType("blob")
+                .HasColumnName("foto");
             entity.Property(e => e.Nome)
                 .HasMaxLength(50)
                 .HasColumnName("nome");
@@ -603,13 +610,9 @@ public partial class EventoContext : DbContext
 
             entity.ToTable("subevento");
 
-            entity.HasIndex(e => e.CargaHoraria, "cargaHoraria_UNIQUE").IsUnique();
-
             entity.HasIndex(e => e.IdEvento, "fk_SubEvento_Evento1_idx");
 
             entity.HasIndex(e => e.IdTipoEvento, "fk_SubEvento_TipoEvento1_idx");
-
-            entity.HasIndex(e => e.IdTipoEvento, "idTipoEvento_UNIQUE").IsUnique();
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.CargaHoraria).HasColumnName("cargaHoraria");
@@ -629,7 +632,7 @@ public partial class EventoContext : DbContext
                 .HasMaxLength(5000)
                 .HasColumnName("descricao");
             entity.Property(e => e.FrequenciaMinimaCertificado)
-                .HasPrecision(10)
+                .HasColumnType("decimal(10,2) unsigned")
                 .HasColumnName("frequenciaMinimaCertificado");
             entity.Property(e => e.IdEvento).HasColumnName("idEvento");
             entity.Property(e => e.IdTipoEvento).HasColumnName("idTipoEvento");
@@ -655,8 +658,8 @@ public partial class EventoContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_SubEvento_Evento1");
 
-            entity.HasOne(d => d.IdTipoEventoNavigation).WithOne(p => p.Subevento)
-                .HasForeignKey<Subevento>(d => d.IdTipoEvento)
+            entity.HasOne(d => d.IdTipoEventoNavigation).WithMany(p => p.Subeventos)
+                .HasForeignKey(d => d.IdTipoEvento)
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_SubEvento_TipoEvento1");
         });

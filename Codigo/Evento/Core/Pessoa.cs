@@ -40,6 +40,8 @@ public partial class Pessoa
 
     public string? Telefone2 { get; set; }
 
+    public byte[]? Foto { get; set; }
+
     public virtual Estadosbrasil? EstadoNavigation { get; set; }
 
     public virtual ICollection<Inscricaopessoaevento> Inscricaopessoaeventos { get; set; } = new List<Inscricaopessoaevento>();
