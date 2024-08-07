@@ -26,9 +26,9 @@
         
         public string Nome { get; set; } = null!;
         
-        public int VagasOfertadas { get; set; }
+        public uint VagasOfertadas { get; set; }
         
-        public int VagasDisponiveis { get; set; }
+        public uint VagasDisponiveis { get; set; }
         
         public string NomeTipoEvento { get; set; }
     }

@@ -8,6 +8,7 @@ using Service;
 using EventoWeb.Areas.Identity.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 namespace EventoWeb
 {
@@ -30,6 +31,7 @@ namespace EventoWeb
             builder.Services.AddTransient<IInscricaoService, InscricaoService>();
             builder.Services.AddTransient<IEstadosbrasilService, EstadosbrasilService>();
             builder.Services.AddTransient<ITipoeventoService, TipoeventoService>();
+            builder.Services.AddTransient<IEmailSender, EmailSender>();
 
             builder.Services.AddDbContext<EventoContext>(
                 options => options.UseMySQL(builder.Configuration.GetConnectionString("EventoDatabase")));
