@@ -91,11 +91,17 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create(TipoInscricaocreateModel tipoInscricaoModel)
         {
-            
+            ModelState.Remove("Evento");
+            if (ModelState.IsValid)
+            {
                 var tipoinscricao = _mapper.Map<Tipoinscricao>(tipoInscricaoModel.TipoInscricao);
                 _tipoInscricaoService.Create(tipoinscricao);
                 return RedirectToAction(nameof(Index), new { idEvento = tipoInscricaoModel.TipoInscricao.IdEvento });
-           
+            }
+
+            var eventos = _eventoService.GetAll().OrderBy(e => e.Nome);
+            tipoInscricaoModel.Evento = new SelectList(eventos, "Id", "Nome");
+            return View(tipoInscricaoModel);
         }
 
 
@@ -125,12 +131,19 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Edit(uint id, TipoInscricaocreateModel tipoInscricaoModel)
         {
-            var tipoinscricao = _mapper.Map<Tipoinscricao>(tipoInscricaoModel.TipoInscricao);
-            tipoinscricao.Id = id;
-            _tipoInscricaoService.Edit(tipoinscricao);
+            ModelState.Remove("Evento");
+            if (ModelState.IsValid)
+            {
+                var tipoinscricao = _mapper.Map<Tipoinscricao>(tipoInscricaoModel.TipoInscricao);
+                tipoinscricao.Id = id;
+                _tipoInscricaoService.Edit(tipoinscricao);
 
-            // Redireciona para a tela correta com o idEvento
-            return RedirectToAction(nameof(Index), new { idEvento = tipoInscricaoModel.TipoInscricao.IdEvento });
+                return RedirectToAction(nameof(Index), new { idEvento = tipoInscricaoModel.TipoInscricao.IdEvento });
+            }
+
+            var eventos = _eventoService.GetAll().OrderBy(e => e.Nome);
+            tipoInscricaoModel.Evento = new SelectList(eventos, "Id", "Nome");
+            return View(tipoInscricaoModel);
         }
 
 
