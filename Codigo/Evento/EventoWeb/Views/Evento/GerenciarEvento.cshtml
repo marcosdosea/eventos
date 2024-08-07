@@ -49,12 +49,28 @@
             </td>
         </div>
     </div>
+    <div class="card">
+        <img src="~/ícones/certificado.svg" class="card-img-bottom" alt="...">
+        <div class="card-img-overlay">
+            <td>
+                @Html.ActionLink("Certificado", "#", new { id = @Model.Evento.Id }, new { @style = "text-decoration:none;" })
+            </td>
+        </div>
+    </div>
+    <div class="card">
+        <img src="~/ícones/cracha.svg" class="card-img-bottom" alt="...">
+        <div class="card-img-overlay">
+            <td>
+                @Html.ActionLink("Cracha", "Index", "Modelocracha", new { id = @Model.Evento.Id }, new { @style = "text-decoration:none;" })
+            </td>
+        </div>
+    </div>
 </div>
-
+<br>
 <button type="button" class="btn-blue-normal btn btn-lg mb-2" onclick="window.location.href='@Url.Action("CreateOrEdit", "Subevento",new { idEvento = Model.Evento.Id})'" style="margin-top: 10px">
     Novo Subevento
 </button>
-
+<br>
 <div class="row" style="margin-top: 10px">
     <table class="table table-striped">
         <thead class="blue-normal blue-normal-bg-table">
