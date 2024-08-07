@@ -15,7 +15,7 @@
         <form asp-action="Edit" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="row">
-                <div class="col-lg-3">
+                <div class="col-lg-3 d-none">
                     <div class="form-group">
                         <label for="IdEvento" class="control-label">Nome do evento</label>
                         <select id="IdEvento" name="IdEvento" class="form-control" readonly>
@@ -80,7 +80,7 @@
                         <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
                     </div>
                     <div class="form-group">
-                        <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
+                        <a href="@Url.Action("Index", "Modelocracha", new { idEvento = Model.Evento.Id})" class="btn btn-outline-danger">Cancelar</a>
                     </div>
                 </div>
             </div>

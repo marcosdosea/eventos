@@ -37,7 +37,14 @@ namespace Service
                 .AsNoTracking()
                 .ToList();
         }
-        
-        
+
+        public IEnumerable<Inscricaopessoaevento> GetByEvento(uint idEvento)
+        {
+            return _context.Inscricaopessoaeventos
+                .Include(i => i.IdPessoaNavigation)
+                .Where(i => i.IdEvento == idEvento)
+                .AsNoTracking()
+                .ToList();
+        }
     }
 }

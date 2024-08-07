@@ -36,5 +36,7 @@ namespace EventoWeb.Models
 
         [Display(Name = "QR Code")]
         public string? QrCodeBase64 { get; set; }
+
+        public List<string>? Inscricoes { get; set; } = new List<string>();
     }
 }
