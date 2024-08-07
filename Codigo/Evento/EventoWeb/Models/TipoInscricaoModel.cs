@@ -31,14 +31,14 @@ namespace EventoWeb.Models
         public DateTime Datafim { get; set; }
 
         [Display(Name = "Evento")]
-        [Range(1, 2, ErrorMessage = "O valor deve ser Não ou Sim.")]
-        public sbyte UsadaEvento { get; set; }
+        [Range(0, 1, ErrorMessage = "O valor deve ser Não ou Sim.")]
+        public sbyte? UsadaEvento { get; set; }
 
         [Display(Name = "Subevento")]
-        [Range(1, 2, ErrorMessage = "O valor deve ser Não ou Sim.")]
-        public sbyte UsadaSubevento { get; set; }
+        [Range(0, 1, ErrorMessage = "O valor deve ser Não ou Sim.")]
+        public sbyte? UsadaSubevento { get; set; } 
 
         [Display(Name = "Evento")]
-        public string NomeEvento { get; set; }
+        public string? NomeEvento { get; set; }
     }
 }

@@ -11,19 +11,18 @@ namespace EventoWeb.Models
 
         [Display(Name = "Nome")]
         [Required(ErrorMessage = "Nome do Evento é obrigatório")]
-        
         public string Nome { get; set; } = null!;
+
         [Display(Name = "Data Inicial")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
-        
-        public DateTime DataInicio { get; set; }
+        public DateTime? DataInicio { get; set; } = DateTime.MinValue;
+
         [Display(Name = "Data Final")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
-        public DateTime DataFim { get; set; }
+        public DateTime? DataFim { get; set; } = DateTime.MinValue;
 
         [Display(Name = "Descrição")]
-        [Required(ErrorMessage = "Fale um pouco a respeito desse Evento")]
-        public string Descricao { get; set; } = null!;
+        public string? Descricao { get; set; }
 
         [Display(Name = "Inscrição Gratuita")]
         public sbyte InscricaoGratuita { get; set; }
@@ -35,11 +34,11 @@ namespace EventoWeb.Models
 
         [Display(Name = "Data Inicial de Inscrição")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
-        public DateTime DataInicioInscricao { get; set; }
+        public DateTime? DataInicioInscricao { get; set; }
 
         [Display(Name = "Data Final de Inscrição")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
-        public DateTime DataFimInscricao { get; set; }
+        public DateTime? DataFimInscricao { get; set; }
 
         [Display(Name = "Valor da Inscrição", Prompt = "R$ 00.00")]
         [Range(0.00, double.MaxValue, ErrorMessage = "O valor da inscrição deve ser zero ou maior que zero.")]
@@ -58,23 +57,19 @@ namespace EventoWeb.Models
         [Display(Name = "CEP")]
         [RegularExpression(@"^\d{8}$", ErrorMessage = "O CEP deve estar no formato 00000000.")]
         [StringLength(8, MinimumLength = 8, ErrorMessage = "O campo CEP deve ter 8 caracteres")]
-        public string Cep { get; set; } = null!;
+        public string? Cep { get; set; }
 
         [Display(Name = "Estado")]
-        [Required(ErrorMessage = "Informe o Estado onde o Evento será realizado")]
-        public string Estado { get; set; } = null!;
+        public string? Estado { get; set; }
 
         [Display(Name = "Cidade")]
-        [Required(ErrorMessage = "Informe a Cidade onde o Evento será realizado")]
-        public string Cidade { get; set; } = null!;
+        public string? Cidade { get; set; }
 
         [Display(Name = "Bairro")]
-        [Required(ErrorMessage = "Informe o Bairro onde o Evento será realizado")]
-        public string Bairro { get; set; } = null!;
+        public string? Bairro { get; set; }
 
         [Display(Name = "Rua")]
-        [Required(ErrorMessage = "Informe a Rua onde o Evento será realizado")]
-        public string Rua { get; set; } = null!;
+        public string? Rua { get; set; }
 
         [Display(Name = "Numero")]
         public string? Numero { get; set; }
@@ -83,13 +78,14 @@ namespace EventoWeb.Models
         public string? Complemento { get; set; }
 
         [Display(Name = "Há Certificação?")]
+        [Required(ErrorMessage = "Informe se há Certificação")]
         public sbyte PossuiCertificado { get; set; }
 
         [Display(Name = "Frequência Minima para Receber a Certificação")]
         public decimal FrequenciaMinimaCertificado { get; set; }
 
         [Display(Name = "ID do Tipo do Evento")]
-        [Required(ErrorMessage = "Informe qual o Tipo desse Evento")]
+        [Required(ErrorMessage = "Informe ")]
         public uint IdTipoEvento { get; set; }
 
         [Display(Name = "Vagas Ofertadas")]
@@ -103,14 +99,13 @@ namespace EventoWeb.Models
         [Display(Name = "Vagas Disponíveis")]
         [Required(ErrorMessage = "Quantas vagas estão disponíveis?")]
         public int VagasDisponiveis { get; set; }
-		public string NomeTipoEvento { get; set; }
+		public string? NomeTipoEvento { get; set; }
 
 		[Display(Name = "ID da Áreas de Interesse")]
-		[Required(ErrorMessage = "Informe as Áreas de Interesse do Evento")]
 		public uint IdAreaInteresse { get; set; }
-		public string NomeAreaInteresse { get; set; }
+		public string? NomeAreaInteresse { get; set; }
 
-        public string NomeEstado { get; set; }
+        public string? NomeEstado { get; set; }
 
         [Display(Name = "Tempo de Reserva em Minutos")]
         [Required(ErrorMessage = "Informe o Tempo da Reserva de uma Vaga")]
