@@ -14,19 +14,18 @@ namespace EventoWeb.Models
 		[StringLength(200, MinimumLength = 0, ErrorMessage = "O campo Nome deve ter 200 caracteres no máximo")]
 		public string Nome { get; set; } = null!;
 
-		[Required]
+
 		[Display(Name = "Data Inicial")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
         
         public DateTime DataInicio { get; set; }
 
-		[Required]
+
 		[Display(Name = "Data Final")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
         public DateTime DataFim { get; set; }
 
         [Display(Name = "Descrição")]
-        [Required(ErrorMessage = "Fale um pouco a respeito desse Evento")]
 		[StringLength(5000, MinimumLength = 0, ErrorMessage = "O campo Descrição deve ter no máximo 5000 caracteres")]
 		public string Descricao { get; set; } = null!;
 
@@ -38,12 +37,12 @@ namespace EventoWeb.Models
         [Required(ErrorMessage = "Status do Evento é obrigatório")]
         public string Status { get; set; } = null!;
 
-		[Required]
+		
 		[Display(Name = "Data Inicial de Inscrição")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
         public DateTime DataInicioInscricao { get; set; }
 
-		[Required]
+	
 		[Display(Name = "Data Final de Inscrição")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
         public DateTime DataFimInscricao { get; set; }
@@ -64,28 +63,24 @@ namespace EventoWeb.Models
 		[Display(Name = "Evento Publico")]
         public sbyte EventoPublico { get; set; }
 
-		[Required]
+		
 		[Display(Name = "CEP")]
         [RegularExpression(@"^\d{8}$", ErrorMessage = "O CEP deve estar no formato 00000000.")]
         [StringLength(8, MinimumLength = 8, ErrorMessage = "O campo CEP deve ter 8 caracteres")]
         public string Cep { get; set; } = null!;
 
         [Display(Name = "Estado")]
-        [Required(ErrorMessage = "Informe o Estado onde o Evento será realizado")]
         public string Estado { get; set; } = null!;
 
         [Display(Name = "Cidade")]
-        [Required(ErrorMessage = "Informe a Cidade onde o Evento será realizado")]
 		[StringLength(50, MinimumLength = 0, ErrorMessage = "O campo Cidade deve ter 50 caracteres no máximo")]
 		public string Cidade { get; set; } = null!;
 
         [Display(Name = "Bairro")]
-        [Required(ErrorMessage = "Informe o Bairro onde o Evento será realizado")]
 		[StringLength(50, MinimumLength = 0, ErrorMessage = "O campo Bairro deve ter 50 caracteres no máximo")]
 		public string Bairro { get; set; } = null!;
 
         [Display(Name = "Rua")]
-        [Required(ErrorMessage = "Informe a Rua onde o Evento será realizado")]
 		[StringLength(50, MinimumLength = 0, ErrorMessage = "O campo Rua deve ter no máximo 50 caracteres")]
 		public string Rua { get; set; } = null!;
 
@@ -106,7 +101,6 @@ namespace EventoWeb.Models
         public decimal FrequenciaMinimaCertificado { get; set; }
 
         [Display(Name = "ID do Tipo do Evento")]
-        [Required(ErrorMessage = "Informe qual o Tipo desse Evento")]
         public uint IdTipoEvento { get; set; }
 
         [Display(Name = "Vagas Ofertadas")]

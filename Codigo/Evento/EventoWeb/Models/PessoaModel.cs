@@ -28,7 +28,6 @@ public class PessoaModel
     [Required(ErrorMessage = "Informe o sexo")]
     public string Sexo { get; set; } = null!;
 
-	[Required]
 	[Display(Name = "CEP", Prompt = "00000-000")]
     [RegularExpression(@"^\d{5}-\d{3}$", ErrorMessage = "O CEP deve estar no formato 00000-000.")]
     [StringLength(9, MinimumLength = 9, ErrorMessage = "O campo CEP deve ter 8 caracteres")]
@@ -36,22 +35,18 @@ public class PessoaModel
 
 	[StringLength(2, MinimumLength = 2, ErrorMessage = "Insira um Estado válido")]
 	[Display(Name = "Estado")]
-    [Required(ErrorMessage = "Informe o Estado onde o Evento será realizado")]
     public string Estado { get; set; } = null!;
 
 	[StringLength(50, MinimumLength = 0, ErrorMessage = "O campo Cidade deve ter 50 caracteres no máximo")]
 	[Display(Name = "Cidade")]
-    [Required(ErrorMessage = "Informe a Cidade onde o Evento será realizado")]
     public string Cidade { get; set; } = null!;
 
 	[StringLength(50, MinimumLength = 0, ErrorMessage = "O campo Bairro deve ter 50 caracteres no máximo")]
 	[Display(Name = "Bairro")]
-    [Required(ErrorMessage = "Informe o Bairro onde o Evento será realizado")]
     public string Bairro { get; set; } = null!;
 
 	[StringLength(50, MinimumLength = 0, ErrorMessage = "O campo Rua deve ter 50 caracteres no máximo")]
 	[Display(Name = "Rua")]
-    [Required(ErrorMessage = "Informe a Rua onde o Evento será realizado")]
     public string Rua { get; set; } = null!;
 
 	[StringLength(10, MinimumLength = 0, ErrorMessage = "O campo Numero deve ter 10 caracteres no máximo")]

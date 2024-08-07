@@ -6,9 +6,8 @@ namespace EventoWeb.Models;
 
 public class GerenciarEventoModel
 {
-	[Required]
 	public EventoModel Evento { get; set; }
 
-	[Required]
+	
 	public IEnumerable<SubeventoEventoDTO> Subeventos { get; set; }
 }
