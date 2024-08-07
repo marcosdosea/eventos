@@ -117,7 +117,6 @@ namespace EventoWeb.Models
 		public string NomeTipoEvento { get; set; }
 
 		[Display(Name = "ID da Áreas de Interesse")]
-		[Required(ErrorMessage = "Informe as Áreas de Interesse do Evento")]
 		public uint IdAreaInteresse { get; set; }
 		public string NomeAreaInteresse { get; set; }
 
