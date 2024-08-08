@@ -12,6 +12,9 @@ namespace Core.Service
         IEnumerable<Inscricaopessoaevento> GetByEventoAndPapel(uint idEvento, int idPapel);
 
         IEnumerable<Inscricaopessoaevento> GetByEvento(uint idEvento);
+
+        IEnumerable<Inscricaopessoasubevento> GetSubByEvento(uint idEvento);
+
     }
 }
 

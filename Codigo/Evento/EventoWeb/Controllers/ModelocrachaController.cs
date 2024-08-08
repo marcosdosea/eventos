@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Linq;
+using AutoMapper;
 using Core;
 using Core.Service;
 using EventoWeb.Models;
@@ -66,16 +67,26 @@ namespace EventoWeb.Controllers
 
             if (modelocracha.Qrcode == 1)
             {
-                var inscricoes = _inscricaoService.GetByEvento(modelocracha.IdEvento);
+                var inscricoessub = _inscricaoService.GetSubByEvento(modelocracha.IdEvento);
+                var inscricoesev = _inscricaoService.GetByEvento(modelocracha.IdEvento);
 
-                if (inscricoes != null && inscricoes.Any())
+                if (inscricoesev != null && inscricoessub != null && inscricoesev.Any())
                 {
-                    foreach (var inscricao in inscricoes)
-                    {
-                        modelocrachaModel.Inscricoes.Add($"Evento:{inscricao.IdEvento}, Pessoa:{inscricao.IdPessoa}, Papel:{inscricao.IdPapel}");
-                    }
+                    var pessoasIds = inscricoesev
+                        .Select(i => i.IdPessoa)
+                        .Distinct() 
+                        .ToList();
 
-                    var conteudoQrCode = string.Join(";", modelocrachaModel.Inscricoes);
+                    var subeventosIds = inscricoessub
+                        .Select(i => i.IdSubEvento)
+                        .Distinct() 
+                        .ToList();
+
+                    var conteudoQrCode = string.Join("\n", pessoasIds.Select(idPessoa =>
+                        $"[{idPessoa}] [{modelocracha.IdEvento}] {string.Join(" ", subeventosIds.Select(idSubEvento => $"[{idSubEvento}]"))}"
+                    ));
+
+                    // Gera o QR Code
                     var qrCodeBytes = QrCodeGenerator.GenerateQr(conteudoQrCode);
                     modelocrachaModel.QrCodeBase64 = Convert.ToBase64String(qrCodeBytes);
                 }
