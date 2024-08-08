@@ -1,11 +1,8 @@
-﻿using System.Linq;
-using AutoMapper;
+﻿using AutoMapper;
 using Core;
 using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Service;
 using Util;
 
 namespace EventoWeb.Controllers
@@ -56,42 +53,37 @@ namespace EventoWeb.Controllers
         public ActionResult Details(uint id)
         {
             var modelocracha = _modelocrachaService.Get(id);
-
             var evento = _eventoService.GetEventoSimpleDto(modelocracha.IdEvento);
             var modelocrachaModel = _mapper.Map<ModelocrachaModel>(modelocracha);
-
             modelocrachaModel.NomeEvento = _eventoService.GetNomeById(modelocracha.IdEvento);
             modelocrachaModel.LogotipoBase64 = modelocracha.Logotipo != null
                 ? Convert.ToBase64String(modelocracha.Logotipo)
                 : null;
-
             if (modelocracha.Qrcode == 1)
             {
                 var inscricoessub = _inscricaoService.GetSubByEvento(modelocracha.IdEvento);
                 var inscricoesev = _inscricaoService.GetByEvento(modelocracha.IdEvento);
-
                 if (inscricoesev != null && inscricoessub != null && inscricoesev.Any())
                 {
-                    var pessoasIds = inscricoesev
-                        .Select(i => i.IdPessoa)
-                        .Distinct() 
-                        .ToList();
-
-                    var subeventosIds = inscricoessub
-                        .Select(i => i.IdSubEvento)
-                        .Distinct() 
-                        .ToList();
-
-                    var conteudoQrCode = string.Join("\n", pessoasIds.Select(idPessoa =>
-                        $"[{idPessoa}] [{modelocracha.IdEvento}] {string.Join(" ", subeventosIds.Select(idSubEvento => $"[{idSubEvento}]"))}"
-                    ));
-
-                    // Gera o QR Code
-                    var qrCodeBytes = QrCodeGenerator.GenerateQr(conteudoQrCode);
-                    modelocrachaModel.QrCodeBase64 = Convert.ToBase64String(qrCodeBytes);
+                    modelocrachaModel.QrCodes = inscricoesev
+                        .Where(inscricao => inscricao.IdPapel == 4)
+                        .Select(inscricao =>
+                        {
+                            var subeventosIdsPessoa = inscricoessub
+                                .Where(sub => sub.IdPessoa == inscricao.IdPessoa)
+                                .Select(sub => sub.IdSubEvento)
+                                .Distinct()
+                                .ToList();
+                            var conteudoQrCode = $"[{inscricao.IdPessoa}] [{modelocracha.IdEvento}]";
+                            if (subeventosIdsPessoa.Any())
+                            {
+                                conteudoQrCode += $" {string.Join(" ", subeventosIdsPessoa.Select(idSubEvento => $"[{idSubEvento}]"))}";
+                            }
+                            var qrCodeBytes = QrCodeGenerator.GenerateQr(conteudoQrCode);
+                            return Convert.ToBase64String(qrCodeBytes);
+                        }).ToList();
                 }
             }
-
             return View(modelocrachaModel);
         }
 
@@ -129,7 +121,7 @@ namespace EventoWeb.Controllers
                         else
                         {
                             ModelState.AddModelError("Modelocracha.Logotipo", "O arquivo é muito grande. Deve ser menor que 64 KB.");
-                            return View(modelocrachaModel); // Retorna a view com a mensagem de erro
+                            return View(modelocrachaModel);
                         }
                     }
                 }
@@ -142,7 +134,7 @@ namespace EventoWeb.Controllers
                 {
                     _modelocrachaService.Create(modelocracha);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     ModelState.AddModelError("", "Ocorreu um erro ao salvar o modelo de crachá. Tente novamente.");
                     return View(modelocrachaModel);
@@ -195,7 +187,7 @@ namespace EventoWeb.Controllers
                         else
                         {
                             ModelState.AddModelError("Modelocracha.Logotipo", "O arquivo é muito grande. Deve ser menor que 64 KB.");
-                            return View(viewModel); // Retorna a view com a mensagem de erro
+                            return View(viewModel);
                         }
                     }
                 }
@@ -208,7 +200,7 @@ namespace EventoWeb.Controllers
                 {
                     _modelocrachaService.Edit(modelocracha);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     ModelState.AddModelError("", "Ocorreu um erro ao salvar o modelo de crachá. Tente novamente.");
                     return View(viewModel);
@@ -240,7 +232,7 @@ namespace EventoWeb.Controllers
         public ActionResult Delete(uint id, uint idEvento)
         {
             _modelocrachaService.Delete(id);
-            return RedirectToAction(nameof(Index), new { idEvento = idEvento });
+            return RedirectToAction(nameof(Index), new { idEvento });
         }
     }
 }

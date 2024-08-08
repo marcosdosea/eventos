@@ -34,20 +34,25 @@
             }
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.QrCodeBase64)
+            QR Codes
         </dt>
         <dd class="col-sm-10">
-            @if (!string.IsNullOrEmpty(Model.QrCodeBase64))
+            @if (Model.QrCodes != null && Model.QrCodes.Any())
             {
-                <img src="data:image/png;base64,@Model.QrCodeBase64" alt="QR Code" style="width:200px;height:200px;object-fit:contain;" />
+                @foreach (var qrCode in Model.QrCodes)
+                {
+                    <img src="data:image/png;base64,@qrCode" alt="QR Code" style="width:200px;height:200px;object-fit:contain;" />
+                    <br />
+                }
             }
             else
             {
-                <span>Sem QR Code</span>
+                <span>Sem QR Codes</span>
             }
         </dd>
     </dl>
 </div>
+
 <div>
     <div class="row">
         <div class="col-1">
