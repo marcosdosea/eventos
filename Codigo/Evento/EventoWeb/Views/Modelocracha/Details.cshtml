@@ -4,10 +4,6 @@
     ViewData["Title"] = "Details";
 }
 
-
-<!DOCTYPE html>
-<html lang="pt-BR">
-
 <h1 class="blue-normal">Detalhes do Modelo</h1>
 
 <div>
@@ -18,10 +14,10 @@
         <dd class="col-sm-10">
             @Html.DisplayFor(model => model.NomeEvento)
         </dd>
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Texto)
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Texto)
         </dd>
         <dt class="col-sm-2">
@@ -38,25 +34,30 @@
             }
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.QrCodeBase64)
+            QR Codes
         </dt>
         <dd class="col-sm-10">
-            @if (!string.IsNullOrEmpty(Model.QrCodeBase64))
+            @if (Model.QrCodes != null && Model.QrCodes.Any())
             {
-                <img src="data:image/png;base64,@Model.QrCodeBase64" alt="QR Code" style="width:200px;height:200px;object-fit:contain;" />
+                @foreach (var qrCode in Model.QrCodes)
+                {
+                    <img src="data:image/png;base64,@qrCode" alt="QR Code" style="width:200px;height:200px;object-fit:contain;" />
+                    <br />
+                }
             }
             else
             {
-                <span>Sem QR Code</span>
+                <span>Sem QR Codes</span>
             }
         </dd>
     </dl>
 </div>
+
 <div>
     <div class="row">
         <div class="col-1">
             <div>
-                <a asp-action="Index" class="btn btn-outline-danger">Voltar</a>
+                <a href="@Url.Action("Index", "Modelocracha", new { idEvento = Model.IdEvento})" class="btn btn-outline-danger">Voltar</a>
             </div>
         </div>
         <div class="col-1">

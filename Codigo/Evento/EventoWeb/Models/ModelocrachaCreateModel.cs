@@ -1,5 +1,4 @@
 ﻿using Core.DTO;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace EventoWeb.Models
 {

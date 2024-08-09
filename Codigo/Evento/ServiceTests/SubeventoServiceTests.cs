@@ -137,10 +137,10 @@ namespace Service.Tests
             Assert.AreEqual((sbyte)0, subevento.PossuiCertificado);
             Assert.AreEqual((decimal)0, subevento.FrequenciaMinimaCertificado);
             Assert.AreEqual((uint)3, subevento.IdTipoEvento);
-            Assert.AreEqual((int)100, subevento.VagasOfertadas);
-            Assert.AreEqual((int)35, subevento.VagasReservadas);
-            Assert.AreEqual((int)65, subevento.VagasDisponiveis);
-            Assert.AreEqual((int)12, subevento.CargaHoraria);
+            Assert.AreEqual((uint)100, subevento.VagasOfertadas);
+            Assert.AreEqual((uint)35, subevento.VagasReservadas);
+            Assert.AreEqual((uint)65, subevento.VagasDisponiveis);
+            Assert.AreEqual((uint)12, subevento.CargaHoraria);
         }
 
         [TestMethod()]
@@ -192,10 +192,10 @@ namespace Service.Tests
             Assert.AreEqual((sbyte)1, subevento.PossuiCertificado);
             Assert.AreEqual((decimal)1, subevento.FrequenciaMinimaCertificado);
             Assert.AreEqual((uint)1, subevento.IdTipoEvento);
-            Assert.AreEqual((int)100, subevento.VagasOfertadas);
-            Assert.AreEqual((int)35, subevento.VagasReservadas);
-            Assert.AreEqual((int)65, subevento.VagasDisponiveis);
-            Assert.AreEqual((int)4, subevento.CargaHoraria);
+            Assert.AreEqual((uint)100, subevento.VagasOfertadas);
+            Assert.AreEqual((uint)35, subevento.VagasReservadas);
+            Assert.AreEqual((uint)65, subevento.VagasDisponiveis);
+            Assert.AreEqual((uint)4, subevento.CargaHoraria);
         }
 
         [TestMethod()]
@@ -216,10 +216,10 @@ namespace Service.Tests
             Assert.AreEqual((sbyte)1, subevento.PossuiCertificado);
             Assert.AreEqual((decimal)1, subevento.FrequenciaMinimaCertificado);
             Assert.AreEqual((uint)1, subevento.IdTipoEvento);
-            Assert.AreEqual((int)100, subevento.VagasOfertadas);
-            Assert.AreEqual((int)35, subevento.VagasReservadas);
-            Assert.AreEqual((int)65, subevento.VagasDisponiveis);
-            Assert.AreEqual((int)4, subevento.CargaHoraria);
+            Assert.AreEqual((uint)100, subevento.VagasOfertadas);
+            Assert.AreEqual((uint)35, subevento.VagasReservadas);
+            Assert.AreEqual((uint)65, subevento.VagasDisponiveis);
+            Assert.AreEqual((uint)4, subevento.CargaHoraria);
         }
 
         [TestMethod()]
@@ -245,10 +245,10 @@ namespace Service.Tests
             Assert.AreEqual((sbyte)1, firstSubevento.PossuiCertificado);
             Assert.AreEqual((decimal)1, firstSubevento.FrequenciaMinimaCertificado);
             Assert.AreEqual((uint)1, firstSubevento.IdTipoEvento);
-            Assert.AreEqual((int)100, firstSubevento.VagasOfertadas);
-            Assert.AreEqual((int)35, firstSubevento.VagasReservadas);
-            Assert.AreEqual((int)65, firstSubevento.VagasDisponiveis);
-            Assert.AreEqual((int)4, firstSubevento.CargaHoraria);
+            Assert.AreEqual((uint)100, firstSubevento.VagasOfertadas);
+            Assert.AreEqual((uint)35, firstSubevento.VagasReservadas);
+            Assert.AreEqual((uint)65, firstSubevento.VagasDisponiveis);
+            Assert.AreEqual((uint)4, firstSubevento.CargaHoraria);
         }
     }
 }
