@@ -86,7 +86,7 @@
                     <td>
                         @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" })
                         &nbsp;&nbsp;
-                        @Html.ActionLink("Detalhes", "Details", new { id = item.Id }, new { @style = "text-decoration:none;" })
+                        @Html.ActionLink("Detalhes", "Details", new { id = item.Id, idPessoa = item.IdPessoa }, new { @style = "text-decoration:none;" })
                         &nbsp;&nbsp;
                         @Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @style = "text-decoration:none;", @class = "danger-normal" })
                         &nbsp;&nbsp;
