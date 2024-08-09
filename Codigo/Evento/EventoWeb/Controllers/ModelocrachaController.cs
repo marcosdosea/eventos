@@ -25,7 +25,7 @@ namespace EventoWeb.Controllers
         }
 
         // GET: ModelocrachaController
-        public ActionResult Index(uint? idEvento)
+        public ActionResult Index(uint? idEvento, uint? idPessoa)
         {
             if (idEvento.HasValue)
             {
@@ -35,10 +35,14 @@ namespace EventoWeb.Controllers
                     var model = _mapper.Map<ModelocrachaModel>(m);
                     var evento = _eventoService.Get(m.IdEvento);
                     model.NomeEvento = evento != null ? evento.Nome : "Evento não encontrado";
+                    model.IdPessoa = idPessoa;
                     return model;
                 }).ToList();
-
-                ViewData["EventoId"] = idEvento.Value;
+                if (idPessoa.HasValue)
+                {
+					ViewData["PessoaId"] = idPessoa.Value;
+				}
+				ViewData["EventoId"] = idEvento.Value;
                 ViewData["EventoNome"] = _eventoService.GetNomeById(idEvento.Value);
                 return View(listaModeloCrachaModel);
             }
@@ -50,7 +54,7 @@ namespace EventoWeb.Controllers
         }
 
         // GET: ModelocrachaController/Details/5
-        public ActionResult Details(uint id)
+        public ActionResult Details(uint id, uint? idPessoa)
         {
             var modelocracha = _modelocrachaService.Get(id);
             var evento = _eventoService.GetEventoSimpleDto(modelocracha.IdEvento);
@@ -65,23 +69,47 @@ namespace EventoWeb.Controllers
                 var inscricoesev = _inscricaoService.GetByEvento(modelocracha.IdEvento);
                 if (inscricoesev != null && inscricoessub != null && inscricoesev.Any())
                 {
-                    modelocrachaModel.QrCodes = inscricoesev
-                        .Where(inscricao => inscricao.IdPapel == 4)
-                        .Select(inscricao =>
-                        {
-                            var subeventosIdsPessoa = inscricoessub
-                                .Where(sub => sub.IdPessoa == inscricao.IdPessoa)
-                                .Select(sub => sub.IdSubEvento)
-                                .Distinct()
-                                .ToList();
-                            var conteudoQrCode = $"[{inscricao.IdPessoa}] [{modelocracha.IdEvento}]";
-                            if (subeventosIdsPessoa.Any())
-                            {
-                                conteudoQrCode += $" {string.Join(" ", subeventosIdsPessoa.Select(idSubEvento => $"[{idSubEvento}]"))}";
-                            }
-                            var qrCodeBytes = QrCodeGenerator.GenerateQr(conteudoQrCode);
-                            return Convert.ToBase64String(qrCodeBytes);
-                        }).ToList();
+                    if (idPessoa.HasValue)
+                    {
+                        modelocrachaModel.IdPessoa = idPessoa.Value;
+                        modelocrachaModel.QrCodes = inscricoesev
+							.Where(inscricao => inscricao.IdPapel == 4 && inscricao.IdPessoa == idPessoa)
+							.Select(inscricao =>
+							{
+								var subeventosIdsPessoa = inscricoessub
+									.Where(sub => sub.IdPessoa == inscricao.IdPessoa)
+									.Select(sub => sub.IdSubEvento)
+									.Distinct()
+									.ToList();
+								var conteudoQrCode = $"[{inscricao.IdPessoa}] [{modelocracha.IdEvento}]";
+								if (subeventosIdsPessoa.Any())
+								{
+									conteudoQrCode += $" {string.Join(" ", subeventosIdsPessoa.Select(idSubEvento => $"[{idSubEvento}]"))}";
+								}
+								var qrCodeBytes = QrCodeGenerator.GenerateQr(conteudoQrCode);
+								return Convert.ToBase64String(qrCodeBytes);
+							}).ToList();
+					}
+                    else
+                    {
+						modelocrachaModel.QrCodes = inscricoesev
+							.Where(inscricao => inscricao.IdPapel == 4)
+							.Select(inscricao =>
+							{
+								var subeventosIdsPessoa = inscricoessub
+									.Where(sub => sub.IdPessoa == inscricao.IdPessoa)
+									.Select(sub => sub.IdSubEvento)
+									.Distinct()
+									.ToList();
+								var conteudoQrCode = $"[{inscricao.IdPessoa}] [{inscricao.NomeCracha}] [{modelocracha.IdEvento}]";
+								if (subeventosIdsPessoa.Any())
+								{
+									conteudoQrCode += $" {string.Join(" ", subeventosIdsPessoa.Select(idSubEvento => $"[{idSubEvento}]"))}";
+								}
+								var qrCodeBytes = QrCodeGenerator.GenerateQr(conteudoQrCode);
+								return Convert.ToBase64String(qrCodeBytes);
+							}).ToList();
+					}
                 }
             }
             return View(modelocrachaModel);
