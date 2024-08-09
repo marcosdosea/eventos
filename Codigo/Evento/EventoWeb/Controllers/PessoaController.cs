@@ -60,22 +60,24 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create(PessoaCreateModel viewModel)
         {
-            if (_pessoaService.CPFIsValid(viewModel.Pessoa.Cpf))
+            if (ModelState.IsValid)
             {
-                viewModel.Pessoa.Cpf = _pessoaService.FormataCPF(viewModel.Pessoa.Cpf);
-                viewModel.Pessoa.Cep = _pessoaService.FormataCep(viewModel.Pessoa.Cep);
+                if (_pessoaService.CPFIsValid(viewModel.Pessoa.Cpf))
+                {
+                    viewModel.Pessoa.Cpf = _pessoaService.FormataCPF(viewModel.Pessoa.Cpf);
+                    viewModel.Pessoa.Cep = _pessoaService.FormataCep(viewModel.Pessoa.Cep);
 
-                var pessoa = _mapper.Map<Pessoa>(viewModel.Pessoa);
-                _pessoaService.Create(pessoa);
-                return RedirectToAction(nameof(Index));
+                    var pessoa = _mapper.Map<Pessoa>(viewModel.Pessoa);
+                    _pessoaService.Create(pessoa);
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    ModelState.AddModelError("Pessoa.Cpf", "CPF inválido.");
+                }
             }
-            else
-            {
-                ModelState.AddModelError("Pessoa.Cpf", "CPF inválido.");
-                var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
-                viewModel.Estados = new SelectList(estados, "Estado", "Nome");
-                return View(viewModel);
-            }
+
+            return View(viewModel);
         }
 
         // GET: PessoaController/Edit/5
@@ -108,22 +110,24 @@ namespace EventoWeb.Controllers
                 return BadRequest();
             }
 
-            if (_pessoaService.CPFIsValid(viewModel.Pessoa.Cpf))
+            if (ModelState.IsValid)
             {
-                viewModel.Pessoa.Cpf = _pessoaService.FormataCPF(viewModel.Pessoa.Cpf);
-                viewModel.Pessoa.Cep = _pessoaService.FormataCep(viewModel.Pessoa.Cep);
+                if (_pessoaService.CPFIsValid(viewModel.Pessoa.Cpf))
+                {
+                    viewModel.Pessoa.Cpf = _pessoaService.FormataCPF(viewModel.Pessoa.Cpf);
+                    viewModel.Pessoa.Cep = _pessoaService.FormataCep(viewModel.Pessoa.Cep);
 
-                var pessoa = _mapper.Map<Pessoa>(viewModel.Pessoa);
-                _pessoaService.Edit(pessoa);
-                return RedirectToAction(nameof(Index));
+                    var pessoa = _mapper.Map<Pessoa>(viewModel.Pessoa);
+                    _pessoaService.Edit(pessoa);
+                    return RedirectToAction(nameof(Index));
+                }
+                else
+                {
+                    ModelState.AddModelError("Pessoa.Cpf", "CPF inválido.");
+                }
             }
-            else
-            {
-                ModelState.AddModelError("Pessoa.Cpf", "CPF inválido.");
-                var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
-                viewModel.Estados = new SelectList(estados, "Estado", "Nome");
-                return View(viewModel);
-            }
+
+            return View(viewModel);
         }
 
         // GET: PessoaController/Delete/5

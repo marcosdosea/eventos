@@ -37,10 +37,10 @@ namespace EventoWeb.Controllers
 			var listarEventosModel = listarEventos.Select(e => new EventoModel
 			{
 				Id = e.Id,
-				DataInicio = (DateTime) e.DataInicio,
+                DataInicio = (DateTime)e.DataInicio,
 				Nome = e.Nome,
 				Status = e.Status,
-				IdTipoEvento = (uint) e.IdTipoEvento,
+				IdTipoEvento = (uint)e.IdTipoEvento,
 				NomeTipoEvento = _tipoEventoService.GetNomeById((uint)e.IdTipoEvento)
 
 			}).ToList();
@@ -75,18 +75,29 @@ namespace EventoWeb.Controllers
 			return View(viewModel);
 		}
 
-		// POST: EventoController/Create
-		[HttpPost]
+        // POST: EventoController/Create
+        [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Create(EventocreateModel eventoModel)
         {
-			var evento = _mapper.Map<Evento>(eventoModel.Evento);
-			_eventoService.Create(evento);
-			return RedirectToAction(nameof(Index));
-		}
+            ModelState.Remove("Estados");
+            ModelState.Remove("TiposEventos");
+            ModelState.Remove("AreaInteresse");
 
-		// GET: EventoController/Edit/5
-		public ActionResult Edit(uint id)
+            if (ModelState.IsValid)
+            {
+                var evento = _mapper.Map<Evento>(eventoModel.Evento);
+                _eventoService.Create(evento);
+                return RedirectToAction(nameof(Index));
+            }
+
+            
+
+            return View(eventoModel);
+        }
+
+        // GET: EventoController/Edit/5
+        public ActionResult Edit(uint id)
 		{
 			var evento = _eventoService.Get(id);
 			if (evento == null)
@@ -109,24 +120,39 @@ namespace EventoWeb.Controllers
 			return View(viewModel);
 		}
 
-		// POST: EventoController/Edit/5
-		[HttpPost]
-		[ValidateAntiForgeryToken]
-		public ActionResult Edit(uint id, EventocreateModel viewModel)
-		{
+        // POST: EventoController/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Edit(uint id, EventocreateModel viewModel)
+        {
+            ModelState.Remove("Estados");
+            ModelState.Remove("TiposEventos");
+            ModelState.Remove("AreaInteresse");
 
-			var evento = _mapper.Map<Evento>(viewModel.Evento);
-            
-			_eventoService.Edit(evento);
+            if (ModelState.IsValid)
+            {
+                var evento = _mapper.Map<Evento>(viewModel.Evento);
+                _eventoService.Edit(evento);
 
-            // Atualiza a quantidade de vagas disponíveis
-            _eventoService.AtualizarVagasDisponiveis(evento.Id);
-            return RedirectToAction(nameof(Index));
-		}
+                // Atualiza a quantidade de vagas disponíveis
+                _eventoService.AtualizarVagasDisponiveis(evento.Id);
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Se o ModelState não for válido, recarrega as listas de seleção
+            var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
+            var tiposEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
+            var areaInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
+            viewModel.Estados = new SelectList(estados, "Estado", "Nome", viewModel.Evento.Estado);
+            viewModel.TiposEventos = new SelectList(tiposEventos, "Id", "Nome", viewModel.Evento.Id);
+            viewModel.AreaInteresse = new SelectList(areaInteresse, "Id", "Nome", viewModel.Evento.Id);
+
+            return View(viewModel);
+        }
 
 
-		// GET: EventoController/Delete/5
-		public ActionResult Delete(uint id)
+        // GET: EventoController/Delete/5
+        public ActionResult Delete(uint id)
         {
             var evento = _eventoService.Get(id);
             var eventoModel = _mapper.Map<EventoModel>(evento);
@@ -245,21 +271,38 @@ namespace EventoWeb.Controllers
         public ActionResult GestorEditarEvento(uint id, EventocreateModel viewModel)
         {
 
+            ModelState.Remove("Estados");
+            ModelState.Remove("TiposEventos");
+            ModelState.Remove("AreaInteresse");
             var evento = _mapper.Map<Evento>(viewModel.Evento);
-
             var idAreaInteresse = viewModel.Evento.IdAreaInteresse;
-			var areaInteresse = _areaInteresseService.Get(idAreaInteresse);
+            var areaInteresse = _areaInteresseService.Get(idAreaInteresse);
 
-			if (evento.IdAreaInteresses == null)
-			{
-				evento.IdAreaInteresses = new List<Core.Areainteresse>();
-			}
+            if (ModelState.IsValid)
+            {
+                if (evento.IdAreaInteresses == null)
+                {
+                    evento.IdAreaInteresses = new List<Core.Areainteresse>();
+                }
 
-			evento.IdAreaInteresses.Clear(); 
-			evento.IdAreaInteresses.Add(areaInteresse);
-            _eventoService.Edit(evento);
-            _eventoService.AtualizarVagasDisponiveis(evento.Id);
-            return RedirectToAction("GerenciarEvento", "Evento", new { idEvento = id });
+                evento.IdAreaInteresses.Clear();
+                evento.IdAreaInteresses.Add(areaInteresse);
+
+                _eventoService.Edit(evento);
+                _eventoService.AtualizarVagasDisponiveis(evento.Id);
+
+                return RedirectToAction("GerenciarEvento", "Evento", new { idEvento = id });
+            }
+
+            var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
+            var tiposEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
+            var areasInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
+
+            viewModel.Estados = new SelectList(estados, "Estado", "Nome", viewModel.Evento.Estado);
+            viewModel.TiposEventos = new SelectList(tiposEventos, "Id", "Nome", viewModel.Evento.IdTipoEvento);
+            viewModel.AreaInteresse = new SelectList(areasInteresse, "Id", "Nome", viewModel.Evento.IdAreaInteresse);
+
+            return View(viewModel);
         }
     }
 }
