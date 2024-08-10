@@ -72,5 +72,18 @@ namespace Service
         {
             return _context.Modelocrachas.AsNoTracking();
         }
+
+        public IEnumerable<Modelocracha> GetByEvento(uint id)
+        {
+            var evento = _context.Eventos.Include(e => e.Modelocrachas)
+                .FirstOrDefault(e => e.Id == id);
+
+            if (evento != null)
+            {
+                return evento.Modelocrachas;
+            }
+
+            return Enumerable.Empty<Modelocracha>();
+        }
     }
 }

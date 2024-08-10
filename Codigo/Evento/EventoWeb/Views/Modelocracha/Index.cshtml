@@ -42,10 +42,8 @@
 
 <div>
     <h1 class="blue-normal">Modelos de crachas disponiveis</h1>
-
-    <button type="button" class="btn btn-lg btn-blue-normal mb-2"
-            onclick="location.href='@Url.Action("Create")'">
-        Adcionar modelo
+    <button type="button" class="btn-blue-normal btn btn-lg mb-2">
+        <a asp-action="Create" asp-route-idEvento="@ViewData["EventoId"]" style="text-decoration:none; color:white">Adcionar modelo</a>
     </button>
     <br />
     <table id="tableModeloCracha" class="table table-striped">
@@ -60,11 +58,6 @@
                 <th>
                     @Html.DisplayNameFor(model => model.Logotipo)
                 </th>
-
-                <th>
-                    @Html.DisplayNameFor(model => model.Qrcode)
-                </th>
-
                 <th>
                     Ações
                 </th>
@@ -91,20 +84,9 @@
                         }
                     </td>
                     <td>
-                        @if (!string.IsNullOrEmpty(item.QrCodeBase64))
-                        {
-                            <img src="data:image/png;base64,@item.QrCodeBase64" alt="QR Code" style="width:150px;height:100px;object-fit:contain;" />
-                        }
-                        else
-                        {
-                            <span>Sem QR Code</span>
-                        }
-                    </td>
-
-                    <td>
                         @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" })
                         &nbsp;&nbsp;
-                        @Html.ActionLink("Detalhes", "Details", new { id = item.Id }, new { @style = "text-decoration:none;" })
+                        @Html.ActionLink("Detalhes", "Details", new { id = item.Id, idPessoa = item.IdPessoa }, new { @style = "text-decoration:none;" })
                         &nbsp;&nbsp;
                         @Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @style = "text-decoration:none;", @class = "danger-normal" })
                         &nbsp;&nbsp;
@@ -116,7 +98,7 @@
     <br />
     <div class="d-flex justify-content-end">
         <button type="button" class="btn-blue-normal btn btn-lg mb-2 ">
-            <a asp-controller="Evento" asp-action="Index" asp-route-idEvento="@ViewData["EventoId"]" style="text-decoration:none; color:white">Voltar</a>
+            <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@ViewData["EventoId"]" style="text-decoration:none; color:white">Voltar</a>
         </button>
     </div>
 </div>
@@ -130,7 +112,7 @@
             $('#tableModeloCracha').DataTable({
                 columnDefs: [
                     { orderable: true, targets: [0] },
-                    { orderable: false, targets: [1, 2, 3, 4] },
+                    { orderable: false, targets: [1, 2, 3] },
                 ],
                 searching: true,
                 ordering: true,

@@ -84,21 +84,30 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult CreateOrEdit(uint idEvento, uint? idSubevento, SubeventoCreateModel subeventoModel)
         {
-            var subevento = _mapper.Map<Subevento>(subeventoModel.Subevento);
-
-            if (idSubevento.HasValue)
+            ModelState.Remove("TiposEventos");
+            ModelState.Remove("Evento.Nome");
+            if (ModelState.IsValid)
             {
-                subevento.IdEvento = idEvento;
-                subevento.Id = idSubevento.Value;
-                _subeventoService.Edit(subevento);
-            }
-            else
-            {
-                subevento.IdEvento = idEvento;
-                _subeventoService.Create(subevento);
+                var subevento = _mapper.Map<Subevento>(subeventoModel.Subevento);
+
+                if (idSubevento.HasValue)
+                {
+                    subevento.IdEvento = idEvento;
+                    subevento.Id = idSubevento.Value;
+                    _subeventoService.Edit(subevento);
+                }
+                else
+                {
+                    subevento.IdEvento = idEvento;
+                    _subeventoService.Create(subevento);
+                }
+
+                return RedirectToAction("GerenciarEvento", "Evento", new { idEvento = idEvento });
             }
 
-            return RedirectToAction("GerenciarEvento", "Evento", new { idEvento = idEvento });
+            
+
+            return View(subeventoModel);
         }
 
         // GET: SubeventoController/Delete/5

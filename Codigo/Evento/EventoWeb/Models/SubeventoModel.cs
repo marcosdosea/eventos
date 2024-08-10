@@ -90,10 +90,10 @@ namespace EventoWeb.Models
         public uint IdTipoEvento { get; set; }
 
         [Display(Name = "Tipo de Subevento")]
-        public string NomeTipoEvento { get; set; }
+        public string? NomeTipoEvento { get; set; }
         
         [Display(Name = "Evento")]
-        public string NomeEvento { get; set; }
+        public string? NomeEvento { get; set; }
     }
 
 }

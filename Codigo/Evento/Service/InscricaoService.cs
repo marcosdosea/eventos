@@ -37,7 +37,30 @@ namespace Service
                 .AsNoTracking()
                 .ToList();
         }
-        
-        
+
+        public IEnumerable<Inscricaopessoaevento> GetByEvento(uint idEvento)
+        {
+            return _context.Inscricaopessoaeventos
+                .Include(i => i.IdPessoaNavigation)
+                .Where(i => i.IdEvento == idEvento)
+                .AsNoTracking()
+                .ToList();
+        }
+
+        public void CreateInscricaoSubEvento(Inscricaopessoasubevento inscricaopessoasubevento)
+        {
+            _context.Add(inscricaopessoasubevento);
+            _context.SaveChanges();
+        }
+
+        public IEnumerable<Inscricaopessoasubevento> GetSubByEvento(uint idEvento)
+        {
+            return _context.Inscricaopessoasubeventos
+                .Include(i => i.IdPessoaNavigation)
+                .Include(i => i.IdSubEventoNavigation)
+                .Where(i => i.IdSubEventoNavigation.IdEvento == idEvento)
+                .AsNoTracking()
+                .ToList();
+        }
     }
 }

@@ -26,6 +26,10 @@ namespace EventoWeb.Controllers.Tests
             // Arrange
             var mockService = new Mock<IModelocrachaService>();
             var mockServiceEvento = new Mock<IEventoService>();
+            var mockServicePessoa = new Mock<IPessoaService>();
+            var mockServiceInscricao = new Mock<IInscricaoService>();
+
+
 
 
             IMapper mapper = new MapperConfiguration(cfg =>
@@ -37,16 +41,16 @@ namespace EventoWeb.Controllers.Tests
                 .Returns(GetTargetModelocracha());
             mockService.Setup(service => service.Create(It.IsAny<Modelocracha>()))
                 .Verifiable();
-            mockServiceEvento.Setup(service => service.GetAll())
-                .Returns(GetTestEventos());
-            controller = new ModelocrachaController(mockService.Object, mockServiceEvento.Object, mapper);
+            mockService.Setup(service => service.GetByEvento(It.IsAny<uint>()))
+            .Returns(GetTestModelocracha());
+            controller = new ModelocrachaController(mockService.Object, mockServiceEvento.Object, mockServicePessoa.Object, mockServiceInscricao.Object, mapper);
         }
 
         [TestMethod]
         public void IndexTest()
         {
             // Act
-            var result = controller.Index();
+            var result = controller.Index(GetTargetEvento().Id);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
@@ -78,7 +82,7 @@ namespace EventoWeb.Controllers.Tests
         public void CreateTest()
         {
             // Act
-            var result = controller.Create(1);
+            var result = controller.Create(GetTargetEvento().Id);
 
             // Assert 
             Assert.IsInstanceOfType(result, typeof(ViewResult));
@@ -162,7 +166,7 @@ namespace EventoWeb.Controllers.Tests
         public void DeleteTest_Get_Valid()
         {
             // Act
-            var result = controller.Delete(GetTargetDeleteModelocrachaModel().Id, GetTargetDeleteModelocrachaModel());
+            var result = controller.Delete(GetTargetDeleteModelocrachaModel().Id, GetTargetDeleteModelocrachaModel().IdEvento);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
@@ -215,6 +219,41 @@ namespace EventoWeb.Controllers.Tests
                 Logotipo = new byte[] { 0x20, 0x20 },
                 Texto = "Texto 1",
                 Qrcode = 1
+            };
+        }
+
+        private static Evento GetTargetEvento()
+        {
+            return new Evento
+            {
+                    Id = 1,
+                    Nome = "SEMINFO",
+                    Descricao = "Evento para a semana da tecnologia",
+                    DataInicio = new DateTime(2024, 10, 2, 7, 30, 0),
+                    DataFim = new DateTime(2024, 10, 7, 12, 30, 0),
+                    InscricaoGratuita = 1,
+                    Status = "A",
+                    DataInicioInscricao = new DateTime(2024, 09, 2, 7, 30, 0),
+                    DataFimInscricao = new DateTime(2024, 09, 7, 12, 30, 0),
+                    ValorInscricao = 0,
+                    Website = "www.itatechjr.com.br",
+                    EmailEvento = "DSI@academico.ufs.br",
+                    EventoPublico = 1,
+                    Cep = "49506036",
+                    Estado = "SE",
+                    Cidade = "Itabaiana",
+                    Bairro = "Porto",
+                    Rua = " Av. Vereador Olímpio Grande",
+                    Numero = "s/n",
+                    Complemento = "Universidade",
+                    PossuiCertificado = 1,
+                    FrequenciaMinimaCertificado = 1,
+                    IdTipoEvento = 1,
+                    VagasOfertadas = 100,
+                    VagasReservadas = 35,
+                    VagasDisponiveis = 65,
+                    TempoMinutosReserva = 240,
+                    CargaHoraria = 4,
             };
         }
 

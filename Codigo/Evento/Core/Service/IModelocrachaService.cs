@@ -12,6 +12,8 @@ namespace Core.Service
         void Edit(Modelocracha modelocracha);
         void Delete(uint id);
         Modelocracha Get(uint id);
+        IEnumerable<Modelocracha> GetByEvento(uint idEvento);
+
         IEnumerable<Modelocracha> GetAll();
     }
 }

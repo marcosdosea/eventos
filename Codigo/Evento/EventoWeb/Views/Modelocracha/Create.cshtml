@@ -77,7 +77,7 @@
                         <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
                     </div>
                     <div class="form-group">
-                        <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
+                        <a href="@Url.Action("Index", "Modelocracha", new { idEvento = Model.Evento.Id})" class="btn btn-outline-danger">Cancelar</a>
                     </div>
                 </div>
             </div>
