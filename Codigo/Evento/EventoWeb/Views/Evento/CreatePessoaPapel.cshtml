@@ -132,8 +132,6 @@
 								<input type="hidden" name="IdEvento" value="@Model.Evento.Id" />
 								<input type="hidden" name="IdPapel" value="@inscricaopessoaevento.IdPapel" />
 								<a href="#confirmRemovalModal" data-toggle="modal" onclick="setModalValues('@inscricaopessoaevento.IdPessoaNavigation.Nome', '@Model.Evento.Nome', '@inscricaopessoaevento.IdPessoa', '@Model.Evento.Id')" class="text-danger" style="text-decoration: none; cursor: pointer;">Remover @papel</a>
-								&nbsp;&nbsp;
-								@Html.ActionLink("Crachá", "Index", "Modelocracha", new { idEvento = @Model.Evento.Id, idPessoa = inscricaopessoaevento.IdPessoa }, new { @style = "text-decoration:none;" })
 							</form>
 						</td>
 					</tr>
@@ -195,8 +193,8 @@
 		$(document).ready(function () {
 			$('#tablePessoa').DataTable({
 				columnDefs: [
-					{ orderable: true, targets: [0, 1] },
-					{ orderable: false, targets: [2, 3, 4] }
+					{ orderable: true, targets: [0] },
+					{ orderable: false, targets: [1, 2] }
 				],
 				searching: true,
 				ordering: true,
