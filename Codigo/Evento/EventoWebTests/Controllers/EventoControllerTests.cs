@@ -132,13 +132,12 @@ namespace EventoWeb.Controllers.Tests
             // Act
             var result = controller.Create(GetNewEvento());
 
-            // Assert
-            Assert.AreEqual(1, controller.ModelState.ErrorCount);
-            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
-            RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
-            Assert.IsNull(redirectToActionResult.ControllerName);
-            Assert.AreEqual("Index", redirectToActionResult.ActionName);
-        }
+			// Assert
+			Assert.AreEqual(1, controller.ModelState.ErrorCount);
+			Assert.IsInstanceOfType(result, typeof(ViewResult));
+			ViewResult viewResult = (ViewResult)result;
+			Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(EventocreateModel));
+		}
 
 
         [TestMethod()]
