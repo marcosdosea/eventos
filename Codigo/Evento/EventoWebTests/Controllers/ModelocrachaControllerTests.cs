@@ -29,9 +29,6 @@ namespace EventoWeb.Controllers.Tests
             var mockServicePessoa = new Mock<IPessoaService>();
             var mockServiceInscricao = new Mock<IInscricaoService>();
 
-
-
-
             IMapper mapper = new MapperConfiguration(cfg =>
             cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
 
@@ -50,7 +47,7 @@ namespace EventoWeb.Controllers.Tests
         public void IndexTest()
         {
             // Act
-            var result = controller.Index(GetTargetEvento().Id);
+            var result = controller.Index(GetTargetEvento().Id, null);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
@@ -65,7 +62,7 @@ namespace EventoWeb.Controllers.Tests
         public void DetailsTest()
         {
             // Act
-            var result = controller.Details(1);
+            var result = controller.Details(1, null);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
@@ -189,7 +186,7 @@ namespace EventoWeb.Controllers.Tests
             formFileMock.Setup(_ => _.FileName).Returns(fileName);
             formFileMock.Setup(_ => _.Length).Returns(ms.Length);
 
-            var modelocrachaModel =  new ModelocrachaModel
+            var modelocrachaModel = new ModelocrachaModel
             {
                 Id = 7,
                 IdEvento = 4,
@@ -226,34 +223,34 @@ namespace EventoWeb.Controllers.Tests
         {
             return new Evento
             {
-                    Id = 1,
-                    Nome = "SEMINFO",
-                    Descricao = "Evento para a semana da tecnologia",
-                    DataInicio = new DateTime(2024, 10, 2, 7, 30, 0),
-                    DataFim = new DateTime(2024, 10, 7, 12, 30, 0),
-                    InscricaoGratuita = 1,
-                    Status = "A",
-                    DataInicioInscricao = new DateTime(2024, 09, 2, 7, 30, 0),
-                    DataFimInscricao = new DateTime(2024, 09, 7, 12, 30, 0),
-                    ValorInscricao = 0,
-                    Website = "www.itatechjr.com.br",
-                    EmailEvento = "DSI@academico.ufs.br",
-                    EventoPublico = 1,
-                    Cep = "49506036",
-                    Estado = "SE",
-                    Cidade = "Itabaiana",
-                    Bairro = "Porto",
-                    Rua = " Av. Vereador Olímpio Grande",
-                    Numero = "s/n",
-                    Complemento = "Universidade",
-                    PossuiCertificado = 1,
-                    FrequenciaMinimaCertificado = 1,
-                    IdTipoEvento = 1,
-                    VagasOfertadas = 100,
-                    VagasReservadas = 35,
-                    VagasDisponiveis = 65,
-                    TempoMinutosReserva = 240,
-                    CargaHoraria = 4,
+                Id = 1,
+                Nome = "SEMINFO",
+                Descricao = "Evento para a semana da tecnologia",
+                DataInicio = new DateTime(2024, 10, 2, 7, 30, 0),
+                DataFim = new DateTime(2024, 10, 7, 12, 30, 0),
+                InscricaoGratuita = 1,
+                Status = "A",
+                DataInicioInscricao = new DateTime(2024, 09, 2, 7, 30, 0),
+                DataFimInscricao = new DateTime(2024, 09, 7, 12, 30, 0),
+                ValorInscricao = 0,
+                Website = "www.itatechjr.com.br",
+                EmailEvento = "DSI@academico.ufs.br",
+                EventoPublico = 1,
+                Cep = "49506036",
+                Estado = "SE",
+                Cidade = "Itabaiana",
+                Bairro = "Porto",
+                Rua = " Av. Vereador Olímpio Grande",
+                Numero = "s/n",
+                Complemento = "Universidade",
+                PossuiCertificado = 1,
+                FrequenciaMinimaCertificado = 1,
+                IdTipoEvento = 1,
+                VagasOfertadas = 100,
+                VagasReservadas = 35,
+                VagasDisponiveis = 65,
+                TempoMinutosReserva = 240,
+                CargaHoraria = 4,
             };
         }
 
@@ -339,6 +336,7 @@ namespace EventoWeb.Controllers.Tests
                 }
             };
         }
+
         private IEnumerable<Modelocracha> GetTestModelocracha()
         {
             return new List<Modelocracha>

@@ -1,7 +1,7 @@
 @model IEnumerable<EventoWeb.Models.PessoaModel>
 
 @{
-	ViewData["Title"] = "Index";
+    ViewData["Title"] = "Index";
 }
 
 <link href="~/lib/datatable/css/datatables.min.css" rel="stylesheet" />
@@ -32,70 +32,69 @@
                 </th>
             </tr>
         </thead>
-    <tbody>
-		<tbody>
-				@foreach (var item in Model)
-				{
-				<tr>
-					<td>
-							@Html.DisplayFor(modelItem => item.Nome)
-					</td>
-					<td>
-							@Html.DisplayFor(modelItem => item.Cpf)
-					</td>
-					<td>
-							@Html.DisplayFor(modelItem => item.Email)
-					</td>
-					<td>
-							@{
-								string sexoDescricao = "Desconhecido";
-								switch (item.Sexo)
-								{
-									case "M":
-										sexoDescricao = "Masculino";
-										break;
-									case "F":
-										sexoDescricao = "Feminino";
-										break;
-									case "N":
-										sexoDescricao = "Prefiro não dizer";
-										break;
-								}
-							}
-							@sexoDescricao
-					<td>
-							@Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" })
-						&nbsp;&nbsp;
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Nome)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Cpf)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Email)
+                    </td>
+                    <td>
+                        @{
+                            string sexoDescricao = "Desconhecido";
+                            switch (item.Sexo)
+                            {
+                                case "M":
+                                    sexoDescricao = "Masculino";
+                                    break;
+                                case "F":
+                                    sexoDescricao = "Feminino";
+                                    break;
+                                case "N":
+                                    sexoDescricao = "Prefiro não dizer";
+                                    break;
+                            }
+                        }
+                        @sexoDescricao
+                    <td>
+                            @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" })
+                        &nbsp;&nbsp;
                             @Html.ActionLink("Detalhes", "Details", new { id = item.Id }, new { @style = "text-decoration:none;" })
-						&nbsp;&nbsp;
+                        &nbsp;&nbsp;
                             @Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @style = "text-decoration:none;", @class = "danger-normal" })
-						&nbsp;&nbsp;
-					</td>
-				</tr>
-				}
-		</tbody>
-	</table>
+                        &nbsp;&nbsp;
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
 
 </div>
 
 @section Scripts {
-	<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-	<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-	<script src="~/lib/datatable/js/datatables.min.js"></script>
-	<script>
-		$(document).ready(function () {
-			$('#tablePessoa').DataTable({
-				columnDefs: [
-					{ orderable: true, targets: [0] },
-					{ orderable: false, targets: [1, 2, 3, 4] }
-				],
-				searching: true,
-				ordering: true,
-				paging: true,
-				language: {
-					url: '@Url.Content("~/lib/datatable/js/pt-BR.json")'
-				}
-			});
-		});
-	</script>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/datatable/js/datatables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#tablePessoa').DataTable({
+                columnDefs: [
+                    { orderable: true, targets: [0] },
+                    { orderable: false, targets: [1, 2, 3, 4] }
+                ],
+                searching: true,
+                ordering: true,
+                paging: true,
+                language: {
+                    url: '@Url.Content("~/lib/datatable/js/pt-BR.json")'
+                }
+            });
+        });
+    </script>
 }
