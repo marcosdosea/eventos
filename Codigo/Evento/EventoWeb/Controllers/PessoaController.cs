@@ -64,10 +64,29 @@ namespace EventoWeb.Controllers
             {
                 if (_pessoaService.CPFIsValid(viewModel.Pessoa.Cpf))
                 {
+                    byte[] fotoSource = null;
+                    if (viewModel.Pessoa.Foto != null && viewModel.Pessoa.Foto.Length > 0)
+                    {
+                        using (var memoryStream = new MemoryStream())
+                        {
+                            viewModel.Pessoa.Foto.CopyTo(memoryStream);
+
+                            if (memoryStream.Length <= 65535)
+                            {
+                                fotoSource = memoryStream.ToArray();
+                            }
+                            else
+                            {
+                                ModelState.AddModelError("Pessoa.Foto", "O arquivo é muito grande. Deve ser menor que 64 KB.");
+                                return View(viewModel);
+                            }
+                        }
+                    }
                     viewModel.Pessoa.Cpf = _pessoaService.FormataCPF(viewModel.Pessoa.Cpf);
                     viewModel.Pessoa.Cep = _pessoaService.FormataCep(viewModel.Pessoa.Cep);
 
                     var pessoa = _mapper.Map<Pessoa>(viewModel.Pessoa);
+                    pessoa.Foto = fotoSource;
                     _pessoaService.Create(pessoa);
                     return RedirectToAction(nameof(Index));
                 }
@@ -114,10 +133,29 @@ namespace EventoWeb.Controllers
             {
                 if (_pessoaService.CPFIsValid(viewModel.Pessoa.Cpf))
                 {
+                    byte[] fotoSource = null;
+                    if (viewModel.Pessoa.Foto != null && viewModel.Pessoa.Foto.Length > 0)
+                    {
+                        using (var memoryStream = new MemoryStream())
+                        {
+                            viewModel.Pessoa.Foto.CopyTo(memoryStream);
+
+                            if (memoryStream.Length <= 65535)
+                            {
+                                fotoSource = memoryStream.ToArray();
+                            }
+                            else
+                            {
+                                ModelState.AddModelError("Pessoa.Foto", "O arquivo é muito grande. Deve ser menor que 64 KB.");
+                                return View(viewModel);
+                            }
+                        }
+                    }
                     viewModel.Pessoa.Cpf = _pessoaService.FormataCPF(viewModel.Pessoa.Cpf);
                     viewModel.Pessoa.Cep = _pessoaService.FormataCep(viewModel.Pessoa.Cep);
 
                     var pessoa = _mapper.Map<Pessoa>(viewModel.Pessoa);
+                    pessoa.Foto = fotoSource;
                     _pessoaService.Edit(pessoa);
                     return RedirectToAction(nameof(Index));
                 }
