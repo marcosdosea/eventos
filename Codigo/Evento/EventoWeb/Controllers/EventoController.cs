@@ -132,14 +132,13 @@ namespace EventoWeb.Controllers
             if (ModelState.IsValid)
             {
                 var evento = _mapper.Map<Evento>(viewModel.Evento);
-                _eventoService.Edit(evento);
-
-                // Atualiza a quantidade de vagas disponíveis
-                _eventoService.AtualizarVagasDisponiveis(evento.Id);
+                var idsAreaInteresse = new List<uint>
+                {
+                    viewModel.Evento.IdAreaInteresse
+                };
+                _eventoService.Edit(evento, idsAreaInteresse); _eventoService.AtualizarVagasDisponiveis(evento.Id);
                 return RedirectToAction(nameof(Index));
             }
-
-            // Se o ModelState não for válido, recarrega as listas de seleção
             var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
             var tiposEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
             var areaInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
@@ -265,44 +264,29 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
 
-        // POST: EventoController/GestorEditarEvento/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult GestorEditarEvento(uint id, EventocreateModel viewModel)
-        {
-
-            ModelState.Remove("Estados");
-            ModelState.Remove("TiposEventos");
-            ModelState.Remove("AreaInteresse");
-            var evento = _mapper.Map<Evento>(viewModel.Evento);
-            var idAreaInteresse = viewModel.Evento.IdAreaInteresse;
-            var areaInteresse = _areaInteresseService.Get(idAreaInteresse);
-
-            if (ModelState.IsValid)
-            {
-                if (evento.IdAreaInteresses == null)
-                {
-                    evento.IdAreaInteresses = new List<Core.Areainteresse>();
-                }
-
-                evento.IdAreaInteresses.Clear();
-                evento.IdAreaInteresses.Add(areaInteresse);
-
-                _eventoService.Edit(evento);
-                _eventoService.AtualizarVagasDisponiveis(evento.Id);
-
-                return RedirectToAction("GerenciarEvento", "Evento", new { idEvento = id });
-            }
-
-            var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
-            var tiposEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
-            var areasInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
-
-            viewModel.Estados = new SelectList(estados, "Estado", "Nome", viewModel.Evento.Estado);
-            viewModel.TiposEventos = new SelectList(tiposEventos, "Id", "Nome", viewModel.Evento.IdTipoEvento);
-            viewModel.AreaInteresse = new SelectList(areasInteresse, "Id", "Nome", viewModel.Evento.IdAreaInteresse);
-
-            return View(viewModel);
-        }
-    }
+		// POST: EventoController/GestorEditarEvento/5
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public ActionResult GestorEditarEvento(uint id, EventocreateModel viewModel)
+		{
+			ModelState.Remove("Estados");
+			ModelState.Remove("TiposEventos");
+			ModelState.Remove("AreaInteresse");
+			if (ModelState.IsValid)
+			{
+				var evento = _mapper.Map<Evento>(viewModel.Evento);
+				var idsAreaInteresse = viewModel.Evento.IdAreaInteresses;
+				_eventoService.Edit(evento, idsAreaInteresse);
+				_eventoService.AtualizarVagasDisponiveis(evento.Id);
+				return RedirectToAction("GerenciarEvento", "Evento", new { idEvento = id });
+			}
+			var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
+			var tiposEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
+			var areasInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
+			viewModel.Estados = new SelectList(estados, "Estado", "Nome", viewModel.Evento.Estado);
+			viewModel.TiposEventos = new SelectList(tiposEventos, "Id", "Nome", viewModel.Evento.IdTipoEvento);
+			viewModel.AreaInteresse = new SelectList(areasInteresse, "Id", "Nome", viewModel.Evento.IdAreaInteresse);
+			return View(viewModel);
+		}
+	}
 }

@@ -7,7 +7,8 @@ namespace EventoWeb.Mappers
     public class EventoProfile : Profile
     {
         public EventoProfile() {
-            CreateMap<EventoModel, Evento>().ReverseMap();
-        }
+			CreateMap<EventoModel, Evento>()
+			.ForMember(dest => dest.IdAreaInteresses, opt => opt.Ignore()).ReverseMap();
+		}
     }
 }

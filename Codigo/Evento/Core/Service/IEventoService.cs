@@ -5,7 +5,7 @@ namespace Core.Service
     public interface IEventoService
     {
         uint Create(Evento evento);
-        void Edit(Evento evento);
+        void Edit(Evento evento, List<uint> idsAreaInteresse);
         void Delete(uint Id);
 
         Evento Get(uint Id);
