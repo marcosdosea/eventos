@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Util;
 namespace EventoWeb.Models;
 
 public class PessoaModel
@@ -59,4 +61,13 @@ public class PessoaModel
     public string? Telefone1 { get; set; }
     [Display(Name = "Telefone")]
     public string? Telefone2 { get; set; }
+
+    [Display(Name = "Foto")]
+    [ImagemUpload(ErrorMessage = "A imagem deve estar nos formatos PNG, JPG, JPEG, TIF ou GIF e ter menos de 1 MB.")]
+    public IFormFile? Foto { get; set; }
+
+ 
+    [Display(Name = "Foto")]
+    [BindNever]
+    public string? FotoBase64 { get; set; }
 }

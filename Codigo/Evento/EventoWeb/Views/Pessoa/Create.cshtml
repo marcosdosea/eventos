@@ -10,13 +10,18 @@ ViewData["Title"] = "Create";
 <h1 class="blue-normal">Nova Pessoa</h1>
     <div class="row">
     <div class="col-md-8">
-            <form asp-action="Create">
-                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <form asp-action="Create" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="row">
                 <div class="col-6 form-group">
                     <label asp-for="Pessoa.Nome" class="control-label"></label>
                     <input asp-for="Pessoa.Nome" class="form-control" placeholder="Insira o nome completo" maxlength="50" />
                     <span asp-validation-for="Pessoa.Nome" class="text-danger"></span>
+                </div>
+                <div class="col-6 form-group">
+                    <label asp-for="Pessoa.Foto" class="control-label"></label>
+                    <input type="file" asp-for="Pessoa.Foto" class="form-control" accept=".png,.jpg,.jpeg,.gif,.tif" id="fileInput" />
+                    <span asp-validation-for="Pessoa.Foto" class="text-danger"></span>
                 </div>
                 <div class="col-6 form-group">
                     <label asp-for="Pessoa.Email" class="control-label"></label>
@@ -115,7 +120,6 @@ ViewData["Title"] = "Create";
                             <span asp-validation-for="Pessoa.Complemento" class="text-danger"></span>
                         </div>
                     </div>
-
                 <br />
                 <div class="d-flex justify-content-end">
                 <div class="d-flex flex-row">
