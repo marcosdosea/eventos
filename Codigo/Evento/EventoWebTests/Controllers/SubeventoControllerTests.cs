@@ -118,12 +118,12 @@ namespace EventoWeb.Controllers.Tests
             // Act
             var result = controller.CreateOrEdit(1, null, GetNewSubevento());
 
-            // Assert
-            Assert.AreEqual(1, controller.ModelState.ErrorCount);
-            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
-            RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
-            Assert.AreEqual("GerenciarEvento", redirectToActionResult.ActionName);
-        }
+			// Assert
+			Assert.AreEqual(1, controller.ModelState.ErrorCount);
+			Assert.IsInstanceOfType(result, typeof(ViewResult));
+			ViewResult viewResult = (ViewResult)result;
+			Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(SubeventoCreateModel));
+		}
 
 
         [TestMethod()]
