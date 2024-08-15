@@ -27,7 +27,6 @@ namespace Service
             return (uint)evento.Id;
         }
 
-
         /// <summary>
         /// Deleta um evento do evento
         /// </summary>
@@ -44,19 +43,40 @@ namespace Service
             }
         }
 
-
         /// <summary>
         /// Edita um evento
         /// </summary>
         /// <param name="evento"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public void Edit(Evento evento)
+        public void Edit(Evento evento, List<uint> novosIdsAreaInteresse)
         {
-            _context.Update(evento);
+            var eventoExistente = _context.Eventos
+                .Include(e => e.IdAreaInteresses)
+                .FirstOrDefault(e => e.Id == evento.Id);
+            if (eventoExistente == null)
+            {
+                throw new Exception("Evento não encontrado.");
+            }
+            var areasParaRemover = eventoExistente.IdAreaInteresses
+                .Where(ai => !novosIdsAreaInteresse.Contains(ai.Id))
+                .ToList();
+
+            foreach (var area in areasParaRemover)
+            {
+                eventoExistente.IdAreaInteresses.Remove(area);
+            }
+            var areasParaAdicionar = novosIdsAreaInteresse
+                .Where(id => !eventoExistente.IdAreaInteresses.Any(ai => ai.Id == id))
+                .Select(id => _context.Areainteresses.Find(id))
+                .ToList();
+            foreach (var area in areasParaAdicionar)
+            {
+                eventoExistente.IdAreaInteresses.Add(area);
+            }
+            _context.Update(eventoExistente);
             _context.SaveChanges();
         }
-
 
         /// <summary>
         /// Busca um evento
@@ -87,7 +107,6 @@ namespace Service
             }
         }
     
-
         /// <summary>
         /// Busca todos os eventos
         /// </summary>
@@ -114,7 +133,6 @@ namespace Service
                         };
             return query.AsNoTracking();
         }
-
         public string GetNomeById(uint id)
         {
             return _context.Eventos
