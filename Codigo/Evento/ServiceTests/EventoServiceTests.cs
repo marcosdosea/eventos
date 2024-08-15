@@ -2,7 +2,6 @@
 using Core.DTO;
 using Core.Service;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Service.Tests
@@ -25,8 +24,26 @@ namespace Service.Tests
             _context.Database.EnsureDeleted();
             _context.Database.EnsureCreated();
 
+			var areainteresses = new List<Areainteresse>
+				{
+				new Areainteresse
+				{
+						Id = 1,
+						Nome =  "Curso",
+					},
+				new Areainteresse
+				{
+						Id = 2,
+						Nome =  "Palestra",
+					},
+				new Areainteresse
+				{
+						Id = 3,
+						Nome =  "Festival",
+					},
+				};
 
-            var eventos = new List<Evento>
+			var eventos = new List<Evento>
                 {
                 new Evento
                 {
@@ -124,7 +141,9 @@ namespace Service.Tests
                 };
 
             _context.AddRange(eventos);
-            _context.SaveChanges();
+			_context.AddRange(areainteresses);
+
+			_context.SaveChanges();
 
             _eventoService = new EventoService(_context);
         }
@@ -240,7 +259,10 @@ namespace Service.Tests
             evento.VagasDisponiveis = 65;
             evento.TempoMinutosReserva = 240;
             evento.CargaHoraria = 4;
-            _eventoService.Edit(evento);
+			var IdsAreaInteresse = new List<uint> {1, 3};
+
+			// Act
+			_eventoService.Edit(evento, IdsAreaInteresse);
             //Assert
             Assert.AreEqual((uint)2, evento.Id);
             Assert.AreEqual("SEMAC", evento.Nome);
