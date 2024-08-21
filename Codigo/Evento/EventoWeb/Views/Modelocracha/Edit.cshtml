@@ -1,4 +1,4 @@
-﻿@model EventoWeb.Models.ModelocrachaCreateModel
+﻿@model EventoWeb.Models.ModelocrachaModel
 
 @{
     ViewData["Title"] = "Edit";
@@ -35,18 +35,18 @@
             </div>
             <br />
             <div class="form-group">
-                <label asp-for="Modelocracha.Texto" class="control-label"></label>
-                <textarea asp-for="Modelocracha.Texto" class="form-control" id="exampleFormControlTextarea1" rows="2"></textarea>
-                <span asp-validation-for="Modelocracha.Texto" class="text-danger"></span>
+                <label asp-for="Texto" class="control-label"></label>
+                <textarea asp-for="Texto" class="form-control" id="exampleFormControlTextarea1" rows="2"></textarea>
+                <span asp-validation-for="Texto" class="text-danger"></span>
             </div>
             <br />
             <div class="form-group row">
                 <div class="col-md-6">
                     <div class="col-md-12">
                         <div class="form-group">
-                            <label asp-for="Modelocracha.Logotipo" class="control-label"></label>
-                            <input type="file" asp-for="Modelocracha.Logotipo" class="form-control" accept=".png,.jpg,.jpeg,.gif,.tif" id="fileInput" />
-                            <span asp-validation-for="Modelocracha.Logotipo" class="text-danger"></span>
+                            <label asp-for="Logotipo" class="control-label"></label>
+                            <input type="file" asp-for="Logotipo" class="form-control" accept=".png,.jpg,.jpeg,.gif,.tif" id="fileInput" />
+                            <span asp-validation-for="Logotipo" class="text-danger"></span>
                         </div>
                     </div>
                     <br />
@@ -54,12 +54,12 @@
                         <div class="d-flex align-items-center">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" value="1" id="Qrcode" name="Modelocracha.Qrcode"
-                                @(Model.Modelocracha.Qrcode == 1 ? "checked" : "")>
+                                @(Model.Qrcode == 1 ? "checked" : "")>
                                 <label class="form-check-label" for="Qrcode">QrCode</label>
                                 <input type="hidden" name="Modelocracha.Qrcode" value="0">
                             </div>
                         </div>
-                        <span asp-validation-for="Modelocracha.Qrcode" class="text-danger"></span>
+                        <span asp-validation-for="Qrcode" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="col-md-6 d-flex justify-content-end">

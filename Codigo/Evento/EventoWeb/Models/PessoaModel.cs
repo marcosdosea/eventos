@@ -1,21 +1,22 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Util;
 namespace EventoWeb.Models;
 
 public class PessoaModel
 {
-    [Display(Name = "Código")]
-    [Required(ErrorMessage = "Código é obrigatório")]
+    [Display(Name = "Cï¿½digo")]
+    [Required(ErrorMessage = "Cï¿½digo ï¿½ obrigatï¿½rio")]
     [Key]
     public uint Id { get; set; }
 
     [Display(Name = "Nome")]
-    [Required(ErrorMessage = "Nome é obrigatório")]
+    [Required(ErrorMessage = "Nome ï¿½ obrigatï¿½rio")]
     public string Nome { get; set; } = null!;
 
-    [Display(Name = "Nome no Crachá")]
-    [Required(ErrorMessage = "Informe o Nome para o crachá do evento")]
+    [Display(Name = "Nome no Crachï¿½")]
+    [Required(ErrorMessage = "Informe o Nome para o crachï¿½ do evento")]
     public string NomeCracha { get; set; } = null!;
 
     [Display(Name = "CPF", Prompt = "000.000.000-00")]
@@ -33,22 +34,22 @@ public class PessoaModel
     public string Cep { get; set; } = null!;
 
     [Display(Name = "Estado")]
-    [Required(ErrorMessage = "Informe o Estado onde o Evento será realizado")]
+    [Required(ErrorMessage = "Informe o Estado onde o Evento serï¿½ realizado")]
     public string Estado { get; set; } = null!;
 
     [Display(Name = "Cidade")]
-    [Required(ErrorMessage = "Informe a Cidade onde o Evento será realizado")]
+    [Required(ErrorMessage = "Informe a Cidade onde o Evento serï¿½ realizado")]
     public string Cidade { get; set; } = null!;
 
     [Display(Name = "Bairro")]
-    [Required(ErrorMessage = "Informe o Bairro onde o Evento será realizado")]
+    [Required(ErrorMessage = "Informe o Bairro onde o Evento serï¿½ realizado")]
     public string Bairro { get; set; } = null!;
 
     [Display(Name = "Rua")]
-    [Required(ErrorMessage = "Informe a Rua onde o Evento será realizado")]
+    [Required(ErrorMessage = "Informe a Rua onde o Evento serï¿½ realizado")]
     public string Rua { get; set; } = null!;
 
-    [Display(Name = "Numero", Prompt = "Sem número, deixe o campo vazio")]
+    [Display(Name = "Numero", Prompt = "Sem nï¿½mero, deixe o campo vazio")]
     public string? Numero { get; set; }
 
     [Display(Name = "Complemento")]
@@ -65,9 +66,10 @@ public class PessoaModel
     [Display(Name = "Foto")]
     [ImagemUpload(ErrorMessage = "A imagem deve estar nos formatos PNG, JPG, JPEG, TIF ou GIF e ter menos de 1 MB.")]
     public IFormFile? Foto { get; set; }
-
- 
+    
     [Display(Name = "Foto")]
     [BindNever]
     public string? FotoBase64 { get; set; }
+    
+    public SelectList? Estados { get; set; }
 }

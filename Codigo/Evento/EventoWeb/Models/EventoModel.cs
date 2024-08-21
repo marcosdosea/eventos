@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace EventoWeb.Models
 {
@@ -121,5 +122,11 @@ namespace EventoWeb.Models
 
 		[Display(Name = "Áreas de Interesse")]
 		public List<uint> IdAreaInteresses { get; set; } = new List<uint>();
+		
+		public SelectList Estados { get; set; }
+		
+		public SelectList TiposEventos { get; set; }
+		
+		public SelectList AreaInteresse { get; set; }
 	}
 }

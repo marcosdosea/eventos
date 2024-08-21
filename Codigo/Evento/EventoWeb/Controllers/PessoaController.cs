@@ -4,8 +4,6 @@ using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace EventoWeb.Controllers
 {
@@ -47,29 +45,26 @@ namespace EventoWeb.Controllers
         public ActionResult Create()
         {
             var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
-            var viewModel = new PessoaCreateModel()
-            {
-                Estados = new SelectList(estados, "Estado", "Nome"),
-            };
-
+            var viewModel = new PessoaModel();
+            viewModel.Estados = new SelectList(estados, "Estado", "Nome");
             return View(viewModel);
         }
 
         // POST: PessoaController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(PessoaCreateModel viewModel)
+        public ActionResult Create(PessoaModel viewModel)
         {
             if (ModelState.IsValid)
             {
-                if (_pessoaService.CPFIsValid(viewModel.Pessoa.Cpf))
+                if (_pessoaService.CPFIsValid(viewModel.Cpf))
                 {
                     byte[] fotoSource = null;
-                    if (viewModel.Pessoa.Foto != null && viewModel.Pessoa.Foto.Length > 0)
+                    if (viewModel.Foto != null && viewModel.Foto.Length > 0)
                     {
                         using (var memoryStream = new MemoryStream())
                         {
-                            viewModel.Pessoa.Foto.CopyTo(memoryStream);
+                            viewModel.Foto.CopyTo(memoryStream);
 
                             if (memoryStream.Length <= 65535)
                             {
@@ -77,15 +72,15 @@ namespace EventoWeb.Controllers
                             }
                             else
                             {
-                                ModelState.AddModelError("Pessoa.Foto", "O arquivo é muito grande. Deve ser menor que 64 KB.");
+                                ModelState.AddModelError("Foto", "O arquivo é muito grande. Deve ser menor que 64 KB.");
                                 return View(viewModel);
                             }
                         }
                     }
-                    viewModel.Pessoa.Cpf = _pessoaService.FormataCPF(viewModel.Pessoa.Cpf);
-                    viewModel.Pessoa.Cep = _pessoaService.FormataCep(viewModel.Pessoa.Cep);
+                    viewModel.Cpf = _pessoaService.FormataCPF(viewModel.Cpf);
+                    viewModel.Cep = _pessoaService.FormataCep(viewModel.Cep);
 
-                    var pessoa = _mapper.Map<Pessoa>(viewModel.Pessoa);
+                    var pessoa = _mapper.Map<Pessoa>(viewModel);
                     pessoa.Foto = fotoSource;
                     _pessoaService.Create(pessoa);
                     return RedirectToAction(nameof(Index));
@@ -107,14 +102,10 @@ namespace EventoWeb.Controllers
             {
                 return NotFound();
             }
-
-            var pessoaModel = _mapper.Map<PessoaModel>(pessoa);
+            
             var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
-            var viewModel = new PessoaCreateModel
-            {
-                Pessoa = pessoaModel,
-                Estados = new SelectList(estados, "Estado", "Nome")
-            };
+            var viewModel =  _mapper.Map<PessoaModel>(pessoa);
+            viewModel.Estados = new SelectList(estados, "Estado", "Nome");
 
             return View(viewModel);
         }
@@ -122,23 +113,23 @@ namespace EventoWeb.Controllers
         // POST: PessoaController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(uint id, PessoaCreateModel viewModel)
+        public ActionResult Edit(uint id, PessoaModel viewModel)
         {
-            if (id != viewModel.Pessoa.Id)
+            if (id != viewModel.Id)
             {
                 return BadRequest();
             }
 
             if (ModelState.IsValid)
             {
-                if (_pessoaService.CPFIsValid(viewModel.Pessoa.Cpf))
+                if (_pessoaService.CPFIsValid(viewModel.Cpf))
                 {
                     byte[] fotoSource = null;
-                    if (viewModel.Pessoa.Foto != null && viewModel.Pessoa.Foto.Length > 0)
+                    if (viewModel.Foto != null && viewModel.Foto.Length > 0)
                     {
                         using (var memoryStream = new MemoryStream())
                         {
-                            viewModel.Pessoa.Foto.CopyTo(memoryStream);
+                            viewModel.Foto.CopyTo(memoryStream);
 
                             if (memoryStream.Length <= 65535)
                             {
@@ -146,22 +137,22 @@ namespace EventoWeb.Controllers
                             }
                             else
                             {
-                                ModelState.AddModelError("Pessoa.Foto", "O arquivo é muito grande. Deve ser menor que 64 KB.");
+                                ModelState.AddModelError("Foto", "O arquivo é muito grande. Deve ser menor que 64 KB.");
                                 return View(viewModel);
                             }
                         }
                     }
-                    viewModel.Pessoa.Cpf = _pessoaService.FormataCPF(viewModel.Pessoa.Cpf);
-                    viewModel.Pessoa.Cep = _pessoaService.FormataCep(viewModel.Pessoa.Cep);
+                    viewModel.Cpf = _pessoaService.FormataCPF(viewModel.Cpf);
+                    viewModel.Cep = _pessoaService.FormataCep(viewModel.Cep);
 
-                    var pessoa = _mapper.Map<Pessoa>(viewModel.Pessoa);
+                    var pessoa = _mapper.Map<Pessoa>(viewModel);
                     pessoa.Foto = fotoSource;
                     _pessoaService.Edit(pessoa);
                     return RedirectToAction(nameof(Index));
                 }
                 else
                 {
-                    ModelState.AddModelError("Pessoa.Cpf", "CPF inválido.");
+                    ModelState.AddModelError("Cpf", "CPF inválido.");
                 }
             }
 
