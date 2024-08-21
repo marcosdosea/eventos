@@ -15,7 +15,7 @@ namespace Core
 
         IEnumerable<TipoInscricaoDTO> GetTiposInscricaosSubevento(uint idSubevento);
 
-        void AssociacaoTipoInscricaoSubecento(uint Idsubevento, uint IdtipoInscricao);
+        void AssociacaoTipoInscricaoSubevento(uint Idsubevento, uint IdtipoInscricao);
         void DeleteTipoInscricaoSubevento(uint Idsubevento, uint IdtipoInscricao);
 
     }

@@ -132,7 +132,7 @@ namespace Service
                 .ToList();
         }
 
-        public void AssociacaoTipoInscricaoSubecento(uint Idsubevento, uint IdtipoInscricao)
+        public void AssociacaoTipoInscricaoSubevento(uint Idsubevento, uint IdtipoInscricao)
         {
             var subevento = _context.Subeventos
                 .Include(s => s.IdTipoInscricaos)

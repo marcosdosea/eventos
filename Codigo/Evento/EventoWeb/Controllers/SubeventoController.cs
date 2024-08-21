@@ -68,13 +68,11 @@ namespace EventoWeb.Controllers
 
             var tipoEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
             var evento = _eventoService.GetEventoSimpleDto(idEvento);
-    
-            var viewModel = new SubeventoCreateModel()
-            {
-                Subevento = subeventoModel,
-                Evento = evento,
-                TiposEventos = new SelectList(tipoEventos, "Id", "Nome"),
-            };
+
+            var viewModel = subeventoModel;
+
+            viewModel.Evento = evento;
+            viewModel.TiposEventos = new SelectList(tipoEventos, "Id", "Nome");
 
             return View(viewModel);
         }
@@ -82,13 +80,13 @@ namespace EventoWeb.Controllers
         // POST: SubeventoController/CreateOrEdit/{idEvento}/{idSubevento?}
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult CreateOrEdit(uint idEvento, uint? idSubevento, SubeventoCreateModel subeventoModel)
+        public ActionResult CreateOrEdit(uint idEvento, uint? idSubevento, SubeventoModel subeventoModel)
         {
             ModelState.Remove("TiposEventos");
             ModelState.Remove("Evento.Nome");
             if (ModelState.IsValid)
             {
-                var subevento = _mapper.Map<Subevento>(subeventoModel.Subevento);
+                var subevento = _mapper.Map<Subevento>(subeventoModel);
 
                 if (idSubevento.HasValue)
                 {

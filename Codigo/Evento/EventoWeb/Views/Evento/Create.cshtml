@@ -1,4 +1,4 @@
-﻿@model EventoWeb.Models.EventocreateModel
+﻿@model EventoWeb.Models.EventoModel
 
 @{
 	ViewData["Title"] = "Create";
@@ -13,28 +13,28 @@
 		<form asp-action="Create">
 			<div asp-validation-summary="ModelOnly" class="text-danger"></div>
 			<div class= "form-group">
-				<label asp-for="Evento.Nome" class="control-label"></label>
-				<input asp-for="Evento.Nome" class="form-control" placeholder="Nome do evento" />
-				<span asp-validation-for="Evento.Nome" class="text-danger"></span>
+				<label asp-for="Nome" class="control-label"></label>
+				<input asp-for="Nome" class="form-control" placeholder="Nome do evento" />
+				<span asp-validation-for="Nome" class="text-danger"></span>
 			</div>
 			<br />
 			<div class="row">
 				<div class="col-md-3">
 					<div class="form-group">
-						<label asp-for="Evento.Estado" class="control-label"></label>
-						<select asp-for="Evento.Estado" class="form-select" asp-items="Model.Estados">
+						<label asp-for="Estado" class="control-label"></label>
+						<select asp-for="Estado" class="form-select" asp-items="Model.Estados">
 							<option value="">Selecione o estado</option>
 						</select>
-						<span asp-validation-for="Evento.Estado" class="text-danger"></span>
+						<span asp-validation-for="Estado" class="text-danger"></span>
 					</div>
 				</div>
 				<div class="col-md-3">
 					<div class="form-group">
-						<label asp-for="Evento.IdTipoEvento" class="control-label">Tipo do Evento</label>
-						<select asp-for="Evento.IdTipoEvento" class="form-select" asp-items="Model.TiposEventos">
+						<label asp-for="IdTipoEvento" class="control-label">Tipo do Evento</label>
+						<select asp-for="IdTipoEvento" class="form-select" asp-items="Model.TiposEventos">
 							<option value="">Selecione o tipo de evento</option>
 						</select>
-						<span asp-validation-for="Evento.Estado" class="text-danger"></span>
+						<span asp-validation-for="Estado" class="text-danger"></span>
 					</div>
 					</div>
 			</div>
@@ -42,10 +42,10 @@
 			<div class="row">
 				<div class="col-2">
 					<div class="form-group">
-						<label asp-for="Evento.Status" class="control-label"></label>
-						<input type="hidden" asp-for="Evento.Status" value="C">
+						<label asp-for="Status" class="control-label"></label>
+						<input type="hidden" asp-for="Status" value="C">
 						<span class="form-control">Cadastro</span>
-						<span asp-validation-for="Evento.Status" class="text-danger"></span>
+						<span asp-validation-for="Status" class="text-danger"></span>
 					</div>
 				</div>
 			</div>

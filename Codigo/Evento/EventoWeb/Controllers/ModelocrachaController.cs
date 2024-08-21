@@ -57,7 +57,6 @@ namespace EventoWeb.Controllers
         public ActionResult Details(uint id, uint? idPessoa)
         {
             var modelocracha = _modelocrachaService.Get(id);
-            var evento = _eventoService.GetEventoSimpleDto(modelocracha.IdEvento);
             var modelocrachaModel = _mapper.Map<ModelocrachaModel>(modelocracha);
             modelocrachaModel.NomeEvento = _eventoService.GetNomeById(modelocracha.IdEvento);
             modelocrachaModel.LogotipoBase64 = modelocracha.Logotipo != null
@@ -118,29 +117,25 @@ namespace EventoWeb.Controllers
         // GET: ModelocrachaController/Create
         public ActionResult Create(uint idEvento)
         {
-            var modelocrachaModel = new ModelocrachaModel();
             var evento = _eventoService.GetEventoSimpleDto(idEvento);
-            var viewModel = new ModelocrachaCreateModel
-            {
-                Modelocracha = modelocrachaModel,
-                Evento = evento
-            };
+            var viewModel = new ModelocrachaModel();
+            viewModel.Evento = evento;
             return View(viewModel);
         }
 
         // POST: ModelocrachaController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(ModelocrachaCreateModel modelocrachaModel)
+        public ActionResult Create(ModelocrachaModel modelocrachaModel)
         {
             if (ModelState.IsValid)
             {
                 byte[] logoTipoSource = null;
-                if (modelocrachaModel.Modelocracha.Logotipo != null && modelocrachaModel.Modelocracha.Logotipo.Length > 0)
+                if (modelocrachaModel.Logotipo != null && modelocrachaModel.Logotipo.Length > 0)
                 {
                     using (var memoryStream = new MemoryStream())
                     {
-                        modelocrachaModel.Modelocracha.Logotipo.CopyTo(memoryStream);
+                        modelocrachaModel.Logotipo.CopyTo(memoryStream);
 
                         if (memoryStream.Length <= 65535)
                         {
@@ -154,8 +149,8 @@ namespace EventoWeb.Controllers
                     }
                 }
 
-                modelocrachaModel.Modelocracha.IdEvento = modelocrachaModel.Evento.Id;
-                var modelocracha = _mapper.Map<Modelocracha>(modelocrachaModel.Modelocracha);
+                modelocrachaModel.IdEvento = modelocrachaModel.Evento.Id;
+                var modelocracha = _mapper.Map<Modelocracha>(modelocrachaModel);
                 modelocracha.Logotipo = logoTipoSource;
 
                 try
@@ -168,7 +163,7 @@ namespace EventoWeb.Controllers
                     return View(modelocrachaModel);
                 }
 
-                return RedirectToAction(nameof(Index), new { idEvento = modelocrachaModel.Modelocracha.IdEvento });
+                return RedirectToAction(nameof(Index), new { idEvento = modelocrachaModel.IdEvento });
             }
 
             return View(modelocrachaModel);
@@ -183,30 +178,26 @@ namespace EventoWeb.Controllers
             {
                 return NotFound();
             }
-            var modelocrachaModel = _mapper.Map<ModelocrachaModel>(modelocracha);
-            var evento = _eventoService.GetEventoSimpleDto(modelocracha.IdEvento);
-            var viewModel = new ModelocrachaCreateModel
-            {
-                Modelocracha = modelocrachaModel,
-                Evento = evento
-            };
+            var viewModel = _mapper.Map<ModelocrachaModel>(modelocracha);
+            viewModel.Evento = _eventoService.GetEventoSimpleDto(modelocracha.IdEvento);
+            
             return View(viewModel);
         }
 
         // POST: ModelocrachaController/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(uint id, ModelocrachaCreateModel viewModel)
+        public ActionResult Edit(uint id, ModelocrachaModel viewModel)
         {
-            viewModel.Modelocracha.Id = id;
+            viewModel.Id = id;
             if (ModelState.IsValid)
             {
                 byte[] logoTipoSource = null;
-                if (viewModel.Modelocracha.Logotipo != null && viewModel.Modelocracha.Logotipo.Length > 0)
+                if (viewModel.Logotipo != null && viewModel.Logotipo.Length > 0)
                 {
                     using (var memoryStream = new MemoryStream())
                     {
-                        viewModel.Modelocracha.Logotipo.CopyTo(memoryStream);
+                        viewModel.Logotipo.CopyTo(memoryStream);
 
                         if (memoryStream.Length <= 65535)
                         {
@@ -220,8 +211,8 @@ namespace EventoWeb.Controllers
                     }
                 }
 
-                viewModel.Modelocracha.IdEvento = viewModel.Evento.Id;
-                var modelocracha = _mapper.Map<Modelocracha>(viewModel.Modelocracha);
+                viewModel.IdEvento = viewModel.Evento.Id;
+                var modelocracha = _mapper.Map<Modelocracha>(viewModel);
                 modelocracha.Logotipo = logoTipoSource;
 
                 try
@@ -234,7 +225,7 @@ namespace EventoWeb.Controllers
                     return View(viewModel);
                 }
 
-                return RedirectToAction(nameof(Index), new { idEvento = viewModel.Modelocracha.IdEvento });
+                return RedirectToAction(nameof(Index), new { idEvento = viewModel.IdEvento });
             }
 
             return View(viewModel);

@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Core.DTO;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace EventoWeb.Models
 {
@@ -94,6 +96,10 @@ namespace EventoWeb.Models
         
         [Display(Name = "Evento")]
         public string? NomeEvento { get; set; }
+        
+        public EventoSimpleDTO Evento { get; set; } 
+        
+        public SelectList TiposEventos { get; set; }
     }
 
 }

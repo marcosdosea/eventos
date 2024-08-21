@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.Rendering;
+
 namespace EventoWeb.Models
 {
     public class TipoInscricaoModel
@@ -40,5 +42,7 @@ namespace EventoWeb.Models
 
         [Display(Name = "Evento")]
         public string? NomeEvento { get; set; }
+        
+        public SelectList Evento { get; set; }
     }
 }

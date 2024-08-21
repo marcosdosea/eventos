@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Util;
+using Core.DTO;
 
 namespace EventoWeb.Models
 {
@@ -43,5 +44,7 @@ namespace EventoWeb.Models
         public List<string>? QrCodes { get; set; } = new List<string>();
 
         public List<string>? Inscricoes { get; set; } = new List<string>();
+        
+        public EventoSimpleDTO Evento { get; set; }
     }
 }
