@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Core;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Util;
@@ -70,6 +71,8 @@ public class PessoaModel
     [Display(Name = "Foto")]
     [BindNever]
     public string? FotoBase64 { get; set; }
+    
+    public IEnumerable<Pessoa> Pessoas { get; set; }
     
     public SelectList? Estados { get; set; }
 }
