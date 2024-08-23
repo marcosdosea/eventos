@@ -3,6 +3,9 @@ using Core;
 using Core.DTO;
 using Core.Service;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
+using EventoWeb.Areas.Identity.Data;
+
 
 namespace Service;
 
@@ -11,15 +14,22 @@ public class PessoaService : IPessoaService
     /// <summary>
     /// Manter dados de pessoa no banco de dados
     /// </summary>
+    
     private readonly EventoContext _context;
-
+    private readonly IdentityContext _identityContext;
     private readonly IInscricaoService _inscricaoService;
+    private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly UserManager<UsuarioIdentity> _userManager;
 
-    public PessoaService(EventoContext context,IInscricaoService inscricaoService)
+    public PessoaService(EventoContext context, IInscricaoService inscricaoService, IdentityContext identityContext, RoleManager<IdentityRole> roleManager, UserManager<UsuarioIdentity> userManager)
     {
-        this._context = context;
+        _context = context;
         _inscricaoService = inscricaoService;
+        _identityContext = identityContext;
+        _roleManager = roleManager;
+        _userManager = userManager;
     }
+
     /// <summary>
     /// Insere uma nova pessoa na base de dados
     /// </summary>
