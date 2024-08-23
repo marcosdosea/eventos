@@ -74,6 +74,7 @@ namespace Service
             {
                 eventoExistente.IdAreaInteresses.Add(area);
             }
+            eventoExistente.ImagemPortal = evento.ImagemPortal;
             _context.Update(eventoExistente);
             _context.SaveChanges();
         }
