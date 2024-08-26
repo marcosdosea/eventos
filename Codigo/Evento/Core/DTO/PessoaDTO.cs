@@ -16,3 +16,14 @@ public class PessoaDTO
 
     public string? Telefone2 { get; set; }
 }
+
+public class PessoaGestorDTO
+{
+    public string cpf { get; set; } = null!;
+
+    public string Nome { get; set; } = null!;
+
+    public string Email { get; set; } = null!;
+
+    public string? Telefone1 { get; set; }
+}
