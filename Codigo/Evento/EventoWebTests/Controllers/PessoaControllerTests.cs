@@ -8,6 +8,7 @@ using Moq;
 using AutoMapper;
 using System.Runtime.ConstrainedExecution;
 using System.Security.Cryptography;
+
 namespace EventoWeb.Controllers.Tests
 {
     [TestClass()]
@@ -94,16 +95,8 @@ namespace EventoWeb.Controllers.Tests
             controller.ModelState.Clear(); // Certifique-se de que o ModelState está limpo
             var mockService = new Mock<IPessoaService>();
 
-            mockService.Setup(service => service.CPFIsValid(It.IsAny<string>()))
-                       .Returns(true);
-            mockService.Setup(service => service.FormataCPF(It.IsAny<string>()))
-                       .Returns((string cpf) => cpf); // Simplesmente retorne o mesmo CPF para este teste
-            mockService.Setup(service => service.FormataCep(It.IsAny<string>()))
-                       .Returns((string cep) => cep); // Simplesmente retorne o mesmo CEP para este teste
-            mockService.Setup(service => service.Create(It.IsAny<Pessoa>()))
-                       .Verifiable();
-
-            controller = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper());
+            controller = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object,
+            new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper());
 
             // Act
             var result = controller.Create(GetNewPessoa());
@@ -126,24 +119,14 @@ namespace EventoWeb.Controllers.Tests
             controller.ModelState.Clear(); // Certifique-se de que o ModelState está limpo
             var mockService = new Mock<IPessoaService>();
 
-            mockService.Setup(service => service.CPFIsValid(It.IsAny<string>()))
-                       .Returns(true);
-            mockService.Setup(service => service.FormataCPF(It.IsAny<string>()))
-                       .Returns((string cpf) => cpf); // Simplesmente retorne o mesmo CPF para este teste
-            mockService.Setup(service => service.FormataCep(It.IsAny<string>()))
-                       .Returns((string cep) => cep); // Simplesmente retorne o mesmo CEP para este teste
-            mockService.Setup(service => service.Create(It.IsAny<Pessoa>()))
-                       .Verifiable();
-
-            controller = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper());
+            controller = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object,
+            new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper());
 
             controller.ModelState.AddModelError("Nome", "Campo requerido");
             controller.ModelState.AddModelError("NomeCracha", "Campo requerido");
             controller.ModelState.AddModelError("Cpf", "Campo requerido");
             controller.ModelState.AddModelError("Sexo", "Campo requerido");
             controller.ModelState.AddModelError("Email", "Campo requerido");
-
-
 
             // Act
             var result = controller.Create(GetNewPessoa());
@@ -192,19 +175,10 @@ namespace EventoWeb.Controllers.Tests
             controller.ModelState.Clear(); // Certifique-se de que o ModelState está limpo
             var mockService = new Mock<IPessoaService>();
 
-            mockService.Setup(service => service.CPFIsValid(It.IsAny<string>()))
-                       .Returns(true);
-            mockService.Setup(service => service.FormataCPF(It.IsAny<string>()))
-                       .Returns((string cpf) => cpf); // Simplesmente retorne o mesmo CPF para este teste
-            mockService.Setup(service => service.FormataCep(It.IsAny<string>()))
-                       .Returns((string cep) => cep); // Simplesmente retorne o mesmo CEP para este teste
-            mockService.Setup(service => service.Edit(It.IsAny<Pessoa>()))
-                       .Verifiable();
-
             controller = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper());
 
             // Act
-            var result = controller.Edit(GetTargetPessoaModel().Pessoa.Id, GetTargetPessoaModel());
+            var result = controller.Edit(GetTargetPessoaModel().Pessoa.Id, GetTargetPessoaModel().Pessoa);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
@@ -258,9 +232,9 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
         }
 
-        private PessoaCreateModel GetNewPessoa()
+        private PessoaModel GetNewPessoa()
         {
-            var pessoaModel = new PessoaModel
+            return new PessoaModel
             {
                 Id = 1,
                 Nome = "João Vitor Sodré",
@@ -277,14 +251,8 @@ namespace EventoWeb.Controllers.Tests
                 Email = "email@gmail.com",
                 Telefone1 = "7999990011",
             };
-
-
-            return new PessoaCreateModel
-            {
-                Pessoa = pessoaModel,
-
-            };
         }
+
         private static Pessoa GetTargetPessoa()
         {
             return new Pessoa
