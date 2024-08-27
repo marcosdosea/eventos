@@ -201,32 +201,80 @@ namespace EventoWeb.Controllers
 		}
 
 
-		// GET: EventoController/CreatePessoaPapel
-		public ActionResult CreatePessoaPapel(uint idEvento, int idPapel)
+		// GET: EventoController/CreateGestor
+		public ActionResult CreateGestor(uint idEvento)
 		{
 			var gestorModel = new GestaoPapelModel
 			{
-				IdPapel = idPapel,
 				Evento = _eventoService.GetEventoSimpleDto(idEvento),
-				Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, idPapel),
+				Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento,2),
 			};
 			return View(gestorModel);
 		}
 
-		// POST: EventoController/CreatePessoaPapel
+		// POST: EventoController/CreateGestor
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public ActionResult CreatePessoaPapel(GestaoPapelModel gestaoPapelModel)
+		public ActionResult CreateGestor(GestaoPapelModel gestaoPapelModel)
 		{
 			var pessoa = gestaoPapelModel.Pessoa;
 			var idEvento = gestaoPapelModel.Evento.Id;
-			var idPapel = gestaoPapelModel.IdPapel;
 			pessoa.NomeCracha = pessoa.Nome;
-			_pessoaService.CreatePessoaPapel(pessoa, idEvento, idPapel);
+			_pessoaService.CreatePessoaPapel(pessoa, idEvento, 2);
 
 			_eventoService.AtualizarVagasDisponiveis(idEvento);
 
-			return RedirectToAction("CreatePessoaPapel", new { idEvento, idPapel });
+			return RedirectToAction("CreateGestor", new { idEvento});
+		}
+		// GET: EventoController/CreateColaborador
+		public ActionResult CreateColaborador(uint idEvento)
+		{
+			var gestorModel = new GestaoPapelModel
+			{
+				Evento = _eventoService.GetEventoSimpleDto(idEvento),
+				Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 3),
+			};
+			return View(gestorModel);
+		}
+
+		// POST: EventoController/CreateColaborador
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public ActionResult CreateColaborador(GestaoPapelModel gestaoPapelModel)
+		{
+			var pessoa = gestaoPapelModel.Pessoa;
+			var idEvento = gestaoPapelModel.Evento.Id;
+			pessoa.NomeCracha = pessoa.Nome;
+			_pessoaService.CreatePessoaPapel(pessoa, idEvento, 3);
+
+			_eventoService.AtualizarVagasDisponiveis(idEvento);
+
+			return RedirectToAction("CreateColaborador", new { idEvento});
+		}
+		// GET: EventoController/CreateParticipante
+		public ActionResult CreateParticipante(uint idEvento)
+		{
+			var gestorModel = new GestaoPapelModel
+			{
+				Evento = _eventoService.GetEventoSimpleDto(idEvento),
+				Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 4),
+			};
+			return View(gestorModel);
+		}
+
+		// POST: EventoController/CreateParticipante
+		[HttpPost]
+		[ValidateAntiForgeryToken]
+		public ActionResult CreateParticipante(GestaoPapelModel gestaoPapelModel)
+		{
+			var pessoa = gestaoPapelModel.Pessoa;
+			var idEvento = gestaoPapelModel.Evento.Id;
+			pessoa.NomeCracha = pessoa.Nome;
+			_pessoaService.CreatePessoaPapel(pessoa, idEvento, 4);
+
+			_eventoService.AtualizarVagasDisponiveis(idEvento);
+
+			return RedirectToAction("CreateParticipante", new { idEvento});
 		}
 
 		// POST: EventoController/DeletePessoaPapel
@@ -236,8 +284,19 @@ namespace EventoWeb.Controllers
 
 			_eventoService.AtualizarVagasDisponiveis(idEvento);
 
-			return RedirectToAction("CreatePessoaPapel", new { idEvento, idPapel });
+			switch (idPapel)
+			{
+				case 2:
+					return RedirectToAction("CreateGestor", new { idEvento });
+				case 3:
+					return RedirectToAction("CreateColaborador", new { idEvento });
+				case 4:
+					return RedirectToAction("CreateParticipante", new { idEvento });
+				default:
+					return RedirectToAction("Index");
+			}
 		}
+
 
 		//GET: EventoController/GerenciarEvento
 		public IActionResult GerenciarEventoListar()
