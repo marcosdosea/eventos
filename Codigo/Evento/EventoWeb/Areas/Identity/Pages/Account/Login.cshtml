@@ -14,12 +14,12 @@ ViewData["Title"] = "Log in";
             <form id="account" method="post">
                 <h1 class="grey-dark" style="margin-top: 96px; margin-bottom: 12px; text-align: center;">Já possui uma conta?</h1>
                 <h5 class="grey-light-active" style="margin-bottom: 32px; text-align: center;">Bem vindo de Volta! Insira seus dados.</h5>
-                <h5>CPF</h5>
+                <h5>Nome de usuário ou email</h5>
                 <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
                 <div class="form-floating mb-3">
-                    <input asp-for="Input.CPF" class="form-control" autocomplete="username" aria-required="true" placeholder="Digite seu CPF" />
-                    <label asp-for="Input.CPF" class="form-label grey-light-active">CPF</label>
-                    <span asp-validation-for="Input.CPF" class="text-danger"></span>
+                    <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                    <label asp-for="Input.Email" class="form-label grey-light-active">Usuário ou Email</label>
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
                 </div>
                 <h5>Senha</h5>
                 <div class="form-floating mb-3">

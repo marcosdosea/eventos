@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.Extensions.Options;
 using System.Globalization;
 using Service;
-using EventoWeb.Areas.Identity.Data;
+using Core;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -23,6 +23,7 @@ namespace EventoWeb
 
             builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             builder.Services.AddTransient<ITipoInscricaoService, TipoInscricaoService>();
+            builder.Services.AddTransient<IAdministradorService, AdministradorService>();
             builder.Services.AddTransient<IAreaInteresseService, AreaInteresseService>();
             builder.Services.AddTransient<IPessoaService, PessoaService>();
             builder.Services.AddTransient<ISubeventoService, SubeventoService>();

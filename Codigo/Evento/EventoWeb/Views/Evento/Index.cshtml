@@ -60,11 +60,11 @@
 						&nbsp;&nbsp;
 						@Html.ActionLink("Tipo Inscrição", "Index", "TipoInscricao", new { idEvento = item.Id, idPapel = 2 }, new { @style = "text-decoration:none;" })
 						&nbsp;&nbsp;
-						@Html.ActionLink("Gestores", "CreateGestor", new { idEvento = item.Id}, new { @style = "text-decoration:none;" })
+						@Html.ActionLink("Gestores", "CreatePessoaPapel", new { idEvento = item.Id, idPapel = 2 }, new { @style = "text-decoration:none;" })
 						&nbsp;&nbsp;
-						@Html.ActionLink("Colaboradores", "CreateColaborador", new { idEvento = item.Id}, new { @style = "text-decoration:none;" })
+						@Html.ActionLink("Colaboradores", "CreatePessoaPapel", new { idEvento = item.Id, idPapel = 3 }, new { @style = "text-decoration:none;" })
 						&nbsp;&nbsp;
-						@Html.ActionLink("Participantes", "CreateParticipante", new { idEvento = item.Id }, new { @style = "text-decoration:none;" })
+						@Html.ActionLink("Participantes", "CreatePessoaPapel", new { idEvento = item.Id, idPapel = 4 }, new { @style = "text-decoration:none;" })
 						&nbsp;&nbsp;
 						@Html.ActionLink("Subeventos", "CreateOrEdit", "Subevento", new { idEvento = item.Id }, new { @style = "text-decoration:none;" })
 					</td>
