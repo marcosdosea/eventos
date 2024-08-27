@@ -2,30 +2,7 @@
 
 <link href="~/lib/datatable/css/datatables.min.css" rel="stylesheet" />
 
-@{
-	string papel = "";
-	string papelPlural = "";
-
-	switch (Model.IdPapel)
-	{
-		case 2:
-			papel = "Gestor";
-			papelPlural = "Gestores";
-			break;
-		case 3:
-			papel = "Colaborador";
-			papelPlural = "Colaboradores";
-			break;
-		case 4:
-			papel = "Participante";
-			papelPlural = "Participantes";
-			break;
-	}
-
-	ViewData["Title"] = papelPlural;
-}
-
-<h1 class="blue-normal">Cadastrar @papelPlural do Evento</h1>
+<h1 class="blue-normal">Cadastrar Gestores do Evento</h1>
 <hr />
 
 <script>
@@ -41,7 +18,7 @@
 
 <div class="row">
 	<div>
-		<form asp-action="CreatePessoaPapel" method="post" onsubmit="return validarFormulario()">
+		<form asp-action="CreateGestor" method="post" onsubmit="return validarFormulario()">
 			<div class="row">
 				<div class="col-lg-3">
 					<div class="form-group">
@@ -62,7 +39,7 @@
 			</div>
 			<br />
 			<h4 class="blue-normal">
-				Dados do @papel
+				Dados do gestor
 			</h4>
 			<div class="row">
 				<div class="col-6 col-sm-6 col-md-3 col-lg-2">
@@ -95,12 +72,10 @@
 				</div>
 			</div>
 			<br />
-
-			<input type="hidden" name="IdPapel" value="@Model.IdPapel" />
-
+			
 			<div class="d-flex flex-row-reverse">
 				<div class="form-group">
-					<input type="submit" value="Adicionar @papel" class="btn btn-lg btn-blue-normal" />
+					<input type="submit" value="Adicionar gestor" class="btn btn-lg btn-blue-normal" />
 				</div>
 			</div>
 			<br />
@@ -110,7 +85,7 @@
 
 <div class="row">
 	<div class="col-md-12">
-		<h2 class="blue-normal">Lista de @papelPlural do Evento</h2>
+		<h2 class="blue-normal">Lista de Gestores do Evento</h2>
 		<table id="tablePessoa" class="table table-striped">
 			<thead class="blue-normal blue-normal-bg-table">
 				<tr>
@@ -131,7 +106,7 @@
 								<input type="hidden" name="IdPessoa" value="@inscricaopessoaevento.IdPessoa" />
 								<input type="hidden" name="IdEvento" value="@Model.Evento.Id" />
 								<input type="hidden" name="IdPapel" value="@inscricaopessoaevento.IdPapel" />
-								<a href="#confirmRemovalModal" data-toggle="modal" onclick="setModalValues('@inscricaopessoaevento.IdPessoaNavigation.Nome', '@Model.Evento.Nome', '@inscricaopessoaevento.IdPessoa', '@Model.Evento.Id')" class="text-danger" style="text-decoration: none; cursor: pointer;">Remover @papel</a>
+								<a href="#confirmRemovalModal" data-toggle="modal" onclick="setModalValues('@inscricaopessoaevento.IdPessoaNavigation.Nome', '@Model.Evento.Nome', '@inscricaopessoaevento.IdPessoa', '@Model.Evento.Id')" class="text-danger" style="text-decoration: none; cursor: pointer;">Remover gestor</a>
 							</form>
 						</td>
 					</tr>
@@ -153,7 +128,7 @@
 				<h5 class="modal-title" id="modalLabel">Confirmar Remoção</h5>
 			</div>
 			<div class="modal-body">
-				Quer realmente remover <strong><span id="pessoaNome"></span></strong> como @papel do evento: <strong><span id="eventoNome"></span></strong>?
+				Quer realmente remover <strong><span id="pessoaNome"></span></strong> como gestor do evento: <strong><span id="eventoNome"></span></strong>?
 			</div>
 			<div class="modal-footer">
 				<button type="button" class="btn btn-outline-blue-normal" data-dismiss="modal">Cancelar</button>

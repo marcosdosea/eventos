@@ -25,7 +25,7 @@
         <img src="~/ícones/Participantes.png" class="card-img-bottom" alt="...">
         <div class="card-img-overlay">
             <td>
-                @Html.ActionLink("Participantes", "CreatePessoaPapel", new { idEvento = @Model.Evento.Id, idPapel = 4 }, new { @style = "text-decoration:none;" })
+                @Html.ActionLink("Participantes", "CreateParticipante", new { idEvento = @Model.Evento.Id}, new { @style = "text-decoration:none;" })
             </td>
         </div>
     </div>
@@ -36,7 +36,7 @@
         <div class="card-img-overlay">
             <td>
                     
-                @Html.ActionLink("Colaboradores", "CreatePessoaPapel", new { idEvento = @Model.Evento.Id, idPapel = 3 }, new { @style = "text-decoration:none;" })
+                @Html.ActionLink("Colaboradores", "CreateColaborador", new { idEvento = @Model.Evento.Id}, new { @style = "text-decoration:none;" })
             </td>
         </div>
     </div>
