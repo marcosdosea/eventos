@@ -111,43 +111,6 @@ public class PessoaService : IPessoaService
         _inscricaoService.CreateInscricaoEvento(novaInscricao);
             
     }
-    
-    public bool CPFIsValid(string cpf)
-    {
-        cpf = Regex.Replace(cpf, @"[^\d]", "");
-
-        if (cpf.Length != 11)
-            return false;
-
-        if (Regex.IsMatch(cpf, @"^(\d)\1{10}$"))
-            return false;
-        
-        int[] multipliers1 = { 10, 9, 8, 7, 6, 5, 4, 3, 2 };
-        int sum = 0;
-        for (int i = 0; i < 9; i++)
-            sum += int.Parse(cpf[i].ToString()) * multipliers1[i];
-        
-        int remainder = sum % 11;
-        int digit1 = remainder < 2 ? 0 : 11 - remainder;
-
-        int[] multipliers2 = { 11, 10, 9, 8, 7, 6, 5, 4, 3, 2 };
-        sum = 0;
-        for (int i = 0; i < 10; i++)
-            sum += int.Parse(cpf[i].ToString()) * multipliers2[i];
-        
-        remainder = sum % 11;
-        int digit2 = remainder < 2 ? 0 : 11 - remainder;
-        
-        return cpf.EndsWith(digit1.ToString() + digit2.ToString());
-    }
-    public string FormataCPF(string cpf)
-    {
-        return Regex.Replace(cpf, @"\D", "");
-    }
-    public string FormataCep(string cep)
-    {
-        return Regex.Replace(cep, @"[^\d]", "");
-    }
 }
 
 

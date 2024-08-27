@@ -38,7 +38,7 @@ ViewData["Title"] = "Create";
                 </div>
                 <div class="col-3 form-group">
                     <label asp-for="Cpf" class="control-label"></label>
-                    <input asp-for="Cpf" class="form-control" placeholder="000.000.000-00" maxlength="14" />
+                    <input asp-for="Cpf" class="form-control" placeholder="000.000.000-00" maxlength="11" />
                     <span asp-validation-for="Cpf" class="text-danger"></span>
                 </div>
                 <br />
@@ -58,12 +58,12 @@ ViewData["Title"] = "Create";
             <div class="row">
                 <div class="col-2 form-group">
                     <label asp-for="Telefone1" class="control-label"></label>
-                    <input asp-for="Telefone1" class="form-control" placeholder="Com o DDD" maxlength="10" />
+                    <input asp-for="Telefone1" class="form-control" placeholder="Com o DDD" maxlength="11" />
                     <span asp-validation-for="Telefone1" class="text-danger"></span>
                 </div>
                 <div class="col-2 form-group">
                     <label asp-for="Telefone2" class="control-label"></label>
-                    <input asp-for="Telefone2" class="form-control" placeholder="Com o DDD" maxlength="10" />
+                    <input asp-for="Telefone2" class="form-control" placeholder="Com o DDD" maxlength="11" />
                     <span asp-validation-for="Telefone2" class="text-danger"></span>
                 </div>
             </div>
