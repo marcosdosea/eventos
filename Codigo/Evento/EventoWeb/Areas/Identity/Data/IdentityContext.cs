@@ -1,7 +1,9 @@
+using EventoWeb.Areas.Identity.Data;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace Core;
+namespace EventoWeb.Areas.Identity.Data;
 
 public class IdentityContext : IdentityDbContext<UsuarioIdentity>
 {

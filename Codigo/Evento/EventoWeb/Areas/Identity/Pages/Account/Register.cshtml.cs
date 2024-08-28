@@ -12,7 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
-using Core;
+using EventoWeb.Areas.Identity.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -135,10 +135,22 @@ namespace EventoWeb.Areas.Identity.Pages.Account
 					var pessoaResult = _pessoaService.Create(new Pessoa
 					{
 						Nome = Input.Nome,
-						NomeCracha = Input.Nome,
+						NomeCracha = Input.Nome.Length > 20 ? Input.Nome.Substring(0, 20) : Input.Nome,
 						Cpf = Input.CPF,
 						Email = Input.Email
 					});
+
+					var roleName = "USUARIO";
+					var roleResult = await _userManager.AddToRoleAsync(user, roleName);
+
+					if (!roleResult.Succeeded)
+					{
+						foreach (var error in roleResult.Errors)
+						{
+							ModelState.AddModelError(string.Empty, error.Description);
+						}
+						return Page();
+					}
 
 					var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
 					code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
@@ -166,11 +178,9 @@ namespace EventoWeb.Areas.Identity.Pages.Account
 					ModelState.AddModelError(string.Empty, error.Description);
 				}
 			}
-
 			// If we got this far, something failed, redisplay form
 			return Page();
 		}
-
 
 		private UsuarioIdentity CreateUser()
         {

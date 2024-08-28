@@ -10,6 +10,7 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Runtime.ConstrainedExecution;
 using System.Security.Cryptography;
 using Core.DTO;
+
 namespace EventoWeb.Controllers.Tests
 {
     [TestClass()]

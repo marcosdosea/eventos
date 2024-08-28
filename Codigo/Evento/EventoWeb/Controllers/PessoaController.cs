@@ -57,38 +57,28 @@ namespace EventoWeb.Controllers
         {
             if (ModelState.IsValid)
             {
-                if (_pessoaService.CPFIsValid(viewModel.Cpf))
+                byte[] fotoSource = null;
+                if (viewModel.Foto != null && viewModel.Foto.Length > 0)
                 {
-                    byte[] fotoSource = null;
-                    if (viewModel.Foto != null && viewModel.Foto.Length > 0)
+                    using (var memoryStream = new MemoryStream())
                     {
-                        using (var memoryStream = new MemoryStream())
-                        {
-                            viewModel.Foto.CopyTo(memoryStream);
+                        viewModel.Foto.CopyTo(memoryStream);
 
-                            if (memoryStream.Length <= 65535)
-                            {
-                                fotoSource = memoryStream.ToArray();
-                            }
-                            else
-                            {
-                                ModelState.AddModelError("Foto", "O arquivo é muito grande. Deve ser menor que 64 KB.");
-                                return View(viewModel);
-                            }
+                        if (memoryStream.Length <= 65535)
+                        {
+                            fotoSource = memoryStream.ToArray();
+                        }
+                        else
+                        {
+                            ModelState.AddModelError("Foto", "O arquivo é muito grande. Deve ser menor que 64 KB.");
+                            return View(viewModel);
                         }
                     }
-                    viewModel.Cpf = _pessoaService.FormataCPF(viewModel.Cpf);
-                    viewModel.Cep = _pessoaService.FormataCep(viewModel.Cep);
-
-                    var pessoa = _mapper.Map<Pessoa>(viewModel);
-                    pessoa.Foto = fotoSource;
-                    _pessoaService.Create(pessoa);
-                    return RedirectToAction(nameof(Index));
                 }
-                else
-                {
-                    ModelState.AddModelError("Pessoa.Cpf", "CPF inválido.");
-                }
+                var pessoa = _mapper.Map<Pessoa>(viewModel);
+                pessoa.Foto = fotoSource;
+                _pessoaService.Create(pessoa);
+                return RedirectToAction(nameof(Index));
             }
 
             return View(viewModel);
@@ -122,38 +112,28 @@ namespace EventoWeb.Controllers
 
             if (ModelState.IsValid)
             {
-                if (_pessoaService.CPFIsValid(viewModel.Cpf))
+                byte[] fotoSource = null;
+                if (viewModel.Foto != null && viewModel.Foto.Length > 0)
                 {
-                    byte[] fotoSource = null;
-                    if (viewModel.Foto != null && viewModel.Foto.Length > 0)
+                    using (var memoryStream = new MemoryStream())
                     {
-                        using (var memoryStream = new MemoryStream())
-                        {
-                            viewModel.Foto.CopyTo(memoryStream);
+                        viewModel.Foto.CopyTo(memoryStream);
 
-                            if (memoryStream.Length <= 65535)
-                            {
-                                fotoSource = memoryStream.ToArray();
-                            }
-                            else
-                            {
-                                ModelState.AddModelError("Foto", "O arquivo é muito grande. Deve ser menor que 64 KB.");
-                                return View(viewModel);
-                            }
+                        if (memoryStream.Length <= 65535)
+                        {
+                            fotoSource = memoryStream.ToArray();
+                        }
+                        else
+                        {
+                            ModelState.AddModelError("Foto", "O arquivo é muito grande. Deve ser menor que 64 KB.");
+                            return View(viewModel);
                         }
                     }
-                    viewModel.Cpf = _pessoaService.FormataCPF(viewModel.Cpf);
-                    viewModel.Cep = _pessoaService.FormataCep(viewModel.Cep);
-
-                    var pessoa = _mapper.Map<Pessoa>(viewModel);
-                    pessoa.Foto = fotoSource;
-                    _pessoaService.Edit(pessoa);
-                    return RedirectToAction(nameof(Index));
                 }
-                else
-                {
-                    ModelState.AddModelError("Cpf", "CPF inválido.");
-                }
+                var pessoa = _mapper.Map<Pessoa>(viewModel);
+                pessoa.Foto = fotoSource;
+                _pessoaService.Edit(pessoa);
+                return RedirectToAction(nameof(Index));
             }
 
             return View(viewModel);
