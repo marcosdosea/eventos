@@ -111,7 +111,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual(1, controller.ModelState.ErrorCount);
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
-            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ModelocrachaCreateModel));
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ModelocrachaModel));
         }
 
         [TestMethod]
@@ -123,19 +123,19 @@ namespace EventoWeb.Controllers.Tests
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
-            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ModelocrachaCreateModel));
-            ModelocrachaCreateModel modelocrachaModel = (ModelocrachaCreateModel)viewResult.ViewData.Model;
-            Assert.AreEqual((uint)1, modelocrachaModel.Modelocracha.Id);
-            Assert.AreEqual((uint)1, modelocrachaModel.Modelocracha.IdEvento);
-            Assert.AreEqual("Texto 1", modelocrachaModel.Modelocracha.Texto);
-            Assert.AreEqual(1, modelocrachaModel.Modelocracha.Qrcode);
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ModelocrachaModel));
+			ModelocrachaModel modelocrachaModel = (ModelocrachaModel)viewResult.ViewData.Model;
+            Assert.AreEqual((uint)1, modelocrachaModel.Id);
+            Assert.AreEqual((uint)1, modelocrachaModel.IdEvento);
+            Assert.AreEqual("Texto 1", modelocrachaModel.Texto);
+            Assert.AreEqual(1, modelocrachaModel.Qrcode);
         }
 
         [TestMethod]
         public void EditTest_Post_Valid()
         {
             // Act
-            var result = controller.Edit(GetTargetEditModelocrachaModel().Modelocracha.Id, GetTargetEditModelocrachaModel());
+            var result = controller.Edit(GetTargetEditModelocrachaModel().Id, GetTargetEditModelocrachaModel());
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
@@ -172,7 +172,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
         }
 
-        private ModelocrachaCreateModel GetNewModelocracha()
+        private ModelocrachaModel GetNewModelocracha()
         {
             var formFileMock = new Mock<IFormFile>();
             var content = "Hello World from a Fake File";
@@ -186,23 +186,19 @@ namespace EventoWeb.Controllers.Tests
             formFileMock.Setup(_ => _.FileName).Returns(fileName);
             formFileMock.Setup(_ => _.Length).Returns(ms.Length);
 
-            var modelocrachaModel = new ModelocrachaModel
-            {
-                Id = 7,
+			var evento = new EventoSimpleDTO
+			{
+				Id = 1,
+				Nome = "SEMINFO"
+			};
+
+			return new ModelocrachaModel
+			{
+				Id = 7,
                 IdEvento = 4,
                 Logotipo = formFileMock.Object,
                 Texto = "Texto 4",
-                Qrcode = 1
-            };
-
-            var evento = new EventoSimpleDTO
-            {
-                Id = 1,
-                Nome = "SEMINFO"
-            };
-            return new ModelocrachaCreateModel
-            {
-                Modelocracha = modelocrachaModel,
+                Qrcode = 1,
                 Evento = evento
             };
         }
@@ -254,33 +250,29 @@ namespace EventoWeb.Controllers.Tests
             };
         }
 
-        private ModelocrachaCreateModel GetTargetEditModelocrachaModel()
+        private ModelocrachaModel GetTargetEditModelocrachaModel()
         {
             var formFileMock = new Mock<IFormFile>();
             var ms = new MemoryStream(new byte[] { 0x20, 0x20 });
             formFileMock.Setup(_ => _.OpenReadStream()).Returns(ms);
             formFileMock.Setup(_ => _.Length).Returns(ms.Length);
 
-            var modelocrachaModel = new ModelocrachaModel
-            {
-                Id = 1,
-                IdEvento = 1,
-                Logotipo = formFileMock.Object,
-                Texto = "SEMINFO",
-                Qrcode = 1
-            };
+			var evento = new EventoSimpleDTO
+			{
+				Id = 1,
+				Nome = "SEMINFO"
+			};
 
-            var evento = new EventoSimpleDTO
-            {
-                Id = 1,
-                Nome = "SEMINFO"
-            };
-            return new ModelocrachaCreateModel
-            {
-                Modelocracha = modelocrachaModel,
-                Evento = evento
-            };
-        }
+			return new ModelocrachaModel
+			{
+				Id = 7,
+				IdEvento = 4,
+				Logotipo = formFileMock.Object,
+				Texto = "Texto 4",
+				Qrcode = 1,
+				Evento = evento
+			};
+	}
 
         private ModelocrachaModel GetTargetDeleteModelocrachaModel()
         {
