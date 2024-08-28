@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using EventoWeb.Areas.Identity.Data;
+using Core;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
@@ -109,7 +109,7 @@ namespace EventoWeb.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
-                // Encontra o usuário pelo CPF
+                // Encontra o usuï¿½rio pelo CPF
                 var user = await _userManager.Users.SingleOrDefaultAsync(u => u.UserName == Input.CPF);
                 if (user != null)
                 {
