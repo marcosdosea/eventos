@@ -2,12 +2,14 @@
 using EventoWeb.Models;
 using Core;
 using Core.Service;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 
 namespace EventoWeb.Controllers
 {
+    [Authorize(Roles = "GESTOR")]
     public class SubeventoController : Controller
     {
         private readonly ISubeventoService _subeventoService;

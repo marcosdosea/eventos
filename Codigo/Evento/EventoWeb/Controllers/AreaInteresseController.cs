@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace EventoWeb.Controllers
 {
-    //[Authorize(Roles = "ADMINISTRADOR")]
+    [Authorize(Roles = "ADMINISTRADOR")]
     public class AreaInteresseController : Controller
     {
         private readonly IAreaInteresseService _areaInteresseService;

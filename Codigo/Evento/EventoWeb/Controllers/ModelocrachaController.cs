@@ -2,11 +2,13 @@
 using Core;
 using Core.Service;
 using EventoWeb.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Util;
 
 namespace EventoWeb.Controllers
 {
+    [Authorize(Roles = "GESTOR")]
     public class ModelocrachaController : Controller
     {
         private readonly IModelocrachaService _modelocrachaService;
