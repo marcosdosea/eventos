@@ -118,7 +118,7 @@ namespace EventoWeb.Controllers.Tests
 			Assert.AreEqual(1, controller.ModelState.ErrorCount);
 			Assert.IsInstanceOfType(result, typeof(ViewResult));
 			ViewResult viewResult = (ViewResult)result;
-			Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(TipoInscricaocreateModel));
+			Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(TipoInscricaoModel));
 		}
 
 
@@ -131,23 +131,23 @@ namespace EventoWeb.Controllers.Tests
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
-            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(TipoInscricaocreateModel));
-            TipoInscricaocreateModel tipoinscricaoModel = (TipoInscricaocreateModel)viewResult.ViewData.Model;
-            Assert.AreEqual((uint)1, tipoinscricaoModel.TipoInscricao.IdEvento);
-            Assert.AreEqual("Gratuita", tipoinscricaoModel.TipoInscricao.Nome);
-            Assert.AreEqual("Incrição sem cobrança", tipoinscricaoModel.TipoInscricao.Descricao);
-            Assert.AreEqual((decimal)1, tipoinscricaoModel.TipoInscricao.Valor);
-            Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), tipoinscricaoModel.TipoInscricao.DataInicio);
-            Assert.AreEqual(DateTime.Parse("2024-09-07 12:30:00"), tipoinscricaoModel.TipoInscricao.Datafim);
-            Assert.AreEqual((sbyte)1, tipoinscricaoModel.TipoInscricao.UsadaEvento);
-            Assert.AreEqual((sbyte)1, tipoinscricaoModel.TipoInscricao.UsadaEvento);
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(TipoInscricaoModel));
+            TipoInscricaoModel tipoinscricaoModel = (TipoInscricaoModel)viewResult.ViewData.Model;
+            Assert.AreEqual((uint)1, tipoinscricaoModel.IdEvento);
+            Assert.AreEqual("Gratuita", tipoinscricaoModel.Nome);
+            Assert.AreEqual("Incrição sem cobrança", tipoinscricaoModel.Descricao);
+            Assert.AreEqual((decimal)1, tipoinscricaoModel.Valor);
+            Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), tipoinscricaoModel.DataInicio);
+            Assert.AreEqual(DateTime.Parse("2024-09-07 12:30:00"), tipoinscricaoModel.Datafim);
+            Assert.AreEqual((sbyte)1, tipoinscricaoModel.UsadaEvento);
+            Assert.AreEqual((sbyte)1, tipoinscricaoModel.UsadaEvento);
         }
 
         [TestMethod()]
         public void EditTest_Post_Valid()
         {
             // Act
-            var result = controller.Edit(GetTargetTipoInscricaoModelEdit().TipoInscricao.Id, GetTargetTipoInscricaoModelEdit());
+            var result = controller.Edit(GetTargetTipoInscricaoModel().Id, GetTargetTipoInscricaoModel());
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
@@ -191,10 +191,10 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
         }
 
-        private TipoInscricaocreateModel GetNewTipoInscricao()
+        private TipoInscricaoModel GetNewTipoInscricao()
         {
 
-            var tipoInscricaoModel = new TipoInscricaoModel
+            return new TipoInscricaoModel
             {
                 Id = 1,
                 IdEvento = 1,
@@ -206,32 +206,8 @@ namespace EventoWeb.Controllers.Tests
                 UsadaEvento = 1,
                 UsadaSubevento = 1,
             };
-            return new TipoInscricaocreateModel
-            {
-                TipoInscricao = tipoInscricaoModel,
-            };
         }
 
-        private TipoInscricaocreateModel GetTargetTipoInscricaoModelEdit()
-        {
-
-            var tipoInscricaoModel = new TipoInscricaoModel
-            {
-                Id = 1,
-                IdEvento = 1,
-                Nome = "Gratuita",
-                Descricao = "Incrição sem cobrança",
-                Valor = 1,
-                DataInicio = new DateTime(2024, 09, 2, 7, 30, 0),
-                Datafim = new DateTime(2024, 09, 7, 12, 30, 0),
-                UsadaEvento = 1,
-                UsadaSubevento = 1,
-            };
-            return new TipoInscricaocreateModel
-            {
-                TipoInscricao = tipoInscricaoModel,
-            };
-        }
         private static Tipoinscricao GetTargetTipoInscricao()
         {
             return new Tipoinscricao

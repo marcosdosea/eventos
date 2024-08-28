@@ -135,7 +135,7 @@ namespace EventoWeb.Controllers.Tests
 			Assert.AreEqual(5, controller.ModelState.ErrorCount);
 			Assert.IsInstanceOfType(result, typeof(ViewResult));
 			ViewResult viewResult = (ViewResult)result;
-			Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(PessoaCreateModel));
+			Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(PessoaModel));
 		}
 
 
@@ -148,9 +148,8 @@ namespace EventoWeb.Controllers.Tests
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
-            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(PessoaCreateModel));
-            PessoaCreateModel PessoaModel = (PessoaCreateModel)viewResult.ViewData.Model;
-            var pessoaModel = PessoaModel.Pessoa;
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(PessoaModel));
+			PessoaModel pessoaModel = (PessoaModel)viewResult.ViewData.Model;
             Assert.AreEqual((uint)1, pessoaModel.Id);
             Assert.AreEqual("João Vitor Sodré", pessoaModel.Nome);
             Assert.AreEqual("Sodré", pessoaModel.NomeCracha);
@@ -178,7 +177,7 @@ namespace EventoWeb.Controllers.Tests
             controller = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper());
 
             // Act
-            var result = controller.Edit(GetTargetPessoaModel().Pessoa.Id, GetTargetPessoaModel().Pessoa);
+            var result = controller.Edit(GetTargetPessoaModel().Id, GetTargetPessoaModel());
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
@@ -223,7 +222,7 @@ namespace EventoWeb.Controllers.Tests
         public void DeleteTest_Get_Valid()
         {
             // Act
-            var result = controller.DeleteConfirmed(GetTargetPessoaModel().Pessoa.Id);
+            var result = controller.DeleteConfirmed(GetTargetPessoaModel().Id);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
@@ -275,11 +274,11 @@ namespace EventoWeb.Controllers.Tests
             };
         }
 
-        private PessoaCreateModel GetTargetPessoaModel()
+        private PessoaModel GetTargetPessoaModel()
         {
-            var pessoaModel = new PessoaModel 
-            {
-                Id = 1,
+			return new PessoaModel
+			{
+				Id = 1,
                 Nome = "João Vitor Sodré",
                 NomeCracha = "Sodré",
                 Cpf = "040.268.930-57",
@@ -294,11 +293,6 @@ namespace EventoWeb.Controllers.Tests
                 Email = "email@gmail.com",
                 Telefone1 = "7999990011",
                 Telefone2 = "NULL",
-            };
-
-            return new PessoaCreateModel
-            {
-                Pessoa = pessoaModel,
             };
         }
 
