@@ -4,11 +4,9 @@
 	ViewData["Title"] = "GestorEditarEvento";
 }
 
-
-
 <h1 class="blue-normal">Gerir Evento</h1>
 <div class="row">
-	<form asp-action="GestorEditarEvento">
+	<form asp-action="GestorEditarEvento" enctype="multipart/form-data">
 		<div asp-validation-summary="ModelOnly" class="text-danger"></div>
 		<input type="hidden" asp-for="Id" />
 		<div class="row">
@@ -19,7 +17,6 @@
 					<span asp-validation-for="Nome" class="text-danger"></span>
 				</div>
 			</div>
-
 			<div class="col-3">
 				<div class="form-group">
 					<label asp-for="IdTipoEvento" class="control-label">Tipo do Evento</label>
@@ -242,17 +239,14 @@
 					</div>
 				</div>
 			</div>
+			<div class="col-5 form-group">
+				<label asp-for="ImagemPortal" class="control-label"></label>
+				<input type="file" asp-for="ImagemPortal" class="form-control" accept=".png,.jpg,.jpeg,.gif,.tif" id="fileInput" />
+				<span asp-validation-for="ImagemPortal" class="text-danger"></span>
+			</div>
 		</div>
 		<br />
 		<div>
-
-
-
-
-
-
-
-
 			<div class="form-group">
 				<label class="control-label">Área de Interesse</label>
 				<select id="areaInteresseSelect" class="form-control">
@@ -268,15 +262,6 @@
 				</ul>
 				<span asp-validation-for="IdAreaInteresses" class="text-danger"></span>
 			</div>
-
-
-
-
-
-
-
-
-
 		</div>
 		<br />
 		<div class="d-flex justify-content-end">
@@ -309,10 +294,6 @@
 			this.nextElementSibling.value = this.checked ? 1 : 0; // Ajusta o valor do campo oculto baseado no estado do checkbox
 		});
 	</script>
-
-
-
-
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 	<script>
 		$(document).ready(function () {
@@ -320,7 +301,7 @@
 			var selectedAreasList = $('#selectedAreas');
 
 			function addHiddenInput(value) {
-				var hiddenInput = $('<input type="hidden" name="Evento.IdAreaInteresses[]" value="' + value + '" />');
+				var hiddenInput = $('<input type="hidden" name="IdAreaInteresses[]" value="' + value + '" />');
 				selectedAreasList.append(hiddenInput);
 			}
 

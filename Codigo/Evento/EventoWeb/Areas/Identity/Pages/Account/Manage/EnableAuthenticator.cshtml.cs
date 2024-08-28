@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
-using Core;
+using EventoWeb.Areas.Identity.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;

@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Util;
 
 namespace EventoWeb.Models
 {
@@ -122,11 +124,19 @@ namespace EventoWeb.Models
 
 		[Display(Name = "Áreas de Interesse")]
 		public List<uint> IdAreaInteresses { get; set; } = new List<uint>();
-		
+
+		[Display(Name = "Foto")]
+		[ImagemUpload(ErrorMessage = "A imagem deve estar nos formatos PNG, JPG, JPEG, TIF ou GIF e ter menos de 1 MB.")]
+		public IFormFile? ImagemPortal { get; set; }
+
+		[Display(Name = "Foto")]
+		[BindNever]
+		public string? ImagemPortalBase64 { get; set; }
+
 		public SelectList Estados { get; set; }
-		
+
 		public SelectList TiposEventos { get; set; }
-		
+
 		public SelectList AreaInteresse { get; set; }
 	}
 }
