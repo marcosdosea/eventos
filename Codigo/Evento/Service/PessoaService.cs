@@ -4,6 +4,7 @@ using Core.DTO;
 using Core.Service;
 using Microsoft.EntityFrameworkCore;
 
+
 namespace Service;
 
 public class PessoaService : IPessoaService
@@ -11,15 +12,16 @@ public class PessoaService : IPessoaService
     /// <summary>
     /// Manter dados de pessoa no banco de dados
     /// </summary>
+    
     private readonly EventoContext _context;
-
     private readonly IInscricaoService _inscricaoService;
 
-    public PessoaService(EventoContext context,IInscricaoService inscricaoService)
+    public PessoaService(EventoContext context, IInscricaoService inscricaoService)
     {
-        this._context = context;
+        _context = context;
         _inscricaoService = inscricaoService;
     }
+
     /// <summary>
     /// Insere uma nova pessoa na base de dados
     /// </summary>

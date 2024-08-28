@@ -1,5 +1,5 @@
 @using Microsoft.AspNetCore.Identity
-@using EventoWeb.Areas.Identity.Data
+@using Core;
 
 @inject SignInManager<UsuarioIdentity> SignInManager
 @inject UserManager<UsuarioIdentity> UserManager
@@ -9,7 +9,7 @@
     {
         <div class="flex-shrink-0 dropdown">
             <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser2" data-bs-toggle="dropdown" aria-expanded="false">
-                Olá, Bem-vindo!
+                Olï¿½, Bem-vindo!
                 <img src="/img/img-user.svg" alt="User" width="32" height="32" class="rounded-circle ms-2">
             </a>
             <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser2">
