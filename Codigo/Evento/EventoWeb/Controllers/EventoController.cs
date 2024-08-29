@@ -2,7 +2,6 @@
 using Core;
 using Core.Service;
 using EventoWeb.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -31,7 +30,6 @@ namespace EventoWeb.Controllers
 			_subeventoService = subeventoService;
 		}
 
-		[Authorize(Roles = "ADMINISTRADOR")]
 		// GET: EventoController
 		public ActionResult Index()
 		{
@@ -50,7 +48,6 @@ namespace EventoWeb.Controllers
 			return View(listarEventosModel);
 		}
 
-		[Authorize(Roles = "ADMINISTRADOR")]
 		// GET: EventoController/Details/5
 		public ActionResult Details(uint id)
 		{
@@ -59,7 +56,6 @@ namespace EventoWeb.Controllers
 			return View(eventoModel);
 		}
 
-		[Authorize(Roles = "ADMINISTRADOR")]
 		// GET: EventoController/Create
 		public ActionResult Create()
 		{
@@ -114,7 +110,6 @@ namespace EventoWeb.Controllers
 			return View(eventoModel);
 		}
 
-		[Authorize(Roles = "ADMINISTRADOR")]
 		// GET: EventoController/Edit/5
 		public ActionResult Edit(uint id)
 		{
@@ -183,7 +178,7 @@ namespace EventoWeb.Controllers
 			return View(viewModel);
 		}
 
-		[Authorize(Roles = "ADMINISTRADOR")]
+
 		// GET: EventoController/Delete/5
 		public ActionResult Delete(uint id)
 		{
@@ -205,7 +200,7 @@ namespace EventoWeb.Controllers
 			return RedirectToAction(nameof(Index));
 		}
 
-		[Authorize(Roles = "ADMINISTRADOR")]
+
 		// GET: EventoController/CreateGestor
 		public ActionResult CreateGestor(uint idEvento)
 		{
@@ -231,8 +226,6 @@ namespace EventoWeb.Controllers
 
 			return RedirectToAction("CreateGestor", new { idEvento});
 		}
-		
-		[Authorize(Roles = "GESTOR")]
 		// GET: EventoController/CreateColaborador
 		public ActionResult CreateColaborador(uint idEvento)
 		{
@@ -258,8 +251,6 @@ namespace EventoWeb.Controllers
 
 			return RedirectToAction("CreateColaborador", new { idEvento});
 		}
-		
-		[Authorize(Roles = "GESTOR, COLABORADOR")]
 		// GET: EventoController/CreateParticipante
 		public ActionResult CreateParticipante(uint idEvento)
 		{
@@ -306,7 +297,7 @@ namespace EventoWeb.Controllers
 			}
 		}
 
-		[Authorize(Roles = "GESTOR, COLABORADOR")]
+
 		//GET: EventoController/GerenciarEvento
 		public IActionResult GerenciarEventoListar()
 		{
@@ -323,8 +314,7 @@ namespace EventoWeb.Controllers
 
 			return View(listarEventosModel);
 		}
-		
-		[Authorize(Roles = "GESTOR, COLABORADOR")]
+
 		//GET: EventoController/GerenciarEventoListar
 		public ActionResult GerenciarEvento(uint idEvento)
 		{
@@ -338,7 +328,6 @@ namespace EventoWeb.Controllers
 
 		}
 
-		[Authorize(Roles = "GESTOR, COLABORADOR")]
 		// GET: EventoController/GestorEditarEvento/5
 		public ActionResult GestorEditarEvento(uint id)
 		{
@@ -349,15 +338,24 @@ namespace EventoWeb.Controllers
 			}
 
 			var viewModel = _mapper.Map<EventoModel>(evento);
+
+			
+			var todasAreasInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
+			viewModel.AreaInteresse = new SelectList(todasAreasInteresse, "Id", "Nome");
+
+			var areasInteresseAssociadas = _eventoService.GetAreasInteresseByEventoId(id);
+			viewModel.IdAreaInteresses = areasInteresseAssociadas.Select(a => a.Id).ToList();
+
 			var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
 			var tiposEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
-			var areaInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
+
 			viewModel.Estados = new SelectList(estados, "Estado", "Nome", viewModel.Estado);
-			viewModel.TiposEventos = new SelectList(tiposEventos, "Id", "Nome", viewModel.Id);
-			viewModel.AreaInteresse = new SelectList(areaInteresse, "Id", "Nome", viewModel.Id);
+			viewModel.TiposEventos = new SelectList(tiposEventos, "Id", "Nome", viewModel.IdTipoEvento);
 
 			return View(viewModel);
 		}
+
+
 
 		// POST: EventoController/GestorEditarEvento/5
 		[HttpPost]
@@ -394,13 +392,16 @@ namespace EventoWeb.Controllers
 				_eventoService.AtualizarVagasDisponiveis(evento.Id);
 				return RedirectToAction("GerenciarEvento", "Evento", new { idEvento = id });
 			}
+
 			var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
 			var tiposEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
 			var areasInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
 			viewModel.Estados = new SelectList(estados, "Estado", "Nome", viewModel.Estado);
 			viewModel.TiposEventos = new SelectList(tiposEventos, "Id", "Nome", viewModel.IdTipoEvento);
-			viewModel.AreaInteresse = new SelectList(areasInteresse, "Id", "Nome", viewModel.IdAreaInteresse);
+			viewModel.AreaInteresse = new SelectList(areasInteresse, "Id", "Nome");
+
 			return View(viewModel);
 		}
+
 	}
 }
