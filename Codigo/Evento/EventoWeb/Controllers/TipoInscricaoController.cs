@@ -3,12 +3,14 @@ using Core;
 using Core.DTO;
 using Core.Service;
 using EventoWeb.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Service;
 
 namespace EventoWeb.Controllers
 {
+    [Authorize(Roles = "GESTOR")]
     public class TipoInscricaoController : Controller
     {
         private readonly ITipoInscricaoService _tipoInscricaoService;
