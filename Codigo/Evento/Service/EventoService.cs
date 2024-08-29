@@ -141,8 +141,16 @@ namespace Service
                    .Select(t => t.Nome)
                    .FirstOrDefault();
         }
+		// No EventoService
+		public IEnumerable<Areainteresse> GetAreasInteresseByEventoId(uint eventoId)
+		{
+			var evento = _context.Eventos
+								 .Include(e => e.IdAreaInteresses) // Carrega as áreas de interesse associadas
+								 .FirstOrDefault(e => e.Id == eventoId);
 
-        public void AtualizarVagasDisponiveis(uint idEvento)
+			return evento?.IdAreaInteresses ?? Enumerable.Empty<Areainteresse>();
+		}
+		public void AtualizarVagasDisponiveis(uint idEvento)
         {
             
             var evento = _context.Eventos
