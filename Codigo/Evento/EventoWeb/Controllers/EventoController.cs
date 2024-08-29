@@ -2,6 +2,7 @@
 using Core;
 using Core.Service;
 using EventoWeb.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -30,6 +31,7 @@ namespace EventoWeb.Controllers
 			_subeventoService = subeventoService;
 		}
 
+		[Authorize(Roles = "ADMINISTRADOR")]
 		// GET: EventoController
 		public ActionResult Index()
 		{
@@ -48,6 +50,7 @@ namespace EventoWeb.Controllers
 			return View(listarEventosModel);
 		}
 
+		[Authorize(Roles = "ADMINISTRADOR")]
 		// GET: EventoController/Details/5
 		public ActionResult Details(uint id)
 		{
@@ -56,6 +59,7 @@ namespace EventoWeb.Controllers
 			return View(eventoModel);
 		}
 
+		[Authorize(Roles = "ADMINISTRADOR")]
 		// GET: EventoController/Create
 		public ActionResult Create()
 		{
@@ -110,6 +114,7 @@ namespace EventoWeb.Controllers
 			return View(eventoModel);
 		}
 
+		[Authorize(Roles = "ADMINISTRADOR")]
 		// GET: EventoController/Edit/5
 		public ActionResult Edit(uint id)
 		{
@@ -178,7 +183,7 @@ namespace EventoWeb.Controllers
 			return View(viewModel);
 		}
 
-
+		[Authorize(Roles = "ADMINISTRADOR")]
 		// GET: EventoController/Delete/5
 		public ActionResult Delete(uint id)
 		{
@@ -200,7 +205,7 @@ namespace EventoWeb.Controllers
 			return RedirectToAction(nameof(Index));
 		}
 
-
+		[Authorize(Roles = "ADMINISTRADOR")]
 		// GET: EventoController/CreateGestor
 		public ActionResult CreateGestor(uint idEvento)
 		{
@@ -226,6 +231,8 @@ namespace EventoWeb.Controllers
 
 			return RedirectToAction("CreateGestor", new { idEvento});
 		}
+		
+		[Authorize(Roles = "GESTOR")]
 		// GET: EventoController/CreateColaborador
 		public ActionResult CreateColaborador(uint idEvento)
 		{
@@ -251,6 +258,8 @@ namespace EventoWeb.Controllers
 
 			return RedirectToAction("CreateColaborador", new { idEvento});
 		}
+		
+		[Authorize(Roles = "GESTOR, COLABORADOR")]
 		// GET: EventoController/CreateParticipante
 		public ActionResult CreateParticipante(uint idEvento)
 		{
@@ -297,7 +306,7 @@ namespace EventoWeb.Controllers
 			}
 		}
 
-
+		[Authorize(Roles = "GESTOR, COLABORADOR")]
 		//GET: EventoController/GerenciarEvento
 		public IActionResult GerenciarEventoListar()
 		{
@@ -314,7 +323,8 @@ namespace EventoWeb.Controllers
 
 			return View(listarEventosModel);
 		}
-
+		
+		[Authorize(Roles = "GESTOR, COLABORADOR")]
 		//GET: EventoController/GerenciarEventoListar
 		public ActionResult GerenciarEvento(uint idEvento)
 		{
@@ -328,6 +338,7 @@ namespace EventoWeb.Controllers
 
 		}
 
+		[Authorize(Roles = "GESTOR, COLABORADOR")]
 		// GET: EventoController/GestorEditarEvento/5
 		public ActionResult GestorEditarEvento(uint id)
 		{
@@ -339,7 +350,7 @@ namespace EventoWeb.Controllers
 
 			var viewModel = _mapper.Map<EventoModel>(evento);
 
-			
+
 			var todasAreasInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
 			viewModel.AreaInteresse = new SelectList(todasAreasInteresse, "Id", "Nome");
 
@@ -402,6 +413,5 @@ namespace EventoWeb.Controllers
 
 			return View(viewModel);
 		}
-
 	}
 }
