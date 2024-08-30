@@ -79,7 +79,7 @@ public class AdministradorService : IAdministradorService
 
         var administradores = usersInRole.Select(user => new PessoaSimpleDTO
         {
-            cpf = user.UserName,
+            Cpf = user.UserName,
             Nome = user.NormalizedUserName,
             Telefone1 = user.PhoneNumber,
             Email = user.Email,
@@ -92,6 +92,29 @@ public class AdministradorService : IAdministradorService
     {
         var user = await _userManager.FindByNameAsync(cpf);
         return user;
+    }
+
+    public async Task DeleteAsync(string cpf)
+    {
+        var usuario = await GetbyCpfAsync(cpf);
+        if (usuario == null)
+        {
+            throw new Exception("Usuário não encontrado.");
+        }
+        
+        var isInRole = await _userManager.IsInRoleAsync(usuario, "ADMINISTRADOR");
+        if (isInRole)
+        {
+            var removeRoleResult = await _userManager.RemoveFromRoleAsync(usuario, "ADMINISTRADOR");
+            if (!removeRoleResult.Succeeded)
+            {
+                throw new Exception("Falha ao remover o usuário da função de administrador.");
+            }
+        }
+        else
+        {
+            throw new Exception("O usuário não é um administrador.");
+        }
     }
 
 

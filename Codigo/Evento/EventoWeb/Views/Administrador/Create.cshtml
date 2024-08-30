@@ -1,13 +1,151 @@
-@model AdministradorModel 
- 
-@{ 
-    ViewData["Title"] = "Create"; 
-} 
- 
-<head> 
-    <link rel="stylesheet" type="text/css" href="~/css/style.css"> 
-</head> 
- 
-<div> 
-    
+@model AdministradorModel
+
+<link href="~/lib/datatable/css/datatables.min.css" rel="stylesheet" />
+
+<h1 class="blue-normal">Cadastrar Administrador</h1>
+<hr />
+
+<div class="row">
+	<div>
+		<form asp-action="Create" method="post">
+			<div class="row">
+				<div class="col-6 col-sm-6 col-md-3 col-lg-2">
+					<div class="form-group">
+						<label asp-for="Administrador.Cpf" class="control-label">CPF</label>
+						<input asp-for="Administrador.Cpf" class="form-control" id="Cpf" placeholder="000.000.000-00" oninput="formatarCPF()" maxlength="14" />
+						<span asp-validation-for="Administrador.Cpf" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-12 col-sm-6 col-md-3 col-lg-4">
+					<div class="form-group">
+						<label asp-for="Administrador.Nome" class="control-label">Nome</label>
+						<input asp-for="Administrador.Nome" class="form-control" id="Nome" placeholder="Nome completo" />
+						<span asp-validation-for="Administrador.Nome" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-6 col-sm-6 col-md-3 col-lg-2">
+					<div class="form-group">
+						<label asp-for="Administrador.Telefone1" class="control-label">Telefone</label>
+						<input asp-for="Administrador.Telefone1" type="number" class="form-control" id="Telefone1" placeholder="Com o DDD" />
+						<span asp-validation-for="Administrador.Telefone1" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-6 col-sm-6 col-md-3 col-lg-4">
+					<div class="form-group">
+						<label asp-for="Administrador.Email" class="control-label">Email</label>
+						<input asp-for="Administrador.Email" class="form-control" id="Email" placeholder="Seu e-mail" />
+						<span asp-validation-for="Administrador.Email" class="text-danger"></span>
+					</div>
+				</div>
+			</div>
+			<br />
+
+			<div class="d-flex flex-row-reverse">
+				<div class="form-group">
+					<input type="submit" value="Adicionar administrador" class="btn btn-lg btn-blue-normal" />
+				</div>
+			</div>
+			<br />
+		</form>
+	</div>
 </div>
+
+<div class="row">
+	<div class="col-md-12">
+		<h2 class="blue-normal">Lista de Administradores do Evento</h2>
+		<table id="tablePessoa" class="table table-striped">
+			<thead class="blue-normal blue-normal-bg-table">
+			<tr>
+				<th>CPF</th>
+				<th>Nome</th>
+				<th>Ações</th>
+			</tr>
+			</thead>
+			<tbody>
+			@foreach (var administrador in Model.Administradores)
+			{
+			<tr>
+				<td style="vertical-align: middle;">@FormatarCPF(administrador.Cpf)</td>
+				<td style="vertical-align: middle;">@administrador.Nome</td>
+				<td style="vertical-align: middle;">
+					<form id="removeForm-@administrador.Cpf" method="POST" action="/Administrador/Delete">
+						@Html.AntiForgeryToken()
+						<input type="hidden" name="Cpf" value="@administrador.Cpf" />
+						<a href="#confirmRemovalModal" data-toggle="modal" onclick="setModalValues('@administrador.Cpf', '@administrador.Nome')" class="text-danger" style="text-decoration: none; cursor: pointer;">
+							<i class="fas fa-trash-alt"></i> Remover administrador
+						</a>
+					</form>
+				</td>
+			</tr>
+			}
+			</tbody>
+		</table>
+	</div>
+</div>
+
+<div class="d-flex flex-row-reverse">
+	<div class="form-group" style="margin-right: 10px;">
+		<a asp-controller="Evento" asp-action="Index" class="btn btn-lg btn-blue-normal">Voltar</a>
+	</div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="confirmRemovalModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="modalLabel">Confirmar Remoção</h5>
+			</div>
+			<div class="modal-body">
+				Quer realmente remover <strong><span id="pessoaNome"></span></strong> como administrador?
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-outline-blue-normal" data-dismiss="modal">Cancelar</button>
+				<button type="button" class="btn btn-danger" id="confirmRemovalButton">Remover</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	function setModalValues(cpf, nome) {
+		document.getElementById('pessoaNome').textContent = nome;
+
+		var removeForm = document.getElementById('removeForm-' + cpf);
+		document.getElementById('confirmRemovalButton').onclick = function () {
+			removeForm.submit();
+		};
+	}
+</script>
+
+@functions {
+public static string FormatarCPF(string cpf)
+{
+if (string.IsNullOrEmpty(cpf) || cpf.Length != 11)
+return cpf;
+
+return Convert.ToUInt64(cpf).ToString(@"000\.000\.000\-00");
+}
+}
+
+@section Scripts {
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/lib/datatable/js/datatables.min.js"></script>
+<script>
+	$(document).ready(function () {
+		$('#tablePessoa').DataTable({
+			columnDefs: [
+				{ orderable: true, targets: [0] },
+				{ orderable: false, targets: [1, 2] }
+			],
+			searching: true,
+			ordering: true,
+			paging: true,
+			language: {
+				url: '@Url.Content("~/lib/datatable/js/pt-BR.json")'
+			}
+		});
+	});
+</script>
+}

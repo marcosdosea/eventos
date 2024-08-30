@@ -22,7 +22,7 @@ public class AdministradorController : Controller
         var administradores = await _administradorService.GetAdministradoresAsync();
         var administradorModel = new AdministradorModel
         {
-            administradores = administradores
+            Administradores = administradores
         };
         return View(administradorModel);
     }
@@ -32,14 +32,28 @@ public class AdministradorController : Controller
     [ValidateAntiForgeryToken]
     public async Task<ActionResult> Create(AdministradorModel administradorModel)
     {
-        if (ModelState.IsValid)
-        {
-            var administrador = administradorModel.administrador;
-            var pessoa = _mapper.Map<Pessoa>(administrador);
-            await _administradorService.CreateAsync(pessoa);
-        }
-
+        var administrador = administradorModel.Administrador;
+        var pessoa = _mapper.Map<Pessoa>(administrador);
+        await _administradorService.CreateAsync(pessoa);
+        administradorModel.Administradores = await _administradorService.GetAdministradoresAsync();
         return View(administradorModel);
     }
+    // POST: AdministradorController/Delete/5
+    public async Task<ActionResult> Delete(string cpf)
+    {
+        try
+        {
+            await _administradorService.DeleteAsync(cpf);
+        }
+        catch (Exception ex)
+        {
+           
+            TempData["ErrorMessage"] = ex.Message;
+        }
+        var administradorModel = new AdministradorModel();
+        administradorModel.Administradores = await _administradorService.GetAdministradoresAsync();
+        return RedirectToAction("Create", new { administradorModel});
+    }
+
 
 }
