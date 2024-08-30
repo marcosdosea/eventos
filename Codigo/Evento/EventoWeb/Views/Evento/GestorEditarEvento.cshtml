@@ -258,11 +258,22 @@
 				</select>
 				<button type="button" id="addAreaButton" class="btn btn-primary mt-2">Adicionar</button>
 				<ul id="selectedAreas" class="mt-2 list-group">
-					<!-- Itens selecionados serão exibidos aqui -->
+					@foreach (var idArea in Model.IdAreaInteresses)
+					{
+						var areaNome = Model.AreaInteresse.FirstOrDefault(a => a.Value == idArea.ToString())?.Text;
+						if (!string.IsNullOrEmpty(areaNome))
+						{
+							<li class="list-group-item d-flex justify-content-between align-items-center">
+								@areaNome
+								<button type="button" class="btn btn-danger btn-sm" onclick="removeArea(this, '@idArea')">Remover</button>
+							</li>
+						}
+					}
 				</ul>
 				<span asp-validation-for="IdAreaInteresses" class="text-danger"></span>
 			</div>
 		</div>
+
 		<br />
 		<div class="d-flex justify-content-end">
 			<div class="form-group" style="margin-right: 10px;">

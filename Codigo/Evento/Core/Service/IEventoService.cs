@@ -15,8 +15,10 @@ namespace Core.Service
         IEnumerable<Evento> GetAll();
 
         IEnumerable<EventoDTO> GetByNome(string Nome);
-        
-        string GetNomeById(uint id);
+
+		public IEnumerable<Areainteresse> GetAreasInteresseByEventoId(uint Id);
+
+		string GetNomeById(uint id);
 
         void AtualizarVagasDisponiveis(uint idEvento);
     }

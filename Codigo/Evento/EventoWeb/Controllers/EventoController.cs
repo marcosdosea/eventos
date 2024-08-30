@@ -349,15 +349,24 @@ namespace EventoWeb.Controllers
 			}
 
 			var viewModel = _mapper.Map<EventoModel>(evento);
+
+
+			var todasAreasInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
+			viewModel.AreaInteresse = new SelectList(todasAreasInteresse, "Id", "Nome");
+
+			var areasInteresseAssociadas = _eventoService.GetAreasInteresseByEventoId(id);
+			viewModel.IdAreaInteresses = areasInteresseAssociadas.Select(a => a.Id).ToList();
+
 			var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
 			var tiposEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
-			var areaInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
+
 			viewModel.Estados = new SelectList(estados, "Estado", "Nome", viewModel.Estado);
-			viewModel.TiposEventos = new SelectList(tiposEventos, "Id", "Nome", viewModel.Id);
-			viewModel.AreaInteresse = new SelectList(areaInteresse, "Id", "Nome", viewModel.Id);
+			viewModel.TiposEventos = new SelectList(tiposEventos, "Id", "Nome", viewModel.IdTipoEvento);
 
 			return View(viewModel);
 		}
+
+
 
 		// POST: EventoController/GestorEditarEvento/5
 		[HttpPost]
@@ -394,12 +403,14 @@ namespace EventoWeb.Controllers
 				_eventoService.AtualizarVagasDisponiveis(evento.Id);
 				return RedirectToAction("GerenciarEvento", "Evento", new { idEvento = id });
 			}
+
 			var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
 			var tiposEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
 			var areasInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
 			viewModel.Estados = new SelectList(estados, "Estado", "Nome", viewModel.Estado);
 			viewModel.TiposEventos = new SelectList(tiposEventos, "Id", "Nome", viewModel.IdTipoEvento);
-			viewModel.AreaInteresse = new SelectList(areasInteresse, "Id", "Nome", viewModel.IdAreaInteresse);
+			viewModel.AreaInteresse = new SelectList(areasInteresse, "Id", "Nome");
+
 			return View(viewModel);
 		}
 	}
