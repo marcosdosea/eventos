@@ -82,13 +82,15 @@ namespace EventoWeb.Controllers
         // POST: SubeventoController/CreateOrEdit/{idEvento}/{idSubevento?}
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult CreateOrEdit(uint idEvento, uint? idSubevento, SubeventoModel subeventoModel)
+        public ActionResult CreateOrEdit(uint idEvento, SubeventoModel subeventoModel)
         {
             ModelState.Remove("TiposEventos");
             ModelState.Remove("Evento.Nome");
             if (ModelState.IsValid)
             {
                 var subevento = _mapper.Map<Subevento>(subeventoModel);
+
+                var idSubevento = (uint?)subevento.Id;
 
                 if (idSubevento.HasValue)
                 {
@@ -105,8 +107,10 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("GerenciarEvento", "Evento", new { idEvento = idEvento });
             }
 
-            
-
+            var tipoEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
+            var evento = _eventoService.GetEventoSimpleDto(idEvento);
+            subeventoModel.Evento = evento;
+            subeventoModel.TiposEventos = new SelectList(tipoEventos, "Id", "Nome");
             return View(subeventoModel);
         }
 
