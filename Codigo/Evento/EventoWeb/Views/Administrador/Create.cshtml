@@ -2,7 +2,7 @@
 
 <link href="~/lib/datatable/css/datatables.min.css" rel="stylesheet" />
 
-<h1 class="blue-normal">Cadastrar Administrador</h1>
+<h1 class="blue-normal">Cadastrar Administradores do Sistema</h1>
 <hr />
 
 <div class="row">
@@ -52,7 +52,6 @@
 
 <div class="row">
 	<div class="col-md-12">
-		<h2 class="blue-normal">Lista de Administradores do Evento</h2>
 		<table id="tablePessoa" class="table table-striped">
 			<thead class="blue-normal blue-normal-bg-table">
 			<tr>
@@ -72,7 +71,7 @@
 						@Html.AntiForgeryToken()
 						<input type="hidden" name="Cpf" value="@administrador.Cpf" />
 						<a href="#confirmRemovalModal" data-toggle="modal" onclick="setModalValues('@administrador.Cpf', '@administrador.Nome')" class="text-danger" style="text-decoration: none; cursor: pointer;">
-							<i class="fas fa-trash-alt"></i> Remover administrador
+							<i class="fas fa-trash-alt"></i> Excluir
 						</a>
 					</form>
 				</td>

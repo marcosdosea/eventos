@@ -27,17 +27,23 @@ public class AdministradorController : Controller
         return View(administradorModel);
     }
 
-// POST: AdministradorController/Create
+    // POST: AdministradorController/Create
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<ActionResult> Create(AdministradorModel administradorModel)
     {
-        var administrador = administradorModel.Administrador;
-        var pessoa = _mapper.Map<Pessoa>(administrador);
-        await _administradorService.CreateAsync(pessoa);
+        if (ModelState.IsValid)
+        {
+            var administrador = administradorModel.Administrador;
+            var pessoa = _mapper.Map<Pessoa>(administrador);
+            await _administradorService.CreateAsync(pessoa);
+            administradorModel.Administradores = await _administradorService.GetAdministradoresAsync();
+            return View(administradorModel);
+        }
         administradorModel.Administradores = await _administradorService.GetAdministradoresAsync();
         return View(administradorModel);
     }
+
     // POST: AdministradorController/Delete/5
     public async Task<ActionResult> Delete(string cpf)
     {

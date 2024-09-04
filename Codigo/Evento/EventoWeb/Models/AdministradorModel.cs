@@ -7,5 +7,5 @@ public class AdministradorModel
 {
     public PessoaModel Administrador { get; set; }
     
-    public IEnumerable<PessoaSimpleDTO> Administradores { get; set; }
+    public IEnumerable<PessoaSimpleDTO>? Administradores { get; set; }
 }
