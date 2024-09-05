@@ -13,6 +13,8 @@ namespace Core.Service
         EventoSimpleDTO GetEventoSimpleDto(uint id);
 
         IEnumerable<Evento> GetAll();
+        
+        IEnumerable<Evento> GetEventByCpf(string userCpf, uint idPapel);
 
         IEnumerable<EventoDTO> GetByNome(string Nome);
         

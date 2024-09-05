@@ -1,10 +1,13 @@
-﻿using AutoMapper;
+﻿using System.Security.Claims;
+using AutoMapper;
 using Core;
 using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Org.BouncyCastle.Bcpg;
 
 namespace EventoWeb.Controllers
 {
@@ -18,9 +21,11 @@ namespace EventoWeb.Controllers
 		private readonly IAreaInteresseService _areaInteresseService;
 		private readonly ISubeventoService _subeventoService;
 		private readonly IMapper _mapper;
+		private readonly UserManager<UsuarioIdentity> _userManager;
 
-		public EventoController(IEventoService eventoService, IMapper mapper, IEstadosbrasilService estadosbrasilService, IInscricaoService inscricaoService, ITipoeventoService tipoeventoService, IAreaInteresseService areaInteresseService, IPessoaService pessoaService, ISubeventoService subeventoService)
+		public EventoController(UserManager<UsuarioIdentity> userManager, IEventoService eventoService, IMapper mapper, IEstadosbrasilService estadosbrasilService, IInscricaoService inscricaoService, ITipoeventoService tipoeventoService, IAreaInteresseService areaInteresseService, IPessoaService pessoaService, ISubeventoService subeventoService)
 		{
+			_userManager = userManager;
 			_tipoEventoService = tipoeventoService;
 			_estadosbrasilService = estadosbrasilService;
 			_eventoService = eventoService;
@@ -307,10 +312,35 @@ namespace EventoWeb.Controllers
 		}
 
 		[Authorize(Roles = "GESTOR, COLABORADOR")]
-		//GET: EventoController/GerenciarEvento
-		public IActionResult GerenciarEventoListar()
+		//GET: EventoController/GerenciarEventoListar
+		public async Task<IActionResult> GerenciarEventoListar()
 		{
-			var listarEventos = _eventoService.GetAll().ToList();
+			string userCpf = null;
+			uint idPapel = 0;
+
+			if (User.Identity.IsAuthenticated)
+			{
+				userCpf = User.FindFirstValue(ClaimTypes.Name);
+				
+				var user = await _userManager.GetUserAsync(User);
+
+				if (user != null)
+				{
+					var roles = await _userManager.GetRolesAsync(user);
+					
+					if (roles.Contains("GESTOR"))
+					{
+						idPapel = 2;
+					}
+					else if (roles.Contains("COLABORADOR"))
+					{
+						idPapel = 3;
+					}
+				}
+			}
+			
+			var listarEventos = _eventoService.GetEventByCpf(userCpf, idPapel).ToList();
+			
 			var listarEventosModel = listarEventos.Select(e => new EventoModel
 			{
 				Id = e.Id,
@@ -323,9 +353,10 @@ namespace EventoWeb.Controllers
 
 			return View(listarEventosModel);
 		}
+
 		
 		[Authorize(Roles = "GESTOR, COLABORADOR")]
-		//GET: EventoController/GerenciarEventoListar
+		//GET: EventoController/GerenciarEvento
 		public ActionResult GerenciarEvento(uint idEvento)
 		{
 			Evento evento = _eventoService.Get(idEvento);

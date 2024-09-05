@@ -107,8 +107,9 @@ namespace EventoWeb.Areas.Identity.Pages.Account
 			[Display(Name = "Nome")]
 			public string Nome { get; set; }
 
-			[Required]
-			[Display(Name = "CPF")]
+			[Required(ErrorMessage = "O campo CPF é obrigatório.")]
+			[CPF(ErrorMessage = "CPF inválido")]
+			[Display(Name = "CPF", Prompt = "Digite seu CPF")]
 			public string CPF { get; set; }
 		}
 
@@ -120,67 +121,73 @@ namespace EventoWeb.Areas.Identity.Pages.Account
 		}
 
 		public async Task<IActionResult> OnPostAsync(string returnUrl = null)
-		{
-			returnUrl = returnUrl ?? Url.Content("~/");
-			ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
-			if (ModelState.IsValid)
-			{
-				var user = new UsuarioIdentity { UserName = Input.CPF, Email = Input.Email };
-				var result = await _userManager.CreateAsync(user, Input.Password);
+{
+    returnUrl = returnUrl ?? Url.Content("~/");
+    ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
-				if (result.Succeeded)
-				{
-					_logger.LogInformation("User created a new account with password.");
+    if (ModelState.IsValid)
+    {
+        
+        string cpfSemFormatacao = Util.Methods.RemoveNaoNumericos(Input.CPF);
 
-					var pessoaResult = _pessoaService.Create(new Pessoa
-					{
-						Nome = Input.Nome,
-						NomeCracha = Input.Nome.Length > 20 ? Input.Nome.Substring(0, 20) : Input.Nome,
-						Cpf = Input.CPF,
-						Email = Input.Email
-					});
+        var user = new UsuarioIdentity { UserName = cpfSemFormatacao, Email = Input.Email };
+        var result = await _userManager.CreateAsync(user, Input.Password);
 
-					var roleName = "USUARIO";
-					var roleResult = await _userManager.AddToRoleAsync(user, roleName);
+        if (result.Succeeded)
+        {
+            _logger.LogInformation("Usuário criou uma nova conta com senha.");
 
-					if (!roleResult.Succeeded)
-					{
-						foreach (var error in roleResult.Errors)
-						{
-							ModelState.AddModelError(string.Empty, error.Description);
-						}
-						return Page();
-					}
+            var pessoaResult = _pessoaService.Create(new Pessoa
+            {
+                Nome = Input.Nome,
+                NomeCracha = Input.Nome.Length > 20 ? Input.Nome.Substring(0, 20) : Input.Nome,
+                Cpf = cpfSemFormatacao, 
+                Email = Input.Email
+            });
 
-					var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-					code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-					var callbackUrl = Url.Page(
-						"/Account/ConfirmEmail",
-						pageHandler: null,
-						values: new { area = "Identity", userId = user.Id, code = code, returnUrl = returnUrl },
-						protocol: Request.Scheme);
+            var roleName = "USUARIO";
+            var roleResult = await _userManager.AddToRoleAsync(user, roleName);
 
-					await _emailSender.SendEmailAsync(Input.Email, "Confirme seu email",
-						$"Por favor, confirme sua conta <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicando aqui</a>.");
+            if (!roleResult.Succeeded)
+            {
+                foreach (var error in roleResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.Description);
+                }
+                return Page();
+            }
 
-					if (_userManager.Options.SignIn.RequireConfirmedAccount)
-					{
-						return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
-					}
-					else
-					{
-						await _signInManager.SignInAsync(user, isPersistent: false);
-						return LocalRedirect(returnUrl);
-					}
-				}
-				foreach (var error in result.Errors)
-				{
-					ModelState.AddModelError(string.Empty, error.Description);
-				}
-			}
-			// If we got this far, something failed, redisplay form
-			return Page();
-		}
+            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+            var callbackUrl = Url.Page(
+                "/Account/ConfirmEmail",
+                pageHandler: null,
+                values: new { area = "Identity", userId = user.Id, code = code, returnUrl = returnUrl },
+                protocol: Request.Scheme);
+
+            await _emailSender.SendEmailAsync(Input.Email, "Confirme seu email",
+                $"Por favor, confirme sua conta <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicando aqui</a>.");
+
+            if (_userManager.Options.SignIn.RequireConfirmedAccount)
+            {
+                return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
+            }
+            else
+            {
+                await _signInManager.SignInAsync(user, isPersistent: false);
+                return LocalRedirect(returnUrl);
+            }
+        }
+
+        foreach (var error in result.Errors)
+        {
+            ModelState.AddModelError(string.Empty, error.Description);
+        }
+    }
+    
+    return Page();
+}
+
 
 		private UsuarioIdentity CreateUser()
         {
