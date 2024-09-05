@@ -117,6 +117,22 @@ namespace Service
             return _context.Eventos.AsNoTracking();
         }
 
+        public IEnumerable<Evento> GetEventByCpf(string userCpf, uint idPapel)
+        {
+            var pessoa = _context.Pessoas.FirstOrDefault(p => p.Cpf == userCpf);
+            if (pessoa == null)
+            {
+                throw new Exception("Pessoa não encontrada para o CPF fornecido.");
+            }
+            var eventos = from evento in _context.Eventos
+                join inscricao in _context.Inscricaopessoaeventos
+                    on evento.Id equals inscricao.IdEvento
+                where inscricao.IdPessoa == pessoa.Id && inscricao.IdPapel == idPapel
+                select evento;
+
+            return eventos.ToList();
+        }
+
         /// <summary>
         /// Obter eventos que iniciam com o nome
         /// </summary>
