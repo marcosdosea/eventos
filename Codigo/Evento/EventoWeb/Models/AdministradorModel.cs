@@ -1,10 +1,11 @@
+using Core;
 using Core.DTO;
 
 namespace EventoWeb.Models;
 
 public class AdministradorModel
 {
-    public PessoaSimpleDTO administrador { get; set; }
+    public PessoaModel Administrador { get; set; }
     
-    public IEnumerable<PessoaSimpleDTO> administradores { get; set; }
+    public IEnumerable<PessoaSimpleDTO>? Administradores { get; set; }
 }

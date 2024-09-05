@@ -38,7 +38,7 @@ public class AdministradorService : IAdministradorService
             var newUser = new UsuarioIdentity
             {
                 UserName = pessoa.Cpf,
-                NormalizedUserName = pessoa.Nome,
+                NormalizedUserName = pessoa.Cpf.Replace(".", "").Replace("-", ""),
                 Email = pessoa.Email,
                 PhoneNumber = pessoa.Telefone1 
             };
@@ -76,22 +76,55 @@ public class AdministradorService : IAdministradorService
         }
 
         var usersInRole = await _userManager.GetUsersInRoleAsync("ADMINISTRADOR");
+        var administradores = new List<PessoaSimpleDTO>();
 
-        var administradores = usersInRole.Select(user => new PessoaSimpleDTO
+        foreach (var user in usersInRole)
         {
-            cpf = user.UserName,
-            Nome = user.NormalizedUserName,
-            Telefone1 = user.PhoneNumber,
-            Email = user.Email,
-        });
+            var pessoa = _pessoaService.GetByCpf(user.NormalizedUserName);
+
+            if (pessoa != null)
+            {
+                administradores.Add(new PessoaSimpleDTO
+                {
+                    Cpf = pessoa.Cpf,
+                    Nome = pessoa.Nome,
+                    Telefone1 = pessoa.Telefone1,
+                    Email = pessoa.Email
+                });
+            }
+        }
 
         return administradores;
     }
+
 
     public async Task<UsuarioIdentity> GetbyCpfAsync(string cpf)
     {
         var user = await _userManager.FindByNameAsync(cpf);
         return user;
+    }
+
+    public async Task DeleteAsync(string cpf)
+    {
+        var usuario = await GetbyCpfAsync(cpf);
+        if (usuario == null)
+        {
+            throw new Exception("Usuário não encontrado.");
+        }
+        
+        var isInRole = await _userManager.IsInRoleAsync(usuario, "ADMINISTRADOR");
+        if (isInRole)
+        {
+            var removeRoleResult = await _userManager.RemoveFromRoleAsync(usuario, "ADMINISTRADOR");
+            if (!removeRoleResult.Succeeded)
+            {
+                throw new Exception("Falha ao remover o usuário da função de administrador.");
+            }
+        }
+        else
+        {
+            throw new Exception("O usuário não é um administrador.");
+        }
     }
 
 

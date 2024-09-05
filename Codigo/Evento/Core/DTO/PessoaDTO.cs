@@ -18,7 +18,7 @@ public class PessoaDTO
 }
 public class PessoaSimpleDTO
 {
-    public string cpf { get; set; } = null!;
+    public string Cpf { get; set; } = null!;
 
     public string Nome { get; set; } = null!;
 
