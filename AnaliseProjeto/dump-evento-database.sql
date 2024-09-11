@@ -47,13 +47,6 @@ INSERT INTO `evento`.`AreaInteresse` (`id`, `nome`) VALUES (2, 'Tecnologia');
 INSERT INTO `evento`.`AreaInteresse` (`id`, `nome`) VALUES (3, 'Saúde');
 INSERT INTO `evento`.`AreaInteresse` (`id`, `nome`) VALUES (4, 'Exposição Cultural');
 
-INSERT INTO `evento`.`pessoa` (`id`, `nome`, `nomeCracha`, `cpf`, `sexo`, `cep`, `rua`, `bairro`, `cidade`, `estado`, `numero`, `complemento`, `email`, `telefone1`, `telefone2`, `foto`) VALUES
-(1, 'João Silva', 'JoãoS', '65535216038', 'M', '12345678', 'Rua A', 'Bairro X', 'São Paulo', 'SP', '100', 'Apto 101', 'joao.silva@example.com', '11987654321', '11912345678', 'foto1.jpg'),
-(2, 'Maria Oliveira', 'MariaO', '27382886000', 'F', '23456789', 'Rua B', 'Bairro Y', 'Rio de Janeiro', 'RJ', '200', 'Casa 02', 'maria.oliveira@example.com', '21998765432', '21923456789', 'foto2.jpg'),
-(3, 'Pedro Santos', 'PedroS', '92023338077', 'M', '34567890', 'Rua C', 'Bairro Z', 'Belo Horizonte', 'MG', '300', 'Sala 03', 'pedro.santos@example.com', '31987651234', '31912345678', 'foto3.jpg'),
-(4, 'Ana Costa', 'AnaC', '40201971054', 'F', '45678901', 'Rua D', 'Bairro W', 'Curitiba', 'PR', '400', 'Apto 202', 'ana.costa@example.com', '41998761234', '41923456789', 'foto4.jpg'),
-(5,'Valdir Mendonça Santana', 'V-San','63499583062','M','45678901', 'Rua D', 'Bairro W', 'Curitiba', 'PR', '400', 'Apto 202','valdirsantana53@gmail.com','41998761234', '41923456789', 'foto5.jpg');
-
 INSERT INTO `evento`.`evento`
 (`id`, `nome`, `descricao`, `dataInicio`, `dataFim`, `inscricaoGratuita`, `status`, `dataInicioInscricao`, `dataFimInscricao`, `valorInscricao`, `website`, `emailEvento`, `eventoPublico`, `cep`, `estado`,
 `cidade`, `bairro`, `rua`, `numero`, `complemento`, `possuiCertificado`, `frequenciaMinimaCertificado`, `idTipoEvento`, `vagasOfertadas`, `vagasReservadas`, `vagasDisponiveis`, `tempoMinutosReserva`, `cargaHoraria`, `imagemPortal`) VALUES
@@ -81,46 +74,43 @@ INSERT INTO `evento`.`modelocracha`  (`id`, `logotipo`, `texto`, `qrcode`, `idEv
 (2, 'logotipo_evento2.png', 'Workshop de Saúde 2024', 1, 2),
 (3, 'logotipo_evento3.png', 'Show Musical 2024', 0, 3);
 
-INSERT INTO `evento`.`inscricaopessoaevento` (`id`, `idPessoa`, `idEventoinscricaopessoaevento`, `idPapel`, `idTipoInscricao`, `dataInscricao`, `valorTotal`, `status`, `frequenciaFinal`, `nomeCracha`)
-VALUES
-(<{id: }>,
-<{idPessoa: }>,
-<{idEvento: }>,
-<{idPapel: }>,
-<{idTipoInscricao: }>,
-<{dataInscricao: }>,
-<{valorTotal: 0.00}>,
-<{status: S}>,
-<{frequenciaFinal: 0.00}>,
-<{nomeCracha: }>);
+use evento;
 
+INSERT INTO `evento`.`pessoa` (`id`, `nome`, `nomeCracha`, `cpf`, `sexo`, `cep`, `rua`, `bairro`, `cidade`, `estado`, `numero`, `complemento`, `email`, `telefone1`, `telefone2`, `foto`) VALUES
+(1, ' MARCOS BARBOSA DÓSEA', 'Dosea', '65535216038', 'M', '12345678', 'Rua A', 'Bairro X', 'São Paulo', 'SP', '100', 'Apto 101', 'dosea@gmail.com', '11987654321', '11912345678', 'foto1.jpg'),
+(2, 'ICARO GABRIEL DO NASCIMENTO SANTOS', 'Ikaruz', '27382886000', 'F', '23456789', 'Rua B', 'Bairro Y', 'Rio de Janeiro', 'RJ', '200', 'Casa 02', 'ikaruz@gmail.com', '21998765432', '21923456789', 'foto2.jpg'),
+(3, 'JOAO VITOR SODRE DE SOUSA', 'Sodre', '92023338077', 'M', '34567890', 'Rua C', 'Bairro Z', 'Belo Horizonte', 'MG', '300', 'Sala 03', 'sodre@gmail.com', '31987651234', '31912345678', 'foto3.jpg'),
+(4, 'JORDAN SILVA SANTOS DE AQUINO ', 'Jordan', '40201971054', 'F', '45678901', 'Rua D', 'Bairro W', 'Curitiba', 'PR', '400', 'Apto 202', 'jordan@gmail.com', '41998761234', '41923456789', 'foto4.jpg'),
+(5,'Valdir Mendonça Santana', 'Valdir','63499583062','M','45678901', 'Rua D', 'Bairro W', 'Curitiba', 'PR', '400', 'Apto 202','valdir@gmail.com','41998761234', '41923456789', 'foto5.jpg');
 
 use itatechusers;
+
+select * from aspnetroles;
 
 INSERT INTO `aspnetusers` 
 (`Id`, `UserName`, `NormalizedUserName`, `Email`, `NormalizedEmail`, `EmailConfirmed`, `PasswordHash`, `SecurityStamp`, `ConcurrencyStamp`, `PhoneNumber`, `PhoneNumberConfirmed`, `TwoFactorEnabled`, `LockoutEnd`, `LockoutEnabled`, `AccessFailedCount`)
 VALUES
-('1', '65535216038', '65535216038', 'joao.silva@example.com', 'JOAO.SILVA@EXAMPLE.COM', 1, 'AQAAAAIAAYagAAAAEABbZCk3T2CqgF5NsM6VV2fIUlO5FsKkK7V2oR7KZ2IHflLJKUuH7C0sghRdzJnA==', 'dFBC5j6WGr5zBNdRZ6qkmSvTV/EiXtFXh/k7uH9LkcO=', '3d4d7d5a-9d9e-4f39-bd7f-4f7ec4c8b3f9', '11987654321', 1, 0, NULL, 1, 0),
-('2', '27382886000', '27382886000', 'maria.oliveira@example.com', 'MARIA.OLIVEIRA@EXAMPLE.COM', 1, 'AQAAAAIAAYagAAAAEABt7xq7T+K3a5Vc3jVu3M9uJh2Gh4n1M8GOPU4RQWwlJoTt6WZLbB9FhZGkGn/8g==', 'xl+T4z5kM0xL3C4bxzFzlg67X/2tdzC3jH93FjOPBb4=', '9b1c00d5-7688-459e-b1ae-e6a1d81b18f0', '21998765432', 1, 0, NULL, 1, 0),
-('3', '92023338077', '92023338077', 'pedro.santos@example.com', 'PEDRO.SANTOS@EXAMPLE.COM', 1, 'AQAAAAIAAYagAAAAEABgJ4Y1sGVZFHjlPscGHTR5abmGmIwY1Fmj0F7g2ZyHkfhWcXMYw0wR/Vs3D/Fw==', 'wYr9K5Y7GQ2zL4yHk/++B6GrXZbGytjXGp1r/m7XQlw=', '1d3dce76-2aef-4f4a-b9d4-04f2540d0e7b', '31987651234', 1, 0, NULL, 1, 0),
-('4', '40201971054', '40201971054', 'ana.costa@example.com', 'ANA.COSTA@EXAMPLE.COM', 1, 'AQAAAAIAAYagAAAAEABgJ4Y1sGVZFHjlPscGHTR5abmGmIwY1Fmj0F7g2ZyHkfhWcXMYw0wR/Vs3D/Fw==', 'U/v8l7Op1R93VxW2oNY9fgqO8b9sP/ZsIHSc1cC4Lw==', 'a7092335-e7b4-48ff-a454-3f1c9b006e3a', '41998761234', 1, 0, NULL, 1, 0),
-('49b4fd3c-edfe-4fd5-b44b-14b61492b97e', '98487027091', '98487027091', 'valdirsantana53@gmail.com', 'VALDIRSANTANA53@GMAIL.COM', '1', 'AQAAAAIAAYagAAAAENXnPg34lX7QHURAHXvQMitqf03JLLTIsos6W2EGOPSspERkT8vj+hUXeGYW2vLpYg==', 'XUPY6P7IPZIYO5H3POTGTMX2QKTXJBDW', 'f12ea623-3346-46b2-ab9f-79918f4317e9', NULL, '0', '0', NULL, '1', '0');
-senha de 98487027091 - 123456789
-
-select * from aspnetusers;
-select * from aspnetroles;
+('187298b7-bb80-4824-a32f-c4698cea894b', '92023338077', '92023338077', 'sodre@gmail.com', 'SODRE@GMAIL.COM', '1', 'AQAAAAIAAYagAAAAENULGVGj30qK5lADm2Cdrt1ew4slalQsFMS3IEpf2K6dey9RZY12+0K/2/CHkWZDZA==', 'ZF7CKARJ2KMFF6VBGNEMBTRZUSE62ASZ', '0d9f7ba0-5991-42f4-95dc-c21f9296c69e', NULL, '0', '0', NULL, '1', '0'),
+('58852b8c-53fb-4deb-921d-512e4e678838', '27382886000', '27382886000', 'ikaruz@gmail.com', 'IKARUZ@GMAIL.COM', '1', 'AQAAAAIAAYagAAAAELE3ZriXrXriQ6w5CPhyw9dBpFRKkMVG0EFlaAAH7w7Ht50FrHP/7DX2r5FYwlk1/w==', 'SFY2UP2J3XTBNROTB53VQCPHLGBP7Q2I', 'b2992759-c7de-4354-8f7f-05eb0915f933', NULL, '0', '0', NULL, '1', '0'),
+('b3ee1ac9-e86d-46de-b322-ca532aa20fb0', '65535216038', '65535216038', 'dosea@gmail.com', 'DOSEA@GMAIL.COM', '1', 'AQAAAAIAAYagAAAAENnc/HNXjLRj5MA4EKh60MDuAJa7BqpZHKBtxQGLnERlyK61qVVv/vB1r/Fi0ZCcHw==', 'CEXQJ2BGDGLJKXPAPN3QQQ4KMNXCEDIL', '0221ec67-6da8-45b7-b6df-a13fb1e0be00', NULL, '0', '0', NULL, '1', '0'),
+('c1c34ba6-646b-4a2d-85e7-ee9e14647a8c', '63499583062', '63499583062', 'valdir@gmail.com', 'VALDIR@GMAIL.COM', '1', 'AQAAAAIAAYagAAAAEBuIQMu3gmhzDkcnPV/Jv4+Ki/hlu9n8wK5Txz2v5v5OJPqKwRA7hNUYt5+GKMKQ1Q==', 'CNYTLD2HZYAAYXZ27MUWBZG5C7BO5YYF', '43bcb2ae-7ae5-4cc1-bca6-cb870668c54c', NULL, '0', '0', NULL, '1', '0'),
+('eec1a3f4-2e74-45f2-b2b5-74273b8c144d', '40201971054', '40201971054', 'jordan@gmail.com', 'JORDAN@GMAIL.COM', '1', 'AQAAAAIAAYagAAAAEEwlZTPyVRX1gewZr/wr9HS0RHnVngaoKVmScO5I3IEtP7MW+Cg1B5cBrS/oaTYKrA==', 'LZEMCC4ZMLQQKM4LH2PI45JS6OXC6NYC', 'd904dc58-5ea3-4591-a886-e66eb1e76838', NULL, '0', '0', NULL, '1', '0');
 
 INSERT INTO `aspnetuserroles` (`UserId`, `RoleId`) VALUES
-('1', '1'), -- João Silva com papel ADMINISTRADOR
-('2', '2'), -- Maria Oliveira com papel GESTOR
-('3', '3'), -- Pedro Santos com papel COLABORADOR
-('4', '4'), -- Ana Costa com papel USUARIO
-('49b4fd3c-edfe-4fd5-b44b-14b61492b97e',1);
-
+('b3ee1ac9-e86d-46de-b322-ca532aa20fb0', '1'), -- Dosea com papel ADMINISTRADOR
+('58852b8c-53fb-4deb-921d-512e4e678838', '1'), -- Icaro com papel ADMINISTRADOR
+('187298b7-bb80-4824-a32f-c4698cea894b', '2'), -- Sodre com papel GESTOR
+('c1c34ba6-646b-4a2d-85e7-ee9e14647a8c', '3'), -- Valdir com papel COLABORADOR
+('eec1a3f4-2e74-45f2-b2b5-74273b8c144d','4'); -- Jordan com papel Usuário
+use evento;
+select * from pessoa;
+use itatechusers;
+select * from aspnetusers;
 select * from aspnetuserroles;
 
 
 
+-- MESMA SENHA PARA TODOS OS USUÁRIOS - SENHA: 123456
 
 
 

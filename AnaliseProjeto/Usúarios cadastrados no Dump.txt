@@ -1,0 +1,17 @@
+Deverá rodar todo o SQL - dump-evento-database - para cadastrar os usuários especificados nesse txt
+
+
+Usuários Administradores 
+Dosea - Login = 65535216038 - Senha = 123456
+Icaro - Login = 27382886000 - Senha =123456
+
+Usuários Gestores
+Sodre - Login = 92023338077 - Senha =123456
+
+
+Usuários Colaboradores
+Valdir - Login = 63499583062 - Senha =123456
+
+
+Usuários Normais
+Jordan - Login = 40201971054 - Senha =123456
