@@ -1,19 +1,18 @@
 ﻿@page
 @model LoginModel
 
-<link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.8.1/font/bootstrap-icons.min.css" rel="stylesheet">
-
 @{
-ViewData["Title"] = "Log in";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Log in";
 }
 
-<div class="row ">
+<div class="row">
     <div class="col-md-6">
         <section>
             <form id="account" method="post">
                 <h1 class="grey-dark" style="margin-top: 96px; margin-bottom: 12px; text-align: center;">Já possui uma conta?</h1>
                 <h5 class="grey-light-active" style="margin-bottom: 32px; text-align: center;">Bem vindo de Volta! Insira seus dados.</h5>
+                
                 <h5>CPF</h5>
                 <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
                 <div class="form-floating mb-3">
@@ -21,6 +20,7 @@ ViewData["Title"] = "Log in";
                     <label asp-for="Input.CPF" class="form-label grey-light-active">CPF</label>
                     <span asp-validation-for="Input.CPF" class="text-danger"></span>
                 </div>
+                
                 <h5>Senha</h5>
                 <div class="form-floating mb-3">
                     <input id="password" type="password" asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" />
@@ -28,6 +28,7 @@ ViewData["Title"] = "Log in";
                     <span asp-validation-for="Input.Password" class="text-danger"></span>
                     <i class="bi bi-eye-slash position-absolute" id="togglePassword" style="top: 50%; right: 15px; cursor: pointer; transform: translateY(-50%);"></i>
                 </div>
+                
                 <div class="d-flex align-items-center justify-content-between mb-3">
                     <div class="form-check">
                         <input class="form-check-input" type="checkbox" asp-for="Input.RememberMe" />
@@ -37,9 +38,11 @@ ViewData["Title"] = "Log in";
                     </div>
                     <a id="forgot-password" class="ms-auto" asp-page="./ForgotPassword">Esqueci minha senha</a>
                 </div>
+                
                 <div>
                     <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-blue-normal">Bora lá</button>
                 </div>
+                
                 <div class="d-flex justify-content-center align-items-center" style="margin-top: 32px; margin-bottom: 96px;">
                     <div class="mb-3" style="text-align: center;">
                         <h6 class="grey-light-active mb-0">Não possui uma conta ainda?</h6>
@@ -51,15 +54,18 @@ ViewData["Title"] = "Log in";
             </form>
         </section>
     </div>
+    
     <div class="col-md-6 d-none d-md-flex justify-content-center align-items-center px-5">
         <div>
             <img src="~/img/LOGOTIPO.svg" class="img-fluid">
         </div>
     </div>
+
     <section>
         @{
             if ((Model.ExternalLogins?.Count ?? 0) == 0)
             {
+                // No external logins available
             }
             else
             {
@@ -78,23 +84,17 @@ ViewData["Title"] = "Log in";
     </section>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
 
 <script>
     document.getElementById('togglePassword').addEventListener('click', function (e) {
         const passwordInput = document.getElementById('password');
         const icon = this;
-        // Toggle the type attribute using getAttribute() method
         const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
         passwordInput.setAttribute('type', type);
-        // Toggle the icon
         icon.classList.toggle('bi-eye');
         icon.classList.toggle('bi-eye-slash');
     });
 </script>
-
-@section Scripts {
-<partial name="_ValidationScriptsPartial" />
-}

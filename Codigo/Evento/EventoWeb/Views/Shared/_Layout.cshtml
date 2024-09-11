@@ -1,118 +1,110 @@
 ﻿<!DOCTYPE html>
-
 <html lang="pt-BR">
 
 <head>
-	<meta charset="utf-8" />
-	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-	<link rel="stylesheet" type="text/css" href="~/css/style.css">
-	<link rel="stylesheet" type="text/css" href="~/css/headerAndFooter.css">
-	<link rel="stylesheet"
-		  href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" type="text/css" href="~/css/style.css">
+    <link rel="stylesheet" type="text/css" href="~/css/headerAndFooter.css">
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
 </head>
 
 <body>
-	<header class="p-3 mb-3 border-bottom">
-		<div class="container">
-			<nav class="navbar navbar-expand-lg navbar-light">
-				<div class="container-fluid">
-					<div class="logo me-3">
-						<a href="/" title="Ir para a página inicial">
-							<img src="/img/LOGOTIPO.png" alt="Logotipo" />
-						</a>
-					</div>
-					<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-						<span class="navbar-toggler-icon"></span>
-					</button>
-					<div class="collapse navbar-collapse" id="navbarSupportedContent">
-						<ul class="navbar-nav me-auto">
-							<li class="nav-item">
-								<div class="input-group me-3" style="width: auto;">
-									<span class="input-group-text" style="border-radius: 10px 0 0 10px; background-color: #fff; border-right: 0; border-color: blue;">
-										<i class="bi bi-search"></i>
-									</span>
-									<input type="text" class="form-control custom-input" placeholder="Pesquisar eventos..." aria-label="Search"
-										   style="border-radius: 0 10px 10px 0; border-left: 0; border-color: blue;">
-								</div>
-							</li>
-							<li class="nav-item menu-view"><a class="nav-link">Localização</a></li>
-							<li class="nav-item menu-view"><a class="nav-link">Seu evento aqui!</a></li>
-						</ul>
-						<div class="buton-menu custom-flex-row">
-							<div class="custom-flex-row custom-hide">
-								<div class="nav-item me-3 align-content-center color: blue-normal">
-									<a>Localização</a>
-								</div>
-								<div class="nav-item me-3 align-content-center color: blue-normal">
-									<a>Seu evento aqui!</a>
-								</div>
-							</div>
-							<partial name="_LoginPartial" />
-						</div>
-					</div>
-				</div>
-			</nav>
-		</div>
-	</header>
+    <header class="p-3 mb-3 border-bottom">
+        <div class="container">
+            <nav class="navbar navbar-expand-lg navbar-light">
+                <div class="container-fluid">
+                    <div class="logo me-3">
+                        <a href="/" title="Ir para a página inicial">
+                            <img src="/img/LOGOTIPO.png" alt="Logotipo" />
+                        </a>
+                    </div>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <ul class="navbar-nav me-auto">
+                            <li class="nav-item">
+                                <div class="input-group me-3" style="width: auto;">
+                                    <span class="input-group-text" style="border-radius: 10px 0 0 10px; background-color: #fff; border-right: 0; border-color: blue;">
+                                        <i class="bi bi-search"></i>
+                                    </span>
+                                    <input type="text" class="form-control custom-input" placeholder="Pesquisar eventos..." aria-label="Search"
+                                           style="border-radius: 0 10px 10px 0; border-left: 0; border-color: blue;">
+                                </div>
+                            </li>
+                            <li class="nav-item menu-view"><a class="nav-link">Localização</a></li>
+                            <li class="nav-item menu-view"><a class="nav-link">Seu evento aqui!</a></li>
+                        </ul>
+                        <div class="buton-menu custom-flex-row">
+                            <div class="custom-flex-row custom-hide">
+                                <div class="nav-item me-3 align-content-center color: blue-normal">
+                                    <a>Localização</a>
+                                </div>
+                                <div class="nav-item me-3 align-content-center color: blue-normal">
+                                    <a>Seu evento aqui!</a>
+                                </div>
+                            </div>
+                            <partial name="_LoginPartial" />
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </div>
+    </header>
 
-	<div class="container conteudo">
-		<main role="main" class="pb-3">
-			@RenderBody()
-		</main>
-	</div>
-	<footer class="footer wrapper" style="background: #0026ff; color: aliceblue; padding: 60px;">
-		<div class="container ">
-			<div class="row">
-				<div class="col-md-3 text-center text-md-start mb-3 mb-md-0">
-					<h4><strong>Bora lá para</strong></h4>
-					<h4>
-						mais um evento?
-					</h4>
-					<p>Precisa de ajuda?</p>
-					<a href="#" class="btn btn-whithe">Fale com o Bora lá!</a>
-				</div>
-				<div class="col-md-3 text-center text-md-start mb-3 mb-md-0 link-footer">
-					<h5><strong>Institucional</strong></h5>
-					<a href="#">Sobre nós</a>
-					<br />
-					<a href="#">Falar com o Bora lá</a>
-				</div>
-				<div class="col-md-3 text-center text-md-start mb-3 mb-md-0 link-footer">
-					<h5><strong>Termos</strong></h5>
-					<a href="#">Lei da meia entrada</a>
-					<br />
-					<a href="#">Termos de serviços</a>
-					<br />
-					<a href="#">Termos de Privacidade</a>
-				</div>
-				<div class="col-md-3 text-center text-md-start mb-3 mb-md-0">
-					<h5><strong>Redes Sociais</strong></h5>
-					<div class="flex-row d-flex justify-content-center justify-content-md-start">
-						<div class="icon-container me-3"> 
-							<a href="https://www.instagram.com" target="_blank" class="text-white"><i class="bi bi-instagram"></i></a>
-						</div>
-						<div class="icon-container me-3">
-							<a href="https://www.facebook.com" target="_blank" class="text-white"><i class="bi bi-facebook"></i></a>
-						</div>
-						<div class="icon-container">
-							<a href="https://www.linkedin.com" target="_blank" class="text-white"><i class="bi bi-linkedin"></i></a>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</footer>
-	</div>
+    <div class="container conteudo">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
 
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-	<script src="~/lib/jquery/dist/jquery.min.js"></script>
-	<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-	<script src="~/js/site.js" asp-append-version="true"></script>
-	<script src="~/js/formHelpers.js"></script>
-	@await RenderSectionAsync("Scripts", required: false)
+    <footer class="footer wrapper" style="background: #0026ff; color: aliceblue; padding: 60px;">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3 text-center text-md-start mb-3 mb-md-0">
+                    <h4><strong>Bora lá para</strong></h4>
+                    <h4>mais um evento?</h4>
+                    <p>Precisa de ajuda?</p>
+                    <a href="#" class="btn btn-whithe">Fale com o Bora lá!</a>
+                </div>
+                <div class="col-md-3 text-center text-md-start mb-3 mb-md-0 link-footer">
+                    <h5><strong>Institucional</strong></h5>
+                    <a href="#">Sobre nós</a><br />
+                    <a href="#">Falar com o Bora lá</a>
+                </div>
+                <div class="col-md-3 text-center text-md-start mb-3 mb-md-0 link-footer">
+                    <h5><strong>Termos</strong></h5>
+                    <a href="#">Lei da meia entrada</a><br />
+                    <a href="#">Termos de serviços</a><br />
+                    <a href="#">Termos de Privacidade</a>
+                </div>
+                <div class="col-md-3 text-center text-md-start mb-3 mb-md-0">
+                    <h5><strong>Redes Sociais</strong></h5>
+                    <div class="flex-row d-flex justify-content-center justify-content-md-start">
+                        <div class="icon-container me-3">
+                            <a href="https://www.instagram.com" target="_blank" class="text-white"><i class="bi bi-instagram"></i></a>
+                        </div>
+                        <div class="icon-container me-3">
+                            <a href="https://www.facebook.com" target="_blank" class="text-white"><i class="bi bi-facebook"></i></a>
+                        </div>
+                        <div class="icon-container">
+                            <a href="https://www.linkedin.com" target="_blank" class="text-white"><i class="bi bi-linkedin"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/formHelpers.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 
 </html>
