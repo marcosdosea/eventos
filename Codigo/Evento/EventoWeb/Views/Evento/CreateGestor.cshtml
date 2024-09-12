@@ -70,7 +70,12 @@
 		</form>
 	</div>
 </div>
-
+@if (!ViewData.ModelState.IsValid)
+{
+<div class="alert alert-danger">
+	@Html.ValidationSummary(false, "", new { @class = "text-danger" })
+</div>
+}
 <div class="row">
 	<div class="col-md-12">
 		<h2 class="blue-normal">Lista de Gestores do Evento</h2>
