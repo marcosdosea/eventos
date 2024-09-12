@@ -5,17 +5,6 @@
 <h1 class="blue-normal">Cadastrar Colaboradores do Evento</h1>
 <hr />
 
-<script>
-	function validarFormulario() {
-		var eventoSelecionado = document.getElementById("IdEvento").value;
-		if (eventoSelecionado == 0) {
-			alert("Por favor, selecione um evento.");
-			return false;
-		}
-		return true;
-	}
-</script>
-
 <div class="row">
 	<div>
 		<form asp-action="CreateColaborador" method="post" onsubmit="return validarFormulario()">
@@ -34,6 +23,7 @@
 							}
 						</select>
 						@Html.HiddenFor(model => model.Evento.Id)
+						@Html.HiddenFor(model => model.Evento.Nome)
 					</div>
 				</div>
 			</div>
@@ -82,6 +72,13 @@
 		</form>
 	</div>
 </div>
+@if (!ViewData.ModelState.IsValid)
+{
+<div class="alert alert-danger">
+	@Html.ValidationSummary(false, "", new { @class = "text-danger" })
+</div>
+}
+
 
 <div class="row">
 	<div class="col-md-12">

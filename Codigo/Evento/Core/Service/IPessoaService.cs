@@ -11,5 +11,6 @@ public interface IPessoaService
     Pessoa Get(uint id);
     IEnumerable<Pessoa> GetAll();
     Pessoa GetByCpf(string nome);
-    void CreatePessoaPapel(Pessoa pessoa, uint IdEvento, int idPapel);
+    void CreatePessoaPapel(Pessoa pessoa, uint idEvento, int idPapel);
+    
 }

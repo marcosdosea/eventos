@@ -5,8 +5,9 @@ namespace EventoWeb.Models;
 
 public class GestaoPapelModel
 {
-    public Pessoa Pessoa { get; set; }
+    public PessoaModel Pessoa { get; set; }
     
     public EventoSimpleDTO Evento { get; set; }
-    public IEnumerable<Inscricaopessoaevento> Inscricoes { get; set; }
+    public IEnumerable<Inscricaopessoaevento>? Inscricoes { get; set; }
+    
 }

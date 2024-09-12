@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using AutoMapper;
 using Core;
+using Core.DTO;
 using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -217,7 +218,7 @@ namespace EventoWeb.Controllers
 			var gestorModel = new GestaoPapelModel
 			{
 				Evento = _eventoService.GetEventoSimpleDto(idEvento),
-				Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento,2),
+				Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 2),
 			};
 			return View(gestorModel);
 		}
@@ -227,15 +228,48 @@ namespace EventoWeb.Controllers
 		[ValidateAntiForgeryToken]
 		public ActionResult CreateGestor(GestaoPapelModel gestaoPapelModel)
 		{
-			var pessoa = gestaoPapelModel.Pessoa;
-			var idEvento = gestaoPapelModel.Evento.Id;
-			pessoa.NomeCracha = pessoa.Nome;
-			_pessoaService.CreatePessoaPapel(pessoa, idEvento, 2);
+			if (ModelState.IsValid)
+			{
+				var pessoa = _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
+				var idEvento = gestaoPapelModel.Evento.Id;
 
-			_eventoService.AtualizarVagasDisponiveis(idEvento);
+				var papel = _inscricaoService.GetPapelPessoaByEvento(pessoa.Id, idEvento);
+				
+				if (papel is 2 or 3)
+				{
+					var papelNome = "";
+					
+					switch (papel)
+					{
+						case 2:
+							papelNome = "gestor";
+							break;
+						case 3:
+							papelNome = "colaborador";
+							break;
+					}
 
-			return RedirectToAction("CreateGestor", new { idEvento});
+					ModelState.AddModelError(string.Empty, $"A pessoa selecionada já é um {papelNome} do evento.");
+    
+					gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
+					gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 2);
+    
+					return View(gestaoPapelModel);
+				}
+
+
+				pessoa.NomeCracha = pessoa.Nome;
+				_pessoaService.CreatePessoaPapel(pessoa, idEvento, 2);
+				_eventoService.AtualizarVagasDisponiveis(idEvento);
+
+				return RedirectToAction("CreateGestor", new { idEvento });
+			}
+
+			gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(gestaoPapelModel.Evento.Id);
+			gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(gestaoPapelModel.Evento.Id, 2);
+			return View(gestaoPapelModel);
 		}
+
 		
 		[Authorize(Roles = "GESTOR")]
 		// GET: EventoController/CreateColaborador
@@ -249,19 +283,52 @@ namespace EventoWeb.Controllers
 			return View(gestorModel);
 		}
 
+
 		// POST: EventoController/CreateColaborador
 		[HttpPost]
 		[ValidateAntiForgeryToken]
 		public ActionResult CreateColaborador(GestaoPapelModel gestaoPapelModel)
 		{
-			var pessoa = gestaoPapelModel.Pessoa;
-			var idEvento = gestaoPapelModel.Evento.Id;
-			pessoa.NomeCracha = pessoa.Nome;
-			_pessoaService.CreatePessoaPapel(pessoa, idEvento, 3);
+			if (ModelState.IsValid)
+			{
+				var pessoa = _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
+				var idEvento = gestaoPapelModel.Evento.Id;
 
-			_eventoService.AtualizarVagasDisponiveis(idEvento);
+				var papel = _inscricaoService.GetPapelPessoaByEvento(pessoa.Id, idEvento);
+				
+				if (papel is 2 or 3)
+				{
+					var papelNome = "";
+					
+					switch (papel)
+					{
+						case 2:
+							papelNome = "gestor";
+							break;
+						case 3:
+							papelNome = "colaborador";
+							break;
+					}
 
-			return RedirectToAction("CreateColaborador", new { idEvento});
+					ModelState.AddModelError(string.Empty, $"A pessoa selecionada já é um {papelNome} do evento.");
+    
+					gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
+					gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 3);
+    
+					return View(gestaoPapelModel);
+				}
+
+
+				pessoa.NomeCracha = pessoa.Nome;
+				_pessoaService.CreatePessoaPapel(pessoa, idEvento, 3);
+				_eventoService.AtualizarVagasDisponiveis(idEvento);
+
+				return RedirectToAction("CreateColaborador", new { idEvento });
+			}
+
+			gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(gestaoPapelModel.Evento.Id);
+			gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(gestaoPapelModel.Evento.Id, 3);
+			return View(gestaoPapelModel);
 		}
 		
 		[Authorize(Roles = "GESTOR, COLABORADOR")]
@@ -281,20 +348,40 @@ namespace EventoWeb.Controllers
 		[ValidateAntiForgeryToken]
 		public ActionResult CreateParticipante(GestaoPapelModel gestaoPapelModel)
 		{
-			var pessoa = gestaoPapelModel.Pessoa;
-			var idEvento = gestaoPapelModel.Evento.Id;
-			pessoa.NomeCracha = pessoa.Nome;
-			_pessoaService.CreatePessoaPapel(pessoa, idEvento, 4);
+			if (ModelState.IsValid)
+			{
+				var pessoa = _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
+				var idEvento = gestaoPapelModel.Evento.Id;
 
-			_eventoService.AtualizarVagasDisponiveis(idEvento);
+				var existingInscricao = _inscricaoService.GetByEventoAndPapel(idEvento, 4)
+					.FirstOrDefault(i => i.IdPessoa == pessoa.Id);
 
-			return RedirectToAction("CreateParticipante", new { idEvento});
+				if (existingInscricao != null)
+				{
+					ModelState.AddModelError(string.Empty, "A pessoa selecionada já é um participante.");
+					gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
+					gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 4);
+					return View(gestaoPapelModel);
+				}
+
+				pessoa.NomeCracha = pessoa.Nome;
+				_pessoaService.CreatePessoaPapel(pessoa, idEvento, 4);
+				_eventoService.AtualizarVagasDisponiveis(idEvento);
+
+				return RedirectToAction("CreateParticipante", new { idEvento });
+			}
+
+			gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(gestaoPapelModel.Evento.Id);
+			gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(gestaoPapelModel.Evento.Id, 4);
+			return View(gestaoPapelModel);
 		}
 
 		// POST: EventoController/DeletePessoaPapel
 		public IActionResult DeletePessoaPapel(uint idPessoa, uint idEvento, uint idPapel)
 		{
-			_inscricaoService.DeletePessoaPapel(idPessoa, idEvento, idPapel);
+			var cpf = _pessoaService.Get(idPessoa).Cpf.Replace(".", "").Replace("-", "");
+			
+			_inscricaoService.DeletePessoaPapel(idPessoa, idEvento, idPapel,cpf);
 
 			_eventoService.AtualizarVagasDisponiveis(idEvento);
 
