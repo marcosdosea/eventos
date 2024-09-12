@@ -18,7 +18,7 @@ public partial class Pessoa
     /// F - Feminino
     /// N - Não Informado
     /// </summary>
-    public string Sexo { get; set; } = null!;
+    public string? Sexo { get; set; } = null!;
 
     public string? Cep { get; set; }
 
