@@ -444,5 +444,37 @@ namespace EventoWeb.Controllers
 
 			return View(viewModel);
 		}
+
+		public IActionResult gerarCertificado(uint idPessoa, uint idPapel ,uint idEvento)
+		{
+			var evento = _eventoService.Get(idEvento);
+            var inscricaoparticipante = _inscricaoService.GetByEventoAndPapel(idEvento, 2).FirstOrDefault(p => p.IdPessoa == idPessoa);
+            var participante = _pessoaService.Get(inscricaoparticipante.IdPessoa);
+
+            if (evento.Id != 0 && evento.PossuiCertificado == 1 && inscricaoparticipante.FrequenciaFinal >= 0.50m)
+			{
+
+				var inscricaogestor = _inscricaoService.GetByEventoAndPapel(idEvento, 2).FirstOrDefault(g => g.IdPapel == 2 && g.IdEvento == idEvento);
+				var gestor = _pessoaService.Get(inscricaogestor.IdPessoa);
+	
+					var certificado = new
+					{
+						Nome = participante.Nome,
+						CPF = participante.Cpf,
+						TipoEvento = _tipoEventoService.GetNomeById(evento.IdTipoEvento),
+						NomeEvento = evento.Nome,
+						CargaHoraria = evento.CargaHoraria,
+						Gestor = gestor.Nome,
+						Frequencia = inscricaoparticipante.FrequenciaFinal,
+						Data = evento.DataFim,
+					};
+
+					return View(certificado);
+			}
+			else
+			{
+				return  BadRequest();
+			}
+		}
 	}
 }
