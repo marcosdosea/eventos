@@ -86,16 +86,44 @@ public class PessoaService : IPessoaService
 
         return query.SingleOrDefault(); 
     }
-    
-    
-    public void CreatePessoaPapel(Pessoa pessoa, uint idEvento, int idPapel)
-    {   
+
+    public async Task<UsuarioIdentity> CreateAsync(Pessoa pessoa)
+    {
+        var newUser = new UsuarioIdentity
+        {
+            UserName = pessoa.Cpf,
+            NormalizedUserName = pessoa.Cpf.Replace(".", "").Replace("-", ""),
+            Email = pessoa.Email,
+            PhoneNumber = pessoa.Telefone1
+        };
+
+        var result = await _userManager.CreateAsync(newUser,pessoa.Cpf);
+
+        if (result.Succeeded)
+        {
+            return newUser;
+        }
+        else
+        {
+            throw new Exception("Falha ao criar o usuário.");
+        }
+    }
+
+    public async Task CreatePessoaPapelAsync(Pessoa pessoa, uint idEvento, int idPapel)
+    {
         uint idPessoa = pessoa.Id;
-    
-        if(idPessoa == null)
+        if (GetByCpf(pessoa.Cpf) == null)
         {
             idPessoa = Create(pessoa);
         }
+
+        var existingUser = await _userManager.FindByNameAsync(pessoa.Cpf);
+    
+        if (existingUser == null)
+        {
+            existingUser = await CreateAsync(pessoa);
+        }
+
         var novaInscricao = new Inscricaopessoaevento
         {
             IdPessoa = idPessoa,
@@ -104,21 +132,8 @@ public class PessoaService : IPessoaService
             DataInscricao = DateTime.Now,
             Status = "S"
         };
-
         _inscricaoService.CreateInscricaoEvento(novaInscricao);
-
-        CreatePessoaPapelAsync(pessoa.Cpf, idPapel).GetAwaiter().GetResult();
-    }
-
-    public async Task CreatePessoaPapelAsync(string cpf, int idPapel)
-    {
-        string cpfSemFormatacao = cpf.Replace(".", "").Replace("-", "");
-        var user = await _userManager.FindByNameAsync(cpfSemFormatacao);
-    
-        if (user == null)
-        {
-            throw new Exception("Usuário não encontrado no sistema de Identity.");
-        }
+        
 
         string role = idPapel switch
         {
@@ -128,16 +143,17 @@ public class PessoaService : IPessoaService
             _ => throw new ArgumentException("Papel inválido.")
         };
 
-        var isInRole = await _userManager.IsInRoleAsync(user, role);
+        var isInRole = await _userManager.IsInRoleAsync(existingUser, role);
         if (!isInRole)
         {
-            var roleResult = await _userManager.AddToRoleAsync(user, role);
+            var roleResult = await _userManager.AddToRoleAsync(existingUser, role);
             if (!roleResult.Succeeded)
             {
                 throw new Exception("Erro ao associar o papel ao usuário no Identity.");
             }
         }
     }
+    
 }
 
 

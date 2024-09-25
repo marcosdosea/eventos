@@ -259,7 +259,7 @@ namespace EventoWeb.Controllers
 
 
 				pessoa.NomeCracha = pessoa.Nome;
-				_pessoaService.CreatePessoaPapel(pessoa, idEvento, 2);
+				_pessoaService.CreatePessoaPapelAsync(pessoa, idEvento, 2);
 				_eventoService.AtualizarVagasDisponiveis(idEvento);
 
 				return RedirectToAction("CreateGestor", new { idEvento });
@@ -320,7 +320,7 @@ namespace EventoWeb.Controllers
 
 
 				pessoa.NomeCracha = pessoa.Nome;
-				_pessoaService.CreatePessoaPapel(pessoa, idEvento, 3);
+				_pessoaService.CreatePessoaPapelAsync(pessoa, idEvento, 3);
 				_eventoService.AtualizarVagasDisponiveis(idEvento);
 
 				return RedirectToAction("CreateColaborador", new { idEvento });
@@ -365,7 +365,7 @@ namespace EventoWeb.Controllers
 				}
 
 				pessoa.NomeCracha = pessoa.Nome;
-				_pessoaService.CreatePessoaPapel(pessoa, idEvento, 4);
+				_pessoaService.CreatePessoaPapelAsync(pessoa, idEvento, 4);
 				_eventoService.AtualizarVagasDisponiveis(idEvento);
 
 				return RedirectToAction("CreateParticipante", new { idEvento });

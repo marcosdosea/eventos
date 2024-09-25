@@ -29,36 +29,19 @@ public class AdministradorService : IAdministradorService
         {
             _pessoaService.Create(pessoa);
         }
-        
-        var existingUser = await GetbyCpfAsync(pessoa.Cpf);
+
+        var existingUser = await _userManager.FindByNameAsync(pessoa.Cpf);
         UsuarioIdentity usuario;
 
         if (existingUser == null)
         {
-            var newUser = new UsuarioIdentity
-            {
-                UserName = pessoa.Cpf,
-                NormalizedUserName = pessoa.Cpf.Replace(".", "").Replace("-", ""),
-                Email = pessoa.Email,
-                PhoneNumber = pessoa.Telefone1 
-            };
-
-            var result = await _userManager.CreateAsync(newUser);
-
-            if (result.Succeeded)
-            {
-                usuario = newUser;
-            }
-            else
-            {
-                throw new Exception("Falha ao criar o usuário.");
-            }
+            usuario = await _pessoaService.CreateAsync(pessoa); 
         }
         else
         {
             usuario = existingUser;
         }
-        
+
         var isInRole = await _userManager.IsInRoleAsync(usuario, "ADMINISTRADOR");
         if (!isInRole)
         {
@@ -96,17 +79,11 @@ public class AdministradorService : IAdministradorService
 
         return administradores;
     }
-
-
-    public async Task<UsuarioIdentity> GetbyCpfAsync(string cpf)
-    {
-        var user = await _userManager.FindByNameAsync(cpf);
-        return user;
-    }
+    
 
     public async Task DeleteAsync(string cpf)
     {
-        var usuario = await GetbyCpfAsync(cpf);
+        var usuario = await _userManager.FindByNameAsync(cpf);;
         if (usuario == null)
         {
             throw new Exception("Usuário não encontrado.");

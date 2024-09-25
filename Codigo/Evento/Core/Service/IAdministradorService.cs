@@ -8,7 +8,5 @@ public interface IAdministradorService
     
     Task<IEnumerable<PessoaSimpleDTO>> GetAdministradoresAsync();
 
-    Task<UsuarioIdentity> GetbyCpfAsync(string cpf);
-
     Task DeleteAsync(string cpf);
 }

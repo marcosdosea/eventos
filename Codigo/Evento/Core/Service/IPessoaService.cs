@@ -10,7 +10,9 @@ public interface IPessoaService
     void Delete(uint id);
     Pessoa Get(uint id);
     IEnumerable<Pessoa> GetAll();
-    Pessoa GetByCpf(string nome);
-    void CreatePessoaPapel(Pessoa pessoa, uint idEvento, int idPapel);
-    
+    Pessoa GetByCpf(string nome); 
+    Task CreatePessoaPapelAsync(Pessoa pessoa, uint idEvento, int idPapel);
+    Task<UsuarioIdentity> CreateAsync(Pessoa pessoa);
+
+
 }
