@@ -22,7 +22,7 @@ namespace EventoWeb.Controllers
         // Ação Index para listar eventos
         public IActionResult Index()
         {
-            var listarEventos = _eventoService.GetAll();
+            var listarEventos = _eventoService.GetAll().ToList();
             var listarEventosModel = _mapper.Map<List<EventoModel>>(listarEventos);
             return View(listarEventosModel);
         }

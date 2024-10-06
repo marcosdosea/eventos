@@ -1,0 +1,63 @@
+﻿@model EventoWeb.Models.EventoModel
+
+@{
+    ViewData["Title"] = "Detalhes";
+}
+<h2 class="blue-normal">Detalhes do evento</h2>
+
+<div class="row">
+<div class="col-md-4">
+    <dd>
+    @Html.DisplayFor(model => model.Nome)
+    </dd>
+    <dt>Data de início das incrições</dt>
+    <dd> @Html.DisplayFor(model => model.DataInicioInscricao)</dd>
+    <dt>Data limite das inscrições</dt>
+    <dd> @Html.DisplayFor(model => model.DataFimInscricao)</dd>
+    <dt>Vagas disponíveis</dt>
+    <dd> @Html.DisplayFor(model => model.VagasDisponiveis) </dd>
+    <dt>Status do evento</dt>
+    <dd class="col-sm-10">
+        @{
+            var status = Model.Status switch
+            {
+                "C" => "Cadastrado",
+                "I" => "Inativo",
+                "A" => "Em andamento",
+                "F" => "Finalizado",
+                _ => "Desconhecido"
+            };
+            @status
+        }
+    </dd>
+
+</div>
+
+    <div class="col-md-8">
+        <div>
+            <h5 class="blue-normal">Tipo de inscrição</h5>
+
+        </div>
+        <span>
+            
+            @{
+                var valorTotal = Model.ValorInscricao;
+            }
+                 <dd>Total
+                R$@valorTotal
+        </dd>
+       
+        <form method="post" asp-action="realizarInscricao">
+           
+        <a>
+            <button type="submit" class="btn btn-primary">Inscrever-se</button>
+        </a>
+        </form>
+        <a asp-action="Index" asp-controller="Home">
+            <button class="btn btn-danger">Voltar</button>
+        </a>
+        
+    </div>
+
+   
+</div>
