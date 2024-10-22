@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 namespace EventoWeb.Models;
 
-public class InscricaoModel
+public class InscricaoEventoModel
   {
     public uint Id { get; set; }
 

@@ -14,15 +14,19 @@ namespace EventoWeb.Controllers
         private readonly IPessoaService _pessoaService;
         private readonly IInscricaoService _inscricaoService;
         private readonly ISubeventoService _subeventoService;
+        private readonly UserManager<UsuarioIdentity> _userManager;
+        private readonly ITipoInscricaoService _tipoinscricaoService;
         private readonly IMapper _mapper;
 
-        public InscricaoController(IEventoService eventoService, IMapper mapper, IInscricaoService inscricaoService, IPessoaService pessoaService, ISubeventoService subeventoService)
+        public InscricaoController(UserManager<UsuarioIdentity> userManager, ITipoInscricaoService tipoinscricaoService, IEventoService eventoService, IMapper mapper, IInscricaoService inscricaoService, IPessoaService pessoaService, ISubeventoService subeventoService)
         {
+            _tipoinscricaoService = tipoinscricaoService;
             _eventoService = eventoService;
             _inscricaoService = inscricaoService;
             _mapper = mapper;
             _pessoaService = pessoaService;
             _subeventoService = subeventoService;
+            _userManager = userManager;
         }
 
         // GET: InscricaoController
@@ -112,17 +116,42 @@ namespace EventoWeb.Controllers
         {
             Evento evento = _eventoService.Get(idEvento);
             EventoModel eventoModel = _mapper.Map<EventoModel>(evento);
-            return View(eventoModel);
+            var tipoInscricaoModel = _tipoinscricaoService.GetByEvento(idEvento).ToList();
+
+            var model = new InscricaoEventoViewModel(){
+                tipoInscricao = tipoInscricaoModel,
+                eventoNavigation = eventoModel
+            };
+            
+            return View(model);
         }
 
         // POST: InscricaoController/realizarInscricao/id
         [HttpPost]
-        public IActionResult realizarInscricao(InscricaoModel inscricaomodel)
+        public async Task<IActionResult> realizarInscricao(uint idEvento, InscricaoEventoModel inscricaoEvento)
         {
-            var inscricao = _mapper.Map<Inscricaopessoaevento>(inscricaomodel);
-            _inscricaoService.CreateInscricaoEvento(inscricao);
+            if (ModelState.IsValid)
+            {
+                var user = await _userManager.GetUserAsync(User);
+                var pessoaId = _pessoaService.GetByCpf(User.Identity.Name);
+                var novaInscricao = new InscricaoEventoModel
+                {
+                    IdPessoa = pessoaId.Id,
+                    IdEvento = idEvento,
+                    IdPapel = 4,
+                    DataInscricao = DateTime.Now,
+                    NomeCracha = User.Identity.Name,
+                    Status = "S",
+                    IdTipoInscricao = inscricaoEvento.IdTipoInscricao,
+                    FrequenciaFinal = 0m,
+                    ValorTotal = inscricaoEvento.ValorTotal 
+                };
 
-            return RedirectToAction("Index", "Evento");
+                var inscricao = _mapper.Map<Inscricaopessoaevento>(novaInscricao);
+                _inscricaoService.CreateInscricaoEvento(inscricao);
+                
+            }
+            return RedirectToAction("Index", "Home");
         }
 
     }

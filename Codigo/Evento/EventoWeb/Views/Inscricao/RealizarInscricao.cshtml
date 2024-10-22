@@ -1,4 +1,4 @@
-﻿@model EventoWeb.Models.EventoModel
+﻿@model EventoWeb.Models.InscricaoEventoViewModel
 
 @{
     ViewData["Title"] = "Detalhes";
@@ -8,18 +8,21 @@
 <div class="row">
 <div class="col-md-4">
     <dd>
-    @Html.DisplayFor(model => model.Nome)
+        @Model.eventoNavigation.Nome
     </dd>
     <dt>Data de início das incrições</dt>
-    <dd> @Html.DisplayFor(model => model.DataInicioInscricao)</dd>
+    <dd> @Model.eventoNavigation.DataInicioInscricao</dd>
     <dt>Data limite das inscrições</dt>
-    <dd> @Html.DisplayFor(model => model.DataFimInscricao)</dd>
+    <dd> @Model.eventoNavigation.DataFimInscricao</dd>
     <dt>Vagas disponíveis</dt>
-    <dd> @Html.DisplayFor(model => model.VagasDisponiveis) </dd>
+    @{
+        var vagasDisponiveisTotal = @Model.eventoNavigation.VagasOfertadas - @Model.eventoNavigation.VagasReservadas; 
+    }
+    <dd> @vagasDisponiveisTotal </dd>
     <dt>Status do evento</dt>
     <dd class="col-sm-10">
         @{
-            var status = Model.Status switch
+            var status = Model.eventoNavigation.Status switch
             {
                 "C" => "Cadastrado",
                 "I" => "Inativo",
@@ -36,28 +39,27 @@
     <div class="col-md-8">
         <div>
             <h5 class="blue-normal">Tipo de inscrição</h5>
-
+                @foreach (var item in Model.tipoInscricao)
+                {
+                <div class="form-check">
+                   <input type="checkbox" class="form-check-input" id="tipoInscricaoId" name="Tipodeinscrição" value="@item.Id">
+                   <label class="form-check-label" for="tipoInscricaoId">@item.Nome</label>
+                </div>
+                }
         </div>
-        <span>
-            
             @{
-                var valorTotal = Model.ValorInscricao;
+                var valorTotal = Model.eventoNavigation.ValorInscricao;
             }
                  <dd>Total
                 R$@valorTotal
         </dd>
        
         <form method="post" asp-action="realizarInscricao">
-           
-        <a>
             <button type="submit" class="btn btn-primary">Inscrever-se</button>
-        </a>
         </form>
         <a asp-action="Index" asp-controller="Home">
             <button class="btn btn-danger">Voltar</button>
         </a>
         
     </div>
-
-   
 </div>

@@ -111,5 +111,4 @@ namespace Service
                 .AsNoTracking()
                 .ToList();
         }
-    }
 }
