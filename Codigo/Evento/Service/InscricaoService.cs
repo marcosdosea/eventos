@@ -16,10 +16,11 @@ namespace Service
             _context = context;
         }
 
-        public void CreateInscricaoEvento(Inscricaopessoaevento inscricaopessoaevento)
+        public uint CreateInscricaoEvento(Inscricaopessoaevento inscricaopessoaevento)
         {
             _context.Add(inscricaopessoaevento);
             _context.SaveChanges();
+            return inscricaopessoaevento.Id;
         }
         
         public void DeletePessoaPapel(uint idPessoa, uint idEvento, uint idPapel, string cpf)
@@ -111,4 +112,5 @@ namespace Service
                 .AsNoTracking()
                 .ToList();
         }
+    }
 }

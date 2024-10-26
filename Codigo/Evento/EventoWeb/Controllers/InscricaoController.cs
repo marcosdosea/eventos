@@ -128,13 +128,12 @@ namespace EventoWeb.Controllers
 
         // POST: InscricaoController/realizarInscricao/id
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> realizarInscricao(uint idEvento, InscricaoEventoModel inscricaoEvento)
         {
-            if (ModelState.IsValid)
-            {
-                var user = await _userManager.GetUserAsync(User);
+           
                 var pessoaId = _pessoaService.GetByCpf(User.Identity.Name);
-                var novaInscricao = new InscricaoEventoModel
+                var novaInscricao = new InscricaoEventoModel()
                 {
                     IdPessoa = pessoaId.Id,
                     IdEvento = idEvento,
@@ -150,7 +149,7 @@ namespace EventoWeb.Controllers
                 var inscricao = _mapper.Map<Inscricaopessoaevento>(novaInscricao);
                 _inscricaoService.CreateInscricaoEvento(inscricao);
                 
-            }
+            
             return RedirectToAction("Index", "Home");
         }
 

@@ -54,8 +54,8 @@
                 R$@valorTotal
         </dd>
        
-        <form method="post" asp-action="realizarInscricao">
-            <button type="submit" class="btn btn-primary">Inscrever-se</button>
+        <form method="post" asp-action="realizarInscricao" asp-controller="inscricao">
+            <button type="submit" class="btn btn-primary" asp-route-idEvento="@Model.eventoNavigation.Id"}>Inscrever-se</button>
         </form>
         <a asp-action="Index" asp-controller="Home">
             <button class="btn btn-danger">Voltar</button>
