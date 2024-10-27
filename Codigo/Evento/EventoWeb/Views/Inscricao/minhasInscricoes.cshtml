@@ -1,0 +1,69 @@
+
+@model IEnumerable<EventoWeb.Models.InscricaoEventoModel>;
+@{
+    ViewData["Title"] = "Minhas Inscrições";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div>
+    <table id="tableEvento" class="table table-striped table-bordered dt-responsive nowrap">
+        <thead>
+            <tr class="blue-normal blue-normal-bg-table">
+                <th>
+                    @Html.DisplayNameFor(model => model.IdEventoNavigation.Nome)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.Status)
+                    
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.DataInscricao)
+                </th>
+                <th>
+                    @Html.DisplayNameFor(model => model.FrequenciaFinal)
+                </th>
+                <th>
+                    Ações
+                </th>
+            </tr>
+        </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.IdEventoNavigation.Nome)
+                </td>
+                <td>
+                    @{
+                        var status = "Padrão";
+                        switch(item.Status) {
+                            case "A":
+                            status = "Ativo";
+                            break;
+                            case "S":
+                            status = "Solicitado";
+                            break;
+                            case "C":
+                            status = "Cancelado";
+                            break;    
+                        }
+                    }
+                @status
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.DataInscricao)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.FrequenciaFinal)
+                </td>
+                <td>
+                    Gerar Certificado
+                </td>
+            </tr>
+        }
+    </tbody>
+    </table>
+    
+</div>

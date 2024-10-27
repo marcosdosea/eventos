@@ -1,4 +1,4 @@
-﻿@model EventoWeb.Models.InscricaoEventoViewModel
+@model EventoWeb.Models.InscricaoEventoViewModel
 
 @{
     ViewData["Title"] = "Detalhes";
@@ -53,7 +53,6 @@
                  <dd>Total
                 R$@valorTotal
         </dd>
-       
         <form method="post" asp-action="realizarInscricao" asp-controller="inscricao">
             <button type="submit" class="btn btn-primary" asp-route-idEvento="@Model.eventoNavigation.Id"}>Inscrever-se</button>
         </form>
