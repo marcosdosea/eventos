@@ -5,7 +5,7 @@ namespace Core.Service
 {
     public interface IInscricaoService
     {
-        void CreateInscricaoEvento(Inscricaopessoaevento inscricaopessoaevento);
+        uint CreateInscricaoEvento(Inscricaopessoaevento inscricaopessoaevento);
 
         void DeletePessoaPapel(uint idPessoa, uint idEvento, uint idPapel, string cpf);
 

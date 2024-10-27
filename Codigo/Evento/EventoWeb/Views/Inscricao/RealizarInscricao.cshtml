@@ -1,0 +1,65 @@
+﻿@model EventoWeb.Models.InscricaoEventoViewModel
+
+@{
+    ViewData["Title"] = "Detalhes";
+}
+<h2 class="blue-normal">Detalhes do evento</h2>
+
+<div class="row">
+<div class="col-md-4">
+    <dd>
+        @Model.eventoNavigation.Nome
+    </dd>
+    <dt>Data de início das incrições</dt>
+    <dd> @Model.eventoNavigation.DataInicioInscricao</dd>
+    <dt>Data limite das inscrições</dt>
+    <dd> @Model.eventoNavigation.DataFimInscricao</dd>
+    <dt>Vagas disponíveis</dt>
+    @{
+        var vagasDisponiveisTotal = @Model.eventoNavigation.VagasOfertadas - @Model.eventoNavigation.VagasReservadas; 
+    }
+    <dd> @vagasDisponiveisTotal </dd>
+    <dt>Status do evento</dt>
+    <dd class="col-sm-10">
+        @{
+            var status = Model.eventoNavigation.Status switch
+            {
+                "C" => "Cadastrado",
+                "I" => "Inativo",
+                "A" => "Em andamento",
+                "F" => "Finalizado",
+                _ => "Desconhecido"
+            };
+            @status
+        }
+    </dd>
+
+</div>
+
+    <div class="col-md-8">
+        <div>
+            <h5 class="blue-normal">Tipo de inscrição</h5>
+                @foreach (var item in Model.tipoInscricao)
+                {
+                <div class="form-check">
+                   <input type="checkbox" class="form-check-input" id="tipoInscricaoId" name="Tipodeinscrição" value="@item.Id">
+                   <label class="form-check-label" for="tipoInscricaoId">@item.Nome</label>
+                </div>
+                }
+        </div>
+            @{
+                var valorTotal = Model.eventoNavigation.ValorInscricao;
+            }
+                 <dd>Total
+                R$@valorTotal
+        </dd>
+       
+        <form method="post" asp-action="realizarInscricao" asp-controller="inscricao">
+            <button type="submit" class="btn btn-primary" asp-route-idEvento="@Model.eventoNavigation.Id"}>Inscrever-se</button>
+        </form>
+        <a asp-action="Index" asp-controller="Home">
+            <button class="btn btn-danger">Voltar</button>
+        </a>
+        
+    </div>
+</div>

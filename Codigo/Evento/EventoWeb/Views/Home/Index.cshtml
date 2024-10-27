@@ -1,4 +1,4 @@
-﻿@model List<EventoWeb.Models.EventoModel>
+﻿@model IEnumerable<EventoWeb.Models.EventoModel>
 
 @{
     ViewData["Title"] = "BoraLá";
@@ -61,6 +61,8 @@
         </div>
         </section>
 
+    
+
         <section class="carrossel">
             <div class="carrossel-container">
                 <div class="carrossel-slide">
@@ -106,11 +108,11 @@
             <h1>Recomendações</h1>
             <div class="scroll-wrapper">
                 <div class="cards-container">
-                    @if (Model != null && Model.Count > 0)
+                    @if (Model != null)
                     {
                         foreach (var evento in Model)
                         {
-                            if (evento.Status == "A")
+                            if (evento.Status == "C")
                             {
                                 <div class="card">
                                     <img src="~/Imagens_Eventos/Evento-BoraLá.png" alt="Imagem do Evento">
@@ -120,7 +122,9 @@
                                             string descricao = evento.Descricao;
                                         }
                                         <p>@descricao</p>
+                                        <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@evento.Id">
                                         <button class="btn btn-blue-normal">Bora lá</button>
+                                        </a>
                                     </div>
                                 </div>
                             }
