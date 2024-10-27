@@ -7,5 +7,6 @@ namespace EventoWeb.Models
     {
         public EventoModel eventoNavigation { get; set; }
         public IEnumerable<Tipoinscricao> tipoInscricao { get; set; }
+        public InscricaoEventoModel inscricaoNavigation { get; set; } = null;
     }
 }

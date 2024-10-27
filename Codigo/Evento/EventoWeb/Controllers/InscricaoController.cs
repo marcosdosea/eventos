@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Core.Service;
 using Core;
+using Core.DTO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -151,6 +152,21 @@ namespace EventoWeb.Controllers
                 
             
             return RedirectToAction("Index", "Home");
+        }
+
+        //GET: InscricaoController/minhasInscricoes
+        public async Task<IActionResult> minhasInscricoes(){
+        var inscricaoUser = _inscricaoService.GetAllEventsByUserId(User.Identity.Name);
+        var listarEventosModel = inscricaoUser.Select(i => new InscricaoEventoModel
+			{
+				Id = i.Id,
+				DataInscricao = (DateTime)i.DataInscricao,
+				NomeCracha = i.NomeCracha,
+				Status = i.Status,
+                FrequenciaFinal = i.FrequenciaFinal,
+                IdEventoNavigation = i.IdEventoNavigation
+			}).ToList();
+         return View(listarEventosModel);
         }
 
     }

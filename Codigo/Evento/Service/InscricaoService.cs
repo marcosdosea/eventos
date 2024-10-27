@@ -9,7 +9,6 @@ namespace Service
     {
         private readonly EventoContext _context;
         private readonly UserManager<UsuarioIdentity> _userManager;
-        
         public InscricaoService(EventoContext context, UserManager<UsuarioIdentity> userManager) 
         {
             _userManager = userManager;
@@ -111,6 +110,11 @@ namespace Service
                 .Where(i => i.IdSubEventoNavigation.IdEvento == idEvento)
                 .AsNoTracking()
                 .ToList();
+        }
+
+        public IEnumerable<Inscricaopessoaevento> GetAllEventsByUserId(string username){
+           var query = from i in _context.Inscricaopessoaeventos.Include(i => i.IdEventoNavigation) where i.IdPessoaNavigation.Cpf.Contains(username) select i;
+           return query;           
         }
     }
 }

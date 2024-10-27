@@ -17,6 +17,8 @@ namespace Core.Service
 
         IEnumerable<Inscricaopessoasubevento> GetSubByEvento(uint idEvento);
 
+        IEnumerable<Inscricaopessoaevento> GetAllEventsByUserId(string username);
+
     }
 }
 
