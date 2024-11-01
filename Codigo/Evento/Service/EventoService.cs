@@ -1,4 +1,4 @@
-﻿using Core;
+using Core;
 using Core.Service;
 using Core.DTO;
 using Microsoft.EntityFrameworkCore;
@@ -50,10 +50,9 @@ namespace Service
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
         public void Edit(Evento evento, List<uint> novosIdsAreaInteresse)
-        {
-            var eventoExistente = _context.Eventos
-                .Include(e => e.IdAreaInteresses)
-                .FirstOrDefault(e => e.Id == evento.Id);
+        {   
+            var eventoExistente = evento;
+            
             if (eventoExistente == null)
             {
                 throw new Exception("Evento não encontrado.");
@@ -168,7 +167,6 @@ namespace Service
 		}
 		public void AtualizarVagasDisponiveis(uint idEvento)
         {
-            
             var evento = _context.Eventos
                 .Include(e => e.Inscricaopessoaeventos)
                 .FirstOrDefault(e => e.Id == idEvento);
@@ -180,7 +178,7 @@ namespace Service
                     .Count(i => i.IdPapel == 4); 
 
                 evento.VagasDisponiveis = evento.VagasOfertadas - quantidadeParticipantes;
-
+                _context.Update(evento);
                 _context.SaveChanges();
             }
         }

@@ -518,9 +518,9 @@ namespace EventoWeb.Controllers
 		[ValidateAntiForgeryToken]
 		public ActionResult GestorEditarEvento(uint id, EventoModel viewModel)
 		{
-		//	ModelState.Remove("Estados");
-		//	ModelState.Remove("TiposEventos");
-		//	ModelState.Remove("AreaInteresse");
+			ModelState.Remove("Estados");
+			ModelState.Remove("TiposEventos");
+			ModelState.Remove("AreaInteresse");
 			if (ModelState.IsValid)
 			{
 				byte[] fotoSource = null;
@@ -542,10 +542,10 @@ namespace EventoWeb.Controllers
 					}
 				}
 				var evento = _mapper.Map<Evento>(viewModel);
-				var idsAreaInteresse = viewModel.IdAreaInteresses;
-				_eventoService.Edit(evento, idsAreaInteresse);
+				var idsAreaInteresse = viewModel.IdAreaInteresses;	
 				evento.ImagemPortal = fotoSource;
 				_eventoService.AtualizarVagasDisponiveis(evento.Id);
+				_eventoService.Edit(evento, idsAreaInteresse);
 				return RedirectToAction("GerenciarEvento", "Evento", new { idEvento = id });
 			}
 
