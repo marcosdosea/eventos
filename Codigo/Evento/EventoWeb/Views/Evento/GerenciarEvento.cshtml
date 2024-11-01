@@ -7,6 +7,20 @@
 @{
     ViewData["Title"] = "GerenciarEvento";
 }
+@if(TempData["Message"] != null){
+            <div class="alert alert-danger" role="alert" id="alerterror">
+                @TempData["Message"]
+            </div>
+            TempData.Remove("Message");
+        }
+
+
+<script>
+        setTimeout(function() {
+            $("#alerterror").fadeOut("slow");
+        }, 3000);
+    </script>
+
 
 <h1 class="blue-normal">Gerenciar evento</h1>
 <span>Nome: @Model.Evento.Nome</span>
@@ -34,8 +48,7 @@
     <div class="card">
         <img src="~/ícones/Colaboradores.png" class="card-img-bottom" alt="...">
         <div class="card-img-overlay">
-            <td>
-                    
+            <td>             
                 @Html.ActionLink("Colaboradores", "CreateColaborador", new { idEvento = @Model.Evento.Id}, new { @style = "text-decoration:none;" })
             </td>
         </div>

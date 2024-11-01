@@ -19,6 +19,9 @@ namespace Core.Service
 
         IEnumerable<Inscricaopessoaevento> GetAllEventsByUserId(string username);
 
+        Inscricaopessoaevento GetGestorInEvent(string username, uint idEvento);
+
+        Inscricaopessoaevento GetColaboradorInEvent(string username, uint idEvento);
     }
 }
 

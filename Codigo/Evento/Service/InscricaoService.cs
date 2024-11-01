@@ -116,5 +116,22 @@ namespace Service
            var query = from i in _context.Inscricaopessoaeventos.Include(i => i.IdEventoNavigation) where i.IdPessoaNavigation.Cpf.Contains(username) select i;
            return query;           
         }
+
+        public Inscricaopessoaevento GetGestorInEvent(string username, uint idEvento){
+
+            var query = from i in _context.Inscricaopessoaeventos.Include(i => i.IdPessoaNavigation) where i.IdPessoaNavigation.Cpf.Contains(username) && i.IdPapel == 2 && i.IdEvento == idEvento select i;
+            if( query.FirstOrDefault() != null){
+                return query.FirstOrDefault();
+            }
+            return null;
+        }
+
+        public Inscricaopessoaevento GetColaboradorInEvent(string username, uint idEvento){
+            var query = from i in _context.Inscricaopessoaeventos.Include(i => i.IdPessoaNavigation) where i.IdPessoaNavigation.Cpf.Contains(username) && i.IdPapel == 3 && i.IdEvento == idEvento select i;
+            if( query.FirstOrDefault() != null){
+                return query.FirstOrDefault();
+            }
+            return null;
+        }
     }
 }

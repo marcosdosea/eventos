@@ -17,6 +17,20 @@
 
 <body>
     <main>
+        @if(TempData["Message"] != null){
+            <div class="alert alert-danger" role="alert" id="alerterror">
+                @TempData["Message"]
+            </div>
+               TempData.Remove("Message");
+        }
+
+
+<script>
+        setTimeout(function() {
+            $("#alerterror").fadeOut("slow");
+        }, 3000);
+    </script>
+
         <section class="categorias">
             <h1>Encontre o evento ideal!</h1>
               <div class="categorias-list-container">
