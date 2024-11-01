@@ -271,16 +271,25 @@ namespace EventoWeb.Controllers
 		}
 
 		
-		[Authorize(Roles = "GESTOR")]
+		[Authorize]
 		// GET: EventoController/CreateColaborador
 		public ActionResult CreateColaborador(uint idEvento)
 		{
+			
+			var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
+			if(User.IsInRole("ADMINISTRADOR") || gestor != null){
 			var gestorModel = new GestaoPapelModel
 			{
 				Evento = _eventoService.GetEventoSimpleDto(idEvento),
 				Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 3),
 			};
 			return View(gestorModel);
+			}else{
+				TempData.Clear();	
+				TempData["Message"] = "Você não tem permissão para criar um colaborador!";
+				return RedirectToAction("GerenciarEvento","Evento", new { idEvento = idEvento});
+			}
+			
 		}
 
 
@@ -331,16 +340,25 @@ namespace EventoWeb.Controllers
 			return View(gestaoPapelModel);
 		}
 		
-		[Authorize(Roles = "GESTOR, COLABORADOR")]
+		[Authorize]
 		// GET: EventoController/CreateParticipante
 		public ActionResult CreateParticipante(uint idEvento)
 		{
+			var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
+			var colaborador = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, idEvento);
+
+			if(gestor == null && colaborador == null){
+				TempData.Clear();
+				TempData["Message"] = "Você não tem permissão para criar um participante!";
+				return RedirectToAction("GerenciarEvento");
+			}else{
 			var gestorModel = new GestaoPapelModel
 			{
 				Evento = _eventoService.GetEventoSimpleDto(idEvento),
 				Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 4),
 			};
 			return View(gestorModel);
+			}
 		}
 
 		// POST: EventoController/CreateParticipante
@@ -398,7 +416,7 @@ namespace EventoWeb.Controllers
 			}
 		}
 
-		[Authorize(Roles = "GESTOR, COLABORADOR")]
+		[Authorize]
 		//GET: EventoController/GerenciarEventoListar
 		public async Task<IActionResult> GerenciarEventoListar()
 		{
@@ -442,25 +460,34 @@ namespace EventoWeb.Controllers
 		}
 
 		
-		[Authorize(Roles = "GESTOR, COLABORADOR")]
+		[Authorize]
 		//GET: EventoController/GerenciarEvento
-		public ActionResult GerenciarEvento(uint idEvento)
+		public IActionResult GerenciarEvento(uint idEvento)
 		{
 			Evento evento = _eventoService.Get(idEvento);
+			var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
+			var colaborador = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, idEvento);
+
+			if(gestor == null && colaborador == null){
+				TempData.Clear();
+				TempData["Message"] = "Você não tem permissão para gerenciar este evento!";
+				return RedirectToAction("Index","Home");
+			}else{
 			var viewModel = new GerenciarEventoModel()
 			{
 				Evento = _mapper.Map<EventoModel>(evento),
 				Subeventos = _subeventoService.GetByIdEvento(idEvento)
 			};
 			return View(viewModel);
-
+			}
 		}
 
-		[Authorize(Roles = "GESTOR, COLABORADOR")]
+		//[Authorize(Roles = "GESTOR, COLABORADOR")]
 		// GET: EventoController/GestorEditarEvento/5
 		public ActionResult GestorEditarEvento(uint id)
 		{
 			var evento = _eventoService.Get(id);
+			
 			if (evento == null)
 			{
 				return NotFound();
@@ -491,9 +518,9 @@ namespace EventoWeb.Controllers
 		[ValidateAntiForgeryToken]
 		public ActionResult GestorEditarEvento(uint id, EventoModel viewModel)
 		{
-			ModelState.Remove("Estados");
-			ModelState.Remove("TiposEventos");
-			ModelState.Remove("AreaInteresse");
+		//	ModelState.Remove("Estados");
+		//	ModelState.Remove("TiposEventos");
+		//	ModelState.Remove("AreaInteresse");
 			if (ModelState.IsValid)
 			{
 				byte[] fotoSource = null;
