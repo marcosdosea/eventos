@@ -1,3 +1,7 @@
+DROP DATABASE IF EXISTS itatechusers;
+CREATE DATABASE itatechusers CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+USE itatechusers;
+
 -- MySQL dump 10.13  Distrib 8.0.36, for Win64 (x86_64)
 --
 -- Host: 127.0.0.1    Database: itatechusers
