@@ -65,4 +65,8 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Views\Colaborador\" />
+  </ItemGroup>
+
 </Project>
