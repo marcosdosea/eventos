@@ -1,0 +1,137 @@
+@model EventoWeb.Models.ParticipanteModel
+
+@{
+ViewData["Title"] = "Create";
+}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<h1 class="blue-normal">Novo Participante</h1>
+<div class="row">
+    <div class="col-md-8">
+        <form asp-action="Create" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="row">
+                <div class="col-6 form-group">
+                    <label asp-for="Participante.Nome" class="control-label"></label>
+                    <input asp-for="Participante.Nome" class="form-control" placeholder="Insira o nome completo" maxlength="50" />
+                    <span asp-validation-for="Participante.Nome" class="text-danger"></span>
+                </div>
+                <div class="col-6 form-group">
+                    <label asp-for="Participante.Foto" class="control-label"></label>
+                    <input type="file" asp-for="Participante.Foto" class="form-control" accept=".png,.jpg,.jpeg,.gif,.tif" id="fileInput" />
+                    <span asp-validation-for="Participante.Foto" class="text-danger"></span>
+                </div>
+                <div class="col-6 form-group">
+                    <label asp-for="Participante.Email" class="control-label"></label>
+                    <input asp-for="Participante.Email" class="form-control" placeholder="E-mail" maxlength="50" />
+                    <span asp-validation-for="Participante.Email" class="text-danger"></span>
+                </div>
+            </div>
+            <br/>
+            <div class="row">
+                <div class="col-4 form-group">
+                    <label asp-for="Participante.NomeCracha" class="control-label"></label>
+                    <input asp-for="Participante.NomeCracha" class="form-control" placeholder="Insira o nome do crachá" maxlength="20" />
+                    <span asp-validation-for="Participante.NomeCracha" class="text-danger"></span>
+                </div>
+                <div class="col-3 form-group">
+                    <label asp-for="Participante.Cpf" class="control-label"></label>
+                    <input asp-for="Participante.Cpf" class="form-control" placeholder="000.000.000-00" maxlength="11" />
+                    <span asp-validation-for="Participante.Cpf" class="text-danger"></span>
+                </div>
+                <br />
+                <div class="col-3">
+                    <div class="form-group">
+                        <label asp-for="Participante.Sexo" class="control-label"></label>
+                        <select asp-for="Participante.Sexo" class="form-select" aria-label="Default select example">
+                            <option value="N">Prefiro não dizer</option>
+                            <option value="M">Masculino</option>
+                            <option value="F">Feminino</option>
+                        </select>
+                        <span asp-validation-for="Participante.Sexo" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            <br />
+            <div class="row">
+                <div class="col-2 form-group">
+                    <label asp-for="Participante.Telefone1" class="control-label"></label>
+                    <input asp-for="Participante.Telefone1" class="form-control" placeholder="Com o DDD" maxlength="11" />
+                    <span asp-validation-for="Participante.Telefone1" class="text-danger"></span>
+                </div>
+                <div class="col-2 form-group">
+                    <label asp-for="Participante.Telefone2" class="control-label"></label>
+                    <input asp-for="Participante.Telefone2" class="form-control" placeholder="Com o DDD" maxlength="11" />
+                    <span asp-validation-for="Participante.Telefone2" class="text-danger"></span>
+                </div>
+            </div>
+            <br />
+            <h4 class="blue-normal">
+                Localização
+            </h4>
+
+            <div class="row">
+                <div class="col-2 form-group">
+                    <label asp-for="Participante.Cep" class="control-label"></label>
+                    <input asp-for="Participante.Cep" class="form-control" placeholder="0000-000" maxlength="9" />
+                    <span asp-validation-for="Participante.Cep" class="text-danger"></span>
+                </div>
+                <br />
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label asp-for="Participante.Estado" class="control-label"></label>
+                        <select asp-for="Participante.Estado" class="form-select" asp-items="Model.Participante.Estados">
+                            <option value="">Selecione o estado</option>
+                        </select>
+                        <span asp-validation-for="Participante.Estado" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-6 form-group">
+                    <label asp-for="Participante.Cidade" class="control-label"></label>
+                    <input asp-for="Participante.Cidade" class="form-control" placeholder="Nome da Cidade" maxlength="50" />
+                    <span asp-validation-for="Participante.Cidade" class="text-danger"></span>
+                </div>
+            </div>
+            <br />
+            <div class="row">
+                <div class="col-6 form-group">
+                    <label asp-for="Participante.Bairro" class="control-label"></label>
+                    <input asp-for="Participante.Bairro" class="form-control" placeholder="Nome do Bairro" maxlength="50" />
+                    <span asp-validation-for="Participante.Bairro" class="text-danger"></span>
+                </div>
+                <div class="col-6 form-group">
+                    <label asp-for="Participante.Rua" class="control-label"></label>
+                    <input asp-for="Participante.Rua" class="form-control" placeholder="Nome da Rua" maxlength="50" />
+                    <span asp-validation-for="Participante.Rua" class="text-danger"></span>
+                </div>
+            </div>
+            <br />
+            <div class="row">
+                <div class="col-2 form-group">
+                    <label asp-for="Participante.Numero" class="control-label"></label>
+                    <input asp-for="Participante.Numero" class="form-control" placeholder="00" maxlength="10" />
+                    <span asp-validation-for="Participante.Numero" class="text-danger"></span>
+                </div>
+                <div class="col-6 form-group">
+                    <label asp-for="Participante.Complemento" class="control-label"></label>
+                    <input asp-for="Participante.Complemento" class="form-control" placeholder="Complemento" maxlength="50" />
+                    <span asp-validation-for="Participante.Complemento" class="text-danger"></span>
+                </div>
+            </div>
+            <br />
+            <div class="d-flex justify-content-end">
+                <div class="d-flex flex-row">
+                    <div class="form-group" style="margin-right: 10px;">
+                        <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
+                    </div>
+                    <div class="form-group">
+                        <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+</html>
