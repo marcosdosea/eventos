@@ -33,6 +33,7 @@ namespace EventoWeb
             builder.Services.AddTransient<IEstadosbrasilService, EstadosbrasilService>();
             builder.Services.AddTransient<ITipoeventoService, TipoeventoService>();
             builder.Services.AddTransient<IEmailSender, EmailSender>();
+            builder.Services.AddTransient<IParticipacaoPessoaEventoService, ParticipacaoPessoaEventoService>();
 
             builder.Services.AddDbContext<EventoContext>(
                 options => options.UseMySQL(builder.Configuration.GetConnectionString("EventoDatabase")));
@@ -84,14 +85,14 @@ namespace EventoWeb
                 options.SlidingExpiration = true;
             });
 
-			builder.Services.Configure<RequestLocalizationOptions>(options =>
+            builder.Services.Configure<RequestLocalizationOptions>(options =>
             {
                 var supportedCultures = new[] { new CultureInfo("pt-BR") };
                 options.DefaultRequestCulture = new RequestCulture("pt-BR");
                 options.SupportedCultures = supportedCultures;
                 options.SupportedUICultures = supportedCultures;
             });
-          
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
