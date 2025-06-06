@@ -112,11 +112,35 @@ namespace EventoWeb
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.Use(async (context, next) =>
+            {
+                var isAuthenticated = context.User.Identity.IsAuthenticated;
+                var isAdmin = context.User.IsInRole("ADMINISTRADOR");
+                
+                if (isAuthenticated)
+                {
+                    System.Diagnostics.Debug.WriteLine($"User is authenticated. Is Admin: {isAdmin}");
+                    if (isAdmin)
+                    {
+                        context.Items["Layout"] = "_LayoutAdministrativo";
+                    }
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("User is NOT authenticated");
+                }
+                
+                await next();
+            });
+
             app.MapRazorPages();
 
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
+
+            app.MapControllers();
 
             app.Run();
         }
