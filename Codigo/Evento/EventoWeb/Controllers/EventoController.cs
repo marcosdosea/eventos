@@ -12,6 +12,7 @@ using Org.BouncyCastle.Bcpg;
 
 namespace EventoWeb.Controllers
 {
+	[Route("[controller]")]
 	public class EventoController : Controller
 	{
 		private readonly IEstadosbrasilService _estadosbrasilService;
@@ -37,8 +38,10 @@ namespace EventoWeb.Controllers
 			_subeventoService = subeventoService;
 		}
 
-		[Authorize(Roles = "ADMINISTRADOR")]
 		// GET: EventoController
+		[HttpGet]
+		[Route("")]
+		[Route("Index")]
 		public ActionResult Index()
 		{
 			var listarEventos = _eventoService.GetAll().ToList();
@@ -65,8 +68,10 @@ namespace EventoWeb.Controllers
 			return View(eventoModel);
 		}
 
-		[Authorize(Roles = "ADMINISTRADOR")]
+		[Authorize]
 		// GET: EventoController/Create
+		[HttpGet]
+		[Route("Create")]
 		public ActionResult Create()
 		{
 			var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
@@ -80,6 +85,7 @@ namespace EventoWeb.Controllers
 			return View(viewModel);
 		}
 
+		[Authorize]
 		// POST: EventoController/Create
 		[HttpPost]
 		[ValidateAntiForgeryToken]
@@ -122,6 +128,8 @@ namespace EventoWeb.Controllers
 
 		[Authorize(Roles = "ADMINISTRADOR")]
 		// GET: EventoController/Edit/5
+		[HttpGet]
+		[Route("Edit/{id}")]
 		public ActionResult Edit(uint id)
 		{
 			var evento = _eventoService.Get(id);
