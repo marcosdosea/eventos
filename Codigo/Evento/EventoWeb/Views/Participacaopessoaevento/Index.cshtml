@@ -1,0 +1,114 @@
+@model EventoWeb.Models.FrequenciaViewModel
+
+<link href="~/lib/datatable/css/datatables.min.css" rel="stylesheet" />
+
+<h1 class="blue-normal">Participação do Participante</h1>
+<hr />
+
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="mb-3">
+            <strong>Nome:</strong> @Model.Evento.Nome
+        </div>
+        <div class="mb-3">
+            <strong>Sub evento:</strong> @Model.SubEvento?.Nome
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <form id="participacaoForm" asp-action="RegistrarParticipacao" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="idEvento" value="@Model.Evento.Id" />
+            @if (Model.SubEvento != null)
+            {
+                <input type="hidden" name="idSubEvento" value="@Model.SubEvento.Id" />
+            }
+            <div class="form-group">
+                <label for="cpf">CPF</label>
+                <div class="d-flex">
+                    <input type="text" id="cpf" name="cpf" class="form-control me-2" placeholder="000.000.000-00" required 
+                           pattern="\d{3}\.\d{3}\.\d{3}-\d{2}" title="Digite um CPF válido no formato 000.000.000-00"/>
+                    <button type="submit" class="btn btn-primary">Adicionar Participação</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (!ViewData.ModelState.IsValid || TempData["Message"] != null)
+{
+    <div class="alert alert-danger">
+        @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+        @TempData["Message"]
+    </div>
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <table id="tabelaParticipacao" class="table table-striped">
+            <thead class="blue-normal blue-normal-bg-table">
+                <tr>
+                    <th>Nome</th>
+                    <th>Tipo</th>
+                    <th>Data e Hora</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var participacao in Model.Frequencias)
+                {
+                    <tr>
+                        <td>@participacao.IdPessoaNavigation.Nome</td>
+                        <td>@(participacao.Saida.HasValue ? "Saída" : "Entrada")</td>
+                        <td>@(participacao.Saida.HasValue ? participacao.Saida.Value.ToString("dd/MM/yyyy às HH:mm\\h") : participacao.Entrada.ToString("dd/MM/yyyy às HH:mm\\h"))</td>
+                        <td>
+                            <form style="display: inline;" method="post" asp-action="ExcluirParticipacao">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@participacao.Id" />
+                                <input type="hidden" name="idEvento" value="@Model.Evento.Id" />
+                                <button type="submit" class="btn btn-link text-danger p-0" style="text-decoration: none;" onclick="return confirm('Deseja realmente excluir este registro?')">
+                                    Excluir
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="d-flex flex-row-reverse mt-3">
+    <div class="form-group">
+        <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Model.Evento.Id" class="btn btn-lg btn-blue-normal">Voltar</a>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/datatable/js/datatables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#tabelaParticipacao').DataTable({
+                language: {
+                    url: '@Url.Content("~/lib/datatable/js/pt-BR.json")'
+                },
+                order: [[2, 'desc']], // Ordena por data/hora decrescente
+                columnDefs: [
+                    { orderable: false, targets: 3 } // Desabilita ordenação na coluna de ações
+                ]
+            });
+
+            // Máscara para CPF
+            $('#cpf').on('input', function() {
+                let value = $(this).val().replace(/\D/g, '');
+                if (value.length <= 11) {
+                    value = value.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+                    $(this).val(value);
+                }
+            });
+        });
+    </script>
+} 
