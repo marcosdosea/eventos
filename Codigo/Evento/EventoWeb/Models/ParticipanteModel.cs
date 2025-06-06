@@ -1,17 +1,11 @@
 using Core;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using System.ComponentModel.DataAnnotations;
+using Core.DTO;
 
-namespace EventoWeb.Models
+namespace EventoWeb.Models;
+
+public class ParticipanteModel
 {
-    public class ParticipanteModel
-    {
-        public PessoaModel Participante { get; set; }
+    public PessoaModel Participante { get; set; }
 
-        public ParticipanteModel()
-        {
-            Participante = new PessoaModel();
-        }
-    }
-} 
+    public IEnumerable<PessoaSimpleDTO>? Participantes { get; set; }
+}
