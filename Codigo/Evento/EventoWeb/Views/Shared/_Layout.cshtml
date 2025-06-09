@@ -37,7 +37,7 @@
                                 </div>
                             </li>
                             <li class="nav-item menu-view"><a class="nav-link">Localização</a></li>
-                            <li class="nav-item menu-view"><a class="nav-link">Seu evento aqui!</a></li>
+                            <li class="nav-item menu-view"><a class="nav-link" asp-controller="Evento" asp-action="Create">Seu evento aqui!</a></li>
                         </ul>
                         <div class="buton-menu custom-flex-row">
                             <div class="custom-flex-row custom-hide">
@@ -45,7 +45,7 @@
                                     <a>Localização</a>
                                 </div>
                                 <div class="nav-item me-3 align-content-center color: blue-normal">
-                                    <a>Seu evento aqui!</a>
+                                    <a asp-controller="Evento" asp-action="Create">Seu evento aqui!</a>
                                 </div>
                             </div>
                             <partial name="_LoginPartial" />
