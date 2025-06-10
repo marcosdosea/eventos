@@ -1,11 +1,10 @@
-using Core;
 using Core.DTO;
 
-namespace EventoWeb.Models;
-
-public class ParticipanteModel
+namespace EventoWeb.Models
 {
-    public PessoaModel Participante { get; set; }
-
-    public IEnumerable<PessoaSimpleDTO>? Participantes { get; set; }
+    public class ParticipanteModel
+    {
+        public PessoaModel Participante { get; set; } = new PessoaModel();
+        public IEnumerable<ParticipanteDTO>? Participantes { get; set; }
+    }
 }
