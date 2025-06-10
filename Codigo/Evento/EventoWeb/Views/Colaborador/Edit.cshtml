@@ -1,0 +1,31 @@
+@model EventoWeb.Models.ColaboradorModel
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Editar Colaborador</h1>
+
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit" asp-route-cpf="@Model.Colaborador.Cpf" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Colaborador.Cpf" />
+            <div class="form-group">
+                <label asp-for="Colaborador.Nome" class="control-label"></label>
+                <input asp-for="Colaborador.Nome" class="form-control" />
+                <span asp-validation-for="Colaborador.Nome" class="text-danger"></span>
+            </div>
+            <!-- Outras propriedades -->
+            <div class="form-group">
+                <input type="submit" value="Salvar" class="btn btn-primary" />
+                <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

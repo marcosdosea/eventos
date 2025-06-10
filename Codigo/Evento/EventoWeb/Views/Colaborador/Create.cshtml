@@ -1,0 +1,63 @@
+@model EventoWeb.Models.ColaboradorModel
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Cadastrar Colaboradores do Evento</h1>
+
+<form asp-action="Create" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="form-group">
+        <label asp-for="Colaborador.Cpf" class="control-label">CPF</label>
+        <input asp-for="Colaborador.Cpf" class="form-control" />
+        <span asp-validation-for="Colaborador.Cpf" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Colaborador.Nome" class="control-label">Nome</label>
+        <input asp-for="Colaborador.Nome" class="form-control" />
+        <span asp-validation-for="Colaborador.Nome" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Colaborador.Telefone1" class="control-label">Celular</label>
+        <input asp-for="Colaborador.Telefone1" class="form-control" />
+        <span asp-validation-for="Colaborador.Telefone1" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="Colaborador.Email" class="control-label">Email</label>
+        <input asp-for="Colaborador.Email" class="form-control" />
+        <span asp-validation-for="Colaborador.Email" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Adicionar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>
+
+@if (Model.Colaboradores != null && Model.Colaboradores.Any())
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>CPF</th>
+                <th>Nome</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Colaboradores)
+            {
+                <tr>
+                    <td>@item.Cpf</td>
+                    <td>@item.Nome</td>
+                    <td>
+                        @Html.ActionLink("Excluir", "Delete", new { cpf = item.Cpf }, new { @class = "btn btn-danger btn-sm" })
+                        @Html.ActionLink("Editar", "Edit", new { cpf = item.Cpf }, new { @class = "btn btn-warning btn-sm" })
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

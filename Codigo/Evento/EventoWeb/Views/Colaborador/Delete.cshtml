@@ -1,0 +1,130 @@
+@model ColaboradorModel
+
+@{
+    ViewData["Title"] = "Delete";
+}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<div class="container-fluid no-padding">
+<div class="row">
+    <h1 class="blue-normal">Excluir Colaborador</h1>
+    <div>
+        <h3>Certeza que deseja excluir este colaborador?</h3>
+        <dl class="row">
+            <dt class = "col-sm-2">
+                    @Html.DisplayNameFor(model => model.Colaborador.Nome)
+            </dt>
+            <dd class = "col-sm-10">
+                    @Html.DisplayFor(model => model.Colaborador.Nome)
+            </dd>
+            <dt class = "col-sm-2">
+                    @Html.DisplayNameFor(model => model.Colaborador.NomeCracha)
+            </dt>
+            <dd class = "col-sm-10">
+                    @Html.DisplayFor(model => model.Colaborador.NomeCracha)
+            </dd>
+            <dt class = "col-sm-2">
+                    @Html.DisplayNameFor(model => model.Colaborador.Cpf)
+            </dt>
+            <dd class = "col-sm-10">
+                    @Html.DisplayFor(model => model.Colaborador.Cpf)
+            </dd>
+            <dt class="col-sm-2">
+                    @Html.DisplayNameFor(model => model.Colaborador.Sexo)
+            </dt>
+            <dd class="col-sm-10">
+                @{
+                    string sexoDescricao = "Desconhecido";
+                        switch (Model.Colaborador.Sexo)
+                    {
+                        case "M":
+                            sexoDescricao = "Masculino";
+                            break;
+                        case "F":
+                            sexoDescricao = "Feminino";
+                            break;
+                        case "N":
+                            sexoDescricao = "Prefiro não dizer";
+                            break;
+                    }
+                }
+                @sexoDescricao
+            </dd>
+            <dt class = "col-sm-2">
+                    @Html.DisplayNameFor(model => model.Colaborador.Email)
+            </dt>
+            <dd class = "col-sm-10">
+                    @Html.DisplayFor(model => model.Colaborador.Email)
+            </dd>
+            <dt class = "col-sm-2">
+                    @Html.DisplayNameFor(model => model.Colaborador.Telefone1)
+            </dt>
+            <dd class = "col-sm-10">
+                    @Html.DisplayFor(model => model.Colaborador.Telefone1)
+            </dd>
+            <dt class = "col-sm-2">
+                    @Html.DisplayNameFor(model => model.Colaborador.Telefone2)
+            </dt>
+            <dd class = "col-sm-10">
+                    @Html.DisplayFor(model => model.Colaborador.Telefone2)
+            </dd>
+            <dt class = "col-sm-2">
+                    @Html.DisplayNameFor(model => model.Colaborador.Cep)
+            </dt>
+            <dd class = "col-sm-10">
+                    @Html.DisplayFor(model => model.Colaborador.Cep)
+            </dd>
+            <dt class="col-sm-2">
+                    @Html.DisplayNameFor(model => model.Colaborador.Estado)
+            </dt>
+            <dd class="col-sm-10">
+                    @Html.DisplayFor(model => model.Colaborador.Estado)
+            </dd>
+            <dt class = "col-sm-2">
+                    @Html.DisplayNameFor(model => model.Colaborador.Cidade)
+            </dt>
+            <dd class = "col-sm-10">
+                    @Html.DisplayFor(model => model.Colaborador.Cidade)
+            </dd>
+            <dt class = "col-sm-2">
+                    @Html.DisplayNameFor(model => model.Colaborador.Bairro)
+            </dt>
+            <dd class = "col-sm-10">
+                    @Html.DisplayFor(model => model.Colaborador.Bairro)
+            </dd>
+            <dt class = "col-sm-2">
+                    @Html.DisplayNameFor(model => model.Colaborador.Rua)
+            </dt>
+            <dd class = "col-sm-10">
+                    @Html.DisplayFor(model => model.Colaborador.Rua)
+            </dd>
+            <dt class = "col-sm-2">
+                    @Html.DisplayNameFor(model => model.Colaborador.Numero)
+            </dt>
+            <dd class = "col-sm-10">
+                    @Html.DisplayFor(model => model.Colaborador.Numero)
+            </dd>
+            <dt class = "col-sm-2">
+                    @Html.DisplayNameFor(model => model.Colaborador.Complemento)
+            </dt>
+            <dd class = "col-sm-10">
+                    @Html.DisplayFor(model => model.Colaborador.Complemento)
+            </dd>
+        </dl>
+    </div>
+    <form asp-action="Delete" class="row">
+        <div class="d-flex justify-content-end">
+        <div class="d-flex flex-row">
+            <div class="form-group" style="margin-right: 10px;">
+                <input type="submit" value="Excluir" class="btn btn-danger"/>
+            </div>
+            <div class="form-group">
+                <a asp-action="Index" class="btn btn-outline-blue-normal">Cancelar</a>
+            </div>
+            </div>
+        </div>
+    </form>
+</div>
+</div>
