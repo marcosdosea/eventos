@@ -13,6 +13,7 @@ using Org.BouncyCastle.Bcpg;
 namespace EventoWeb.Controllers
 {
 	[Route("[controller]")]
+	[Authorize]
 	public class EventoController : Controller
 	{
 		private readonly IEstadosbrasilService _estadosbrasilService;
@@ -68,7 +69,7 @@ namespace EventoWeb.Controllers
 			return View(eventoModel);
 		}
 
-		[Authorize]
+		[Authorize(Roles = "ADMINISTRADOR,GESTOR")]
 		// GET: EventoController/Create
 		[HttpGet]
 		[Route("Create")]
@@ -85,7 +86,7 @@ namespace EventoWeb.Controllers
 			return View(viewModel);
 		}
 
-		[Authorize]
+		[Authorize(Roles = "ADMINISTRADOR")]
 		// POST: EventoController/Create
 		[HttpPost]
 		[ValidateAntiForgeryToken]
@@ -279,7 +280,7 @@ namespace EventoWeb.Controllers
 		}
 
 		
-		[Authorize]
+		[Authorize(Roles = "ADMINISTRADOR,GESTOR")]
 		// GET: EventoController/CreateColaborador
 		public ActionResult CreateColaborador(uint idEvento)
 		{
@@ -348,7 +349,7 @@ namespace EventoWeb.Controllers
 			return View(gestaoPapelModel);
 		}
 		
-		[Authorize]
+		[Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
 		// GET: EventoController/CreateParticipante
 		public ActionResult CreateParticipante(uint idEvento)
 		{
@@ -424,7 +425,7 @@ namespace EventoWeb.Controllers
 			}
 		}
 
-		[Authorize]
+		[Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
 		//GET: EventoController/GerenciarEventoListar
 		public async Task<IActionResult> GerenciarEventoListar()
 		{
@@ -468,7 +469,7 @@ namespace EventoWeb.Controllers
 		}
 
 		
-		[Authorize]
+		[Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
 		//GET: EventoController/GerenciarEvento
 		public IActionResult GerenciarEvento(uint idEvento)
 		{
@@ -492,6 +493,7 @@ namespace EventoWeb.Controllers
 
 		//[Authorize(Roles = "GESTOR, COLABORADOR")]
 		// GET: EventoController/GestorEditarEvento/5
+		[Authorize(Roles = "GESTOR")]
 		public ActionResult GestorEditarEvento(uint id)
 		{
 			var evento = _eventoService.Get(id);
@@ -501,8 +503,16 @@ namespace EventoWeb.Controllers
 				return NotFound();
 			}
 
-			var viewModel = _mapper.Map<EventoModel>(evento);
+			// Verifica se o usuário é gestor deste evento
+			var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, id);
+			if (gestor == null)
+			{
+				TempData.Clear();
+				TempData["Message"] = "Você não tem permissão para editar este evento!";
+				return RedirectToAction("GerenciarEvento", new { idEvento = id });
+			}
 
+			var viewModel = _mapper.Map<EventoModel>(evento);
 
 			var todasAreasInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
 			viewModel.AreaInteresse = new SelectList(todasAreasInteresse, "Id", "Nome");
@@ -524,11 +534,22 @@ namespace EventoWeb.Controllers
 		// POST: EventoController/GestorEditarEvento/5
 		[HttpPost]
 		[ValidateAntiForgeryToken]
+		[Authorize(Roles = "GESTOR")]
 		public ActionResult GestorEditarEvento(uint id, EventoModel viewModel)
 		{
-		//	ModelState.Remove("Estados");
-		//	ModelState.Remove("TiposEventos");
-		//	ModelState.Remove("AreaInteresse");
+			// Verifica se o usuário é gestor deste evento
+			var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, id);
+			if (gestor == null)
+			{
+				TempData.Clear();
+				TempData["Message"] = "Você não tem permissão para editar este evento!";
+				return RedirectToAction("GerenciarEvento", new { idEvento = id });
+			}
+
+			ModelState.Remove("Estados");
+			ModelState.Remove("TiposEventos");
+			ModelState.Remove("AreaInteresse");
+
 			if (ModelState.IsValid)
 			{
 				byte[] fotoSource = null;
@@ -550,19 +571,22 @@ namespace EventoWeb.Controllers
 					}
 				}
 				var evento = _mapper.Map<Evento>(viewModel);
-				var idsAreaInteresse = viewModel.IdAreaInteresses;
+				var idsAreaInteresse = new List<uint>
+				{
+					viewModel.IdAreaInteresse
+				};
 				_eventoService.Edit(evento, idsAreaInteresse);
-				evento.ImagemPortal = fotoSource;
 				_eventoService.AtualizarVagasDisponiveis(evento.Id);
-				return RedirectToAction("GerenciarEvento", "Evento", new { idEvento = id });
+				evento.ImagemPortal = fotoSource;
+				return RedirectToAction("GerenciarEvento", new { idEvento = id });
 			}
 
 			var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
 			var tiposEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
-			var areasInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
+			var areaInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
 			viewModel.Estados = new SelectList(estados, "Estado", "Nome", viewModel.Estado);
 			viewModel.TiposEventos = new SelectList(tiposEventos, "Id", "Nome", viewModel.IdTipoEvento);
-			viewModel.AreaInteresse = new SelectList(areasInteresse, "Id", "Nome");
+			viewModel.AreaInteresse = new SelectList(areaInteresse, "Id", "Nome", viewModel.IdAreaInteresse);
 
 			return View(viewModel);
 		}

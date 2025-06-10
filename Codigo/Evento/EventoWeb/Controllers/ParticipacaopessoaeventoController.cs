@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace EventoWeb.Controllers
 {
+    [Authorize]
     public class ParticipacaopessoaeventoController : Controller
     {
         private readonly IParticipacaoPessoaEventoService _participacaoService;
@@ -40,7 +41,7 @@ namespace EventoWeb.Controllers
             _userManager = userManager;
         }
 
-        [Authorize]
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
         public async Task<IActionResult> Index(uint idEvento, uint? idSubEvento)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -69,7 +70,7 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
 
-        [Authorize]
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RegistrarParticipacao(uint idEvento, uint? idSubEvento, string cpf)
@@ -77,7 +78,7 @@ namespace EventoWeb.Controllers
             var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
             var colaborador = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, idEvento);
 
-            if (gestor == null && colaborador == null)
+            if (gestor == null && colaborador == null && !User.IsInRole("ADMINISTRADOR"))
             {
                 TempData.Clear();
                 TempData["Message"] = "Você não tem permissão para registrar participação!";
@@ -133,7 +134,7 @@ namespace EventoWeb.Controllers
             return RedirectToAction(nameof(Index), new { idEvento, idSubEvento });
         }
 
-        [Authorize]
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ExcluirParticipacao(uint id, uint idEvento)
@@ -158,7 +159,7 @@ namespace EventoWeb.Controllers
             return RedirectToAction(nameof(Index), new { idEvento });
         }
 
-        // GET: api/ParticipacaoPessoaEvento
+        [Authorize(Roles = "ADMINISTRADOR")]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ParticipacaoPessoaEventoDTO>>> GetAll()
         {
@@ -169,7 +170,7 @@ namespace EventoWeb.Controllers
             return Ok(dtos);
         }
 
-        // GET: api/ParticipacaoPessoaEvento/5
+        [Authorize(Roles = "ADMINISTRADOR")]
         [HttpGet("{id}")]
         public async Task<ActionResult<ParticipacaoPessoaEventoDTO>> GetById(uint id)
         {
