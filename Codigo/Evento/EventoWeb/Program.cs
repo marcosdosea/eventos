@@ -131,6 +131,13 @@ namespace EventoWeb
             app.UseAuthentication();
             app.UseAuthorization();
 
+            // Inicializa os roles do sistema
+            using (var scope = app.Services.CreateScope())
+            {
+                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+                IdentityInitializer.InitializeRoles(roleManager).Wait();
+            }
+
             app.Use(async (context, next) =>
             {
                 var isAuthenticated = context.User.Identity.IsAuthenticated;

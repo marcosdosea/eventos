@@ -2,11 +2,13 @@ using AutoMapper;
 using Core;
 using Core.Service;
 using EventoWeb.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace EventoWeb.Controllers
 {
+    [Authorize]
     public class PessoaController : Controller
     {
         private readonly IPessoaService _pessoaService;
@@ -20,7 +22,7 @@ namespace EventoWeb.Controllers
             _mapper = mapper;
         }
 
-        // GET: PessoaController
+        [Authorize(Roles = "ADMINISTRADOR")]
         public ActionResult Index()
         {
             var listaPessoa = _pessoaService.GetAll();
@@ -28,7 +30,7 @@ namespace EventoWeb.Controllers
             return View(listaPessoaModel);
         }
 
-        // GET: PessoaController/Details/5
+        [Authorize(Roles = "ADMINISTRADOR")]
         public ActionResult Details(uint id)
         {
             var pessoa = _pessoaService.Get(id);
@@ -41,7 +43,7 @@ namespace EventoWeb.Controllers
             return View(pessoaModel);
         }
 
-        // GET: PessoaController/Create
+        [AllowAnonymous]
         public ActionResult Create()
         {
             var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
@@ -50,7 +52,7 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
 
-        // POST: PessoaController/Create
+        [AllowAnonymous]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Create(PessoaModel viewModel)
@@ -84,13 +86,18 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
 
-        // GET: PessoaController/Edit/5
+        [Authorize]
         public ActionResult Edit(uint id)
         {
             var pessoa = _pessoaService.Get(id);
             if (pessoa == null)
             {
                 return NotFound();
+            }
+
+            if (pessoa.Cpf != User.Identity.Name && !User.IsInRole("ADMINISTRADOR"))
+            {
+                return Forbid();
             }
             
             var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
@@ -100,11 +107,22 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
 
-        // POST: PessoaController/Edit/5
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Edit(uint id, PessoaModel viewModel)
         {
+            var pessoa = _pessoaService.Get(id);
+            if (pessoa == null)
+            {
+                return NotFound();
+            }
+
+            if (pessoa.Cpf != User.Identity.Name && !User.IsInRole("ADMINISTRADOR"))
+            {
+                return Forbid();
+            }
+
             if (id != viewModel.Id)
             {
                 return BadRequest();
@@ -130,9 +148,9 @@ namespace EventoWeb.Controllers
                         }
                     }
                 }
-                var pessoa = _mapper.Map<Pessoa>(viewModel);
-                pessoa.Foto = fotoSource;
-                _pessoaService.Edit(pessoa);
+                var pessoaEditada = _mapper.Map<Pessoa>(viewModel);
+                pessoaEditada.Foto = fotoSource;
+                _pessoaService.Edit(pessoaEditada);
                 return RedirectToAction(nameof(Index));
             }
 
