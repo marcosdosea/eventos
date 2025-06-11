@@ -1,130 +1,174 @@
-@model ColaboradorModel
+@model EventoWeb.Models.ColaboradorModel
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Excluir Colaborador";
 }
 
 <!DOCTYPE html>
 <html lang="pt-BR">
 
-<div class="container-fluid no-padding">
-<div class="row">
-    <h1 class="blue-normal">Excluir Colaborador</h1>
-    <div>
-        <h3>Certeza que deseja excluir este colaborador?</h3>
-        <dl class="row">
-            <dt class = "col-sm-2">
-                    @Html.DisplayNameFor(model => model.Colaborador.Nome)
-            </dt>
-            <dd class = "col-sm-10">
-                    @Html.DisplayFor(model => model.Colaborador.Nome)
-            </dd>
-            <dt class = "col-sm-2">
-                    @Html.DisplayNameFor(model => model.Colaborador.NomeCracha)
-            </dt>
-            <dd class = "col-sm-10">
-                    @Html.DisplayFor(model => model.Colaborador.NomeCracha)
-            </dd>
-            <dt class = "col-sm-2">
-                    @Html.DisplayNameFor(model => model.Colaborador.Cpf)
-            </dt>
-            <dd class = "col-sm-10">
-                    @Html.DisplayFor(model => model.Colaborador.Cpf)
-            </dd>
-            <dt class="col-sm-2">
-                    @Html.DisplayNameFor(model => model.Colaborador.Sexo)
-            </dt>
-            <dd class="col-sm-10">
-                @{
-                    string sexoDescricao = "Desconhecido";
-                        switch (Model.Colaborador.Sexo)
-                    {
-                        case "M":
-                            sexoDescricao = "Masculino";
-                            break;
-                        case "F":
-                            sexoDescricao = "Feminino";
-                            break;
-                        case "N":
-                            sexoDescricao = "Prefiro não dizer";
-                            break;
-                    }
-                }
-                @sexoDescricao
-            </dd>
-            <dt class = "col-sm-2">
-                    @Html.DisplayNameFor(model => model.Colaborador.Email)
-            </dt>
-            <dd class = "col-sm-10">
-                    @Html.DisplayFor(model => model.Colaborador.Email)
-            </dd>
-            <dt class = "col-sm-2">
-                    @Html.DisplayNameFor(model => model.Colaborador.Telefone1)
-            </dt>
-            <dd class = "col-sm-10">
-                    @Html.DisplayFor(model => model.Colaborador.Telefone1)
-            </dd>
-            <dt class = "col-sm-2">
-                    @Html.DisplayNameFor(model => model.Colaborador.Telefone2)
-            </dt>
-            <dd class = "col-sm-10">
-                    @Html.DisplayFor(model => model.Colaborador.Telefone2)
-            </dd>
-            <dt class = "col-sm-2">
-                    @Html.DisplayNameFor(model => model.Colaborador.Cep)
-            </dt>
-            <dd class = "col-sm-10">
-                    @Html.DisplayFor(model => model.Colaborador.Cep)
-            </dd>
-            <dt class="col-sm-2">
-                    @Html.DisplayNameFor(model => model.Colaborador.Estado)
-            </dt>
-            <dd class="col-sm-10">
-                    @Html.DisplayFor(model => model.Colaborador.Estado)
-            </dd>
-            <dt class = "col-sm-2">
-                    @Html.DisplayNameFor(model => model.Colaborador.Cidade)
-            </dt>
-            <dd class = "col-sm-10">
-                    @Html.DisplayFor(model => model.Colaborador.Cidade)
-            </dd>
-            <dt class = "col-sm-2">
-                    @Html.DisplayNameFor(model => model.Colaborador.Bairro)
-            </dt>
-            <dd class = "col-sm-10">
-                    @Html.DisplayFor(model => model.Colaborador.Bairro)
-            </dd>
-            <dt class = "col-sm-2">
-                    @Html.DisplayNameFor(model => model.Colaborador.Rua)
-            </dt>
-            <dd class = "col-sm-10">
-                    @Html.DisplayFor(model => model.Colaborador.Rua)
-            </dd>
-            <dt class = "col-sm-2">
-                    @Html.DisplayNameFor(model => model.Colaborador.Numero)
-            </dt>
-            <dd class = "col-sm-10">
-                    @Html.DisplayFor(model => model.Colaborador.Numero)
-            </dd>
-            <dt class = "col-sm-2">
-                    @Html.DisplayNameFor(model => model.Colaborador.Complemento)
-            </dt>
-            <dd class = "col-sm-10">
-                    @Html.DisplayFor(model => model.Colaborador.Complemento)
-            </dd>
-        </dl>
+<h1 class="blue-normal">Excluir Colaborador</h1>
+
+<div class="card">
+    <div class="card-header bg-danger text-white">
+        <h5 class="mb-0">Confirmação de Exclusão</h5>
     </div>
-    <form asp-action="Delete" class="row">
-        <div class="d-flex justify-content-end">
-        <div class="d-flex flex-row">
-            <div class="form-group" style="margin-right: 10px;">
-                <input type="submit" value="Excluir" class="btn btn-danger"/>
+    <div class="card-body">
+        <div class="alert alert-warning">
+            <h4>Tem certeza que deseja excluir este colaborador?</h4>
+            <p>Esta ação não poderá ser desfeita.</p>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header blue-normal text-white">
+                <h5 class="mb-0">Dados Pessoais</h5>
             </div>
-            <div class="form-group">
-                <a asp-action="Index" class="btn btn-outline-blue-normal">Cancelar</a>
-            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="control-label">CPF</label>
+                            <p class="form-control-static">@Model.Colaborador.Cpf</p>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label class="control-label">Nome</label>
+                            <p class="form-control-static">@Model.Colaborador.Nome</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="control-label">Nome no Crachá</label>
+                            <p class="form-control-static">@Model.Colaborador.NomeCracha</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="control-label">Sexo</label>
+                            <p class="form-control-static">
+                                @{
+                                    string sexoDescricao = "Desconhecido";
+                                    switch (Model.Colaborador.Sexo)
+                                    {
+                                        case "M":
+                                            sexoDescricao = "Masculino";
+                                            break;
+                                        case "F":
+                                            sexoDescricao = "Feminino";
+                                            break;
+                                        case "N":
+                                            sexoDescricao = "Prefiro não dizer";
+                                            break;
+                                    }
+                                }
+                                @sexoDescricao
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </form>
+
+        <div class="card mb-3">
+            <div class="card-header blue-normal text-white">
+                <h5 class="mb-0">Contato</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="control-label">Email</label>
+                            <p class="form-control-static">@Model.Colaborador.Email</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="control-label">Celular</label>
+                            <p class="form-control-static">@Model.Colaborador.Telefone1</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="control-label">Telefone Adicional</label>
+                            <p class="form-control-static">@Model.Colaborador.Telefone2</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header blue-normal text-white">
+                <h5 class="mb-0">Endereço</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="control-label">CEP</label>
+                            <p class="form-control-static">@Model.Colaborador.Cep</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="control-label">Estado</label>
+                            <p class="form-control-static">@Model.Colaborador.Estado</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="control-label">Cidade</label>
+                            <p class="form-control-static">@Model.Colaborador.Cidade</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="control-label">Bairro</label>
+                            <p class="form-control-static">@Model.Colaborador.Bairro</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="control-label">Rua</label>
+                            <p class="form-control-static">@Model.Colaborador.Rua</p>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label class="control-label">Número</label>
+                            <p class="form-control-static">@Model.Colaborador.Numero</p>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label class="control-label">Complemento</label>
+                            <p class="form-control-static">@Model.Colaborador.Complemento</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-footer">
+        <form asp-action="Delete" method="post">
+            @Html.AntiForgeryToken()
+            <div class="d-flex justify-content-end">
+                <div class="d-flex flex-row">
+                    <div class="form-group" style="margin-right: 10px;">
+                        <input type="submit" value="Confirmar Exclusão" class="btn btn-danger" />
+                    </div>
+                    <div class="form-group">
+                        <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
 </div>
-</div>
+
+</html>
