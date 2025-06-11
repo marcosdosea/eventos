@@ -79,6 +79,12 @@
                         <img src="/img/img-user.svg" alt="User" width="32" height="32" class="rounded-circle ms-2">
                     </a>
                     <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser2">
+                        @if (User.IsInRole("ADMINISTRADOR"))
+                        {
+                            <li>
+                                <a class="dropdown-item" asp-controller="Evento" asp-action="GerenciarEventoListar">Gerenciar Evento</a>
+                            </li>
+                        }
                         <li>
                             <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Gerenciar Conta</a>
                         </li>
