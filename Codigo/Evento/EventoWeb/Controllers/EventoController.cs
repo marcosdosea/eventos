@@ -427,6 +427,8 @@ namespace EventoWeb.Controllers
 
 		[Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
 		//GET: EventoController/GerenciarEventoListar
+		[HttpGet]
+		[Route("GerenciarEventoListar")]
 		public async Task<IActionResult> GerenciarEventoListar()
 		{
 			string userCpf = null;
@@ -471,23 +473,26 @@ namespace EventoWeb.Controllers
 		
 		[Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
 		//GET: EventoController/GerenciarEvento
-		public IActionResult GerenciarEvento(uint idEvento)
+		[HttpGet]
+		[Route("GerenciarEvento")]
+		public IActionResult GerenciarEvento([FromQuery] uint idEvento)
 		{
 			Evento evento = _eventoService.Get(idEvento);
 			var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
 			var colaborador = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, idEvento);
+			var isAdmin = User.IsInRole("ADMINISTRADOR");
 
-			if(gestor == null && colaborador == null){
+			if(!isAdmin && gestor == null && colaborador == null){
 				TempData.Clear();
 				TempData["Message"] = "Você não tem permissão para gerenciar este evento!";
 				return RedirectToAction("Index","Home");
 			}else{
-			var viewModel = new GerenciarEventoModel()
-			{
-				Evento = _mapper.Map<EventoModel>(evento),
-				Subeventos = _subeventoService.GetByIdEvento(idEvento)
-			};
-			return View(viewModel);
+				var viewModel = new GerenciarEventoModel()
+				{
+					Evento = _mapper.Map<EventoModel>(evento),
+					Subeventos = _subeventoService.GetByIdEvento(idEvento)
+				};
+				return View(viewModel);
 			}
 		}
 
