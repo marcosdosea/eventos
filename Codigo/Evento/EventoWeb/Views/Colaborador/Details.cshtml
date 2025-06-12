@@ -1,0 +1,80 @@
+@model EventoWeb.Models.ColaboradorModel
+
+@{
+    ViewData["Title"] = "Detalhes do Colaborador";
+}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+</head>
+<body>
+    <h1 class="blue-normal">Detalhes do Colaborador</h1>
+
+    <div class="card mb-3">
+        <div class="card-header blue-normal text-white">
+            <h5 class="mb-0">Informações do Colaborador</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <tbody>
+                        <tr>
+                            <th scope="row">CPF</th>
+                            <td>@Html.DisplayFor(model => model.Colaborador.Cpf)</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Nome</th>
+                            <td>@Html.DisplayFor(model => model.Colaborador.Nome)</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Nome no Crachá</th>
+                            <td>@Html.DisplayFor(model => model.Colaborador.NomeCracha)</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Sexo</th>
+                            <td>
+                                @{
+                                    var status = Model.Colaborador.Sexo switch
+                                    {
+                                        "M" => "Masculino",
+                                        "F" => "Feminino",
+                                        "N" => "Prefiro não dizer",
+                                        _ => "Desconhecido"
+                                    };
+                                    @status
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Email</th>
+                            <td>@Html.DisplayFor(model => model.Colaborador.Email)</td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Celular</th>
+                            <td>@Html.DisplayFor(model => model.Colaborador.Telefone1)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end">
+        <div class="d-flex flex-row">
+            <div class="form-group" style="margin-right: 10px;">
+                <a asp-action="Edit" asp-route-cpf="@Model.Colaborador.Cpf" class="btn btn-warning btn-sm">
+                    <i class="fas fa-edit"></i> Editar
+                </a>
+            </div>
+            <div class="form-group">
+                <a  asp-controller="Colaborador"asp-Controller="Index" asp-route-cpf="@Model.Colaborador.Cpf" class="btn btn-outline-danger">Cancelar</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
