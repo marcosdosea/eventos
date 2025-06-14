@@ -1,64 +1,120 @@
 using AutoMapper;
 using Core;
+using Core.DTO;
 using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Mvc;
-using Service;
 
-namespace EventoWeb.Controllers;
-
-public class ColaboradorController : Controller
+namespace EventoWeb.Controllers
 {
-    private readonly IColaboradorService _colaboradorService;
-    private readonly IMapper _mapper;
-
-    public ColaboradorController(IColaboradorService colaboradorService, IMapper mapper)
+    public class ColaboradorController : Controller
     {
-        _colaboradorService = colaboradorService;
-        _mapper = mapper;
-    }
+        private readonly IColaboradorService _colaboradorService;
+        private readonly IMapper _mapper;
 
-    // GET: ColaboradorController/Create
-    public async Task<ActionResult> Create()
-    {
-        var colaboradores = await _colaboradorService.GetColaboradoresAsync();
-        var colaboradorModel = new ColaboradorModel
+        public ColaboradorController(IColaboradorService colaboradorService, IMapper mapper)
         {
-            Colaboradores = colaboradores
-        };
-        return View(colaboradorModel);
-    }
+            _colaboradorService = colaboradorService;
+            _mapper = mapper;
+        }
 
-    // POST: ColaboradorController/Create
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<ActionResult> Create(ColaboradorModel colaboradorModel)
-    {
-        if (ModelState.IsValid)
+        public async Task<ActionResult> Index()
         {
-            var colaborador = colaboradorModel.Colaborador;
-            var pessoa = _mapper.Map<Pessoa>(colaborador);
-            await _colaboradorService.CreateAsync(pessoa);
-            colaboradorModel.Colaboradores = await _colaboradorService.GetColaboradoresAsync();
+            var colaboradores = await _colaboradorService.GetColaboradoresAsync();
+            var colaboradorModel = new ColaboradorModel
+            {
+                Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(colaboradores)
+            };
             return View(colaboradorModel);
         }
-        colaboradorModel.Colaboradores = await _colaboradorService.GetColaboradoresAsync();
-        return View(colaboradorModel);
-    }
 
-    // POST: ColaboradorController/Delete/5
-    public async Task<ActionResult> Delete(string cpf)
-    {
-        try
+        public async Task<ActionResult> Create()
         {
-            await _colaboradorService.DeleteAsync(cpf);
+            var colaboradores = await _colaboradorService.GetColaboradoresAsync();
+            var colaboradorModel = new ColaboradorModel
+            {
+                Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(colaboradores)
+            };
+            return View(colaboradorModel);
         }
-        catch (Exception ex)
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> Create(ColaboradorModel colaboradorModel)
         {
-            TempData["ErrorMessage"] = ex.Message;
+            if (ModelState.IsValid)
+            {
+                var pessoa = _mapper.Map<Pessoa>(colaboradorModel.Colaborador);
+                await _colaboradorService.CreateAsync(pessoa);
+                colaboradorModel.Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(await _colaboradorService.GetColaboradoresAsync());
+                return View(colaboradorModel);
+            }
+            colaboradorModel.Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(await _colaboradorService.GetColaboradoresAsync());
+            return View(colaboradorModel);
         }
-        var colaboradorModel = new ColaboradorModel();
-        colaboradorModel.Colaboradores = await _colaboradorService.GetColaboradoresAsync();
-        return RedirectToAction("Create", new { colaboradorModel });
+
+        public async Task<ActionResult> Edit(string cpf)
+        {
+            var colaboradores = await _colaboradorService.GetColaboradoresAsync();
+            var colaborador = colaboradores.FirstOrDefault(c => c.Cpf == cpf);
+            if (colaborador == null)
+            {
+                return NotFound();
+            }
+            var colaboradorModel = new ColaboradorModel
+            {
+                Colaborador = _mapper.Map<PessoaModel>(colaborador),
+                Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(colaboradores)
+            };
+            return View(colaboradorModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> Edit(string cpf, ColaboradorModel colaboradorModel)
+        {
+            if (ModelState.IsValid)
+            {
+                var pessoa = _mapper.Map<Pessoa>(colaboradorModel.Colaborador);
+                await _colaboradorService.CreateAsync(pessoa);
+                colaboradorModel.Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(await _colaboradorService.GetColaboradoresAsync());
+                return View(colaboradorModel);
+            }
+            colaboradorModel.Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(await _colaboradorService.GetColaboradoresAsync());
+            return View(colaboradorModel);
+        }
+
+        public async Task<ActionResult> Details(string cpf)
+        {
+            var colaboradores = await _colaboradorService.GetColaboradoresAsync();
+            var colaborador = colaboradores.FirstOrDefault(c => c.Cpf == cpf);
+            if (colaborador == null)
+            {
+                return NotFound();
+            }
+            var colaboradorModel = new ColaboradorModel
+            {
+                Colaborador = _mapper.Map<PessoaModel>(colaborador),
+                Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(colaboradores)
+            };
+            return View(colaboradorModel);
+        }
+
+        public async Task<ActionResult> Delete(string cpf)
+        {
+            try
+            {
+                TempData["ErrorMessage"] = "Exclusão não permitida para colaboradores.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+            var colaboradorModel = new ColaboradorModel
+            {
+                Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(await _colaboradorService.GetColaboradoresAsync())
+            };
+            return RedirectToAction("Create", colaboradorModel);
+        }
     }
 }
