@@ -1,4 +1,4 @@
-@model PessoaModel
+@model ParticipanteModel
 
 @{
     ViewData["Title"] = "Details";
@@ -13,29 +13,23 @@
     <hr />
     <dl class="row">
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Nome)
+            @Html.DisplayNameFor(model => model.Participante.Nome)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Nome)
+            @Html.DisplayFor(model => model.Participante.Nome)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.NomeCracha)
+            @Html.DisplayNameFor(model => model.Participante.Cpf)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.NomeCracha)
+            @Html.DisplayFor(model => model.Participante.Cpf)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Cpf)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Cpf)
-        </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Sexo)
+            @Html.DisplayNameFor(model => model.Participante.Sexo)
         </dt>
         <dd class="col-sm-10">
             @{
-                var status = Model.Sexo switch
+                var status = Model.Participante.Sexo switch
                 {
                     "M" => "Masculino",
                     "F" => "Feminino",
@@ -46,71 +40,71 @@
             }
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Email)
+            @Html.DisplayNameFor(model => model.Participante.Email)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Email)
+            @Html.DisplayFor(model => model.Participante.Email)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Telefone1)
+            @Html.DisplayNameFor(model => model.Participante.Telefone1)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Telefone1)
+            @Html.DisplayFor(model => model.Participante.Telefone1)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Telefone2)
+            @Html.DisplayNameFor(model => model.Participante.Telefone2)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Telefone2)
+            @Html.DisplayFor(model => model.Participante.Telefone2)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Cep)
+            @Html.DisplayNameFor(model => model.Participante.Cep)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Cep)
+            @Html.DisplayFor(model => model.Participante.Cep)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Estado)
+            @Html.DisplayNameFor(model => model.Participante.Estado)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Estado)
+            @Html.DisplayFor(model => model.Participante.Estado)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Cidade)
+            @Html.DisplayNameFor(model => model.Participante.Cidade)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Cidade)
+            @Html.DisplayFor(model => model.Participante.Cidade)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Bairro)
+            @Html.DisplayNameFor(model => model.Participante.Bairro)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Bairro)
+            @Html.DisplayFor(model => model.Participante.Bairro)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Rua)
+            @Html.DisplayNameFor(model => model.Participante.Rua)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Rua)
+            @Html.DisplayFor(model => model.Participante.Rua)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Numero)
+            @Html.DisplayNameFor(model => model.Participante.Numero)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Numero)
+            @Html.DisplayFor(model => model.Participante.Numero)
         </dd>
         <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Complemento)
+            @Html.DisplayNameFor(model => model.Participante.Complemento)
         </dt>
         <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Complemento)
+            @Html.DisplayFor(model => model.Participante.Complemento)
         </dd>
 
     </dl>
 </div>
 <div class="row">
     <div class="col-auto">
-        <button type="button" class="btn btn-blue-normal" onclick="location.href='@Url.Action("Edit", new { id = Model.Id })'">
+        <button type="button" class="btn btn-blue-normal" onclick="location.href='@Url.Action("Edit", new { id = Model.Participante.Id })'">
             Editar
         </button>
     </div>
