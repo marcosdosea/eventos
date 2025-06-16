@@ -6,9 +6,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using EventoWeb.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EventoWeb.Controllers
 {
+    [Authorize]
     public class InscricaoController : Controller
     {
         private readonly IEventoService _eventoService;
@@ -30,25 +32,25 @@ namespace EventoWeb.Controllers
             _userManager = userManager;
         }
 
-        // GET: InscricaoController
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
         public ActionResult Index()
         {
             return View();
         }
 
-        // GET: InscricaoController/Details/5
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
         public ActionResult Details(int id)
         {
             return View();
         }
 
-        // GET: InscricaoController/Create
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
         public ActionResult Create()
         {
             return View();
         }
 
-        // POST: InscricaoController/Create
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Create(IFormCollection collection)
@@ -63,13 +65,13 @@ namespace EventoWeb.Controllers
             }
         }
 
-        // GET: InscricaoController/Edit/5
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
         public ActionResult Edit(int id)
         {
             return View();
         }
 
-        // POST: InscricaoController/Edit/5
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Edit(int id, IFormCollection collection)
@@ -84,13 +86,13 @@ namespace EventoWeb.Controllers
             }
         }
 
-        // GET: InscricaoController/Delete/5
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
         public ActionResult Delete(int id)
         {
             return View();
         }
 
-        // POST: InscricaoController/Delete/5
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Delete(int id, IFormCollection collection)
@@ -105,15 +107,14 @@ namespace EventoWeb.Controllers
             }
         }
 
-
-        // GET: InscricaoController/pessoaAllInscricao/id
+        [Authorize]
         public IActionResult pessoaAllInscricao()
         {
             return View();
         }
 
-        // GET: InscricaoController/realizarInscricao/id
-        public IActionResult realizarInscricao(uint idEvento,uint? idSubevento)
+        [Authorize]
+        public IActionResult realizarInscricao(uint idEvento, uint? idSubevento)
         {
             Evento evento = _eventoService.Get(idEvento);
             EventoModel eventoModel = _mapper.Map<EventoModel>(evento);
@@ -127,7 +128,7 @@ namespace EventoWeb.Controllers
             return View(model);
         }
 
-        // POST: InscricaoController/realizarInscricao/id
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> realizarInscricao(uint idEvento, InscricaoEventoModel inscricaoEvento)
@@ -154,7 +155,7 @@ namespace EventoWeb.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        //GET: InscricaoController/minhasInscricoes
+        [Authorize]
         public async Task<IActionResult> minhasInscricoes(){
         var inscricaoUser = _inscricaoService.GetAllEventsByUserId(User.Identity.Name);
         var listarEventosModel = inscricaoUser.Select(i => new InscricaoEventoModel

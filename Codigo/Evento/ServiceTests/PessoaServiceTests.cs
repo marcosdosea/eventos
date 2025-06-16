@@ -6,6 +6,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Immutable;
 using System.Runtime.ConstrainedExecution;
 using System.Security.Cryptography;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.AspNetCore.Identity;
+using EventoWeb.Models;
 
 namespace Service.Tests
 {
@@ -15,6 +19,7 @@ namespace Service.Tests
 
         private EventoContext _context;
         private IPessoaService _pessoaService;
+        private MockUserManager<UsuarioIdentity> _userManager;
         private IInscricaoService _inscricaoService;
 
         [TestInitialize]
@@ -130,9 +135,10 @@ namespace Service.Tests
             _context.AddRange(papel);
             _context.SaveChanges();
 
-            _inscricaoService = new InscricaoService(_context);
+            _userManager = new MockUserManager<UsuarioIdentity>();
+            _inscricaoService = new InscricaoService(_context, _userManager);
 
-            _pessoaService = new PessoaService(_context,_inscricaoService);
+            _pessoaService = new PessoaService(_userManager, _context, _inscricaoService);
         }
 
         [TestMethod()]
@@ -270,7 +276,7 @@ namespace Service.Tests
             var pessoa = _pessoaService.Get(1);
 
 
-            _pessoaService.CreatePessoaPapel(pessoa, 1, 1);
+            _pessoaService.CreatePessoaPapelAsync(pessoa, 1, 1);
 
             var inscricao = _context.Inscricaopessoaeventos.FirstOrDefault();
             Assert.IsNotNull(inscricao);

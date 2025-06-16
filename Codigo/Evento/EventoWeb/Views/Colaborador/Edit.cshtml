@@ -1,0 +1,200 @@
+@model EventoWeb.Models.ColaboradorModel
+
+@{
+    ViewData["Title"] = "Editar Colaborador";
+}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+</head>
+<body>
+    <h1 class="blue-normal">Editar Colaborador</h1>
+
+    <form asp-action="Edit" asp-route-cpf="@Model.Colaborador.Cpf" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <input type="hidden" asp-for="Colaborador.Cpf" />
+
+        <div class="card mb-3">
+            <div class="card-header blue-normal text-white">
+                <h5 class="mb-0">Dados Pessoais</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="control-label">CPF</label>
+                            <input class="form-control" value="@Model.Colaborador.Cpf" disabled />
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label asp-for="Colaborador.Nome" class="control-label">Nome Completo</label>
+                            <input asp-for="Colaborador.Nome" class="form-control" placeholder="Nome completo" />
+                            <span asp-validation-for="Colaborador.Nome" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="Colaborador.NomeCracha" class="control-label">Nome no Crachá</label>
+                            <input asp-for="Colaborador.NomeCracha" class="form-control" placeholder="Nome que aparecerá no crachá" />
+                            <span asp-validation-for="Colaborador.NomeCracha" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="Colaborador.Sexo" class="control-label">Sexo</label>
+                            <select asp-for="Colaborador.Sexo" class="form-select">
+                                <option value="">Selecione...</option>
+                                <option value="M">Masculino</option>
+                                <option value="F">Feminino</option>
+                                <option value="N">Prefiro não dizer</option>
+                            </select>
+                            <span asp-validation-for="Colaborador.Sexo" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header blue-normal text-white">
+                <h5 class="mb-0">Contato</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="Colaborador.Email" class="control-label">Email</label>
+                            <input asp-for="Colaborador.Email" class="form-control" placeholder="email@exemplo.com" />
+                            <span asp-validation-for="Colaborador.Email" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label asp-for="Colaborador.Telefone1" class="control-label">Celular</label>
+                            <input asp-for="Colaborador.Telefone1" class="form-control" placeholder="(00) 00000-0000" />
+                            <span asp-validation-for="Colaborador.Telefone1" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label asp-for="Colaborador.Telefone2" class="control-label">Telefone Adicional</label>
+                            <input asp-for="Colaborador.Telefone2" class="form-control" placeholder="(00) 0000-0000" />
+                            <span asp-validation-for="Colaborador.Telefone2" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-3">
+            <div class="card-header blue-normal text-white">
+                <h5 class="mb-0">Endereço</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label asp-for="Colaborador.Cep" class="control-label">CEP</label>
+                            <input asp-for="Colaborador.Cep" class="form-control" placeholder="00000-000" />
+                            <span asp-validation-for="Colaborador.Cep" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label asp-for="Colaborador.Estado" class="control-label">Estado</label>
+                            <input asp-for="Colaborador.Estado" class="form-control" />
+                            <span asp-validation-for="Colaborador.Estado" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label asp-for="Colaborador.Cidade" class="control-label">Cidade</label>
+                            <input asp-for="Colaborador.Cidade" class="form-control" />
+                            <span asp-validation-for="Colaborador.Cidade" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="Colaborador.Bairro" class="control-label">Bairro</label>
+                            <input asp-for="Colaborador.Bairro" class="form-control" />
+                            <span asp-validation-for="Colaborador.Bairro" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="Colaborador.Rua" class="control-label">Rua</label>
+                            <input asp-for="Colaborador.Rua" class="form-control" />
+                            <span asp-validation-for="Colaborador.Rua" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label asp-for="Colaborador.Numero" class="control-label">Número</label>
+                            <input asp-for="Colaborador.Numero" class="form-control" />
+                            <span asp-validation-for="Colaborador.Numero" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group">
+                            <label asp-for="Colaborador.Complemento" class="control-label">Complemento</label>
+                            <input asp-for="Colaborador.Complemento" class="form-control" />
+                            <span asp-validation-for="Colaborador.Complemento" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end">
+            <div class="d-flex flex-row">
+                <div class="form-group" style="margin-right: 10px;">
+                    <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
+                </div>
+                <div class="form-group">
+                    <a asp-action="Details" asp-controller="Colaborador" asp-route-cpf="@Model.Colaborador.Cpf" class="btn btn-outline-danger">Cancelar</a>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    @section Scripts {
+        @{
+            await Html.RenderPartialAsync("_ValidationScriptsPartial");
+        }
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                // Máscaras
+                $('#Colaborador_Telefone1').mask('(00) 00000-0000');
+                $('#Colaborador_Telefone2').mask('(00) 0000-0000');
+                $('#Colaborador_Cep').mask('00000-000');
+
+                // Busca CEP
+                $('#Colaborador_Cep').blur(function () {
+                    var cep = $(this).val().replace(/\D/g, '');
+                    if (cep.length === 8) {
+                        $.getJSON(`https://viacep.com.br/ws/${cep}/json/`, function (data) {
+                            if (!data.erro) {
+                                $('#Colaborador_Estado').val(data.uf);
+                                $('#Colaborador_Cidade').val(data.localidade);
+                                $('#Colaborador_Bairro').val(data.bairro);
+                                $('#Colaborador_Rua').val(data.logradouro);
+                            }
+                        });
+                    }
+                });
+            });
+        </script>
+    }
+</body>
+</html>

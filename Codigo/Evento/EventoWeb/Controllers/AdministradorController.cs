@@ -2,10 +2,12 @@ using AutoMapper;
 using Core;
 using Core.Service;
 using EventoWeb.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EventoWeb.Controllers;
 
+[Authorize(Roles = "ADMINISTRADOR")]
 public class AdministradorController : Controller
 {
     private readonly IAdministradorService _administradorService;

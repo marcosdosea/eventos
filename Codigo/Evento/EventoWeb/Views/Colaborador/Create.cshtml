@@ -18,12 +18,13 @@ namespace EventoWeb.Controllers
             _mapper = mapper;
         }
 
-        public async Task<ActionResult> Index()
-        {
-            var colaboradores = await _colaboradorService.GetColaboradoresAsync();
-            var colaboradorModel = new ColaboradorModel
-            {
-                Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(colaboradores)
+        public async Task<ActionResult>
+    Index()
+    {
+    var colaboradores = await _colaboradorService.GetColaboradoresAsync();
+    var colaboradorModel = new ColaboradorModel
+    {
+    Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(colaboradores)
             };
             return View(colaboradorModel);
         }
@@ -45,9 +46,24 @@ namespace EventoWeb.Controllers
             if (ModelState.IsValid)
             {
                 var pessoa = _mapper.Map<Pessoa>(colaboradorModel.Colaborador);
-                await _colaboradorService.CreateAsync(pessoa);
-                colaboradorModel.Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(await _colaboradorService.GetColaboradoresAsync());
-                return View(colaboradorModel);
+                System.Diagnostics.Debug.WriteLine($"Criando colaborador: {pessoa.Nome}, CPF: {pessoa.Cpf}");
+                try
+                {
+                    await _colaboradorService.CreateAsync(pessoa);
+                    return RedirectToAction("Index"); // Redireciona para /Colaborador/Index
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", $"Erro ao criar colaborador: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Erro: {ex.Message}");
+                }
+            }
+            else
+            {
+                foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    System.Diagnostics.Debug.WriteLine(error.ErrorMessage);
+                }
             }
             colaboradorModel.Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(await _colaboradorService.GetColaboradoresAsync());
             return View(colaboradorModel);
@@ -76,7 +92,7 @@ namespace EventoWeb.Controllers
             if (ModelState.IsValid)
             {
                 var pessoa = _mapper.Map<Pessoa>(colaboradorModel.Colaborador);
-                await _colaboradorService.CreateAsync(pessoa);
+                await _colaboradorService.CreateAsync(pessoa); // Nota: Deve ser UpdateAsync, ajustar se necess√°rio
                 colaboradorModel.Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(await _colaboradorService.GetColaboradoresAsync());
                 return View(colaboradorModel);
             }
@@ -104,7 +120,7 @@ namespace EventoWeb.Controllers
         {
             try
             {
-                TempData["ErrorMessage"] = "Exclus„o n„o permitida para colaboradores.";
+                TempData["ErrorMessage"] = "Exclus√£o n√£o permitida para colaboradores.";
             }
             catch (Exception ex)
             {

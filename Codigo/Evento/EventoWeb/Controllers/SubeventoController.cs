@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace EventoWeb.Controllers
 {
-    [Authorize(Roles = "GESTOR")]
+    [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
     public class SubeventoController : Controller
     {
         private readonly ISubeventoService _subeventoService;

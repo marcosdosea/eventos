@@ -134,7 +134,6 @@ public class PessoaService : IPessoaService
             Status = "S"
         };
         _inscricaoService.CreateInscricaoEvento(novaInscricao);
-        
 
         string role = idPapel switch
         {
@@ -143,26 +142,6 @@ public class PessoaService : IPessoaService
             4 => "USUARIO",
             _ => throw new ArgumentException("Papel inválido.")
         };
-        
-        if(role == "GESTOR"){
-            try{
-            await _userManager.AddClaimAsync(existingUser,new Claim("GESTOR","true"));
-            }catch(Exception e){
-                throw new Exception("Erro ao adicionar claim de gestor ao usuário: " + e.Message);
-            }
-        }else if(role == "COLABORADOR"){
-            try{
-            await _userManager.AddClaimAsync(existingUser,new Claim("COLABORADOR","true"));
-            }catch(Exception e){
-                throw new Exception("Erro ao adicionar claim de colaborador ao usuário: " + e.Message);
-            }
-        }else{
-            try{
-            await _userManager.AddClaimAsync(existingUser,new Claim("USUARIO","true"));
-            }catch(Exception e){
-                throw new Exception("Erro ao adicionar claim de usuário ao usuário: " + e.Message);
-            }
-        }
 
         var isInRole = await _userManager.IsInRoleAsync(existingUser, role);
         if (!isInRole)

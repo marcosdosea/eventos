@@ -9,6 +9,8 @@ using Core;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Core.DTO;
+using EventoWeb.Models;
 
 namespace EventoWeb
 {
@@ -21,7 +23,22 @@ namespace EventoWeb
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
-            builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            builder.Services.AddAutoMapper(cfg =>
+            {
+                cfg.CreateMap<PessoaModel, Pessoa>().ReverseMap();
+                cfg.CreateMap<PessoaSimpleDTO, ColaboradorDTO>()
+                    .ForMember(dest => dest.Id, opt => opt.MapFrom(src => 0)) // Valor padrão
+                    .ForMember(dest => dest.Cpf, opt => opt.MapFrom(src => src.Cpf))
+                    .ForMember(dest => dest.Nome, opt => opt.MapFrom(src => src.Nome))
+                    .ForMember(dest => dest.NomeCracha, opt => opt.MapFrom(src => string.Empty))
+                    .ForMember(dest => dest.Sexo, opt => opt.MapFrom(src => string.Empty))
+                    .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
+                    .ForMember(dest => dest.Telefone1, opt => opt.MapFrom(src => src.Telefone1))
+                    .ForMember(dest => dest.Telefone2, opt => opt.MapFrom(src => src.Telefone1 ?? string.Empty))
+                    .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => true)) // Valor padrão
+                    .ForMember(dest => dest.RegistrationDate, opt => opt.MapFrom(src => DateTime.Now)) // Valor padrão
+                    .ForMember(dest => dest.LastLogin, opt => opt.MapFrom(src => (DateTime?)null)); // Valor padrão
+            }, AppDomain.CurrentDomain.GetAssemblies());
             builder.Services.AddTransient<IAdministradorService, AdministradorService>();
             builder.Services.AddTransient<ITipoInscricaoService, TipoInscricaoService>();
             builder.Services.AddTransient<IAreaInteresseService, AreaInteresseService>();
@@ -35,7 +52,7 @@ namespace EventoWeb
             builder.Services.AddTransient<IEmailSender, EmailSender>();
             builder.Services.AddTransient<IParticipacaoPessoaEventoService, ParticipacaoPessoaEventoService>();
             builder.Services.AddTransient<IParticipanteService, ParticipanteService>();
-
+            builder.Services.AddTransient<IColaboradorService, ColaboradorService>();
 
             builder.Services.AddDbContext<EventoContext>(
                 options => options.UseMySQL(builder.Configuration.GetConnectionString("EventoDatabase")));
@@ -115,11 +132,18 @@ namespace EventoWeb
             app.UseAuthentication();
             app.UseAuthorization();
 
+            // Inicializa os roles do sistema
+            using (var scope = app.Services.CreateScope())
+            {
+                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+                IdentityInitializer.InitializeRoles(roleManager).Wait();
+            }
+
             app.Use(async (context, next) =>
             {
                 var isAuthenticated = context.User.Identity.IsAuthenticated;
                 var isAdmin = context.User.IsInRole("ADMINISTRADOR");
-                
+
                 if (isAuthenticated)
                 {
                     System.Diagnostics.Debug.WriteLine($"User is authenticated. Is Admin: {isAdmin}");
@@ -132,7 +156,7 @@ namespace EventoWeb
                 {
                     System.Diagnostics.Debug.WriteLine("User is NOT authenticated");
                 }
-                
+
                 await next();
             });
 
