@@ -13,6 +13,7 @@ namespace Service.Tests
     {
         private EventoContext _context;
         private IInscricaoService _inscricaoService;
+        private MockUserManager<UsuarioIdentity> _userManager;
 
         [TestInitialize]
         public void Initialize()
@@ -231,7 +232,11 @@ namespace Service.Tests
             _context.AddRange(inscricoes);
             _context.SaveChanges();
 
-            _inscricaoService = new InscricaoService(_context);
+            _userManager = new MockUserManager<UsuarioIdentity>();
+            _inscricaoService = new InscricaoService(_context, _userManager);
+
+            var user = new UsuarioIdentity { UserName = "test@example.com", Email = "test@example.com" };
+            _userManager.CreateAsync(user, "Test@123");
         }
 
         [TestMethod()]
@@ -272,7 +277,7 @@ namespace Service.Tests
         public void DeleteTest()
         {
             // Act
-            _inscricaoService.DeletePessoaPapel(1, 1, 1);
+            _inscricaoService.DeletePessoaPapel(1, 1, 1, "12246232367");
             // Assert
             var inscricoes = _inscricaoService.GetByEventoAndPapel(1, 1);
             Assert.IsNotNull(inscricoes);

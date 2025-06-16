@@ -21,6 +21,9 @@ namespace Service
 
         public uint Create(Modelocertificado modelocertificado)
         {
+            if (_context.Modelocertificados.Any(m => m.IdEvento == modelocertificado.IdEvento))
+                throw new Exception("Já existe um modelo de certificado para este evento");
+                
             _context.Modelocertificados.Add(modelocertificado);
             _context.SaveChanges();
             return modelocertificado.Id;
@@ -28,7 +31,11 @@ namespace Service
 
         public void Update(Modelocertificado modelocertificado)
         {
-            _context.Modelocertificados.Update(modelocertificado);
+            var existingModel = _context.Modelocertificados.Find(modelocertificado.Id);
+            if (existingModel == null)
+                throw new Exception("Modelo de certificado não encontrado");
+                
+            _context.Entry(existingModel).CurrentValues.SetValues(modelocertificado);
             _context.SaveChanges();
         }
 
@@ -47,7 +54,7 @@ namespace Service
             return _context.Modelocertificados
                 .Include(m => m.IdEventoNavigation)
                 .AsNoTracking()
-                .FirstOrDefault(m => m.Id == id)!;
+                .FirstOrDefault(m => m.Id == id);
         }
 
         public IEnumerable<Modelocertificado> GetAll()
