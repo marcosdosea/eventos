@@ -1,129 +1,136 @@
-@model EventoWeb.Models.ColaboradorModel
+using AutoMapper;
+using Core;
+using Core.DTO;
+using Core.Service;
+using EventoWeb.Models;
+using Microsoft.AspNetCore.Mvc;
 
-@{
-    ViewData["Title"] = "Novo Colaborador";
-}
-
-<!DOCTYPE html>
-<html lang="pt-BR">
-
-<h1 class="blue-normal">Cadastrar Colaborador</h1>
-
-<form asp-action="Create" method="post">
-    @Html.AntiForgeryToken()
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-    
-    <div class="card mb-3">
-        <div class="card-header blue-normal text-white">
-            <h5 class="mb-0">Dados do Colaborador</h5>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label asp-for="Colaborador.Cpf" class="control-label">CPF</label>
-                        <input asp-for="Colaborador.Cpf" class="form-control" placeholder="000.000.000-00" />
-                        <span asp-validation-for="Colaborador.Cpf" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="col-md-8">
-                    <div class="form-group">
-                        <label asp-for="Colaborador.Nome" class="control-label">Nome Completo</label>
-                        <input asp-for="Colaborador.Nome" class="form-control" placeholder="Nome completo" />
-                        <span asp-validation-for="Colaborador.Nome" class="text-danger"></span>
-                    </div>
-                </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label asp-for="Colaborador.Email" class="control-label">Email</label>
-                        <input asp-for="Colaborador.Email" class="form-control" placeholder="email@exemplo.com" />
-                        <span asp-validation-for="Colaborador.Email" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label asp-for="Colaborador.Telefone1" class="control-label">Celular</label>
-                        <input asp-for="Colaborador.Telefone1" class="form-control" placeholder="(00) 00000-0000" />
-                        <span asp-validation-for="Colaborador.Telefone1" class="text-danger"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="d-flex justify-content-end">
-        <div class="d-flex flex-row">
-            <div class="form-group" style="margin-right: 10px;">
-                <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
-            </div>
-            <div class="form-group">
-                <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
-            </div>
-        </div>
-    </div>
-</form>
-
-@if (Model.Colaboradores != null && Model.Colaboradores.Any())
+namespace EventoWeb.Controllers
 {
-    <div class="card mt-4">
-        <div class="card-header blue-normal text-white">
-            <h5 class="mb-0">Colaboradores Cadastrados</h5>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>CPF</th>
-                            <th>Nome</th>
-                            <th>Email</th>
-                            <th>Celular</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model.Colaboradores)
-                        {
-                            <tr>
-                                <td>@item.Cpf</td>
-                                <td>@item.Nome</td>
-                                <td>@item.Email</td>
-                                <td>@item.Telefone1</td>
-                                <td>
-                                    <a asp-action="Edit" asp-route-cpf="@item.Cpf" class="btn btn-warning btn-sm">
-                                        <i class="fas fa-edit"></i> Editar
-                                    </a>
-                                    <a asp-action="Delete" asp-route-cpf="@item.Cpf" class="btn btn-danger btn-sm delete-colaborador">
-                                        <i class="fas fa-trash"></i> Excluir
-                                    </a>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-}
+    public class ColaboradorController : Controller
+    {
+        private readonly IColaboradorService _colaboradorService;
+        private readonly IMapper _mapper;
 
-@section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            // Máscaras
-            $('#Colaborador_Cpf').mask('000.000.000-00');
-            $('#Colaborador_Telefone1').mask('(00) 00000-0000');
+        public ColaboradorController(IColaboradorService colaboradorService, IMapper mapper)
+        {
+            _colaboradorService = colaboradorService;
+            _mapper = mapper;
+        }
 
-            // Confirmação de exclusão
-            $('.delete-colaborador').click(function(e) {
-                if (!confirm('Tem certeza que deseja excluir este colaborador?')) {
-                    e.preventDefault();
+        public async Task<ActionResult>
+    Index()
+    {
+    var colaboradores = await _colaboradorService.GetColaboradoresAsync();
+    var colaboradorModel = new ColaboradorModel
+    {
+    Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(colaboradores)
+            };
+            return View(colaboradorModel);
+        }
+
+        public async Task<ActionResult> Create()
+        {
+            var colaboradores = await _colaboradorService.GetColaboradoresAsync();
+            var colaboradorModel = new ColaboradorModel
+            {
+                Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(colaboradores)
+            };
+            return View(colaboradorModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> Create(ColaboradorModel colaboradorModel)
+        {
+            if (ModelState.IsValid)
+            {
+                var pessoa = _mapper.Map<Pessoa>(colaboradorModel.Colaborador);
+                System.Diagnostics.Debug.WriteLine($"Criando colaborador: {pessoa.Nome}, CPF: {pessoa.Cpf}");
+                try
+                {
+                    await _colaboradorService.CreateAsync(pessoa);
+                    return RedirectToAction("Index"); // Redireciona para /Colaborador/Index
                 }
-            });
-        });
-    </script>
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", $"Erro ao criar colaborador: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Erro: {ex.Message}");
+                }
+            }
+            else
+            {
+                foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    System.Diagnostics.Debug.WriteLine(error.ErrorMessage);
+                }
+            }
+            colaboradorModel.Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(await _colaboradorService.GetColaboradoresAsync());
+            return View(colaboradorModel);
+        }
+
+        public async Task<ActionResult> Edit(string cpf)
+        {
+            var colaboradores = await _colaboradorService.GetColaboradoresAsync();
+            var colaborador = colaboradores.FirstOrDefault(c => c.Cpf == cpf);
+            if (colaborador == null)
+            {
+                return NotFound();
+            }
+            var colaboradorModel = new ColaboradorModel
+            {
+                Colaborador = _mapper.Map<PessoaModel>(colaborador),
+                Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(colaboradores)
+            };
+            return View(colaboradorModel);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> Edit(string cpf, ColaboradorModel colaboradorModel)
+        {
+            if (ModelState.IsValid)
+            {
+                var pessoa = _mapper.Map<Pessoa>(colaboradorModel.Colaborador);
+                await _colaboradorService.CreateAsync(pessoa); // Nota: Deve ser UpdateAsync, ajustar se necessário
+                colaboradorModel.Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(await _colaboradorService.GetColaboradoresAsync());
+                return View(colaboradorModel);
+            }
+            colaboradorModel.Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(await _colaboradorService.GetColaboradoresAsync());
+            return View(colaboradorModel);
+        }
+
+        public async Task<ActionResult> Details(string cpf)
+        {
+            var colaboradores = await _colaboradorService.GetColaboradoresAsync();
+            var colaborador = colaboradores.FirstOrDefault(c => c.Cpf == cpf);
+            if (colaborador == null)
+            {
+                return NotFound();
+            }
+            var colaboradorModel = new ColaboradorModel
+            {
+                Colaborador = _mapper.Map<PessoaModel>(colaborador),
+                Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(colaboradores)
+            };
+            return View(colaboradorModel);
+        }
+
+        public async Task<ActionResult> Delete(string cpf)
+        {
+            try
+            {
+                TempData["ErrorMessage"] = "Exclusão não permitida para colaboradores.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+            var colaboradorModel = new ColaboradorModel
+            {
+                Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(await _colaboradorService.GetColaboradoresAsync())
+            };
+            return RedirectToAction("Create", colaboradorModel);
+        }
+    }
 }
-</rewritten_file>
