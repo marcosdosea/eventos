@@ -1,6 +1,7 @@
 using AutoMapper;
-using EventoWeb.Models;
 using Core;
+using Core.DTO;
+using EventoWeb.Models;
 
 namespace EventoWeb.Mappers;
 
@@ -14,6 +15,8 @@ public class PessoaProfile : Profile
         .ForMember(dest => dest.Foto, opt => opt.MapFrom(src => ByteArrayToFormFile(src.Foto, "foto.png")))
         .ForMember(dest => dest.FotoBase64, opt => opt.MapFrom(src => Convert.ToBase64String(src.Foto)));
 
+        CreateMap<PessoaSimpleDTO, ParticipanteDTO>();
+        CreateMap<PessoaSimpleDTO, PessoaModel>();
     }
 
     private static IFormFile ByteArrayToFormFile(byte[] byteArray, string fileName)
