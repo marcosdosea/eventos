@@ -27,7 +27,7 @@ namespace EventoWeb
             {
                 cfg.CreateMap<PessoaModel, Pessoa>().ReverseMap();
                 cfg.CreateMap<PessoaSimpleDTO, ColaboradorDTO>()
-                    .ForMember(dest => dest.Id, opt => opt.MapFrom(src => 0)) // Valor padr„o
+                    .ForMember(dest => dest.Id, opt => opt.MapFrom(src => 0)) // Valor padr√£o
                     .ForMember(dest => dest.Cpf, opt => opt.MapFrom(src => src.Cpf))
                     .ForMember(dest => dest.Nome, opt => opt.MapFrom(src => src.Nome))
                     .ForMember(dest => dest.NomeCracha, opt => opt.MapFrom(src => string.Empty))
@@ -35,9 +35,9 @@ namespace EventoWeb
                     .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
                     .ForMember(dest => dest.Telefone1, opt => opt.MapFrom(src => src.Telefone1))
                     .ForMember(dest => dest.Telefone2, opt => opt.MapFrom(src => src.Telefone1 ?? string.Empty))
-                    .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => true)) // Valor padr„o
-                    .ForMember(dest => dest.RegistrationDate, opt => opt.MapFrom(src => DateTime.Now)) // Valor padr„o
-                    .ForMember(dest => dest.LastLogin, opt => opt.MapFrom(src => (DateTime?)null)); // Valor padr„o
+                    .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => true)) // Valor padr√£o
+                    .ForMember(dest => dest.RegistrationDate, opt => opt.MapFrom(src => DateTime.Now)) // Valor padr√£o
+                    .ForMember(dest => dest.LastLogin, opt => opt.MapFrom(src => (DateTime?)null)); // Valor padr√£o
             }, AppDomain.CurrentDomain.GetAssemblies());
             builder.Services.AddTransient<IAdministradorService, AdministradorService>();
             builder.Services.AddTransient<ITipoInscricaoService, TipoInscricaoService>();
@@ -52,6 +52,7 @@ namespace EventoWeb
             builder.Services.AddTransient<IEmailSender, EmailSender>();
             builder.Services.AddTransient<IParticipacaoPessoaEventoService, ParticipacaoPessoaEventoService>();
             builder.Services.AddTransient<IColaboradorService, ColaboradorService>();
+            builder.Services.AddTransient<IParticipanteService, ParticipanteService>();
 
             builder.Services.AddDbContext<EventoContext>(
                 options => options.UseMySQL(builder.Configuration.GetConnectionString("EventoDatabase")));
