@@ -1,105 +1,129 @@
 @using Core.DTO
-
-@model ColaboradorModel
+@model EventoWeb.Models.ColaboradorModel
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Colaboradores";
 }
 
 <link href="~/lib/datatable/css/datatables.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"]</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
-</head>
-<body>
-    <div>
-        <h1 class="blue-normal">Seja Bem-vindo</h1>
-        <button type="button" class="btn btn-lg btn-blue-normal mb-2" onclick="location.href='@Url.Action("Create")'">
-            Adicionar Colaborador
-        </button>
-        <div class="card mt-4">
-            <div class="card-header blue-normal text-white">
-                <h5 class="mb-0">Colaboradores Cadastrados</h5>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table id="tableColaborador" class="table table-striped">
-                        <thead class="blue-normal blue-normal-bg-table">
+<style>
+    .btn-custom-edit {
+        background-color: #FFC107;
+        color: #000;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 5px;
+        margin-right: 5px;
+    }
+    .btn-custom-edit:hover {
+        background-color: #E0A800;
+        color: #000;
+    }
+    .btn-custom-details {
+        background-color: #007BFF;
+        color: #FFF;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 5px;
+        margin-right: 5px;
+    }
+    .btn-custom-details:hover {
+        background-color: #0056b3;
+        color: #FFF;
+    }
+    .btn-custom-delete {
+        background-color: #DC3545;
+        color: #FFF;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 5px;
+    }
+    .btn-custom-delete:hover {
+        background-color: #B02A37;
+        color: #FFF;
+    }
+</style>
+
+<div>
+    <h1 class="blue-normal">Colaboradores</h1>
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+    <button type="button" class="btn btn-lg btn-blue-normal mb-2" onclick="location.href='@Url.Action("Create", "Colaborador")'">Adicionar Colaborador</button>
+    <div class="card">
+        <div class="card-header">
+            <h5 class="blue-normal">Colaboradores Cadastrados</h5>
+        </div>
+        <div class="card-body">
+            <table id="tableColaborador" class="table table-striped">
+                <thead class="blue-normal blue-normal-bg-table">
+                    <tr>
+                        <th>CPF</th>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Celular</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Colaboradores != null && Model.Colaboradores.Any())
+                    {
+                        @foreach (var item in Model.Colaboradores)
+                        {
                             <tr>
-                                <th>CPF</th>
-                                <th>Nome</th>
-                                <th>Email</th>
-                                <th>Celular</th>
-                                <th>Ações</th>
+                                <td>@item.Cpf</td>
+                                <td>@item.Nome</td>
+                                <td>@item.Email</td>
+                                <td>@item.Telefone1</td>
+                                <td>
+                                    <button class="btn-custom-edit" onclick="location.href='@Url.Action("Edit", "Colaborador", new { cpf = @item.Cpf })'">
+                                        <i class="fas fa-edit"></i> Editar
+                                    </button>
+                                    <button class="btn-custom-details" onclick="location.href='@Url.Action("Details", "Colaborador", new { cpf = @item.Cpf })'">
+                                        <i class="fas fa-info"></i> Detalhes
+                                    </button>
+                                    <button class="btn-custom-delete" onclick="location.href='@Url.Action("Delete", "Colaborador", new { cpf = @item.Cpf })'">
+                                        <i class="fas fa-trash"></i> Excluir
+                                    </button>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            @if (Model.Colaboradores != null)
-                            {
-                                @foreach (var item in Model.Colaboradores)
-                                {
-                                    <tr>
-                                        <td>@item.Cpf</td>
-                                        <td>@item.Nome</td>
-                                        <td>@item.Email</td>
-                                        <td>@item.Telefone1</td>
-                                        <td>
-                                            <a asp-action="Edit" asp-route-cpf="@item.Cpf" class="btn btn-warning btn-sm">
-                                                <i class="fas fa-edit"></i> Editar
-                                            </a>
-                                            <a asp-action="Details" asp-route-cpf="@item.Cpf" class="btn btn-info btn-sm">
-                                                <i class="fas fa-info-circle"></i> Detalhes
-                                            </a>
-                                            <a asp-action="Delete" asp-route-cpf="@item.Cpf" class="btn btn-danger btn-sm delete-colaborador">
-                                                <i class="fas fa-trash"></i> Excluir
-                                            </a>
-                                        </td>
-                                    </tr>
-                                }
-                            }
-                            else
-                            {
-                                <tr><td colspan="5">Nenhum colaborador encontrado.</td></tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5">Nenhum colaborador encontrado.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
+</div>
 
-    @section Scripts {
-        <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-        <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-        <script src="~/lib/datatable/js/datatables.min.js"></script>
-        <script>
-            $(document).ready(function () {
-                $('#tableColaborador').DataTable({
-                    columnDefs: [
-                        { orderable: true, targets: [0, 1, 2, 3] },
-                        { orderable: false, targets: [4] }
-                    ],
-                    searching: true,
-                    ordering: true,
-                    paging: true,
-                    language: {
-                        url: '@Url.Content("~/lib/datatable/js/pt-BR.json")'
-                    }
-                });
-
-                // Confirmação de exclusão
-                $('.delete-colaborador').click(function (e) {
-                    if (!confirm('Tem certeza que deseja excluir este colaborador?')) {
-                        e.preventDefault();
-                    }
-                });
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/datatable/js/datatables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#tableColaborador').DataTable({
+                columnDefs: [
+                    { orderable: true, targets: [0] },
+                    { orderable: false, targets: [1, 2, 3, 4] }
+                ],
+                searching: true,
+                ordering: true,
+                paging: true,
+                language: {
+                    url: '@Url.Content("~/lib/datatable/js/pt-BR.json")'
+                }
             });
-        </script>
-    }
-</body>
-</html>
+        });
+    </script>
+}
