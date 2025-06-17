@@ -1,0 +1,34 @@
+﻿@* Views/Modelocertificado/Index.cshtml *@
+@model IEnumerable<EventoWeb.Models.ModelocertificadoModel>
+@{
+    ViewData["Title"] = "Modelos de Certificado";
+}
+<h1>Modelos de Certificado</h1>
+<p>
+    <a asp-action="Create" class="btn btn-primary">Novo Modelo</a>
+</p>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Evento</th>
+            <th>Data de Emissão</th>
+            <th>Código</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.NomeEvento</td>
+                <td>@item.DataEmissao.ToString("dd/MM/yyyy")</td>
+                <td>@item.Codigo</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Detalhes</a>
+                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Editar</a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Excluir</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
