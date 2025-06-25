@@ -20,22 +20,41 @@ namespace EventoWeb.Controllers
 
         public async Task<ActionResult> Index()
         {
-            var colaboradores = await _colaboradorService.GetColaboradoresAsync();
-            var colaboradorModel = new ColaboradorModel
+            try
             {
-                Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(colaboradores)
-            };
-            return View(colaboradorModel);
+                var colaboradores = await _colaboradorService.GetColaboradoresAsync();
+                var colaboradorModel = new ColaboradorModel
+                {
+                    Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(colaboradores)
+                };
+                return View(colaboradorModel);
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Erro ao carregar colaboradores: {ex.Message}";
+                System.Diagnostics.Debug.WriteLine($"Erro: {ex.Message}");
+                return View(new ColaboradorModel());
+            }
         }
 
         public async Task<ActionResult> Create()
         {
-            var colaboradores = await _colaboradorService.GetColaboradoresAsync();
-            var colaboradorModel = new ColaboradorModel
+            try
             {
-                Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(colaboradores)
-            };
-            return View(colaboradorModel);
+                var colaboradores = await _colaboradorService.GetColaboradoresAsync();
+                var colaboradorModel = new ColaboradorModel
+                {
+                    Colaborador = new PessoaModel(),
+                    Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(colaboradores)
+                };
+                return View(colaboradorModel);
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Erro ao carregar formulário: {ex.Message}";
+                System.Diagnostics.Debug.WriteLine($"Erro: {ex.Message}");
+                return RedirectToAction("Index");
+            }
         }
 
         [HttpPost]
@@ -44,10 +63,25 @@ namespace EventoWeb.Controllers
         {
             if (ModelState.IsValid)
             {
-                var pessoa = _mapper.Map<Pessoa>(colaboradorModel.Colaborador);
-                await _colaboradorService.CreateAsync(pessoa);
-                colaboradorModel.Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(await _colaboradorService.GetColaboradoresAsync());
-                return View(colaboradorModel);
+                try
+                {
+                    var pessoa = _mapper.Map<Pessoa>(colaboradorModel.Colaborador);
+                    System.Diagnostics.Debug.WriteLine($"Criando colaborador: {pessoa.Nome}, CPF: {pessoa.Cpf}");
+                    await _colaboradorService.CreateAsync(pessoa);
+                    return RedirectToAction("Index");
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", $"Erro ao criar colaborador: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Erro: {ex.Message}");
+                }
+            }
+            else
+            {
+                foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    System.Diagnostics.Debug.WriteLine(error.ErrorMessage);
+                }
             }
             colaboradorModel.Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(await _colaboradorService.GetColaboradoresAsync());
             return View(colaboradorModel);
@@ -55,18 +89,27 @@ namespace EventoWeb.Controllers
 
         public async Task<ActionResult> Edit(string cpf)
         {
-            var colaboradores = await _colaboradorService.GetColaboradoresAsync();
-            var colaborador = colaboradores.FirstOrDefault(c => c.Cpf == cpf);
-            if (colaborador == null)
+            try
             {
-                return NotFound();
+                var colaboradores = await _colaboradorService.GetColaboradoresAsync();
+                var colaborador = colaboradores.FirstOrDefault(c => c.Cpf == cpf);
+                if (colaborador == null)
+                {
+                    return NotFound();
+                }
+                var colaboradorModel = new ColaboradorModel
+                {
+                    Colaborador = _mapper.Map<PessoaModel>(colaborador),
+                    Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(colaboradores)
+                };
+                return View(colaboradorModel);
             }
-            var colaboradorModel = new ColaboradorModel
+            catch (Exception ex)
             {
-                Colaborador = _mapper.Map<PessoaModel>(colaborador),
-                Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(colaboradores)
-            };
-            return View(colaboradorModel);
+                TempData["ErrorMessage"] = $"Erro ao carregar colaborador: {ex.Message}";
+                System.Diagnostics.Debug.WriteLine($"Erro: {ex.Message}");
+                return RedirectToAction("Index");
+            }
         }
 
         [HttpPost]
@@ -75,10 +118,17 @@ namespace EventoWeb.Controllers
         {
             if (ModelState.IsValid)
             {
-                var pessoa = _mapper.Map<Pessoa>(colaboradorModel.Colaborador);
-                await _colaboradorService.CreateAsync(pessoa);
-                colaboradorModel.Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(await _colaboradorService.GetColaboradoresAsync());
-                return View(colaboradorModel);
+                try
+                {
+                    var pessoa = _mapper.Map<Pessoa>(colaboradorModel.Colaborador);
+                    await _colaboradorService.UpdateAsync(pessoa);
+                    return RedirectToAction("Index");
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", $"Erro ao atualizar colaborador: {ex.Message}");
+                    System.Diagnostics.Debug.WriteLine($"Erro: {ex.Message}");
+                }
             }
             colaboradorModel.Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(await _colaboradorService.GetColaboradoresAsync());
             return View(colaboradorModel);
@@ -86,35 +136,70 @@ namespace EventoWeb.Controllers
 
         public async Task<ActionResult> Details(string cpf)
         {
-            var colaboradores = await _colaboradorService.GetColaboradoresAsync();
-            var colaborador = colaboradores.FirstOrDefault(c => c.Cpf == cpf);
-            if (colaborador == null)
+            try
             {
-                return NotFound();
+                var colaboradores = await _colaboradorService.GetColaboradoresAsync();
+                var colaborador = colaboradores.FirstOrDefault(c => c.Cpf == cpf);
+                if (colaborador == null)
+                {
+                    return NotFound();
+                }
+                var colaboradorModel = new ColaboradorModel
+                {
+                    Colaborador = _mapper.Map<PessoaModel>(colaborador),
+                    Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(colaboradores)
+                };
+                return View(colaboradorModel);
             }
-            var colaboradorModel = new ColaboradorModel
+            catch (Exception ex)
             {
-                Colaborador = _mapper.Map<PessoaModel>(colaborador),
-                Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(colaboradores)
-            };
-            return View(colaboradorModel);
+                TempData["ErrorMessage"] = $"Erro ao carregar detalhes: {ex.Message}";
+                System.Diagnostics.Debug.WriteLine($"Erro: {ex.Message}");
+                return RedirectToAction("Index");
+            }
         }
 
         public async Task<ActionResult> Delete(string cpf)
         {
             try
             {
-                TempData["ErrorMessage"] = "Exclusão não permitida para colaboradores.";
+                var colaboradores = await _colaboradorService.GetColaboradoresAsync();
+                var colaborador = colaboradores.FirstOrDefault(c => c.Cpf == cpf);
+                if (colaborador == null)
+                {
+                    return NotFound();
+                }
+                var colaboradorModel = new ColaboradorModel
+                {
+                    Colaborador = _mapper.Map<PessoaModel>(colaborador),
+                    Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(colaboradores)
+                };
+                return View(colaboradorModel);
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = ex.Message;
+                TempData["ErrorMessage"] = $"Erro ao carregar colaborador: {ex.Message}";
+                System.Diagnostics.Debug.WriteLine($"Erro: {ex.Message}");
+                return RedirectToAction("Index");
             }
-            var colaboradorModel = new ColaboradorModel
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> Delete(string cpf, ColaboradorModel colaboradorModel)
+        {
+            try
             {
-                Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(await _colaboradorService.GetColaboradoresAsync())
-            };
-            return RedirectToAction("Create", colaboradorModel);
+                await _colaboradorService.DeleteAsync(cpf);
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", $"Erro ao excluir colaborador: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Erro: {ex.Message}");
+                colaboradorModel.Colaboradores = _mapper.Map<IEnumerable<ColaboradorDTO>>(await _colaboradorService.GetColaboradoresAsync());
+                return View(colaboradorModel);
+            }
         }
     }
 }
