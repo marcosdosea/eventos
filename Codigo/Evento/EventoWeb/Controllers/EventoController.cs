@@ -280,7 +280,7 @@ namespace EventoWeb.Controllers
 		}
 
 		
-		[Authorize(Roles = "ADMINISTRADOR,GESTOR")]
+		[Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
 		// GET: EventoController/CreateColaborador
 		public ActionResult CreateColaborador(uint idEvento)
 		{
@@ -433,6 +433,7 @@ namespace EventoWeb.Controllers
 		{
 			string userCpf = null;
 			uint idPapel = 0;
+			bool isAdmin = false;
 
 			if (User.Identity.IsAuthenticated)
 			{
@@ -444,7 +445,11 @@ namespace EventoWeb.Controllers
 				{
 					var roles = await _userManager.GetRolesAsync(user);
 					
-					if (roles.Contains("GESTOR"))
+					if (roles.Contains("ADMINISTRADOR"))
+					{
+						isAdmin = true;
+					}
+					else if (roles.Contains("GESTOR"))
 					{
 						idPapel = 2;
 					}
@@ -455,16 +460,33 @@ namespace EventoWeb.Controllers
 				}
 			}
 			
-			var listarEventos = _eventoService.GetEventByCpf(userCpf, idPapel).ToList();
+			IEnumerable<Evento> listarEventos;
 			
-			var listarEventosModel = listarEventos.Select(e => new EventoModel
+			if (isAdmin)
+			{
+				// Administradores veem todos os eventos
+				listarEventos = _eventoService.GetAll();
+			}
+			else
+			{
+				// Gestores e colaboradores veem apenas eventos onde participam
+				listarEventos = _eventoService.GetEventByCpf(userCpf, idPapel);
+			}
+			
+			// Converter para lista primeiro para evitar problemas de DataReader
+			var eventosList = listarEventos.ToList();
+			
+			// Buscar todos os tipos de evento de uma vez
+			var tiposEvento = _tipoEventoService.GetAll().ToDictionary(t => t.Id, t => t.Nome);
+			
+			var listarEventosModel = eventosList.Select(e => new EventoModel
 			{
 				Id = e.Id,
 				DataInicio = (DateTime)e.DataInicio,
 				Nome = e.Nome,
 				Status = e.Status,
 				IdTipoEvento = (uint)e.IdTipoEvento,
-				NomeTipoEvento = _tipoEventoService.GetNomeById((uint)e.IdTipoEvento)
+				NomeTipoEvento = tiposEvento.ContainsKey((uint)e.IdTipoEvento) ? tiposEvento[(uint)e.IdTipoEvento] : "Tipo não encontrado"
 			}).ToList();
 
 			return View(listarEventosModel);
@@ -487,12 +509,12 @@ namespace EventoWeb.Controllers
 				TempData["Message"] = "Você não tem permissão para gerenciar este evento!";
 				return RedirectToAction("Index","Home");
 			}else{
-				var viewModel = new GerenciarEventoModel()
-				{
-					Evento = _mapper.Map<EventoModel>(evento),
-					Subeventos = _subeventoService.GetByIdEvento(idEvento)
-				};
-				return View(viewModel);
+			var viewModel = new GerenciarEventoModel()
+			{
+				Evento = _mapper.Map<EventoModel>(evento),
+				Subeventos = _subeventoService.GetByIdEvento(idEvento)
+			};
+			return View(viewModel);
 			}
 		}
 
