@@ -163,6 +163,12 @@ namespace EventoWeb
 
             app.MapRazorPages();
 
+            app.MapGet("/Participante", context =>
+            {
+                context.Response.Redirect("/Participante/Index");
+                return Task.CompletedTask;
+            });
+
             app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
