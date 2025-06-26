@@ -1,4 +1,4 @@
-@model ParticipanteModel
+@model EventoWeb.Models.ParticipanteModel
 
 @{
     ViewData["Title"] = "Delete";
@@ -114,17 +114,20 @@
             </dd>
         </dl>
     </div>
-    <form asp-action="Delete" class="row">
-        <div class="d-flex justify-content-end">
-        <div class="d-flex flex-row">
-            <div class="form-group" style="margin-right: 10px;">
-                <input type="submit" value="Excluir" class="btn btn-danger"/>
+        <form asp-action="Delete" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Participante.Id" />
+
+            <div class="d-flex justify-content-end">
+                <div class="d-flex flex-row">
+                    <div class="form-group" style="margin-right: 10px;">
+                        <input type="submit" value="Excluir" class="btn btn-danger" />
+                    </div>
+                    <div class="form-group">
+                        <a asp-controller="Participante" asp-action="Index" class="btn btn-outline-primary">Cancelar</a>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <a asp-action="Index" class="btn btn-outline-blue-normal">Cancelar</a>
-            </div>
-            </div>
-        </div>
-    </form>
+        </form>
 </div>
 </div>

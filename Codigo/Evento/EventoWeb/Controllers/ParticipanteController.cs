@@ -3,6 +3,7 @@ using Core;
 using Core.DTO;
 using Core.Service;
 using EventoWeb.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EventoWeb.Controllers
@@ -27,7 +28,7 @@ namespace EventoWeb.Controllers
             };
             return View(participanteModel);
         }
-
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
         public async Task<ActionResult> Create()
         {
             var participantes = await _participanteService.GetParticipantesAsync();
@@ -38,6 +39,7 @@ namespace EventoWeb.Controllers
             return View(participanteModel);
         }
 
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Create(ParticipanteModel participanteModel)
@@ -47,7 +49,7 @@ namespace EventoWeb.Controllers
                 var pessoa = _mapper.Map<Pessoa>(participanteModel.Participante);
                 await _participanteService.CreateAsync(pessoa);
                 participanteModel.Participantes = _mapper.Map<IEnumerable<ParticipanteDTO>>(await _participanteService.GetParticipantesAsync());
-                return View(participanteModel);
+                return RedirectToAction("Index");
             }
             participanteModel.Participantes = _mapper.Map<IEnumerable<ParticipanteDTO>>(await _participanteService.GetParticipantesAsync());
             return View(participanteModel);
@@ -100,21 +102,12 @@ namespace EventoWeb.Controllers
             return View(participanteModel);
         }
 
-        public async Task<ActionResult> Delete(string cpf)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(string id)
         {
-            try
-            {
-                TempData["ErrorMessage"] = "Exclusão não permitida para participantes.";
-            }
-            catch (Exception ex)
-            {
-                TempData["ErrorMessage"] = ex.Message;
-            }
-            var participanteModel = new ParticipanteModel
-            {
-                Participantes = _mapper.Map<IEnumerable<ParticipanteDTO>>(await _participanteService.GetParticipantesAsync())
-            };
-            return RedirectToAction("Create", participanteModel);
+            await _participanteService.DeleteAsync(id);
+            return RedirectToAction("Index");
         }
     }
 }
