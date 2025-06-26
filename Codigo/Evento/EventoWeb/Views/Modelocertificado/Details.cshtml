@@ -1,0 +1,28 @@
+﻿@* Views/Modelocertificado/Details.cshtml *@
+@model EventoWeb.Models.ModelocertificadoModel
+
+@{
+    ViewData["Title"] = "Detalhes do Modelo de Certificado";
+}
+
+<h1>Detalhes do Modelo de Certificado</h1>
+
+<div class="card mb-3">
+    <div class="card-body">
+        <dl class="row">
+            <dt class="col-sm-3">Evento</dt>
+            <dd class="col-sm-9">@Model.NomeEvento</dd>
+
+            <dt class="col-sm-3">Data de Emissão</dt>
+            <dd class="col-sm-9">@Model.DataEmissao.ToString("dd/MM/yyyy")</dd>
+
+            <dt class="col-sm-3">Código</dt>
+            <dd class="col-sm-9">@Model.Codigo</dd>
+        </dl>
+    </div>
+</div>
+
+<p>
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Editar</a>
+    <a asp-action="Index" class="btn btn-secondary">Voltar</a>
+</p>

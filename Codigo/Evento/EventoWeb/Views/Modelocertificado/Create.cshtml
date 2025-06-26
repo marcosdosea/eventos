@@ -1,0 +1,37 @@
+﻿@* Views/Modelocertificado/Create.cshtml *@
+@model EventoWeb.Models.ModelocertificadoModel
+
+@{
+    ViewData["Title"] = "Novo Modelo de Certificado";
+}
+
+<h1>Criar Novo Modelo de Certificado</h1>
+
+<form asp-action="Create" method="post">
+    <div class="form-group">
+        <label asp-for="IdEvento"></label>
+        <select asp-for="IdEvento" asp-items="Model.Eventos" class="form-control"></select>
+        <span asp-validation-for="IdEvento" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="DataEmissao"></label>
+        <input asp-for="DataEmissao" type="date" class="form-control" />
+        <span asp-validation-for="DataEmissao" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Codigo"></label>
+        <input asp-for="Codigo" class="form-control" />
+        <span asp-validation-for="Codigo" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Salvar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
