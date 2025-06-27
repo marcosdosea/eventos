@@ -6,12 +6,13 @@ using EventoWeb.Mappers;
 using Core.Service;
 using Moq;
 using AutoMapper;
+using Core.DTO;
 namespace EventoWeb.Controllers.Tests
 {
     [TestClass()]
     public class SubeventoControllerTests
     {
-        private static SubeventoController controller;
+        private static SubeventoController controller = null!;
 
         [TestInitialize]
         public void Initialize()
@@ -26,15 +27,28 @@ namespace EventoWeb.Controllers.Tests
             cfg.AddProfile(new SubeventoProfile())).CreateMapper();
 
             mockService.Setup(service => service.GetAll())
-                            .Returns(GetTestSubeventos());
+                .Returns(GetTestSubeventos());
             mockService.Setup(service => service.Get(1))
                 .Returns(GetTargetSubevento());
             mockService.Setup(service => service.Create(It.IsAny<Subevento>()))
                 .Verifiable();
+            mockService.Setup(service => service.Edit(It.IsAny<Subevento>()))
+                .Verifiable();
+            mockService.Setup(service => service.Delete(It.IsAny<uint>()))
+                .Verifiable();
+
             mockServiceEvento.Setup(service => service.GetNomeById(1))
                 .Returns("SEMINFO");
+            mockServiceEvento.Setup(service => service.GetEventoSimpleDto(1))
+                .Returns(new EventoSimpleDTO { Id = 1, Nome = "SEMINFO" });
+
             mockServiceTipoevento.Setup(service => service.GetNomeById(1))
-                .Returns("Tecnologia");
+                .Returns("Palestra");
+            mockServiceTipoevento.Setup(service => service.GetAll())
+                .Returns(new List<Tipoevento> { new Tipoevento { Id = 1, Nome = "Palestra" } });
+
+            mockServiceTipoInscricao.Setup(service => service.GetTiposInscricaosSubevento(1))
+                .Returns(new List<TipoInscricaoDTO>());
 
             controller = new SubeventoController(mockService.Object, mapper, mockServiceEvento.Object, mockServiceTipoevento.Object, mockServiceTipoInscricao.Object);
         }
@@ -59,7 +73,6 @@ namespace EventoWeb.Controllers.Tests
         {
             // Act
             var result = controller.Details(1);
-
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
@@ -89,7 +102,7 @@ namespace EventoWeb.Controllers.Tests
         public void CreateTest()
         {
             // Act
-            var result = controller.CreateOrEdit(1,null);
+            var result = controller.CreateOrEdit(1, (uint?)null);
 
             // Assert 
             Assert.IsInstanceOfType(result, typeof(ViewResult));
@@ -101,7 +114,7 @@ namespace EventoWeb.Controllers.Tests
         public void CreateTest_Valid()
         {
             // Act
-            var result = controller.CreateOrEdit(1,null,GetNewSubevento());
+            var result = controller.CreateOrEdit(1, GetNewSubevento());
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
@@ -116,7 +129,7 @@ namespace EventoWeb.Controllers.Tests
             controller.ModelState.AddModelError("Nome", "Nome do Subevento é obrigatório");
 
             // Act
-            var result = controller.CreateOrEdit(1, null, GetNewSubevento());
+            var result = controller.CreateOrEdit(1, GetNewSubevento());
 
 			// Assert
 			Assert.AreEqual(1, controller.ModelState.ErrorCount);
@@ -130,7 +143,7 @@ namespace EventoWeb.Controllers.Tests
         public void EditTest_Get_Valid()
         {
             // Act
-            var result = controller.CreateOrEdit(1,1);
+            var result = controller.CreateOrEdit(1, 1);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
@@ -160,7 +173,7 @@ namespace EventoWeb.Controllers.Tests
         public void EditTest_Post_Valid()
         {
             // Act
-            var result = controller.CreateOrEdit(GetTargetSubeventoModel().IdEvento, GetTargetSubeventoModel().Id,GetNewSubevento());
+            var result = controller.CreateOrEdit(1, GetNewSubevento());
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
@@ -202,7 +215,7 @@ namespace EventoWeb.Controllers.Tests
         public void DeleteTest_Post_Valid()
         {
             // Act
-            var result = controller.Delete(GetTargetSubeventoModel().Id, GetTargetSubeventoModel());
+            var result = controller.Delete(1, GetTargetSubeventoModel());
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
@@ -318,69 +331,69 @@ namespace EventoWeb.Controllers.Tests
                     VagasDisponiveis = 65,
                     TempoMinutosReserva = 240,
                     CargaHoraria = 4,
-                    },
+                },
                 new Evento
                 {
-                        Id = 3,
-                        Nome = "SEMAC",
-                        Descricao = "Semana academica de cursos",
-                        DataInicio = new DateTime(2024, 10, 2, 7, 30, 0),
-                        DataFim = new DateTime(2024, 10, 7, 12, 30, 0),
-                        InscricaoGratuita = 1,
-                        Status = "F",
-                        DataInicioInscricao = new DateTime(2024, 02, 2, 7, 30, 0),
-                        DataFimInscricao = new DateTime(2024, 02, 7, 12, 30, 0),
-                        ValorInscricao = 0,
-                        Website = "www.itatechjr.com.br",
-                        EmailEvento = "DSI@academico.ufs.br",
-                        EventoPublico = 1,
-                        Cep = "49506036",
-                        Estado = "SE",
-                        Cidade = "Itabaiana",
-                        Bairro = "Porto",
-                        Rua = " Av. Vereador Olímpio Grande",
-                        Numero = "s/n",
-                        Complemento = "Universidade",
-                        PossuiCertificado = 1,
-                        FrequenciaMinimaCertificado = 1,
-                        IdTipoEvento = 1,
-                        VagasOfertadas = 100,
-                        VagasReservadas = 35,
-                        VagasDisponiveis = 65,
-                        TempoMinutosReserva = 240,
-                        CargaHoraria = 4,
-                    },
+                    Id = 2,
+                    Nome = "ENCONTRO",
+                    Descricao = "Evento para encontro de estudantes",
+                    DataInicio = new DateTime(2024, 11, 2, 7, 30, 0),
+                    DataFim = new DateTime(2024, 11, 7, 12, 30, 0),
+                    InscricaoGratuita = 0,
+                    Status = "A",
+                    DataInicioInscricao = new DateTime(2024, 10, 2, 7, 30, 0),
+                    DataFimInscricao = new DateTime(2024, 10, 7, 12, 30, 0),
+                    ValorInscricao = 50,
+                    Website = "www.encontro.com.br",
+                    EmailEvento = "encontro@gmail.com",
+                    EventoPublico = 1,
+                    Cep = "49506036",
+                    Estado = "SE",
+                    Cidade = "Itabaiana",
+                    Bairro = "Porto",
+                    Rua = " Av. Vereador Olímpio Grande",
+                    Numero = "s/n",
+                    Complemento = "Universidade",
+                    PossuiCertificado = 1,
+                    FrequenciaMinimaCertificado = 1,
+                    IdTipoEvento = 1,
+                    VagasOfertadas = 200,
+                    VagasReservadas = 50,
+                    VagasDisponiveis = 150,
+                    TempoMinutosReserva = 240,
+                    CargaHoraria = 8,
+                },
                 new Evento
                 {
-                        Id = 5,
-                        Nome = "Balada do DJ Ikaruz",
-                        Descricao = "Festa Fechada",
-                        DataInicio = new DateTime(2024, 10, 2, 7, 30, 0),
-                        DataFim = new DateTime(2024, 10, 7, 12, 30, 0),
-                        InscricaoGratuita = 1,
-                        Status = "C",
-                        DataInicioInscricao = new DateTime(2024, 09, 2, 7, 30, 0),
-                        DataFimInscricao = new DateTime(2024, 09, 3, 7, 30, 0),
-                        ValorInscricao = 0,
-                        Website = "www.dj.com.br",
-                        EmailEvento = "DJ@gmail.com",
-                        EventoPublico = 1,
-                        Cep = "49506036",
-                        Estado = "SE",
-                        Cidade = "Itabaiana",
-                        Bairro = "Porto",
-                        Rua = " Av. Vereador Olímpio Grande",
-                        Numero = "s/n",
-                        Complemento = "Universidade",
-                        PossuiCertificado = 0,
-                        FrequenciaMinimaCertificado = 0,
-                        IdTipoEvento = 3,
-                        VagasOfertadas = 100,
-                        VagasReservadas = 35,
-                        VagasDisponiveis = 65,
-                        TempoMinutosReserva = 240,
-                        CargaHoraria = 12,
-                    },
+                    Id = 3,
+                    Nome = "CONGRESSO",
+                    Descricao = "Evento para congresso de tecnologia",
+                    DataInicio = new DateTime(2024, 12, 2, 7, 30, 0),
+                    DataFim = new DateTime(2024, 12, 7, 12, 30, 0),
+                    InscricaoGratuita = 0,
+                    Status = "A",
+                    DataInicioInscricao = new DateTime(2024, 11, 2, 7, 30, 0),
+                    DataFimInscricao = new DateTime(2024, 11, 7, 12, 30, 0),
+                    ValorInscricao = 100,
+                    Website = "www.congresso.com.br",
+                    EmailEvento = "congresso@gmail.com",
+                    EventoPublico = 1,
+                    Cep = "49506036",
+                    Estado = "SE",
+                    Cidade = "Itabaiana",
+                    Bairro = "Porto",
+                    Rua = " Av. Vereador Olímpio Grande",
+                    Numero = "s/n",
+                    Complemento = "Universidade",
+                    PossuiCertificado = 1,
+                    FrequenciaMinimaCertificado = 1,
+                    IdTipoEvento = 1,
+                    VagasOfertadas = 300,
+                    VagasReservadas = 75,
+                    VagasDisponiveis = 225,
+                    TempoMinutosReserva = 240,
+                    CargaHoraria = 12,
+                }
             };
         }
 
@@ -408,49 +421,49 @@ namespace EventoWeb.Controllers.Tests
                     VagasReservadas = 35,
                     VagasDisponiveis = 65,
                     CargaHoraria = 4,
-                    },
+                },
                 new Subevento
                 {
-                        Id = 3,
-                        IdEvento = 1,
-                        Nome = "SEMAC",
-                        Descricao = "Semana academica de cursos",
-                        DataInicio = new DateTime(2024, 02, 2, 7, 30, 0),
-                        DataFim = new DateTime(2024, 02, 7, 12, 30, 0),
-                        InscricaoGratuita = 1,
-                        Status = "F",
-                        DataInicioInscricao = new DateTime(2024, 02, 2, 7, 30, 0),
-                        DataFimInscricao = new DateTime(2024, 02, 7, 12, 30, 0),
-                        ValorInscricao = 0,
-                        PossuiCertificado = 1,
-                        FrequenciaMinimaCertificado = 1,
-                        IdTipoEvento = 1,
-                        VagasOfertadas = 100,
-                        VagasReservadas = 35,
-                        VagasDisponiveis = 65,
-                        CargaHoraria = 4,
-                    },
+                    Id = 2,
+                    IdEvento = 1,
+                    Nome = "ENCONTRO",
+                    Descricao = "Evento para encontro de estudantes",
+                    DataInicio = new DateTime(2024, 11, 2, 7, 30, 0),
+                    DataFim = new DateTime(2024, 11, 7, 12, 30, 0),
+                    InscricaoGratuita = 0,
+                    Status = "A",
+                    DataInicioInscricao = new DateTime(2024, 10, 2, 7, 30, 0),
+                    DataFimInscricao = new DateTime(2024, 10, 7, 12, 30, 0),
+                    ValorInscricao = 50,
+                    PossuiCertificado = 1,
+                    FrequenciaMinimaCertificado = 1,
+                    IdTipoEvento = 1,
+                    VagasOfertadas = 200,
+                    VagasReservadas = 50,
+                    VagasDisponiveis = 150,
+                    CargaHoraria = 8,
+                },
                 new Subevento
                 {
-                        Id = 5,
-                        IdEvento = 1,
-                        Nome = "Balada do DJ Ikaruz",
-                        Descricao = "Festa Fechada",
-                        DataInicio = new DateTime(2024, 09, 2, 7, 30, 0),
-                        DataFim = new DateTime(2024, 09, 3, 7, 30, 0),
-                        InscricaoGratuita = 1,
-                        Status = "C",
-                        DataInicioInscricao = new DateTime(2024, 09, 2, 7, 30, 0),
-                        DataFimInscricao = new DateTime(2024, 09, 3, 7, 30, 0),
-                        ValorInscricao = 0,
-                        PossuiCertificado = 0,
-                        FrequenciaMinimaCertificado = 0,
-                        IdTipoEvento = 3,
-                        VagasOfertadas = 100,
-                        VagasReservadas = 35,
-                        VagasDisponiveis = 65,
-                        CargaHoraria = 12,
-                    },
+                    Id = 3,
+                    IdEvento = 1,
+                    Nome = "CONGRESSO",
+                    Descricao = "Evento para congresso de tecnologia",
+                    DataInicio = new DateTime(2024, 12, 2, 7, 30, 0),
+                    DataFim = new DateTime(2024, 12, 7, 12, 30, 0),
+                    InscricaoGratuita = 0,
+                    Status = "A",
+                    DataInicioInscricao = new DateTime(2024, 11, 2, 7, 30, 0),
+                    DataFimInscricao = new DateTime(2024, 11, 7, 12, 30, 0),
+                    ValorInscricao = 100,
+                    PossuiCertificado = 1,
+                    FrequenciaMinimaCertificado = 1,
+                    IdTipoEvento = 1,
+                    VagasOfertadas = 300,
+                    VagasReservadas = 75,
+                    VagasDisponiveis = 225,
+                    CargaHoraria = 12,
+                }
             };
         }
     }

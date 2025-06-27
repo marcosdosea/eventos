@@ -10,13 +10,14 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.Runtime.ConstrainedExecution;
 using System.Security.Cryptography;
 using Core.DTO;
+using Microsoft.AspNetCore.Identity;
 
 namespace EventoWeb.Controllers.Tests
 {
     [TestClass()]
     public class EventoControllerTests
     {
-        private static EventoController controller;
+        private static EventoController controller = null!;
 
         [TestInitialize]
         public void Initialize()
@@ -29,6 +30,9 @@ namespace EventoWeb.Controllers.Tests
             var mockServiceAreaInteresse = new Mock<IAreaInteresseService>();
             var mockServicePessoa = new Mock<IPessoaService>();
             var mockServiceSubevento = new Mock<ISubeventoService>();
+            var mockUserStore = new Mock<IUserStore<UsuarioIdentity>>();
+            var mockUserManager = new Mock<UserManager<UsuarioIdentity>>(
+                mockUserStore.Object, null, null, null, null, null, null, null, null);
 
             IMapper mapper = new MapperConfiguration(cfg =>
             cfg.AddProfile(new EventoProfile())).CreateMapper();
@@ -43,7 +47,7 @@ namespace EventoWeb.Controllers.Tests
             mockServiceInscricao.Setup(service => service.GetByEventoAndPapel(1,1))
     .Returns(GetTestInscricoes());
 
-            controller = new EventoController(mockService.Object, mapper, mockServiceEstado.Object, mockServiceInscricao.Object, mockServiceTipoevento.Object, mockServiceAreaInteresse.Object,mockServicePessoa.Object, mockServiceSubevento.Object);
+            controller = new EventoController(mockUserManager.Object, mockService.Object, mapper, mockServiceEstado.Object, mockServiceInscricao.Object, mockServiceTipoevento.Object, mockServiceAreaInteresse.Object,mockServicePessoa.Object, mockServiceSubevento.Object);
         }
 
         [TestMethod()]
@@ -198,47 +202,7 @@ namespace EventoWeb.Controllers.Tests
         public void DeleteTest_Post_Valid()
         {
             // Act
-            var result = controller.Delete(1);
-
-            // Assert
-            Assert.IsInstanceOfType(result, typeof(ViewResult));
-            ViewResult viewResult = (ViewResult)result;
-            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(EventoModel));
-            EventoModel eventoModel = (EventoModel)viewResult.ViewData.Model;
-            Assert.AreEqual("SEMINFO", eventoModel.Nome);
-            Assert.AreEqual("Evento para a semana da tecnologia", eventoModel.Descricao);
-            Assert.AreEqual(DateTime.Parse("2024-10-02 07:30:00"), eventoModel.DataInicio);
-            Assert.AreEqual(DateTime.Parse("2024-10-07 12:30:00"), eventoModel.DataFim);
-            Assert.AreEqual((sbyte)1, eventoModel.InscricaoGratuita);
-            Assert.AreEqual("A", eventoModel.Status);
-            Assert.AreEqual(DateTime.Parse("2024-09-02 07:30:00"), eventoModel.DataInicioInscricao);
-            Assert.AreEqual(DateTime.Parse("2024-09-07 12:30:00"), eventoModel.DataFimInscricao);
-            Assert.AreEqual((decimal)0.0, eventoModel.ValorInscricao);
-            Assert.AreEqual("www.itatechjr.com.br", eventoModel.Website);
-            Assert.AreEqual("DSI@academico.ufs.br", eventoModel.EmailEvento);
-            Assert.AreEqual((sbyte)1, eventoModel.EventoPublico);
-            Assert.AreEqual("49506036", eventoModel.Cep);
-            Assert.AreEqual("SE", eventoModel.Estado);
-            Assert.AreEqual("Itabaiana", eventoModel.Cidade);
-            Assert.AreEqual("Porto", eventoModel.Bairro);
-            Assert.AreEqual(" Av. Vereador Olímpio Grande", eventoModel.Rua);
-            Assert.AreEqual("s/n", eventoModel.Numero);
-            Assert.AreEqual("Universidade", eventoModel.Complemento);
-            Assert.AreEqual((sbyte)1, eventoModel.PossuiCertificado);
-            Assert.AreEqual((decimal)1.0, eventoModel.FrequenciaMinimaCertificado);
-            Assert.AreEqual((uint)1, eventoModel.IdTipoEvento);
-            Assert.AreEqual((int)100, eventoModel.VagasOfertadas);
-            Assert.AreEqual((int)35, eventoModel.VagasReservadas);
-            Assert.AreEqual((int)65, eventoModel.VagasDisponiveis);
-            Assert.AreEqual((int)240, eventoModel.TempoMinutosReserva);
-            Assert.AreEqual((int)4, eventoModel.CargaHoraria);
-        }
-
-        [TestMethod()]
-        public void DeleteTest_Get_Valid()
-        {
-            // Act
-            var result = controller.Delete(GetTargetEventoModel().Id, GetTargetEventoModel());
+            var result = controller.Delete(1, GetTargetEventoModel());
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
@@ -248,10 +212,22 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
+        public void DeleteTest_Get_Valid()
+        {
+            // Act
+            var result = controller.Delete(1);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            ViewResult viewResult = (ViewResult)result;
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(EventoModel));
+        }
+
+        [TestMethod()]
         public void Gestor_Get_Valid()
         {
             // Act
-            var result = controller.CreateGestor(GetTargetEventoModel().Id);
+            var result = controller.CreateGestor(1);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
@@ -268,15 +244,14 @@ namespace EventoWeb.Controllers.Tests
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
-            Assert.IsNull(redirectToActionResult.ControllerName);
-
+            Assert.AreEqual("GerenciarEvento", redirectToActionResult.ActionName);
         }
 
 		[TestMethod()]
 		public void Colaborador_Get_Valid()
 		{
 			// Act
-			var result = controller.CreateColaborador(GetTargetEventoModel().Id);
+			var result = controller.CreateColaborador(1);
 
 			// Assert
 			Assert.IsInstanceOfType(result, typeof(ViewResult));
@@ -293,37 +268,34 @@ namespace EventoWeb.Controllers.Tests
 			// Assert
 			Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
 			RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
-			Assert.IsNull(redirectToActionResult.ControllerName);
-
+			Assert.AreEqual("GerenciarEvento", redirectToActionResult.ActionName);
 		}
 
-		[TestMethod()]
-		public void Participante_Get_Valid()
-		{
-			// Act
-			var result = controller.CreateParticipante(GetTargetEventoModel().Id);
+        [TestMethod()]
+        public void Participante_Get_Valid()
+        {
+            // Act
+            var result = controller.CreateParticipante(1);
 
-			// Assert
-			Assert.IsInstanceOfType(result, typeof(ViewResult));
-			ViewResult viewResult = (ViewResult)result;
-			Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(GestaoPapelModel));
-		}
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            ViewResult viewResult = (ViewResult)result;
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(GestaoPapelModel));
+        }
 
-		[TestMethod()]
-		public void Participante_Post_Valid()
-		{
-			// Act
-			var result = controller.CreateParticipante(GetNewGestaoPapel());
+        [TestMethod()]
+        public void Participante_Post_Valid()
+        {
+            // Act
+            var result = controller.CreateParticipante(GetNewGestaoPapel());
 
-			// Assert
-			Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
-			RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
-			Assert.IsNull(redirectToActionResult.ControllerName);
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
+            Assert.AreEqual("GerenciarEvento", redirectToActionResult.ActionName);
+        }
 
-		}
-
-
-		[TestMethod()]
+        [TestMethod()]
         public void DeletePessoaPapel_Post_Valid()
         {
             // Act
@@ -332,14 +304,13 @@ namespace EventoWeb.Controllers.Tests
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
-            Assert.IsNull(redirectToActionResult.ControllerName);
+            Assert.AreEqual("GerenciarEvento", redirectToActionResult.ActionName);
         }
 
         private EventoModel GetNewEvento()
         {
-			return new EventoModel
+            return new EventoModel
             {
-                Id = 1,
                 Nome = "SEMINFO",
                 Descricao = "Evento para a semana da tecnologia",
                 DataInicio = new DateTime(2024, 10, 2, 7, 30, 0),
@@ -372,23 +343,23 @@ namespace EventoWeb.Controllers.Tests
 
         private GestaoPapelModel GetNewGestaoPapel()
         {
-            var pessoa = new Pessoa
+            var pessoa = new PessoaModel
             {
                 Id = 1,
                 Nome = "João Vitor Sodré",
                 NomeCracha = "Sodré",
-                Cpf = "12246232367",
+                Cpf = "040.268.930-57",
                 Sexo = "M",
-                Cep = "45340086",
+                Cep = "48370-000",
                 Rua = "Avenida Principal",
                 Bairro = "Centro",
-                Cidade = "Irece",
+                Cidade = "Irecê",
                 Estado = "BA",
                 Numero = "s/n",
                 Complemento = "casa",
                 Email = "email@gmail.com",
-                Telefone1 = "7999900113344",
-                Telefone2 = "NULL",
+                Telefone1 = "7999990011",
+                Telefone2 = null,
             };
 
             var evento = new EventoSimpleDTO
@@ -418,8 +389,6 @@ namespace EventoWeb.Controllers.Tests
                 Evento = evento,
             };
         }
-
-
 
         private static Evento GetTargetEvento()
         {
@@ -548,7 +517,7 @@ namespace EventoWeb.Controllers.Tests
                 Cep = "48370-000",
                 Rua = "Avenida Principal",
                 Bairro = "Centro",
-                Cidade = "Irece",
+                Cidade = "Irecê",
                 Estado = "BA",
                 Numero = "s/n",
                 Complemento = "casa",
@@ -609,26 +578,25 @@ namespace EventoWeb.Controllers.Tests
             {
                 new Inscricaopessoaevento
                 {
+                    Id = 1,
                     IdPessoa = pessoa1.Id,
                     IdEvento = evento.Id,
                     IdPapel = papel.Id,
                 },
-
                 new Inscricaopessoaevento
                 {
+                    Id = 2,
                     IdPessoa = pessoa2.Id,
                     IdEvento = evento.Id,
                     IdPapel = papel.Id,
                 },
-                
                 new Inscricaopessoaevento
                 {
+                    Id = 3,
                     IdPessoa = pessoa3.Id,
                     IdEvento = evento.Id,
                     IdPapel = papel.Id,
                 }
-
-
             };
         }
 
@@ -666,69 +634,69 @@ namespace EventoWeb.Controllers.Tests
                     VagasDisponiveis = 65,
                     TempoMinutosReserva = 240,
                     CargaHoraria = 4,
-                    },
+                },
                 new Evento
                 {
-                        Id = 3,
-                        Nome = "SEMAC",
-                        Descricao = "Semana academica de cursos",
-                        DataInicio = new DateTime(2024, 10, 2, 7, 30, 0),
-                        DataFim = new DateTime(2024, 10, 7, 12, 30, 0),
-                        InscricaoGratuita = 1,
-                        Status = "F",
-                        DataInicioInscricao = new DateTime(2024, 02, 2, 7, 30, 0),
-                        DataFimInscricao = new DateTime(2024, 02, 7, 12, 30, 0),
-                        ValorInscricao = 0,
-                        Website = "www.itatechjr.com.br",
-                        EmailEvento = "DSI@academico.ufs.br",
-                        EventoPublico = 1,
-                        Cep = "49506036",
-                        Estado = "SE",
-                        Cidade = "Itabaiana",
-                        Bairro = "Porto",
-                        Rua = " Av. Vereador Olímpio Grande",
-                        Numero = "s/n",
-                        Complemento = "Universidade",
-                        PossuiCertificado = 1,
-                        FrequenciaMinimaCertificado = 1,
-                        IdTipoEvento = 1,
-                        VagasOfertadas = 100,
-                        VagasReservadas = 35,
-                        VagasDisponiveis = 65,
-                        TempoMinutosReserva = 240,
-                        CargaHoraria = 4,
-                    },
+                    Id = 2,
+                    Nome = "ENCONTRO",
+                    Descricao = "Evento para encontro de estudantes",
+                    DataInicio = new DateTime(2024, 11, 2, 7, 30, 0),
+                    DataFim = new DateTime(2024, 11, 7, 12, 30, 0),
+                    InscricaoGratuita = 0,
+                    Status = "A",
+                    DataInicioInscricao = new DateTime(2024, 10, 2, 7, 30, 0),
+                    DataFimInscricao = new DateTime(2024, 10, 7, 12, 30, 0),
+                    ValorInscricao = 50,
+                    Website = "www.encontro.com.br",
+                    EmailEvento = "encontro@gmail.com",
+                    EventoPublico = 1,
+                    Cep = "49506036",
+                    Estado = "SE",
+                    Cidade = "Itabaiana",
+                    Bairro = "Porto",
+                    Rua = " Av. Vereador Olímpio Grande",
+                    Numero = "s/n",
+                    Complemento = "Universidade",
+                    PossuiCertificado = 1,
+                    FrequenciaMinimaCertificado = 1,
+                    IdTipoEvento = 1,
+                    VagasOfertadas = 200,
+                    VagasReservadas = 50,
+                    VagasDisponiveis = 150,
+                    TempoMinutosReserva = 240,
+                    CargaHoraria = 8,
+                },
                 new Evento
                 {
-                        Id = 5,
-                        Nome = "Balada do DJ Ikaruz",
-                        Descricao = "Festa Fechada",
-                        DataInicio = new DateTime(2024, 10, 2, 7, 30, 0),
-                        DataFim = new DateTime(2024, 10, 7, 12, 30, 0),
-                        InscricaoGratuita = 1,
-                        Status = "C",
-                        DataInicioInscricao = new DateTime(2024, 09, 2, 7, 30, 0),
-                        DataFimInscricao = new DateTime(2024, 09, 3, 7, 30, 0),
-                        ValorInscricao = 0,
-                        Website = "www.dj.com.br",
-                        EmailEvento = "DJ@gmail.com",
-                        EventoPublico = 1,
-                        Cep = "49506036",
-                        Estado = "SE",
-                        Cidade = "Itabaiana",
-                        Bairro = "Porto",
-                        Rua = " Av. Vereador Olímpio Grande",
-                        Numero = "s/n",
-                        Complemento = "Universidade",
-                        PossuiCertificado = 0,
-                        FrequenciaMinimaCertificado = 0,
-                        IdTipoEvento = 3,
-                        VagasOfertadas = 100,
-                        VagasReservadas = 35,
-                        VagasDisponiveis = 65,
-                        TempoMinutosReserva = 240,
-                        CargaHoraria = 12,
-                    },
+                    Id = 3,
+                    Nome = "CONGRESSO",
+                    Descricao = "Evento para congresso de tecnologia",
+                    DataInicio = new DateTime(2024, 12, 2, 7, 30, 0),
+                    DataFim = new DateTime(2024, 12, 7, 12, 30, 0),
+                    InscricaoGratuita = 0,
+                    Status = "A",
+                    DataInicioInscricao = new DateTime(2024, 11, 2, 7, 30, 0),
+                    DataFimInscricao = new DateTime(2024, 11, 7, 12, 30, 0),
+                    ValorInscricao = 100,
+                    Website = "www.congresso.com.br",
+                    EmailEvento = "congresso@gmail.com",
+                    EventoPublico = 1,
+                    Cep = "49506036",
+                    Estado = "SE",
+                    Cidade = "Itabaiana",
+                    Bairro = "Porto",
+                    Rua = " Av. Vereador Olímpio Grande",
+                    Numero = "s/n",
+                    Complemento = "Universidade",
+                    PossuiCertificado = 1,
+                    FrequenciaMinimaCertificado = 1,
+                    IdTipoEvento = 1,
+                    VagasOfertadas = 300,
+                    VagasReservadas = 75,
+                    VagasDisponiveis = 225,
+                    TempoMinutosReserva = 240,
+                    CargaHoraria = 12,
+                }
             };
         }
     }
