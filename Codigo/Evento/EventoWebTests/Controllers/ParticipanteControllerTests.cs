@@ -7,40 +7,41 @@ using EventoWeb.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using System.Runtime.ConstrainedExecution;
-using System.Security.Cryptography;
 
 namespace EventoWeb.Controllers.Tests
 {
     [TestClass()]
     public class ParticipanteControllerTests
     {
-        private static ParticipanteController controller;
+        private static ParticipanteController controller = null!;
+        private static Mock<IParticipanteService> mockService = null!;
+        private static IMapper mapper = null!;
 
         [TestInitialize]
         public void Initialize()
         {
             // Arrange
-            var mockService = new Mock<IParticipanteService>();
+            mockService = new Mock<IParticipanteService>();
             var mockEstadosbrasilService = new Mock<IEstadosbrasilService>();
 
-            IMapper mapper = new MapperConfiguration(cfg =>
-            cfg.AddProfile(new PessoaProfile())).CreateMapper();
+            mapper = new MapperConfiguration(cfg =>
+                cfg.AddProfile(new PessoaProfile())).CreateMapper();
 
             mockService.Setup(service => service.GetParticipantesAsync())
                 .ReturnsAsync(GetTestParticipantes());
             mockService.Setup(service => service.CreateAsync(It.IsAny<Pessoa>()))
-                .ReturnsAsync(true);
-            //mockService.Setup(service => service.Create(It.IsAny<Pessoa>()))
-                .Verifiable();
+                .Returns(Task.CompletedTask);
+            mockService.Setup(service => service.DeleteAsync(It.IsAny<string>()))
+                .Returns(Task.CompletedTask);
+
             controller = new ParticipanteController(mockService.Object, mapper);
         }
 
         [TestMethod()]
-        public void IndexTest()
+        public async Task IndexTest()
         {
             // Act
-            var result = controller.Index();
+            var result = await controller.Index();
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
@@ -48,21 +49,18 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ParticipanteModel));
 
             ParticipanteModel? lista = (ParticipanteModel)viewResult.ViewData.Model;
-            Assert.AreEqual(3, lista.Participantes.Count());
+            Assert.AreEqual(3, lista.Participantes?.Count());
         }
 
         [TestMethod()]
         public async Task CreateTest_Valid()
         {
             // Arrange
-            controller.ModelState.Clear(); // Certifique-se de que o ModelState está limpo
-            var mockService = new Mock<IParticipanteService>();
-            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-
-            controller = new ParticipanteController(mockService.Object, mapper);
+            controller.ModelState.Clear();
+            var newController = new ParticipanteController(mockService.Object, mapper);
 
             // Act
-            var result = await controller.Create(GetNewParticipanteModel());
+            var result = await newController.Create(GetNewParticipanteModel());
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
@@ -70,7 +68,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsNull(redirectToActionResult.ControllerName);
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
 
-            // Verifique se o método CreateAsync do serviço foi chamado
+            // Verifique se o mÃ©todo CreateAsync do serviÃ§o foi chamado
             mockService.Verify(service => service.CreateAsync(It.IsAny<Pessoa>()), Times.Once);
         }
 
@@ -83,66 +81,106 @@ namespace EventoWeb.Controllers.Tests
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
         }
+
         [TestMethod()]
         public async Task CreateTest_Invalid()
         {
             // Arrange
-            controller.ModelState.Clear(); // Certifique-se de que o ModelState está limpo
-            var mockService = new Mock<IParticipanteService>();
-            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
+            controller.ModelState.Clear();
+            var newController = new ParticipanteController(mockService.Object, mapper);
 
-            controller = new ParticipanteController(mockService.Object, mapper);
-
-            controller.ModelState.AddModelError("Nome", "Campo requerido");
-            controller.ModelState.AddModelError("Cpf", "Campo requerido");
+            newController.ModelState.AddModelError("Nome", "Campo requerido");
+            newController.ModelState.AddModelError("Cpf", "Campo requerido");
 
             // Act
-            var result = await controller.Create(GetNewParticipanteModel());
+            var result = await newController.Create(GetNewParticipanteModel());
 
             // Assert
-            Assert.AreEqual(2, controller.ModelState.ErrorCount);
+            Assert.AreEqual(2, newController.ModelState.ErrorCount);
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ParticipanteModel));
         }
 
         [TestMethod()]
-        public void DetailsTest()
+        public async Task DetailsTest()
         {
             // Act
-            var result = controller.Details(1);
+            var result = await controller.Details("040.268.930-57");
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
-            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(PessoaModel));
-            PessoaModel pessoaModel = (PessoaModel)viewResult.ViewData.Model;
-            Assert.AreEqual((uint)1, pessoaModel.Id);
-            Assert.AreEqual("João Vitor Sodré", pessoaModel.Nome);
-            Assert.AreEqual("Sodré", pessoaModel.NomeCracha);
-            Assert.AreEqual("040.268.930-57", pessoaModel.Cpf);
-            Assert.AreEqual("M", pessoaModel.Sexo);
-            Assert.AreEqual("48370-000", pessoaModel.Cep);
-            Assert.AreEqual("Avenida Principal", pessoaModel.Rua);
-            Assert.AreEqual("Centro", pessoaModel.Bairro);
-            Assert.AreEqual("Irece", pessoaModel.Cidade);
-            Assert.AreEqual("BA", pessoaModel.Estado);
-            Assert.AreEqual("s/n", pessoaModel.Numero);
-            Assert.AreEqual("casa", pessoaModel.Complemento);
-            Assert.AreEqual("email@gmail.com", pessoaModel.Email);
-            Assert.AreEqual("7999990011", pessoaModel.Telefone1);
-            Assert.AreEqual("NULL", pessoaModel.Telefone2);
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ParticipanteModel));
+            ParticipanteModel participanteModel = (ParticipanteModel)viewResult.ViewData.Model;
+            Assert.AreEqual("JoÃ£o Vitor SodrÃ©", participanteModel.Participante.Nome);
+            Assert.AreEqual("SodrÃ©", participanteModel.Participante.NomeCracha);
+            Assert.AreEqual("040.268.930-57", participanteModel.Participante.Cpf);
+            Assert.AreEqual("M", participanteModel.Participante.Sexo);
+            Assert.AreEqual("48370-000", participanteModel.Participante.Cep);
+            Assert.AreEqual("Avenida Principal", participanteModel.Participante.Rua);
+            Assert.AreEqual("Centro", participanteModel.Participante.Bairro);
+            Assert.AreEqual("IrecÃª", participanteModel.Participante.Cidade);
+            Assert.AreEqual("BA", participanteModel.Participante.Estado);
+            Assert.AreEqual("s/n", participanteModel.Participante.Numero);
+            Assert.AreEqual("casa", participanteModel.Participante.Complemento);
+            Assert.AreEqual("email@gmail.com", participanteModel.Participante.Email);
+            Assert.AreEqual("7999990011", participanteModel.Participante.Telefone1);
+            Assert.AreEqual(null, participanteModel.Participante.Telefone2);
         }
 
         [TestMethod()]
-        public void CreateTest()
+        public async Task EditTest_Get_Valid()
         {
             // Act
-            var result = controller.Create();
+            var result = await controller.Edit("040.268.930-57");
 
-            // Assert 
+            // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
+            ViewResult viewResult = (ViewResult)result;
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ParticipanteModel));
         }
+
+        [TestMethod()]
+        public async Task EditTest_Post_Valid()
+        {
+            // Arrange
+            controller.ModelState.Clear();
+            var participanteModel = GetNewParticipanteModel();
+
+            // Act
+            var result = await controller.Edit("040.268.930-57", participanteModel);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            mockService.Verify(service => service.CreateAsync(It.IsAny<Pessoa>()), Times.Once);
+        }
+
+        [TestMethod()]
+        public async Task DeleteTest_Post_Valid()
+        {
+            // Act
+            var result = await controller.Delete("040.268.930-57");
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirectToActionResult.ActionName);
+            mockService.Verify(service => service.DeleteAsync("040.268.930-57"), Times.Once);
+        }
+
+        [TestMethod()]
+        public async Task DeleteTest_Get_Valid()
+        {
+            // Act
+            var result = await controller.Delete("040.268.930-57");
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirectToActionResult.ActionName);
+        }
+
         private ParticipanteModel GetNewParticipanteModel()
         {
             return new ParticipanteModel
@@ -165,231 +203,76 @@ namespace EventoWeb.Controllers.Tests
                 }
             };
         }
-        private IEnumerable<ParticipanteDTO> GetTestParticipantes()
+
+        private IEnumerable<PessoaSimpleDTO> GetTestParticipantes()
         {
-            return new List<ParticipanteDTO>
+            return new List<PessoaSimpleDTO>
             {
-                new ParticipanteDTO
+                new PessoaSimpleDTO
                 {
-                    Id = 1,
-                    Nome = "Haendel Hernan",
-                    NomeCracha = "Haendel",
                     Cpf = "040.268.930-57",
-                    Sexo = "M",
-                    Cep = "49000-000",
-                    Rua = "Avenida Ver. Olimpio Grande",
-                    Bairro = "Porto",
-                    Cidade = "Itabaiana",
-                    Estado = "SE",
-                    Numero = "100",
-                    Complemento = "UFS",
+                    Nome = "JoÃ£o Vitor SodrÃ©",
                     Email = "email@gmail.com",
-                    Telefone1 = "79000000000",
-                    Telefone2 = null,
-                    IsActive = true,
-                    RegistrationDate = DateTime.Now,
-                    LastLogin = null
+                    Telefone1 = "7999990011"
                 },
-                new ParticipanteDTO
+                new PessoaSimpleDTO
                 {
-                    Id = 2,
-                    Nome = "Nagibe Santos Wanus Junior",
-                    NomeCracha = "Nagibe Junior",
                     Cpf = "917.091.250-55",
-                    Sexo = "M",
-                    Cep = "45566-000",
-                    Rua = "Rua Severino Vieira",
-                    Bairro = "Centro",
-                    Cidade = "Esplanada",
-                    Estado = "BA",
-                    Numero = "147",
-                    Complemento = "casa",
-                    Email = "nagibejr@gmail.com",
-                    Telefone1 = "7599643467",
-                    Telefone2 = null,
-                    IsActive = true,
-                    RegistrationDate = DateTime.Now,
-                    LastLogin = null
+                    Nome = "Nagibe Santos Wanus Junior",
+                    Email = "nagibe@gmail.com",
+                    Telefone1 = "7999990022"
                 },
-                new ParticipanteDTO
+                new PessoaSimpleDTO
                 {
-                    Id = 3,
-                    Nome = "Marcos Venicios da Palma Dias",
-                    NomeCracha = "Marcos Venicios",
-                    Cpf = "206.015.300-04",
-                    Sexo = "M",
-                    Cep = "45340-086",
-                    Rua = "Rua da Linha",
-                    Bairro = "Centro",
-                    Cidade = "Esplanada",
-                    Estado = "BA",
-                    Numero = "s/n",
-                    Complemento = "casa",
-                    Email = "muzanpvp@gmail.com",
-                    Telefone1 = "7999001133",
-                    Telefone2 = null,
-                    IsActive = true,
-                    RegistrationDate = DateTime.Now,
-                    LastLogin = null
+                    Cpf = "123.456.789-00",
+                    Nome = "Maria Silva",
+                    Email = "maria@gmail.com",
+                    Telefone1 = "7999990033"
                 }
             };
         }
-
-
-        [TestMethod()]
-        public void EditTest_Get_Valid()
-        {
-            // Act
-            var result = controller.Edit(1);
-
-            // Assert
-            Assert.IsInstanceOfType(result, typeof(ViewResult));
-            ViewResult viewResult = (ViewResult)result;
-            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(PessoaModel));
-            PessoaModel pessoaModel = (PessoaModel)viewResult.ViewData.Model;
-            Assert.AreEqual((uint)1, pessoaModel.Id);
-            Assert.AreEqual("João Vitor Sodré", pessoaModel.Nome);
-            Assert.AreEqual("Sodré", pessoaModel.NomeCracha);
-            Assert.AreEqual("040.268.930-57", pessoaModel.Cpf);
-            Assert.AreEqual("M", pessoaModel.Sexo);
-            Assert.AreEqual("48370-000", pessoaModel.Cep);
-            Assert.AreEqual("Avenida Principal", pessoaModel.Rua);
-            Assert.AreEqual("Centro", pessoaModel.Bairro);
-            Assert.AreEqual("Irece", pessoaModel.Cidade);
-            Assert.AreEqual("BA", pessoaModel.Estado);
-            Assert.AreEqual("s/n", pessoaModel.Numero);
-            Assert.AreEqual("casa", pessoaModel.Complemento);
-            Assert.AreEqual("email@gmail.com", pessoaModel.Email);
-            Assert.AreEqual("7999990011", pessoaModel.Telefone1);
-            Assert.AreEqual("NULL", pessoaModel.Telefone2);
-        }
-
-        [TestMethod()]
-        public void EditTest_Post_Valid()
-        {
-            // Arrange
-            controller.ModelState.Clear(); // Certifique-se de que o ModelState está limpo
-            var mockService = new Mock<IParticipanteService>();
-
-            controller = new ParticipanteController(mockService.Object, new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper());
-
-            // Act
-            var result = controller.Edit(GetTargetParticipanteModel().Id, GetTargetParticipanteModel());
-
-            // Assert
-            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
-            RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
-            Assert.IsNull(redirectToActionResult.ControllerName);
-            Assert.AreEqual("Index", redirectToActionResult.ActionName);
-
-
-            // Verifique se o método Create do serviço foi chamado
-            mockService.Verify(service => service.Edit(It.IsAny<Pessoa>()), Times.Once);
-        }
-
-        [TestMethod()]
-        public void DeleteTest_Post_Valid()
-        {
-            // Act
-            var result = controller.Delete(1);
-
-            // Assert
-            Assert.IsInstanceOfType(result, typeof(ViewResult));
-            ViewResult viewResult = (ViewResult)result;
-            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(PessoaModel));
-            PessoaModel pessoaModel = (PessoaModel)viewResult.ViewData.Model;
-            Assert.AreEqual((uint)1, pessoaModel.Id);
-            Assert.AreEqual("João Vitor Sodré", pessoaModel.Nome);
-            Assert.AreEqual("Sodré", pessoaModel.NomeCracha);
-            Assert.AreEqual("040.268.930-57", pessoaModel.Cpf);
-            Assert.AreEqual("M", pessoaModel.Sexo);
-            Assert.AreEqual("48370-000", pessoaModel.Cep);
-            Assert.AreEqual("Avenida Principal", pessoaModel.Rua);
-            Assert.AreEqual("Centro", pessoaModel.Bairro);
-            Assert.AreEqual("Irece", pessoaModel.Cidade);
-            Assert.AreEqual("BA", pessoaModel.Estado);
-            Assert.AreEqual("s/n", pessoaModel.Numero);
-            Assert.AreEqual("casa", pessoaModel.Complemento);
-            Assert.AreEqual("email@gmail.com", pessoaModel.Email);
-            Assert.AreEqual("7999990011", pessoaModel.Telefone1);
-            Assert.AreEqual("NULL", pessoaModel.Telefone2);
-        }
-
-        [TestMethod()]
-        public void DeleteTest_Get_Valid()
-        {
-            // Act
-            var result = controller.Delete(GetTargetParticipanteModel().Id);
-
-            // Assert
-            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
-            RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
-            Assert.IsNull(redirectToActionResult.ControllerName);
-            Assert.AreEqual("Index", redirectToActionResult.ActionName);
-        }
-
-        /*private ParticipanteModel GetNewParticipante()
-        {
-            return new ParticipanteModel
-            {
-                Id = 1,
-                Nome = "João Vitor Sodré",
-                NomeCracha = "Sodré",
-                Cpf = "040.268.930-57",
-                Sexo = "M",
-                Cep = "48370-000",
-                Rua = "Avenida Principal",
-                Bairro = "Centro",
-                Cidade = "Irece",
-                Estado = "BA",
-                Numero = "s/n",
-                Complemento = "casa",
-                Email = "email@gmail.com",
-                Telefone1 = "7999990011",
-            };
-        }*/
 
         private static Pessoa GetTargetParticipante()
         {
             return new Pessoa
             {
                 Id = 1,
-                Nome = "João Vitor Sodré",
-                NomeCracha = "Sodré",
+                Nome = "JoÃ£o Vitor SodrÃ©",
+                NomeCracha = "SodrÃ©",
                 Cpf = "040.268.930-57",
                 Sexo = "M",
                 Cep = "48370-000",
                 Rua = "Avenida Principal",
                 Bairro = "Centro",
-                Cidade = "Irece",
+                Cidade = "IrecÃª",
                 Estado = "BA",
                 Numero = "s/n",
                 Complemento = "casa",
                 Email = "email@gmail.com",
                 Telefone1 = "7999990011",
-                Telefone2 = "NULL",
+                Telefone2 = null
             };
         }
 
-        private static Pessoa GetTargetParticipanteModel()
+        private static PessoaModel GetTargetParticipanteModel()
         {
-            return new Pessoa
+            return new PessoaModel
             {
                 Id = 1,
-                Nome = "João Vitor Sodré",
-                NomeCracha = "Sodré",
+                Nome = "JoÃ£o Vitor SodrÃ©",
+                NomeCracha = "SodrÃ©",
                 Cpf = "040.268.930-57",
                 Sexo = "M",
                 Cep = "48370-000",
                 Rua = "Avenida Principal",
                 Bairro = "Centro",
-                Cidade = "Irece",
+                Cidade = "IrecÃª",
                 Estado = "BA",
                 Numero = "s/n",
                 Complemento = "casa",
                 Email = "email@gmail.com",
                 Telefone1 = "7999990011",
-                Telefone2 = "NULL",
+                Telefone2 = null
             };
         }
 
@@ -399,58 +282,58 @@ namespace EventoWeb.Controllers.Tests
             {
                 new Pessoa
                 {
-                        Id = 1,
-                        Nome = "João Vitor Sodré",
-                        NomeCracha = "Sodré",
-                        Cpf = "040.268.930-57",
-                        Sexo = "M",
-                        Cep = "48370-000",
-                        Rua = "Avenida Principal",
-                        Bairro = "Centro",
-                        Cidade = "Irece",
-                        Estado = "BA",
-                        Numero = "s/n",
-                        Complemento = "casa",
-                        Email = "email@gmail.com",
-                        Telefone1 = "7999990011",
-                        Telefone2 = "NULL",
-                    },
+                    Id = 1,
+                    Nome = "JoÃ£o Vitor SodrÃ©",
+                    NomeCracha = "SodrÃ©",
+                    Cpf = "040.268.930-57",
+                    Sexo = "M",
+                    Cep = "48370-000",
+                    Rua = "Avenida Principal",
+                    Bairro = "Centro",
+                    Cidade = "IrecÃª",
+                    Estado = "BA",
+                    Numero = "s/n",
+                    Complemento = "casa",
+                    Email = "email@gmail.com",
+                    Telefone1 = "7999990011",
+                    Telefone2 = null
+                },
                 new Pessoa
                 {
-                        Id = 2,
-                        Nome = "Nagibe Santos Wanus Junior",
-                        NomeCracha = "Nagibe Junior",
-                        Cpf = "917.091.250-55",
-                        Sexo = "M",
-                        Cep = "45566-000",
-                        Rua = "Rua Severino Vieira",
-                        Bairro = "Centro",
-                        Cidade = "Esplanada",
-                        Estado = "BA",
-                        Numero = "147",
-                        Complemento = "casa",
-                        Email = "nagibejr@gmail.com",
-                        Telefone1 = "7599643467",
-                        Telefone2 = "NULL",
-                    },
+                    Id = 2,
+                    Nome = "Nagibe Santos Wanus Junior",
+                    NomeCracha = "Nagibe Junior",
+                    Cpf = "917.091.250-55",
+                    Sexo = "M",
+                    Cep = "45566-000",
+                    Rua = "Rua das Flores",
+                    Bairro = "Jardim",
+                    Cidade = "Salvador",
+                    Estado = "BA",
+                    Numero = "123",
+                    Complemento = "apto 101",
+                    Email = "nagibe@gmail.com",
+                    Telefone1 = "7999990022",
+                    Telefone2 = null
+                },
                 new Pessoa
                 {
-                        Id = 3,
-                        Nome = "Marcos Venicios da Palma Dias",
-                        NomeCracha = "Marcos Venicios",
-                        Cpf = "206.015.300-04",
-                        Sexo = "M",
-                        Cep = "45340-086",
-                        Rua = "Rua da Linha",
-                        Bairro = "Centro",
-                        Cidade = "Esplanada",
-                        Estado = "BA",
-                        Numero = "s/n",
-                        Complemento = "casa",
-                        Email = "muzanpvp@gmail.com",
-                        Telefone1 = "7999001133",
-                        Telefone2 = "NULL",
-                    },
+                    Id = 3,
+                    Nome = "Maria Silva",
+                    NomeCracha = "Maria",
+                    Cpf = "123.456.789-00",
+                    Sexo = "F",
+                    Cep = "49000-000",
+                    Rua = "Rua das Palmeiras",
+                    Bairro = "Centro",
+                    Cidade = "Aracaju",
+                    Estado = "SE",
+                    Numero = "456",
+                    Complemento = "casa",
+                    Email = "maria@gmail.com",
+                    Telefone1 = "7999990033",
+                    Telefone2 = null
+                }
             };
         }
     }
