@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace EventoWeb.Controllers
 {
+    [Route("[controller]")]
     public class ColaboradorController : Controller
     {
         private readonly IColaboradorService _colaboradorService;
@@ -18,6 +19,9 @@ namespace EventoWeb.Controllers
             _mapper = mapper;
         }
 
+        [HttpGet]
+        [Route("")]
+        [Route("Index")]
         public async Task<ActionResult> Index()
         {
             try
@@ -37,6 +41,8 @@ namespace EventoWeb.Controllers
             }
         }
 
+        [HttpGet]
+        [Route("Create")]
         public async Task<ActionResult> Create()
         {
             try
@@ -51,13 +57,14 @@ namespace EventoWeb.Controllers
             }
             catch (Exception ex)
             {
-                TempData["ErrorMessage"] = $"Erro ao carregar formul·rio: {ex.Message}";
+                TempData["ErrorMessage"] = $"Erro ao carregar formul√°rio: {ex.Message}";
                 System.Diagnostics.Debug.WriteLine($"Erro: {ex.Message}");
                 return RedirectToAction("Index");
             }
         }
 
         [HttpPost]
+        [Route("Create")]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Create(ColaboradorModel colaboradorModel)
         {
@@ -87,6 +94,8 @@ namespace EventoWeb.Controllers
             return View(colaboradorModel);
         }
 
+        [HttpGet]
+        [Route("Edit/{cpf}")]
         public async Task<ActionResult> Edit(string cpf)
         {
             try
@@ -113,6 +122,7 @@ namespace EventoWeb.Controllers
         }
 
         [HttpPost]
+        [Route("Edit/{cpf}")]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Edit(string cpf, ColaboradorModel colaboradorModel)
         {
@@ -134,6 +144,8 @@ namespace EventoWeb.Controllers
             return View(colaboradorModel);
         }
 
+        [HttpGet]
+        [Route("Details/{cpf}")]
         public async Task<ActionResult> Details(string cpf)
         {
             try
@@ -159,6 +171,8 @@ namespace EventoWeb.Controllers
             }
         }
 
+        [HttpGet]
+        [Route("Delete/{cpf}")]
         public async Task<ActionResult> Delete(string cpf)
         {
             try
@@ -185,6 +199,7 @@ namespace EventoWeb.Controllers
         }
 
         [HttpPost]
+        [Route("Delete/{cpf}")]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Delete(string cpf, ColaboradorModel colaboradorModel)
         {
