@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace EventoWeb.Controllers
 {
+    [Route("[controller]")]
     [Authorize]
     public class PessoaController : Controller
     {
@@ -23,6 +24,9 @@ namespace EventoWeb.Controllers
         }
 
         [Authorize(Roles = "ADMINISTRADOR")]
+        [HttpGet]
+        [Route("")]
+        [Route("Index")]
         public ActionResult Index()
         {
             var listaPessoa = _pessoaService.GetAll();
@@ -31,6 +35,8 @@ namespace EventoWeb.Controllers
         }
 
         [Authorize(Roles = "ADMINISTRADOR")]
+        [HttpGet]
+        [Route("Details/{id}")]
         public ActionResult Details(uint id)
         {
             var pessoa = _pessoaService.Get(id);
@@ -44,6 +50,8 @@ namespace EventoWeb.Controllers
         }
 
         [AllowAnonymous]
+        [HttpGet]
+        [Route("Create")]
         public ActionResult Create()
         {
             var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
@@ -54,6 +62,7 @@ namespace EventoWeb.Controllers
 
         [AllowAnonymous]
         [HttpPost]
+        [Route("Create")]
         [ValidateAntiForgeryToken]
         public ActionResult Create(PessoaModel viewModel)
         {
@@ -87,6 +96,8 @@ namespace EventoWeb.Controllers
         }
 
         [Authorize]
+        [HttpGet]
+        [Route("Edit/{id}")]
         public ActionResult Edit(uint id)
         {
             var pessoa = _pessoaService.Get(id);
@@ -109,6 +120,7 @@ namespace EventoWeb.Controllers
 
         [Authorize]
         [HttpPost]
+        [Route("Edit/{id}")]
         [ValidateAntiForgeryToken]
         public ActionResult Edit(uint id, PessoaModel viewModel)
         {
@@ -158,6 +170,8 @@ namespace EventoWeb.Controllers
         }
 
         // GET: PessoaController/Delete/5
+        [HttpGet]
+        [Route("Delete/{id}")]
         public ActionResult Delete(uint id)
         {
             var pessoa = _pessoaService.Get(id);
@@ -172,6 +186,7 @@ namespace EventoWeb.Controllers
 
         // POST: PessoaController/Delete/5
         [HttpPost, ActionName("Delete")]
+        [Route("Delete/{id}")]
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(uint id)
         {

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace EventoWeb.Controllers
 {
+    [Route("[controller]")]
     [Authorize(Roles = "ADMINISTRADOR")]
     public class AreaInteresseController : Controller
     {
@@ -20,6 +21,9 @@ namespace EventoWeb.Controllers
         }
 
         // GET: AreainteresseController
+        [HttpGet]
+        [Route("")]
+        [Route("Index")]
         public ActionResult Index()
         {
             var listaAreainteresse = _areaInteresseService.GetAll();
@@ -28,6 +32,8 @@ namespace EventoWeb.Controllers
         }
 
         // GET: AreainteresseController/Details/5
+        [HttpGet]
+        [Route("Details/{id}")]
         public ActionResult Details(uint id)
         {
             Areainteresse areainteresse = _areaInteresseService.Get(id);
@@ -40,6 +46,8 @@ namespace EventoWeb.Controllers
         }
 
         // GET: AreainteresseController/Create
+        [HttpGet]
+        [Route("Create")]
         public ActionResult Create()
         {
             var areaInteresseModel = new AreaInteresseModel();
@@ -48,6 +56,7 @@ namespace EventoWeb.Controllers
 
         // POST: AreainteresseController/Create
         [HttpPost]
+        [Route("Create")]
         [ValidateAntiForgeryToken]
         public ActionResult Create(AreaInteresseModel areaInteresseModel)
         {
@@ -61,6 +70,8 @@ namespace EventoWeb.Controllers
         }
 
         // GET: AreainteresseController/Edit/5
+        [HttpGet]
+        [Route("Edit/{id}")]
         public ActionResult Edit(uint id)
         {
             Areainteresse areainteresse = _areaInteresseService.Get(id);
@@ -74,6 +85,7 @@ namespace EventoWeb.Controllers
 
         // POST: AreainteresseController/Edit/5
         [HttpPost]
+        [Route("Edit/{id}")]
         [ValidateAntiForgeryToken]
         public ActionResult Edit(uint id, AreaInteresseModel areaInteresseModel)
         {
@@ -87,6 +99,8 @@ namespace EventoWeb.Controllers
         }
 
         // GET: AreainteresseController/Delete/5
+        [HttpGet]
+        [Route("Delete/{id}")]
         public ActionResult Delete(uint id)
         {
             Areainteresse areainteresse = _areaInteresseService.Get(id);
@@ -100,6 +114,7 @@ namespace EventoWeb.Controllers
 
         // POST: AreainteresseController/Delete/5
         [HttpPost]
+        [Route("Delete/{id}")]
         [ValidateAntiForgeryToken]
         public ActionResult Delete(uint id, AreaInteresseModel areaInteresseModel)
         {

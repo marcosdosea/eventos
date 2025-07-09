@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace EventoWeb.Controllers
 {
+    [Route("[controller]")]
     [Authorize]
     public class InscricaoController : Controller
     {
@@ -33,18 +34,25 @@ namespace EventoWeb.Controllers
         }
 
         [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
+        [HttpGet]
+        [Route("")]
+        [Route("Index")]
         public ActionResult Index()
         {
             return View();
         }
 
         [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
+        [HttpGet]
+        [Route("Details/{id}")]
         public ActionResult Details(int id)
         {
             return View();
         }
 
         [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
+        [HttpGet]
+        [Route("Create")]
         public ActionResult Create()
         {
             return View();
@@ -52,6 +60,7 @@ namespace EventoWeb.Controllers
 
         [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
         [HttpPost]
+        [Route("Create")]
         [ValidateAntiForgeryToken]
         public ActionResult Create(IFormCollection collection)
         {
@@ -66,6 +75,8 @@ namespace EventoWeb.Controllers
         }
 
         [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
+        [HttpGet]
+        [Route("Edit/{id}")]
         public ActionResult Edit(int id)
         {
             return View();
@@ -73,6 +84,7 @@ namespace EventoWeb.Controllers
 
         [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
         [HttpPost]
+        [Route("Edit/{id}")]
         [ValidateAntiForgeryToken]
         public ActionResult Edit(int id, IFormCollection collection)
         {
@@ -87,6 +99,8 @@ namespace EventoWeb.Controllers
         }
 
         [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
+        [HttpGet]
+        [Route("Delete/{id}")]
         public ActionResult Delete(int id)
         {
             return View();
@@ -94,6 +108,7 @@ namespace EventoWeb.Controllers
 
         [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
         [HttpPost]
+        [Route("Delete/{id}")]
         [ValidateAntiForgeryToken]
         public ActionResult Delete(int id, IFormCollection collection)
         {
@@ -108,12 +123,16 @@ namespace EventoWeb.Controllers
         }
 
         [Authorize]
+        [HttpGet]
+        [Route("PessoaAllInscricao")]
         public IActionResult pessoaAllInscricao()
         {
             return View();
         }
 
         [Authorize]
+        [HttpGet]
+        [Route("RealizarInscricao/{idEvento}/{idSubevento?}")]
         public IActionResult realizarInscricao(uint idEvento, uint? idSubevento)
         {
             Evento evento = _eventoService.Get(idEvento);
@@ -130,6 +149,7 @@ namespace EventoWeb.Controllers
 
         [Authorize]
         [HttpPost]
+        [Route("RealizarInscricao/{idEvento}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> realizarInscricao(uint idEvento, InscricaoEventoModel inscricaoEvento)
         {
@@ -156,6 +176,8 @@ namespace EventoWeb.Controllers
         }
 
         [Authorize]
+        [HttpGet]
+        [Route("MinhasInscricoes")]
         public async Task<IActionResult> minhasInscricoes(){
         var inscricaoUser = _inscricaoService.GetAllEventsByUserId(User.Identity.Name);
         var listarEventosModel = inscricaoUser.Select(i => new InscricaoEventoModel
