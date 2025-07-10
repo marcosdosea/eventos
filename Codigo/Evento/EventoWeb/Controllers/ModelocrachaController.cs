@@ -8,6 +8,7 @@ using Util;
 
 namespace EventoWeb.Controllers
 {
+    [Route("[controller]")]
     [Authorize(Roles = "GESTOR")]
     public class ModelocrachaController : Controller
     {
@@ -27,6 +28,9 @@ namespace EventoWeb.Controllers
         }
 
         // GET: ModelocrachaController
+        [HttpGet]
+        [Route("")]
+        [Route("Index")]
         public ActionResult Index(uint? idEvento, uint? idPessoa)
         {
             if (idEvento.HasValue)
@@ -56,6 +60,8 @@ namespace EventoWeb.Controllers
         }
 
         // GET: ModelocrachaController/Details/5
+        [HttpGet]
+        [Route("Details/{id}")]
         public ActionResult Details(uint id, uint? idPessoa)
         {
             var modelocracha = _modelocrachaService.Get(id);
@@ -117,6 +123,8 @@ namespace EventoWeb.Controllers
         }
 
         // GET: ModelocrachaController/Create
+        [HttpGet]
+        [Route("Create/{idEvento}")]
         public ActionResult Create(uint idEvento)
         {
             var evento = _eventoService.GetEventoSimpleDto(idEvento);
@@ -127,6 +135,7 @@ namespace EventoWeb.Controllers
 
         // POST: ModelocrachaController/Create
         [HttpPost]
+        [Route("Create")]
         [ValidateAntiForgeryToken]
         public ActionResult Create(ModelocrachaModel modelocrachaModel)
         {
@@ -173,6 +182,8 @@ namespace EventoWeb.Controllers
 
 
         // GET: ModelocrachaController/Edit/5
+        [HttpGet]
+        [Route("Edit/{id}")]
         public ActionResult Edit(uint id)
         {
             var modelocracha = _modelocrachaService.Get(id);
@@ -188,6 +199,7 @@ namespace EventoWeb.Controllers
 
         // POST: ModelocrachaController/Edit/5
         [HttpPost]
+        [Route("Edit/{id}")]
         [ValidateAntiForgeryToken]
         public ActionResult Edit(uint id, ModelocrachaModel viewModel)
         {
@@ -213,9 +225,11 @@ namespace EventoWeb.Controllers
                     }
                 }
 
-                viewModel.IdEvento = viewModel.Evento.Id;
                 var modelocracha = _mapper.Map<Modelocracha>(viewModel);
-                modelocracha.Logotipo = logoTipoSource;
+                if (logoTipoSource != null)
+                {
+                    modelocracha.Logotipo = logoTipoSource;
+                }
 
                 try
                 {
@@ -223,37 +237,39 @@ namespace EventoWeb.Controllers
                 }
                 catch (Exception)
                 {
-                    ModelState.AddModelError("", "Ocorreu um erro ao salvar o modelo de crachá. Tente novamente.");
+                    ModelState.AddModelError("", "Ocorreu um erro ao atualizar o modelo de crachá. Tente novamente.");
                     return View(viewModel);
                 }
 
-                return RedirectToAction(nameof(Index), new { idEvento = viewModel.IdEvento });
+                return RedirectToAction(nameof(Index), new { idEvento = modelocracha.IdEvento });
             }
 
             return View(viewModel);
         }
 
         // GET: ModelocrachaController/Delete/5
+        [HttpGet]
+        [Route("Delete/{id}")]
         public ActionResult Delete(uint id)
         {
             var modelocracha = _modelocrachaService.Get(id);
-            var modelocrachaModel = _mapper.Map<ModelocrachaModel>(modelocracha);
-
-            modelocrachaModel.NomeEvento = _eventoService.GetNomeById(modelocracha.IdEvento);
-            modelocrachaModel.LogotipoBase64 = modelocracha.Logotipo != null
-                ? Convert.ToBase64String(modelocracha.Logotipo)
-                : null;
-            return View(modelocrachaModel);
+            if (modelocracha == null)
+            {
+                return NotFound();
+            }
+            var viewModel = _mapper.Map<ModelocrachaModel>(modelocracha);
+            viewModel.Evento = _eventoService.GetEventoSimpleDto(modelocracha.IdEvento);
+            return View(viewModel);
         }
-
 
         // POST: ModelocrachaController/Delete/5
         [HttpPost]
+        [Route("Delete/{id}")]
         [ValidateAntiForgeryToken]
         public ActionResult Delete(uint id, uint idEvento)
         {
             _modelocrachaService.Delete(id);
-            return RedirectToAction(nameof(Index), new { idEvento });
+            return RedirectToAction(nameof(Index), new { idEvento = idEvento });
         }
     }
 }

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace EventoWeb.Controllers
 {
+    [Route("[controller]")]
     public class ParticipanteController : Controller
     {
         private readonly IParticipanteService _participanteService;
@@ -19,6 +20,9 @@ namespace EventoWeb.Controllers
             _mapper = mapper;
         }
 
+        [HttpGet]
+        [Route("")]
+        [Route("Index")]
         public async Task<ActionResult> Index()
         {
             var participantes = await _participanteService.GetParticipantesAsync();
@@ -28,7 +32,10 @@ namespace EventoWeb.Controllers
             };
             return View(participanteModel);
         }
+        
         [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
+        [HttpGet]
+        [Route("Create")]
         public async Task<ActionResult> Create()
         {
             var participantes = await _participanteService.GetParticipantesAsync();
@@ -41,6 +48,7 @@ namespace EventoWeb.Controllers
 
         [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
         [HttpPost]
+        [Route("Create")]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Create(ParticipanteModel participanteModel)
         {
@@ -55,6 +63,8 @@ namespace EventoWeb.Controllers
             return View(participanteModel);
         }
 
+        [HttpGet]
+        [Route("Edit/{cpf}")]
         public async Task<ActionResult> Edit(string cpf)
         {
             var participantes = await _participanteService.GetParticipantesAsync();
@@ -72,6 +82,7 @@ namespace EventoWeb.Controllers
         }
 
         [HttpPost]
+        [Route("Edit/{cpf}")]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> Edit(string cpf, ParticipanteModel participanteModel)
         {
@@ -86,6 +97,8 @@ namespace EventoWeb.Controllers
             return View(participanteModel);
         }
 
+        [HttpGet]
+        [Route("Details/{cpf}")]
         public async Task<ActionResult> Details(string cpf)
         {
             var participantes = await _participanteService.GetParticipantesAsync();
@@ -103,6 +116,7 @@ namespace EventoWeb.Controllers
         }
 
         [HttpPost]
+        [Route("Delete/{id}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(string id)
         {
