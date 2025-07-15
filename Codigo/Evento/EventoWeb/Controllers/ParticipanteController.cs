@@ -115,8 +115,29 @@ namespace EventoWeb.Controllers
             return View(participanteModel);
         }
 
+        // No ParticipanteController.cs
+
+        [HttpGet]
+        [Route("ConfirmDelete/{cpf}")] // Nova rota para a página de confirmação
+        public async Task<ActionResult> ConfirmDelete(string cpf) // Novo nome para o método GET
+        {
+            var participantes = await _participanteService.GetParticipantesAsync();
+            var participante = participantes.FirstOrDefault(c => c.Cpf == cpf);
+            if (participante == null)
+            {
+                return NotFound();
+            }
+            var participanteModel = new ParticipanteModel
+            {
+                Participante = _mapper.Map<PessoaModel>(participante),
+                // Pode remover a linha abaixo se não for usar 'Participantes' na view de confirmação
+                Participantes = _mapper.Map<IEnumerable<ParticipanteDTO>>(participantes)
+            };
+            return View("Delete", participanteModel); // Isso renderizaria ConfirmDelete.cshtml (ou Delete.cshtml, se preferir manter o nome do arquivo da view)
+        }
+
         [HttpPost]
-        [Route("Delete/{id}")]
+        [Route("Delete/{id}")] // Esta rota e método ficam como estão para o POST de exclusão
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(string id)
         {
