@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 namespace EventoWeb.Controllers
 {
     [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
-    [Route("modelocertificados")]
+    [Route("[controller]")]
     public class ModelocertificadoController : Controller
     {
         private readonly IModelocertificadoService _service;
@@ -28,6 +28,8 @@ namespace EventoWeb.Controllers
         }
 
         [HttpGet]
+        [Route("")]
+        [Route("Index")]
         public IActionResult Index()
         {
             var items = _service.GetAll();
@@ -35,7 +37,8 @@ namespace EventoWeb.Controllers
             return View(model);
         }
 
-        [HttpGet("{id:int}")]
+        [HttpGet]
+        [Route("Details/{id:int}")]
         public IActionResult Details(int id)
         {
             var entity = _service.Get((uint)id);
@@ -44,7 +47,8 @@ namespace EventoWeb.Controllers
             return View(model);
         }
 
-        [HttpGet("create")]
+        [HttpGet]
+        [Route("Create")]
         public IActionResult Create()
         {
             var model = new ModelocertificadoModel
@@ -55,7 +59,8 @@ namespace EventoWeb.Controllers
             return View(model);
         }
 
-        [HttpPost("create")]
+        [HttpPost]
+        [Route("Create")]
         [ValidateAntiForgeryToken]
         public IActionResult Create(ModelocertificadoModel model)
         {
@@ -70,7 +75,8 @@ namespace EventoWeb.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        [HttpGet("edit/{id:int}")]
+        [HttpGet]
+        [Route("Edit/{id:int}")]
         public IActionResult Edit(int id)
         {
             var entity = _service.Get((uint)id);
@@ -80,7 +86,8 @@ namespace EventoWeb.Controllers
             return View(model);
         }
 
-        [HttpPost("edit/{id:int}")]
+        [HttpPost]
+        [Route("Edit/{id:int}")]
         [ValidateAntiForgeryToken]
         public IActionResult Edit(ModelocertificadoModel model)
         {
@@ -95,7 +102,8 @@ namespace EventoWeb.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        [HttpGet("delete/{id:int}")]
+        [HttpGet]
+        [Route("Delete/{id:int}")]
         public IActionResult Delete(int id)
         {
             var entity = _service.Get((uint)id);
@@ -104,7 +112,8 @@ namespace EventoWeb.Controllers
             return View(model);
         }
 
-        [HttpPost("delete/{id:int}")]
+        [HttpPost]
+        [Route("Delete/{id:int}")]
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id)
         {

@@ -3,6 +3,18 @@
     {
         Layout = "_LayoutAdministrativo";
     }
+    else if (Context.User.Identity.IsAuthenticated && Context.User.IsInRole("GESTOR"))
+    {
+        Layout = "_LayoutGestor";
+    }
+    else if (Context.User.Identity.IsAuthenticated && Context.User.IsInRole("COLABORADOR"))
+    {
+        Layout = "_LayoutColaborador";
+    }
+    else if (Context.User.Identity.IsAuthenticated && Context.User.IsInRole("USUARIO"))
+    {
+        Layout = "_LayoutParticipante";
+    }
     else
     {
         Layout = "_Layout";

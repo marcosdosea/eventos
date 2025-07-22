@@ -7,9 +7,6 @@ using Core.Service;
 using Moq;
 using AutoMapper;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using System.Linq;
-using Core.DTO; // Adicionado para resolver o erro CS0246
 
 namespace EventoWeb.Controllers.Tests
 {
@@ -28,14 +25,10 @@ namespace EventoWeb.Controllers.Tests
             IMapper mapper = new MapperConfiguration(cfg =>
                 cfg.AddProfile(new PessoaProfile())).CreateMapper();
 
-            // Correção: O serviço retorna PessoaSimpleDTO, não ColaboradorDTO.
-            // O mapeamento de AutoMapper no Controller converte para ColaboradorDTO.
             mockService.Setup(service => service.GetColaboradoresAsync())
-                .ReturnsAsync(GetTestPessoaSimpleDTOs()); // Alterado para retornar o DTO correto
-
-            // Correção: CreateAsync retorna Task, não Task<bool>.
+                .ReturnsAsync(GetTestColaboradores());
             mockService.Setup(service => service.CreateAsync(It.IsAny<Pessoa>()))
-                .Returns(Task.CompletedTask) // Corrigido para retornar um Task completo
+                .ReturnsAsync(true)
                 .Verifiable();
 
             controller = new ColaboradorController(mockService.Object, mapper);
@@ -53,7 +46,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ColaboradorModel));
 
             ColaboradorModel? model = (ColaboradorModel)viewResult.ViewData.Model;
-            // A contagem deve ser baseada nos dados do mock
+
             Assert.AreEqual(3, model.Colaboradores.Count());
         }
 
@@ -136,37 +129,6 @@ namespace EventoWeb.Controllers.Tests
             };
         }
 
-        // Este método retorna o tipo de DTO que o Controller espera receber do serviço
-        private IEnumerable<PessoaSimpleDTO> GetTestPessoaSimpleDTOs()
-        {
-            return new List<PessoaSimpleDTO>
-            {
-                new PessoaSimpleDTO
-                {
-                    Cpf = "070.594.845-58",
-                    Nome = "Alexandre Moreira Silva",
-                    Email = "email@gmail.com",
-                    Telefone1 = "7999990011"
-                },
-                new PessoaSimpleDTO
-                {
-                    Cpf = "917.091.250-55",
-                    Nome = "Nagibe Santos Wanus Junior",
-                    Email = "nagibejr@gmail.com",
-                    Telefone1 = "7599643467"
-                },
-                new PessoaSimpleDTO
-                {
-                    Cpf = "206.015.300-04",
-                    Nome = "Marcos Venicios da Palma Dias",
-                    Email = "muzanpvp@gmail.com",
-                    Telefone1 = "7999001133"
-                }
-            };
-        }
-
-        // Método original do teste que retorna ColaboradorDTO
-        // Mantido para referência, mas não é usado na configuração do mock do serviço
         private IEnumerable<ColaboradorDTO> GetTestColaboradores()
         {
             return new List<ColaboradorDTO>
@@ -174,10 +136,18 @@ namespace EventoWeb.Controllers.Tests
                 new ColaboradorDTO
                 {
                     Id = 1,
-                    Nome = "Alexandre Moreira Silva",
+
+               Nome = "Alexandre Moreira Silva",
                     NomeCracha = "Alexandre",
                     Cpf = "070.594.845-58",
                     Sexo = "M",
+                    Cep = "48800-000",
+                    Rua = "Avenida Principal",
+                    Bairro = "Centro",
+                    Cidade = "Porto da Folha",
+                    Estado = "SE",
+                    Numero = "1503",
+                    Complemento = "casa",
                     Email = "email@gmail.com",
                     Telefone1 = "7999990011",
                     Telefone2 = null,
@@ -192,6 +162,13 @@ namespace EventoWeb.Controllers.Tests
                     NomeCracha = "Nagibe Junior",
                     Cpf = "917.091.250-55",
                     Sexo = "M",
+                    Cep = "45566-000",
+                    Rua = "Rua Severino Vieira",
+                    Bairro = "Centro",
+                    Cidade = "Esplanada",
+                    Estado = "BA",
+                    Numero = "147",
+                    Complemento = "casa",
                     Email = "nagibejr@gmail.com",
                     Telefone1 = "7599643467",
                     Telefone2 = null,
@@ -206,6 +183,13 @@ namespace EventoWeb.Controllers.Tests
                     NomeCracha = "Marcos Venicios",
                     Cpf = "206.015.300-04",
                     Sexo = "M",
+                    Cep = "45340-086",
+                    Rua = "Rua da Linha",
+                    Bairro = "Centro",
+                    Cidade = "Esplanada",
+                    Estado = "BA",
+                    Numero = "s/n",
+                    Complemento = "casa",
                     Email = "muzanpvp@gmail.com",
                     Telefone1 = "7999001133",
                     Telefone2 = null,

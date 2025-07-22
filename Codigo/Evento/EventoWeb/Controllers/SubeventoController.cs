@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace EventoWeb.Controllers
 {
+    [Route("[controller]")]
     [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
     public class SubeventoController : Controller
     {
@@ -26,6 +27,9 @@ namespace EventoWeb.Controllers
             _tipoInscricaoService = tipoInscricaoService;
         }
         // GET: SubeventoController
+        [HttpGet]
+        [Route("")]
+        [Route("Index")]
         public ActionResult Index()
         {
             var listaSubeventos = _subeventoService.GetAll().ToList();
@@ -44,6 +48,8 @@ namespace EventoWeb.Controllers
             return View(listaSubeventosModel);
         }
         // GET: SubeventoController/Details/5
+        [HttpGet]
+        [Route("Details/{id}")]
         public ActionResult Details(uint id)
         {
             Subevento subevento = _subeventoService.Get(id);
@@ -51,6 +57,8 @@ namespace EventoWeb.Controllers
             return View(subeventoModel);
         }
         // GET: SubeventoController/CreateOrEdit/{idEvento}/{idSubevento?}
+        [HttpGet]
+        [Route("CreateOrEdit/{idEvento}/{idSubevento?}")]
         public ActionResult CreateOrEdit(uint idEvento, uint? idSubevento)
         {
             SubeventoModel subeventoModel;
@@ -81,6 +89,7 @@ namespace EventoWeb.Controllers
 
         // POST: SubeventoController/CreateOrEdit/{idEvento}/{idSubevento?}
         [HttpPost]
+        [Route("CreateOrEdit/{idEvento}/{idSubevento?}")]
         [ValidateAntiForgeryToken]
         public ActionResult CreateOrEdit(uint idEvento, SubeventoModel subeventoModel)
         {
@@ -115,6 +124,8 @@ namespace EventoWeb.Controllers
         }
 
         // GET: SubeventoController/Delete/5
+        [HttpGet]
+        [Route("Delete/{id}")]
         public ActionResult Delete(uint id)
         {
             
@@ -131,6 +142,7 @@ namespace EventoWeb.Controllers
         }
         // POST: SubeventoController/Delete/5
         [HttpPost]
+        [Route("Delete/{id}")]
         [ValidateAntiForgeryToken]
         public ActionResult Delete(uint id, SubeventoModel subeventoModel)
         {

@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Identity;
 namespace EventoWeb.Controllers
 {
     [Authorize]
-    public class ParticipacaopessoaeventoController : Controller
+    public class ParticipacaoPessoaEventoController : Controller
     {
         private readonly IParticipacaoPessoaEventoService _participacaoService;
         private readonly IEventoService _eventoService;
@@ -23,7 +23,7 @@ namespace EventoWeb.Controllers
         private readonly IMapper _mapper;
         private readonly UserManager<UsuarioIdentity> _userManager;
 
-        public ParticipacaopessoaeventoController(
+        public ParticipacaoPessoaEventoController(
             IParticipacaoPessoaEventoService participacaoService,
             IEventoService eventoService,
             ISubeventoService subeventoService,

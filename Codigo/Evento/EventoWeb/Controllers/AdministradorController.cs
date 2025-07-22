@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace EventoWeb.Controllers;
 
+[Route("[controller]")]
 [Authorize(Roles = "ADMINISTRADOR")]
 public class AdministradorController : Controller
 {
@@ -19,6 +20,10 @@ public class AdministradorController : Controller
         _mapper = mapper;
     }
     // GET: AdministradorController/Create
+    [HttpGet]
+    [Route("")]
+    [Route("Index")]
+    [Route("Create")]
     public async Task<ActionResult> Create()
     {
         var administradores = await _administradorService.GetAdministradoresAsync();
@@ -31,6 +36,7 @@ public class AdministradorController : Controller
 
     // POST: AdministradorController/Create
     [HttpPost]
+    [Route("Create")]
     [ValidateAntiForgeryToken]
     public async Task<ActionResult> Create(AdministradorModel administradorModel)
     {
@@ -47,6 +53,8 @@ public class AdministradorController : Controller
     }
 
     // POST: AdministradorController/Delete/5
+    [HttpGet]
+    [Route("Delete/{cpf}")]
     public async Task<ActionResult> Delete(string cpf)
     {
         try

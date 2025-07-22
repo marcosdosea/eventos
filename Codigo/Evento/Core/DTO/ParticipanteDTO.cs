@@ -8,6 +8,20 @@ namespace Core.DTO
 
         public string Nome { get; set; } = null!; // Nome do participante
 
+        public string NomeCracha { get; set; } = null!; // Nome a ser exibido no cracha
+
+        public string Cep { get; set; } = null!; // CEP do participante
+
+        public string Rua { get; set; } = null!; // Rua do participante
+
+        public string Bairro { get; set; } = null!; // Bairro do participante
+
+        public string Cidade { get; set; } = null!; // Cidade do participante
+        public string Estado { get; set; } = null!; // UF do participante
+
+        public string Numero { get; set; } = null!; // Numero do endereco do participante
+
+        public string Complemento { get; set; } = null!; // Complemento do endereco do participante
         public string Sexo { get; set; } = null!; // Sexo do participante (M, F, N)
 
         public string Email { get; set; } = null!; // Email do participante
