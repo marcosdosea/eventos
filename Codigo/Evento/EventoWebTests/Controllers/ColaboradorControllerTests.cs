@@ -7,13 +7,14 @@ using Core.Service;
 using Moq;
 using AutoMapper;
 using System.Collections.Generic;
+using Core.DTO;
 
 namespace EventoWeb.Controllers.Tests
 {
     [TestClass()]
     public class ColaboradorControllerTests
     {
-        private static ColaboradorController controller;
+        private ColaboradorController controller;
 
         [TestInitialize]
         public void Initialize()
@@ -22,13 +23,17 @@ namespace EventoWeb.Controllers.Tests
             var mockService = new Mock<IColaboradorService>();
             var mockEstadosbrasilService = new Mock<IEstadosbrasilService>();
 
-            IMapper mapper = new MapperConfiguration(cfg =>
-                cfg.AddProfile(new PessoaProfile())).CreateMapper();
+            var config = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile(new PessoaProfile());
+                cfg.CreateMap<PessoaSimpleDTO, ColaboradorDTO>();
+            });
+            IMapper mapper = config.CreateMapper();
 
             mockService.Setup(service => service.GetColaboradoresAsync())
-                .ReturnsAsync(GetTestColaboradores());
+                .Returns(Task.FromResult(GetTestPessoaSimpleDTOs()));
             mockService.Setup(service => service.CreateAsync(It.IsAny<Pessoa>()))
-                .ReturnsAsync(true)
+                .Returns(Task.FromResult(true))
                 .Verifiable();
             controller = new ColaboradorController(mockService.Object, mapper);
         }
@@ -64,7 +69,12 @@ namespace EventoWeb.Controllers.Tests
             // Arrange
             controller.ModelState.Clear(); // Certifique-se de que o ModelState está limpo
             var mockService = new Mock<IColaboradorService>();
-            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
+            var config = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile(new PessoaProfile());
+                cfg.CreateMap<PessoaSimpleDTO, ColaboradorDTO>();
+            });
+            IMapper mapper = config.CreateMapper();
 
             controller = new ColaboradorController(mockService.Object, mapper);
 
@@ -87,7 +97,12 @@ namespace EventoWeb.Controllers.Tests
             // Arrange
             controller.ModelState.Clear(); // Certifique-se de que o ModelState está limpo
             var mockService = new Mock<IColaboradorService>();
-            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
+            var config = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile(new PessoaProfile());
+                cfg.CreateMap<PessoaSimpleDTO, ColaboradorDTO>();
+            });
+            IMapper mapper = config.CreateMapper();
 
             controller = new ColaboradorController(mockService.Object, mapper);
 
@@ -127,73 +142,13 @@ namespace EventoWeb.Controllers.Tests
             };
         }
 
-        private IEnumerable<ColaboradorDTO> GetTestColaboradores()
+        private IEnumerable<PessoaSimpleDTO> GetTestPessoaSimpleDTOs()
         {
-            return new List<ColaboradorDTO>
+            return new List<PessoaSimpleDTO>
             {
-                new ColaboradorDTO
-                {
-                    Id = 1,
-               Nome = "Alexandre Moreira Silva",
-                    NomeCracha = "Alexandre",
-                    Cpf = "070.594.845-58",
-                    Sexo = "M",
-                    Cep = "48800-000",
-                    Rua = "Avenida Principal",
-                    Bairro = "Centro",
-                    Cidade = "Porto da Folha",
-                    Estado = "SE",
-                    Numero = "1503",
-                    Complemento = "casa",
-                    Email = "email@gmail.com",
-                    Telefone1 = "7999990011",
-                    Telefone2 = null,
-                    IsActive = true,
-                    RegistrationDate = DateTime.Now,
-                    LastLogin = null
-                },
-                new ColaboradorDTO
-                {
-                    Id = 2,
-                    Nome = "Nagibe Santos Wanus Junior",
-                    NomeCracha = "Nagibe Junior",
-                    Cpf = "917.091.250-55",
-                    Sexo = "M",
-                    Cep = "45566-000",
-                    Rua = "Rua Severino Vieira",
-                    Bairro = "Centro",
-                    Cidade = "Esplanada",
-                    Estado = "BA",
-                    Numero = "147",
-                    Complemento = "casa",
-                    Email = "nagibejr@gmail.com",
-                    Telefone1 = "7599643467",
-                    Telefone2 = null,
-                    IsActive = true,
-                    RegistrationDate = DateTime.Now,
-                    LastLogin = null
-                },
-                new ColaboradorDTO
-                {
-                    Id = 3,
-                    Nome = "Marcos Venicios da Palma Dias",
-                    NomeCracha = "Marcos Venicios",
-                    Cpf = "206.015.300-04",
-                    Sexo = "M",
-                    Cep = "45340-086",
-                    Rua = "Rua da Linha",
-                    Bairro = "Centro",
-                    Cidade = "Esplanada",
-                    Estado = "BA",
-                    Numero = "s/n",
-                    Complemento = "casa",
-                    Email = "muzanpvp@gmail.com",
-                    Telefone1 = "7999001133",
-                    Telefone2 = null,
-                    IsActive = true,
-                    RegistrationDate = DateTime.Now,
-                    LastLogin = null
-                }
+                new PessoaSimpleDTO { Cpf = "111.111.111-11", Nome = "Colaborador 1", Email = "colab1@email.com", Telefone1 = "999999999" },
+                new PessoaSimpleDTO { Cpf = "222.222.222-22", Nome = "Colaborador 2", Email = "colab2@email.com", Telefone1 = "988888888" },
+                new PessoaSimpleDTO { Cpf = "333.333.333-33", Nome = "Colaborador 3", Email = "colab3@email.com", Telefone1 = "977777777" }
             };
         }
     }
