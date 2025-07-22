@@ -30,6 +30,7 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.CreateAsync(It.IsAny<Pessoa>()))
                 .ReturnsAsync(true)
                 .Verifiable();
+
             controller = new ColaboradorController(mockService.Object, mapper);
         }
 
@@ -45,6 +46,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ColaboradorModel));
 
             ColaboradorModel? model = (ColaboradorModel)viewResult.ViewData.Model;
+
             Assert.AreEqual(3, model.Colaboradores.Count());
         }
 
@@ -134,6 +136,7 @@ namespace EventoWeb.Controllers.Tests
                 new ColaboradorDTO
                 {
                     Id = 1,
+
                Nome = "Alexandre Moreira Silva",
                     NomeCracha = "Alexandre",
                     Cpf = "070.594.845-58",
