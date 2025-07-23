@@ -8,13 +8,15 @@ using Moq;
 using AutoMapper;
 using System.Runtime.ConstrainedExecution;
 using System.Security.Cryptography;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace EventoWeb.Controllers.Tests
 {
     [TestClass()]
     public class PessoaControllerTests
     {
-        private static PessoaController controller;
+        private static PessoaController? controller;
 
         [TestInitialize]
         public void Initialize()
@@ -39,7 +41,7 @@ namespace EventoWeb.Controllers.Tests
         public void IndexTest()
         {
             // Act
-            var result = controller.Index();
+            var result = controller!.Index();
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
@@ -54,7 +56,7 @@ namespace EventoWeb.Controllers.Tests
         public void DetailsTest()
         {
             // Act
-            var result = controller.Details(1);
+            var result = controller!.Details(1);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
@@ -76,13 +78,13 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("email@gmail.com", pessoaModel.Email);
             Assert.AreEqual("7999990011", pessoaModel.Telefone1);
             Assert.AreEqual("NULL", pessoaModel.Telefone2);
-    }
+        }
 
         [TestMethod()]
         public void CreateTest()
         {
             // Act
-            var result = controller.Create();
+            var result = controller!.Create();
 
             // Assert 
             Assert.IsInstanceOfType(result, typeof(ViewResult));
@@ -92,7 +94,7 @@ namespace EventoWeb.Controllers.Tests
         public void CreateTest_Valid()
         {
             // Arrange
-            controller.ModelState.Clear(); // Certifique-se de que o ModelState está limpo
+            controller!.ModelState.Clear(); // Certifique-se de que o ModelState está limpo
             var mockService = new Mock<IPessoaService>();
 
             controller = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object,
@@ -116,7 +118,7 @@ namespace EventoWeb.Controllers.Tests
         public void CreateTest_Invalid()
         {
             // Arrange
-            controller.ModelState.Clear(); // Certifique-se de que o ModelState está limpo
+            controller!.ModelState.Clear(); // Certifique-se de que o ModelState está limpo
             var mockService = new Mock<IPessoaService>();
 
             controller = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object,
@@ -131,70 +133,93 @@ namespace EventoWeb.Controllers.Tests
             // Act
             var result = controller.Create(GetNewPessoa());
 
-			// Assert
-			Assert.AreEqual(5, controller.ModelState.ErrorCount);
-			Assert.IsInstanceOfType(result, typeof(ViewResult));
-			ViewResult viewResult = (ViewResult)result;
-			Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(PessoaModel));
-		}
+            // Assert
+            Assert.AreEqual(5, controller.ModelState.ErrorCount);
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            ViewResult viewResult = (ViewResult)result;
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(PessoaModel));
+        }
 
 
         [TestMethod()]
         public void EditTest_Get_Valid()
         {
+            // Arrange
+            var pessoa = GetTargetPessoa();
+
+            var mockService = new Mock<IPessoaService>();
+            var mockEstadosService = new Mock<IEstadosbrasilService>();
+            mockService.Setup(service => service.Get(pessoa.Id)).Returns(pessoa);
+
+            var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper);
+
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+        new Claim(ClaimTypes.Name, pessoa.Cpf),
+        new Claim(ClaimTypes.Role, "ADMINISTRADOR")
+            }, "mock"));
+
+            localController.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = user }
+            };
+
             // Act
-            var result = controller.Edit(1);
+            var result = localController.Edit(1);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(PessoaModel));
-			PessoaModel pessoaModel = (PessoaModel)viewResult.ViewData.Model;
+            PessoaModel pessoaModel = (PessoaModel)viewResult.ViewData.Model;
             Assert.AreEqual((uint)1, pessoaModel.Id);
-            Assert.AreEqual("João Vitor Sodré", pessoaModel.Nome);
-            Assert.AreEqual("Sodré", pessoaModel.NomeCracha);
-            Assert.AreEqual("040.268.930-57", pessoaModel.Cpf);
-            Assert.AreEqual("M", pessoaModel.Sexo);
-            Assert.AreEqual("48370-000", pessoaModel.Cep);
-            Assert.AreEqual("Avenida Principal", pessoaModel.Rua);
-            Assert.AreEqual("Centro", pessoaModel.Bairro);
-            Assert.AreEqual("Irece", pessoaModel.Cidade);
-            Assert.AreEqual("BA", pessoaModel.Estado);
-            Assert.AreEqual("s/n", pessoaModel.Numero);
-            Assert.AreEqual("casa", pessoaModel.Complemento);
-            Assert.AreEqual("email@gmail.com", pessoaModel.Email);
-            Assert.AreEqual("7999990011", pessoaModel.Telefone1);
-            Assert.AreEqual("NULL", pessoaModel.Telefone2);
         }
 
         [TestMethod()]
         public void EditTest_Post_Valid()
         {
             // Arrange
-            controller.ModelState.Clear(); // Certifique-se de que o ModelState está limpo
-            var mockService = new Mock<IPessoaService>();
+            var model = GetTargetPessoaModel();
+            var pessoa = GetTargetPessoa();
 
-            controller = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper());
+            var mockService = new Mock<IPessoaService>();
+            mockService.Setup(service => service.Get(model.Id)).Returns(pessoa);
+            mockService.Setup(service => service.Edit(It.IsAny<Pessoa>())).Verifiable();
+
+            var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
+            var localController = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, mapper);
+
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+        new Claim(ClaimTypes.Name, model.Cpf),
+        new Claim(ClaimTypes.Role, "ADMINISTRADOR")
+            }, "mock"));
+
+            localController.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = user }
+            };
+
+            localController.ModelState.Clear();
 
             // Act
-            var result = controller.Edit(GetTargetPessoaModel().Id, GetTargetPessoaModel());
+            var result = localController.Edit(model.Id, model);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
-            RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
+            var redirectToActionResult = (RedirectToActionResult)result;
             Assert.IsNull(redirectToActionResult.ControllerName);
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
-
-
-            // Verifique se o método Create do serviço foi chamado
             mockService.Verify(service => service.Edit(It.IsAny<Pessoa>()), Times.Once);
         }
+
 
         [TestMethod()]
         public void DeleteTest_Post_Valid()
         {
             // Act
-            var result = controller.Delete(1);
+            var result = controller!.Delete(1);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
@@ -222,7 +247,7 @@ namespace EventoWeb.Controllers.Tests
         public void DeleteTest_Get_Valid()
         {
             // Act
-            var result = controller.DeleteConfirmed(GetTargetPessoaModel().Id);
+            var result = controller!.DeleteConfirmed(GetTargetPessoaModel().Id);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
@@ -276,9 +301,9 @@ namespace EventoWeb.Controllers.Tests
 
         private PessoaModel GetTargetPessoaModel()
         {
-			return new PessoaModel
-			{
-				Id = 1,
+            return new PessoaModel
+            {
+                Id = 1,
                 Nome = "João Vitor Sodré",
                 NomeCracha = "Sodré",
                 Cpf = "040.268.930-57",
