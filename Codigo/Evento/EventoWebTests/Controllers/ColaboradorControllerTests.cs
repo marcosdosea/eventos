@@ -35,6 +35,7 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.CreateAsync(It.IsAny<Pessoa>()))
                 .Returns(Task.FromResult(true))
                 .Verifiable();
+
             controller = new ColaboradorController(mockService.Object, mapper);
         }
 
@@ -50,6 +51,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ColaboradorModel));
 
             ColaboradorModel? model = (ColaboradorModel)viewResult.ViewData.Model;
+
             Assert.AreEqual(3, model.Colaboradores.Count());
         }
 
