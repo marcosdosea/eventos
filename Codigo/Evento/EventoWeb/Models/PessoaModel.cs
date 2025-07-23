@@ -8,7 +8,7 @@ namespace EventoWeb.Models
     public class PessoaModel
     {
         public uint Id { get; set; }
-        
+
         [Display(Name = "Nome")]
         [Required(ErrorMessage = "Nome é obrigatório")]
         public string Nome { get; set; } = null!;
@@ -17,6 +17,7 @@ namespace EventoWeb.Models
 
         [Display(Name = "Nome no Crachá")]
         [Required(ErrorMessage = "Informe o nome que será exibido no crachá do evento")]
+        [StringLength(20, ErrorMessage = "O Nome no Crachá não pode exceder {1} caracteres.")] // <--- CORRIGIDO PARA 20
         public string NomeCracha
         {
             get => string.IsNullOrWhiteSpace(_nomeCracha) ? Nome : _nomeCracha;
@@ -67,11 +68,11 @@ namespace EventoWeb.Models
         [Display(Name = "Foto")]
         [ImagemUpload(ErrorMessage = "A imagem deve estar nos formatos PNG, JPG, JPEG, TIF ou GIF e ter menos de 1 MB.")]
         public IFormFile? Foto { get; set; }
-        
+
         [Display(Name = "Foto")]
         [BindNever]
         public string? FotoBase64 { get; set; }
-        
+
         public SelectList? Estados { get; set; }
     }
 }
