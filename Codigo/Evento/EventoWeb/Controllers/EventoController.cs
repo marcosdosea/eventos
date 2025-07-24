@@ -271,7 +271,7 @@ namespace EventoWeb.Controllers
 				_pessoaService.CreatePessoaPapelAsync(pessoa, idEvento, 2);
 				_eventoService.AtualizarVagasDisponiveis(idEvento);
 
-				return RedirectToAction("CreateGestor", new { idEvento });
+				return RedirectToAction("GerenciarEvento", new { idEvento }); 
 			}
 
 			gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(gestaoPapelModel.Evento.Id);
@@ -380,10 +380,9 @@ namespace EventoWeb.Controllers
 				var pessoa = _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
 				var idEvento = gestaoPapelModel.Evento.Id;
 
-				var existingInscricao = _inscricaoService.GetByEventoAndPapel(idEvento, 4)
-					.FirstOrDefault(i => i.IdPessoa == pessoa.Id);
+				var papel = _inscricaoService.GetPapelPessoaByEvento(pessoa.Id, idEvento);
 
-				if (existingInscricao != null)
+				if (papel == 4)
 				{
 					ModelState.AddModelError(string.Empty, "A pessoa selecionada já é um participante.");
 					gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
@@ -395,7 +394,7 @@ namespace EventoWeb.Controllers
 				_pessoaService.CreatePessoaPapelAsync(pessoa, idEvento, 4);
 				_eventoService.AtualizarVagasDisponiveis(idEvento);
 
-				return RedirectToAction("CreateParticipante", new { idEvento });
+				return RedirectToAction("GerenciarEvento", new { idEvento });
 			}
 
 			gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(gestaoPapelModel.Evento.Id);
@@ -406,9 +405,16 @@ namespace EventoWeb.Controllers
 		// POST: EventoController/DeletePessoaPapel
 		public IActionResult DeletePessoaPapel(uint idPessoa, uint idEvento, uint idPapel)
 		{
-			var cpf = _pessoaService.Get(idPessoa).Cpf.Replace(".", "").Replace("-", "");
-			
-			_inscricaoService.DeletePessoaPapel(idPessoa, idEvento, idPapel,cpf);
+			var pessoa = _pessoaService.Get(idPessoa);
+			if (pessoa == null || string.IsNullOrEmpty(pessoa.Cpf))
+			{
+				TempData["Message"] = "Pessoa não encontrada para exclusão.";
+				return RedirectToAction("GerenciarEvento", new { idEvento });
+			}
+
+			var cpf = pessoa.Cpf.Replace(".", "").Replace("-", "");
+
+			_inscricaoService.DeletePessoaPapel(idPessoa, idEvento, idPapel, cpf);
 
 			_eventoService.AtualizarVagasDisponiveis(idEvento);
 
@@ -421,7 +427,7 @@ namespace EventoWeb.Controllers
 				case 4:
 					return RedirectToAction("CreateParticipante", new { idEvento });
 				default:
-					return RedirectToAction("Index");
+                    return RedirectToAction("GerenciarEvento", new { idEvento }); ;
 			}
 		}
 
