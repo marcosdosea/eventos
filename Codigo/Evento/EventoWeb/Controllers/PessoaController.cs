@@ -68,7 +68,7 @@ namespace EventoWeb.Controllers
         {
             if (ModelState.IsValid)
             {
-                byte[] fotoSource = null;
+                byte[]? fotoSource = null;
                 if (viewModel.Foto != null && viewModel.Foto.Length > 0)
                 {
                     using (var memoryStream = new MemoryStream())
@@ -106,13 +106,13 @@ namespace EventoWeb.Controllers
                 return NotFound();
             }
 
-            if (pessoa.Cpf != User.Identity.Name && !User.IsInRole("ADMINISTRADOR"))
+            if (pessoa.Cpf != User.Identity!.Name && !User.IsInRole("ADMINISTRADOR"))
             {
                 return Forbid();
             }
-            
+
             var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
-            var viewModel =  _mapper.Map<PessoaModel>(pessoa);
+            var viewModel = _mapper.Map<PessoaModel>(pessoa);
             viewModel.Estados = new SelectList(estados, "Estado", "Nome");
 
             return View(viewModel);
@@ -130,7 +130,7 @@ namespace EventoWeb.Controllers
                 return NotFound();
             }
 
-            if (pessoa.Cpf != User.Identity.Name && !User.IsInRole("ADMINISTRADOR"))
+            if (pessoa.Cpf != User.Identity!.Name && !User.IsInRole("ADMINISTRADOR"))
             {
                 return Forbid();
             }
@@ -142,7 +142,7 @@ namespace EventoWeb.Controllers
 
             if (ModelState.IsValid)
             {
-                byte[] fotoSource = null;
+                byte[]? fotoSource = null;
                 if (viewModel.Foto != null && viewModel.Foto.Length > 0)
                 {
                     using (var memoryStream = new MemoryStream())
