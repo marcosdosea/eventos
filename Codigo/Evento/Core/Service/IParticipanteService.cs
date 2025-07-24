@@ -9,4 +9,6 @@ public interface IParticipanteService
     Task<IEnumerable<PessoaSimpleDTO>> GetParticipantesAsync();
 
     Task DeleteAsync(string cpf);
+
+    Task<Pessoa?> GetParticipanteByCpfAsync(string cpf);
 }
