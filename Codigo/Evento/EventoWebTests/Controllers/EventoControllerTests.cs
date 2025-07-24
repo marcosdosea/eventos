@@ -11,6 +11,8 @@ using System.Runtime.ConstrainedExecution;
 using System.Security.Cryptography;
 using Core.DTO;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace EventoWeb.Controllers.Tests
 {
@@ -44,10 +46,44 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.Create(It.IsAny<Evento>()))
                 .Verifiable();
 
-            mockServiceInscricao.Setup(service => service.GetByEventoAndPapel(1,1))
-    .Returns(GetTestInscricoes());
+            mockServiceInscricao.Setup(service => service.GetByEventoAndPapel(It.IsAny<uint>(), It.IsAny<int>()))
+                .Returns(GetTestInscricoes());
+            // Mock para CreateColaborador
+            mockServiceInscricao.Setup(service => service.GetGestorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
+                .Returns(new Inscricaopessoaevento()); // Retorna objeto do tipo correto
+            mockService.Setup(service => service.GetEventoSimpleDto(It.IsAny<uint>()))
+                .Returns(new EventoSimpleDTO { Id = 1, Nome = "Evento Teste" });
+            mockServiceInscricao.Setup(service => service.GetByEventoAndPapel(It.IsAny<uint>(), 3))
+                .Returns(GetTestInscricoes());
 
-            controller = new EventoController(mockUserManager.Object, mockService.Object, mapper, mockServiceEstado.Object, mockServiceInscricao.Object, mockServiceTipoevento.Object, mockServiceAreaInteresse.Object,mockServicePessoa.Object, mockServiceSubevento.Object);
+            // Mock para POST de CreateColaborador
+            mockServicePessoa.Setup(service => service.GetByCpf(It.IsAny<string>()))
+                .Returns(new Pessoa { Id = 1, Nome = "João Vitor Sodré", NomeCracha = "Sodré", Cpf = "040.268.930-57" });
+            mockServiceInscricao.Setup(service => service.GetPapelPessoaByEvento(It.IsAny<uint>(), It.IsAny<uint>()))
+                .Returns((uint idPessoa, uint idEvento) => 1); // Delegate para garantir correspondência de tipos
+            mockServicePessoa.Setup(service => service.CreatePessoaPapelAsync(It.IsAny<Pessoa>(), It.IsAny<uint>(), It.IsAny<int>()))
+                .Verifiable();
+            mockService.Setup(service => service.AtualizarVagasDisponiveis(It.IsAny<uint>()))
+                .Verifiable();
+
+            // Mock para DeletePessoaPapel
+            var pessoa = new Pessoa { Id = 1, Cpf = "123.456.789-00", Nome = "Teste" };
+            mockServicePessoa.Setup(s => s.Get(1)).Returns(pessoa);
+
+            controller = new EventoController(mockUserManager.Object, mockService.Object, mapper, mockServiceEstado.Object, mockServiceInscricao.Object, mockServiceTipoevento.Object, mockServiceAreaInteresse.Object, mockServicePessoa.Object, mockServiceSubevento.Object);
+
+            // Mock do contexto do usuário para o controller
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "usuario@teste.com"),
+                new Claim(ClaimTypes.Role, "ADMINISTRADOR"),
+                new Claim(ClaimTypes.Role, "GESTOR"),
+                new Claim(ClaimTypes.Role, "COLABORADOR")
+            };
+            var identity = new ClaimsIdentity(claims, "TestAuthType");
+            var claimsPrincipal = new ClaimsPrincipal(identity);
+            controller.ControllerContext = new ControllerContext();
+            controller.ControllerContext.HttpContext = new DefaultHttpContext { User = claimsPrincipal };
         }
 
         [TestMethod()]
