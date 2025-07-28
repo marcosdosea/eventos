@@ -116,17 +116,17 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("João Vitor Sodré", participanteModel.Participante.Nome);
             Assert.AreEqual("Sodré", participanteModel.Participante.NomeCracha);
             Assert.AreEqual("040.268.930-57", participanteModel.Participante.Cpf);
-            //Assert.AreEqual("M", participanteModel.Participante.Sexo);
-            //Assert.AreEqual("48370-000", participanteModel.Participante.Cep);
-            //Assert.AreEqual("Avenida Principal", participanteModel.Participante.Rua);
-            //Assert.AreEqual("Centro", participanteModel.Participante.Bairro);
-            //Assert.AreEqual("Irecê", participanteModel.Participante.Cidade);
-            //Assert.AreEqual("BA", participanteModel.Participante.Estado);
-            //Assert.AreEqual("s/n", participanteModel.Participante.Numero);
-            //Assert.AreEqual("casa", participanteModel.Participante.Complemento);
+            Assert.AreEqual("M", participanteModel.Participante.Sexo);
+            Assert.AreEqual("48370-000", participanteModel.Participante.Cep);
+            Assert.AreEqual("Avenida Principal", participanteModel.Participante.Rua);
+            Assert.AreEqual("Centro", participanteModel.Participante.Bairro);
+            Assert.AreEqual("Irecê", participanteModel.Participante.Cidade);
+            Assert.AreEqual("BA", participanteModel.Participante.Estado);
+            Assert.AreEqual("s/n", participanteModel.Participante.Numero);
+            Assert.AreEqual("casa", participanteModel.Participante.Complemento);
             Assert.AreEqual("email@gmail.com", participanteModel.Participante.Email);
             Assert.AreEqual("7999990011", participanteModel.Participante.Telefone1);
-            //Assert.AreEqual(null, participanteModel.Participante.Telefone2);
+            Assert.AreEqual(null, participanteModel.Participante.Telefone2);
 
             //As linhas comentadas não existem em PessoaSimpleDTO, mas existem em PessoaModel.
         }
