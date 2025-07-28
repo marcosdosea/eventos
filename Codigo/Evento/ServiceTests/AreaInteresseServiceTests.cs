@@ -1,11 +1,11 @@
-﻿using Service;
-using Core;
+﻿using Core;
 using Core.Service;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Service;
 using System.Collections.Immutable;
 
-namespace Service.Tests
+namespace ServiceTests
 {
     [TestClass()]
     public class AreaInteresseServiceTests
