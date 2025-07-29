@@ -26,7 +26,7 @@ public class PessoaProfile : Profile
             .ForMember(dest => dest.Foto, opt => opt.MapFrom(src => src.Foto != null ? FormFileToByteArray(src.Foto) : null))
             .ReverseMap()
             .ForMember(dest => dest.Foto, opt => opt.MapFrom(src => ByteArrayToFormFile(src.Foto, "foto.png")))
-            .ForMember(dest => dest.FotoBase64, opt => opt.MapFrom(src => src.Foto != null ? Convert.ToBase64String(src.Foto) : null));
+            .ForMember(dest => dest.FotoBase64, opt => opt.MapFrom(src => src.Foto != null ? Convert.ToBase64String(src.Foto) : null))
             .ForMember(dest => dest.Cep, opt => opt.MapFrom(src => src.Cep)) // Ensure this line exists
             .ForMember(dest => dest.Estado, opt => opt.MapFrom(src => src.Estado)) // Ensure this line exists
             .ForMember(dest => dest.Cidade, opt => opt.MapFrom(src => src.Cidade)) // Ensure this line exists
