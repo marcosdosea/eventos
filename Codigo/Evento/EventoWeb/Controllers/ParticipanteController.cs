@@ -101,12 +101,13 @@ namespace EventoWeb.Controllers
         [Route("Details/{cpf}")]
         public async Task<ActionResult> Details(string cpf)
         {
-            var participantes = await _participanteService.GetParticipantesAsync();
-            var participante = participantes.FirstOrDefault(c => c.Cpf == cpf);
+         
+            var participante = await _participanteService.GetParticipanteByCpfAsync(cpf);
             if (participante == null)
             {
                 return NotFound();
             }
+            var participantes = await _participanteService.GetParticipantesAsync();
             var participanteModel = new ParticipanteModel
             {
                 Participante = _mapper.Map<PessoaModel>(participante),

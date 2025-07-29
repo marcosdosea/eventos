@@ -104,5 +104,10 @@ public class ParticipanteService : IParticipanteService
         }
     }
 
-
+    public async Task<Pessoa?> GetParticipanteByCpfAsync(string cpf)
+    {
+        // Busca a pessoa completa pelo CPF usando o serviço de pessoas
+        // Pode ser síncrono, mas mantemos async para compatibilidade com a interface
+        return await Task.FromResult(_pessoaService.GetByCpf(cpf));
+    }
 }

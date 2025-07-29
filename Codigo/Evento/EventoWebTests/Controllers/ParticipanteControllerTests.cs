@@ -34,6 +34,9 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.DeleteAsync(It.IsAny<string>()))
                 .Returns(Task.CompletedTask);
 
+            mockService.Setup(service => service.GetParticipanteByCpfAsync("040.268.930-57"))
+                .ReturnsAsync(GetTargetParticipante());
+
             controller = new ParticipanteController(mockService.Object, mapper);
         }
 
