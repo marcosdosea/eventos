@@ -5,7 +5,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Service;
 using System.Collections.Immutable;
 
-namespace ServiceTests
+namespace Service.Tests
 {
     [TestClass()]
     public class AreaInteresseServiceTests

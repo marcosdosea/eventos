@@ -31,7 +31,9 @@ namespace Service.Tests
             {
                 new Evento { Id = 1, Nome = "Evento 1", Status = "A", Descricao = "Descrição do Evento 1", DataInicio = DateTime.Now, DataFim = DateTime.Now.AddDays(1) },
                 new Evento { Id = 2, Nome = "Evento 2", Status = "A", Descricao = "Descrição do Evento 2", DataInicio = DateTime.Now, DataFim = DateTime.Now.AddDays(1) },
-                new Evento { Id = 3, Nome = "Evento 3", Status = "A", Descricao = "Descrição do Evento 3", DataInicio = DateTime.Now, DataFim = DateTime.Now.AddDays(1) }
+                new Evento { Id = 3, Nome = "Evento 3", Status = "A", Descricao = "Descrição do Evento 3", DataInicio = DateTime.Now, DataFim = DateTime.Now.AddDays(1) },
+                new Evento { Id = 4, Nome = "Evento 4", Status = "A", Descricao = "Descrição do Evento 4", DataInicio = DateTime.Now, DataFim = DateTime.Now.AddDays(1) }
+
             };
             _context.AddRange(eventos);
 
@@ -87,7 +89,7 @@ namespace Service.Tests
             var novoModelo = new Modelocertificado
             {
                 Id = 4,
-                IdEvento = 1,
+                IdEvento = 4,
                 LogotipoSuperior = new byte[] { 0x50, 0x50 },
                 TextoAntesParticipante = "Certificamos que",
                 TextoAntesEvento = "participou do evento",
@@ -102,7 +104,7 @@ namespace Service.Tests
             Assert.AreEqual(4, _modelocertificadoService.GetAll().Count());
             var modelocertificado = _modelocertificadoService.Get(4);
             Assert.IsNotNull(modelocertificado);
-            Assert.AreEqual((uint)1, modelocertificado.IdEvento);
+            Assert.AreEqual((uint)4, modelocertificado.IdEvento);
             CollectionAssert.AreEqual(new byte[] { 0x50, 0x50 }, modelocertificado.LogotipoSuperior);
             Assert.AreEqual("Certificamos que", modelocertificado.TextoAntesParticipante);
         }
