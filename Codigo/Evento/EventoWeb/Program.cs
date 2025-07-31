@@ -134,13 +134,7 @@ namespace EventoWeb
             app.UseAuthentication();
             app.UseAuthorization();
 
-            // Inicializa os roles do sistema
-            using (var scope = app.Services.CreateScope())
-            {
-                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-                IdentityInitializer.InitializeRoles(roleManager).Wait();
-            }
-
+            // Middleware personalizado para definir layout baseado no role
             app.Use(async (context, next) =>
             {
                 var isAuthenticated = context.User.Identity.IsAuthenticated;
@@ -161,6 +155,13 @@ namespace EventoWeb
 
                 await next();
             });
+
+            // Inicializa os roles do sistema
+            using (var scope = app.Services.CreateScope())
+            {
+                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+                IdentityInitializer.InitializeRoles(roleManager).Wait();
+            }
 
             app.MapRazorPages();
 
