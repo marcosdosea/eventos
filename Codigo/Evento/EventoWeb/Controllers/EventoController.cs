@@ -89,6 +89,7 @@ namespace EventoWeb.Controllers
 		[Authorize(Roles = "ADMINISTRADOR")]
 		// POST: EventoController/Create
 		[HttpPost]
+		[Route("Create")]
 		[ValidateAntiForgeryToken]
 		public ActionResult Create(EventoModel eventoModel)
 		{
@@ -152,6 +153,7 @@ namespace EventoWeb.Controllers
 
 		// POST: EventoController/Edit/5
 		[HttpPost]
+		[Route("Edit/{id}")]
 		[ValidateAntiForgeryToken]
 		public ActionResult Edit(uint id, EventoModel viewModel)
 		{
@@ -213,6 +215,7 @@ namespace EventoWeb.Controllers
 
 		// POST: EventoController/Delete/5
 		[HttpPost]
+		[Route("Delete/{id}")]
 		[ValidateAntiForgeryToken]
 		public ActionResult Delete(uint id, EventoModel eventoModel)
 		{
@@ -234,6 +237,7 @@ namespace EventoWeb.Controllers
 
 		// POST: EventoController/CreateGestor
 		[HttpPost]
+		[Route("CreateGestor")]
 		[ValidateAntiForgeryToken]
 		public ActionResult CreateGestor(GestaoPapelModel gestaoPapelModel)
 		{
@@ -304,6 +308,7 @@ namespace EventoWeb.Controllers
 
 		// POST: EventoController/CreateColaborador
 		[HttpPost]
+		[Route("CreateColaborador")]
 		[ValidateAntiForgeryToken]
 		public ActionResult CreateColaborador(GestaoPapelModel gestaoPapelModel)
 		{
@@ -372,6 +377,7 @@ namespace EventoWeb.Controllers
 
 		// POST: EventoController/CreateParticipante
 		[HttpPost]
+		[Route("CreateParticipante")]
 		[ValidateAntiForgeryToken]
 		public ActionResult CreateParticipante(GestaoPapelModel gestaoPapelModel)
 		{
@@ -566,6 +572,7 @@ namespace EventoWeb.Controllers
 
 		// POST: EventoController/GestorEditarEvento/5
 		[HttpPost]
+		[Route("GestorEditarEvento/{id}")]
 		[ValidateAntiForgeryToken]
 		[Authorize(Roles = "GESTOR")]
 		public ActionResult GestorEditarEvento(uint id, EventoModel viewModel)
