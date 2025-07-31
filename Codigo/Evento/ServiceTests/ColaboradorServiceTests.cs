@@ -72,7 +72,9 @@ namespace Service.Tests
             await _colaboradorService.CreateAsync(pessoa);
 
             // Assert
-            _mockPessoaService.Verify(service => service.Create(It.IsAny<Pessoa>()), Times.Once);
+            // Não deve chamar Create nem CreateAsync se a pessoa já existe
+            _mockPessoaService.Verify(service => service.Create(It.IsAny<Pessoa>()), Times.Never);
+            _mockPessoaService.Verify(service => service.CreateAsync(It.IsAny<Pessoa>()), Times.Never);
             _mockUserManager.Verify(um => um.AddToRoleAsync(usuario, "COLABORADOR"), Times.Once);
         }
 
