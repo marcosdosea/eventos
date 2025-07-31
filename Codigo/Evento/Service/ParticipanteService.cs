@@ -71,6 +71,7 @@ public class ParticipanteService : IParticipanteService
                 {
                     Cpf = pessoa.Cpf,
                     Nome = pessoa.Nome,
+                    NomeCracha = pessoa.NomeCracha,
                     Telefone1 = pessoa.Telefone1,
                     Email = pessoa.Email
                 });

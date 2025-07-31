@@ -26,6 +26,17 @@ namespace EventoWeb
             builder.Services.AddAutoMapper(cfg =>
             {
                 cfg.CreateMap<PessoaModel, Pessoa>().ReverseMap();
+
+                cfg.CreateMap<PessoaSimpleDTO, PessoaModel>()
+                    .ForMember(dest => dest.Nome, opt => opt.MapFrom(src => src.Nome))
+                    .ForMember(dest => dest.NomeCracha, opt => opt.MapFrom(src => src.NomeCracha)) // Mapeia NomeCracha corretamente
+                    .ForMember(dest => dest.Cpf, opt => opt.MapFrom(src => src.Cpf)) // Adicione outras propriedades se necessário
+                    .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
+                    .ForMember(dest => dest.Telefone1, opt => opt.MapFrom(src => src.Telefone1));
+                // Se PessoaModel tiver outras propriedades que vêm de PessoaSimpleDTO, mapeie-as aqui.
+                // Se PessoaModel.Participante for do tipo PessoaModel, então este mapeamento é o que importa.
+
+
                 cfg.CreateMap<PessoaSimpleDTO, ColaboradorDTO>()
                     .ForMember(dest => dest.Id, opt => opt.MapFrom(src => 0)) // Valor padrão
                     .ForMember(dest => dest.Cpf, opt => opt.MapFrom(src => src.Cpf))
