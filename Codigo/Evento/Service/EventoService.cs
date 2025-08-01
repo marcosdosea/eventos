@@ -87,7 +87,7 @@ namespace Service
         /// <exception cref="NotImplementedException"></exception>
         public Evento Get(uint id)
         {
-            return _context.Eventos.Find(id);
+            return _context.Eventos.FirstOrDefault(e => e.Id == id);
         }
         public EventoSimpleDTO GetEventoSimpleDto(uint id)
         {
