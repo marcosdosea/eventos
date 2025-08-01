@@ -61,8 +61,10 @@ namespace EventoWeb.Controllers
 		}
 
 		[Authorize(Roles = "ADMINISTRADOR")]
-		// GET: EventoController/Details/5
-		public ActionResult Details(uint id)
+        // GET: EventoController/Details/5
+        [HttpGet]
+        [Route("Details/{id}")]
+        public ActionResult Details(uint id)
 		{
 			Evento evento = _eventoService.Get(id);
 			EventoModel eventoModel = _mapper.Map<EventoModel>(evento);
@@ -201,8 +203,10 @@ namespace EventoWeb.Controllers
 		}
 
 		[Authorize(Roles = "ADMINISTRADOR")]
-		// GET: EventoController/Delete/5
-		public ActionResult Delete(uint id)
+        // GET: EventoController/Delete/5
+        [HttpGet]
+        [Route("Delete/{id}")]
+        public ActionResult Delete(uint id)
 		{
 			var evento = _eventoService.Get(id);
 			var eventoModel = _mapper.Map<EventoModel>(evento);
@@ -224,8 +228,10 @@ namespace EventoWeb.Controllers
 		}
 
 		[Authorize(Roles = "ADMINISTRADOR")]
-		// GET: EventoController/CreateGestor
-		public ActionResult CreateGestor(uint idEvento)
+        // GET: EventoController/CreateGestor
+        [HttpGet]
+        [Route("CreateGestor")]
+        public ActionResult CreateGestor(uint idEvento)
 		{
 			var gestorModel = new GestaoPapelModel
 			{
@@ -285,8 +291,10 @@ namespace EventoWeb.Controllers
 
 		
 		[Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
-		// GET: EventoController/CreateColaborador
-		public ActionResult CreateColaborador(uint idEvento)
+        // GET: EventoController/CreateColaborador
+        [HttpGet]
+        [Route("CreateColaborador")]
+        public ActionResult CreateColaborador(uint idEvento)
 		{
 			
 			var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
@@ -355,18 +363,33 @@ namespace EventoWeb.Controllers
 		}
 		
 		[Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
-		// GET: EventoController/CreateParticipante
-		public ActionResult CreateParticipante(uint idEvento)
-		{
-			var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
-			var colaborador = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, idEvento);
+        // GET: EventoController/CreateParticipante
+        [HttpGet]
+        [Route("CreateParticipante")]
+        public ActionResult CreateParticipante(uint idEvento)
+        {
+            // Verifica se o evento existe
+            var evento = _eventoService.Get(idEvento);
+            if (evento == null)
+            {
+                TempData.Clear();
+                TempData["Message"] = "Evento não encontrado!";
+                return RedirectToAction("Index", "Home");
+            }
 
-			if(gestor == null && colaborador == null){
-				TempData.Clear();
-				TempData["Message"] = "Você não tem permissão para criar um participante!";
-				return RedirectToAction("GerenciarEvento");
-			}else{
-			var gestorModel = new GestaoPapelModel
+            var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
+            var colaborador = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, idEvento);
+            var isAdmin = User.IsInRole("ADMINISTRADOR");
+
+            if (!isAdmin && gestor == null && colaborador == null)
+            {
+                TempData.Clear();
+                TempData["Message"] = "Você não tem permissão para criar um participante!";
+                return RedirectToAction("GerenciarEvento", new { idEvento });
+            }
+            else
+            {
+                var gestorModel = new GestaoPapelModel
 			{
 				Evento = _eventoService.GetEventoSimpleDto(idEvento),
 				Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 4),
@@ -408,8 +431,10 @@ namespace EventoWeb.Controllers
 			return View(gestaoPapelModel);
 		}
 
-		// POST: EventoController/DeletePessoaPapel
-		public IActionResult DeletePessoaPapel(uint idPessoa, uint idEvento, uint idPapel)
+        // POST: EventoController/DeletePessoaPapel
+        [HttpPost]
+        [Route("DeletePessoaPapel")]
+        public IActionResult DeletePessoaPapel(uint idPessoa, uint idEvento, uint idPapel)
 		{
 			var pessoa = _pessoaService.Get(idPessoa);
 			if (pessoa == null || string.IsNullOrEmpty(pessoa.Cpf))
@@ -512,7 +537,16 @@ namespace EventoWeb.Controllers
 		public IActionResult GerenciarEvento([FromQuery] uint idEvento)
 		{
 			Evento evento = _eventoService.Get(idEvento);
-			var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
+
+            // Verifica se o evento existe
+            if (evento == null)
+            {
+                TempData.Clear();
+                TempData["Message"] = "Evento não encontrado!";
+                return RedirectToAction("Index", "Home");
+            }
+
+            var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
 			var colaborador = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, idEvento);
 			var isAdmin = User.IsInRole("ADMINISTRADOR");
 
@@ -533,7 +567,9 @@ namespace EventoWeb.Controllers
 		//[Authorize(Roles = "GESTOR, COLABORADOR")]
 		// GET: EventoController/GestorEditarEvento/5
 		[Authorize(Roles = "GESTOR")]
-		public ActionResult GestorEditarEvento(uint id)
+        [HttpGet]
+        [Route("GestorEditarEvento/{id}")]
+        public ActionResult GestorEditarEvento(uint id)
 		{
 			var evento = _eventoService.Get(id);
 			
