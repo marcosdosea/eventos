@@ -1,21 +1,17 @@
-﻿using System;
+﻿using Core;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Core;
-
 
 namespace Core.Service
 {
     public interface IInscricaopessoaeventoService
     {
         void Create(Inscricaopessoaevento inscricao);
-        Inscricaopessoaevento GetById(int id);
+        Inscricaopessoaevento GetById(uint id);
         IEnumerable<Inscricaopessoaevento> GetAll();
         void Update(Inscricaopessoaevento inscricao);
-        void Delete(int id);
-        //Verifica se a pessoa já está inscrita no evento
-        bool PessoaJaInscrita(int pessoaId, int eventoId);
+        void Delete(uint id);
+
+        // Verifica se uma pessoa já está inscrita em um evento
+        bool PessoaJaInscrita(uint idPessoa, uint idEvento);
     }
 }
