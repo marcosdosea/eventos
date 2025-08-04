@@ -11,10 +11,10 @@ namespace Service.Tests
 {
     public class MockUserManager<TUser> : UserManager<TUser> where TUser : class
     {
-         private readonly Dictionary<string, TUser> _users = new Dictionary<string, TUser>();
+        private readonly Dictionary<string, TUser> _users = new();
 
-         public MockUserManager()
-             : base(new Mock<IUserStore<TUser>>().Object,
+        public MockUserManager()
+            : base(new Mock<IUserStore<TUser>>().Object,
                    new Mock<IOptions<IdentityOptions>>().Object,
                    new Mock<IPasswordHasher<TUser>>().Object,
                    new IUserValidator<TUser>[0],
@@ -23,44 +23,70 @@ namespace Service.Tests
                    new Mock<IdentityErrorDescriber>().Object,
                    new Mock<IServiceProvider>().Object,
                    new Mock<ILogger<UserManager<TUser>>>().Object)
-         { }
+        { }
 
-         public override Task<IdentityResult> CreateAsync(TUser user, string password)
-         {
-             if (user is UsuarioIdentity usuario)
-             {
-                 _users[usuario.Id] = user;
-                 _users[usuario.Email] = user;
-             }
-             return Task.FromResult(IdentityResult.Success);
-         }
+        public override Task<IdentityResult> CreateAsync(TUser user, string password)
+        {
+            if (user is UsuarioIdentity usuario)
+            {
+                if (!string.IsNullOrEmpty(usuario.UserName))
+                    _users[usuario.UserName] = user;
 
-         public override Task<IdentityResult> AddToRoleAsync(TUser user, string role)
-         {
-             return Task.FromResult(IdentityResult.Success);
-         }
+                if (!string.IsNullOrEmpty(usuario.Email))
+                    _users[usuario.Email] = user;
 
-         public override Task<TUser> FindByEmailAsync(string email)
-         {
-             if (_users.TryGetValue(email, out var user))
-             {
-                 return Task.FromResult(user);
-             }
-             return Task.FromResult((TUser)null);
-         }
+                if (!string.IsNullOrEmpty(usuario.Id))
+                    _users[usuario.Id] = user;
+            }
+            return Task.FromResult(IdentityResult.Success);
+        }
 
-         public override Task<TUser> FindByIdAsync(string userId)
-         {
-             if (_users.TryGetValue(userId, out var user))
-             {
-                 return Task.FromResult(user);
-             }
-             return Task.FromResult((TUser)null);
-         }
+        public override Task<TUser> FindByNameAsync(string userName)
+        {
+            if (_users.TryGetValue(userName, out var user))
+            {
+                return Task.FromResult(user);
+            }
+            return Task.FromResult<TUser>(null);
+        }
 
-         public override Task<IList<string>> GetRolesAsync(TUser user)
-         {
-             return Task.FromResult<IList<string>>(new List<string> { "Participante" });
-         }
+        public override Task<TUser> FindByEmailAsync(string email)
+        {
+            if (_users.TryGetValue(email, out var user))
+            {
+                return Task.FromResult(user);
+            }
+            return Task.FromResult((TUser)null);
+        }
+
+        public override Task<TUser> FindByIdAsync(string userId)
+        {
+            if (_users.TryGetValue(userId, out var user))
+            {
+                return Task.FromResult(user);
+            }
+            return Task.FromResult((TUser)null);
+        }
+
+        public override Task<IdentityResult> AddToRoleAsync(TUser user, string role)
+        {
+            return Task.FromResult(IdentityResult.Success);
+        }
+
+        public override Task<IdentityResult> RemoveFromRoleAsync(TUser user, string role)
+        {
+            return Task.FromResult(IdentityResult.Success);
+        }
+
+        public override Task<bool> IsInRoleAsync(TUser user, string role)
+        {
+            // Simula que está na role para permitir remoção
+            return Task.FromResult(true);
+        }
+
+        public override Task<IList<string>> GetRolesAsync(TUser user)
+        {
+            return Task.FromResult<IList<string>>(new List<string> { "Participante" });
+        }
     }
-} 
+}
