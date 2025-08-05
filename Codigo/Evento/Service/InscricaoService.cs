@@ -9,7 +9,7 @@ namespace Service
     {
         private readonly EventoContext _context;
         private readonly UserManager<UsuarioIdentity> _userManager;
-        public InscricaoService(EventoContext context, UserManager<UsuarioIdentity> userManager) 
+        public InscricaoService(EventoContext context, UserManager<UsuarioIdentity> userManager)
         {
             _userManager = userManager;
             _context = context;
@@ -21,9 +21,15 @@ namespace Service
             _context.SaveChanges();
             return inscricaopessoaevento.Id;
         }
-        
+
         public void DeletePessoaPapel(uint idPessoa, uint idEvento, uint idPapel, string cpf)
         {
+            var pessoa = _context.Pessoas.FirstOrDefault(p => p.Id == idPessoa && p.Cpf == cpf);
+            if (pessoa == null)
+            {
+                throw new Exception("Pessoa não encontrada com o CPF informado.");
+            }
+
             var inscricao = _context.Inscricaopessoaeventos
                 .FirstOrDefault(i => i.IdPessoa == idPessoa && i.IdEvento == idEvento && i.IdPapel == idPapel);
 
@@ -42,7 +48,7 @@ namespace Service
             }
         }
 
-        public async Task RemoveUserRole(uint idPessoa, uint idPapel,string cpf)
+        public async Task RemoveUserRole(uint idPessoa, uint idPapel, string cpf)
         {
             string cpfSemFormatacao = cpf.Replace(".", "").Replace("-", "");
             var user = await _userManager.FindByNameAsync(cpfSemFormatacao);
@@ -54,6 +60,7 @@ namespace Service
 
             string role = idPapel switch
             {
+                1 => "GESTOR",
                 2 => "GESTOR",
                 3 => "COLABORADOR",
                 _ => throw new ArgumentException("Papel inválido.")
@@ -84,7 +91,7 @@ namespace Service
             return _context.Inscricaopessoaeventos
                 .Where(i => i.IdEvento == idEvento && i.IdPessoa == idPessoa)
                 .Select(i => i.IdPapel)
-                .FirstOrDefault(); 
+                .FirstOrDefault();
         }
 
         public IEnumerable<Inscricaopessoaevento> GetByEvento(uint idEvento)
@@ -112,23 +119,28 @@ namespace Service
                 .ToList();
         }
 
-        public IEnumerable<Inscricaopessoaevento> GetAllEventsByUserId(string username){
-           var query = from i in _context.Inscricaopessoaeventos.Include(i => i.IdEventoNavigation) where i.IdPessoaNavigation.Cpf.Contains(username) select i;
-           return query;           
+        public IEnumerable<Inscricaopessoaevento> GetAllEventsByUserId(string username)
+        {
+            var query = from i in _context.Inscricaopessoaeventos.Include(i => i.IdEventoNavigation) where i.IdPessoaNavigation.Cpf.Contains(username) select i;
+            return query;
         }
 
-        public Inscricaopessoaevento GetGestorInEvent(string username, uint idEvento){
+        public Inscricaopessoaevento GetGestorInEvent(string username, uint idEvento)
+        {
 
             var query = from i in _context.Inscricaopessoaeventos.Include(i => i.IdPessoaNavigation) where i.IdPessoaNavigation.Cpf.Contains(username) && i.IdPapel == 2 && i.IdEvento == idEvento select i;
-            if( query.FirstOrDefault() != null){
+            if (query.FirstOrDefault() != null)
+            {
                 return query.FirstOrDefault();
             }
             return null;
         }
 
-        public Inscricaopessoaevento GetColaboradorInEvent(string username, uint idEvento){
+        public Inscricaopessoaevento GetColaboradorInEvent(string username, uint idEvento)
+        {
             var query = from i in _context.Inscricaopessoaeventos.Include(i => i.IdPessoaNavigation) where i.IdPessoaNavigation.Cpf.Contains(username) && i.IdPapel == 3 && i.IdEvento == idEvento select i;
-            if( query.FirstOrDefault() != null){
+            if (query.FirstOrDefault() != null)
+            {
                 return query.FirstOrDefault();
             }
             return null;
