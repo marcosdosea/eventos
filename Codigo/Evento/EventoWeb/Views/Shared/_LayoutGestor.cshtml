@@ -39,7 +39,7 @@
                                 <a class="nav-link opcao" asp-controller="Colaborador" asp-action="Index">Colaboradores</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link opcao" asp-controller="Evento" asp-action="Index">Eventos</a>
+                                <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEventoListar">Meus Eventos</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link opcao" asp-controller="Subevento" asp-action="Index">SubEventos</a>
@@ -95,6 +95,13 @@
 
     <div class="container conteudo">
         <main role="main" class="pb-3">
+            
+            @if (User.IsInRole("GESTOR"))
+            {
+                <div id="gestorEventosContainer">
+                    @await Html.PartialAsync("_GestorEventosList", new List<EventoWeb.Models.EventoModel>())
+                </div>
+            }
             @RenderBody()
         </main>
     </div>
@@ -110,6 +117,26 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/formHelpers.js"></script>
+    
+    @if (User.IsInRole("GESTOR"))
+    {
+        <script>
+            $(document).ready(function() {
+                // Carregar eventos do gestor via AJAX
+                $.ajax({
+                    url: '@Url.Action("GetGestorEventos", "Home")',
+                    type: 'GET',
+                    success: function(data) {
+                        $('#gestorEventosContainer').html(data);
+                    },
+                    error: function() {
+                        $('#gestorEventosContainer').html('<div class="alert alert-danger">Erro ao carregar eventos.</div>');
+                    }
+                });
+            });
+        </script>
+    }
+    
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 
