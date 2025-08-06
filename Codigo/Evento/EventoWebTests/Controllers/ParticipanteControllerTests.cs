@@ -130,6 +130,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("email@gmail.com", participanteModel.Participante.Email);
             Assert.AreEqual("7999990011", participanteModel.Participante.Telefone1);
             Assert.AreEqual(null, participanteModel.Participante.Telefone2);
+
+            //As linhas comentadas não existem em PessoaSimpleDTO, mas existem em PessoaModel.
         }
 
         [TestMethod()]
@@ -215,6 +217,7 @@ namespace EventoWeb.Controllers.Tests
                 {
                     Cpf = "040.268.930-57",
                     Nome = "João Vitor Sodré",
+                    NomeCracha = "Sodré",
                     Email = "email@gmail.com",
                     Telefone1 = "7999990011"
                 },
@@ -222,6 +225,7 @@ namespace EventoWeb.Controllers.Tests
                 {
                     Cpf = "917.091.250-55",
                     Nome = "Nagibe Santos Wanus Junior",
+                    NomeCracha = "Nagibe",
                     Email = "nagibe@gmail.com",
                     Telefone1 = "7999990022"
                 },
@@ -229,6 +233,7 @@ namespace EventoWeb.Controllers.Tests
                 {
                     Cpf = "123.456.789-00",
                     Nome = "Maria Silva",
+                    NomeCracha = "Maria",
                     Email = "maria@gmail.com",
                     Telefone1 = "7999990033"
                 }
