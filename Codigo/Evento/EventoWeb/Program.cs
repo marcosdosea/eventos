@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Core.DTO;
 using EventoWeb.Models;
+using EventoWeb.Mappers;
 
 namespace EventoWeb
 {
@@ -25,7 +26,7 @@ namespace EventoWeb
 
             builder.Services.AddAutoMapper(cfg =>
             {
-                cfg.CreateMap<PessoaModel, Pessoa>().ReverseMap();
+                cfg.AddProfile<PessoaProfile>();
                 cfg.CreateMap<PessoaSimpleDTO, ColaboradorDTO>()
                     .ForMember(dest => dest.Id, opt => opt.MapFrom(src => 0)) // Valor padrão
                     .ForMember(dest => dest.Cpf, opt => opt.MapFrom(src => src.Cpf))
