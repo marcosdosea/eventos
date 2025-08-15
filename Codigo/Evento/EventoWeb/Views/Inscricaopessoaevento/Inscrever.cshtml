@@ -1,0 +1,78 @@
+﻿@model EventoWeb.Models.InscricaopessoaeventoModel
+
+@{
+    ViewData["Title"] = "Inscreva-se no Evento";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Banner do evento -->
+        <div class="col-12 mb-3">
+            <div class="bg-dark text-light rounded p-3 d-flex align-items-center" style="min-height:160px;">
+                <img src="@Model.BannerUrl" alt="Banner" class="img-fluid rounded me-4" style="height:120px;width:auto;">
+                <div>
+                    <h2 class="mb-1">@Model.NomeEvento</h2>
+                    <div class="text-muted">
+                        <i class="fa fa-calendar"></i>
+                        @Model.DataEvento.ToString("dd/MM/yyyy HH:mm") -
+                        @Model.DataFimEvento.ToString("dd/MM/yyyy HH:mm")
+                        <span class="ms-3"><i class="fa fa-map-marker"></i> @Model.LocalEvento</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Descrição do evento -->
+        <div class="col-md-8">
+            <h4>Descrição do evento</h4>
+            <p>@Html.Raw(Model.DescricaoEvento)</p>
+        </div>
+
+        <!-- Box de inscrições -->
+        <div class="col-md-4">
+            <form asp-action="Inscrever" method="post">
+                <div class="card shadow-lg p-3 mb-3">
+                    <h5>Inscrições</h5>
+                    @for (int i = 0; i < Model.Lotes.Count; i++)
+                    {
+                        <partial name="_LoteInscricaoPartial" model="Model.Lotes[i]" view-data='new ViewDataDictionary(ViewData) { { "Index", i } }' />
+                    }
+                    <hr />
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">Total:</span>
+                        <span class="fw-bold" id="totalSelecionado">R$ 0,00</span>
+                    </div>
+                    <div class="form-group mt-2">
+                        <input type="text" name="CupomPromocional" class="form-control" placeholder="Inserir código promocional" />
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 mt-3">Realizar Inscrição</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Atualiza o valor total dinamicamente conforme as quantidades
+        document.querySelectorAll('input[type="number"]').forEach(input => {
+            input.addEventListener('input', atualizarTotal);
+        });
+
+        function atualizarTotal() {
+            let total = 0;
+            @for (int i = 0; i < Model.Lotes.Count; i++)
+            {
+                    <text>
+                    let preco@i = parseFloat('@Model.Lotes[i].Preco.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)');
+                    let qtd@i = document.querySelector('input[name="Lotes[@i].Quantidade"]').value;
+                    total += preco@i * qtd@i;
+                    </text>
+            }
+            document.getElementById('totalSelecionado').innerText = "R$ " + total.toFixed(2).replace('.', ',');
+        }
+        atualizarTotal();
+    </script>
+}
