@@ -1,0 +1,16 @@
+﻿@model EventoWeb.Models.LoteInscricaoModel
+@{
+    var idx = ViewData["Index"];
+}
+
+<div class="d-flex align-items-center mb-2">
+    <div class="flex-fill">
+        <strong>@Model.NomeLote</strong>
+        <div class="small text-muted">@Model.Preco.ToString("C")</div>
+        <div class="text-muted small">@Model.Descricao</div>
+    </div>
+    <div class="ms-2">
+        <input type="hidden" name="Lotes[@idx].Id" value="@Model.Id" />
+        <input type="number" name="Lotes[@idx].Quantidade" min="0" value="@Model.Quantidade" class="form-control" style="width:60px;display:inline-block;" />
+    </div>
+</div>
