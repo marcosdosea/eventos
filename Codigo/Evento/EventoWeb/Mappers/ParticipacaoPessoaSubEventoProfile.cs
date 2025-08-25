@@ -19,6 +19,7 @@ namespace EventoWeb.Mappers
                 .ForMember(dest => dest.NomePessoa, opt => opt.MapFrom(src => src.IdPessoaNavigation.Nome))
                 .ForMember(dest => dest.NomeSubEvento, opt => opt.MapFrom(src => src.IdSubEventoNavigation.Nome));
 
+
             // Mapeia ViewModel para entidade
             CreateMap<ParticipacaoPessoaSubEventoModel, Participacaopessoasubevento>()
                 .ForMember(dest => dest.IdPessoa, opt => opt.MapFrom(src => src.IdPessoa))
