@@ -60,8 +60,8 @@ namespace EventoWeb.Models
         public DateTime DataFimInscricao { get; set; }
 
         [Display(Name = "Valor da Inscrição", Prompt = "R$ 00.00")]
-        [Range(0.00, double.MaxValue, ErrorMessage = "O valor da inscrição deve ser zero ou maior que zero.")]
-        [RegularExpression(@"^\d+(\.\d{1,2})?$", ErrorMessage = "Por favor, insira no máximo duas casas decimais e use '.' como separador decimal.")]
+        [Range(typeof(decimal), "0", "9999999999", ErrorMessage = "O valor deve ser zero ou maior que zero.")]
+        [RegularExpression(@"^\d+([.,]\d{1,2})?$", ErrorMessage = "Por favor, insira no máximo duas casas decimais, usando ',' ou '.' como separador decimal.")]
         public decimal ValorInscricao { get; set; }
 
         [Display(Name = "Há Certificação?")]
