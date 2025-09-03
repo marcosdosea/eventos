@@ -1,17 +1,18 @@
 using Core;
-using Core.Service;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Localization;
-using Microsoft.Extensions.Options;
-using System.Globalization;
-using Service;
 using Core;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Core.DTO;
-using EventoWeb.Models;
+using Core.Service;
+using EventoWeb.Filters;
 using EventoWeb.Mappers;
+using EventoWeb.Models;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Service;
+using System.Globalization;
 
 namespace EventoWeb
 {
@@ -23,6 +24,11 @@ namespace EventoWeb
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+
+            builder.Services.AddControllersWithViews(options =>
+            {
+                options.Filters.Add<NomeUsuarioFilter>();
+            });
 
             builder.Services.AddAutoMapper(cfg =>
             {
