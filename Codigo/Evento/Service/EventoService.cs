@@ -166,23 +166,27 @@ namespace Service
 
 			return evento?.IdAreaInteresses ?? Enumerable.Empty<Areainteresse>();
 		}
-		public void AtualizarVagasDisponiveis(uint idEvento)
+		public async Task AtualizarVagasDisponiveisAsync(uint idEvento)
         {
             
-            var evento = _context.Eventos
+            var evento = await _context.Eventos
                 .Include(e => e.Inscricaopessoaeventos)
-                .FirstOrDefault(e => e.Id == idEvento);
+                .FirstOrDefaultAsync(e => e.Id == idEvento);
 
             if (evento != null)
             {
-                
-                var quantidadeParticipantes = evento.Inscricaopessoaeventos
-                    .Count(i => i.IdPapel == 4); 
+
+                var quantidadeParticipantes = await _context.Inscricaopessoaeventos
+                    .CountAsync(i => i.IdPapel == 4 && i.IdEvento == idEvento);
 
                 evento.VagasDisponiveis = evento.VagasOfertadas - quantidadeParticipantes;
 
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
             }
+        }
+        public void AtualizarVagasDisponiveis(uint idEvento)
+        {
+            AtualizarVagasDisponiveisAsync(idEvento).GetAwaiter().GetResult();
         }
     }
 }
