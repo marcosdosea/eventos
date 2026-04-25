@@ -5,6 +5,13 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Log in";
 }
+<style>
+    /*Desabilita o olho nativo no Microsoft Edge */
+    input[type="password"]::-ms-reveal,
+    input[type="password"]::-ms-clear {
+        display: none !important;
+    }
+</style>
 
 <div class="row">
     <div class="col-md-6">
