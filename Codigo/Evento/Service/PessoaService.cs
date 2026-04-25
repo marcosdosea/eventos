@@ -166,7 +166,7 @@ public class PessoaService : IPessoaService
             DataInscricao = DateTime.Now,
             Status = "S"
         };
-        _inscricaoService.CreateInscricaoEvento(novaInscricao);
+        await _inscricaoService.CreateInscricaoEventoAsync(novaInscricao);
 
         string role = idPapel switch
         {

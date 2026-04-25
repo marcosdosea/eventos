@@ -169,7 +169,7 @@ namespace EventoWeb.Controllers
                 };
 
                 var inscricao = _mapper.Map<Inscricaopessoaevento>(novaInscricao);
-                _inscricaoService.CreateInscricaoEvento(inscricao);
+                await _inscricaoService.CreateInscricaoEventoAsync(inscricao);
                 
             
             return RedirectToAction("Index", "Home");

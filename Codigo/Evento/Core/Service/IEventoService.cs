@@ -23,5 +23,6 @@ namespace Core.Service
 		string GetNomeById(uint id);
 
         void AtualizarVagasDisponiveis(uint idEvento);
+        Task AtualizarVagasDisponiveisAsync(uint idEvento);
     }
 }

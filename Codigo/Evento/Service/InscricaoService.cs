@@ -15,10 +15,10 @@ namespace Service
             _context = context;
         }
 
-        public uint CreateInscricaoEvento(Inscricaopessoaevento inscricaopessoaevento)
+        public async Task<uint> CreateInscricaoEventoAsync(Inscricaopessoaevento inscricaopessoaevento)
         {
             _context.Add(inscricaopessoaevento);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync(); 
             return inscricaopessoaevento.Id;
         }
 
