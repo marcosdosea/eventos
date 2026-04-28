@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Service;
 using System.Globalization;
+using Util;
 
 namespace EventoWeb
 {
@@ -79,10 +80,11 @@ namespace EventoWeb
 
                     // Password settings
                     options.Password.RequireDigit = true;
-                    options.Password.RequireLowercase = false;
-                    options.Password.RequireNonAlphanumeric = false;
-                    options.Password.RequireUppercase = false;
-                    options.Password.RequiredLength = 6;
+                    options.Password.RequireLowercase = true;
+                    options.Password.RequireUppercase = true;
+                    options.Password.RequireNonAlphanumeric = true;
+                    options.Password.RequiredLength = 8;
+                    options.Password.RequiredUniqueChars = 3;
 
                     // Default User settings.
                     options.User.AllowedUserNameCharacters =
@@ -95,6 +97,9 @@ namespace EventoWeb
                     options.Lockout.AllowedForNewUsers = true;
                 }).AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<IdentityContext>();
+
+            builder.Services.AddTransient<IPasswordValidator<UsuarioIdentity>,
+                SemEspacoSenhaValidator<UsuarioIdentity>>();
 
             //Configure tokens life
             builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
