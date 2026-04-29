@@ -1,10 +1,11 @@
-using System.Text.RegularExpressions;
 using Core;
 using Core.DTO;
 using Core.Service;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 
 namespace Service;
 
@@ -49,6 +50,39 @@ public class PessoaService : IPessoaService
             throw new Exception($"Erro inesperado ao criar pessoa: {ex.Message}", ex);
         }
     }
+
+    ///<summary>
+    /// Atribui o identity administrador ao usuário.
+    /// </summary>
+    /// <param name="pessoa">dados de pessoa</param>
+    /// <returns> name="identity" </returns>
+    public async Task DefineIdentityAdminAsync(Pessoa pessoa)
+    {
+        var role = "ADMINISTRADOR";
+        if (GetByCpf(pessoa.Cpf) == null)
+        {
+            Create(pessoa);
+        }
+
+        var existingUser = await _userManager.FindByNameAsync(pessoa.Cpf);
+        if (existingUser == null)
+        {
+            existingUser = await CreateAsync(pessoa);
+        }
+
+        var isInRole = await _userManager.IsInRoleAsync(existingUser, role);
+        if (!isInRole)
+        {
+            var roleResult = await _userManager.AddToRoleAsync(existingUser, role);
+            if (!roleResult.Succeeded)
+            {
+               
+                var errors = string.Join("; ", roleResult.Errors.Select(e => e.Description));
+                throw new Exception($"Erro ao associar o papel '{role.ToLower()}' ao usuário no Identity: {errors}");
+            }
+        }
+
+    }  
 
     /// <summary>
     /// Edita uma pessoa na base de dados
@@ -184,7 +218,7 @@ public class PessoaService : IPessoaService
             {
                 // Melhorar a mensagem de erro para incluir detalhes do Identity
                 var errors = string.Join("; ", roleResult.Errors.Select(e => e.Description));
-                throw new Exception($"Erro ao associar o papel '{role}' ao usuário no Identity: {errors}");
+                throw new Exception($"Erro ao associar o papel '{role.ToLower()}' ao usuário no Identity: {errors}");
             }
         }
     }

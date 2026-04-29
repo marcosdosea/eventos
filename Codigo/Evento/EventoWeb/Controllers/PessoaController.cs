@@ -3,6 +3,7 @@ using Core;
 using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -14,6 +15,7 @@ namespace EventoWeb.Controllers
     {
         private readonly IPessoaService _pessoaService;
         private readonly IEstadosbrasilService _estadosbrasilService;
+        private readonly UserManager<UsuarioIdentity> _userManager;
         private readonly IMapper _mapper;
 
         public PessoaController(IPessoaService pessoaService, IEstadosbrasilService estadosbrasilService, IMapper mapper)
@@ -34,7 +36,7 @@ namespace EventoWeb.Controllers
             return View(listaPessoaModel);
         }
 
-        [Authorize(Roles = "ADMINISTRADOR")]
+        //[Authorize(Roles = "ADMINISTRADOR")]
         [HttpGet]
         [Route("Details/{id}")]
         public ActionResult Details(uint id)
@@ -42,7 +44,7 @@ namespace EventoWeb.Controllers
             var pessoa = _pessoaService.Get(id);
             if (pessoa == null)
             {
-                return NotFound();
+                return RedirectToAction("Index", "Home");
             }
 
             PessoaModel pessoaModel = _mapper.Map<PessoaModel>(pessoa);
@@ -55,6 +57,7 @@ namespace EventoWeb.Controllers
         public ActionResult Create()
         {
             var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
+            ViewBag.Estados = new SelectList(estados, "Estado", "Nome");
             var viewModel = new PessoaModel();
             viewModel.Estados = new SelectList(estados, "Estado", "Nome");
             return View(viewModel);
