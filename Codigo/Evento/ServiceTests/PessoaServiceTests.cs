@@ -287,5 +287,27 @@ namespace Service.Tests
 
 
         }
+
+        [TestMethod()]
+        public async Task CreateAdministradorAsync()
+        {
+            var pessoa = new Pessoa
+            {
+                Id = 4,
+                Nome = "Sinéad O'Connor Null Nullberg",
+                Cpf = "883.069.820-29",
+                Email = "sine_connor.9@academico.ufs.br",
+                Telefone1 = "7999990011"
+            };
+
+            await _pessoaService.CreatePessoaPapelAsync(pessoa, 0, 1);
+            var usuario = _userManager.Users.FirstOrDefault(u => u.UserName == pessoa.Cpf);
+            Assert.IsNotNull(usuario);
+            var isAdmin = await _userManager.IsInRoleAsync(usuario, "ADMINISTRADOR");
+            Assert.IsTrue(isAdmin);
+            Assert.AreEqual(pessoa.Email, usuario.Email);
+            Assert.AreEqual(pessoa.Telefone1, usuario.PhoneNumber);
+        }
+
     }
 }
