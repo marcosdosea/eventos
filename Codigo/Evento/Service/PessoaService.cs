@@ -51,39 +51,6 @@ public class PessoaService : IPessoaService
         }
     }
 
-    ///<summary>
-    /// Atribui o identity administrador ao usuário.
-    /// </summary>
-    /// <param name="pessoa">dados de pessoa</param>
-    /// <returns> name="identity" </returns>
-    public async Task DefineIdentityAdminAsync(Pessoa pessoa)
-    {
-        var role = "ADMINISTRADOR";
-        if (GetByCpf(pessoa.Cpf) == null)
-        {
-            Create(pessoa);
-        }
-
-        var existingUser = await _userManager.FindByNameAsync(pessoa.Cpf);
-        if (existingUser == null)
-        {
-            existingUser = await CreateAsync(pessoa);
-        }
-
-        var isInRole = await _userManager.IsInRoleAsync(existingUser, role);
-        if (!isInRole)
-        {
-            var roleResult = await _userManager.AddToRoleAsync(existingUser, role);
-            if (!roleResult.Succeeded)
-            {
-               
-                var errors = string.Join("; ", roleResult.Errors.Select(e => e.Description));
-                throw new Exception($"Erro ao associar o papel '{role.ToLower()}' ao usuário no Identity: {errors}");
-            }
-        }
-
-    }  
-
     /// <summary>
     /// Edita uma pessoa na base de dados
     /// </summary>
@@ -177,6 +144,15 @@ public class PessoaService : IPessoaService
         }
     }
 
+    /// <summary>
+    /// Atribuindo um papel a uma pessoa e criando uma inscrição para o evento, se necessário.
+    /// </summary>
+    /// <param name="pessoa"></param>
+    /// <param name="idEvento"></param>
+    /// <param name="idPapel"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
+    /// <exception cref="Exception"></exception>
     public async Task CreatePessoaPapelAsync(Pessoa pessoa, uint idEvento, int idPapel)
     {
         uint idPessoa = pessoa.Id;
@@ -192,18 +168,23 @@ public class PessoaService : IPessoaService
             existingUser = await CreateAsync(pessoa);
         }
 
-        var novaInscricao = new Inscricaopessoaevento
-        {
-            IdPessoa = idPessoa,
-            IdEvento = idEvento,
-            IdPapel = idPapel,
-            DataInscricao = DateTime.Now,
-            Status = "S"
-        };
-        _inscricaoService.CreateInscricaoEvento(novaInscricao);
+        if(idPapel != 1) {
+            var novaInscricao = new Inscricaopessoaevento
+            {
+                IdPessoa = idPessoa,
+                IdEvento = idEvento,
+                IdPapel = idPapel,
+                DataInscricao = DateTime.Now,
+                Status = "S"
+            };
+            _inscricaoService.CreateInscricaoEvento(novaInscricao);
+
+        }
+        
 
         string role = idPapel switch
         {
+            1 => "ADMINISTRADOR",
             2 => "GESTOR",
             3 => "COLABORADOR",
             4 => "USUARIO",

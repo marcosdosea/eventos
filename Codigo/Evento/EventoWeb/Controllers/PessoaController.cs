@@ -36,7 +36,7 @@ namespace EventoWeb.Controllers
             return View(listaPessoaModel);
         }
 
-        //[Authorize(Roles = "ADMINISTRADOR")]
+        [Authorize(Roles = "ADMINISTRADOR")]
         [HttpGet]
         [Route("Details/{id}")]
         public ActionResult Details(uint id)
@@ -51,13 +51,21 @@ namespace EventoWeb.Controllers
             return View(pessoaModel);
         }
 
+        [Authorize(Roles = "ADMINISTRADOR")]
+        [HttpGet]
+        [Route("DefinirAdministrador")]
+        public ActionResult DefineAdministrador(Pessoa pessoa)
+        {
+            _pessoaService.CreatePessoaPapelAsync(pessoa, 0, 1);
+            return View();
+        }
+
         [AllowAnonymous]
         [HttpGet]
         [Route("Create")]
         public ActionResult Create()
         {
             var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
-            ViewBag.Estados = new SelectList(estados, "Estado", "Nome");
             var viewModel = new PessoaModel();
             viewModel.Estados = new SelectList(estados, "Estado", "Nome");
             return View(viewModel);
