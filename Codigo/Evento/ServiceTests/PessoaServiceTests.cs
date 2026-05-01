@@ -276,13 +276,13 @@ namespace Service.Tests
             var pessoa = _pessoaService.Get(1);
 
 
-            _pessoaService.CreatePessoaPapelAsync(pessoa, 1, 1);
+            _pessoaService.CreatePessoaPapelAsync(pessoa, 1, 2);
 
             var inscricao = _context.Inscricaopessoaeventos.FirstOrDefault();
             Assert.IsNotNull(inscricao);
             Assert.AreEqual(pessoa.Id, inscricao.IdPessoa);
             Assert.AreEqual((uint)1, inscricao.IdEvento);
-            Assert.AreEqual((int)1, inscricao.IdPapel);
+            Assert.AreEqual((int)2, inscricao.IdPapel);
             Assert.AreEqual("S", inscricao.Status);
 
 
@@ -295,13 +295,14 @@ namespace Service.Tests
             {
                 Id = 4,
                 Nome = "Sinéad O'Connor Null Nullberg",
+                NomeCracha = "Sineád O'Connor",
                 Cpf = "883.069.820-29",
                 Email = "sine_connor.9@academico.ufs.br",
                 Telefone1 = "7999990011"
             };
 
             await _pessoaService.CreatePessoaPapelAsync(pessoa, 0, 1);
-            var usuario = _userManager.Users.FirstOrDefault(u => u.UserName == pessoa.Cpf);
+            var usuario = await _userManager.FindByNameAsync(pessoa.Cpf);
             Assert.IsNotNull(usuario);
             var isAdmin = await _userManager.IsInRoleAsync(usuario, "ADMINISTRADOR");
             Assert.IsTrue(isAdmin);
