@@ -1,10 +1,11 @@
-using System.Text.RegularExpressions;
 using Core;
 using Core.DTO;
 using Core.Service;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using System.Data;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 
 namespace Service;
 
@@ -143,6 +144,15 @@ public class PessoaService : IPessoaService
         }
     }
 
+    /// <summary>
+    /// Atribuindo um papel a uma pessoa e criando uma inscrição para o evento, se necessário.
+    /// </summary>
+    /// <param name="pessoa"></param>
+    /// <param name="idEvento"></param>
+    /// <param name="idPapel"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
+    /// <exception cref="Exception"></exception>
     public async Task CreatePessoaPapelAsync(Pessoa pessoa, uint idEvento, int idPapel)
     {
         uint idPessoa = pessoa.Id;
@@ -158,18 +168,23 @@ public class PessoaService : IPessoaService
             existingUser = await CreateAsync(pessoa);
         }
 
-        var novaInscricao = new Inscricaopessoaevento
-        {
-            IdPessoa = idPessoa,
-            IdEvento = idEvento,
-            IdPapel = idPapel,
-            DataInscricao = DateTime.Now,
-            Status = "S"
-        };
-        _inscricaoService.CreateInscricaoEvento(novaInscricao);
+        if(idPapel != 1) {
+            var novaInscricao = new Inscricaopessoaevento
+            {
+                IdPessoa = idPessoa,
+                IdEvento = idEvento,
+                IdPapel = idPapel,
+                DataInscricao = DateTime.Now,
+                Status = "S"
+            };
+            _inscricaoService.CreateInscricaoEvento(novaInscricao);
+
+        }
+        
 
         string role = idPapel switch
         {
+            1 => "ADMINISTRADOR",
             2 => "GESTOR",
             3 => "COLABORADOR",
             4 => "USUARIO",
@@ -184,7 +199,7 @@ public class PessoaService : IPessoaService
             {
                 // Melhorar a mensagem de erro para incluir detalhes do Identity
                 var errors = string.Join("; ", roleResult.Errors.Select(e => e.Description));
-                throw new Exception($"Erro ao associar o papel '{role}' ao usuário no Identity: {errors}");
+                throw new Exception($"Erro ao associar o papel '{role.ToLower()}' ao usuário no Identity: {errors}");
             }
         }
     }
