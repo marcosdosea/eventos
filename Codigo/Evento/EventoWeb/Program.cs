@@ -46,7 +46,6 @@ namespace EventoWeb
                     .ForMember(dest => dest.RegistrationDate, opt => opt.MapFrom(src => DateTime.Now)) // Valor padrão
                     .ForMember(dest => dest.LastLogin, opt => opt.MapFrom(src => (DateTime?)null)); // Valor padrão
             }, AppDomain.CurrentDomain.GetAssemblies());
-            builder.Services.AddTransient<IAdministradorService, AdministradorService>();
             builder.Services.AddTransient<ITipoInscricaoService, TipoInscricaoService>();
             builder.Services.AddTransient<IAreaInteresseService, AreaInteresseService>();
             builder.Services.AddTransient<IPessoaService, PessoaService>();

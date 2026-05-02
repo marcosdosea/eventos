@@ -15,7 +15,6 @@ namespace EventoWeb.Controllers
     {
         private readonly IPessoaService _pessoaService;
         private readonly IEstadosbrasilService _estadosbrasilService;
-        private readonly UserManager<UsuarioIdentity> _userManager;
         private readonly IMapper _mapper;
 
         public PessoaController(IPessoaService pessoaService, IEstadosbrasilService estadosbrasilService, IMapper mapper)
@@ -50,8 +49,6 @@ namespace EventoWeb.Controllers
             PessoaModel pessoaModel = _mapper.Map<PessoaModel>(pessoa);
             return View(pessoaModel);
         }
-
-
 
         [Authorize(Roles = "ADMINISTRADOR")]
         [HttpGet]
