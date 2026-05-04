@@ -3,6 +3,7 @@ using Core.DTO;
 using Core.Service;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using System.Data;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
@@ -91,6 +92,35 @@ public class PessoaService : IPessoaService
     public IEnumerable<Pessoa> GetAll()
     {
         return _context.Pessoas.AsNoTracking();
+    }
+
+    ///<summary>
+    /// Obtém todas as pessoas que possuem o papel de "ADMINISTRADOR" no sistema Identity.
+    /// </summary>
+    /// <returns>listaAdministradores</returns>
+    public async Task<IEnumerable<Pessoa>> GetAllAdmAsync()
+    {
+        var listaPessoa = GetAll();
+        var listaAdministradores = new List<Pessoa>();
+
+        if (listaPessoa == null)
+            return listaAdministradores;
+
+        foreach (var pessoa in listaPessoa)
+        {
+            if (pessoa == null || string.IsNullOrWhiteSpace(pessoa.Cpf))
+                continue;
+
+            var userAdm = await _userManager.FindByNameAsync(pessoa.Cpf);
+            if (userAdm == null)
+                continue;
+
+            var isAdmin = await _userManager.IsInRoleAsync(userAdm, "ADMINISTRADOR");
+            if (isAdmin)
+                listaAdministradores.Add(pessoa);
+        }
+
+        return listaAdministradores;
     }
 
     /// <summary>
