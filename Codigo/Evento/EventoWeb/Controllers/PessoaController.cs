@@ -3,6 +3,7 @@ using Core;
 using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -42,11 +43,64 @@ namespace EventoWeb.Controllers
             var pessoa = _pessoaService.Get(id);
             if (pessoa == null)
             {
-                return NotFound();
+                return RedirectToAction("Index", "Home");
             }
 
             PessoaModel pessoaModel = _mapper.Map<PessoaModel>(pessoa);
             return View(pessoaModel);
+        }
+
+        [Authorize(Roles = "ADMINISTRADOR")]
+        [HttpGet]
+        [Route("DefinirAdministrador")]
+        //GET: PessoaController/DefineAdministrador
+        public ActionResult DefineAdministrador()
+        {
+            var usuarios = _pessoaService.GetAll().OrderBy(p => p.Nome);
+            var viewModel = new SelectList(usuarios, "Id", "Nome");
+            return RedirectToAction(nameof(Create));
+        }
+
+        [Authorize(Roles = "ADMINISTRADOR")]
+        [HttpPost]
+        [Route("DefinirAdministrador")]
+        [ValidateAntiForgeryToken]
+        //POST: PessoaController/DefineAdministrador
+        public async Task<ActionResult> DefineAdministrador(PessoaModel pessoaModel)
+        {
+
+            if (!ModelState.IsValid) return RedirectToAction(nameof(Create));
+
+            var pessoa = new Pessoa
+            {
+                Id = pessoaModel.Id,
+                Cpf = pessoaModel.Cpf,
+                Nome = pessoaModel.Nome,
+                NomeCracha = pessoaModel.Nome,
+                Sexo = pessoaModel.Sexo,
+                Telefone1 = pessoaModel.Telefone1,
+                Email = pessoaModel.Email
+            };
+
+            if (pessoa == null)
+            {
+                
+                return RedirectToAction(nameof(Create));
+            }
+            ModelState.AddModelError("", "O usuário já existe.");
+            try
+            {
+                await _pessoaService.CreatePessoaPapelAsync(pessoa, 0, 1); 
+                TempData["Success"] = "Administrador definido com sucesso.";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "Erro ao definir administrador: " + ex.Message);
+                return RedirectToAction(nameof(Index));
+            }
+
+            
         }
 
         [AllowAnonymous]
