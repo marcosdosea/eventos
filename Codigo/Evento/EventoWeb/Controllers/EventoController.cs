@@ -245,7 +245,7 @@ namespace EventoWeb.Controllers
 		[HttpPost]
 		[Route("CreateGestor")]
 		[ValidateAntiForgeryToken]
-		public ActionResult CreateGestor(GestaoPapelModel gestaoPapelModel)
+		public async Task<IActionResult> CreateGestor(GestaoPapelModel gestaoPapelModel)
 		{
 			if (ModelState.IsValid)
 			{
@@ -278,7 +278,7 @@ namespace EventoWeb.Controllers
 
 
 				pessoa.NomeCracha = pessoa.Nome;
-				_pessoaService.CreatePessoaPapelAsync(pessoa, idEvento, 2);
+				await _pessoaService.CreatePessoaPapelAsync(pessoa, idEvento, 2);
 				_eventoService.AtualizarVagasDisponiveis(idEvento);
 
 				return RedirectToAction("GerenciarEvento", new { idEvento }); 
@@ -288,7 +288,7 @@ namespace EventoWeb.Controllers
 			gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(gestaoPapelModel.Evento.Id, 2);
 			return View(gestaoPapelModel);
 		}
-
+		
 		
 		[Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
         // GET: EventoController/CreateColaborador
