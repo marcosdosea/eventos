@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Linq.Expressions;
+using System.Security.Cryptography;
 
 namespace EventoWeb.Controllers
 {
@@ -53,23 +55,23 @@ namespace EventoWeb.Controllers
         [Authorize(Roles = "ADMINISTRADOR")]
         [HttpGet]
         [Route("DefinirAdministrador")]
-        //GET: PessoaController/DefineAdministrador
-        public ActionResult DefineAdministrador()
+        //GET: PessoaController/DefinirAdministrador
+        public async Task<ActionResult> DefinirAdministrador()
         {
-            var usuarios = _pessoaService.GetAll().OrderBy(p => p.Nome);
-            var viewModel = new SelectList(usuarios, "Id", "Nome");
-            return RedirectToAction(nameof(Create));
+            var admins = await _pessoaService.GetAllAdmAsync();
+            var listaModel = _mapper.Map<List<PessoaModel>>(admins.OrderBy(p => p.Nome));
+            return View(listaModel);
         }
 
         [Authorize(Roles = "ADMINISTRADOR")]
         [HttpPost]
         [Route("DefinirAdministrador")]
         [ValidateAntiForgeryToken]
-        //POST: PessoaController/DefineAdministrador
-        public async Task<ActionResult> DefineAdministrador(PessoaModel pessoaModel)
+        //POST: PessoaController/DefinirAdministrador
+        public async Task<ActionResult> DefinirAdministrador(PessoaModel pessoaModel)
         {
 
-            if (!ModelState.IsValid) return RedirectToAction(nameof(Create));
+            if (!ModelState.IsValid) return View("Create", pessoaModel); 
 
             var pessoa = new Pessoa
             {
@@ -77,7 +79,6 @@ namespace EventoWeb.Controllers
                 Cpf = pessoaModel.Cpf,
                 Nome = pessoaModel.Nome,
                 NomeCracha = pessoaModel.Nome,
-                Sexo = pessoaModel.Sexo,
                 Telefone1 = pessoaModel.Telefone1,
                 Email = pessoaModel.Email
             };
@@ -92,12 +93,12 @@ namespace EventoWeb.Controllers
             {
                 await _pessoaService.CreatePessoaPapelAsync(pessoa, 0, 1); 
                 TempData["Success"] = "Administrador definido com sucesso.";
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(DefinirAdministrador));
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError("", "Erro ao definir administrador: " + ex.Message);
-                return RedirectToAction(nameof(Index));
+                return View("Create", pessoaModel);
             }
 
             

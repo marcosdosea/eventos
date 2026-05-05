@@ -1,0 +1,40 @@
+﻿@model IEnumerable<EventoWeb.Models.PessoaModel>
+
+@{
+    ViewData["Title"] = "Administradores";
+}
+
+
+<div>
+    <h1 class="blue-normal">Administradores</h1>
+    <button type="button" class="btn btn-lg btn-blue-normal mb-3"
+            onclick="location.href='@Url.Action("Create")'">
+        Adicionar Administrador
+    </button>
+
+    <table class="table table-striped">
+        <thead class="blue-normal blue-normal-bg-table">
+            <tr>
+                <th>@Html.DisplayNameFor(m => m.First().Nome)</th>
+                <th>@Html.DisplayNameFor(m => m.First().Cpf)</th>
+                <th>@Html.DisplayNameFor(m => m.First().Email)</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Nome</td>
+                    <td>@item.Cpf</td>
+                    <td>@item.Email</td>
+                    <td>
+                        @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @class = "btn btn-sm btn-link" })
+                        &nbsp;
+                        @Html.ActionLink("Detalhes", "Details", new { id = item.Id }, new { @class = "btn btn-sm btn-link" })
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
