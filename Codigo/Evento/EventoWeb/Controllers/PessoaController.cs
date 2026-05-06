@@ -77,7 +77,7 @@ namespace EventoWeb.Controllers
         public async Task<ActionResult> DefinirAdministrador(PessoaModel pessoaModel)
         {
 
-            if (!ModelState.IsValid) return View("Create", pessoaModel); 
+            if (!ModelState.IsValid) return View(pessoaModel); 
 
             var pessoa = new Pessoa
             {
@@ -91,8 +91,8 @@ namespace EventoWeb.Controllers
 
             if (pessoa == null)
             {
-                
-                return RedirectToAction(nameof(Create));
+
+                return View(pessoaModel);
             }
             ModelState.AddModelError("", "O usuário já existe.");
             try
@@ -104,7 +104,7 @@ namespace EventoWeb.Controllers
             catch (Exception ex)
             {
                 ModelState.AddModelError("", "Erro ao definir administrador: " + ex.Message);
-                return View("Create", pessoaModel);
+                return View(pessoaModel);
             }
 
             

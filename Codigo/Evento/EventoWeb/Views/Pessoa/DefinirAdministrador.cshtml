@@ -1,11 +1,15 @@
 ﻿@model EventoWeb.Models.GestaoAdministradorModel
 
+@{
+    ViewData["Title"] = "DefinirAdministrador";
+}
 <link href="~/lib/datatable/css/datatables.min.css" rel="stylesheet" />
 <h1 class="blue-normal">Cadastrar Administradores</h1>
 <div class="row">
     <div> 
-		<form asp-action="DefinirAdministrador" method="post" onsubmit="return validarFormulario()">
+        <form asp-action="DefinirAdministrador" method="post" onsubmit="return validarFormulario()">
 			<div class="row">
+             <br/>
 			<h4 class="blue-normal">
 				Dados do gestor
 			</h4>
@@ -38,13 +42,14 @@
 						<span asp-validation-for="Administrador.Email" class="text-danger"></span>
 					</div>
 				</div>
-			</div>
-			<br />
-        <div class="d-flex flex-row-reverse">
-            <input type="submit" value="Adicionar Administrador"class="btn btn-lg btn-blue-normal"></input>
-        </div>
+			    <br />
+                <div class="d-flex flex-row-reverse">
+                    <input type="submit" value="Adicionar Administrador" class="btn btn-lg btn-blue-normal"></input>
+                </div>
+            </div>
+            <br/>
         </form>
-        <br />
+        
     </div>
 </div>
    
