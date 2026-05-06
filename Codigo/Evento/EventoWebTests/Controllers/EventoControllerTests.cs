@@ -272,10 +272,10 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public void Gestor_Post_Valid()
+        public async Task Gestor_Post_Valid()
         {
             // Act
-            var result = controller.CreateGestor(GetNewGestaoPapel());
+            var result = await controller.CreateGestor(GetNewGestaoPapel());
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
@@ -331,10 +331,10 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public void DeletePessoaPapel_Post_Valid()
+        public async Task DeletePessoaPapel_Post_Valid()
         {
             // Act
-            var result = controller.DeletePessoaPapel(1, 1, 1);
+            var result = await controller.DeletePessoaPapel(1, 1, 1);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));

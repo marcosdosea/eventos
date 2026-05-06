@@ -434,9 +434,10 @@ namespace EventoWeb.Controllers
         // POST: EventoController/DeletePessoaPapel
         [HttpPost]
         [Route("DeletePessoaPapel")]
-        public IActionResult DeletePessoaPapel(uint idPessoa, uint idEvento, uint idPapel)
+        public async Task<IActionResult> DeletePessoaPapel(uint idPessoa, uint idEvento, uint idPapel)
 		{
-			var pessoa = _pessoaService.Get(idPessoa);
+            Console.WriteLine("Entrou no DeletePessoaPapel");
+            var pessoa = _pessoaService.Get(idPessoa);
 			if (pessoa == null || string.IsNullOrEmpty(pessoa.Cpf))
 			{
 				TempData["Message"] = "Pessoa não encontrada para exclusão.";
@@ -445,7 +446,7 @@ namespace EventoWeb.Controllers
 
 			var cpf = pessoa.Cpf.Replace(".", "").Replace("-", "");
 
-			_inscricaoService.DeletePessoaPapel(idPessoa, idEvento, idPapel, cpf);
+			await _inscricaoService.DeletePessoaPapelAsync(idPessoa, idEvento, idPapel, cpf);
 
 			_eventoService.AtualizarVagasDisponiveis(idEvento);
 

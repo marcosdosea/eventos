@@ -22,25 +22,25 @@ namespace Service
             return inscricaopessoaevento.Id;
         }
 
-        public void DeletePessoaPapel(uint idPessoa, uint idEvento, uint idPapel, string cpf)
+        public async Task DeletePessoaPapelAsync(uint idPessoa, uint idEvento, uint idPapel, string cpf)
         {
-            var pessoa = _context.Pessoas.FirstOrDefault(p => p.Id == idPessoa && p.Cpf == cpf);
+            var pessoa = await _context.Pessoas.FirstOrDefaultAsync(p => p.Id == idPessoa && p.Cpf == cpf);
             if (pessoa == null)
             {
                 throw new Exception("Pessoa não encontrada com o CPF informado.");
             }
 
-            var inscricao = _context.Inscricaopessoaeventos
-                .FirstOrDefault(i => i.IdPessoa == idPessoa && i.IdEvento == idEvento && i.IdPapel == idPapel);
+            var inscricao = await _context.Inscricaopessoaeventos
+                .FirstOrDefaultAsync(i => i.IdPessoa == idPessoa && i.IdEvento == idEvento && i.IdPapel == idPapel);
 
             if (inscricao != null)
             {
                 _context.Inscricaopessoaeventos.Remove(inscricao);
-                _context.SaveChanges();
+                await _context.SaveChangesAsync();
             }
 
-            var existePapelUsuario = _context.Inscricaopessoaeventos
-                .Any(i => i.IdPessoa == idPessoa && i.IdPapel == idPapel);
+            var existePapelUsuario = await _context.Inscricaopessoaeventos
+                .AnyAsync(i => i.IdPessoa == idPessoa && i.IdPapel == idPapel);
 
             if (!existePapelUsuario && idPapel != 4)
             {
