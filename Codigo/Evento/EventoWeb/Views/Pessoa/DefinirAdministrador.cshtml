@@ -1,14 +1,50 @@
-﻿@model IEnumerable<EventoWeb.Models.PessoaModel>
+﻿@model EventoWeb.Models.GestaoAdministradorModel
 
 <link href="~/lib/datatable/css/datatables.min.css" rel="stylesheet" />
 <h1 class="blue-normal">Cadastrar Administradores</h1>
 <div class="row">
     <div> 
-        <!--colocar formulárioaqui -->
+		<form asp-action="CreateGestor" method="post" onsubmit="return validarFormulario()">
+			<div class="row">
+			<h4 class="blue-normal">
+				Dados do gestor
+			</h4>
+			<div class="row">
+				<div class="col-6 col-sm-6 col-md-3 col-lg-2">
+					<div class="form-group">
+						<label asp-for="Administrador.Cpf" class="control-label">CPF</label>
+						<input asp-for="Administrador.Cpf" class="form-control" id="Cpf" placeholder="000.000.000-00" oninput="formatarCPF()" maxlength="14" />
+						<span asp-validation-for="Administrador.Cpf" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-12 col-sm-6 col-md-3 col-lg-4">
+					<div class="form-group">
+						<label asp-for="Administrador.Nome" class="control-label">Nome</label>
+						<input asp-for="Administrador.Nome" class="form-control" id="Nome" placeholder="Nome completo" />
+						<span asp-validation-for="Administrador.Nome" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-6 col-sm-6 col-md-3 col-lg-2">
+					<div class="form-group">
+						<label asp-for="Administrador.Telefone1" class="control-label">Telefone</label>
+						<input asp-for="Administrador.Telefone1" type="number" class="form-control" id="Telefone1" placeholder="Com o DDD" />
+						<span asp-validation-for="Administrador.Telefone1" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-6 col-sm-6 col-md-3 col-lg-4">
+					<div class="form-group">
+						<label asp-for="Administrador.Email" class="control-label">Email</label>
+						<input asp-for="Administrador.Email" class="form-control" id="Email" placeholder="Seu e-mail" />
+						<span asp-validation-for="Administrador.Email" class="text-danger"></span>
+					</div>
+				</div>
+			</div>
+			<br />
         <button type="button" class="btn btn-lg btn-blue-normal mb-3"
                 onclick="location.href='@Url.Action("Create")'">
             Adicionar Administrador
         </button>
+        </form>
     </div>
 </div>
    
@@ -18,14 +54,14 @@
         <table class="table table-striped">
             <thead class="blue-normal blue-normal-bg-table">
                 <tr>
-                    <th>@Html.DisplayNameFor(m => m.First().Nome)</th>
-                    <th>@Html.DisplayNameFor(m => m.First().Cpf)</th>
-                    <th>@Html.DisplayNameFor(m => m.First().Email)</th>
+                    <th>CPF</th>
+                    <th>Nome</th>
+                    <th>Email</th>
                     <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var item in Model)
+                @foreach (var item in Model.ListaAdministradores)
                 {
                     <tr>
                         <td style="vertical-align: middle;">@FormatarCPF(@item.Cpf)</td>

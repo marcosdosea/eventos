@@ -59,8 +59,14 @@ namespace EventoWeb.Controllers
         public async Task<ActionResult> DefinirAdministrador()
         {
             var admins = await _pessoaService.GetAllAdmAsync();
-            var listaModel = _mapper.Map<List<PessoaModel>>(admins.OrderBy(p => p.Nome));
-            return View(listaModel);
+            var viewModel = new GestaoAdministradorModel
+            {
+                ListaAdministradores = _mapper.Map<List<PessoaModel>>(admins.OrderBy(p => p.Nome)),
+                Administrador = new PessoaModel()
+
+            };
+
+            return View(viewModel);
         }
 
         [Authorize(Roles = "ADMINISTRADOR")]
