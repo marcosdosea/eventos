@@ -9,43 +9,8 @@ ViewData["Title"] = "Create";
 <body>
     @if (User.IsInRole("ADMINISTRADOR"))
     {
-        <h5>Dados do Administrador</h5>
-        <form asp-controller="Pessoa"
-              asp-action="DefinirAdministrador"
-              method="post"
-              class="mb-4">
-            @Html.AntiForgeryToken()
-            <div class="row">
-                <div class="col-6 form-group">
-                    <label asp-for="Nome" class="control-label"></label>
-                    <input asp-for="Nome" class="form-control" placeholder="Insira o nome completo" maxlength="50" />
-                    <span asp-validation-for="Nome" class="text-danger"></span>
-                </div>
-                <div class="col-6 form-group">
-                    <label asp-for="Email" class="control-label"></label>
-                    <input asp-for="Email" class="form-control" placeholder="E-mail" maxlength="50" />
-                    <span asp-validation-for="Email" class="text-danger"></span>
-                </div>
-            </div>
-            <br />
-            <div class="row">
-                <div class="col-2 form-group">
-                    <label asp-for="Telefone1" class="control-label"></label>
-                    <input asp-for="Telefone1" class="form-control" placeholder="Com o DDD" maxlength="11" />
-                    <span asp-validation-for="Telefone1" class="text-danger"></span>
-                </div>
-                <br />
-                <div class="col-3 form-group">
-                    <label asp-for="Cpf" class="control-label"></label>
-                    <input asp-for="Cpf" class="form-control" placeholder="000.000.000-00" maxlength="11" />
-                    <span asp-validation-for="Cpf" class="text-danger"></span>
-                </div>
-               <div class="d-flex flex-row-reverse">
-                    <button type="submit" class="btn btn-lg btn-blue-normal">Definir como Administrador</button>
-			</div>
-            
-           
-        </form>
+        <h5></h5>
+       
     }
     else
     {
