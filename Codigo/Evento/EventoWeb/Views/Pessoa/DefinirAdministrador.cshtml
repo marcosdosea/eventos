@@ -4,7 +4,7 @@
 <h1 class="blue-normal">Cadastrar Administradores</h1>
 <div class="row">
     <div> 
-		<form asp-action="CreateGestor" method="post" onsubmit="return validarFormulario()">
+		<form asp-action="DefinirAdministrador" method="post" onsubmit="return validarFormulario()">
 			<div class="row">
 			<h4 class="blue-normal">
 				Dados do gestor
@@ -40,11 +40,11 @@
 				</div>
 			</div>
 			<br />
-        <button type="button" class="btn btn-lg btn-blue-normal mb-3"
-                onclick="location.href='@Url.Action("Create")'">
-            Adicionar Administrador
-        </button>
+        <div class="d-flex flex-row-reverse">
+            <input type="submit" value="Adicionar Administrador"class="btn btn-lg btn-blue-normal"></input>
+        </div>
         </form>
+        <br />
     </div>
 </div>
    
