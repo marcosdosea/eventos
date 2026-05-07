@@ -78,7 +78,7 @@ namespace EventoWeb
                     options.SignIn.RequireConfirmedEmail = true;
                     options.SignIn.RequireConfirmedPhoneNumber = false;
 
-                    // Password settings
+                    // Password settings 
                     options.Password.RequireDigit = true;
                     options.Password.RequireLowercase = true;
                     options.Password.RequireUppercase = true;
