@@ -21,7 +21,6 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using Util;
 using Core.Service;
-using Core;
 
 namespace EventoWeb.Areas.Identity.Pages.Account
 {

@@ -75,6 +75,6 @@ namespace EventoWeb.Models
 
         public SelectList? Estados { get; set; }
 
-        public List<PessoaModel> Administradores = new List<PessoaModel>();
+       
     }
 }

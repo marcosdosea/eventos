@@ -13,5 +13,5 @@ public interface IPessoaService
     Pessoa GetByCpf(string nome); 
     Task CreatePessoaPapelAsync(Pessoa pessoa, uint idEvento, int idPapel);
     Task<UsuarioIdentity> CreateAsync(Pessoa pessoa);
-    Task<IEnumerable<Pessoa>> GetAllAdmAsync();
+    Task<List<Pessoa>> GetAllAdmAsync();
 }

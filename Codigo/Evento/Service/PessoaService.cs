@@ -98,7 +98,7 @@ public class PessoaService : IPessoaService
     /// Obtém todas as pessoas que possuem o papel de "ADMINISTRADOR" no sistema Identity.
     /// </summary>
     /// <returns>listaAdministradores</returns>
-    public async Task<IEnumerable<Pessoa>> GetAllAdmAsync()
+    public async Task<List<Pessoa>> GetAllAdmAsync()
     {
         var listaPessoa = GetAll();
         var listaAdministradores = new List<Pessoa>();

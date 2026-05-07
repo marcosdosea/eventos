@@ -1,5 +1,4 @@
 using Core;
-using Core;
 using Core.DTO;
 using Core.Service;
 using EventoWeb.Filters;

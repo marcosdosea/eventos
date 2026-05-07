@@ -61,8 +61,8 @@ namespace EventoWeb.Controllers
             var admins = await _pessoaService.GetAllAdmAsync();
             var viewModel = new GestaoAdministradorModel
             {
-                ListaAdministradores = _mapper.Map<List<PessoaModel>>(admins.OrderBy(p => p.Nome)),
-                Administrador = new PessoaModel()
+               Administradores = _mapper.Map<List<PessoaModel>>(admins.OrderBy(p => p.Nome))
+
 
             };
 
@@ -74,40 +74,43 @@ namespace EventoWeb.Controllers
         [Route("DefinirAdministrador")]
         [ValidateAntiForgeryToken]
         //POST: PessoaController/DefinirAdministrador
-        public async Task<ActionResult> DefinirAdministrador(PessoaModel pessoaModel)
+        public async Task<ActionResult> DefinirAdministrador(GestaoAdministradorModel pessoaModel)
         {
-
-            if (!ModelState.IsValid) return View(pessoaModel); 
-
-            var pessoa = new Pessoa
-            {
-                Id = pessoaModel.Id,
-                Cpf = pessoaModel.Cpf,
-                Nome = pessoaModel.Nome,
-                NomeCracha = pessoaModel.Nome,
-                Telefone1 = pessoaModel.Telefone1,
-                Email = pessoaModel.Email
-            };
-
-            if (pessoa == null)
+            if (ModelState.IsValid)
             {
 
-                return View(pessoaModel);
+
+                var pessoa = new Pessoa
+                {
+                    Cpf = pessoaModel.Cpf,
+                    Nome = pessoaModel.Nome,
+                    NomeCracha = pessoaModel.Nome,
+                    Telefone1 = pessoaModel.Telefone1,
+                    Email = pessoaModel.Email
+                };
+
+                if (pessoa == null)
+                {
+
+                    return View(pessoaModel);
+                }
+                ModelState.AddModelError("", "O usuário já existe.");
+                try
+                {
+                    await _pessoaService.CreatePessoaPapelAsync(pessoa, 0, 1);
+                    TempData["Success"] = "Administrador definido com sucesso.";
+                    return RedirectToAction(nameof(DefinirAdministrador));
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "Erro ao definir administrador: " + ex.Message);
+                    return View(pessoaModel);
+                }
             }
-            ModelState.AddModelError("", "O usuário já existe.");
-            try
-            {
-                await _pessoaService.CreatePessoaPapelAsync(pessoa, 0, 1); 
-                TempData["Success"] = "Administrador definido com sucesso.";
-                return RedirectToAction(nameof(DefinirAdministrador));
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("", "Erro ao definir administrador: " + ex.Message);
-                return View(pessoaModel);
-            }
-
             
+
+            return View(pessoaModel);
+
         }
 
         [AllowAnonymous]
