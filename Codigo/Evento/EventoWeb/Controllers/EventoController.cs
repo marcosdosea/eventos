@@ -249,36 +249,41 @@ namespace EventoWeb.Controllers
 		{
 			if (ModelState.IsValid)
 			{
-				var pessoa = _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
+				var pessoaExistente = _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
 				var idEvento = gestaoPapelModel.Evento.Id;
-
-				var papel = _inscricaoService.GetPapelPessoaByEvento(pessoa.Id, idEvento);
-				
-				if (papel is 2 or 3)
+				if(pessoaExistente is null)
 				{
-					var papelNome = "";
-					
-					switch (papel)
+					Pessoa pessoa = _mapper.Map<Pessoa>(gestaoPapelModel.Pessoa);
+					pessoaExistente = pessoa;
+				}
+				else {
+					var papel = _inscricaoService.GetPapelPessoaByEvento(pessoaExistente.Id, idEvento);
+				
+					if (papel is 2 or 3)
 					{
-						case 2:
-							papelNome = "gestor";
-							break;
-						case 3:
-							papelNome = "colaborador";
-							break;
-					}
+						var papelNome = "";
+					
+						switch (papel)
+						{
+							case 2:
+								papelNome = "gestor";
+								break;
+							case 3:
+								papelNome = "colaborador";
+								break;
+						}
 
-					ModelState.AddModelError(string.Empty, $"A pessoa selecionada já é um {papelNome} do evento.");
+						ModelState.AddModelError(string.Empty, $"A pessoa selecionada já é um {papelNome} do evento.");
     
-					gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
-					gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 2);
+						gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
+						gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 2);
     
-					return View(gestaoPapelModel);
+						return View(gestaoPapelModel);
+					}
 				}
 
-
-				pessoa.NomeCracha = pessoa.Nome;
-				await _pessoaService.CreatePessoaPapelAsync(pessoa, idEvento, 2);
+				pessoaExistente.NomeCracha = pessoaExistente.Nome;
+				await _pessoaService.CreatePessoaPapelAsync(pessoaExistente, idEvento, 2);
 				_eventoService.AtualizarVagasDisponiveis(idEvento);
 
 				return RedirectToAction("GerenciarEvento", new { idEvento }); 
