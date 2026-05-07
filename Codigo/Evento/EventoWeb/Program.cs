@@ -84,7 +84,7 @@ namespace EventoWeb
                     options.Password.RequireUppercase = true;
                     options.Password.RequireNonAlphanumeric = true;
                     options.Password.RequiredLength = 8;
-                    options.Password.RequiredUniqueChars = 3;
+                    options.Password.RequiredUniqueChars = 1;
 
                     // Default User settings.
                     options.User.AllowedUserNameCharacters =
