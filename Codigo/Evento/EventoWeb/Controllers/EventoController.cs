@@ -245,40 +245,45 @@ namespace EventoWeb.Controllers
 		[HttpPost]
 		[Route("CreateGestor")]
 		[ValidateAntiForgeryToken]
-		public ActionResult CreateGestor(GestaoPapelModel gestaoPapelModel)
+		public async Task<IActionResult> CreateGestor(GestaoPapelModel gestaoPapelModel)
 		{
 			if (ModelState.IsValid)
 			{
-				var pessoa = _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
+				var pessoaExistente = _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
 				var idEvento = gestaoPapelModel.Evento.Id;
-
-				var papel = _inscricaoService.GetPapelPessoaByEvento(pessoa.Id, idEvento);
-				
-				if (papel is 2 or 3)
+				if(pessoaExistente is null)
 				{
-					var papelNome = "";
-					
-					switch (papel)
+					Pessoa pessoa = _mapper.Map<Pessoa>(gestaoPapelModel.Pessoa);
+					pessoaExistente = pessoa;
+				}
+				else {
+					var papel = _inscricaoService.GetPapelPessoaByEvento(pessoaExistente.Id, idEvento);
+				
+					if (papel is 2 or 3)
 					{
-						case 2:
-							papelNome = "gestor";
-							break;
-						case 3:
-							papelNome = "colaborador";
-							break;
-					}
+						var papelNome = "";
+					
+						switch (papel)
+						{
+							case 2:
+								papelNome = "gestor";
+								break;
+							case 3:
+								papelNome = "colaborador";
+								break;
+						}
 
-					ModelState.AddModelError(string.Empty, $"A pessoa selecionada já é um {papelNome} do evento.");
+						ModelState.AddModelError(string.Empty, $"A pessoa selecionada já é um {papelNome} do evento.");
     
-					gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
-					gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 2);
+						gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
+						gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 2);
     
-					return View(gestaoPapelModel);
+						return View(gestaoPapelModel);
+					}
 				}
 
-
-				pessoa.NomeCracha = pessoa.Nome;
-				_pessoaService.CreatePessoaPapelAsync(pessoa, idEvento, 2);
+				pessoaExistente.NomeCracha = pessoaExistente.Nome;
+				await _pessoaService.CreatePessoaPapelAsync(pessoaExistente, idEvento, 2);
 				_eventoService.AtualizarVagasDisponiveis(idEvento);
 
 				return RedirectToAction("GerenciarEvento", new { idEvento }); 
@@ -288,7 +293,7 @@ namespace EventoWeb.Controllers
 			gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(gestaoPapelModel.Evento.Id, 2);
 			return View(gestaoPapelModel);
 		}
-
+		
 		
 		[Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
         // GET: EventoController/CreateColaborador
@@ -434,9 +439,10 @@ namespace EventoWeb.Controllers
         // POST: EventoController/DeletePessoaPapel
         [HttpPost]
         [Route("DeletePessoaPapel")]
-        public IActionResult DeletePessoaPapel(uint idPessoa, uint idEvento, uint idPapel)
+        public async Task<IActionResult> DeletePessoaPapel(uint idPessoa, uint idEvento, uint idPapel)
 		{
-			var pessoa = _pessoaService.Get(idPessoa);
+            Console.WriteLine("Entrou no DeletePessoaPapel");
+            var pessoa = _pessoaService.Get(idPessoa);
 			if (pessoa == null || string.IsNullOrEmpty(pessoa.Cpf))
 			{
 				TempData["Message"] = "Pessoa não encontrada para exclusão.";
@@ -445,7 +451,7 @@ namespace EventoWeb.Controllers
 
 			var cpf = pessoa.Cpf.Replace(".", "").Replace("-", "");
 
-			_inscricaoService.DeletePessoaPapel(idPessoa, idEvento, idPapel, cpf);
+			await _inscricaoService.DeletePessoaPapelAsync(idPessoa, idEvento, idPapel, cpf);
 
 			_eventoService.AtualizarVagasDisponiveis(idEvento);
 

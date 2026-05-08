@@ -282,10 +282,10 @@ namespace Service.Tests
         }
 
         [TestMethod()]
-        public void DeleteTest()
+        public async Task DeleteTest()
         {
             // Act
-            _inscricaoService.DeletePessoaPapel(1, 1, 1, "12246232367");
+            await _inscricaoService.DeletePessoaPapelAsync(1, 1, 1, "12246232367");
 
             // Assert
             var inscricoes = _inscricaoService.GetByEventoAndPapel(1, 1);

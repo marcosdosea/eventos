@@ -99,7 +99,17 @@
 								<input type="hidden" name="IdPessoa" value="@inscricaopessoaevento.IdPessoa" />
 								<input type="hidden" name="IdEvento" value="@Model.Evento.Id" />
 								<input type="hidden" name="IdPapel" value="@inscricaopessoaevento.IdPapel" />
-								<a href="#confirmRemovalModal" data-toggle="modal" onclick="setModalValues('@inscricaopessoaevento.IdPessoaNavigation.Nome', '@Model.Evento.Nome', '@inscricaopessoaevento.IdPessoa', '@Model.Evento.Id')" class="text-danger" style="text-decoration: none; cursor: pointer;">Remover gestor</a>
+
+								<form method="POST" action="/Evento/DeletePessoaPapel" style="display:inline;">
+									@Html.AntiForgeryToken()
+
+									<button type="submit"
+											class="btn btn-link text-danger"
+											style="text-decoration:none;"
+											onclick="return confirm('Tem certeza que deseja remover este gestor?');">
+										Remover gestor
+									</button>
+								</form>
 							</form>
 						</td>
 					</tr>
@@ -136,7 +146,7 @@
 		document.getElementById('pessoaNome').textContent = pessoaNome;
 		document.getElementById('eventoNome').textContent = eventoNome;
 
-		var removeForm = document.getElementById('removeForm-' + pessoaId);
+		removeForm = document.getElementById('removeForm-' + pessoaId);
 		document.getElementById('confirmRemovalButton').onclick = function () {
 			removeForm.submit();
 		};
