@@ -1,0 +1,98 @@
+﻿@model EventoWeb.Models.GestaoAdministradorModel
+
+@{
+    ViewData["Title"] = "DefinirAdministrador";
+}
+<link href="~/lib/datatable/css/datatables.min.css" rel="stylesheet" />
+
+<h1 class="blue-normal">Cadastrar Administradores</h1>
+<br />
+<div class="row">
+    <div> 
+        <form asp-action="DefinirAdministrador" method="post">
+			<div class="row">
+             <br/>
+			<h4 class="blue-normal">
+				Dados do administrador
+			</h4>
+			<div class="row">
+				<div class="col-6 col-sm-6 col-md-3 col-lg-2">
+					<div class="form-group">
+						<label asp-for="Cpf" class="control-label">CPF</label>
+						<input asp-for="Cpf" class="form-control" id="Cpf" placeholder="000.000.000-00" oninput="formatarCPF()" maxlength="14" />
+						<span asp-validation-for="Cpf" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-12 col-sm-6 col-md-3 col-lg-4">
+					<div class="form-group">
+						<label asp-for="Nome" class="control-label">Nome</label>
+						<input asp-for="Nome" class="form-control" id="Nome" placeholder="Nome completo" />
+						<span asp-validation-for="Nome" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-6 col-sm-6 col-md-3 col-lg-2">
+					<div class="form-group">
+						<label asp-for="Telefone1" class="control-label">Telefone</label>
+						<input asp-for="Telefone1" type="number" class="form-control" id="Telefone1" placeholder="Com o DDD" />
+						<span asp-validation-for="Telefone1" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-6 col-sm-6 col-md-3 col-lg-4">
+					<div class="form-group">
+						<label asp-for="Email" class="control-label">Email</label>
+						<input asp-for="Email" class="form-control" id="Email" placeholder="Seu e-mail" />
+						<span asp-validation-for="Email" class="text-danger"></span>
+					</div>
+				</div>
+			    <br />
+                <div class="d-flex flex-row-reverse">
+                    <input type="submit" value="Adicionar Administrador" class="btn btn-lg btn-blue-normal"></input>
+                </div>
+            </div>
+            <br/>
+        </form>
+        
+    </div>
+</div>
+   
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="blue-normal">Lista de Gestores do Evento</h2>
+        <table class="table table-striped">
+            <thead class="blue-normal blue-normal-bg-table">
+                <tr>
+                    <th>CPF</th>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Administradores)
+                {
+                    <tr>
+                        <td style="vertical-align: middle;">@FormatarCPF(@item.Cpf)</td>
+                        <td style="vertical-align: middle;">@item.Nome</td>
+                        <td style="vertical-align: middle;">@item.Email</td>
+                        <td>
+                            @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @class = "btn btn-sm btn-link" })
+                            &nbsp;
+                            @Html.ActionLink("Detalhes", "Details", new { id = item.Id }, new { @class = "btn btn-sm btn-link" })
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@functions {
+    public static string FormatarCPF(string cpf)
+    {
+        if (string.IsNullOrEmpty(cpf) || cpf.Length != 11)
+            return cpf;
+
+        return Convert.ToUInt64(cpf).ToString(@"000\.000\.000\-00");
+    }
+}
+    

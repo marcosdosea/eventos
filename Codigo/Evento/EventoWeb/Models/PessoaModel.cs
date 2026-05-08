@@ -74,5 +74,7 @@ namespace EventoWeb.Models
         public string? FotoBase64 { get; set; }
 
         public SelectList? Estados { get; set; }
+
+       
     }
 }

@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Linq.Expressions;
+using System.Security.Cryptography;
 
 namespace EventoWeb.Controllers
 {
@@ -53,54 +55,62 @@ namespace EventoWeb.Controllers
         [Authorize(Roles = "ADMINISTRADOR")]
         [HttpGet]
         [Route("DefinirAdministrador")]
-        //GET: PessoaController/DefineAdministrador
-        public ActionResult DefineAdministrador()
+        //GET: PessoaController/DefinirAdministrador
+        public async Task<ActionResult> DefinirAdministrador()
         {
-            var usuarios = _pessoaService.GetAll().OrderBy(p => p.Nome);
-            var viewModel = new SelectList(usuarios, "Id", "Nome");
-            return RedirectToAction(nameof(Create));
+            var admins = await _pessoaService.GetAllAdmAsync();
+            var viewModel = new GestaoAdministradorModel
+            {
+               Administradores = _mapper.Map<List<PessoaModel>>(admins.OrderBy(p => p.Nome))
+
+
+            };
+
+            return View(viewModel);
         }
 
         [Authorize(Roles = "ADMINISTRADOR")]
         [HttpPost]
         [Route("DefinirAdministrador")]
         [ValidateAntiForgeryToken]
-        //POST: PessoaController/DefineAdministrador
-        public async Task<ActionResult> DefineAdministrador(PessoaModel pessoaModel)
+        //POST: PessoaController/DefinirAdministrador
+        public async Task<ActionResult> DefinirAdministrador(GestaoAdministradorModel pessoaModel)
         {
-
-            if (!ModelState.IsValid) return RedirectToAction(nameof(Create));
-
-            var pessoa = new Pessoa
+            if (ModelState.IsValid)
             {
-                Id = pessoaModel.Id,
-                Cpf = pessoaModel.Cpf,
-                Nome = pessoaModel.Nome,
-                NomeCracha = pessoaModel.Nome,
-                Sexo = pessoaModel.Sexo,
-                Telefone1 = pessoaModel.Telefone1,
-                Email = pessoaModel.Email
-            };
 
-            if (pessoa == null)
-            {
-                
-                return RedirectToAction(nameof(Create));
+
+                var pessoa = new Pessoa
+                {
+                    Cpf = pessoaModel.Cpf,
+                    Nome = pessoaModel.Nome,
+                    NomeCracha = pessoaModel.Nome,
+                    Telefone1 = pessoaModel.Telefone1,
+                    Email = pessoaModel.Email
+                };
+
+                if (pessoa == null)
+                {
+
+                    return View(pessoaModel);
+                }
+                ModelState.AddModelError("", "O usuário já existe.");
+                try
+                {
+                    await _pessoaService.CreatePessoaPapelAsync(pessoa, 0, 1);
+                    TempData["Success"] = "Administrador definido com sucesso.";
+                    return RedirectToAction(nameof(DefinirAdministrador));
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "Erro ao definir administrador: " + ex.Message);
+                    return View(pessoaModel);
+                }
             }
-            ModelState.AddModelError("", "O usuário já existe.");
-            try
-            {
-                await _pessoaService.CreatePessoaPapelAsync(pessoa, 0, 1); 
-                TempData["Success"] = "Administrador definido com sucesso.";
-                return RedirectToAction(nameof(Index));
-            }
-            catch (Exception ex)
-            {
-                ModelState.AddModelError("", "Erro ao definir administrador: " + ex.Message);
-                return RedirectToAction(nameof(Index));
-            }
-
             
+
+            return View(pessoaModel);
+
         }
 
         [AllowAnonymous]
