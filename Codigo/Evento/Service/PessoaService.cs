@@ -57,11 +57,38 @@ public class PessoaService : IPessoaService
     /// </summary>
     /// <param name="pessoa">dados de pessoa</param>
     /// <returns></returns>
-    public void Edit(Pessoa pessoa)
-    {
-        _context.Update(pessoa);
-        _context.SaveChanges();
-    }
+    public async Task Edit(Pessoa pessoa)
+     {
+         /*await using var transaction =
+           await _context.Database.BeginTransactionAsync();*/
+    
+         try
+         {
+             // Para conferir se a entidade já está sendo rastreada.
+             var local = _context.Set<Pessoa>()
+           .Local
+           .FirstOrDefault(p => p.Id == pessoa.Id);
+
+             if (local != null)
+             {
+                 // Desconecta a entidade já rastreada.
+                 _context.Entry(local).State = EntityState.Detached;
+             }
+
+             _context.Update(pessoa);
+
+             await _context.SaveChangesAsync();
+
+             //await transaction.CommitAsync();
+         }
+         catch (Exception ex)
+         {
+            // await transaction.RollbackAsync();
+
+             throw new Exception("Erro ao editar pessoa.", ex);
+         }
+     }
+ 
 
     /// <summary>
     /// Exclui uma pessoa na base de dados
