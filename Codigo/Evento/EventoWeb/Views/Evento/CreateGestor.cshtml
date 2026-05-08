@@ -146,7 +146,7 @@
 		document.getElementById('pessoaNome').textContent = pessoaNome;
 		document.getElementById('eventoNome').textContent = eventoNome;
 
-		var removeForm = document.getElementById('removeForm-' + pessoaId);
+		removeForm = document.getElementById('removeForm-' + pessoaId);
 		document.getElementById('confirmRemovalButton').onclick = function () {
 			removeForm.submit();
 		};
