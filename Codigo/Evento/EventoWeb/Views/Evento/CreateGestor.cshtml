@@ -1,9 +1,27 @@
 @model EventoWeb.Models.GestaoPapelModel
 
+<style>
+	.dataTables_length{
+		display: none !important;
+	}
+
+	.dataTables_filter{
+		display: none !important;
+	}
+
+	.dataTables_paginate{
+		display: none !important;
+	}
+
+	.dataTables_info{
+		display: none !important;
+	}
+</style>
+
 <link href="~/lib/datatable/css/datatables.min.css" rel="stylesheet" />
 
 <h1 class="blue-normal">Gestores do Evento</h1>
-<hr />
+
 <div class="row">
 	<div>
 		<form asp-action="CreateGestor" method="post" onsubmit="return validarFormulario()">
@@ -32,22 +50,26 @@
 			</h4>
 			<div class="row">
 				<div class="col-6 col-sm-6 col-md-3 col-lg-2">
-					<div class="form-group">
+					<div class="form-group mb-3">
 						<label asp-for="Pessoa.Cpf" class="control-label">CPF</label>
 						<input asp-for="Pessoa.Cpf" class="form-control" id="Cpf" placeholder="000.000.000-00" oninput="formatarCPF()" maxlength="14" />
 						<span asp-validation-for="Pessoa.Cpf" class="text-danger"></span>
-					
+					</div>
+
+				    <div class="form-group">
 						<label asp-for="Pessoa.Telefone1" class="control-label">Telefone</label>
 						<input asp-for="Pessoa.Telefone1" type="number" class="form-control" id="Telefone1" placeholder="Com o DDD" />
 						<span asp-validation-for="Pessoa.Telefone1" class="text-danger"></span>
 					</div>
 				</div>
 				<div class="col-12 col-sm-6 col-md-3 col-lg-4">
-					<div class="form-group">
+					<div class="form-group mb-3">
 						<label asp-for="Pessoa.Nome" class="control-label">Nome</label>
 						<input asp-for="Pessoa.Nome" class="form-control" id="Nome" placeholder="Nome completo" />
 						<span asp-validation-for="Pessoa.Nome" class="text-danger"></span>
+					</div>
 
+					<div class="form-group">
 						<label asp-for="Pessoa.Email" class="control-label">Email</label>
 						<input asp-for="Pessoa.Email" class="form-control" id="Email" placeholder="Seu e-mail" />
 						<span asp-validation-for="Pessoa.Email" class="text-danger"></span>
@@ -59,7 +81,7 @@
 			<br />
 			<div class="d-flex flex-row-reverse">
 				<div class="form-group">
-					<input type="submit" value="Adicionar gestor" class="btn btn-lg btn-blue-normal" />
+					<input type="submit" value="Adicionar gestor" class="btn btn-blue-normal" />
 				</div>
 			</div>
 			<br />
@@ -73,14 +95,13 @@
 	</div>
 }
 <div class="row">
-	<div class="col-md-12">
-		<h2 class="blue-normal">Lista de Gestores do Evento</h2>
+	<div class="col-md-12 mb-4">
 		<table id="tablePessoa" class="table table-striped">
 			<thead class="blue-normal blue-normal-bg-table">
 				<tr>
 					<th>CPF</th>
 					<th>Nome</th>
-					<th>Ações</th>
+					<th class="text-center" style="width: 250px;">Ações</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -96,17 +117,24 @@
 								<input type="hidden" name="IdEvento" value="@Model.Evento.Id" />
 								<input type="hidden" name="IdPapel" value="@inscricaopessoaevento.IdPapel" />
 
-								<form method="POST" action="/Evento/DeletePessoaPapel" style="display:inline;">
-									@Html.AntiForgeryToken()
+								<div class="d-flex justify-content-center align-items-center gap-2">
+    
+									<form method="POST" action="mudar senha" style="display:inline;">
+										@Html.AntiForgeryToken()
+										<button type="submit" class="btn btn-link text-primary p-0 text-nowrap" style="text-decoration:none;" onclick="return confirm('Tem certeza que deseja mudar senha deste gestor?');">
+											Mudar senha
+										</button>
+									</form>
 
-									<button type="submit"
-											class="btn btn-link text-danger"
-											style="text-decoration:none;"
-											onclick="return confirm('Tem certeza que deseja remover este gestor?');">
-										Remover gestor
-									</button>
-								</form>
-							</form>
+									
+									<form method="POST" action="/Evento/DeletePessoaPapel" style="display:inline;">
+										@Html.AntiForgeryToken()
+										<button type="submit" class="btn btn-link text-danger p-0 text-nowrap" style="text-decoration:none;" onclick="return confirm('Tem certeza que deseja remover este gestor?');">
+											Excluir
+										</button>
+									</form>
+								</div>
+						    </form>
 						</td>
 					</tr>
 				}
@@ -116,7 +144,7 @@
 </div>
 <div class="d-flex flex-row-reverse">
 	<div class="form-group" style="margin-right: 10px;">
-		<a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Model.Evento.Id" class="btn btn-lg btn-blue-normal">Voltar</a>
+		<a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Model.Evento.Id" class="btn btn-blue-normal">Voltar</a>
 	</div>
 </div>
 <!-- Modal -->
