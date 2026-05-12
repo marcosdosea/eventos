@@ -217,7 +217,7 @@ namespace EventoWeb.Controllers
                 var pessoaEditada = _mapper.Map<Pessoa>(viewModel);
                 pessoaEditada.Foto = fotoSource;
                 _pessoaService.Edit(pessoaEditada);
-                TempData["MensagemSucesso"] = "Pessoa editada com sucesso.";
+     
                 return RedirectToAction(nameof(Index));
             }
 
