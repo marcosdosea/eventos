@@ -1,14 +1,12 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using AutoMapper;
 using Core;
-using Microsoft.AspNetCore.Mvc;
-using EventoWeb.Models;
-using EventoWeb.Mappers;
 using Core.Service;
-using Moq;
-using AutoMapper;
-using System.Runtime.ConstrainedExecution;
-using System.Security.Cryptography;
+using EventoWeb.Mappers;
+using EventoWeb.Models;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using System.Security.Claims;
 
 namespace EventoWeb.Controllers.Tests
@@ -177,7 +175,7 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public void EditTest_Post_Valid()
+        public async Task EditTest_Post_Valid()
         {
             // Arrange
             var model = GetTargetPessoaModel();
@@ -204,7 +202,7 @@ namespace EventoWeb.Controllers.Tests
             localController.ModelState.Clear();
 
             // Act
-            var result = localController.Edit(model.Id, model);
+            var result = await localController.Edit(model.Id, model);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));

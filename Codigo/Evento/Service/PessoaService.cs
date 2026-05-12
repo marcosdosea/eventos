@@ -1,12 +1,11 @@
 using Core;
-using Core.DTO;
 using Core.Service;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
+using MySqlX.XDevAPI;
 using System.Data;
-using System.Security.Claims;
-using System.Text.RegularExpressions;
+using System.Diagnostics;
+using System.Runtime.ConstrainedExecution;
 
 namespace Service;
 
@@ -57,38 +56,37 @@ public class PessoaService : IPessoaService
     /// </summary>
     /// <param name="pessoa">dados de pessoa</param>
     /// <returns></returns>
-    public async Task Edit(Pessoa pessoa)
-     {
-        try
+
+public async Task Edit(Pessoa pessoa)
+{
+    try
+    {
+        var local = _context.Set<Pessoa>().Local.FirstOrDefault(p => p.Id == pessoa.Id);
+        if (local != null)
         {
-            // Para conferir se a entidade já está sendo rastreada.
-            var local = _context.Set<Pessoa>()
-          .Local
-          .FirstOrDefault(p => p.Id == pessoa.Id);
-
-            if (local != null)
-            {
-                // Desconecta a entidade já rastreada.
-                _context.Entry(local).State = EntityState.Detached;
-            }
-
-            _context.Update(pessoa);
-
-            await _context.SaveChangesAsync();
+            _context.Entry(local).State = EntityState.Detached;
         }
-        catch (Exception ex)
-        {
-            throw new Exception("Erro ao editar pessoa.", ex);
-        }
-     }
- 
 
-    /// <summary>
-    /// Exclui uma pessoa na base de dados
-    /// </summary>
-    /// <param name="id">dados de pessoa</param>
-    /// <returns></returns>
-    public void Delete(uint id)
+        _context.Update(pessoa);
+        await _context.SaveChangesAsync();
+    }
+    catch (DbUpdateException dbEx)
+    {
+        var sqlError = dbEx.InnerException?.Message;
+        throw new Exception($"Erro no Banco de Dados: {sqlError}", dbEx);
+    }
+    catch (Exception ex)
+    {
+        throw new Exception("Erro genérico na aplicação.", ex);
+    }
+}
+
+/// <summary>
+/// Exclui uma pessoa na base de dados
+/// </summary>
+/// <param name="id">dados de pessoa</param>
+/// <returns></returns>
+public void Delete(uint id)
     {
         var pessoa = _context.Pessoas.Find(id);
         _context.Remove(pessoa);
@@ -218,7 +216,8 @@ public class PessoaService : IPessoaService
             existingUser = await CreateAsync(pessoa);
         }
 
-        if(idPapel != 1) {
+        if (idPapel != 1)
+        {
             var novaInscricao = new Inscricaopessoaevento
             {
                 IdPessoa = idPessoa,
@@ -230,7 +229,7 @@ public class PessoaService : IPessoaService
             _inscricaoService.CreateInscricaoEvento(novaInscricao);
 
         }
-        
+
 
         string role = idPapel switch
         {
