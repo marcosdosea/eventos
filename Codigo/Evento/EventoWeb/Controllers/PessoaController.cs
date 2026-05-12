@@ -227,6 +227,7 @@ namespace EventoWeb.Controllers
                 var pessoaEditada = _mapper.Map<Pessoa>(viewModel);
                 pessoaEditada.Foto = fotoSource;
                 _pessoaService.Edit(pessoaEditada);
+     
                 return RedirectToAction(nameof(Index));
             }
 
