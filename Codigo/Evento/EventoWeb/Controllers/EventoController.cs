@@ -1,14 +1,12 @@
-﻿using System.Security.Claims;
-using AutoMapper;
+﻿using AutoMapper;
 using Core;
-using Core.DTO;
 using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Org.BouncyCastle.Bcpg;
+using System.Security.Claims;
 
 namespace EventoWeb.Controllers
 {
