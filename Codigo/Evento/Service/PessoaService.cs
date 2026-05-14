@@ -69,8 +69,9 @@ public async Task Edit(Pessoa pessoa)
     }
     catch (DbUpdateException dbEx)
     {
-        var sqlError = dbEx.InnerException?.Message;
-        throw new Exception($"Erro no Banco de Dados: {sqlError}", dbEx);
+        var errorDetail = dbEx.InnerException?.Message ?? dbEx.Message;
+        Trace.TraceError($"Erro ao atualizar pessoa no banco de dados: {errorDetail}");
+        throw new Exception("Erro no banco de dados ao atualizar pessoa. Consulte os logs internos para mais detalhes.", dbEx);
     }
     catch (Exception ex)
     {
