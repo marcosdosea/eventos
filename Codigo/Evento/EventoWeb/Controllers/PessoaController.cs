@@ -3,11 +3,8 @@ using Core;
 using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using System.Linq.Expressions;
-using System.Security.Cryptography;
 
 namespace EventoWeb.Controllers
 {
@@ -61,7 +58,7 @@ namespace EventoWeb.Controllers
             var admins = await _pessoaService.GetAllAdmAsync();
             var viewModel = new GestaoAdministradorModel
             {
-               Administradores = _mapper.Map<List<PessoaModel>>(admins.OrderBy(p => p.Nome))
+                Administradores = _mapper.Map<List<PessoaModel>>(admins.OrderBy(p => p.Nome))
 
 
             };
@@ -107,7 +104,7 @@ namespace EventoWeb.Controllers
                     return View(pessoaModel);
                 }
             }
-            
+
 
             return View(pessoaModel);
 
@@ -186,7 +183,7 @@ namespace EventoWeb.Controllers
         [HttpPost]
         [Route("Edit/{id}")]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(uint id, PessoaModel viewModel)
+        public async Task<ActionResult> Edit(uint id, PessoaModel viewModel)
         {
             var pessoa = _pessoaService.Get(id);
             if (pessoa == null)
@@ -226,8 +223,8 @@ namespace EventoWeb.Controllers
                 }
                 var pessoaEditada = _mapper.Map<Pessoa>(viewModel);
                 pessoaEditada.Foto = fotoSource;
-                _pessoaService.Edit(pessoaEditada);
-     
+                await _pessoaService.Edit(pessoaEditada);
+
                 return RedirectToAction(nameof(Index));
             }
 
