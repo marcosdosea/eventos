@@ -95,9 +95,7 @@ namespace EventoWeb.Controllers
 		[ValidateAntiForgeryToken]
 		public ActionResult Create(EventoModel eventoModel)
 		{
-			ModelState.Remove("Estados");
-			ModelState.Remove("TiposEventos");
-			ModelState.Remove("AreaInteresse");
+		
 
 			if (ModelState.IsValid)
 			{
@@ -159,9 +157,6 @@ namespace EventoWeb.Controllers
 		[ValidateAntiForgeryToken]
 		public ActionResult Edit(uint id, EventoModel viewModel)
 		{
-			ModelState.Remove("Estados");
-			ModelState.Remove("TiposEventos");
-			ModelState.Remove("AreaInteresse");
 
 			if (ModelState.IsValid)
 			{
@@ -628,9 +623,6 @@ namespace EventoWeb.Controllers
 				return RedirectToAction("GerenciarEvento", new { idEvento = id });
 			}
 
-			ModelState.Remove("Estados");
-			ModelState.Remove("TiposEventos");
-			ModelState.Remove("AreaInteresse");
 
 			if (ModelState.IsValid)
 			{
