@@ -117,23 +117,36 @@
 								<input type="hidden" name="IdEvento" value="@Model.Evento.Id" />
 								<input type="hidden" name="IdPapel" value="@inscricaopessoaevento.IdPapel" />
 
-								<div class="d-flex justify-content-center align-items-center gap-2">
-    
-									<form method="POST" action="mudar senha" style="display:inline;">
+							<td style="vertical-align: middle;">
+								<div class="d-flex justify-content-center align-items-center gap-3">
+
+									<!-- Formulário para Mudar Senha -->
+									<form method="POST" action="/Caminho/Para/MudarSenha" style="display:inline;">
 										@Html.AntiForgeryToken()
-										<button type="submit" class="btn btn-link text-primary p-0 text-nowrap" style="text-decoration:none;" onclick="return confirm('Tem certeza que deseja mudar senha deste gestor?');">
+										<input type="hidden" name="IdPessoa" value="@inscricaopessoaevento.IdPessoa" />
+										<button type="submit" class="btn btn-link text-primary p-0 text-nowrap"
+												style="text-decoration:none;"
+												onclick="return confirm('Tem certeza que deseja mudar a senha deste gestor?');">
 											Mudar senha
 										</button>
 									</form>
 
-									
+									<!-- Formulário para Excluir (Remover) -->
 									<form method="POST" action="/Evento/DeletePessoaPapel" style="display:inline;">
 										@Html.AntiForgeryToken()
-										<button type="submit" class="btn btn-link text-danger p-0 text-nowrap" style="text-decoration:none;" onclick="return confirm('Tem certeza que deseja remover este gestor?');">
+										<input type="hidden" name="IdPessoa" value="@inscricaopessoaevento.IdPessoa" />
+										<input type="hidden" name="IdEvento" value="@Model.Evento.Id" />
+										<input type="hidden" name="IdPapel" value="@inscricaopessoaevento.IdPapel" />
+
+										<button type="submit" class="btn btn-link text-danger p-0 text-nowrap"
+												style="text-decoration:none;"
+												onclick="return confirm('Tem certeza que deseja remover este gestor?');">
 											Excluir
 										</button>
 									</form>
+
 								</div>
+							</td>
 						    </form>
 						</td>
 					</tr>
