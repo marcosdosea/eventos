@@ -2,10 +2,7 @@ using Core;
 using Core.Service;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using MySqlX.XDevAPI;
 using System.Data;
-using System.Diagnostics;
-using System.Runtime.ConstrainedExecution;
 
 namespace Service;
 
