@@ -98,11 +98,12 @@
 						<td style="vertical-align: middle;">@FormatarCPF(inscricaopessoaevento.IdPessoaNavigation.Cpf)</td>
 						<td style="vertical-align: middle;">@inscricaopessoaevento.IdPessoaNavigation.Nome</td>
 						<td style="vertical-align: middle;">
-							<form method="POST" action="/Evento/DeletePessoaPapel" style="display:inline;">
+							<form id="removeForm-@inscricaopessoaevento.IdPessoa" method="POST" action="/Evento/DeletePessoaPapel">
 								@Html.AntiForgeryToken()
-								<button type="submit" class="btn btn-link text-danger p-0 text-nowrap" style="text-decoration:none;" onclick="return confirm('Tem certeza que deseja remover este coloborador?');">
-									Excluir
-								</button>
+								<input type="hidden" name="IdPessoa" value="@inscricaopessoaevento.IdPessoa" />
+								<input type="hidden" name="IdEvento" value="@Model.Evento.Id" />
+								<input type="hidden" name="IdPapel" value="@inscricaopessoaevento.IdPapel" />
+								<a href="#confirmRemovalModal" data-toggle="modal" onclick="setModalValues('@inscricaopessoaevento.IdPessoaNavigation.Nome', '@Model.Evento.Nome', '@inscricaopessoaevento.IdPessoa')" class="text-danger" style="text-decoration: none; cursor: pointer;">Remover colaborador</a>
 							</form>
 						</td>
 					</tr>

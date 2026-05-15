@@ -1,19 +1,19 @@
 @model EventoWeb.Models.GestaoPapelModel
 
 <style>
-	.dataTables_length{
+	.dataTables_length {
 		display: none !important;
 	}
 
-	.dataTables_filter{
+	.dataTables_filter {
 		display: none !important;
 	}
 
-	.dataTables_paginate{
+	.dataTables_paginate {
 		display: none !important;
 	}
 
-	.dataTables_info{
+	.dataTables_info {
 		display: none !important;
 	}
 </style>
@@ -56,7 +56,7 @@
 						<span asp-validation-for="Pessoa.Cpf" class="text-danger"></span>
 					</div>
 
-				    <div class="form-group">
+					<div class="form-group">
 						<label asp-for="Pessoa.Telefone1" class="control-label">Telefone</label>
 						<input asp-for="Pessoa.Telefone1" type="number" class="form-control" id="Telefone1" placeholder="Com o DDD" />
 						<span asp-validation-for="Pessoa.Telefone1" class="text-danger"></span>
@@ -116,38 +116,8 @@
 								<input type="hidden" name="IdPessoa" value="@inscricaopessoaevento.IdPessoa" />
 								<input type="hidden" name="IdEvento" value="@Model.Evento.Id" />
 								<input type="hidden" name="IdPapel" value="@inscricaopessoaevento.IdPapel" />
-
-							<td style="vertical-align: middle;">
-								<div class="d-flex justify-content-center align-items-center gap-3">
-
-									<!-- Formulário para Mudar Senha -->
-									<form method="POST" action="/Caminho/Para/MudarSenha" style="display:inline;">
-										@Html.AntiForgeryToken()
-										<input type="hidden" name="IdPessoa" value="@inscricaopessoaevento.IdPessoa" />
-										<button type="submit" class="btn btn-link text-primary p-0 text-nowrap"
-												style="text-decoration:none;"
-												onclick="return confirm('Tem certeza que deseja mudar a senha deste gestor?');">
-											Mudar senha
-										</button>
-									</form>
-
-									<!-- Formulário para Excluir (Remover) -->
-									<form method="POST" action="/Evento/DeletePessoaPapel" style="display:inline;">
-										@Html.AntiForgeryToken()
-										<input type="hidden" name="IdPessoa" value="@inscricaopessoaevento.IdPessoa" />
-										<input type="hidden" name="IdEvento" value="@Model.Evento.Id" />
-										<input type="hidden" name="IdPapel" value="@inscricaopessoaevento.IdPapel" />
-
-										<button type="submit" class="btn btn-link text-danger p-0 text-nowrap"
-												style="text-decoration:none;"
-												onclick="return confirm('Tem certeza que deseja remover este gestor?');">
-											Excluir
-										</button>
-									</form>
-
-								</div>
-							</td>
-						    </form>
+								<a data-bs-toggle="modal" data-bs-target="#confirmRemovalModal" onclick="setModalValues('@inscricaopessoaevento.IdPessoaNavigation.Nome', '@Model.Evento.Nome', '@inscricaopessoaevento.IdPessoa')" class="text-danger" style="text-decoration: none; cursor: pointer;">Remover gestor</a>
+							</form>
 						</td>
 					</tr>
 				}
@@ -206,18 +176,18 @@
 	<script src="~/lib/datatable/js/datatables.min.js"></script>
 	<script>
 		$(document).ready(function () {
-			$('#tablePessoa').DataTable({
-				columnDefs: [
-					{ orderable: true, targets: [0] },
-					{ orderable: false, targets: [1, 2] }
-				],
-				searching: true,
-				ordering: true,
-				paging: true,
-				language: {
-					url: '@Url.Content("~/lib/datatable/js/pt-BR.json")'
-				}
-			});
+		$('#tablePessoa').DataTable({
+		columnDefs: [
+		{ orderable: true, targets: [0] },
+		{ orderable: false, targets: [1, 2] }
+		],
+		searching: true,
+		ordering: true,
+		paging: true,
+		language: {
+		url: '@Url.Content("~/lib/datatable/js/pt-BR.json")'
+		}
+		});
 		});
 	</script>
 }
