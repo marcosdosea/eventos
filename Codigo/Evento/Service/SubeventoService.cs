@@ -35,10 +35,36 @@ namespace Service
         /// <exception cref="NotImplementedException"></exception>
         public void Delete(uint id)
         {
-            var subevento = _context.Subeventos.Find(id);
-            _context.Remove(subevento);
-            _context.SaveChanges();
+            // 1. Buscamos o subevento INCLUINDO as tabelas filhas que dependem dele
+            var subevento = _context.Subeventos
+                .Include(s => s.Inscricaopessoasubeventos)
+                .Include(s => s.Participacaopessoasubeventos)
+                .Include(s => s.IdTipoInscricaos) // Se for muitos-para-muitos
+                .FirstOrDefault(s => s.Id == id);
 
+            if (subevento != null)
+            {
+                try
+                {
+                    if (subevento.Inscricaopessoasubeventos.Any())
+                    {
+                        _context.Inscricaopessoasubeventos.RemoveRange(subevento.Inscricaopessoasubeventos);
+                    }
+
+                    if (subevento.Participacaopessoasubeventos.Any())
+                    {
+                        _context.Participacaopessoasubeventos.RemoveRange(subevento.Participacaopessoasubeventos);
+                    }
+
+                    subevento.IdTipoInscricaos.Clear();
+                    _context.Subeventos.Remove(subevento);
+                    _context.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception($"Erro ao excluir o subevento: {ex.Message}", ex);
+                }
+            }
         }
 
         /// <summary>

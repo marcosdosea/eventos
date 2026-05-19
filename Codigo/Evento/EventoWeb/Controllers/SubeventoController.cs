@@ -142,7 +142,7 @@ namespace EventoWeb.Controllers
         }
         // POST: SubeventoController/Delete/5
         [HttpPost]
-        [Route("Delete/{id}")]
+        [Route("Delete")]
         [ValidateAntiForgeryToken]
         public ActionResult Delete(uint id, SubeventoModel subeventoModel)
         {
