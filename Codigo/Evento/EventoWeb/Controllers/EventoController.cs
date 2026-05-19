@@ -1,14 +1,12 @@
-﻿using System.Security.Claims;
-using AutoMapper;
+﻿using AutoMapper;
 using Core;
-using Core.DTO;
 using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Org.BouncyCastle.Bcpg;
+using System.Security.Claims;
 
 namespace EventoWeb.Controllers
 {
@@ -95,9 +93,7 @@ namespace EventoWeb.Controllers
 		[ValidateAntiForgeryToken]
 		public ActionResult Create(EventoModel eventoModel)
 		{
-			ModelState.Remove("Estados");
-			ModelState.Remove("TiposEventos");
-			ModelState.Remove("AreaInteresse");
+		
 
 			if (ModelState.IsValid)
 			{
@@ -159,9 +155,6 @@ namespace EventoWeb.Controllers
 		[ValidateAntiForgeryToken]
 		public ActionResult Edit(uint id, EventoModel viewModel)
 		{
-			ModelState.Remove("Estados");
-			ModelState.Remove("TiposEventos");
-			ModelState.Remove("AreaInteresse");
 
 			if (ModelState.IsValid)
 			{
@@ -636,9 +629,6 @@ namespace EventoWeb.Controllers
 				return RedirectToAction("GerenciarEvento", new { idEvento = id });
 			}
 
-			ModelState.Remove("Estados");
-			ModelState.Remove("TiposEventos");
-			ModelState.Remove("AreaInteresse");
 
 			if (ModelState.IsValid)
 			{
