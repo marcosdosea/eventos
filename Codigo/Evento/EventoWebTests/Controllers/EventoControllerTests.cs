@@ -296,10 +296,10 @@ namespace EventoWeb.Controllers.Tests
 		}
 
 		[TestMethod()]
-		public void Colaborador_Post_Valid()
+		public async Task Colaborador_Post_Valid()
 		{
 			// Act
-			var result = controller.CreateColaborador(GetNewGestaoPapel());
+			var result = await controller.CreateColaborador(GetNewGestaoPapel());
 
 			// Assert
 			Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));

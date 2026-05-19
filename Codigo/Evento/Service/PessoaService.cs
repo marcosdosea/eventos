@@ -3,6 +3,7 @@ using Core.Service;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
+using System.Diagnostics;
 
 namespace Service;
 
@@ -54,37 +55,37 @@ public class PessoaService : IPessoaService
     /// <param name="pessoa">dados de pessoa</param>
     /// <returns></returns>
 
-public async Task Edit(Pessoa pessoa)
-{
-    try
+    public async Task Edit(Pessoa pessoa)
     {
-        var local = _context.Set<Pessoa>().Local.FirstOrDefault(p => p.Id == pessoa.Id);
-        if (local != null)
+        try
         {
-            _context.Entry(local).State = EntityState.Detached;
+            var local = _context.Set<Pessoa>().Local.FirstOrDefault(p => p.Id == pessoa.Id);
+            if (local != null)
+            {
+                _context.Entry(local).State = EntityState.Detached;
+            }
+
+            _context.Update(pessoa);
+            await _context.SaveChangesAsync();
         }
+        catch (DbUpdateException dbEx)
+        {
+            var errorDetail = dbEx.InnerException?.Message ?? dbEx.Message;
+            Trace.TraceError($"Erro ao atualizar pessoa no banco de dados: {errorDetail}");
+            throw new Exception("Erro no banco de dados ao atualizar pessoa. Consulte os logs internos para mais detalhes.", dbEx);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("Erro genérico na aplicação.", ex);
+        }
+    }
 
-        _context.Update(pessoa);
-        await _context.SaveChangesAsync();
-    }
-    catch (DbUpdateException dbEx)
-    {
-        var errorDetail = dbEx.InnerException?.Message ?? dbEx.Message;
-        Trace.TraceError($"Erro ao atualizar pessoa no banco de dados: {errorDetail}");
-        throw new Exception("Erro no banco de dados ao atualizar pessoa. Consulte os logs internos para mais detalhes.", dbEx);
-    }
-    catch (Exception ex)
-    {
-        throw new Exception("Erro genérico na aplicação.", ex);
-    }
-}
-
-/// <summary>
-/// Exclui uma pessoa na base de dados
-/// </summary>
-/// <param name="id">dados de pessoa</param>
-/// <returns></returns>
-public void Delete(uint id)
+    /// <summary>
+    /// Exclui uma pessoa na base de dados
+    /// </summary>
+    /// <param name="id">dados de pessoa</param>
+    /// <returns></returns>
+    public void Delete(uint id)
     {
         var pessoa = _context.Pessoas.Find(id);
         _context.Remove(pessoa);
@@ -209,44 +210,56 @@ public void Delete(uint id)
 
         var existingUser = await _userManager.FindByNameAsync(pessoa.Cpf);
 
-        if (existingUser == null)
+        using (var transaction = _context.Database.BeginTransaction())
         {
-            existingUser = await CreateAsync(pessoa);
-        }
-
-        if (idPapel != 1)
-        {
-            var novaInscricao = new Inscricaopessoaevento
+            try
             {
-                IdPessoa = idPessoa,
-                IdEvento = idEvento,
-                IdPapel = idPapel,
-                DataInscricao = DateTime.Now,
-                Status = "S"
+                if (existingUser == null)
+                {
+                    existingUser = await CreateAsync(pessoa);
+                }
+
+                if (idPapel != 1)
+                {
+                    var novaInscricao = new Inscricaopessoaevento
+                    {
+                        IdPessoa = idPessoa,
+                        IdEvento = idEvento,
+                        IdPapel = idPapel,
+                        DataInscricao = DateTime.Now,
+                        Status = "S"
+                    };
+                    _inscricaoService.CreateInscricaoEvento(novaInscricao);
+
+                }
+                transaction.Commit();
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                throw new Exception($"Erro ao criar pessoa, inscrição ou associar papel: {ex.Message}", ex);
+            }
+
+
+            string role = idPapel switch
+            {
+                1 => "ADMINISTRADOR",
+                2 => "GESTOR",
+                3 => "COLABORADOR",
+                4 => "USUARIO",
+                _ => throw new ArgumentException("Papel inválido.")
             };
-            _inscricaoService.CreateInscricaoEvento(novaInscricao);
 
-        }
-
-
-        string role = idPapel switch
-        {
-            1 => "ADMINISTRADOR",
-            2 => "GESTOR",
-            3 => "COLABORADOR",
-            4 => "USUARIO",
-            _ => throw new ArgumentException("Papel inválido.")
-        };
-
-        var isInRole = await _userManager.IsInRoleAsync(existingUser, role);
-        if (!isInRole)
-        {
-            var roleResult = await _userManager.AddToRoleAsync(existingUser, role);
-            if (!roleResult.Succeeded)
+            var isInRole = await _userManager.IsInRoleAsync(existingUser, role);
+            if (!isInRole)
             {
-                // Melhorar a mensagem de erro para incluir detalhes do Identity
-                var errors = string.Join("; ", roleResult.Errors.Select(e => e.Description));
-                throw new Exception($"Erro ao associar o papel '{role.ToLower()}' ao usuário no Identity: {errors}");
+                var roleResult = await _userManager.AddToRoleAsync(existingUser, role);
+                if (!roleResult.Succeeded)
+                {
+                    // Melhorar a mensagem de erro para incluir detalhes do Identity
+                    var errors = string.Join("; ", roleResult.Errors.Select(e => e.Description));
+                    throw new Exception($"Erro ao associar o papel '{role.ToLower()}' ao usuário no Identity: {errors}");
+                }
             }
         }
     }
