@@ -35,11 +35,37 @@ namespace Service
         /// <exception cref="NotImplementedException"></exception>
         public void Delete(uint Id)
         {
-            var evento = _context.Eventos.Find(Id);
+            var evento = _context.Eventos
+                .Include(e => e.IdAreaInteresses)         
+                .Include(e => e.Inscricaopessoaeventos)   
+                .Include(e => e.Subeventos)
+                .Include(e => e.Modelocertificados)
+                .Include(e => e.Modelocrachas)
+                .Include(e => e.Participacaopessoaeventos)
+                .Include(e => e.Tipoinscricaos)
+                .FirstOrDefault(e => e.Id == Id);
+
             if (evento != null)
             {
-                _context.Eventos.Remove(evento);
-                _context.SaveChanges();
+                try
+                {
+                    evento.IdAreaInteresses.Clear();
+
+                    _context.Subeventos.RemoveRange(evento.Subeventos);
+                    _context.Inscricaopessoaeventos.RemoveRange(evento.Inscricaopessoaeventos);
+                    _context.Modelocertificados.RemoveRange(evento.Modelocertificados);
+                    _context.Modelocrachas.RemoveRange(evento.Modelocrachas);
+                    _context.Participacaopessoaeventos.RemoveRange(evento.Participacaopessoaeventos);
+                    _context.Tipoinscricaos.RemoveRange(evento.Tipoinscricaos);
+
+                    _context.Eventos.Remove(evento);
+
+                    _context.SaveChanges();
+                }
+                catch (Exception ex)
+                {
+                    throw new Exception("Não foi possível excluir o evento. Verifique se existem dependências ativas.", ex);
+                }
             }
         }
 
@@ -51,32 +77,39 @@ namespace Service
         /// <exception cref="NotImplementedException"></exception>
         public void Edit(Evento evento, List<uint> novosIdsAreaInteresse)
         {
-            var eventoExistente = _context.Eventos
-                .Include(e => e.IdAreaInteresses)
-                .FirstOrDefault(e => e.Id == evento.Id);
-            if (eventoExistente == null)
+            try
             {
-                throw new Exception("Evento não encontrado.");
-            }
-            var areasParaRemover = eventoExistente.IdAreaInteresses
-                .Where(ai => !novosIdsAreaInteresse.Contains(ai.Id))
-                .ToList();
+                var eventoExistente = _context.Eventos
+                    .Include(e => e.IdAreaInteresses)
+                    .FirstOrDefault(e => e.Id == evento.Id);
 
-            foreach (var area in areasParaRemover)
-            {
-                eventoExistente.IdAreaInteresses.Remove(area);
+                if (eventoExistente == null) throw new Exception("Evento não encontrado.");
+
+                _context.Entry(eventoExistente).CurrentValues.SetValues(evento);
+
+                eventoExistente.ImagemPortal = evento.ImagemPortal;
+
+
+                var paraRemover = eventoExistente.IdAreaInteresses
+                    .Where(ai => !novosIdsAreaInteresse.Contains(ai.Id)).ToList();
+
+                foreach (var area in paraRemover)
+                    eventoExistente.IdAreaInteresses.Remove(area);
+
+                var idsAtuais = eventoExistente.IdAreaInteresses.Select(ai => ai.Id).ToList();
+                var paraAdicionar = _context.Areainteresses
+                    .Where(ai => novosIdsAreaInteresse.Contains(ai.Id) && !idsAtuais.Contains(ai.Id))
+                    .ToList();
+
+                foreach (var area in paraAdicionar)
+                    eventoExistente.IdAreaInteresses.Add(area);
+
+                _context.SaveChanges();
             }
-            var areasParaAdicionar = novosIdsAreaInteresse
-                .Where(id => !eventoExistente.IdAreaInteresses.Any(ai => ai.Id == id))
-                .Select(id => _context.Areainteresses.Find(id))
-                .ToList();
-            foreach (var area in areasParaAdicionar)
+            catch (Exception ex)
             {
-                eventoExistente.IdAreaInteresses.Add(area);
+                throw new Exception($"Erro ao atualizar o evento: {ex.Message}", ex);
             }
-            eventoExistente.ImagemPortal = evento.ImagemPortal;
-            _context.Update(eventoExistente);
-            _context.SaveChanges();
         }
 
         /// <summary>

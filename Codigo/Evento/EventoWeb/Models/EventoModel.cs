@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Util;
 
@@ -133,10 +134,13 @@ namespace EventoWeb.Models
 		[BindNever]
 		public string? ImagemPortalBase64 { get; set; }
 
+		[ValidateNever] //remover as validações para os metodos post
 		public SelectList Estados { get; set; }
 
+		[ValidateNever]
 		public SelectList TiposEventos { get; set; }
-
+		
+		[ValidateNever]
 		public SelectList AreaInteresse { get; set; }
 	}
 }
