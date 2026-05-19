@@ -35,7 +35,6 @@ namespace Service
         /// <exception cref="NotImplementedException"></exception>
         public void Delete(uint id)
         {
-            // 1. Buscamos o subevento INCLUINDO as tabelas filhas que dependem dele
             var subevento = _context.Subeventos
                 .Include(s => s.Inscricaopessoasubeventos)
                 .Include(s => s.Participacaopessoasubeventos)
