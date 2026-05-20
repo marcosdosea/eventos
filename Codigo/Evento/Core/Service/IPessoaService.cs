@@ -6,7 +6,7 @@ public interface IPessoaService
 
 {
     uint Create(Pessoa pessoa);
-    Task Edit(Pessoa pessoa);
+     Task Edit(Pessoa pessoa);
     void Delete(uint id);
     Pessoa Get(uint id);
     IEnumerable<Pessoa> GetAll();

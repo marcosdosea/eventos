@@ -275,7 +275,6 @@ namespace EventoWeb.Controllers
 					}
 				}
 
-				pessoaExistente.NomeCracha = pessoaExistente.Nome;
 				await _pessoaService.CreatePessoaPapelAsync(pessoaExistente, idEvento, 2);
 				_eventoService.AtualizarVagasDisponiveis(idEvento);
 
@@ -354,9 +353,7 @@ namespace EventoWeb.Controllers
                         return View(gestaoPapelModel);
                     }
                 }
-
-
-                pessoaExistente.NomeCracha = pessoaExistente.Nome;
+              
 				await _pessoaService.CreatePessoaPapelAsync(pessoaExistente, idEvento, 3);
 				_eventoService.AtualizarVagasDisponiveis(idEvento);
 
