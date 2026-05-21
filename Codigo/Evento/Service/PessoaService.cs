@@ -202,18 +202,19 @@ public class PessoaService : IPessoaService
     /// <exception cref="Exception"></exception>
     public async Task CreatePessoaPapelAsync(Pessoa pessoa, uint idEvento, int idPapel)
     {
-        uint idPessoa = pessoa.Id;
-        if (GetByCpf(pessoa.Cpf) == null)
-        {
-            idPessoa = Create(pessoa);
-        }
 
-        var existingUser = await _userManager.FindByNameAsync(pessoa.Cpf);
-
-        using (var transaction = _context.Database.BeginTransaction())
+        await using (var transaction = await _context.Database.BeginTransactionAsync())
         {
+
             try
             {
+                uint idPessoa = pessoa.Id;
+                if (GetByCpf(pessoa.Cpf) == null)
+                {
+                    idPessoa = Create(pessoa);
+                }
+
+                var existingUser = await _userManager.FindByNameAsync(pessoa.Cpf);
                 if (existingUser == null)
                 {
                     existingUser = await CreateAsync(pessoa);
@@ -230,37 +231,36 @@ public class PessoaService : IPessoaService
                         Status = "S"
                     };
                     _inscricaoService.CreateInscricaoEvento(novaInscricao);
-
                 }
-                transaction.Commit();
+                string role = idPapel switch
+                {
+                    1 => "ADMINISTRADOR",
+                    2 => "GESTOR",
+                    3 => "COLABORADOR",
+                    4 => "USUARIO",
+                    _ => throw new ArgumentException("Papel inválido.")
+                };
+
+                var isInRole = await _userManager.IsInRoleAsync(existingUser, role);
+                if (!isInRole)
+                {
+                    var roleResult = await _userManager.AddToRoleAsync(existingUser, role);
+                    if (!roleResult.Succeeded)
+                    {
+                        // Melhorar a mensagem de erro para incluir detalhes do Identity
+                        var errors = string.Join("; ", roleResult.Errors.Select(e => e.Description));
+                        throw new Exception($"Erro ao associar o papel '{role.ToLower()}' ao usuário no Identity: {errors}");
+                    }
+                }
+                await transaction.CommitAsync();
             }
             catch (Exception ex)
             {
-                transaction.Rollback();
+                await transaction.RollbackAsync();
                 throw new Exception($"Erro ao criar pessoa, inscrição ou associar papel: {ex.Message}", ex);
             }
 
 
-            string role = idPapel switch
-            {
-                1 => "ADMINISTRADOR",
-                2 => "GESTOR",
-                3 => "COLABORADOR",
-                4 => "USUARIO",
-                _ => throw new ArgumentException("Papel inválido.")
-            };
-
-            var isInRole = await _userManager.IsInRoleAsync(existingUser, role);
-            if (!isInRole)
-            {
-                var roleResult = await _userManager.AddToRoleAsync(existingUser, role);
-                if (!roleResult.Succeeded)
-                {
-                    // Melhorar a mensagem de erro para incluir detalhes do Identity
-                    var errors = string.Join("; ", roleResult.Errors.Select(e => e.Description));
-                    throw new Exception($"Erro ao associar o papel '{role.ToLower()}' ao usuário no Identity: {errors}");
-                }
-            }
         }
     }
 }

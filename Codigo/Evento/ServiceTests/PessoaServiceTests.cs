@@ -1,15 +1,8 @@
-﻿using Service;
-using Core;
+﻿using Core;
 using Core.Service;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Immutable;
-using System.Runtime.ConstrainedExecution;
-using System.Security.Cryptography;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.AspNetCore.Identity;
-using EventoWeb.Models;
 
 namespace Service.Tests
 {
