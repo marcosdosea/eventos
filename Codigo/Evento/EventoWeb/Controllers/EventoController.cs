@@ -275,7 +275,6 @@ namespace EventoWeb.Controllers
 					}
 				}
 
-				pessoaExistente.NomeCracha = pessoaExistente.Nome;
 				await _pessoaService.CreatePessoaPapelAsync(pessoaExistente, idEvento, 2);
 				_eventoService.AtualizarVagasDisponiveis(idEvento);
 
@@ -316,40 +315,46 @@ namespace EventoWeb.Controllers
 		[HttpPost]
 		[Route("CreateColaborador")]
 		[ValidateAntiForgeryToken]
-		public ActionResult CreateColaborador(GestaoPapelModel gestaoPapelModel)
+		public async Task<IActionResult> CreateColaborador(GestaoPapelModel gestaoPapelModel)
 		{
 			if (ModelState.IsValid)
 			{
-				var pessoa = _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
-				var idEvento = gestaoPapelModel.Evento.Id;
 
-				var papel = _inscricaoService.GetPapelPessoaByEvento(pessoa.Id, idEvento);
-				
-				if (papel is 2 or 3)
-				{
-					var papelNome = "";
-					
-					switch (papel)
-					{
-						case 2:
-							papelNome = "gestor";
-							break;
-						case 3:
-							papelNome = "colaborador";
-							break;
-					}
+                var pessoaExistente = _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
+                var idEvento = gestaoPapelModel.Evento.Id;
+                if (pessoaExistente is null)
+                {
+                    Pessoa pessoa = _mapper.Map<Pessoa>(gestaoPapelModel.Pessoa);
+                    pessoaExistente = pessoa;
+                }
+                else
+                {
+                    var papel = _inscricaoService.GetPapelPessoaByEvento(pessoaExistente.Id, idEvento);
 
-					ModelState.AddModelError(string.Empty, $"A pessoa selecionada já é um {papelNome} do evento.");
-    
-					gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
-					gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 3);
-    
-					return View(gestaoPapelModel);
-				}
+                    if (papel is 2 or 3)
+                    {
+                        var papelNome = "";
 
+                        switch (papel)
+                        {
+                            case 2:
+                                papelNome = "gestor";
+                                break;
+                            case 3:
+                                papelNome = "colaborador";
+                                break;
+                        }
 
-				pessoa.NomeCracha = pessoa.Nome;
-				_pessoaService.CreatePessoaPapelAsync(pessoa, idEvento, 3);
+                        ModelState.AddModelError(string.Empty, $"A pessoa selecionada já é um {papelNome} do evento.");
+
+                        gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
+                        gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 3);
+
+                        return View(gestaoPapelModel);
+                    }
+                }
+              
+				await _pessoaService.CreatePessoaPapelAsync(pessoaExistente, idEvento, 3);
 				_eventoService.AtualizarVagasDisponiveis(idEvento);
 
 				return RedirectToAction("CreateColaborador", new { idEvento });
