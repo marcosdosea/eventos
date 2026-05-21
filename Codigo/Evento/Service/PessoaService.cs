@@ -55,29 +55,10 @@ public class PessoaService : IPessoaService
     /// <param name="pessoa">dados de pessoa</param>
     /// <returns></returns>
 
-    public async Task Edit(Pessoa pessoa)
+    public void Edit(Pessoa pessoa)
     {
-        try
-        {
-            var local = _context.Set<Pessoa>().Local.FirstOrDefault(p => p.Id == pessoa.Id);
-            if (local != null)
-            {
-                _context.Entry(local).State = EntityState.Detached;
-            }
-
-            _context.Update(pessoa);
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateException dbEx)
-        {
-            var errorDetail = dbEx.InnerException?.Message ?? dbEx.Message;
-            Trace.TraceError($"Erro ao atualizar pessoa no banco de dados: {errorDetail}");
-            throw new Exception("Erro no banco de dados ao atualizar pessoa. Consulte os logs internos para mais detalhes.", dbEx);
-        }
-        catch (Exception ex)
-        {
-            throw new Exception("Erro genérico na aplicação.", ex);
-        }
+        _context.Update(pessoa);   
+        _context.SaveChanges();
     }
 
     /// <summary>

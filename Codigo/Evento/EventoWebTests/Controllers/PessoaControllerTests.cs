@@ -175,7 +175,7 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public async Task EditTest_Post_Valid()
+        public void EditTest_Post_Valid()
         {
             // Arrange
             var model = GetTargetPessoaModel();
@@ -202,7 +202,7 @@ namespace EventoWeb.Controllers.Tests
             localController.ModelState.Clear();
 
             // Act
-            var result = await localController.Edit(model.Id, model);
+            var result =  localController.Edit(model.Id, model);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));

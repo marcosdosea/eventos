@@ -183,7 +183,7 @@ namespace EventoWeb.Controllers
         [HttpPost]
         [Route("Edit/{id}")]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Edit(uint id, PessoaModel viewModel)
+        public ActionResult Edit(uint id, PessoaModel viewModel)
         {
             var pessoa = _pessoaService.Get(id);
             if (pessoa == null)
@@ -221,9 +221,10 @@ namespace EventoWeb.Controllers
                         }
                     }
                 }
-                var pessoaEditada = _mapper.Map<Pessoa>(viewModel);
-                pessoaEditada.Foto = fotoSource;
-                await _pessoaService.Edit(pessoaEditada);
+                    _mapper.Map(viewModel, pessoa);
+                    pessoa.Foto = fotoSource;
+
+                _pessoaService.Edit(pessoa);
 
                 return RedirectToAction(nameof(Index));
             }
