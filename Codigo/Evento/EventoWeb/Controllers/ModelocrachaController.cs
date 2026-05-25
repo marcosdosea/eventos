@@ -31,6 +31,7 @@ namespace EventoWeb.Controllers
         [HttpGet]
         [Route("")]
         [Route("Index")]
+
         public ActionResult Index(uint? idEvento, uint? idPessoa)
         {
             if (idEvento.HasValue)
@@ -54,7 +55,9 @@ namespace EventoWeb.Controllers
             }
             else
             {
-                return RedirectToAction("Index", "Evento");
+                var items = _modelocrachaService.GetAll();
+                var model = items.Select(x => _mapper.Map<ModelocrachaModel>(x)).ToList();
+                return View(model);
             }
 
         }
