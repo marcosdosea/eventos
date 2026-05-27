@@ -66,7 +66,6 @@ namespace Service
         /// </summary>
         public IEnumerable<Tipoinscricao> GetByEvento(uint id)
         {
-            // 🚀 Otimização: Busca direto na tabela de inscrições sem carregar o objeto Evento inteiro na memória
             return _context.Tipoinscricaos
                 .Where(ti => ti.IdEvento == id)
                 .AsNoTracking()
@@ -78,7 +77,6 @@ namespace Service
         /// </summary>
         public IEnumerable<TipoInscricaoDTO> GetByEventoUsadaSubevento(uint id)
         {
-            // 🚀 Otimização: Query direta e filtrada no banco, evitando Includes desnecessários
             return _context.Tipoinscricaos
                 .Where(ti => ti.IdEvento == id && ti.UsadaSubevento == 1)
                 .Select(tipoInscricao => new TipoInscricaoDTO
@@ -124,32 +122,22 @@ namespace Service
         /// </summary>
         public void AssociacaoTipoInscricaoSubevento(uint Idsubevento, uint IdtipoInscricao)
         {
-            // 1. Busca o Subevento puramente (Garante que ele seja encontrado mesmo sem vínculos existentes)
-            var subevento = _context.Subeventos
-                .FirstOrDefault(s => s.Id == Idsubevento);
+            var subevento = _context.Subeventos.FirstOrDefault(s => s.Id == Idsubevento);
+            if (subevento == null) throw new ArgumentException("Subevento não encontrado.");
 
-            if (subevento == null)
-            {
-                throw new ArgumentException($"Erro: Subevento com ID {Idsubevento} não foi encontrado no banco de dados.");
-            }
-
-            // 2. Carrega a coleção de inscrições separadamente de forma explícita e segura
             _context.Entry(subevento).Collection(s => s.IdTipoInscricaos).Load();
 
-            var tipoInscricao = _context.Tipoinscricaos
-                .FirstOrDefault(ti => ti.Id == IdtipoInscricao);
-
-            if (tipoInscricao == null)
-            {
-                throw new ArgumentException($"Erro: Tipo de Inscrição com ID {IdtipoInscricao} não foi encontrado no banco de dados.");
-            }
+            var tipoInscricao = _context.Tipoinscricaos.FirstOrDefault(ti => ti.Id == IdtipoInscricao);
+            if (tipoInscricao == null) throw new ArgumentException("Tipo de Inscrição não encontrado.");
 
             subevento.IdTipoInscricaos ??= new List<Tipoinscricao>();
 
             if (!subevento.IdTipoInscricaos.Any(ti => ti.Id == IdtipoInscricao))
             {
+                tipoInscricao.UsadaSubevento = 1;
+
                 subevento.IdTipoInscricaos.Add(tipoInscricao);
-                _context.SaveChanges();
+                _context.SaveChanges(); 
             }
         }
 
@@ -166,7 +154,6 @@ namespace Service
                 throw new ArgumentException("Subevento não encontrado");
             }
 
-            // Carrega a coleção explicitamente antes de remover
             _context.Entry(subevento).Collection(s => s.IdTipoInscricaos).Load();
 
             var tipoInscricao = subevento.IdTipoInscricaos

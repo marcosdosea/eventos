@@ -187,7 +187,6 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult CreateTipoInscricaoSubevento(uint idSubevento, uint IdTipoInscricao)
         {
-            // Validação de segurança caso tente submeter valor inválido (0 ou vazio)
             if (IdTipoInscricao == 0)
             {
                 ModelState.AddModelError("", "Por favor, selecione um Tipo de Inscrição válido.");
@@ -213,7 +212,7 @@ namespace EventoWeb.Controllers
         }
 
         // POST: /TipoInscricao/DeleteTipoInscricaoSubevento
-        [HttpPost("DeleteTipoInscricaoSubevento")] // 💡 CORREÇÃO: Adicionado explicitamente como HttpPost para evitar conflitos
+        [HttpPost("DeleteTipoInscricaoSubevento")] 
         [ValidateAntiForgeryToken]
         public IActionResult DeleteTipoInscricaoSubevento(uint idSubevento, uint IdTipoInscricao)
         {
