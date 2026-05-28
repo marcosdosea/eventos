@@ -45,23 +45,21 @@ namespace EventoWeb
                     .ForMember(dest => dest.RegistrationDate, opt => opt.MapFrom(src => DateTime.Now)) // Valor padrão
                     .ForMember(dest => dest.LastLogin, opt => opt.MapFrom(src => (DateTime?)null)); // Valor padrão
             }, AppDomain.CurrentDomain.GetAssemblies());
-            builder.Services.AddTransient<ITipoInscricaoService, TipoInscricaoService>();
-            builder.Services.AddTransient<IAreaInteresseService, AreaInteresseService>();
-            builder.Services.AddTransient<IPessoaService, PessoaService>();
-            builder.Services.AddTransient<ISubeventoService, SubeventoService>();
-            builder.Services.AddTransient<IEventoService, EventoService>();
-            builder.Services.AddTransient<IModelocrachaService, ModelocrachaService>();
-            builder.Services.AddScoped<IModelocertificadoService, ModelocertificadoService>();
-            builder.Services.AddTransient<IInscricaoService, InscricaoService>();
-            builder.Services.AddTransient<IEstadosbrasilService, EstadosbrasilService>();
-            builder.Services.AddTransient<ITipoeventoService, TipoeventoService>();
-            builder.Services.AddTransient<IEmailSender, EmailSender>();
-            builder.Services.AddTransient<IParticipacaoPessoaEventoService, ParticipacaoPessoaEventoService>();
-            builder.Services.AddTransient<IParticipanteService, ParticipanteService>();
-            builder.Services.AddTransient<IParticipanteService, ParticipanteService>();
-            builder.Services.AddTransient<IInscricaopessoaeventoService, InscricaopessoaeventoService>();
+			builder.Services.AddTransient<ITipoInscricaoService, TipoInscricaoService>();
+			builder.Services.AddTransient<IAreaInteresseService, AreaInteresseService>();
+			builder.Services.AddTransient<IPessoaService, PessoaService>();
+			builder.Services.AddTransient<ISubeventoService, SubeventoService>();
+			builder.Services.AddTransient<IEventoService, EventoService>();
+			builder.Services.AddTransient<IModelocrachaService, ModelocrachaService>();
+			builder.Services.AddScoped<IModelocertificadoService, ModelocertificadoService>();
+			builder.Services.AddTransient<Core.Service.IInscricaoService, Service.InscricaoService>();
+			builder.Services.AddTransient<IEstadosbrasilService, EstadosbrasilService>();
+			builder.Services.AddTransient<ITipoeventoService, TipoeventoService>();
+			builder.Services.AddTransient<IEmailSender, EmailSender>();
+			builder.Services.AddTransient<IParticipacaoPessoaEventoService, ParticipacaoPessoaEventoService>();
+			
 
-            builder.Services.AddDbContext<EventoContext>(
+			builder.Services.AddDbContext<EventoContext>(
                 options => options.UseMySQL(builder.Configuration.GetConnectionString("EventoDatabase")));
 
             builder.Services.AddDbContext<IdentityContext>(

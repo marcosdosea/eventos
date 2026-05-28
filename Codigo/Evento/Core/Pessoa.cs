@@ -13,11 +13,6 @@ public partial class Pessoa
 
     public string Cpf { get; set; } = null!;
 
-    /// <summary>
-    /// M - Masculino
-    /// F - Feminino
-    /// N - Não Informado
-    /// </summary>
     public string? Sexo { get; set; } = null!;
 
     public string? Cep { get; set; }

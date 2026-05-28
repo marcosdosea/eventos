@@ -1,13 +1,14 @@
 using Core;
 using Core.DTO;
+using System.Collections.Generic;
 
-namespace EventoWeb.Models;
-
-public class GestaoPapelModel
+namespace EventoWeb.Models
 {
-    public PessoaModel Pessoa { get; set; }
-    
-    public EventoSimpleDTO Evento { get; set; }
-    public IEnumerable<Inscricaopessoaevento>? Inscricoes { get; set; }
-    
+    public class GestaoPapelModel
+    {
+        public PessoaModel Pessoa { get; set; } = new PessoaModel();
+        public EventoSimpleDTO Evento { get; set; } = new EventoSimpleDTO();
+        public IEnumerable<Inscricaopessoaevento>? Inscricoes { get; set; }
+        public int IdPapelRequisitado { get; set; }
+    }
 }

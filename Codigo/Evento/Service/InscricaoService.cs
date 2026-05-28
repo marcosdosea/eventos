@@ -5,33 +5,99 @@ using Microsoft.AspNetCore.Identity;
 
 namespace Service
 {
+    /// <summary>
+    /// Service unificado de inscrições.
+    /// Elimina a duplicação com InscricaopessoaeventoService (arquivo deletado).
+    /// Toda lógica de vincular Pessoa a Evento por Papel fica aqui.
+    /// </summary>
     public class InscricaoService : IInscricaoService
     {
         private readonly EventoContext _context;
         private readonly UserManager<UsuarioIdentity> _userManager;
+
         public InscricaoService(EventoContext context, UserManager<UsuarioIdentity> userManager)
         {
-            _userManager = userManager;
             _context = context;
+            _userManager = userManager;
         }
+
+        // =====================================================================
+        // CRIAÇÃO DE INSCRIÇÕES
+        // =====================================================================
 
         public uint CreateInscricaoEvento(Inscricaopessoaevento inscricaopessoaevento)
         {
+            if (PessoaJaInscrita(inscricaopessoaevento.IdPessoa, inscricaopessoaevento.IdEvento))
+                throw new Exception("Esta pessoa já está inscrita neste evento.");
+
+            inscricaopessoaevento.DataInscricao = DateTime.Now;
             _context.Add(inscricaopessoaevento);
             _context.SaveChanges();
             return inscricaopessoaevento.Id;
         }
 
-        public async Task DeletePessoaPapelAsync(uint idPessoa, uint idEvento, uint idPapel, string cpf)
+        public void CreateInscricaoSubEvento(Inscricaopessoasubevento inscricaopessoasubevento)
         {
-            var pessoa = await _context.Pessoas.FirstOrDefaultAsync(p => p.Id == idPessoa && p.Cpf == cpf);
-            if (pessoa == null)
+            _context.Add(inscricaopessoasubevento);
+            _context.SaveChanges();
+        }
+
+        // =====================================================================
+        // ATRIBUIÇÃO / REMOÇÃO DE PAPEL NO EVENTO
+        // =====================================================================
+
+        /// <summary>
+        /// Vincula uma Pessoa a um Evento com um Papel específico,
+        /// criando a Pessoa no banco se necessário (mas SEM criar usuário Identity).
+        /// A criação do usuário Identity é responsabilidade de PessoaService.
+        /// </summary>
+        public async Task AtribuirPapelNoEventoAsync(Pessoa pessoa, uint idEvento, int idPapel)
+        {
+            var pessoaExistente = _context.Pessoas.FirstOrDefault(p => p.Cpf == pessoa.Cpf);
+            if (pessoaExistente == null)
             {
-                throw new Exception("Pessoa não encontrada com o CPF informado.");
+                _context.Pessoas.Add(pessoa);
+                await _context.SaveChangesAsync();
+                pessoaExistente = pessoa;
             }
 
+            bool jaVinculado = _context.Inscricaopessoaeventos
+                .Any(i => i.IdPessoa == pessoaExistente.Id
+                       && i.IdEvento == idEvento
+                       && i.IdPapel == idPapel);
+
+            if (jaVinculado)
+                throw new Exception("Esta pessoa já está vinculada a este evento com este papel.");
+
+            var inscricao = new Inscricaopessoaevento
+            {
+                IdPessoa = pessoaExistente.Id,
+                IdEvento = idEvento,
+                IdPapel = idPapel,
+                DataInscricao = DateTime.Now,
+                Status = "A",
+                NomeCracha = !string.IsNullOrWhiteSpace(pessoaExistente.NomeCracha)
+                    ? pessoaExistente.NomeCracha
+                    : pessoaExistente.Nome,
+                FrequenciaFinal = 0
+            };
+
+            _context.Inscricaopessoaeventos.Add(inscricao);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeletePessoaPapelAsync(uint idPessoa, uint idEvento, uint idPapel, string cpf)
+        {
+            var pessoa = await _context.Pessoas
+                .FirstOrDefaultAsync(p => p.Id == idPessoa && p.Cpf == cpf);
+
+            if (pessoa == null)
+                throw new Exception("Pessoa não encontrada com o CPF informado.");
+
             var inscricao = await _context.Inscricaopessoaeventos
-                .FirstOrDefaultAsync(i => i.IdPessoa == idPessoa && i.IdEvento == idEvento && i.IdPapel == idPapel);
+                .FirstOrDefaultAsync(i => i.IdPessoa == idPessoa
+                                       && i.IdEvento == idEvento
+                                       && i.IdPapel == (int)idPapel);
 
             if (inscricao != null)
             {
@@ -39,60 +105,22 @@ namespace Service
                 await _context.SaveChangesAsync();
             }
 
-            var existePapelUsuario = await _context.Inscricaopessoaeventos
-                .AnyAsync(i => i.IdPessoa == idPessoa && i.IdPapel == idPapel);
-
-            if (!existePapelUsuario && idPapel != 4)
+            // Remove role do Identity apenas se não tiver mais nenhum vínculo com esse papel
+            // em NENHUM evento (papéis globais no Identity são por papel, não por evento).
+            // USUÁRIO (papel 4) não tem role no Identity.
+            if (idPapel != 4)
             {
-                RemoveUserRole(idPessoa, idPapel, cpf).GetAwaiter().GetResult();
+                bool aindaPossuiPapel = await _context.Inscricaopessoaeventos
+                    .AnyAsync(i => i.IdPessoa == idPessoa && i.IdPapel == (int)idPapel);
+
+                if (!aindaPossuiPapel)
+                    await RemoverRoleIdentityAsync(cpf, idPapel);
             }
         }
 
-        public async Task RemoveUserRole(uint idPessoa, uint idPapel, string cpf)
-        {
-            string cpfSemFormatacao = cpf.Replace(".", "").Replace("-", "");
-            var user = await _userManager.FindByNameAsync(cpfSemFormatacao);
-
-            if (user == null)
-            {
-                throw new Exception("Usuário não encontrado.");
-            }
-
-            string role = idPapel switch
-            {
-                1 => "GESTOR",
-                2 => "GESTOR",
-                3 => "COLABORADOR",
-                _ => throw new ArgumentException("Papel inválido.")
-            };
-
-            if (await _userManager.IsInRoleAsync(user, role))
-            {
-                var removeResult = await _userManager.RemoveFromRoleAsync(user, role);
-
-                if (!removeResult.Succeeded)
-                {
-                    throw new Exception("Erro ao remover o papel do usuário.");
-                }
-            }
-        }
-        public IEnumerable<Inscricaopessoaevento> GetByEventoAndPapel(uint idEvento, int idPapel)
-        {
-            return _context.Inscricaopessoaeventos
-                .Include(i => i.IdPessoaNavigation)
-                .Where(i => i.IdEvento == idEvento && i.IdPapel == idPapel)
-                .AsNoTracking()
-                .ToList();
-        }
-
-
-        public int GetPapelPessoaByEvento(uint idPessoa, uint idEvento)
-        {
-            return _context.Inscricaopessoaeventos
-                .Where(i => i.IdEvento == idEvento && i.IdPessoa == idPessoa)
-                .Select(i => i.IdPapel)
-                .FirstOrDefault();
-        }
+        // =====================================================================
+        // CONSULTAS
+        // =====================================================================
 
         public IEnumerable<Inscricaopessoaevento> GetByEvento(uint idEvento)
         {
@@ -103,10 +131,13 @@ namespace Service
                 .ToList();
         }
 
-        public void CreateInscricaoSubEvento(Inscricaopessoasubevento inscricaopessoasubevento)
+        public IEnumerable<Inscricaopessoaevento> GetByEventoAndPapel(uint idEvento, int idPapel)
         {
-            _context.Add(inscricaopessoasubevento);
-            _context.SaveChanges();
+            return _context.Inscricaopessoaeventos
+                .Include(i => i.IdPessoaNavigation)
+                .Where(i => i.IdEvento == idEvento && i.IdPapel == idPapel)
+                .AsNoTracking()
+                .ToList();
         }
 
         public IEnumerable<Inscricaopessoasubevento> GetSubByEvento(uint idEvento)
@@ -121,29 +152,90 @@ namespace Service
 
         public IEnumerable<Inscricaopessoaevento> GetAllEventsByUserId(string username)
         {
-            var query = from i in _context.Inscricaopessoaeventos.Include(i => i.IdEventoNavigation) where i.IdPessoaNavigation.Cpf.Contains(username) select i;
-            return query;
+            return _context.Inscricaopessoaeventos
+                .Include(i => i.IdEventoNavigation)
+                .Where(i => i.IdPessoaNavigation.Cpf.Contains(username))
+                .ToList();
+        }
+
+        public int GetPapelPessoaByEvento(uint idPessoa, uint idEvento)
+        {
+            return _context.Inscricaopessoaeventos
+                .Where(i => i.IdEvento == idEvento && i.IdPessoa == idPessoa)
+                .Select(i => i.IdPapel)
+                .FirstOrDefault();
         }
 
         public Inscricaopessoaevento GetGestorInEvent(string username, uint idEvento)
         {
-
-            var query = from i in _context.Inscricaopessoaeventos.Include(i => i.IdPessoaNavigation) where i.IdPessoaNavigation.Cpf.Contains(username) && i.IdPapel == 2 && i.IdEvento == idEvento select i;
-            if (query.FirstOrDefault() != null)
-            {
-                return query.FirstOrDefault();
-            }
-            return null;
+            return _context.Inscricaopessoaeventos
+                .Include(i => i.IdPessoaNavigation)
+                .FirstOrDefault(i => i.IdPessoaNavigation.Cpf.Contains(username)
+                                  && i.IdPapel == 2
+                                  && i.IdEvento == idEvento);
         }
 
         public Inscricaopessoaevento GetColaboradorInEvent(string username, uint idEvento)
         {
-            var query = from i in _context.Inscricaopessoaeventos.Include(i => i.IdPessoaNavigation) where i.IdPessoaNavigation.Cpf.Contains(username) && i.IdPapel == 3 && i.IdEvento == idEvento select i;
-            if (query.FirstOrDefault() != null)
+            return _context.Inscricaopessoaeventos
+                .Include(i => i.IdPessoaNavigation)
+                .FirstOrDefault(i => i.IdPessoaNavigation.Cpf.Contains(username)
+                                  && i.IdPapel == 3
+                                  && i.IdEvento == idEvento);
+        }
+
+        // =====================================================================
+        // CRUD DIRETO (uso administrativo)
+        // =====================================================================
+
+        public Inscricaopessoaevento GetById(uint id)
+            => _context.Inscricaopessoaeventos.Find(id);
+
+        public IEnumerable<Inscricaopessoaevento> GetAll()
+            => _context.Inscricaopessoaeventos.ToList();
+
+        public void Update(Inscricaopessoaevento inscricao)
+        {
+            _context.Inscricaopessoaeventos.Update(inscricao);
+            _context.SaveChanges();
+        }
+
+        public void Delete(uint id)
+        {
+            var inscricao = GetById(id);
+            if (inscricao != null)
             {
-                return query.FirstOrDefault();
+                _context.Inscricaopessoaeventos.Remove(inscricao);
+                _context.SaveChanges();
             }
-            return null;
+        }
+
+        public bool PessoaJaInscrita(uint idPessoa, uint idEvento)
+        {
+            return _context.Inscricaopessoaeventos
+                .Any(i => i.IdPessoa == idPessoa && i.IdEvento == idEvento);
+        }
+
+        // =====================================================================
+        // PRIVADOS
+        // =====================================================================
+
+        private async Task RemoverRoleIdentityAsync(string cpf, uint idPapel)
+        {
+            string cpfLimpo = cpf.Replace(".", "").Replace("-", "");
+            var user = await _userManager.FindByNameAsync(cpfLimpo);
+            if (user == null) return;
+
+            string role = idPapel switch
+            {
+                1 => "ADMINISTRADOR",
+                2 => "GESTOR",
+                3 => "COLABORADOR",
+                _ => throw new ArgumentException("Papel inválido para remoção de role.")
+            };
+
+            if (await _userManager.IsInRoleAsync(user, role))
+                await _userManager.RemoveFromRoleAsync(user, role);
         }
     }
 }

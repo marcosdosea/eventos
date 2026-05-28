@@ -113,6 +113,28 @@ namespace Service
         }
 
         /// <summary>
+        /// Edita um evento (implementação simples para interface)
+        /// </summary>
+        /// <param name="evento"></param>
+        public void Edit(Evento evento)
+        {
+            try
+            {
+                var eventoExistente = _context.Eventos.FirstOrDefault(e => e.Id == evento.Id);
+
+                if (eventoExistente == null)
+                    throw new Exception("Evento não encontrado.");
+
+                _context.Entry(eventoExistente).CurrentValues.SetValues(evento);
+                _context.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Erro ao atualizar o evento: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
         /// Busca um evento
         /// </summary>
         /// <param name="id"></param>
