@@ -41,9 +41,9 @@ namespace EventoWeb.Controllers.Tests
 			mockService.Setup(service => service.GetAll()).Returns(GetTestEventos());
 			mockService.Setup(service => service.Get(It.IsAny<uint>())).Returns(GetTargetEvento());
 			mockService.Setup(service => service.Create(It.IsAny<Evento>())).Verifiable();
-            mockService.Setup(service => service.Edit(It.IsAny<Evento>(), It.IsAny<List<uint>>())).Verifiable();
+			mockService.Setup(service => service.Edit(It.IsAny<Evento>(), It.IsAny<List<uint>>())).Verifiable();
 
-            mockServiceEstado.Setup(service => service.GetAll()).Returns(new List<Estadosbrasil>());
+			mockServiceEstado.Setup(service => service.GetAll()).Returns(new List<Estadosbrasil>());
 			mockServiceTipoevento.Setup(service => service.GetAll()).Returns(new List<Tipoevento>());
 			mockServiceAreaInteresse.Setup(service => service.GetAll()).Returns(new List<Areainteresse>());
 
@@ -69,14 +69,13 @@ namespace EventoWeb.Controllers.Tests
 			Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(IEnumerable<EventoModel>));
 		}
 
-
 		[TestMethod()]
 		public void DetailsTest()
 		{
 			var result = controller.Details(1);
-			Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
-			RedirectToActionResult redirectResult = (RedirectToActionResult)result;
-			Assert.AreEqual("Index", redirectResult.ActionName);
+			Assert.IsInstanceOfType(result, typeof(ViewResult));
+			ViewResult viewResult = (ViewResult)result;
+			Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(EventoModel));
 		}
 
 		[TestMethod()]
