@@ -1,6 +1,8 @@
 ﻿using Core;
 using Core.DTO;
+using Core.Service;
 using Microsoft.EntityFrameworkCore;
+
 
 namespace Service
 {
@@ -123,12 +125,12 @@ namespace Service
         public void AssociacaoTipoInscricaoSubevento(uint Idsubevento, uint IdtipoInscricao)
         {
             var subevento = _context.Subeventos.FirstOrDefault(s => s.Id == Idsubevento);
-            if (subevento == null) throw new ArgumentException("Subevento não encontrado.");
+            if (subevento == null) throw new ServiceException("Subevento não encontrado.");
 
             _context.Entry(subevento).Collection(s => s.IdTipoInscricaos).Load();
 
             var tipoInscricao = _context.Tipoinscricaos.FirstOrDefault(ti => ti.Id == IdtipoInscricao);
-            if (tipoInscricao == null) throw new ArgumentException("Tipo de Inscrição não encontrado.");
+            if (tipoInscricao == null) throw new ServiceException("Tipo de Inscrição não encontrado.");
 
             subevento.IdTipoInscricaos ??= new List<Tipoinscricao>();
 

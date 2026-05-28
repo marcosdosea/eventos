@@ -25,7 +25,7 @@ namespace EventoWeb.Controllers
             this._mapper = mapper;
         }
 
-        // GET: /TipoInscricao?idEvento=X
+        // GET: /TipoInscricaocontroller
         [HttpGet]
         public ActionResult Index(uint? idEvento)
         {
