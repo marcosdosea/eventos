@@ -18,7 +18,7 @@ namespace Service
         /// </summary>
         /// <param name="modelocracha"></param>
         /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
+        
         public uint Create(Modelocracha modelocracha)
         {
             _context.Add(modelocracha);
@@ -31,7 +31,7 @@ namespace Service
         /// </summary>
         /// <param name="modelocracha"></param>
         /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
+      
         public void Delete(uint id)
         {
             var modelo = _context.Modelocrachas.Find(id);
@@ -44,7 +44,7 @@ namespace Service
         /// </summary>
         /// <param name="modelocracha"></param>
         /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
+   
         public void Edit(Modelocracha modelocracha)
         {
             _context.Update(modelocracha);
@@ -55,8 +55,7 @@ namespace Service
         /// Busca modelo crachá
         /// </summary>
         /// <param name="modelocracha"></param>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
+
         public Modelocracha Get(uint id)
         {
             return _context.Modelocrachas.Find(id);
@@ -67,7 +66,7 @@ namespace Service
         /// </summary>
         /// <param name="modelocracha"></param>
         /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
+      
         public IEnumerable<Modelocracha> GetAll()
         {
             return _context.Modelocrachas.AsNoTracking();

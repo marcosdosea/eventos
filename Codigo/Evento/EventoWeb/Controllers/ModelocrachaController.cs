@@ -138,7 +138,7 @@ namespace EventoWeb.Controllers
 
         // POST: ModelocrachaController/Create
         [HttpPost]
-        [Route("Create")]
+        [Route("Create/{idEvento}")]
         [ValidateAntiForgeryToken]
         public ActionResult Create(ModelocrachaModel modelocrachaModel)
         {
