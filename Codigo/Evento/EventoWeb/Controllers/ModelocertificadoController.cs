@@ -70,9 +70,69 @@ namespace EventoWeb.Controllers
                 return View(model);
             }
 
-            var entity = _mapper.Map<Modelocertificado>(model);
-            _service.Create(entity);
-            return RedirectToAction(nameof(Index));
+
+            byte[] logotipoSource = null;
+            byte[] assinatura1Source = null;
+            byte[] assinatura2Source = null;
+            const long MaxSize = 65535; 
+
+            if (model.LogotipoSuperior != null && model.LogotipoSuperior.Length > 0)
+            {
+                using (var ms = new MemoryStream())
+                {
+                    model.LogotipoSuperior.CopyTo(ms);
+                    if (ms.Length <= MaxSize) logotipoSource = ms.ToArray();
+                    else
+                    {
+                        ModelState.AddModelError("LogotipoSuperior", "O logotipo superior deve ser menor ou igual a 64KB.");
+                        return View(model);
+                    }
+                }
+            }
+
+            if (model.Assinatura1 != null && model.Assinatura1.Length > 0)
+            {
+                using (var ms = new MemoryStream())
+                {
+                    model.Assinatura1.CopyTo(ms);
+                    if (ms.Length <= MaxSize) assinatura1Source = ms.ToArray();
+                    else
+                    {
+                        ModelState.AddModelError("Assinatura1", "A assinatura 1 deve ser menor ou igual a 64KB.");
+                        return View(model);
+                    }
+                }
+            }
+
+            if (model.Assinatura2 != null && model.Assinatura2.Length > 0)
+            {
+                using (var ms = new MemoryStream())
+                {
+                    model.Assinatura2.CopyTo(ms);
+                    if (ms.Length <= MaxSize) assinatura2Source = ms.ToArray();
+                    else
+                    {
+                        ModelState.AddModelError("Assinatura2", "A assinatura 2 deve ser menor ou igual a 64KB.");
+                        return View(model);
+                    }
+                }
+            }
+
+            var modeloCertificado = _mapper.Map<Modelocertificado>(model);
+            modeloCertificado.LogotipoSuperior = logotipoSource;
+            modeloCertificado.Assinatura1 = assinatura1Source;
+            modeloCertificado.Assinatura2 = assinatura2Source;
+
+            try
+            {
+                _service.Create(modeloCertificado);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, $"Ocorreu um erro ao criar o modelo de certificado: {ex.Message}");
+                return View(model);
+            }
         }
 
         [HttpGet]

@@ -7,7 +7,7 @@
 
 <h1>Criar Novo Modelo de Certificado</h1>
 
-<form asp-action="Create" method="post">
+<form asp-action="Create" method="post" enctype="multipart/form-data">
     <div class="form-group">
         <label asp-for="IdEvento"></label>
         <select asp-for="IdEvento" asp-items="Model.Eventos" class="form-control"></select>
@@ -18,6 +18,54 @@
         <label asp-for="DataEmissao"></label>
         <input asp-for="DataEmissao" type="date" class="form-control" />
         <span asp-validation-for="DataEmissao" class="text-danger"></span>
+    </div>
+
+    <div class=" form-group">
+        <label asp-for="LogotipoSuperior" class="control-label"></label>
+        <input type="file" asp-for="LogotipoSuperior" class="form-control" accept=".png,.jpg,.jpeg,.gif,.tif" id="LogotipoSuperior" />
+        <span asp-validation-for="LogotipoSuperior" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="TextoAntesParticipante" class="control-label"></label>
+        <textarea asp-for="TextoAntesParticipante" class="form-control" id="exampleFormControlTextarea1" rows="2"></textarea>
+        <span asp-validation-for="TextoAntesParticipante" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="TextoAntesEvento" class="control-label"></label>
+        <textarea asp-for="TextoAntesEvento" class="form-control" id="exampleFormControlTextarea1" rows="2"></textarea>
+        <span asp-validation-for="TextoAntesEvento" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="TextoAntesCargaHoraria" class="control-label"></label>
+        <textarea asp-for="TextoAntesCargaHoraria" class="form-control" id="exampleFormControlTextarea1" rows="2"></textarea>
+        <span asp-validation-for="TextoAntesCargaHoraria" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="TextoAssinatura1" class="control-label"></label>
+        <textarea asp-for="TextoAssinatura1" class="form-control" id="exampleFormControlTextarea1" rows="2"></textarea>
+        <span asp-validation-for="TextoAssinatura1" class="text-danger"></span>
+    </div>
+
+    <div class=" form-group">
+        <label asp-for="Assinatura1" class="control-label"></label>
+        <input type="file" asp-for="Assinatura1" class="form-control" accept=".png,.jpg,.jpeg,.gif,.tif" id="Assinatura1" />
+        <span asp-validation-for="Assinatura1" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="TextoAssinatura2" class="control-label"></label>
+        <textarea asp-for="TextoAssinatura2" class="form-control" id="exampleFormControlTextarea1" rows="2"></textarea>
+        <span asp-validation-for="TextoAssinatura2" class="text-danger"></span>
+    </div>
+
+    <div class=" form-group">
+        <label asp-for="Assinatura2" class="control-label"></label>
+        <input type="file" asp-for="Assinatura2" class="form-control" accept=".png,.jpg,.jpeg,.gif,.tif" id="Assinatura2" />
+        <span asp-validation-for="Assinatura2" class="text-danger"></span>
     </div>
 
     <div class="form-group">
