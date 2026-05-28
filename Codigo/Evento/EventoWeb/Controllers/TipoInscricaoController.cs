@@ -1,15 +1,14 @@
 ﻿using AutoMapper;
 using Core;
-using Core.DTO;
 using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Service;
 
 namespace EventoWeb.Controllers
 {
+    [Route("[controller]")]
     [Authorize(Roles = "GESTOR")]
     public class TipoInscricaoController : Controller
     {
@@ -18,7 +17,7 @@ namespace EventoWeb.Controllers
         private readonly ISubeventoService _subeventoService;
         private readonly IMapper _mapper;
 
-        public TipoInscricaoController(ITipoInscricaoService tipoInscricaoService, IMapper mapper,IEventoService eventoService,ISubeventoService subeventoService)
+        public TipoInscricaoController(ITipoInscricaoService tipoInscricaoService, IMapper mapper, IEventoService eventoService, ISubeventoService subeventoService)
         {
             this._tipoInscricaoService = tipoInscricaoService;
             this._eventoService = eventoService;
@@ -26,8 +25,8 @@ namespace EventoWeb.Controllers
             this._mapper = mapper;
         }
 
-
-        // GET: TipoInscricaoController
+        // GET: /TipoInscricaocontroller
+        [HttpGet]
         public ActionResult Index(uint? idEvento)
         {
             if (idEvento.HasValue)
@@ -54,22 +53,23 @@ namespace EventoWeb.Controllers
             }
             else
             {
-                return RedirectToAction("Index", "Evento"); 
+                return RedirectToAction("Index", "Evento");
             }
         }
 
-
-
-
-        // GET: TipoInscricaoController/Details/5
+        // GET: /TipoInscricao/Details/5
+        [HttpGet("Details/{id}")]
         public ActionResult Details(uint id)
         {
             Tipoinscricao tipoinscricao = _tipoInscricaoService.Get(id);
+            if (tipoinscricao == null) return NotFound();
+
             TipoInscricaoModel tipoInscricaoModel = _mapper.Map<TipoInscricaoModel>(tipoinscricao);
             return View(tipoInscricaoModel);
         }
 
-        // GET: TipoInscricaoController/Create
+        // GET: /TipoInscricao/Create?idEvento=X
+        [HttpGet("Create")]
         public ActionResult Create(uint idEvento)
         {
             var eventos = _eventoService.GetAll().OrderBy(e => e.Nome);
@@ -80,10 +80,8 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
 
-
-
-        // POST: TipoInscricaoController/Create
-        [HttpPost]
+        // POST: /TipoInscricao/Create
+        [HttpPost("Create")]
         [ValidateAntiForgeryToken]
         public ActionResult Create(TipoInscricaoModel tipoInscricaoModel)
         {
@@ -100,10 +98,8 @@ namespace EventoWeb.Controllers
             return View(tipoInscricaoModel);
         }
 
-
-
-
-        // GET: TipoInscricaoController/Edit/5
+        // GET: /TipoInscricao/Edit/5
+        [HttpGet("Edit/{id}")]
         public ActionResult Edit(uint id)
         {
             var tipoinscricao = _tipoInscricaoService.Get(id);
@@ -116,12 +112,12 @@ namespace EventoWeb.Controllers
             var eventos = _eventoService.GetAll().OrderBy(e => e.Nome);
             var viewModel = tipoInscricaoModel;
             viewModel.Evento = new SelectList(eventos, "Id", "Nome");
-           
+
             return View(viewModel);
         }
 
-        // POST: TipoInscricaoController/Edit/5
-        [HttpPost]
+        // POST: /TipoInscricao/Edit/5
+        [HttpPost("Edit/{id}")]
         [ValidateAntiForgeryToken]
         public ActionResult Edit(uint id, TipoInscricaoModel tipoInscricaoModel)
         {
@@ -140,12 +136,13 @@ namespace EventoWeb.Controllers
             return View(tipoInscricaoModel);
         }
 
-
-
-        // GET: TipoInscricaoController/Delete/5
+        // GET: /TipoInscricao/Delete/5
+        [HttpGet("Delete/{id}")]
         public ActionResult Delete(uint id)
         {
             Tipoinscricao tipoinscricao = _tipoInscricaoService.Get(id);
+            if (tipoinscricao == null) return NotFound();
+
             TipoInscricaoModel tipoInscricaoModel = _mapper.Map<TipoInscricaoModel>(tipoinscricao);
 
             string nomeEvento = _eventoService.GetNomeById(tipoinscricao.IdEvento);
@@ -154,47 +151,73 @@ namespace EventoWeb.Controllers
             return View(tipoInscricaoModel);
         }
 
-        // POST: TipoInscricaoController/Delete/5
-        [HttpPost]
+        // POST: /TipoInscricao/Delete/5
+        [HttpPost("Delete/{id}")]
         [ValidateAntiForgeryToken]
         public ActionResult Delete(uint id, uint idEvento)
         {
             _tipoInscricaoService.Delete(id);
             return RedirectToAction(nameof(Index), new { idEvento = idEvento });
         }
-        
-        // GET: TipoInscricaoController/CreateTipoInscricaoSubevento
+
+        // GET: /TipoInscricao/CreateTipoInscricaoSubevento?idSubevento=X
+        [HttpGet("CreateTipoInscricaoSubevento")]
         public ActionResult CreateTipoInscricaoSubevento(uint idSubevento)
         {
             var subevento = _subeventoService.Get(idSubevento);
+            if (subevento == null) return NotFound();
+
             var subeventoModel = _mapper.Map<SubeventoModel>(subevento);
             var tiposInscricaos = _tipoInscricaoService.GetByEventoUsadaSubevento(subevento.IdEvento);
             var tiposInscricaosSubevento = _tipoInscricaoService.GetTiposInscricaosSubevento(idSubevento);
+
             ViewData["EventoId"] = subevento.IdEvento;
+
             var view = new TipoInscricaoSubeventoModel()
             {
                 Subevento = subeventoModel,
                 TiposInscricaos = new SelectList(tiposInscricaos, "Id", "Nome"),
                 TiposInscricaosSubevento = tiposInscricaosSubevento
             };
-            return View(view);    
+            return View(view);
         }
-        // POST: TipoInscricaoController/CreateTipoInscricaoSubevento   
-        [HttpPost]
+
+        // POST: /TipoInscricao/CreateTipoInscricaoSubevento
+        [HttpPost("CreateTipoInscricaoSubevento")]
         [ValidateAntiForgeryToken]
         public ActionResult CreateTipoInscricaoSubevento(uint idSubevento, uint IdTipoInscricao)
         {
+            if (IdTipoInscricao == 0)
+            {
+                ModelState.AddModelError("", "Por favor, selecione um Tipo de Inscrição válido.");
+
+                var subevento = _subeventoService.Get(idSubevento);
+                var subeventoModel = _mapper.Map<SubeventoModel>(subevento);
+                var tiposInscricaos = _tipoInscricaoService.GetByEventoUsadaSubevento(subevento.IdEvento);
+                var tiposInscricaosSubevento = _tipoInscricaoService.GetTiposInscricaosSubevento(idSubevento);
+
+                ViewData["EventoId"] = subevento.IdEvento;
+
+                var view = new TipoInscricaoSubeventoModel()
+                {
+                    Subevento = subeventoModel,
+                    TiposInscricaos = new SelectList(tiposInscricaos, "Id", "Nome"),
+                    TiposInscricaosSubevento = tiposInscricaosSubevento
+                };
+                return View(view);
+            }
+
             _tipoInscricaoService.AssociacaoTipoInscricaoSubevento(idSubevento, IdTipoInscricao);
             return RedirectToAction("CreateTipoInscricaoSubevento", new { idSubevento });
         }
-        
-        
-        // POST: TipoInscricaoController/DeleteTipoInscricaoSubevento
-        public IActionResult DeleteTipoInscricaoSubevento(uint idSubevento,uint IdTipoInscricao)
+
+        // POST: /TipoInscricao/DeleteTipoInscricaoSubevento
+        [HttpPost("DeleteTipoInscricaoSubevento")] 
+        [ValidateAntiForgeryToken]
+        public IActionResult DeleteTipoInscricaoSubevento(uint idSubevento, uint IdTipoInscricao)
         {
             _tipoInscricaoService.DeleteTipoInscricaoSubevento(idSubevento, IdTipoInscricao);
-            var subevento = _subeventoService.Get(idSubevento);
-            return RedirectToAction("CreateTipoInscricaoSubevento", new { idSubevento }); 
+            return RedirectToAction("CreateTipoInscricaoSubevento", new { idSubevento });
         }
     }
 }
