@@ -65,10 +65,9 @@ namespace EventoWeb.Controllers
         public IActionResult Create(ModelocertificadoModel model)
         {
             var errors = ModelState.Values.SelectMany(v => v.Errors);   
-            if (!ModelState.IsValid || model.IdEvento == null || model.IdEvento == 0)
+            if (!ModelState.IsValid)
             {
                 model.Eventos = new SelectList(_eventoService.GetAll(), "Id", "Nome", model.IdEvento);
-                if (model.IdEvento == null || model.IdEvento == 0) ModelState.AddModelError("IdEvento", "Selecione o Evento");
                 return View(model);
             }
 
