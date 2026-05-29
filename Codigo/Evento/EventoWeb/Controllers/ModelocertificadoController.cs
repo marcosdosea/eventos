@@ -64,9 +64,11 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Create(ModelocertificadoModel model)
         {
-            if (!ModelState.IsValid)
+            var errors = ModelState.Values.SelectMany(v => v.Errors);   
+            if (!ModelState.IsValid || model.IdEvento == null || model.IdEvento == 0)
             {
                 model.Eventos = new SelectList(_eventoService.GetAll(), "Id", "Nome", model.IdEvento);
+                if (model.IdEvento == null || model.IdEvento == 0) ModelState.AddModelError("IdEvento", "Selecione o Evento");
                 return View(model);
             }
 
@@ -117,7 +119,7 @@ namespace EventoWeb.Controllers
                     }
                 }
             }
-
+            model.Eventos = new SelectList(_eventoService.GetAll(), "Id", "Nome", model.IdEvento);
             var modeloCertificado = _mapper.Map<Modelocertificado>(model);
             modeloCertificado.LogotipoSuperior = logotipoSource;
             modeloCertificado.Assinatura1 = assinatura1Source;
@@ -126,7 +128,7 @@ namespace EventoWeb.Controllers
             try
             {
                 _service.Create(modeloCertificado);
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), new { idEvento = model.IdEvento });
             }
             catch (Exception ex)
             {
@@ -151,9 +153,10 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Edit(ModelocertificadoModel model)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid || model.IdEvento == null || model.IdEvento == 0)
             {
                 model.Eventos = new SelectList(_eventoService.GetAll(), "Id", "Nome", model.IdEvento);
+                if (model.IdEvento == null || model.IdEvento == 0) ModelState.AddModelError("IdEvento", "Selecione o Evento");
                 return View(model);
             }
 

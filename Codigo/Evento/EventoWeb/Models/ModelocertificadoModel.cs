@@ -28,14 +28,14 @@ namespace EventoWeb.Models
 
         [Required(ErrorMessage = "Texto da Assinatura 1 é obrigatório")]
         [Display(Name = "Texto da Assinatura 1")]
-        public string TextoAssinatura1 { get; set; } = null!;
+        public string Assinatura1Texto { get; set; } = null!;
 
         [Required(ErrorMessage = "Assinatura 1 é obrigatória")]
         [Display(Name = "Assinatura 1")]
         public IFormFile Assinatura1 { get; set; } = null!;
 
         [Display(Name = "Texto da Assinatura 2")]
-        public string? TextoAssinatura2 { get; set; } 
+        public string? Assinatura2Texto { get; set; } 
 
         [Display(Name = "Assinatura 2")]
         public IFormFile? Assinatura2 { get; set; }
@@ -43,8 +43,7 @@ namespace EventoWeb.Models
         [Required(ErrorMessage = "Selecione o Evento")]
         [Display(Name = "Evento")]
         public uint IdEvento { get; set; }
-
-        
+    
 
         [Required(ErrorMessage = "Informe a Data de Emissão")]
         [Display(Name = "Data de Emissão")]
@@ -52,13 +51,13 @@ namespace EventoWeb.Models
         public DateTime DataEmissao { get; set; } = DateTime.Now;
 
         [Display(Name = "Código do Certificado")]
-        public string Codigo { get; set; } = string.Empty;
+        public string Codigo { get; set; } = null!;
 
         // Para exibição
         [Display(Name = "Evento")]
-        public string NomeEvento { get; set; } = string.Empty;
+        public string? NomeEvento { get; set; }
 
         // Listas para dropdown
-        public SelectList Eventos { get; set; } = new SelectList(Array.Empty<object>(), "Id", "Nome");
+        public SelectList Eventos { get; set; } = new SelectList(items: Array.Empty<object>(), "Id", "Nome");
     }
 }

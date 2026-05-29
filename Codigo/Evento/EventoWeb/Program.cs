@@ -68,7 +68,8 @@ namespace EventoWeb
                 options => options.UseMySQL(builder.Configuration.GetConnectionString("ItatechUsersDatabase")));
 
             builder.Services.AddDefaultIdentity<UsuarioIdentity>(
-                options => {
+                options =>
+                {
                     // SignIn settings
                     options.SignIn.RequireConfirmedAccount = true;
                     options.SignIn.RequireConfirmedEmail = true;
