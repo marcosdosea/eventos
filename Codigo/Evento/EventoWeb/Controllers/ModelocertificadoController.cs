@@ -64,7 +64,6 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Create(ModelocertificadoModel model)
         {
-            var errors = ModelState.Values.SelectMany(v => v.Errors);   
             if (!ModelState.IsValid)
             {
                 model.Eventos = new SelectList(_eventoService.GetAll(), "Id", "Nome", model.IdEvento);
