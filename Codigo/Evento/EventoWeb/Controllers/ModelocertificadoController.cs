@@ -71,9 +71,9 @@ namespace EventoWeb.Controllers
             }
 
 
-            byte[] logotipoSource = null;
-            byte[] assinatura1Source = null;
-            byte[] assinatura2Source = null;
+            byte[]? logotipoSource = null;
+            byte[]? assinatura1Source = null;
+            byte[]? assinatura2Source = null;
             const long MaxSize = 65535; 
 
             if (model.LogotipoSuperior != null && model.LogotipoSuperior.Length > 0)
