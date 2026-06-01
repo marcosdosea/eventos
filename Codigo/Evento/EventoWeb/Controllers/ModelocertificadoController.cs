@@ -85,6 +85,7 @@ namespace EventoWeb.Controllers
                     else
                     {
                         ModelState.AddModelError("LogotipoSuperior", "O logotipo superior deve ser menor ou igual a 64KB.");
+                        model.Eventos = new SelectList(_eventoService.GetAll(), "Id", "Nome", model.IdEvento);
                         return View(model);
                     }
                 }
