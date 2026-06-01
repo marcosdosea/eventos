@@ -152,10 +152,10 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Edit(ModelocertificadoModel model)
         {
-            if (!ModelState.IsValid || model.IdEvento == null || model.IdEvento == 0)
+            if (!ModelState.IsValid || model.IdEvento == 0)
             {
                 model.Eventos = new SelectList(_eventoService.GetAll(), "Id", "Nome", model.IdEvento);
-                if (model.IdEvento == null || model.IdEvento == 0) ModelState.AddModelError("IdEvento", "Selecione o Evento");
+                if (model.IdEvento == 0) ModelState.AddModelError("IdEvento", "Selecione o Evento");
                 return View(model);
             }
 
