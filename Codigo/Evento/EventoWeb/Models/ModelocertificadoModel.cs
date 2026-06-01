@@ -43,15 +43,6 @@ namespace EventoWeb.Models
         [Required(ErrorMessage = "Selecione o Evento")]
         [Display(Name = "Evento")]
         public uint IdEvento { get; set; }
-    
-
-        [Required(ErrorMessage = "Informe a Data de Emissão")]
-        [Display(Name = "Data de Emissão")]
-        [DataType(DataType.Date)]
-        public DateTime DataEmissao { get; set; } = DateTime.Now;
-
-        [Display(Name = "Código do Certificado")]
-        public string Codigo { get; set; } = null!;
 
         // Para exibição
         [Display(Name = "Evento")]

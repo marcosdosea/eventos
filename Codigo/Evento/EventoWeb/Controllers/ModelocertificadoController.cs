@@ -53,7 +53,6 @@ namespace EventoWeb.Controllers
         {
             var model = new ModelocertificadoModel
             {
-                DataEmissao = System.DateTime.Now,
                 Eventos = new SelectList(_eventoService.GetAll(), "Id", "Nome")
             };
             return View(model);
@@ -64,7 +63,6 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Create(ModelocertificadoModel model)
         {
-            var errors = ModelState.Values.SelectMany(v => v.Errors);   
             if (!ModelState.IsValid)
             {
                 model.Eventos = new SelectList(_eventoService.GetAll(), "Id", "Nome", model.IdEvento);
@@ -72,9 +70,9 @@ namespace EventoWeb.Controllers
             }
 
 
-            byte[] logotipoSource = null;
-            byte[] assinatura1Source = null;
-            byte[] assinatura2Source = null;
+            byte[]? logotipoSource = null;
+            byte[]? assinatura1Source = null;
+            byte[]? assinatura2Source = null;
             const long MaxSize = 65535; 
 
             if (model.LogotipoSuperior != null && model.LogotipoSuperior.Length > 0)
@@ -86,6 +84,7 @@ namespace EventoWeb.Controllers
                     else
                     {
                         ModelState.AddModelError("LogotipoSuperior", "O logotipo superior deve ser menor ou igual a 64KB.");
+                        model.Eventos = new SelectList(_eventoService.GetAll(), "Id", "Nome", model.IdEvento);
                         return View(model);
                     }
                 }
@@ -131,7 +130,7 @@ namespace EventoWeb.Controllers
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, $"Ocorreu um erro ao criar o modelo de certificado.");
+                ModelState.AddModelError(string.Empty, "Ocorreu um erro ao criar o modelo de certificado.");
                 return View(model);
             }
         }
@@ -152,10 +151,10 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Edit(ModelocertificadoModel model)
         {
-            if (!ModelState.IsValid || model.IdEvento == null || model.IdEvento == 0)
+            if (!ModelState.IsValid || model.IdEvento == 0)
             {
                 model.Eventos = new SelectList(_eventoService.GetAll(), "Id", "Nome", model.IdEvento);
-                if (model.IdEvento == null || model.IdEvento == 0) ModelState.AddModelError("IdEvento", "Selecione o Evento");
+                if (model.IdEvento == 0) ModelState.AddModelError("IdEvento", "Selecione o Evento");
                 return View(model);
             }
 
