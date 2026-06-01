@@ -131,7 +131,7 @@ namespace EventoWeb.Controllers
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(string.Empty, $"Ocorreu um erro ao criar o modelo de certificado: {ex.Message}");
+                ModelState.AddModelError(string.Empty, "Ocorreu um erro ao criar o modelo de certificado.");
                 return View(model);
             }
         }
