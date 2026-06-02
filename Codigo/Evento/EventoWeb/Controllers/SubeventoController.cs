@@ -1,16 +1,18 @@
 ﻿using AutoMapper;
-using EventoWeb.Models;
 using Core;
 using Core.Service;
+using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Security.Claims;
 
 
 namespace EventoWeb.Controllers
 {
     [Route("[controller]")]
-    [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
+    [Authorize(Roles = "GESTOR")]
     public class SubeventoController : Controller
     {
         private readonly ISubeventoService _subeventoService;
@@ -18,7 +20,7 @@ namespace EventoWeb.Controllers
         private readonly ITipoeventoService _tipoEventoService;
         private readonly ITipoInscricaoService _tipoInscricaoService;
         private readonly IMapper _mapper;
-        public SubeventoController(ISubeventoService subeventoService, IMapper mapper, IEventoService eventoService, ITipoeventoService tipoeventoService,ITipoInscricaoService tipoInscricaoService)
+        public SubeventoController(ISubeventoService subeventoService, IMapper mapper, IEventoService eventoService, ITipoeventoService tipoeventoService, ITipoInscricaoService tipoInscricaoService)
         {
             _subeventoService = subeventoService;
             _eventoService = eventoService;
@@ -26,27 +28,79 @@ namespace EventoWeb.Controllers
             _mapper = mapper;
             _tipoInscricaoService = tipoInscricaoService;
         }
+
         // GET: SubeventoController
         [HttpGet]
         [Route("")]
         [Route("Index")]
-        public ActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var listaSubeventos = _subeventoService.GetAll().ToList();
-            var listaSubeventosModel = listaSubeventos.Select(e => new SubeventoModel
-            {
-                Id = e.Id,
-                Nome = e.Nome,
-                IdEvento = e.IdEvento,
-                NomeEvento = _eventoService.GetNomeById(e.IdEvento),
-                DataInicio = e.DataInicio,
-                Status = e.Status,
-                IdTipoEvento = e.IdTipoEvento,
-                NomeTipoEvento = _tipoEventoService.GetNomeById(e.IdTipoEvento)
+            string userCpf = null;
+            uint idPapel = 0;
 
+            if (User?.Identity?.IsAuthenticated == true)
+            {
+                userCpf = User.FindFirstValue(ClaimTypes.Name);
+
+                if (User.IsInRole("GESTOR"))
+                {
+                    idPapel = 2;
+                }
+                else if (User.IsInRole("COLABORADOR"))
+                {
+                    idPapel = 3;
+                }
+            }
+
+            List<Subevento> listaSubeventos = new List<Subevento>();
+
+            var todosSubeventos = _subeventoService.GetAll();
+            if (todosSubeventos != null)
+            {
+                var eventosDoUsuario = _eventoService.GetEventByCpf(userCpf, idPapel);
+
+                var idsEventosDoUsuario = eventosDoUsuario != null
+                    ? eventosDoUsuario.Select(ev => ev.Id).ToList()
+                    : new List<uint>();
+
+                listaSubeventos = todosSubeventos
+                    .Where(s => idsEventosDoUsuario.Contains(s.IdEvento))
+                    .ToList();
+
+            }
+
+            var todosEventos = _eventoService.GetAll();
+            var dicionarioEventos = todosEventos != null
+                ? todosEventos.ToDictionary(e => e.Id, e => e.Nome)
+                : new Dictionary<uint, string>();
+
+            var todosTipos = _tipoEventoService.GetAll();
+            var dicionarioTipos = todosTipos != null
+                ? todosTipos.ToDictionary(t => t.Id, t => t.Nome)
+                : new Dictionary<uint, string>();
+
+            var listaSubeventosModel = listaSubeventos.Select(e =>
+            {
+                string nomeEvento = dicionarioEventos.TryGetValue(e.IdEvento, out var nomeE) ? nomeE : "Evento não encontrado";
+
+                string nomeTipoEvento = dicionarioTipos.TryGetValue(e.IdTipoEvento, out var nomeT) ? nomeT : "Tipo não encontrado";
+
+                return new SubeventoModel
+                {
+                    Id = e.Id,
+                    Nome = e.Nome,
+                    IdEvento = e.IdEvento,
+                    NomeEvento = nomeEvento,
+                    DataInicio = e.DataInicio,
+                    Status = e.Status,
+                    IdTipoEvento = e.IdTipoEvento,
+                    NomeTipoEvento = nomeTipoEvento
+                };
             }).ToList();
+
             return View(listaSubeventosModel);
         }
+
         // GET: SubeventoController/Details/5
         [HttpGet]
         [Route("Details/{id}")]
@@ -56,6 +110,7 @@ namespace EventoWeb.Controllers
             SubeventoModel subeventoModel = _mapper.Map<SubeventoModel>(subevento);
             return View(subeventoModel);
         }
+
         // GET: SubeventoController/CreateOrEdit/{idEvento}/{idSubevento?}
         [HttpGet]
         [Route("CreateOrEdit/{idEvento}/{idSubevento?}")]
@@ -128,7 +183,7 @@ namespace EventoWeb.Controllers
         [Route("Delete/{id}")]
         public ActionResult Delete(uint id)
         {
-            
+
             var subevento = _subeventoService.Get(id);
             var subeventoModel = _mapper.Map<SubeventoModel>(subevento);
 
