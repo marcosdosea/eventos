@@ -68,11 +68,11 @@
                         }
                         @sexoDescricao
                     <td>
-                            @Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" })
+                        @Html.ActionLink("Editar", "Edit", new { id = item.Id, returnUrl = Url.Action("Index", "Pessoa") }, new { @class = "btn btn-sm btn-link" })
                         &nbsp;&nbsp;
-                            @Html.ActionLink("Detalhes", "Details", new { id = item.Id }, new { @style = "text-decoration:none;" })
+                        @Html.ActionLink("Detalhes", "Details", new { id = item.Id, returnUrl = Url.Action("Index", "Pessoa") }, new { @class = "btn btn-sm btn-link" })
                         &nbsp;&nbsp;
-                            @Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @style = "text-decoration:none;", @class = "danger-normal" })
+                        @Html.ActionLink("Excluir", "Delete", new { id = item.Id, returnUrl = Url.Action("Index", "Pessoa") }, new { @class = "btn btn-sm btn-link" })
                         &nbsp;&nbsp;
                     </td>
                 </tr>
