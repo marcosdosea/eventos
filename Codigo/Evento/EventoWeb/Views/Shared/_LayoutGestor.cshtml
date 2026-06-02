@@ -38,7 +38,7 @@
                                     <a class="nav-link opcao" asp-controller="Participante" asp-action="Index">Participantes</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link opcao" asp-controller="Evento" asp-action="CreateColaborador">Colaboradores</a>
+                                    <a class="nav-link opcao" asp-controller="Evento" asp-action="CreateColaborador" asp-route-idEvento="@Model.Evento.Id">Colaboradores</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEventoListar">Meus Eventos</a>
