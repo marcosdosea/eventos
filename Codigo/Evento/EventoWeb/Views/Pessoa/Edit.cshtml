@@ -125,10 +125,11 @@ ViewData["Title"] = "Edit";
             <div class="d-flex justify-content-end">
             <div class="d-flex flex-row">
                 <div class="form-group" style="margin-right: 10px;">
+                    <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
                     <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
                 </div>
                 <div class="form-group">
-                    <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
+                        <a href="javascript:history.back()" class="btn btn-outline-danger">Cancelar</a>
                 </div>
             </div>
             </div>
