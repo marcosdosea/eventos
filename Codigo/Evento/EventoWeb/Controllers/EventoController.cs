@@ -540,7 +540,8 @@ namespace EventoWeb.Controllers
 		[Route("GerenciarEvento")]
 		public IActionResult GerenciarEvento([FromQuery] uint idEvento)
 		{
-			Evento evento = _eventoService.Get(idEvento);
+
+            Evento evento = _eventoService.Get(idEvento);
 
             // Verifica se o evento existe
             if (evento == null)
