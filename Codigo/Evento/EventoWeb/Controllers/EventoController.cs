@@ -287,7 +287,7 @@ namespace EventoWeb.Controllers
 		}
 		
 		
-		[Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
+		[Authorize(Roles = "GESTOR")]
         // GET: EventoController/CreateColaborador
         [HttpGet]
         [Route("CreateColaborador")]
@@ -295,7 +295,7 @@ namespace EventoWeb.Controllers
 		{
 			
 			var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
-			if(User.IsInRole("ADMINISTRADOR") || gestor != null){
+			if(gestor != null){
 			var gestorModel = new GestaoPapelModel
 			{
 				Evento = _eventoService.GetEventoSimpleDto(idEvento),
