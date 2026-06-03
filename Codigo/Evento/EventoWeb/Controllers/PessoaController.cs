@@ -239,6 +239,7 @@ namespace EventoWeb.Controllers
 
         // GET: PessoaController/Delete/5
         [HttpGet]
+        [Authorize(Roles = "ADMINISTRADOR, GESTOR, COLABORADOR")]
         [Route("Delete/{id}")]
         public ActionResult Delete(uint id, string? returnUrl)
         {
@@ -255,12 +256,19 @@ namespace EventoWeb.Controllers
 
         // POST: PessoaController/Delete/5
         [HttpPost, ActionName("Delete")]
+        [Authorize(Roles = "ADMINISTRADOR, GESTOR, COLABORADOR")]
         [Route("Delete/{id}")]
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(uint id, string? returnUrl)
         {
+            var pessoa = _pessoaService.Get(id);
+            if (pessoa == null)
+            {
+                return NotFound();
+            }
+
             _pessoaService.Delete(id);
-            if (!string.IsNullOrEmpty(returnUrl))
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
                 return Redirect(returnUrl);
             }
