@@ -49,6 +49,16 @@ namespace EventoWeb.Controllers
             return View(pessoaModel);
         }
 
+        public async Task<ActionResult> GestoresSistema()
+        {
+            var gestores = await _pessoaService.GetAllGestorAsync();
+            var viewModel = new GestorModel
+            {
+                Gestores = _mapper.Map<List<PessoaModel>>(gestores.OrderBy(p => p.Nome))
+            };
+            return View(viewModel);
+        }
+
         [Authorize(Roles = "ADMINISTRADOR")]
         [HttpGet]
         [Route("DefinirAdministrador")]
