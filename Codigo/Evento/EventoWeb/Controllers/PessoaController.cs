@@ -239,7 +239,7 @@ namespace EventoWeb.Controllers
 
         // GET: PessoaController/Delete/5
         [HttpGet]
-        [Authorize(Roles = "ADMINISTRADOR, GESTOR, COLABORADOR")]
+        [Authorize]
         [Route("Delete/{id}")]
         public ActionResult Delete(uint id, string? returnUrl)
         {
@@ -249,6 +249,11 @@ namespace EventoWeb.Controllers
                 return NotFound();
             }
 
+            if (pessoa.Cpf != User.Identity!.Name && !User.IsInRole("ADMINISTRADOR"))
+            {
+                return Forbid();
+            }
+
             PessoaModel pessoaModel = _mapper.Map<PessoaModel>(pessoa);
             ViewBag.ReturnUrl = returnUrl;
             return View(pessoaModel);
@@ -256,7 +261,7 @@ namespace EventoWeb.Controllers
 
         // POST: PessoaController/Delete/5
         [HttpPost, ActionName("Delete")]
-        [Authorize(Roles = "ADMINISTRADOR, GESTOR, COLABORADOR")]
+        [Authorize]
         [Route("Delete/{id}")]
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(uint id, string? returnUrl)
@@ -266,7 +271,10 @@ namespace EventoWeb.Controllers
             {
                 return NotFound();
             }
-
+            if (pessoa.Cpf != User.Identity!.Name && !User.IsInRole("ADMINISTRADOR"))
+            {
+                return Forbid();
+            }
             _pessoaService.Delete(id);
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
