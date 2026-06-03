@@ -14,4 +14,5 @@ public interface IPessoaService
     Task CreatePessoaPapelAsync(Pessoa pessoa, uint idEvento, int idPapel);
     Task<UsuarioIdentity> CreateAsync(Pessoa pessoa);
     Task<List<Pessoa>> GetAllAdmAsync();
+    Task<List<Pessoa>> GetAllGestorAsync();
 }

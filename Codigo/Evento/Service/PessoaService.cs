@@ -122,6 +122,35 @@ public class PessoaService : IPessoaService
     }
 
     /// <summary>
+    /// Obtém todas as pessoas que possuem o papel de "GESTOR" no sistema Identity.
+    /// </summary>
+    /// <returns>listaGestores</returns>
+    public async Task<List<Pessoa>> GetAllGestorAsync()
+    {
+        var listaPessoa = GetAll();
+        var listaGestores = new List<Pessoa>();
+
+        if (listaPessoa == null)
+            return listaGestores;
+
+        foreach (var pessoa in listaPessoa)
+        {
+            if (pessoa == null || string.IsNullOrWhiteSpace(pessoa.Cpf))
+                continue;
+
+            var userGestor = await _userManager.FindByNameAsync(pessoa.Cpf);
+            if (userGestor == null)
+                continue;
+
+            var isGestor = await _userManager.IsInRoleAsync(userGestor, "GESTOR");
+            if (isGestor)
+                listaGestores.Add(pessoa);
+        }
+
+        return listaGestores;
+    }
+
+    /// <summary>
     /// Obtém uma pessoa específica por cpf
     /// </summary>
     /// <param name="cpf">dados de pessoa</param>
