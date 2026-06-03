@@ -16,12 +16,19 @@ namespace EventoWeb.Controllers
         private readonly IEstadosbrasilService _estadosbrasilService;
         private readonly IMapper _mapper;
 
-        public PessoaController(IPessoaService pessoaService, IEstadosbrasilService estadosbrasilService, IMapper mapper)
+        public PessoaController(
+            IPessoaService pessoaService,
+            IEstadosbrasilService estadosbrasilService,
+            IMapper mapper)
         {
             _pessoaService = pessoaService;
             _estadosbrasilService = estadosbrasilService;
             _mapper = mapper;
         }
+
+        // =====================================================================
+        // INDEX (apenas ADM vê todos)
+        // =====================================================================
 
         [Authorize(Roles = "ADMINISTRADOR")]
         [HttpGet]
@@ -29,10 +36,14 @@ namespace EventoWeb.Controllers
         [Route("Index")]
         public ActionResult Index()
         {
-            var listaPessoa = _pessoaService.GetAll();
-            var listaPessoaModel = _mapper.Map<List<PessoaModel>>(listaPessoa);
-            return View(listaPessoaModel);
+            var lista = _pessoaService.GetAll();
+            var model = _mapper.Map<List<PessoaModel>>(lista);
+            return View(model);
         }
+
+        // =====================================================================
+        // DETAILS
+        // =====================================================================
 
         [Authorize(Roles = "ADMINISTRADOR")]
         [HttpGet]
@@ -40,75 +51,15 @@ namespace EventoWeb.Controllers
         public ActionResult Details(uint id)
         {
             var pessoa = _pessoaService.Get(id);
-            if (pessoa == null)
-            {
-                return RedirectToAction("Index", "Home");
-            }
+            if (pessoa == null) return RedirectToAction("Index", "Home");
 
-            PessoaModel pessoaModel = _mapper.Map<PessoaModel>(pessoa);
-            return View(pessoaModel);
+            return View(_mapper.Map<PessoaModel>(pessoa));
         }
 
-        [Authorize(Roles = "ADMINISTRADOR")]
-        [HttpGet]
-        [Route("DefinirAdministrador")]
-        //GET: PessoaController/DefinirAdministrador
-        public async Task<ActionResult> DefinirAdministrador()
-        {
-            var admins = await _pessoaService.GetAllAdmAsync();
-            var viewModel = new GestaoAdministradorModel
-            {
-                Administradores = _mapper.Map<List<PessoaModel>>(admins.OrderBy(p => p.Nome))
-
-
-            };
-
-            return View(viewModel);
-        }
-
-        [Authorize(Roles = "ADMINISTRADOR")]
-        [HttpPost]
-        [Route("DefinirAdministrador")]
-        [ValidateAntiForgeryToken]
-        //POST: PessoaController/DefinirAdministrador
-        public async Task<ActionResult> DefinirAdministrador(GestaoAdministradorModel pessoaModel)
-        {
-            if (ModelState.IsValid)
-            {
-
-
-                var pessoa = new Pessoa
-                {
-                    Cpf = pessoaModel.Cpf,
-                    Nome = pessoaModel.Nome,
-                    NomeCracha = pessoaModel.Nome,
-                    Telefone1 = pessoaModel.Telefone1,
-                    Email = pessoaModel.Email
-                };
-
-                if (pessoa == null)
-                {
-
-                    return View(pessoaModel);
-                }
-                ModelState.AddModelError("", "O usuário já existe.");
-                try
-                {
-                    await _pessoaService.CreatePessoaPapelAsync(pessoa, 0, 1);
-                    TempData["Success"] = "Administrador definido com sucesso.";
-                    return RedirectToAction(nameof(DefinirAdministrador));
-                }
-                catch (Exception ex)
-                {
-                    ModelState.AddModelError("", "Erro ao definir administrador: " + ex.Message);
-                    return View(pessoaModel);
-                }
-            }
-
-
-            return View(pessoaModel);
-
-        }
+        // =====================================================================
+        // CREATE (auto-cadastro — sem autenticação)
+        // Cria a Pessoa + usuário Identity com role USUARIO
+        // =====================================================================
 
         [AllowAnonymous]
         [HttpGet]
@@ -116,8 +67,10 @@ namespace EventoWeb.Controllers
         public ActionResult Create()
         {
             var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
-            var viewModel = new PessoaModel();
-            viewModel.Estados = new SelectList(estados, "Estado", "Nome");
+            var viewModel = new PessoaModel
+            {
+                Estados = new SelectList(estados, "Estado", "Nome")
+            };
             return View(viewModel);
         }
 
@@ -125,36 +78,42 @@ namespace EventoWeb.Controllers
         [HttpPost]
         [Route("Create")]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(PessoaModel viewModel)
+        public async Task<ActionResult> Create(PessoaModel viewModel)
         {
             if (ModelState.IsValid)
             {
-                byte[]? fotoSource = null;
-                if (viewModel.Foto != null && viewModel.Foto.Length > 0)
+                byte[]? fotoSource = ProcessarFoto(viewModel, out string? fotoErro);
+                if (fotoErro != null)
                 {
-                    using (var memoryStream = new MemoryStream())
-                    {
-                        viewModel.Foto.CopyTo(memoryStream);
-
-                        if (memoryStream.Length <= 65535)
-                        {
-                            fotoSource = memoryStream.ToArray();
-                        }
-                        else
-                        {
-                            ModelState.AddModelError("Foto", "O arquivo é muito grande. Deve ser menor que 64 KB.");
-                            return View(viewModel);
-                        }
-                    }
+                    ModelState.AddModelError("Foto", fotoErro);
+                    viewModel.Estados = new SelectList(
+                        _estadosbrasilService.GetAll().OrderBy(e => e.Nome), "Estado", "Nome");
+                    return View(viewModel);
                 }
+
                 var pessoa = _mapper.Map<Pessoa>(viewModel);
                 pessoa.Foto = fotoSource;
-                _pessoaService.Create(pessoa);
-                return RedirectToAction(nameof(Index));
+
+                try
+                {
+                    // Cria Pessoa + Identity + role USUARIO (papel 4)
+                    await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 4);
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", ex.Message);
+                }
             }
 
+            viewModel.Estados = new SelectList(
+                _estadosbrasilService.GetAll().OrderBy(e => e.Nome), "Estado", "Nome");
             return View(viewModel);
         }
+
+        // =====================================================================
+        // EDIT
+        // =====================================================================
 
         [Authorize]
         [HttpGet]
@@ -162,20 +121,14 @@ namespace EventoWeb.Controllers
         public ActionResult Edit(uint id)
         {
             var pessoa = _pessoaService.Get(id);
-            if (pessoa == null)
-            {
-                return NotFound();
-            }
+            if (pessoa == null) return NotFound();
 
             if (pessoa.Cpf != User.Identity!.Name && !User.IsInRole("ADMINISTRADOR"))
-            {
                 return Forbid();
-            }
 
             var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
             var viewModel = _mapper.Map<PessoaModel>(pessoa);
             viewModel.Estados = new SelectList(estados, "Estado", "Nome");
-
             return View(viewModel);
         }
 
@@ -183,71 +136,53 @@ namespace EventoWeb.Controllers
         [HttpPost]
         [Route("Edit/{id}")]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(uint id, PessoaModel viewModel)
+        public async Task<ActionResult> Edit(uint id, PessoaModel viewModel)
         {
             var pessoa = _pessoaService.Get(id);
-            if (pessoa == null)
-            {
-                return NotFound();
-            }
+            if (pessoa == null) return NotFound();
 
             if (pessoa.Cpf != User.Identity!.Name && !User.IsInRole("ADMINISTRADOR"))
-            {
                 return Forbid();
-            }
 
-            if (id != viewModel.Id)
-            {
-                return BadRequest();
-            }
+            if (id != viewModel.Id) return BadRequest();
 
             if (ModelState.IsValid)
             {
-                byte[]? fotoSource = null;
-                if (viewModel.Foto != null && viewModel.Foto.Length > 0)
+                byte[]? fotoSource = ProcessarFoto(viewModel, out string? fotoErro);
+                if (fotoErro != null)
                 {
-                    using (var memoryStream = new MemoryStream())
-                    {
-                        viewModel.Foto.CopyTo(memoryStream);
-
-                        if (memoryStream.Length <= 65535)
-                        {
-                            fotoSource = memoryStream.ToArray();
-                        }
-                        else
-                        {
-                            ModelState.AddModelError("Foto", "O arquivo é muito grande. Deve ser menor que 64 KB.");
-                            return View(viewModel);
-                        }
-                    }
+                    ModelState.AddModelError("Foto", fotoErro);
+                    viewModel.Estados = new SelectList(
+                        _estadosbrasilService.GetAll().OrderBy(e => e.Nome), "Estado", "Nome");
+                    return View(viewModel);
                 }
-                    _mapper.Map(viewModel, pessoa);
-                    pessoa.Foto = fotoSource;
 
-                _pessoaService.Edit(pessoa);
-
+                var pessoaEditada = _mapper.Map<Pessoa>(viewModel);
+                pessoaEditada.Foto = fotoSource;
+                await _pessoaService.Edit(pessoaEditada);
                 return RedirectToAction(nameof(Index));
             }
 
+            viewModel.Estados = new SelectList(
+                _estadosbrasilService.GetAll().OrderBy(e => e.Nome), "Estado", "Nome");
             return View(viewModel);
         }
 
-        // GET: PessoaController/Delete/5
+        // =====================================================================
+        // DELETE
+        // =====================================================================
+
+        [Authorize(Roles = "ADMINISTRADOR")]
         [HttpGet]
         [Route("Delete/{id}")]
         public ActionResult Delete(uint id)
         {
             var pessoa = _pessoaService.Get(id);
-            if (pessoa == null)
-            {
-                return NotFound();
-            }
-
-            PessoaModel pessoaModel = _mapper.Map<PessoaModel>(pessoa);
-            return View(pessoaModel);
+            if (pessoa == null) return NotFound();
+            return View(_mapper.Map<PessoaModel>(pessoa));
         }
 
-        // POST: PessoaController/Delete/5
+        [Authorize(Roles = "ADMINISTRADOR")]
         [HttpPost, ActionName("Delete")]
         [Route("Delete/{id}")]
         [ValidateAntiForgeryToken]
@@ -255,6 +190,77 @@ namespace EventoWeb.Controllers
         {
             _pessoaService.Delete(id);
             return RedirectToAction(nameof(Index));
+        }
+
+        // =====================================================================
+        // DEFINIR ADMINISTRADOR
+        // =====================================================================
+
+        [Authorize(Roles = "ADMINISTRADOR")]
+        [HttpGet]
+        [Route("DefinirAdministrador")]
+        public async Task<ActionResult> DefinirAdministrador()
+        {
+            var admins = await _pessoaService.GetAllAdmAsync();
+            var viewModel = new GestaoAdministradorModel
+            {
+                Administradores = _mapper.Map<List<PessoaModel>>(admins.OrderBy(p => p.Nome).ToList())
+            };
+            return View(viewModel);
+        }
+
+        [Authorize(Roles = "ADMINISTRADOR")]
+        [HttpPost]
+        [Route("DefinirAdministrador")]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> DefinirAdministrador(GestaoAdministradorModel viewModel)
+        {
+            if (ModelState.IsValid)
+            {
+                var pessoa = new Pessoa
+                {
+                    Cpf = viewModel.Cpf,
+                    Nome = viewModel.Nome,
+                    NomeCracha = viewModel.Nome,
+                    Telefone1 = viewModel.Telefone1,
+                    Email = viewModel.Email
+                };
+
+                try
+                {
+                    // Cria Pessoa + Identity + role ADMINISTRADOR (papel 1)
+                    await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 1);
+                    TempData["Success"] = "Administrador definido com sucesso.";
+                    return RedirectToAction(nameof(DefinirAdministrador));
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "Erro ao definir administrador: " + ex.Message);
+                }
+            }
+
+            var adminsAtuais = await _pessoaService.GetAllAdmAsync();
+            viewModel.Administradores = _mapper.Map<List<PessoaModel>>(adminsAtuais.OrderBy(p => p.Nome).ToList());
+            return View(viewModel);
+        }
+
+        // =====================================================================
+        // HELPER PRIVADO
+        // =====================================================================
+
+        private static byte[]? ProcessarFoto(PessoaModel viewModel, out string? erro)
+        {
+            erro = null;
+            if (viewModel.Foto == null || viewModel.Foto.Length == 0) return null;
+
+            using var ms = new MemoryStream();
+            viewModel.Foto.CopyTo(ms);
+            if (ms.Length > 65535)
+            {
+                erro = "O arquivo é muito grande. Deve ser menor que 64 KB.";
+                return null;
+            }
+            return ms.ToArray();
         }
     }
 }
