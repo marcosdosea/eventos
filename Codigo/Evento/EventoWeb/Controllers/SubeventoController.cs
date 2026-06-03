@@ -38,19 +38,20 @@ namespace EventoWeb.Controllers
             string userCpf = null;
             uint idPapel = 0;
 
-            if (User?.Identity?.IsAuthenticated == true)
+            if (User?.Identity?.IsAuthenticated != true)
             {
-                userCpf = User.FindFirstValue(ClaimTypes.Name);
-
-                if (User.IsInRole("GESTOR"))
-                {
-                    idPapel = 2;
-                }
-                else if (User.IsInRole("COLABORADOR"))
-                {
-                    idPapel = 3;
-                }
+                return View(new List<SubeventoModel>());
             }
+
+            userCpf = User.FindFirstValue(ClaimTypes.Name);
+
+            if (string.IsNullOrEmpty(userCpf))
+            {
+                return View(new List<SubeventoModel>());
+            }
+
+            // Controller is restricted to GESTOR, so papel is always 2
+            idPapel = 2;
 
             List<Subevento> listaSubeventos = new List<Subevento>();
 
