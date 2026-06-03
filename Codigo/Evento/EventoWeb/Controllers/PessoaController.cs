@@ -159,7 +159,7 @@ namespace EventoWeb.Controllers
         [Authorize]
         [HttpGet]
         [Route("Edit/{id}")]
-        public ActionResult Edit(uint id)
+        public ActionResult Edit(uint id, string? returnUrl)
         {
             var pessoa = _pessoaService.Get(id);
             if (pessoa == null)
@@ -176,6 +176,7 @@ namespace EventoWeb.Controllers
             var viewModel = _mapper.Map<PessoaModel>(pessoa);
             viewModel.Estados = new SelectList(estados, "Estado", "Nome");
 
+            ViewBag.ReturnUrl = returnUrl;
             return View(viewModel);
         }
 
@@ -183,7 +184,7 @@ namespace EventoWeb.Controllers
         [HttpPost]
         [Route("Edit/{id}")]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(uint id, PessoaModel viewModel)
+        public ActionResult Edit(uint id, PessoaModel viewModel, string? returnUrl)
         {
             var pessoa = _pessoaService.Get(id);
             if (pessoa == null)
@@ -221,10 +222,14 @@ namespace EventoWeb.Controllers
                         }
                     }
                 }
-                    _mapper.Map(viewModel, pessoa);
-                    pessoa.Foto = fotoSource;
 
+                _mapper.Map(viewModel, pessoa);
+                 pessoa.Foto = fotoSource;
                 _pessoaService.Edit(pessoa);
+
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                    return Redirect(returnUrl);
+
 
                 return RedirectToAction(nameof(Index));
             }
@@ -234,8 +239,9 @@ namespace EventoWeb.Controllers
 
         // GET: PessoaController/Delete/5
         [HttpGet]
+        [Authorize]
         [Route("Delete/{id}")]
-        public ActionResult Delete(uint id)
+        public ActionResult Delete(uint id, string? returnUrl)
         {
             var pessoa = _pessoaService.Get(id);
             if (pessoa == null)
@@ -243,17 +249,37 @@ namespace EventoWeb.Controllers
                 return NotFound();
             }
 
+            if (pessoa.Cpf != User.Identity!.Name && !User.IsInRole("ADMINISTRADOR"))
+            {
+                return Forbid();
+            }
+
             PessoaModel pessoaModel = _mapper.Map<PessoaModel>(pessoa);
+            ViewBag.ReturnUrl = returnUrl;
             return View(pessoaModel);
         }
 
         // POST: PessoaController/Delete/5
         [HttpPost, ActionName("Delete")]
+        [Authorize]
         [Route("Delete/{id}")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(uint id)
+        public ActionResult DeleteConfirmed(uint id, string? returnUrl)
         {
+            var pessoa = _pessoaService.Get(id);
+            if (pessoa == null)
+            {
+                return NotFound();
+            }
+            if (pessoa.Cpf != User.Identity!.Name && !User.IsInRole("ADMINISTRADOR"))
+            {
+                return Forbid();
+            }
             _pessoaService.Delete(id);
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
             return RedirectToAction(nameof(Index));
         }
     }
