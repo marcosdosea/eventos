@@ -9,6 +9,9 @@ namespace Service;
 
 public class PessoaService : IPessoaService
 {
+    /// <summary>
+    /// Manter dados de pessoa no banco de dados
+    /// </summary>
     private readonly EventoContext _context;
     private readonly UserManager<UsuarioIdentity> _userManager;
     private readonly IInscricaoService _inscricaoService;
@@ -20,6 +23,11 @@ public class PessoaService : IPessoaService
         _inscricaoService = inscricaoService;
     }
 
+    /// <summary>
+    /// Insere uma nova pessoa na base de dados
+    /// </summary>
+    /// <param name="pessoa">dados de pessoa</param>
+    /// <returns></returns>
     public uint Create(Pessoa pessoa)
     {
         try
@@ -30,71 +38,155 @@ public class PessoaService : IPessoaService
         }
         catch (DbUpdateException ex)
         {
-            throw new Exception($"Erro ao salvar pessoa: {ex.InnerException?.Message ?? ex.Message}", ex);
+            // Captura exceções relacionadas a problemas de atualização/inserção no banco de dados
+            // e lança uma nova exceção com a mensagem interna para melhor diagnóstico.
+            throw new Exception($"Erro ao salvar pessoa no banco de dados: {ex.InnerException?.Message ?? ex.Message}", ex);
+        }
+        catch (Exception ex)
+        {
+            // Captura outras exceções gerais
+            throw new Exception($"Erro inesperado ao criar pessoa: {ex.Message}", ex);
         }
     }
 
-    public async Task Edit(Pessoa pessoa)
+    /// <summary>
+    /// Edita uma pessoa na base de dados
+    /// </summary>
+    /// <param name="pessoa">dados de pessoa</param>
+    /// <returns></returns>
+
+    public void Edit(Pessoa pessoa)
     {
-        try
-        {
-            var local = _context.Set<Pessoa>().Local.FirstOrDefault(p => p.Id == pessoa.Id);
-            if (local != null)
-                _context.Entry(local).State = EntityState.Detached;
-
-            _context.Update(pessoa);
-            await _context.SaveChangesAsync();
-        }
-        catch (DbUpdateException dbEx)
-        {
-            Trace.TraceError($"Erro ao atualizar pessoa: {dbEx.InnerException?.Message ?? dbEx.Message}");
-            throw new Exception("Erro no banco de dados ao atualizar pessoa.", dbEx);
-        }
+        _context.Update(pessoa);   
+        _context.SaveChanges();
     }
 
+    /// <summary>
+    /// Exclui uma pessoa na base de dados
+    /// </summary>
+    /// <param name="id">dados de pessoa</param>
+    /// <returns></returns>
     public void Delete(uint id)
     {
         var pessoa = _context.Pessoas.Find(id);
-        if (pessoa != null)
-        {
-            _context.Remove(pessoa);
-            _context.SaveChanges();
-        }
+        _context.Remove(pessoa);
+        _context.SaveChanges();
     }
 
-    public Pessoa Get(uint id) => _context.Pessoas.Find(id);
+    /// <summary>
+    /// Obtém uma pessoa específica por id
+    /// </summary>
+    /// <param name="id">dados de pessoa</param>
+    /// <returns></returns>
+    public Pessoa Get(uint id)
+    {
+        return _context.Pessoas.Find(id);
+    }
 
-    public IEnumerable<Pessoa> GetAll() => _context.Pessoas.AsNoTracking();
+    /// <summary>
+    /// Obtém todas pessoas
+    /// </summary>
+    /// <returns></returns>
+    public IEnumerable<Pessoa> GetAll()
+    {
+        return _context.Pessoas.AsNoTracking();
+    }
 
+    ///<summary>
+    /// Obtém todas as pessoas que possuem o papel de "ADMINISTRADOR" no sistema Identity.
+    /// </summary>
+    /// <returns>listaAdministradores</returns>
+    public async Task<List<Pessoa>> GetAllAdmAsync()
+    {
+        var listaPessoa = GetAll();
+        var listaAdministradores = new List<Pessoa>();
+
+        if (listaPessoa == null)
+            return listaAdministradores;
+
+        foreach (var pessoa in listaPessoa)
+        {
+            if (pessoa == null || string.IsNullOrWhiteSpace(pessoa.Cpf))
+                continue;
+
+            var userAdm = await _userManager.FindByNameAsync(pessoa.Cpf);
+            if (userAdm == null)
+                continue;
+
+            var isAdmin = await _userManager.IsInRoleAsync(userAdm, "ADMINISTRADOR");
+            if (isAdmin)
+                listaAdministradores.Add(pessoa);
+        }
+
+        return listaAdministradores;
+    }
+
+    /// <summary>
+    /// Obtém uma pessoa específica por cpf
+    /// </summary>
+    /// <param name="cpf">dados de pessoa</param>
+    /// <returns></returns>
     public Pessoa GetByCpf(string cpf)
-        => _context.Pessoas.SingleOrDefault(p => p.Cpf == cpf);
+    {
+        var query = from pessoa in _context.Pessoas
+                    where pessoa.Cpf == cpf
+                    select pessoa;
 
+        return query.SingleOrDefault();
+    }
+
+    /// <summary>
+    /// Cria um novo usuário Identity para a pessoa.
+    /// </summary>
+    /// <param name="pessoa">Os dados da pessoa para criar o usuário Identity.</param>
+    /// <returns>O UsuarioIdentity criado.</returns>
+    /// <exception cref="Exception">Lançada se a criação do usuário Identity falhar.</exception>
     public async Task<UsuarioIdentity> CreateAsync(Pessoa pessoa)
     {
-        var novoUsuario = new UsuarioIdentity
+        var newUser = new UsuarioIdentity
         {
             UserName = pessoa.Cpf,
-            NormalizedUserName = pessoa.Cpf.Replace(".", "").Replace("-", "").ToUpper(),
+            NormalizedUserName = pessoa.Cpf.Replace(".", "").Replace("-", "").ToUpper(), // Normalizar para garantir unicidade e consistência
             Email = pessoa.Email,
             PhoneNumber = pessoa.Telefone1,
-            EmailConfirmed = true
+            EmailConfirmed = true // Assumindo que o e-mail é confirmado na criação para colaboradores
         };
 
-        var result = await _userManager.CreateAsync(novoUsuario, "Temp@1234!");
+        // Gerar uma senha padrão forte. É CRÍTICO que esta senha seja temporária
+        // e que o usuário seja forçado a alterá-la no primeiro login.
+        // Adapte a senha para atender às políticas de senha do seu Identity.
+        // Exemplo: "TempPass!23" ou gerar uma GUID.
+        string defaultPassword = "TempPassword!2024"; // <--- ALTERE ESTA SENHA PARA ALGO SEGURO E TEMPORÁRIO!
 
-        if (!result.Succeeded)
+        var result = await _userManager.CreateAsync(newUser, defaultPassword);
+
+        if (result.Succeeded)
         {
-            var erros = string.Join("; ", result.Errors.Select(e => e.Description));
-            throw new Exception($"Falha ao criar usuário Identity para CPF {pessoa.Cpf}: {erros}");
+            return newUser;
         }
-
-        return novoUsuario;
+        else
+        {
+            // Agrega as mensagens de erro do Identity para um diagnóstico mais preciso
+            var errors = string.Join("; ", result.Errors.Select(e => e.Description));
+            throw new Exception($"Falha ao criar o usuário Identity para CPF {pessoa.Cpf}: {errors}");
+        }
     }
 
-    public async Task CreatePessoaIdentityComPapelAsync(Pessoa pessoa, int idPapel)
+    /// <summary>
+    /// Atribuindo um papel a uma pessoa e criando uma inscrição para o evento, se necessário.
+    /// </summary>
+    /// <param name="pessoa"></param>
+    /// <param name="idEvento"></param>
+    /// <param name="idPapel"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
+    /// <exception cref="Exception"></exception>
+    public async Task CreatePessoaPapelAsync(Pessoa pessoa, uint idEvento, int idPapel)
     {
+
         await using (var transaction = await _context.Database.BeginTransactionAsync())
         {
+
             try
             {
                 uint idPessoa = pessoa.Id;
@@ -111,29 +203,23 @@ public class PessoaService : IPessoaService
 
                 if (idPapel != 1)
                 {
-                    uint idEventoVinculado = pessoa.Inscricaopessoaeventos.FirstOrDefault()?.IdEvento ?? 0;
-
-                    if (idEventoVinculado > 0)
+                    var novaInscricao = new Inscricaopessoaevento
                     {
-                        var novaInscricao = new Inscricaopessoaevento
-                        {
-                            IdPessoa = idPessoa,
-                            IdEvento = idEventoVinculado,
-                            IdPapel = idPapel,
-                            DataInscricao = DateTime.Now,
-                            Status = "S"
-                        };
-                        _inscricaoService.CreateInscricaoEvento(novaInscricao);
-                    }
+                        IdPessoa = idPessoa,
+                        IdEvento = idEvento,
+                        IdPapel = idPapel,
+                        DataInscricao = DateTime.Now,
+                        Status = "S"
+                    };
+                    _inscricaoService.CreateInscricaoEvento(novaInscricao);
                 }
-
                 string role = idPapel switch
                 {
                     1 => "ADMINISTRADOR",
                     2 => "GESTOR",
                     3 => "COLABORADOR",
                     4 => "USUARIO",
-                    _ => throw new ArgumentException($"Papel inválido: {idPapel}")
+                    _ => throw new ArgumentException("Papel inválido.")
                 };
 
                 var isInRole = await _userManager.IsInRoleAsync(existingUser, role);
@@ -142,11 +228,11 @@ public class PessoaService : IPessoaService
                     var roleResult = await _userManager.AddToRoleAsync(existingUser, role);
                     if (!roleResult.Succeeded)
                     {
+                        // Melhorar a mensagem de erro para incluir detalhes do Identity
                         var errors = string.Join("; ", roleResult.Errors.Select(e => e.Description));
                         throw new Exception($"Erro ao associar o papel '{role.ToLower()}' ao usuário no Identity: {errors}");
                     }
                 }
-
                 await transaction.CommitAsync();
             }
             catch (Exception ex)
@@ -154,28 +240,8 @@ public class PessoaService : IPessoaService
                 await transaction.RollbackAsync();
                 throw new Exception($"Erro ao criar pessoa, inscrição ou associar papel: {ex.Message}", ex);
             }
-        }
-    }
 
-    public async Task<List<Pessoa>> GetAllAdmAsync()
-    {
-        var admins = new List<Pessoa>();
-        foreach (var pessoa in GetAll())
-        {
-            if (string.IsNullOrWhiteSpace(pessoa.Cpf)) continue;
-            var user = await _userManager.FindByNameAsync(pessoa.Cpf);
-            if (user != null && await _userManager.IsInRoleAsync(user, "ADMINISTRADOR"))
-                admins.Add(pessoa);
-        }
-        return admins;
-    }
 
-    public async Task<List<Pessoa>> GetPessoasPorPapelNoEventoAsync(uint idEvento, int idPapel)
-    {
-        return await _context.Inscricaopessoaeventos
-            .Where(i => i.IdEvento == idEvento && i.IdPapel == idPapel)
-            .Select(i => i.IdPessoaNavigation)
-            .AsNoTracking()
-            .ToListAsync();
+        }
     }
 }
