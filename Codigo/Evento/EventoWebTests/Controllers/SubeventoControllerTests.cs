@@ -73,10 +73,10 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public async Task IndexTest()
+        public void IndexTest()
         {
             // Act
-            var result = await controller.Index();
+            var result = controller.Index();
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
