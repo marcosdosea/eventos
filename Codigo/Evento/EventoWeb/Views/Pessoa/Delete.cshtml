@@ -118,13 +118,15 @@
         <div class="d-flex justify-content-end">
         <div class="d-flex flex-row">
             <div class="form-group" style="margin-right: 10px;">
+                <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
                 <input type="submit" value="Excluir" class="btn btn-danger"/>
             </div>
             <div class="form-group">
-                <a asp-action="Index" class="btn btn-outline-blue-normal">Cancelar</a>
+            <a href="@ViewBag.ReturnUrl" class="btn btn-outline-blue-normal">Cancelar</a>
             </div>
             </div>
         </div>
     </form>
 </div>
 </div>
+
