@@ -1,12 +1,14 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using AutoMapper;
 using Core;
-using Microsoft.AspNetCore.Mvc;
-using EventoWeb.Models;
-using EventoWeb.Mappers;
-using Core.Service;
-using Moq;
-using AutoMapper;
 using Core.DTO;
+using Core.Service;
+using EventoWeb.Mappers;
+using EventoWeb.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
+using System.Security.Claims;
 namespace EventoWeb.Controllers.Tests
 {
     [TestClass()]
@@ -26,38 +28,59 @@ namespace EventoWeb.Controllers.Tests
             IMapper mapper = new MapperConfiguration(cfg =>
             cfg.AddProfile(new SubeventoProfile())).CreateMapper();
 
+            // --- CONFIGURAÇÃO DOS MOCKS ---
             mockService.Setup(service => service.GetAll())
-                .Returns(GetTestSubeventos());
+                .Returns(GetTestSubeventos()); // Certifique-se que este método retorna 3 subeventos com IdEvento = 1
+
             mockService.Setup(service => service.Get(1))
                 .Returns(GetTargetSubevento());
-            mockService.Setup(service => service.Create(It.IsAny<Subevento>()))
-                .Verifiable();
-            mockService.Setup(service => service.Edit(It.IsAny<Subevento>()))
-                .Verifiable();
-            mockService.Setup(service => service.Delete(It.IsAny<uint>()))
-                .Verifiable();
+
+            // Configurando o mock de Eventos para a listagem por CPF (Regra do Gestor)
+            string cpfTeste = "12345678900";
+            uint papelGestor = 2;
+
+            var listaEventosTeste = new List<Evento> { new Evento { Id = 1, Nome = "SEMINFO" } };
+
+            mockServiceEvento.Setup(service => service.GetEventByCpf(cpfTeste, papelGestor))
+                .Returns(listaEventosTeste);
+
+            mockServiceEvento.Setup(service => service.GetAll())
+                .Returns(listaEventosTeste);
 
             mockServiceEvento.Setup(service => service.GetNomeById(1))
                 .Returns("SEMINFO");
-            mockServiceEvento.Setup(service => service.GetEventoSimpleDto(1))
-                .Returns(new EventoSimpleDTO { Id = 1, Nome = "SEMINFO" });
 
-            mockServiceTipoevento.Setup(service => service.GetNomeById(1))
-                .Returns("Palestra");
             mockServiceTipoevento.Setup(service => service.GetAll())
                 .Returns(new List<Tipoevento> { new Tipoevento { Id = 1, Nome = "Palestra" } });
 
             mockServiceTipoInscricao.Setup(service => service.GetTiposInscricaosSubevento(1))
                 .Returns(new List<TipoInscricaoDTO>());
 
+            // --- INSTÂNCIA DO CONTROLLER ---
             controller = new SubeventoController(mockService.Object, mapper, mockServiceEvento.Object, mockServiceTipoevento.Object, mockServiceTipoInscricao.Object);
+
+            // --- SOLUÇÃO DO PROBLEMA: SIMULAR USUÁRIO LOGADO COMO GESTOR ---
+            var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.Name, cpfTeste),           // O mesmo CPF que configuramos no mock
+        new Claim(ClaimTypes.Role, "GESTOR")            // Força a Role de GESTOR
+    };
+
+            var identity = new ClaimsIdentity(claims, "TestAuthType");
+            var claimsPrincipal = new ClaimsPrincipal(identity);
+
+            // Injeta o usuário fictício dentro do contexto do Controller
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = claimsPrincipal }
+            };
         }
 
         [TestMethod()]
-        public void IndexTest()
+        public async Task IndexTest()
         {
             // Act
-            var result = controller.Index();
+            var result = await controller.Index();
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
@@ -131,12 +154,12 @@ namespace EventoWeb.Controllers.Tests
             // Act
             var result = controller.CreateOrEdit(1, GetNewSubevento());
 
-			// Assert
-			Assert.AreEqual(1, controller.ModelState.ErrorCount);
-			Assert.IsInstanceOfType(result, typeof(ViewResult));
-			ViewResult viewResult = (ViewResult)result;
-			Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(SubeventoModel));
-		}
+            // Assert
+            Assert.AreEqual(1, controller.ModelState.ErrorCount);
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            ViewResult viewResult = (ViewResult)result;
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(SubeventoModel));
+        }
 
 
         [TestMethod()]
@@ -149,7 +172,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(SubeventoModel));
-			SubeventoModel subeventoModel = (SubeventoModel)viewResult.ViewData.Model;
+            SubeventoModel subeventoModel = (SubeventoModel)viewResult.ViewData.Model;
             Assert.AreEqual((uint)1, subeventoModel.IdEvento);
             Assert.AreEqual("SEMINFO", subeventoModel.Nome);
             Assert.AreEqual("Evento para a semana da tecnologia", subeventoModel.Descricao);
@@ -226,9 +249,9 @@ namespace EventoWeb.Controllers.Tests
 
         private SubeventoModel GetNewSubevento()
         {
-			return new SubeventoModel
-			{
-				IdEvento = 1,
+            return new SubeventoModel
+            {
+                IdEvento = 1,
                 Nome = "SEMINFO",
                 Descricao = "Evento para a semana da tecnologia",
                 DataInicio = new DateTime(2024, 09, 2, 7, 30, 0),
