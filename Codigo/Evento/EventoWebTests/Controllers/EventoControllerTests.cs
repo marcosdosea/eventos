@@ -24,7 +24,6 @@ namespace EventoWeb.Controllers.Tests
         [TestInitialize]
         public void Initialize()
         {
-            // Arrange
             var mockService = new Mock<IEventoService>();
             var mockServiceEstado = new Mock<IEstadosbrasilService>();
             var mockServiceInscricao = new Mock<IInscricaoService>();
@@ -48,31 +47,25 @@ namespace EventoWeb.Controllers.Tests
 
             mockServiceInscricao.Setup(service => service.GetByEventoAndPapel(It.IsAny<uint>(), It.IsAny<int>()))
                 .Returns(GetTestInscricoes());
-            // Mock para CreateColaborador
             mockServiceInscricao.Setup(service => service.GetGestorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
-                .Returns(new Inscricaopessoaevento()); // Retorna objeto do tipo correto
+                .Returns(new Inscricaopessoaevento()); 
             mockService.Setup(service => service.GetEventoSimpleDto(It.IsAny<uint>()))
                 .Returns(new EventoSimpleDTO { Id = 1, Nome = "Evento Teste" });
             mockServiceInscricao.Setup(service => service.GetByEventoAndPapel(It.IsAny<uint>(), 3))
                 .Returns(GetTestInscricoes());
-
-            // Mock para POST de CreateColaborador
             mockServicePessoa.Setup(service => service.GetByCpf(It.IsAny<string>()))
                 .Returns(new Pessoa { Id = 1, Nome = "João Vitor Sodré", NomeCracha = "Sodré", Cpf = "040.268.930-57" });
             mockServiceInscricao.Setup(service => service.GetPapelPessoaByEvento(It.IsAny<uint>(), It.IsAny<uint>()))
-                .Returns((uint idPessoa, uint idEvento) => 1); // Delegate para garantir correspondência de tipos
-            //mockServicePessoa.Setup(service => service.CreatePessoaPapelAsync(It.IsAny<Pessoa>(), It.IsAny<uint>(), It.IsAny<int>()))
-            //    .Verifiable();
+                .Returns((uint idPessoa, uint idEvento) => 1);
+            mockServicePessoa.Setup(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), It.IsAny<int>()))
+                .Verifiable();
             mockService.Setup(service => service.AtualizarVagasDisponiveis(It.IsAny<uint>()))
                 .Verifiable();
-
-            // Mock para DeletePessoaPapel
             var pessoa = new Pessoa { Id = 1, Cpf = "123.456.789-00", Nome = "Teste" };
             mockServicePessoa.Setup(s => s.Get(1)).Returns(pessoa);
 
             controller = new EventoController(mockUserManager.Object, mockService.Object, mapper, mockServiceEstado.Object, mockServiceInscricao.Object, mockServiceTipoevento.Object, mockServiceAreaInteresse.Object, mockServicePessoa.Object, mockServiceSubevento.Object);
 
-            // Mock do contexto do usuário para o controller
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, "usuario@teste.com"),
@@ -89,10 +82,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public void IndexTest()
         {
-            // Act
             var result = controller.Index();
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(List<EventoModel>));
@@ -104,10 +95,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public void DetailsTest()
         {
-            // Act
             var result = controller.Details(1);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(EventoModel));
@@ -144,20 +133,16 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public void CreateTest()
         {
-            // Act
             var result = controller.Create();
 
-            // Assert 
             Assert.IsInstanceOfType(result, typeof(ViewResult));
         }
 
         [TestMethod()]
         public void CreateTest_Valid()
         {
-            // Act
             var result = controller.Create(GetNewEvento());
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.IsNull(redirectToActionResult.ControllerName);
@@ -167,13 +152,10 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public void CreateTest_Invalid()
         {
-            // Arrange
             controller.ModelState.AddModelError("Nome", "Nome do Evento é obrigatório");
 
-            // Act
             var result = controller.Create(GetNewEvento());
 
-            // Assert
             Assert.AreEqual(1, controller.ModelState.ErrorCount);
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
@@ -184,10 +166,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public void EditTest_Get_Valid()
         {
-            // Act
             var result = controller.Edit(1);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(EventoModel));
@@ -224,10 +204,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public void EditTest_Post_Valid()
         {
-            // Act
             var result = controller.Edit(GetTargetEventoModelEdit().Id, GetTargetEventoModelEdit());
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.IsNull(redirectToActionResult.ControllerName);
@@ -237,10 +215,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public void DeleteTest_Post_Valid()
         {
-            // Act
             var result = controller.Delete(1, GetTargetEventoModel());
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.IsNull(redirectToActionResult.ControllerName);
@@ -250,10 +226,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public void DeleteTest_Get_Valid()
         {
-            // Act
             var result = controller.Delete(1);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(EventoModel));
@@ -262,10 +236,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public void Gestor_Get_Valid()
         {
-            // Act
             var result = controller.CreateGestor(1);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(GestaoPapelModel));
@@ -274,10 +246,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public async Task Gestor_Post_Valid()
         {
-            // Act
             var result = await controller.CreateGestor(GetNewGestaoPapel());
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.AreEqual("GerenciarEvento", redirectToActionResult.ActionName);
@@ -286,10 +256,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public void Colaborador_Get_Valid()
         {
-            // Act
             var result = controller.CreateColaborador(1);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(GestaoPapelModel));
@@ -298,10 +266,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public async Task Colaborador_Post_Valid()
         {
-            // Act
             var result = await controller.CreateColaborador(GetNewGestaoPapel());
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
         }
@@ -309,10 +275,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public void Participante_Get_Valid()
         {
-            // Act
             var result = controller.CreateParticipante(1);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(GestaoPapelModel));
@@ -321,10 +285,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public void Participante_Post_Valid()
         {
-            // Act
             var result = controller.CreateParticipante(GetNewGestaoPapel());
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.AreEqual("GerenciarEvento", redirectToActionResult.ActionName);
@@ -333,10 +295,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public async Task DeletePessoaPapel_Post_Valid()
         {
-            // Act
             var result = await controller.DeletePessoaPapel(1, 1, 1);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.AreEqual("GerenciarEvento", redirectToActionResult.ActionName);

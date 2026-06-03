@@ -34,6 +34,8 @@ namespace EventoWeb.Controllers.Tests
                 .Returns(GetTargetPessoa());
             mockService.Setup(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), It.IsAny<int>()))
                 .Returns(Task.CompletedTask);
+            mockService.Setup(service => service.Edit(It.IsAny<Pessoa>()))
+                .Returns(Task.CompletedTask);
             controller = new PessoaController(mockService.Object, mockEstadosbrasilService.Object, mapper);
         }
 

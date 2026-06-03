@@ -189,12 +189,14 @@ namespace Service.Tests
         }
 
         [TestMethod()]
-        public void EditTest()
+        public async Task EditTest()
         {
+            
             var pessoa = _pessoaService.Get(3);
-            pessoa.Id = 3;
-            pessoa.Nome = "Marcos Venicios da Palma Dias";
-            pessoa.NomeCracha = "Marcos Venicios";
+
+            
+            pessoa.Nome = "Marcos Venicios da Palma Dias Alterado";
+            pessoa.NomeCracha = "Marcos Alterado";
             pessoa.Cpf = "206.015.300-04";
             pessoa.Sexo = "M";
             pessoa.Cep = "45340-086";
@@ -202,28 +204,34 @@ namespace Service.Tests
             pessoa.Bairro = "Centro";
             pessoa.Cidade = "Esplanada";
             pessoa.Estado = "BA";
-            pessoa.Numero = "s/n";
+            pessoa.Numero = "100"; 
             pessoa.Complemento = "casa";
-            pessoa.Email = "muzanpvp@gmail.com";
+            pessoa.Email = "muzanpvp_alterado@gmail.com"; 
             pessoa.Telefone1 = "7999001133";
             pessoa.Telefone2 = "NULL";
 
-            pessoa = _pessoaService.Get(3);
-            Assert.AreEqual((uint)3, pessoa.Id);
-            Assert.AreEqual("Marcos Venicios da Palma Dias", pessoa.Nome);
-            Assert.AreEqual("Marcos Venicios", pessoa.NomeCracha);
-            Assert.AreEqual("206.015.300-04", pessoa.Cpf);
-            Assert.AreEqual("M", pessoa.Sexo);
-            Assert.AreEqual("45340-086", pessoa.Cep);
-            Assert.AreEqual("Rua da Linha", pessoa.Rua);
-            Assert.AreEqual("Centro", pessoa.Bairro);
-            Assert.AreEqual("Esplanada", pessoa.Cidade);
-            Assert.AreEqual("BA", pessoa.Estado);
-            Assert.AreEqual("s/n", pessoa.Numero);
-            Assert.AreEqual("casa", pessoa.Complemento);
-            Assert.AreEqual("muzanpvp@gmail.com", pessoa.Email);
-            Assert.AreEqual("7999001133", pessoa.Telefone1);
-            Assert.AreEqual("NULL", pessoa.Telefone2);
+            
+            await _pessoaService.Edit(pessoa);
+
+            
+            var pessoaVerificada = _pessoaService.Get(3);
+
+            
+            Assert.AreEqual((uint)3, pessoaVerificada.Id);
+            Assert.AreEqual("Marcos Venicios da Palma Dias Alterado", pessoaVerificada.Nome);
+            Assert.AreEqual("Marcos Alterado", pessoaVerificada.NomeCracha);
+            Assert.AreEqual("206.015.300-04", pessoaVerificada.Cpf);
+            Assert.AreEqual("M", pessoaVerificada.Sexo);
+            Assert.AreEqual("45340-086", pessoaVerificada.Cep);
+            Assert.AreEqual("Rua da Linha", pessoaVerificada.Rua);
+            Assert.AreEqual("Centro", pessoaVerificada.Bairro);
+            Assert.AreEqual("Esplanada", pessoaVerificada.Cidade);
+            Assert.AreEqual("BA", pessoaVerificada.Estado);
+            Assert.AreEqual("100", pessoaVerificada.Numero);
+            Assert.AreEqual("casa", pessoaVerificada.Complemento);
+            Assert.AreEqual("muzanpvp_alterado@gmail.com", pessoaVerificada.Email);
+            Assert.AreEqual("7999001133", pessoaVerificada.Telefone1);
+            Assert.AreEqual("NULL", pessoaVerificada.Telefone2);
         }
 
         [TestMethod()]

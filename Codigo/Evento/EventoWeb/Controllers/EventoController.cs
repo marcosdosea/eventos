@@ -645,9 +645,10 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
 
-        // =====================================================================
-        // BLOCO DE ESTRUTURAS DE EVENTO RESERVADAS PARA FUTURAS PRs
-        // =====================================================================
+        
+        // é um adianto deevento proxima PR de Nadson
+        // (tanto adianta quanto quem for mexer com isso vai ver o que Nadson fez/fará).
+        
         /*
 		[Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
 		[HttpGet]
