@@ -129,7 +129,7 @@ ViewData["Title"] = "Edit";
                     <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
                 </div>
                 <div class="form-group">
-                    <a href="@((ViewBag.ReturnUrl as string) is string ru && Url.IsLocalUrl(ru) ? ru : Url.Action("Index", "Pessoa"))" class="btn btn-outline-danger">Cancelar</a>
+                    <a href="@ViewBag.ReturnUrl" class="btn btn-outline-danger">Cancelar</a>
                 </div>
             </div>
             </div>
