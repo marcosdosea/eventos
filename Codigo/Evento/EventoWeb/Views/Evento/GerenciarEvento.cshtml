@@ -7,6 +7,9 @@
 @{
     ViewData["Title"] = "GerenciarEvento";
 }
+@{
+    ViewData["ExibirMenuSanduiche"] = true;
+}
 @if (TempData["Message"] != null)
 {
     <div class="alert alert-danger" role="alert" id="alerterror">
@@ -17,11 +20,10 @@
 
 
 <script>
-    setTimeout(function() {
+    setTimeout(function () {
         $("#alerterror").fadeOut("slow");
     }, 3000);
 </script>
-
 
 <h1 class="blue-normal">Gerenciar evento</h1>
 <span>Nome: @Model.Evento.Nome</span>
@@ -118,7 +120,7 @@
                             new { idEvento = Model.Evento.Id, idSubevento = subevento.Id },
                                                 new { @style = "text-decoration:none;" })
 
-                        @using (Html.BeginForm("Delete", "Subevento", FormMethod.Post, new { @style = "display:inline;" }))
+                            @using (Html.BeginForm("Delete", "Subevento", FormMethod.Post, new { @style = "display:inline;" }))
                             {
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@subevento.Id" />
@@ -130,15 +132,15 @@
                             @Html.ActionLink("Tipo Inscrição", "CreateTipoInscricaoSubevento", "TipoInscricao",
                             new { idEvento = Model.Evento.Id, idSubevento = subevento.Id },
                                                 new { @style = "text-decoration:none;" })
-                    </div>
-                </td>
-            </tr>
-                        }
-    </table>
-    <br />
-    <div class="d-flex justify-content-end">
-        <button type="button" class="btn-blue-normal btn btn-lg mb-2 ">
-            <a asp-controller="Evento" asp-action="GerenciarEventoListar" asp-route-idEvento="@ViewData["EventoId"]" style="text-decoration:none; color:white">Voltar</a>
-        </button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </table>
+        <br />
+        <div class="d-flex justify-content-end">
+            <button type="button" class="btn-blue-normal btn btn-lg mb-2 ">
+                <a asp-controller="Evento" asp-action="GerenciarEventoListar" asp-route-idEvento="@ViewData["EventoId"]" style="text-decoration:none; color:white">Voltar</a>
+            </button>
+        </div>
     </div>
-</div>
