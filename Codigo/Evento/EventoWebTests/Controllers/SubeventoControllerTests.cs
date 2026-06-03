@@ -28,14 +28,12 @@ namespace EventoWeb.Controllers.Tests
             IMapper mapper = new MapperConfiguration(cfg =>
             cfg.AddProfile(new SubeventoProfile())).CreateMapper();
 
-            // --- CONFIGURAÇÃO DOS MOCKS ---
             mockService.Setup(service => service.GetAll())
-                .Returns(GetTestSubeventos()); // Certifique-se que este método retorna 3 subeventos com IdEvento = 1
+                .Returns(GetTestSubeventos());
 
             mockService.Setup(service => service.Get(1))
                 .Returns(GetTargetSubevento());
 
-            // Configurando o mock de Eventos para a listagem por CPF (Regra do Gestor)
             string cpfTeste = "12345678900";
             uint papelGestor = 2;
 
@@ -56,15 +54,13 @@ namespace EventoWeb.Controllers.Tests
             mockServiceTipoInscricao.Setup(service => service.GetTiposInscricaosSubevento(1))
                 .Returns(new List<TipoInscricaoDTO>());
 
-            // --- INSTÂNCIA DO CONTROLLER ---
             controller = new SubeventoController(mockService.Object, mapper, mockServiceEvento.Object, mockServiceTipoevento.Object, mockServiceTipoInscricao.Object);
 
-            // --- SOLUÇÃO DO PROBLEMA: SIMULAR USUÁRIO LOGADO COMO GESTOR ---
             var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.Name, cpfTeste),           // O mesmo CPF que configuramos no mock
-        new Claim(ClaimTypes.Role, "GESTOR")            // Força a Role de GESTOR
-    };
+            {
+                new Claim(ClaimTypes.Name, cpfTeste),
+                new Claim(ClaimTypes.Role, "GESTOR")
+             };
 
             var identity = new ClaimsIdentity(claims, "TestAuthType");
             var claimsPrincipal = new ClaimsPrincipal(identity);
