@@ -1,0 +1,95 @@
+@model IEnumerable<EventoWeb.Models.EventoModel>
+
+@{
+	ViewData["Title"] = "Index";
+}
+
+<link href="~/lib/datatable/css/datatables.min.css" rel="stylesheet" />
+
+<div class="container">
+	<h1 class="blue-normal">Seja Bem-vindo</h1>
+	<h3>Confira os eventos do sistema!</h3>
+	<div class="btn-container">
+		<button type="button" class="btn btn-lg btn-blue-normal mb-2" onclick="location.href='@Url.Action("Create")'">
+			Novo evento
+		</button>
+	</div>
+	<br />
+	<table id="tableEvento" class="table table-striped table-bordered dt-responsive nowrap">
+		<thead>
+			<tr class="blue-normal blue-normal-bg-table">
+				<th>@Html.DisplayNameFor(model => model.DataInicio)</th>
+				<th>@Html.DisplayNameFor(model => model.Nome)</th>
+				<th>@Html.DisplayNameFor(model => model.Status)</th>
+				<th>Tipo do Evento</th>
+				<th>Ações</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var item in Model)
+			{
+				<tr>
+					<td>@Html.DisplayFor(modelItem => item.DataInicio)</td>
+					<td>@Html.DisplayFor(modelItem => item.Nome)</td>
+					<td>
+						@{
+							string statusDescricao = "Desconhecido";
+							switch (item.Status)
+							{
+								case "A":
+									statusDescricao = "Ativo";
+									break;
+								case "C":
+									statusDescricao = "Cadastro";
+									break;
+								case "F":
+									statusDescricao = "Finalizado";
+									break;
+								case "I":
+									statusDescricao = "Inativo";
+									break;
+							}
+						}
+						@statusDescricao
+					</td>
+					<td>@Html.DisplayFor(modelItem => item.NomeTipoEvento)</td>
+					<td>
+						@Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" })
+						&nbsp;&nbsp;
+						@Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @style = "text-decoration:none;", @class = "danger-normal" })
+						&nbsp;&nbsp;
+						@Html.ActionLink("Tipo Inscrição", "Index", "TipoInscricao", new { idEvento = item.Id, idPapel = 2 }, new { @style = "text-decoration:none;" })
+						&nbsp;&nbsp;
+						@Html.ActionLink("Gestores", "CreateGestor", new { idEvento = item.Id}, new { @style = "text-decoration:none;" })
+						&nbsp;&nbsp;
+						@Html.ActionLink("Colaboradores", "CreateColaborador", new { idEvento = item.Id}, new { @style = "text-decoration:none;" })
+						&nbsp;&nbsp;
+						@Html.ActionLink("Participantes", "CreateParticipante", new { idEvento = item.Id }, new { @style = "text-decoration:none;" })
+						&nbsp;&nbsp;
+						@Html.ActionLink("Subeventos", "CreateOrEdit", "Subevento", new { idEvento = item.Id }, new { @style = "text-decoration:none;" })
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+</div>
+
+@section Scripts {
+	<script src="~/lib/datatable/js/datatables.min.js"></script>
+	<script>
+		$(document).ready(function () {
+			$('#tableEvento').DataTable({
+				columnDefs: [
+					{ orderable: true, targets: [0, 1] },
+					{ orderable: false, targets: [2, 3, 4] }
+				],
+				searching: true,
+				ordering: true,
+				paging: true,
+				language: {
+					url: '@Url.Content("~/lib/datatable/js/pt-BR.json")'
+				}
+			});
+		});
+	</script>
+}

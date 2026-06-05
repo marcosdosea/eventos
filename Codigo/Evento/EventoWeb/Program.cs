@@ -1,3 +1,4 @@
+using AutoMapper;
 using Core;
 using Core.DTO;
 using Core.Service;
@@ -21,7 +22,6 @@ namespace EventoWeb
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
             builder.Services.AddControllersWithViews();
 
             builder.Services.AddControllersWithViews(options =>
@@ -33,7 +33,7 @@ namespace EventoWeb
             {
                 cfg.AddProfile<PessoaProfile>();
                 cfg.CreateMap<PessoaSimpleDTO, ColaboradorDTO>()
-                    .ForMember(dest => dest.Id, opt => opt.MapFrom(src => 0)) // Valor padrão
+                    .ForMember(dest => dest.Id, opt => opt.MapFrom(src => 0))
                     .ForMember(dest => dest.Cpf, opt => opt.MapFrom(src => src.Cpf))
                     .ForMember(dest => dest.Nome, opt => opt.MapFrom(src => src.Nome))
                     .ForMember(dest => dest.NomeCracha, opt => opt.MapFrom(src => string.Empty))
@@ -41,10 +41,11 @@ namespace EventoWeb
                     .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
                     .ForMember(dest => dest.Telefone1, opt => opt.MapFrom(src => src.Telefone1))
                     .ForMember(dest => dest.Telefone2, opt => opt.MapFrom(src => src.Telefone1 ?? string.Empty))
-                    .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => true)) // Valor padrão
-                    .ForMember(dest => dest.RegistrationDate, opt => opt.MapFrom(src => DateTime.Now)) // Valor padrão
-                    .ForMember(dest => dest.LastLogin, opt => opt.MapFrom(src => (DateTime?)null)); // Valor padrão
+                    .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => true))
+                    .ForMember(dest => dest.RegistrationDate, opt => opt.MapFrom(src => DateTime.Now))
+                    .ForMember(dest => dest.LastLogin, opt => opt.MapFrom(src => (DateTime?)null));
             }, AppDomain.CurrentDomain.GetAssemblies());
+
             builder.Services.AddTransient<ITipoInscricaoService, TipoInscricaoService>();
             builder.Services.AddTransient<IAreaInteresseService, AreaInteresseService>();
             builder.Services.AddTransient<IPessoaService, PessoaService>();
@@ -57,8 +58,6 @@ namespace EventoWeb
             builder.Services.AddTransient<ITipoeventoService, TipoeventoService>();
             builder.Services.AddTransient<IEmailSender, EmailSender>();
             builder.Services.AddTransient<IParticipacaoPessoaEventoService, ParticipacaoPessoaEventoService>();
-            builder.Services.AddTransient<IParticipanteService, ParticipanteService>();
-            builder.Services.AddTransient<IParticipanteService, ParticipanteService>();
             builder.Services.AddTransient<IInscricaopessoaeventoService, InscricaopessoaeventoService>();
 
             builder.Services.AddDbContext<EventoContext>(
@@ -69,44 +68,34 @@ namespace EventoWeb
 
             builder.Services.AddDefaultIdentity<UsuarioIdentity>(
                 options => {
-                    // SignIn settings
                     options.SignIn.RequireConfirmedAccount = true;
                     options.SignIn.RequireConfirmedEmail = true;
                     options.SignIn.RequireConfirmedPhoneNumber = false;
 
-                    // Password settings
                     options.Password.RequireDigit = true;
                     options.Password.RequireLowercase = false;
                     options.Password.RequireNonAlphanumeric = false;
                     options.Password.RequireUppercase = false;
                     options.Password.RequiredLength = 6;
 
-                    // Default User settings.
                     options.User.AllowedUserNameCharacters =
                             "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
-                    //options.User.RequireUniqueEmail = true;
 
-                    // Default Lockout settings
                     options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
                     options.Lockout.MaxFailedAccessAttempts = 5;
                     options.Lockout.AllowedForNewUsers = true;
                 }).AddRoles<IdentityRole>()
                 .AddEntityFrameworkStores<IdentityContext>();
 
-            //Configure tokens life
             builder.Services.Configure<DataProtectionTokenProviderOptions>(options =>
-                //sets a 2 hour lifetime of the generated token to reset password/email/phone number
                 options.TokenLifespan = TimeSpan.FromHours(2)
             );
 
             builder.Services.ConfigureApplicationCookie(options =>
             {
-                //options.AccessDeniedPath = "/Identity/Autenticar";
                 options.Cookie.Name = "YourAppCookieName";
                 options.Cookie.HttpOnly = true;
                 options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
-                //options.LoginPath = "/Identity/Autenticar";
-                // ReturnUrlParameter requires 
                 options.ReturnUrlParameter = CookieAuthenticationDefaults.ReturnUrlParameter;
                 options.SlidingExpiration = true;
             });
@@ -121,11 +110,9 @@ namespace EventoWeb
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
                 app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 
@@ -139,7 +126,6 @@ namespace EventoWeb
             app.UseAuthentication();
             app.UseAuthorization();
 
-            // Middleware personalizado para definir layout baseado no role
             app.Use(async (context, next) =>
             {
                 var isAuthenticated = context.User.Identity.IsAuthenticated;
@@ -161,7 +147,6 @@ namespace EventoWeb
                 await next();
             });
 
-            // Inicializa os roles do sistema
             using (var scope = app.Services.CreateScope())
             {
                 var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
