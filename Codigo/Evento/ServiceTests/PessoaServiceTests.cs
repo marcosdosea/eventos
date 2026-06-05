@@ -2,14 +2,20 @@
 using Core.Service;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
+using EventoWeb.Models;
+using System;
 using System.Collections.Immutable;
+using Service;
 
 namespace Service.Tests
 {
     [TestClass()]
     public class PessoaServiceTests
     {
-
         private EventoContext _context;
         private IPessoaService _pessoaService;
         private MockUserManager<UsuarioIdentity> _userManager;
@@ -18,7 +24,6 @@ namespace Service.Tests
         [TestInitialize]
         public void Initialize()
         {
-            //Arrange
             var builder = new DbContextOptionsBuilder<EventoContext>();
             builder.UseInMemoryDatabase("Evento");
             var options = builder.Options;
@@ -26,63 +31,64 @@ namespace Service.Tests
             _context = new EventoContext(options);
             _context.Database.EnsureDeleted();
             _context.Database.EnsureCreated();
+
             var pessoas = new List<Pessoa>
-                {
+            {
                 new Pessoa
                 {
-                        Id = 1,
-                        Nome = "João Vitor Sodré",
-                        NomeCracha = "Sodré",
-                        Cpf = "040.268.930-57",
-                        Sexo = "M",
-                        Cep = "48370-000",
-                        Rua = "Avenida Principal",
-                        Bairro = "Centro",
-                        Cidade = "Irece",
-                        Estado = "BA",
-                        Numero = "s/n",
-                        Complemento = "casa",
-                        Email = "email@gmail.com",
-                        Telefone1 = "7999990011",
-                        Telefone2 = "NULL",
-                    },
+                    Id = 1,
+                    Nome = "João Vitor Sodré",
+                    NomeCracha = "Sodré",
+                    Cpf = "040.268.930-57",
+                    Sexo = "M",
+                    Cep = "48370-000",
+                    Rua = "Avenida Principal",
+                    Bairro = "Centro",
+                    Cidade = "Irece",
+                    Estado = "BA",
+                    Numero = "s/n",
+                    Complemento = "casa",
+                    Email = "email@gmail.com",
+                    Telefone1 = "7999990011",
+                    Telefone2 = "NULL",
+                },
                 new Pessoa
                 {
-                        Id = 2,
-                        Nome = "Nagibe Santos Wanus Junior",
-                        NomeCracha = "Nagibe Junior",
-                        Cpf = "917.091.250-55",
-                        Sexo = "M",
-                        Cep = "45566-000",
-                        Rua = "Rua Severino Vieira",
-                        Bairro = "Centro",
-                        Cidade = "Esplanada",
-                        Estado = "BA",
-                        Numero = "147",
-                        Complemento = "casa",
-                        Email = "nagibejr@gmail.com",
-                        Telefone1 = "7599643467",
-                        Telefone2 = "NULL",
-                    },
+                    Id = 2,
+                    Nome = "Nagibe Santos Wanus Junior",
+                    NomeCracha = "Nagibe Junior",
+                    Cpf = "917.091.250-55",
+                    Sexo = "M",
+                    Cep = "45566-000",
+                    Rua = "Rua Severino Vieira",
+                    Bairro = "Centro",
+                    Cidade = "Esplanada",
+                    Estado = "BA",
+                    Numero = "147",
+                    Complemento = "casa",
+                    Email = "nagibejr@gmail.com",
+                    Telefone1 = "7599643467",
+                    Telefone2 = "NULL",
+                },
                 new Pessoa
                 {
-                        Id = 3,
-                        Nome = "Marcos Venicios da Palma Dias",
-                        NomeCracha = "Marcos Venicios",
-                        Cpf = "206.015.300-04",
-                        Sexo = "M",
-                        Cep = "45340-086",
-                        Rua = "Rua da Linha",
-                        Bairro = "Centro",
-                        Cidade = "Esplanada",
-                        Estado = "BA",
-                        Numero = "s/n",
-                        Complemento = "casa",
-                        Email = "muzanpvp@gmail.com",
-                        Telefone1 = "7999001133",
-                        Telefone2 = "NULL",
-                    },
-                };
+                    Id = 3,
+                    Nome = "Marcos Venicios da Palma Dias",
+                    NomeCracha = "Marcos Venicios",
+                    Cpf = "206.015.300-04",
+                    Sexo = "M",
+                    Cep = "45340-086",
+                    Rua = "Rua da Linha",
+                    Bairro = "Centro",
+                    Cidade = "Esplanada",
+                    Estado = "BA",
+                    Numero = "s/n",
+                    Complemento = "casa",
+                    Email = "muzanpvp@gmail.com",
+                    Telefone1 = "7999001133",
+                    Telefone2 = "NULL",
+                },
+            };
 
             var evento = new Evento
             {
@@ -122,7 +128,6 @@ namespace Service.Tests
                 Nome = "Gestor",
             };
 
-
             _context.AddRange(pessoas);
             _context.AddRange(evento);
             _context.AddRange(papel);
@@ -130,14 +135,12 @@ namespace Service.Tests
 
             _userManager = new MockUserManager<UsuarioIdentity>();
             _inscricaoService = new InscricaoService(_context, _userManager);
-
             _pessoaService = new PessoaService(_userManager, _context, _inscricaoService);
         }
 
         [TestMethod()]
         public void CreateTest()
         {
-            // Act
             _pessoaService.Create(new Pessoa()
             {
                 Id = 4,
@@ -156,7 +159,7 @@ namespace Service.Tests
                 Telefone1 = "7999001133",
                 Telefone2 = "NULL",
             });
-            // Assert
+
             Assert.AreEqual(4, _pessoaService.GetAll().Count());
             var pessoa = _pessoaService.Get(4);
             Assert.AreEqual("Marcos Venicios da Palma Dias", pessoa.Nome);
@@ -178,22 +181,22 @@ namespace Service.Tests
         [TestMethod()]
         public void DeleteTest()
         {
-            // Act
             _pessoaService.Delete(1);
-            // Assert
+
             Assert.AreEqual(2, _pessoaService.GetAll().Count());
             var areainteresse = _pessoaService.Get(1);
             Assert.AreEqual(null, areainteresse);
         }
 
         [TestMethod()]
-        public void EditTest()
+        public async Task EditTest()
         {
-            //Act 
+            
             var pessoa = _pessoaService.Get(3);
-            pessoa.Id = 3;
-            pessoa.Nome = "Marcos Venicios da Palma Dias";
-            pessoa.NomeCracha = "Marcos Venicios";
+
+            
+            pessoa.Nome = "Marcos Venicios da Palma Dias Alterado";
+            pessoa.NomeCracha = "Marcos Alterado";
             pessoa.Cpf = "206.015.300-04";
             pessoa.Sexo = "M";
             pessoa.Cep = "45340-086";
@@ -201,28 +204,34 @@ namespace Service.Tests
             pessoa.Bairro = "Centro";
             pessoa.Cidade = "Esplanada";
             pessoa.Estado = "BA";
-            pessoa.Numero = "s/n";
+            pessoa.Numero = "100"; 
             pessoa.Complemento = "casa";
-            pessoa.Email = "muzanpvp@gmail.com";
+            pessoa.Email = "muzanpvp_alterado@gmail.com"; 
             pessoa.Telefone1 = "7999001133";
             pessoa.Telefone2 = "NULL";
-            //Assert
-            pessoa = _pessoaService.Get(3);
-            Assert.AreEqual((uint)3, pessoa.Id);
-            Assert.AreEqual("Marcos Venicios da Palma Dias", pessoa.Nome);
-            Assert.AreEqual("Marcos Venicios", pessoa.NomeCracha);
-            Assert.AreEqual("206.015.300-04", pessoa.Cpf);
-            Assert.AreEqual("M", pessoa.Sexo);
-            Assert.AreEqual("45340-086", pessoa.Cep);
-            Assert.AreEqual("Rua da Linha", pessoa.Rua);
-            Assert.AreEqual("Centro", pessoa.Bairro);
-            Assert.AreEqual("Esplanada", pessoa.Cidade);
-            Assert.AreEqual("BA", pessoa.Estado);
-            Assert.AreEqual("s/n", pessoa.Numero);
-            Assert.AreEqual("casa", pessoa.Complemento);
-            Assert.AreEqual("muzanpvp@gmail.com", pessoa.Email);
-            Assert.AreEqual("7999001133", pessoa.Telefone1);
-            Assert.AreEqual("NULL", pessoa.Telefone2);
+
+            
+            await _pessoaService.Edit(pessoa);
+
+            
+            var pessoaVerificada = _pessoaService.Get(3);
+
+            
+            Assert.AreEqual((uint)3, pessoaVerificada.Id);
+            Assert.AreEqual("Marcos Venicios da Palma Dias Alterado", pessoaVerificada.Nome);
+            Assert.AreEqual("Marcos Alterado", pessoaVerificada.NomeCracha);
+            Assert.AreEqual("206.015.300-04", pessoaVerificada.Cpf);
+            Assert.AreEqual("M", pessoaVerificada.Sexo);
+            Assert.AreEqual("45340-086", pessoaVerificada.Cep);
+            Assert.AreEqual("Rua da Linha", pessoaVerificada.Rua);
+            Assert.AreEqual("Centro", pessoaVerificada.Bairro);
+            Assert.AreEqual("Esplanada", pessoaVerificada.Cidade);
+            Assert.AreEqual("BA", pessoaVerificada.Estado);
+            Assert.AreEqual("100", pessoaVerificada.Numero);
+            Assert.AreEqual("casa", pessoaVerificada.Complemento);
+            Assert.AreEqual("muzanpvp_alterado@gmail.com", pessoaVerificada.Email);
+            Assert.AreEqual("7999001133", pessoaVerificada.Telefone1);
+            Assert.AreEqual("NULL", pessoaVerificada.Telefone2);
         }
 
         [TestMethod()]
@@ -250,9 +259,8 @@ namespace Service.Tests
         [TestMethod()]
         public void GetAllTest()
         {
-            // Act
             var listaPessoa = _pessoaService.GetAll();
-            // Assert
+
             Assert.IsInstanceOfType(listaPessoa, typeof(IEnumerable<Pessoa>));
             Assert.IsNotNull(listaPessoa);
             Assert.AreEqual(3, listaPessoa.Count());
@@ -266,23 +274,13 @@ namespace Service.Tests
         */
 
         //[TestMethod()]
-        //public void CreateGestorModelTest()
+        //public async Task CreateGestorModelTest()
         //{
-
-        //    // Arrange
         //    var pessoa = _pessoaService.Get(1);
-
-
-        //    _pessoaService.CreatePessoaPapelAsync(pessoa, 1, 2);
-
-        //    var inscricao = _context.Inscricaopessoaeventos.FirstOrDefault();
-        //    Assert.IsNotNull(inscricao);
-        //    Assert.AreEqual(pessoa.Id, inscricao.IdPessoa);
-        //    Assert.AreEqual((uint)1, inscricao.IdEvento);
-        //    Assert.AreEqual((int)2, inscricao.IdPapel);
-        //    Assert.AreEqual("S", inscricao.Status);
-
-
+        //    await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 2);
+        //    var usuario = await _userManager.FindByNameAsync(pessoa.Cpf);
+        //    Assert.IsNotNull(usuario);
+        //    Assert.IsTrue(await _userManager.IsInRoleAsync(usuario, "GESTOR"));
         //}
 
         //[TestMethod()]
@@ -297,16 +295,12 @@ namespace Service.Tests
         //        Email = "sine_connor.9@academico.ufs.br",
         //        Telefone1 = "7999990011"
         //    };
-
-        //    await _pessoaService.CreatePessoaPapelAsync(pessoa, 0, 1);
+        //    await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 1);
         //    var usuario = await _userManager.FindByNameAsync(pessoa.Cpf);
         //    Assert.IsNotNull(usuario);
-        //    var isAdmin = await _userManager.IsInRoleAsync(usuario, "ADMINISTRADOR");
-        //    Assert.IsTrue(isAdmin);
+        //    Assert.IsTrue(await _userManager.IsInRoleAsync(usuario, "ADMINISTRADOR"));
         //    Assert.AreEqual(pessoa.Email, usuario.Email);
         //    Assert.AreEqual(pessoa.Telefone1, usuario.PhoneNumber);
         //}
-
     }
-
 }

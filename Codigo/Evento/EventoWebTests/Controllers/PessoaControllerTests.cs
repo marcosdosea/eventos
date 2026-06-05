@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System.Security.Claims;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace EventoWeb.Controllers.Tests
 {
@@ -19,7 +22,6 @@ namespace EventoWeb.Controllers.Tests
         [TestInitialize]
         public void Initialize()
         {
-            // Arrange
             var mockService = new Mock<IPessoaService>();
             var mockEstadosbrasilService = new Mock<IEstadosbrasilService>();
 
@@ -30,18 +32,18 @@ namespace EventoWeb.Controllers.Tests
                 .Returns(GetTestPessoas());
             mockService.Setup(service => service.Get(1))
                 .Returns(GetTargetPessoa());
-            mockService.Setup(service => service.Create(It.IsAny<Pessoa>()))
-                .Verifiable();
+            mockService.Setup(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), It.IsAny<int>()))
+                .Returns(Task.CompletedTask);
+            mockService.Setup(service => service.Edit(It.IsAny<Pessoa>()))
+                .Returns(Task.CompletedTask);
             controller = new PessoaController(mockService.Object, mockEstadosbrasilService.Object, mapper);
         }
 
         [TestMethod()]
         public void IndexTest()
         {
-            // Act
             var result = controller!.Index();
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(List<PessoaModel>));
@@ -53,10 +55,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public void DetailsTest()
         {
-            // Act
             var result = controller!.Details(1);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(PessoaModel));
@@ -81,42 +81,36 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public void CreateTest()
         {
-            // Act
             var result = controller!.Create();
 
-            // Assert 
             Assert.IsInstanceOfType(result, typeof(ViewResult));
         }
 
         [TestMethod()]
-        public void CreateTest_Valid()
+        public async Task CreateTest_Valid()
         {
-            // Arrange
-            controller!.ModelState.Clear(); // Certifique-se de que o ModelState está limpo
+            controller!.ModelState.Clear();
             var mockService = new Mock<IPessoaService>();
+            mockService.Setup(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), It.IsAny<int>()))
+                .Returns(Task.CompletedTask);
 
             controller = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object,
             new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper());
 
-            // Act
-            var result = controller.Create(GetNewPessoa());
+            var result = await controller.Create(GetNewPessoa());
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.IsNull(redirectToActionResult.ControllerName);
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
 
-            // Verifique se o método Create do serviço foi chamado
-            mockService.Verify(service => service.Create(It.IsAny<Pessoa>()), Times.Once);
+            mockService.Verify(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), It.IsAny<int>()), Times.Once);
         }
 
-
         [TestMethod()]
-        public void CreateTest_Invalid()
+        public async Task CreateTest_Invalid()
         {
-            // Arrange
-            controller!.ModelState.Clear(); // Certifique-se de que o ModelState está limpo
+            controller!.ModelState.Clear();
             var mockService = new Mock<IPessoaService>();
 
             controller = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object,
@@ -128,21 +122,17 @@ namespace EventoWeb.Controllers.Tests
             controller.ModelState.AddModelError("Sexo", "Campo requerido");
             controller.ModelState.AddModelError("Email", "Campo requerido");
 
-            // Act
-            var result = controller.Create(GetNewPessoa());
+            var result = await controller.Create(GetNewPessoa());
 
-            // Assert
             Assert.AreEqual(5, controller.ModelState.ErrorCount);
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(PessoaModel));
         }
 
-
         [TestMethod()]
         public void EditTest_Get_Valid()
         {
-            // Arrange
             var pessoa = GetTargetPessoa();
 
             var mockService = new Mock<IPessoaService>();
@@ -154,8 +144,8 @@ namespace EventoWeb.Controllers.Tests
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
-        new Claim(ClaimTypes.Name, pessoa.Cpf),
-        new Claim(ClaimTypes.Role, "ADMINISTRADOR")
+                new Claim(ClaimTypes.Name, pessoa.Cpf),
+                new Claim(ClaimTypes.Role, "ADMINISTRADOR")
             }, "mock"));
 
             localController.ControllerContext = new ControllerContext()
@@ -163,10 +153,8 @@ namespace EventoWeb.Controllers.Tests
                 HttpContext = new DefaultHttpContext() { User = user }
             };
 
-            // Act
             var result = localController.Edit(1);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(PessoaModel));
@@ -175,9 +163,8 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public void EditTest_Post_Valid()
+        public async Task EditTest_Post_Valid()
         {
-            // Arrange
             var model = GetTargetPessoaModel();
             var pessoa = GetTargetPessoa();
 
@@ -190,8 +177,8 @@ namespace EventoWeb.Controllers.Tests
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
-        new Claim(ClaimTypes.Name, model.Cpf),
-        new Claim(ClaimTypes.Role, "ADMINISTRADOR")
+                new Claim(ClaimTypes.Name, model.Cpf),
+                new Claim(ClaimTypes.Role, "ADMINISTRADOR")
             }, "mock"));
 
             localController.ControllerContext = new ControllerContext()
@@ -201,10 +188,8 @@ namespace EventoWeb.Controllers.Tests
 
             localController.ModelState.Clear();
 
-            // Act
-            var result =  localController.Edit(model.Id, model);
+            var result = await localController.Edit(model.Id, model);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             var redirectToActionResult = (RedirectToActionResult)result;
             Assert.IsNull(redirectToActionResult.ControllerName);
@@ -212,14 +197,11 @@ namespace EventoWeb.Controllers.Tests
             mockService.Verify(service => service.Edit(It.IsAny<Pessoa>()), Times.Once);
         }
 
-
         [TestMethod()]
         public void DeleteTest_Post_Valid()
         {
-            // Act
             var result = controller!.Delete(1);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(PessoaModel));
@@ -244,10 +226,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public void DeleteTest_Get_Valid()
         {
-            // Act
             var result = controller!.DeleteConfirmed(GetTargetPessoaModel().Id);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.IsNull(redirectToActionResult.ControllerName);
@@ -325,58 +305,58 @@ namespace EventoWeb.Controllers.Tests
             {
                 new Pessoa
                 {
-                        Id = 1,
-                        Nome = "João Vitor Sodré",
-                        NomeCracha = "Sodré",
-                        Cpf = "040.268.930-57",
-                        Sexo = "M",
-                        Cep = "48370-000",
-                        Rua = "Avenida Principal",
-                        Bairro = "Centro",
-                        Cidade = "Irece",
-                        Estado = "BA",
-                        Numero = "s/n",
-                        Complemento = "casa",
-                        Email = "email@gmail.com",
-                        Telefone1 = "7999990011",
-                        Telefone2 = "NULL",
-                    },
+                    Id = 1,
+                    Nome = "João Vitor Sodré",
+                    NomeCracha = "Sodré",
+                    Cpf = "040.268.930-57",
+                    Sexo = "M",
+                    Cep = "48370-000",
+                    Rua = "Avenida Principal",
+                    Bairro = "Centro",
+                    Cidade = "Irece",
+                    Estado = "BA",
+                    Numero = "s/n",
+                    Complemento = "casa",
+                    Email = "email@gmail.com",
+                    Telefone1 = "7999990011",
+                    Telefone2 = "NULL",
+                },
                 new Pessoa
                 {
-                        Id = 2,
-                        Nome = "Nagibe Santos Wanus Junior",
-                        NomeCracha = "Nagibe Junior",
-                        Cpf = "917.091.250-55",
-                        Sexo = "M",
-                        Cep = "45566-000",
-                        Rua = "Rua Severino Vieira",
-                        Bairro = "Centro",
-                        Cidade = "Esplanada",
-                        Estado = "BA",
-                        Numero = "147",
-                        Complemento = "casa",
-                        Email = "nagibejr@gmail.com",
-                        Telefone1 = "7599643467",
-                        Telefone2 = "NULL",
-                    },
+                    Id = 2,
+                    Nome = "Nagibe Santos Wanus Junior",
+                    NomeCracha = "Nagibe Junior",
+                    Cpf = "917.091.250-55",
+                    Sexo = "M",
+                    Cep = "45566-000",
+                    Rua = "Rua Severino Vieira",
+                    Bairro = "Centro",
+                    Cidade = "Esplanada",
+                    Estado = "BA",
+                    Numero = "147",
+                    Complemento = "casa",
+                    Email = "nagibejr@gmail.com",
+                    Telefone1 = "7599643467",
+                    Telefone2 = "NULL",
+                },
                 new Pessoa
                 {
-                        Id = 3,
-                        Nome = "Marcos Venicios da Palma Dias",
-                        NomeCracha = "Marcos Venicios",
-                        Cpf = "206.015.300-04",
-                        Sexo = "M",
-                        Cep = "45340-086",
-                        Rua = "Rua da Linha",
-                        Bairro = "Centro",
-                        Cidade = "Esplanada",
-                        Estado = "BA",
-                        Numero = "s/n",
-                        Complemento = "casa",
-                        Email = "muzanpvp@gmail.com",
-                        Telefone1 = "7999001133",
-                        Telefone2 = "NULL",
-                    },
+                    Id = 3,
+                    Nome = "Marcos Venicios da Palma Dias",
+                    NomeCracha = "Marcos Venicios",
+                    Cpf = "206.015.300-04",
+                    Sexo = "M",
+                    Cep = "45340-086",
+                    Rua = "Rua da Linha",
+                    Bairro = "Centro",
+                    Cidade = "Esplanada",
+                    Estado = "BA",
+                    Numero = "s/n",
+                    Complemento = "casa",
+                    Email = "muzanpvp@gmail.com",
+                    Telefone1 = "7999001133",
+                    Telefone2 = "NULL",
+                },
             };
         }
     }
