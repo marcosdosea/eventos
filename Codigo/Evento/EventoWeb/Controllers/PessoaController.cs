@@ -48,7 +48,10 @@ namespace EventoWeb.Controllers
             PessoaModel pessoaModel = _mapper.Map<PessoaModel>(pessoa);
             return View(pessoaModel);
         }
-
+        
+        [Authorize(Roles = "ADMINISTRADOR")]
+        [HttpGet]
+        [Route("GestoresSistema")]
         public async Task<ActionResult> GestoresSistema()
         {
             var gestores = await _pessoaService.GetAllGestorAsync();
