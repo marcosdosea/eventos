@@ -96,11 +96,7 @@ public class PessoaService : IPessoaService
     /// </summary>
     /// <param name="cpf">dados de pessoa</param>
     /// <returns></returns>
-    public Pessoa GetByCpf(string cpf)
-    {
-        var query = from pessoa in _context.Pessoas
-                    where pessoa.Cpf == cpf
-                    select pessoa;
+    public Pessoa Get(uint id) => _context.Pessoas.Find(id);
 
     public IEnumerable<Pessoa> GetAll() => _context.Pessoas.AsNoTracking();
 
