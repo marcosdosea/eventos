@@ -126,11 +126,13 @@ namespace EventoWeb.Controllers
         [AllowAnonymous]
         [HttpGet]
         [Route("Create")]
-        public ActionResult Create()
+        public ActionResult Create(string? returnUrl)
         {
             var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
             var viewModel = new PessoaModel();
             viewModel.Estados = new SelectList(estados, "Estado", "Nome");
+
+            ViewBag.ReturnUrl = returnUrl;
             return View(viewModel);
         }
 
@@ -138,7 +140,7 @@ namespace EventoWeb.Controllers
         [HttpPost]
         [Route("Create")]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(PessoaModel viewModel)
+        public ActionResult Create(PessoaModel viewModel, string? returnUrl)
         {
             if (ModelState.IsValid)
             {
@@ -163,9 +165,14 @@ namespace EventoWeb.Controllers
                 var pessoa = _mapper.Map<Pessoa>(viewModel);
                 pessoa.Foto = fotoSource;
                 _pessoaService.Create(pessoa);
-                return RedirectToAction(nameof(Index));
-            }
 
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
+
+            }
+            
             return View(viewModel);
         }
 
@@ -240,11 +247,11 @@ namespace EventoWeb.Controllers
                  pessoa.Foto = fotoSource;
                 _pessoaService.Edit(pessoa);
 
-                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)) { 
                     return Redirect(returnUrl);
+                }
 
-
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index));//TODO: PRECISO SABER QUAL PÁGINA REDIRECIONAR
             }
 
             return View(viewModel);
