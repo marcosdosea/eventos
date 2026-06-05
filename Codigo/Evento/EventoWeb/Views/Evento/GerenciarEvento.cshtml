@@ -33,20 +33,10 @@
         <img src="~/ícones/Inscricoes.png" class="card-img-bottom" alt="...">
         <div class="card-img-overlay">
             <td>
-                @Html.ActionLink("Tipo Inscrição", "Index", "TipoInscricao", new { idEvento = @Model.Evento.Id }, new { @style = "text-decoration:none;" })
+                @Html.ActionLink("Inscrições", "Index", "Participacaopessoaevento", new { idEvento = Model.Evento.Id}, new { @style = "text-decoration:none;" })
             </td>
         </div>
     </div>
-
-    <div class="card">
-        <img src="~/ícones/Participantes.png" class="card-img-bottom" alt="...">
-        <div class="card-img-overlay">
-            <td>
-                @Html.ActionLink("Participantes", "CreateParticipante", new { idEvento = @Model.Evento.Id }, new { @style = "text-decoration:none;" })
-            </td>
-        </div>
-    </div>
-
 
     <div class="card">
         <img src="~/ícones/Colaboradores.png" class="card-img-bottom" alt="...">
@@ -65,30 +55,18 @@
             </td>
         </div>
     </div>
+
+    
     <div class="card">
-        <img src="~/ícones/certificado.svg" class="card-img-bottom" alt="...">
+        <img src="~/ícones/Participantes.png" class="card-img-bottom" alt="...">
         <div class="card-img-overlay">
             <td>
-                @Html.ActionLink("Certificado", "#", new { id = @Model.Evento.Id }, new { @style = "text-decoration:none;" })
+                @Html.ActionLink("Usuário", "CreateParticipante", new { idEvento = @Model.Evento.Id }, new { @style = "text-decoration:none;" })
             </td>
         </div>
     </div>
-    <div class="card">
-        <img src="~/ícones/cracha.svg" class="card-img-bottom" alt="...">
-        <div class="card-img-overlay">
-            <td>
-                @Html.ActionLink("Cracha", "Index", "Modelocracha", new { idEvento = @Model.Evento.Id }, new { @style = "text-decoration:none;" })
-            </td>
-        </div>
-    </div>
-    <div class="card">
-        <img src="~/ícones/frequencia.svg" class="card-img-bottom" alt="...">
-        <div class="card-img-overlay">
-            <td>
-                @Html.ActionLink("Participação", "Index", "Participacaopessoaevento", new { idEvento = @Model.Evento.Id }, new { @style = "text-decoration:none;" })
-            </td>
-        </div>
-    </div>
+
+
 </div>
 <br>
 <button type="button" class="btn-blue-normal btn btn-lg mb-2" onclick="window.location.href='@Url.Action("CreateOrEdit", "Subevento", new { idEvento = Model.Evento.Id })'" style="margin-top: 10px">
