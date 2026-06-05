@@ -5,6 +5,8 @@ namespace EventoWeb.Models
 {
     public class GestorModel
     {
+        public uint Id { get; set; }
+
         [Display(Name = "Nome")]
         [Required(ErrorMessage = "Nome é obrigatório")]
         public string Nome { get; set; } = null!;

@@ -9,7 +9,8 @@
 <div>
     <h1 class="blue-normal">Seja Bem-vindo</h1>
     <button type="button" class="btn btn-lg btn-blue-normal mb-2"
-            onclick="location.href='@Url.Action("Create")'">
+            onclick="location.href='@Url.Action("Create", new { id = Model.Id, returnUrl = Url.Action("GestoresSistema", "Pessoa") })'">
+        
         Adicionar Gestor
     </button>
     <table id="tableGestor" class="table table-striped">
@@ -29,9 +30,9 @@
                     <td style="vertical-align: middle;">@FormatarCPF(@item.Cpf)</td>
                     <td style="vertical-align: middle;">@item.Nome</td>      
                     <td>
-                        @Html.ActionLink("Editar", "Edit", new { id = item.Id, returnUrl = Url.Action("Index", "Pessoa") }, new { @class = "btn btn-sm btn-link" })
+                        @Html.ActionLink("Editar", "Edit", new { id = item.Id, returnUrl = Url.Action("GestoresSistema", "Pessoa") }, new { @class = "btn btn-sm btn-link" })
                         &nbsp;&nbsp;
-                        @Html.ActionLink("Detalhes", "Details", new { id = item.Id, returnUrl = Url.Action("Index", "Pessoa") }, new { @class = "btn btn-sm btn-link" })
+                        @Html.ActionLink("Detalhes", "Details", new { id = item.Id, returnUrl = Url.Action("GestoresSistema", "Pessoa") }, new { @class = "btn btn-sm btn-link" })
                         &nbsp;&nbsp;
                         @Html.ActionLink("Excluir", "Delete", new { id = item.Id, returnUrl = Url.Action("Index", "Pessoa") }, new { @class = "btn btn-sm btn-link" })
                         &nbsp;&nbsp;
