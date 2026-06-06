@@ -55,6 +55,19 @@ namespace EventoWeb.Controllers
 
             return View(_mapper.Map<PessoaModel>(pessoa));
         }
+        
+        [Authorize(Roles = "ADMINISTRADOR")]
+        [HttpGet]
+        [Route("GestoresSistema")]
+        public async Task<ActionResult> GestoresSistema()
+        {
+            var gestores = await _pessoaService.GetAllGestorAsync();
+            var viewModel = new GestorModel
+            {
+                Gestores = _mapper.Map<List<PessoaModel>>(gestores.OrderBy(p => p.Nome))
+            };
+            return View(viewModel);
+        }
 
         // =====================================================================
         // CREATE (auto-cadastro — sem autenticação)
@@ -64,13 +77,14 @@ namespace EventoWeb.Controllers
         [AllowAnonymous]
         [HttpGet]
         [Route("Create")]
-        public ActionResult Create()
+        public ActionResult Create(string? returnUrl)
         {
             var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
             var viewModel = new PessoaModel
             {
                 Estados = new SelectList(estados, "Estado", "Nome")
             };
+             ViewBag.ReturnUrl = returnUrl;
             return View(viewModel);
         }
 
@@ -78,7 +92,7 @@ namespace EventoWeb.Controllers
         [HttpPost]
         [Route("Create")]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Create(PessoaModel viewModel)
+        public async Task<ActionResult> Create(PessoaModel viewModel,string? returnUrl)
         {
             if (ModelState.IsValid)
             {
@@ -98,7 +112,11 @@ namespace EventoWeb.Controllers
                 {
                     // Cria Pessoa + Identity + role USUARIO (papel 4)
                     await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 4);
-                    return RedirectToAction(nameof(Index));
+                    if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                    {
+                      return Redirect(returnUrl);
+                    } 
+
                 }
                 catch (Exception ex)
                 {
@@ -106,19 +124,15 @@ namespace EventoWeb.Controllers
                 }
             }
 
-            viewModel.Estados = new SelectList(
-                _estadosbrasilService.GetAll().OrderBy(e => e.Nome), "Estado", "Nome");
-            return View(viewModel);
-        }
 
-        // =====================================================================
-        // EDIT
-        // =====================================================================
+            return View(viewModel);
+
+        }
 
         [Authorize]
         [HttpGet]
         [Route("Edit/{id}")]
-        public ActionResult Edit(uint id)
+        public ActionResult Edit(uint id,string? returnUrl)
         {
             var pessoa = _pessoaService.Get(id);
             if (pessoa == null) return NotFound();
@@ -129,6 +143,7 @@ namespace EventoWeb.Controllers
             var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
             var viewModel = _mapper.Map<PessoaModel>(pessoa);
             viewModel.Estados = new SelectList(estados, "Estado", "Nome");
+            ViewBag.ReturnUrl = returnUrl;
             return View(viewModel);
         }
 
@@ -136,7 +151,7 @@ namespace EventoWeb.Controllers
         [HttpPost]
         [Route("Edit/{id}")]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Edit(uint id, PessoaModel viewModel)
+        public async Task<ActionResult> Edit(uint id, PessoaModel viewModel, string? returnUrl)
         {
             var pessoa = _pessoaService.Get(id);
             if (pessoa == null) return NotFound();
@@ -160,7 +175,13 @@ namespace EventoWeb.Controllers
                 var pessoaEditada = _mapper.Map<Pessoa>(viewModel);
                 pessoaEditada.Foto = fotoSource;
                 await _pessoaService.Edit(pessoaEditada);
-                return RedirectToAction(nameof(Index));
+
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)) { 
+                    return Redirect(returnUrl);
+                }
+
+                              
+                
             }
 
             viewModel.Estados = new SelectList(
@@ -175,21 +196,27 @@ namespace EventoWeb.Controllers
         [Authorize(Roles = "ADMINISTRADOR")]
         [HttpGet]
         [Route("Delete/{id}")]
-        public ActionResult Delete(uint id)
+        public ActionResult Delete(uint id, string? returnUrl)
         {
             var pessoa = _pessoaService.Get(id);
             if (pessoa == null) return NotFound();
-            return View(_mapper.Map<PessoaModel>(pessoa));
+            PessoaModel pessoaModel = _mapper.Map<PessoaModel>(pessoa);
+            ViewBag.ReturnUrl = returnUrl;
+            return View(pessoaModel);
         }
 
         [Authorize(Roles = "ADMINISTRADOR")]
         [HttpPost, ActionName("Delete")]
         [Route("Delete/{id}")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(uint id)
+        public ActionResult DeleteConfirmed(uint id, string? returnUrl)
         {
             _pessoaService.Delete(id);
-            return RedirectToAction(nameof(Index));
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+            return RedirectToAction(returnUrl);
         }
 
         // =====================================================================

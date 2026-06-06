@@ -14,14 +14,10 @@ namespace Core.Service
         Pessoa Get(uint id);
         IEnumerable<Pessoa> GetAll();
         Pessoa GetByCpf(string cpf);
-
-
-        Task<UsuarioIdentity> CreateAsync(Pessoa pessoa);
-
-        Task CreatePessoaIdentityComPapelAsync(Pessoa pessoa, int idPapel);
-
-        
         Task<List<Pessoa>> GetAllAdmAsync();
+        Task<List<Pessoa>> GetAllGestorAsync();
+        Task<UsuarioIdentity> CreateAsync(Pessoa pessoa);
+        Task CreatePessoaIdentityComPapelAsync(Pessoa pessoa, int idPapel);
         Task<List<Pessoa>> GetPessoasPorPapelNoEventoAsync(uint idEvento, int idPapel);
 
     }
