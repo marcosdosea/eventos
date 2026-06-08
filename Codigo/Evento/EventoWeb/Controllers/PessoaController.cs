@@ -212,6 +212,7 @@ namespace EventoWeb.Controllers
         public ActionResult DeleteConfirmed(uint id, string? returnUrl)
         {
             _pessoaService.Delete(id);
+            TempData["SuccessMessage"] = "Exclusão realizada com sucesso!";
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
                 return Redirect(returnUrl);
@@ -257,7 +258,7 @@ namespace EventoWeb.Controllers
                 {
                     // Cria Pessoa + Identity + role ADMINISTRADOR (papel 1)
                     await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 1);
-                    TempData["Success"] = "Administrador definido com sucesso.";
+                    TempData["SuccessMessage"] = "Administrador definido com sucesso.";
                     return RedirectToAction(nameof(DefinirAdministrador));
                 }
                 catch (Exception ex)
