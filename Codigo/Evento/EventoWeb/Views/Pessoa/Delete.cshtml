@@ -135,14 +135,14 @@
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title justify-content-center" id="exampleModalLongTitle">Excluir Cadastro</h5>
+                <h5 class="modal-title justify-content-center" id="exampleModalLongTitle">Confirmar exclusão</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close">
                    
                 </button>
             </div>
             <form asp-action="Delete">
                 <div class="modal-body text-center">
-                    <h4>Certeza que deseja excluir esta pessoa?</h4>
+                    <h4>Tem certeza que deseja excluir essa pessoa?</h4>
                     <input type="hidden" asp-for="Id" /> <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
                 </div>
                 <div class="modal-footer justify-content-center">
