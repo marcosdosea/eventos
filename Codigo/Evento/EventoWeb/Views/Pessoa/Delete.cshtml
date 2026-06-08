@@ -4,14 +4,12 @@
     ViewData["Title"] = "Delete";
 }
 
-<!DOCTYPE html>
-<html lang="pt-BR">
-
 <div class="container-fluid no-padding">
 <div class="row">
+   
     <h1 class="blue-normal">Excluir Pessoa</h1>
+    <br />
     <div>
-        <h3>Certeza que deseja excluir esta Pessoa?</h3>
         <dl class="row">
             <dt class = "col-sm-2">
                 @Html.DisplayNameFor(model => model.Nome)
@@ -114,19 +112,45 @@
             </dd>
         </dl>
     </div>
-    <form asp-action="Delete" class="row">
-        <div class="d-flex justify-content-end">
+    <div class="d-flex justify-content-end">
         <div class="d-flex flex-row">
-            <div class="form-group" style="margin-right: 10px;">
-                <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
-                <input type="submit" value="Excluir" class="btn btn-danger"/>
-            </div>
-            <div class="form-group">
-            <a href="@ViewBag.ReturnUrl" class="btn btn-outline-blue-normal">Cancelar</a>
-            </div>
-            </div>
+                <div class="form-group" style="margin-right: 10px;">
+                    <a href="@ViewBag.ReturnUrl" class="btn btn-outline-blue-normal">Voltar</a>
+                </div>
+
+                <div class="form-group">
+                    
+                    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluir">
+                        Excluir
+                    </button>
+                </div>
+
+               
         </div>
-    </form>
+    </div>
+        
 </div>
+</div>
+<div class="modal fade" id="modalExcluir" tabindex="-1" role="dialog" aria-labelledby="modalExcluirPessoa" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title justify-content-center" id="exampleModalLongTitle">Confirmar exclusão</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close">
+                   
+                </button>
+            </div>
+            <form asp-action="Delete">
+                <div class="modal-body text-center">
+                    <h4>Tem certeza que deseja excluir essa pessoa?</h4>
+                    <input type="hidden" asp-for="Id" /> <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Excluir</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
