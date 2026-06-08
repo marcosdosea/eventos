@@ -26,6 +26,7 @@ namespace EventoWeb.Controllers
         }
 
         // GET: /TipoInscricaocontroller
+        [HttpGet("Index/{id}")]
         [HttpGet]
         public ActionResult Index(uint? idEvento)
         {

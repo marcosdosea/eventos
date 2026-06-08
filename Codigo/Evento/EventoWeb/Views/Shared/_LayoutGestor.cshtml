@@ -47,7 +47,7 @@
                                     <a class="nav-link opcao" asp-controller="Subevento" asp-action="Index">SubEventos</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link opcao" asp-controller="TipoInscricao" asp-action="Index">Tipo Inscrição</a>
+                                    @Html.ActionLink("Tipo Inscrição", "Index", "TipoInscricao", new { idEvento = Model.Evento.Id }, new { @class = "nav-link opcao", @style = "text-decoration:none;" })
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link opcao" asp-controller="Modelocracha" asp-action="Index">Modelo Cracha</a>
