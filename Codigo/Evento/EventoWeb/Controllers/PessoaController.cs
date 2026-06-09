@@ -211,12 +211,24 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(uint id, string? returnUrl)
         {
-            _pessoaService.Delete(id);
-            TempData["SuccessMessage"] = "Exclusão realizada com sucesso!";
-            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            try
             {
-                return Redirect(returnUrl);
+                _pessoaService.Delete(id);
+                TempData["SuccessMessage"] = "Exclusão realizada com sucesso!";
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
+
+            }catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = "Erro ao excluir pessoa: " + ex.Message;
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
+                    return Redirect(returnUrl);
+                }
             }
+
             return RedirectToAction(returnUrl);
         }
 
