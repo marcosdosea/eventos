@@ -58,15 +58,8 @@
 						&nbsp;&nbsp;
 						@Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @style = "text-decoration:none;", @class = "danger-normal" })
 						&nbsp;&nbsp;
-						@Html.ActionLink("Tipo Inscrição", "Index", "TipoInscricao", new { idEvento = item.Id, idPapel = 2 }, new { @style = "text-decoration:none;" })
-						&nbsp;&nbsp;
 						@Html.ActionLink("Gestores", "CreateGestor", new { idEvento = item.Id}, new { @style = "text-decoration:none;" })
 						&nbsp;&nbsp;
-						@Html.ActionLink("Colaboradores", "CreateColaborador", new { idEvento = item.Id}, new { @style = "text-decoration:none;" })
-						&nbsp;&nbsp;
-						@Html.ActionLink("Participantes", "CreateParticipante", new { idEvento = item.Id }, new { @style = "text-decoration:none;" })
-						&nbsp;&nbsp;
-						@Html.ActionLink("Subeventos", "CreateOrEdit", "Subevento", new { idEvento = item.Id }, new { @style = "text-decoration:none;" })
 					</td>
 				</tr>
 			}
