@@ -5,11 +5,12 @@ using EventoWeb.Mappers;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using System.Security.Claims;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace EventoWeb.Controllers.Tests
@@ -35,7 +36,7 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), It.IsAny<int>()))
                 .Returns(Task.CompletedTask);
             mockService.Setup(service => service.Edit(It.IsAny<Pessoa>()))
-                .Returns(Task.CompletedTask);
+                .Returns(Task.CompletedTask); 
             controller = new PessoaController(mockService.Object, mockEstadosbrasilService.Object, mapper);
         }
 
@@ -81,7 +82,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public void CreateTest()
         {
-            var result = controller!.Create();
+            string? returnUrl = null;
+            var result = controller!.Create(returnUrl);
 
             Assert.IsInstanceOfType(result, typeof(ViewResult));
         }
@@ -89,6 +91,7 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public async Task CreateTest_Valid()
         {
+            string? returnUrl = null;
             controller!.ModelState.Clear();
             var mockService = new Mock<IPessoaService>();
             mockService.Setup(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), It.IsAny<int>()))
@@ -97,19 +100,19 @@ namespace EventoWeb.Controllers.Tests
             controller = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object,
             new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper());
 
-            var result = await controller.Create(GetNewPessoa());
+            var result = await controller.Create(GetNewPessoa(), returnUrl);
 
-            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
-            RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
-            Assert.IsNull(redirectToActionResult.ControllerName);
-            Assert.AreEqual("Index", redirectToActionResult.ActionName);
-
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            ViewResult viewResult = (ViewResult)result;
+            Assert.IsNull(viewResult.ViewName);
+           
             mockService.Verify(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), It.IsAny<int>()), Times.Once);
         }
 
         [TestMethod()]
         public async Task CreateTest_Invalid()
         {
+            string? returnUrl = null;
             controller!.ModelState.Clear();
             var mockService = new Mock<IPessoaService>();
 
@@ -122,7 +125,7 @@ namespace EventoWeb.Controllers.Tests
             controller.ModelState.AddModelError("Sexo", "Campo requerido");
             controller.ModelState.AddModelError("Email", "Campo requerido");
 
-            var result = await controller.Create(GetNewPessoa());
+            var result = await controller.Create(GetNewPessoa(), returnUrl);
 
             Assert.AreEqual(5, controller.ModelState.ErrorCount);
             Assert.IsInstanceOfType(result, typeof(ViewResult));
@@ -133,6 +136,7 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public void EditTest_Get_Valid()
         {
+            string? returnUrl = null;
             var pessoa = GetTargetPessoa();
 
             var mockService = new Mock<IPessoaService>();
@@ -153,7 +157,7 @@ namespace EventoWeb.Controllers.Tests
                 HttpContext = new DefaultHttpContext() { User = user }
             };
 
-            var result = localController.Edit(1);
+            var result = localController.Edit(1, returnUrl);
 
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
@@ -165,6 +169,7 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public async Task EditTest_Post_Valid()
         {
+            string? returnUrl = null;
             var model = GetTargetPessoaModel();
             var pessoa = GetTargetPessoa();
 
@@ -188,19 +193,20 @@ namespace EventoWeb.Controllers.Tests
 
             localController.ModelState.Clear();
 
-            var result = await localController.Edit(model.Id, model);
+            var result = await localController.Edit(model.Id, model, returnUrl);
 
-            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
-            var redirectToActionResult = (RedirectToActionResult)result;
-            Assert.IsNull(redirectToActionResult.ControllerName);
-            Assert.AreEqual("Index", redirectToActionResult.ActionName);
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            ViewResult viewResult = (ViewResult)result;
+            Assert.IsNull(viewResult.ViewName);
+            
             mockService.Verify(service => service.Edit(It.IsAny<Pessoa>()), Times.Once);
         }
 
         [TestMethod()]
-        public void DeleteTest_Post_Valid()
+        public void DeleteTest_Get_Valid()
         {
-            var result = controller!.Delete(1);
+            string? returnUrl = null;
+            var result = controller!.Delete(1, returnUrl);
 
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
@@ -224,14 +230,21 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public void DeleteTest_Get_Valid()
+        public void DeleteTest_Post_Valid()
         {
-            var result = controller!.DeleteConfirmed(GetTargetPessoaModel().Id);
+            string? returnUrl = null;
+            
+            controller!.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext()
+            };
+            controller.TempData = new TempDataDictionary(controller.HttpContext, Mock.Of<ITempDataProvider>());
 
+            var result = controller!.DeleteConfirmed(GetTargetPessoa().Id, returnUrl);
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.IsNull(redirectToActionResult.ControllerName);
-            Assert.AreEqual("Index", redirectToActionResult.ActionName);
+            
         }
 
         private PessoaModel GetNewPessoa()
