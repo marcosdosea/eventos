@@ -47,7 +47,8 @@ namespace EventoWeb.Controllers
                     UsadaSubevento = e.UsadaSubevento
                 }).ToList();
 
-                ViewData["EventoId"] = idEvento.Value;
+                ViewData["ExibirMenuSanduiche"] = true;
+                ViewData["EventoId"] = idEvento;
                 ViewData["EventoNome"] = _eventoService.GetNomeById(idEvento.Value);
 
                 return View(listaTipoInscricaoModel);

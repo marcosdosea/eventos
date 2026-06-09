@@ -1,5 +1,20 @@
 ﻿<!DOCTYPE html>
 
+@{
+
+    var eventoId = ViewData["EventoId"]?.ToString();
+
+    if (string.IsNullOrEmpty(eventoId))
+    {
+        eventoId = Context.Request.Query["idEvento"].ToString();
+    }
+
+    if (string.IsNullOrEmpty(eventoId))
+    {
+        eventoId = ViewContext.RouteData.Values["id"]?.ToString();
+    }
+}
+
 <html lang="pt-BR">
 
 <head>
@@ -37,18 +52,22 @@
                                 <li class="nav-item">
                                     <a class="nav-link opcao" asp-controller="Participante" asp-action="Index">Participantes</a>
                                 </li>
+
                                 <li class="nav-item">
-                                    <a class="nav-link opcao" asp-controller="Evento" asp-action="CreateColaborador" asp-route-idEvento="@Model.Evento.Id">Colaboradores</a>
+                                    <a class="nav-link opcao" asp-controller="Evento" asp-action="CreateColaborador" asp-route-idEvento="@eventoId">Colaboradores</a>
                                 </li>
+
                                 <li class="nav-item">
                                     <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEventoListar">Meus Eventos</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link opcao" asp-controller="Subevento" asp-action="Index">SubEventos</a>
                                 </li>
+
                                 <li class="nav-item">
-                                    @Html.ActionLink("Tipo Inscrição", "Index", "TipoInscricao", new { idEvento = Model.Evento.Id }, new { @class = "nav-link opcao", @style = "text-decoration:none;" })
+                                    @Html.ActionLink("Tipo Inscrição", "Index", "TipoInscricao", new { idEvento = eventoId }, new { @class = "nav-link opcao", @style = "text-decoration:none;" })
                                 </li>
+
                                 <li class="nav-item">
                                     <a class="nav-link opcao" asp-controller="Modelocracha" asp-action="Index">Modelo Cracha</a>
                                 </li>

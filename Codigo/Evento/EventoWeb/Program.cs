@@ -140,26 +140,26 @@ namespace EventoWeb
             app.UseAuthorization();
 
             // Middleware personalizado para definir layout baseado no role
-            app.Use(async (context, next) =>
-            {
-                var isAuthenticated = context.User.Identity.IsAuthenticated;
-                var isAdmin = context.User.IsInRole("ADMINISTRADOR");
+            //app.Use(async (context, next) =>
+            //{
+            //    var isAuthenticated = context.User.Identity.IsAuthenticated;
+            //    var isAdmin = context.User.IsInRole("ADMINISTRADOR");
 
-                if (isAuthenticated)
-                {
-                    System.Diagnostics.Debug.WriteLine($"User is authenticated. Is Admin: {isAdmin}");
-                    if (isAdmin)
-                    {
-                        context.Items["Layout"] = "_LayoutAdministrativo";
-                    }
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine("User is NOT authenticated");
-                }
+            //    if (isAuthenticated)
+            //    {
+            //        System.Diagnostics.Debug.WriteLine($"User is authenticated. Is Admin: {isAdmin}");
+            //        if (isAdmin)
+            //        {
+            //            context.Items["Layout"] = "_LayoutAdministrativo";
+            //        }
+            //    }
+            //    else
+            //    {
+            //        System.Diagnostics.Debug.WriteLine("User is NOT authenticated");
+            //    }
 
-                await next();
-            });
+            //    await next();
+            //});
 
             // Inicializa os roles do sistema
             using (var scope = app.Services.CreateScope())
