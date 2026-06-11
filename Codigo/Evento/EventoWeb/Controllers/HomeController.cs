@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using EventoWeb.Views.Home;
+using Core;
 
 namespace EventoWeb.Controllers
 {
@@ -26,39 +28,34 @@ namespace EventoWeb.Controllers
         // Ação Index para listar eventos
         public IActionResult Index()
         {
+            if (User.IsInRole("GESTOR"))
+            {
+                string userCpf = User.FindFirstValue(ClaimTypes.Name);
+                if (string.IsNullOrEmpty(userCpf))
+                {
+                    return View("IndexGestor", new List<EventoModel>());
+                }
+                var eventosGestor = _eventoService.GetEventByCpf(userCpf, 2); // 2 = papel de gestor
+                var eventosList = eventosGestor.ToList();
+
+                var tiposEvento = _tipoEventoService.GetAll().ToDictionary(t => t.Id, t => t.Nome);
+
+                var eventosGestorModel = eventosList.Select(e => new EventoModel
+                {
+                    Id = e.Id,
+                    DataInicio = e.DataInicio,
+                    Nome = e.Nome,
+                    Status = e.Status,
+                    IdTipoEvento = (uint)e.IdTipoEvento,
+                    NomeTipoEvento = tiposEvento.ContainsKey((uint)e.IdTipoEvento) ? tiposEvento[(uint)e.IdTipoEvento] : "Tipo não encontrado"
+                }).ToList();
+                return View("IndexGestor", eventosGestorModel);
+            }
             var listarEventos = _eventoService.GetAll().ToList();
             var listarEventosModel = _mapper.Map<List<EventoModel>>(listarEventos);
             return View(listarEventosModel);
         }
-
-        [Authorize(Roles = "GESTOR")]
-        public IActionResult GetGestorEventos()
-        {
-            string userCpf = User.FindFirstValue(ClaimTypes.Name);
-            
-            if (string.IsNullOrEmpty(userCpf))
-            {
-                return PartialView("_GestorEventosList", new List<EventoModel>());
-            }
-
-            var listarEventos = _eventoService.GetEventByCpf(userCpf, 2); // 2 = papel de gestor
-            var eventosList = listarEventos.ToList();
-            
-            // Buscar todos os tipos de evento de uma vez
-            var tiposEvento = _tipoEventoService.GetAll().ToDictionary(t => t.Id, t => t.Nome);
-            
-            var listarEventosModel = eventosList.Select(e => new EventoModel
-            {
-                Id = e.Id,
-                DataInicio = e.DataInicio,
-                Nome = e.Nome,
-                Status = e.Status,
-                IdTipoEvento = (uint)e.IdTipoEvento,
-                NomeTipoEvento = tiposEvento.ContainsKey((uint)e.IdTipoEvento) ? tiposEvento[(uint)e.IdTipoEvento] : "Tipo não encontrado"
-            }).ToList();
-
-            return PartialView("_GestorEventosList", listarEventosModel);
-        }
+       
 
         // Outras ações do controlador
         public IActionResult Privacy()

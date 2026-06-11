@@ -3,6 +3,8 @@
 @{
     ViewData["Title"] = "BoraLá";
 }
+
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 
@@ -30,12 +32,6 @@
                         $("#alerterror").fadeOut("slow");
                     }, 3000);
         </script>
-        @if (User.IsInRole("GESTOR"))
-        {
-
-        }
-        else
-        {
             <section class="categorias">
                 <h1>Encontre o evento ideal!</h1>
                 <div class="categorias-list-container">
@@ -294,7 +290,6 @@
 
             <script src="~/js/carrossel.js"></script>
 
-        }
     </main>
 </body>
 
