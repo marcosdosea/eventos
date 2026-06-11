@@ -206,7 +206,7 @@ namespace EventoWeb.Controllers.Tests
         public void DeleteTest_Get_Valid()
         {
             string? returnUrl = null;
-            var result = controller!.Delete(1, returnUrl);
+            var result = controller!.Delete(GetTargetPessoaModel(), returnUrl);
 
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
@@ -240,10 +240,11 @@ namespace EventoWeb.Controllers.Tests
             };
             controller.TempData = new TempDataDictionary(controller.HttpContext, Mock.Of<ITempDataProvider>());
 
-            var result = controller!.DeleteConfirmed(GetTargetPessoa().Id, returnUrl);
-            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
-            RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
-            Assert.IsNull(redirectToActionResult.ControllerName);
+            var result = controller!.DeleteConfirmed(GetTargetPessoaModel(), returnUrl);
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            ViewResult viewResult = (ViewResult)result;
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(PessoaModel));
+            
             
         }
 
