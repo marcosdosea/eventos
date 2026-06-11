@@ -52,7 +52,7 @@ public class PessoaService : IPessoaService
         }
     }
 
-    public void Delete(uint id) //TODO:o cadastro continua sendo excluir se o adm decidir excluir a conta 
+    public bool Delete(uint id) 
     {
         try
         {
@@ -61,30 +61,28 @@ public class PessoaService : IPessoaService
             if (pessoa != null)
             {
                 Task<List<Pessoa>> administradores = GetAllAdmAsync();
-                foreach (var item in administradores.Result)
-                {
-                    if (administradores.Result.Count() == 1 && administradores.Result.Any(a => a.Id == id))
-                    {
 
-                        throw new InvalidOperationException("Não é possível deletar o último administrador do sistema.");
-                    }
+                if (administradores.Result.Count() == 1 && administradores.Result.Any(a => a.Id == id))
+                {
+                    return false;
+
                 }
+
 
                 _context.Remove(pessoa);
                 _context.SaveChanges();
+                return true;
             }
-        }
-        catch (InvalidOperationException)
-        {
-            
-            throw;
         }
         catch (Exception ex)
         {
             Trace.TraceError($"Erro ao deletar pessoa com ID {id}: {ex.Message}");
-            throw new Exception($"Erro ao deletar pessoa com ID {id}.", ex);
+           
+            return false;
         }
-        
+
+
+        return false;
     }
 
     /// <summary>
