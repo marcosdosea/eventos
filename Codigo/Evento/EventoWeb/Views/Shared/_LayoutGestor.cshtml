@@ -36,13 +36,13 @@
                                     <a class="nav-link opcao" href="#">Inscrições</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link opcao" asp-controller="Participante" asp-action="Index">Participantes</a>
-                                </li>
-                                <li class="nav-item">
                                     <a class="nav-link opcao" asp-controller="Evento" asp-action="CreateColaborador" asp-route-idEvento="@Model.Evento.Id">Colaboradores</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEventoListar">Meus Eventos</a>
+                                    <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEventoListar">Evento</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link opcao" asp-controller="Participante" asp-action="Index">Usuários</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link opcao" asp-controller="Subevento" asp-action="Index">SubEventos</a>
@@ -51,7 +51,7 @@
                                     <a class="nav-link opcao" asp-controller="TipoInscricao" asp-action="Index">Tipo Inscrição</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link opcao" asp-controller="Modelocracha" asp-action="Index">Modelo Cracha</a>
+                                    <a class="nav-link opcao" asp-controller="Modelocracha" asp-action="Index">Modelo Crachá</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link opcao" asp-controller="Modelocertificado" asp-action="Index">Modelo Certificado</a>
