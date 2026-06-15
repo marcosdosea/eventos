@@ -20,14 +20,16 @@
 
 
 <script>
-    setTimeout(function () {
+    setTimeout(function() {
         $("#alerterror").fadeOut("slow");
     }, 3000);
 </script>
 
 <h1 class="blue-normal">Gerenciar evento</h1>
-<span>Nome: @Model.Evento.Nome</span>
-<p>Data: @Model.Evento.DataInicio</p>
+<div class="d-flex gap-4 align-items-center">
+    <p>Nome: @Model.Evento.Nome</p>
+    <p>Data: @Model.Evento.DataInicio?.ToString("dd/MM/yyyy")</p>
+</div>
 <div class="container">
     <div class="card">
         <img src="~/ícones/Inscricoes.png" class="card-img-bottom" alt="...">

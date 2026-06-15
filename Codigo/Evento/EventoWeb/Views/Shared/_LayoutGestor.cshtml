@@ -17,7 +17,7 @@
     <header class="p-3 mb-3 border-bottom">
         <div class="container">
             <div class="d-flex justify-content-lg-between justify-content-lg-start">
-                @if ((ViewData["ExibirMenuSanduiche"] != null && (bool)ViewData["ExibirMenuSanduiche"]))
+                @if (ViewData["ExibirMenuSanduiche"] is true)
                 {
                     <button class="navbar-toggler navbar-light custom-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
