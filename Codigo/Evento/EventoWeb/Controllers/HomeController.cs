@@ -3,10 +3,7 @@ using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
-using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using EventoWeb.Views.Home;
-using Core;
 
 namespace EventoWeb.Controllers
 {
