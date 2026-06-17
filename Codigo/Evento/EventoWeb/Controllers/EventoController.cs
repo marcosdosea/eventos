@@ -283,7 +283,7 @@ namespace EventoWeb.Controllers
         }
 
         [Authorize(Roles = "GESTOR")]
-        
+     
         [HttpGet]
         [Route("CreateColaborador")]
         public ActionResult CreateColaborador(uint idEvento)
@@ -318,8 +318,8 @@ namespace EventoWeb.Controllers
                 var idEvento = gestaoPapelModel.Evento.Id;
                 if (pessoaExistente is null)
                 {
-                    Pessoa pessoa = _mapper.Map<Pessoa>(gestaoPapelModel.Pessoa);
-                    pessoaExistente = pessoa;
+                    TempData["Message"] = "Essa pessoa ainda não está no sistema...";
+                    return View(gestaoPapelModel);
                 }
                 else
                 {
