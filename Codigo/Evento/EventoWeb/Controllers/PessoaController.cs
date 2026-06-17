@@ -196,9 +196,10 @@ namespace EventoWeb.Controllers
         [Authorize(Roles = "ADMINISTRADOR")]
         [HttpGet]
         [Route("Delete/{id}")]
-        public ActionResult Delete(uint id, string? returnUrl)
+        [Route("Delete")]
+        public ActionResult Delete(PessoaModel viewModel,string? returnUrl)
         {
-            var pessoa = _pessoaService.Get(id);
+            var pessoa = _pessoaService.Get(viewModel.Id);
             if (pessoa == null) return NotFound();
             PessoaModel pessoaModel = _mapper.Map<PessoaModel>(pessoa);
             ViewBag.ReturnUrl = returnUrl;
@@ -209,15 +210,27 @@ namespace EventoWeb.Controllers
         [HttpPost, ActionName("Delete")]
         [Route("Delete/{id}")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(uint id, string? returnUrl)
+        public ActionResult DeleteConfirmed(PessoaModel viewModel,string? returnUrl)
         {
-            _pessoaService.Delete(id);
-            TempData["SuccessMessage"] = "Exclusão realizada com sucesso!";
-            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                       
+                var sucesso = _pessoaService.Delete(viewModel.Id);
+
+                if (sucesso)
+                {
+                    TempData["SuccessMessage"] = "Exclusão realizada com sucesso!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Erro ao excluir pessoa";
+                }
+
+            
+           if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             {
                 return Redirect(returnUrl);
             }
-            return RedirectToAction(returnUrl);
+
+            return View(viewModel);
         }
 
         // =====================================================================
@@ -254,17 +267,11 @@ namespace EventoWeb.Controllers
                     Email = viewModel.Email
                 };
 
-                try
-                {
-                    // Cria Pessoa + Identity + role ADMINISTRADOR (papel 1)
-                    await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 1);
-                    TempData["SuccessMessage"] = "Administrador definido com sucesso.";
-                    return RedirectToAction(nameof(DefinirAdministrador));
-                }
-                catch (Exception ex)
-                {
-                    ModelState.AddModelError("", "Erro ao definir administrador: " + ex.Message);
-                }
+                // Cria Pessoa + Identity + role ADMINISTRADOR (papel 1)
+                await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 1);
+                TempData["SuccessMessage"] = "Administrador definido com sucesso.";
+                return RedirectToAction(nameof(DefinirAdministrador));
+               
             }
 
             var adminsAtuais = await _pessoaService.GetAllAdmAsync();

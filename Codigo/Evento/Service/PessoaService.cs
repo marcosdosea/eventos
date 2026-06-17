@@ -52,14 +52,37 @@ public class PessoaService : IPessoaService
         }
     }
 
-    public void Delete(uint id)
+    public bool Delete(uint id) 
     {
-        var pessoa = _context.Pessoas.Find(id);
-        if (pessoa != null)
+        try
         {
-            _context.Remove(pessoa);
-            _context.SaveChanges();
+            var pessoa = _context.Pessoas.Find(id);
+
+            if (pessoa != null)
+            {
+                Task<List<Pessoa>> administradores = GetAllAdmAsync();
+
+                if (administradores.Result.Count() == 1 && administradores.Result.Any(a => a.Id == id))
+                {
+                    return false;
+
+                }
+
+
+                _context.Remove(pessoa);
+                _context.SaveChanges();
+                return true;
+            }
         }
+        catch (Exception ex)
+        {
+            Trace.TraceError($"Erro ao deletar pessoa com ID {id}: {ex.Message}");
+           
+            return false;
+        }
+
+
+        return false;
     }
 
     /// <summary>
