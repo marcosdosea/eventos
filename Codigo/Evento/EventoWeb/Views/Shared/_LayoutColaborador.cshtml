@@ -2,6 +2,22 @@
 
 <html lang="pt-BR">
 
+
+@{
+
+    var eventoId = ViewData["EventoId"]?.ToString();
+
+    if (string.IsNullOrEmpty(eventoId))
+    {
+        eventoId = Context.Request.Query["idEvento"].ToString();
+    }
+
+    if (string.IsNullOrEmpty(eventoId))
+    {
+        eventoId = ViewContext.RouteData.Values["id"]?.ToString();
+    }
+}
+
 <head>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -33,7 +49,7 @@
                                 <a class="nav-link opcao" href="#">Inscrições</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link opcao" asp-controller="Participante" asp-action="Index">Participantes</a>
+                                <a class="nav-link opcao" asp-controller="Evento" asp-action="CreateParticipante" asp-route-idEvento="@eventoId">Participantes</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link opcao" asp-controller="ParticipacaoPessoaEvento" asp-action="Index">Frequência</a>
