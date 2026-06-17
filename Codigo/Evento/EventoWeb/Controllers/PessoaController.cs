@@ -197,12 +197,12 @@ namespace EventoWeb.Controllers
         [HttpGet]
         [Route("Delete/{id}")]
         [Route("Delete")]
-        public ActionResult Delete(PessoaModel viewModel,string? returnUrl)
+        public ActionResult Delete(PessoaModel viewModel)
         {
             var pessoa = _pessoaService.Get(viewModel.Id);
             if (pessoa == null) return NotFound();
             PessoaModel pessoaModel = _mapper.Map<PessoaModel>(pessoa);
-            ViewBag.ReturnUrl = returnUrl;
+            
             return View(pessoaModel);
         }
 
@@ -210,7 +210,7 @@ namespace EventoWeb.Controllers
         [HttpPost, ActionName("Delete")]
         [Route("Delete/{id}")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(PessoaModel viewModel,string? returnUrl)
+        public ActionResult DeleteConfirmed(PessoaModel viewModel)
         {
                        
                 var sucesso = _pessoaService.Delete(viewModel.Id);
@@ -224,11 +224,6 @@ namespace EventoWeb.Controllers
                     TempData["ErrorMessage"] = "Erro ao excluir pessoa";
                 }
 
-            
-           if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
-            {
-                return Redirect(returnUrl);
-            }
 
             return View(viewModel);
         }

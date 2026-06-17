@@ -42,8 +42,8 @@
 					</div>
 				</div>
                 <div class="row">
-                    <div class="d-flex flex-row-reverse">
-                        <input type="submit" value="Adicionar Administrador" class="btn btn-lg btn-blue-normal"></input>
+                    <div class="d-flex flex-row-reverse mb-4">
+                            <button type="submit" class="btn btn-lg btn-blue-normal">Adicionar Administrador</button>
                     </div>
                 </div>
             </div>
@@ -55,7 +55,6 @@
    
 <div class="row">
     <div class="col-md-12">
-        <h2 class="blue-normal">Lista de Gestores do Evento</h2>
         <table class="table table-striped">
             <thead class="blue-normal blue-normal-bg-table">
                 <tr>
@@ -71,12 +70,10 @@
                         <td style="vertical-align: middle;">@FormatarCPF(@item.Cpf)</td>
                         <td style="vertical-align: middle;">@item.Nome</td>
                         <td>
-                            @Html.ActionLink("Editar", "Edit", new { id = item.Id, returnUrl = Url.Action("DefinirAdministrador", "Pessoa") }, new { @class = "btn btn-sm btn-link" })
-                            &nbsp;
-                            @Html.ActionLink("Detalhes", "Details", new { id = item.Id, returnUrl = Url.Action("DefinirAdministrador", "Pessoa") }, new { @class = "btn btn-sm btn-link" })
-                            &nbsp;
+                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluir" data-bs-id="@item.Id">Excluir</button>
                             @Html.ActionLink("Excluir", "Delete", new { id = item.Id, returnUrl = Url.Action("DefinirAdministrador", "Pessoa") }, new { @class = "btn btn-sm btn-link" })
-                        
+                            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modalMudarSenha" data-bs-id="@item.Id">Mudar Senha</button>
+
                         </td>
                     </tr>
                 }
@@ -84,8 +81,56 @@
         </table>
     </div>
 </div>
+<div class="modal fade" id="modalExcluir" tabindex="-1" role="dialog" aria-labelledby="modalExcluirPessoa" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title justify-content-center" id="exampleModalLongTitle">Confirmar exclusão</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close">
+                </button>
+            </div>
+              <div class="modal-body text-center">
+                <h4>Tem certeza que deseja excluir?</h4>
+                <span class="text-danger fw-bold small">
+                    ESTA OPERAÇÃO NÃO PODE SER DESFEITA.
+                </span>
+                    <input type="hidden" asp-for="Id" /> 
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger" id="btnConfirmarExclusao">Ok</button>
+             </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalMudarSenha" tabindex="-1" role="dialog" aria-labelledby="modalMudarSenhaPessoa" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title justify-content-center" id="exampleModalLongTitle">Confirmar exclusão</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close">
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <h4>Tem certeza que deseja mudar a senha?</h4>
+                <span class="text-black-50 fw-bold small">
+                    O administrador vai receber um e-mail para redefinir a senha.
+                </span>
+                <input type="hidden" asp-for="Id" />
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-danger" id="btnConfirmarMudanca">Sim</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 
 @functions {
+
     public static string FormatarCPF(string cpf)
     {
         if (string.IsNullOrEmpty(cpf) || cpf.Length != 11)
@@ -93,4 +138,5 @@
 
         return Convert.ToUInt64(cpf).ToString(@"000\.000\.000\-00");
     }
+
 }
