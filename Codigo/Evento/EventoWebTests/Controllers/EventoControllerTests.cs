@@ -60,7 +60,7 @@ namespace EventoWeb.Controllers.Tests
             mockServicePessoa.Setup(service => service.CreatePessoaIdentityComPapelAsync(
     It.IsAny<Pessoa>(), It.IsAny<uint>(), It.IsAny<int>()))
     .Returns(Task.CompletedTask)
-    .Verifiable();
+                .Verifiable();
             mockService.Setup(service => service.AtualizarVagasDisponiveis(It.IsAny<uint>()))
                 .Verifiable();
             var pessoa = new Pessoa { Id = 1, Cpf = "123.456.789-00", Nome = "Teste" };

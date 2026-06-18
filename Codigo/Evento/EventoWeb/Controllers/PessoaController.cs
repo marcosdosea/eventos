@@ -1,4 +1,4 @@
-using AutoMapper;
+    using AutoMapper;
 using Core;
 using Core.Service;
 using EventoWeb.Models;
@@ -110,6 +110,7 @@ namespace EventoWeb.Controllers
 
                 try
                 {
+                    await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 4);
 
                     if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                     {

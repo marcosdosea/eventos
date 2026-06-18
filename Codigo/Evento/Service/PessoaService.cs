@@ -160,7 +160,7 @@ public class PessoaService : IPessoaService
 
         if (existingUser == null)
         {
-            existingUser = await CreateAsync(pessoa);
+            return;
         }
 
         if (idEvento > 0)
@@ -174,6 +174,7 @@ public class PessoaService : IPessoaService
                 Status = "S"
             };
             _inscricaoService.CreateInscricaoEvento(novaInscricao);
+
         }
 
         using (var transaction = await _context.Database.BeginTransactionAsync())
