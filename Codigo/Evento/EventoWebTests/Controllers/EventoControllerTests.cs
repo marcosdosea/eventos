@@ -57,8 +57,10 @@ namespace EventoWeb.Controllers.Tests
                 .Returns(new Pessoa { Id = 1, Nome = "João Vitor Sodré", NomeCracha = "Sodré", Cpf = "040.268.930-57" });
             mockServiceInscricao.Setup(service => service.GetPapelPessoaByEvento(It.IsAny<uint>(), It.IsAny<uint>()))
                 .Returns((uint idPessoa, uint idEvento) => 1);
-            mockServicePessoa.Setup(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), It.IsAny<int>()))
-                .Verifiable();
+            mockServicePessoa.Setup(service => service.CreatePessoaIdentityComPapelAsync(
+    It.IsAny<Pessoa>(), It.IsAny<uint>(), It.IsAny<int>()))
+    .Returns(Task.CompletedTask)
+    .Verifiable();
             mockService.Setup(service => service.AtualizarVagasDisponiveis(It.IsAny<uint>()))
                 .Verifiable();
             var pessoa = new Pessoa { Id = 1, Cpf = "123.456.789-00", Nome = "Teste" };
