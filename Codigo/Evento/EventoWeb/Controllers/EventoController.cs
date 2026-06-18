@@ -319,11 +319,11 @@ namespace EventoWeb.Controllers
                 if (pessoaExistente is null)
                 {
                     TempData["Message"] = "Essa pessoa ainda não está no sistema...";
-                    return View(gestaoPapelModel);
+                    return RedirectToAction("CreateColaborador", new { idEvento });
                 }
                 var papel = _inscricaoService.GetPapelPessoaByEvento(pessoaExistente.Id, idEvento);
 
-                if (papel is 2 or 3 or 4)
+                if (papel is 2 or 3)
                 {
                     var papelNome = "";
 
@@ -334,9 +334,6 @@ namespace EventoWeb.Controllers
                             break;
                         case 3:
                             papelNome = "colaborador";
-                            break;
-                        case 4:
-                            papelNome = "participante";
                             break;
                     }
 
