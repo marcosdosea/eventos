@@ -7,136 +7,53 @@
 
 <h1 class="blue-normal">Cadastrar Administradores do Sistema</h1>
 <br />
+
 <div class="row">
-    <div> 
-        <form asp-action="DefinirAdministrador" method="post">
+	<div>
+		<form asp-action="DefinirAdministrador" method="post">
 			<div class="row">
-             <br/>
-			<div class="row">
-				<div class="col-6 col-sm-6 col-md-6 col-lg-6">
-					<div class="form-group mb-4">
-						<label asp-for="Cpf" class="control-label">CPF</label>
-						<input asp-for="Cpf" class="form-control" id="Cpf" placeholder="000.000.000-00" oninput="formatarCPF()" maxlength="14" />
-						<span asp-validation-for="Cpf" class="text-danger"></span>
+				<br />
+				<div class="row">
+					<div class="col-6 col-sm-6 col-md-6 col-lg-6">
+						<div class="form-group mb-4">
+							<label asp-for="Cpf" class="control-label">CPF</label>
+							<input asp-for="Cpf" class="form-control" id="Cpf" placeholder="000.000.000-00" oninput="formatarCPF()" maxlength="14" />
+							<span asp-validation-for="Cpf" class="text-danger"></span>
+						</div>
+					</div>
+					<div class="col-12 col-sm-6 col-md-6 col-lg-6">
+						<div class="form-group mb-4">
+							<label asp-for="Nome" class="control-label">Nome</label>
+							<input asp-for="Nome" class="form-control" id="Nome" placeholder="Nome completo" />
+							<span asp-validation-for="Nome" class="text-danger"></span>
+						</div>
+					</div>
+					<div class="col-6 col-sm-6 col-md-6 col-lg-6">
+						<div class="form-group mb-4">
+							<label asp-for="Telefone1" class="control-label">Telefone</label>
+							<input asp-for="Telefone1" type="number" class="form-control" id="Telefone1" placeholder="Com o DDD" />
+							<span asp-validation-for="Telefone1" class="text-danger"></span>
+						</div>
+					</div>
+					<div class="col-6 col-sm-6 col-md-6 col-lg-6">
+						<div class="form-group mb-4">
+							<label asp-for="Email" class="control-label">Email</label>
+							<input asp-for="Email" class="form-control" id="Email" placeholder="Seu e-mail" />
+							<span asp-validation-for="Email" class="text-danger"></span>
+						</div>
+					</div>
+					<div class="row">
+						<div class="d-flex flex-row-reverse mb-4">
+							<button type="submit" class="btn btn-lg btn-blue-normal">Adicionar Administrador</button>
+						</div>
 					</div>
 				</div>
-				<div class="col-12 col-sm-6 col-md-6 col-lg-6">
-                        <div class="form-group mb-4">
-						<label asp-for="Nome" class="control-label">Nome</label>
-						<input asp-for="Nome" class="form-control" id="Nome" placeholder="Nome completo" />
-						<span asp-validation-for="Nome" class="text-danger"></span>
-					</div>
-				</div>
-				<div class="col-6 col-sm-6 col-md-6 col-lg-6">
-                        <div class="form-group mb-4">
-						<label asp-for="Telefone1" class="control-label">Telefone</label>
-						<input asp-for="Telefone1" type="number" class="form-control" id="Telefone1" placeholder="Com o DDD" />
-						<span asp-validation-for="Telefone1" class="text-danger"></span>
-					</div>
-				</div>
-				<div class="col-6 col-sm-6 col-md-6 col-lg-6">
-                        <div class="form-group mb-4">
-						<label asp-for="Email" class="control-label">Email</label>
-						<input asp-for="Email" class="form-control" id="Email" placeholder="Seu e-mail" />
-						<span asp-validation-for="Email" class="text-danger"></span>
-					</div>
-				</div>
-                <div class="row">
-                    <div class="d-flex flex-row-reverse mb-4">
-                            <button type="submit" class="btn btn-lg btn-blue-normal">Adicionar Administrador</button>
-                    </div>
-                </div>
-            </div>
-            <br/>
-        </form>
-        
-    </div>
-</div>
-   
-<div class="row">
-    <div class="col-md-12">
-        <table class="table table-striped">
-            <thead class="blue-normal blue-normal-bg-table">
-                <tr>
-                    <th>CPF</th>
-                    <th>Nome</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var item in Model.Administradores)
-                {
-                    <tr>
-                        <td style="vertical-align: middle;">@FormatarCPF(@item.Cpf)</td>
-                        <td style="vertical-align: middle;">@item.Nome</td>
-                        <td>
-                            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalExcluir" data-bs-id="@item.Id">Excluir</button>
-                            @Html.ActionLink("Excluir", "Delete", new { id = item.Id, returnUrl = Url.Action("DefinirAdministrador", "Pessoa") }, new { @class = "btn btn-sm btn-link" })
-                            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modalMudarSenha" data-bs-id="@item.Id">Mudar Senha</button>
+				<br />
 
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-</div>
-<div class="modal fade" id="modalExcluir" tabindex="-1" role="dialog" aria-labelledby="modalExcluirPessoa" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title justify-content-center" id="exampleModalLongTitle">Confirmar exclusão</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close">
-                </button>
-            </div>
-              <div class="modal-body text-center">
-                <h4>Tem certeza que deseja excluir?</h4>
-                <span class="text-danger fw-bold small">
-                    ESTA OPERAÇÃO NÃO PODE SER DESFEITA.
-                </span>
-                    <input type="hidden" asp-for="Id" /> 
-                </div>
-                <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-danger" id="btnConfirmarExclusao">Ok</button>
-             </div>
-        </div>
-    </div>
+			</div>
+		</form>
+
+	</div>
 </div>
 
-<div class="modal fade" id="modalMudarSenha" tabindex="-1" role="dialog" aria-labelledby="modalMudarSenhaPessoa" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title justify-content-center" id="exampleModalLongTitle">Confirmar exclusão</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close">
-                </button>
-            </div>
-            <div class="modal-body text-center">
-                <h4>Tem certeza que deseja mudar a senha?</h4>
-                <span class="text-black-50 fw-bold small">
-                    O administrador vai receber um e-mail para redefinir a senha.
-                </span>
-                <input type="hidden" asp-for="Id" />
-            </div>
-            <div class="modal-footer justify-content-center">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-danger" id="btnConfirmarMudanca">Sim</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-
-@functions {
-
-    public static string FormatarCPF(string cpf)
-    {
-        if (string.IsNullOrEmpty(cpf) || cpf.Length != 11)
-            return cpf;
-
-        return Convert.ToUInt64(cpf).ToString(@"000\.000\.000\-00");
-    }
-
-}
+<partial name="Index" model="Model.Administradores" />
