@@ -110,7 +110,7 @@ namespace EventoWeb.Controllers
 
                 try
                 {
-                    // Cria Pessoa + Identity + role USUARIO (papel 4)
+                    
                     await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 4);
                     if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                     {
@@ -267,7 +267,7 @@ namespace EventoWeb.Controllers
                     Email = viewModel.Email
                 };
 
-                // Cria Pessoa + Identity + role ADMINISTRADOR (papel 1)
+               
                 await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 1);
                 TempData["SuccessMessage"] = "Administrador definido com sucesso.";
                 return RedirectToAction(nameof(DefinirAdministrador));
