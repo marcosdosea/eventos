@@ -224,8 +224,13 @@ namespace EventoWeb.Controllers
                     TempData["ErrorMessage"] = "Erro ao excluir pessoa";
                 }
 
+            if (User.IsInRole("ADMINISTRADOR"))
+            {
+                return RedirectToAction("DefinirAdministrador", "Pessoa");
+            }
 
-            return View(viewModel);
+
+            return RedirectToAction("Index", "Pessoa");
         }
 
         // =====================================================================
