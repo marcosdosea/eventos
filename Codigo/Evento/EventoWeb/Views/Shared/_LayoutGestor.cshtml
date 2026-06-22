@@ -114,6 +114,25 @@
 
     <div class="container conteudo">
         <main role="main" class="pb-3">
+            @if (User.IsInRole("GESTOR"))
+            {
+                <div id="gestorEventosContainer">
+                    @await Html.PartialAsync("_GestorEventosList", new List<EventoWeb.Models.EventoModel>())
+                </div>
+            }
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show position-relative" role="alert" style="padding-right: 2rem;">
+                    <div class="text-success m-0">
+                        @TempData["SuccessMessage"]
+                    </div>
+
+                    <button type="button" data-bs-dismiss="alert" aria-label="Close"
+                            style="background: none; border: none; color: #198754; font-size: 1.2rem; line-height: 1; padding: 0; cursor: pointer; position: absolute; top: 8px; right: 10px;">
+                        &times;
+                    </button>
+                </div>
+            }
             @RenderBody()
         </main>
     </div>

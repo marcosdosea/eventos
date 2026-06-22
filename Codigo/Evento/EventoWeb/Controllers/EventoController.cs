@@ -37,7 +37,7 @@ namespace EventoWeb.Controllers
             _subeventoService = subeventoService;
         }
 
-        
+
         [HttpGet]
         [Route("")]
         [Route("Index")]
@@ -59,7 +59,7 @@ namespace EventoWeb.Controllers
         }
 
         [Authorize(Roles = "ADMINISTRADOR")]
-        
+
         [HttpGet]
         [Route("Details/{id}")]
         public ActionResult Details(uint id)
@@ -70,7 +70,7 @@ namespace EventoWeb.Controllers
         }
 
         [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
-        
+
         [HttpGet]
         [Route("Create")]
         public ActionResult Create()
@@ -87,7 +87,7 @@ namespace EventoWeb.Controllers
         }
 
         [Authorize(Roles = "ADMINISTRADOR")]
-        
+
         [HttpPost]
         [Route("Create")]
         [ValidateAntiForgeryToken]
@@ -123,7 +123,7 @@ namespace EventoWeb.Controllers
         }
 
         [Authorize(Roles = "ADMINISTRADOR")]
-        
+
         [HttpGet]
         [Route("Edit/{id}")]
         public ActionResult Edit(uint id)
@@ -145,7 +145,7 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
 
-        
+
         [HttpPost]
         [Route("Edit/{id}")]
         [ValidateAntiForgeryToken]
@@ -191,7 +191,7 @@ namespace EventoWeb.Controllers
         }
 
         [Authorize(Roles = "ADMINISTRADOR")]
-        
+
         [HttpGet]
         [Route("Delete/{id}")]
         public ActionResult Delete(uint id)
@@ -205,7 +205,7 @@ namespace EventoWeb.Controllers
             return View(eventoModel);
         }
 
-        
+
         [HttpPost]
         [Route("Delete/{id}")]
         [ValidateAntiForgeryToken]
@@ -216,7 +216,7 @@ namespace EventoWeb.Controllers
         }
 
         [Authorize(Roles = "ADMINISTRADOR")]
-      
+
         [HttpGet]
         [Route("CreateGestor")]
         public ActionResult CreateGestor(uint idEvento)
@@ -229,7 +229,7 @@ namespace EventoWeb.Controllers
             return View(gestorModel);
         }
 
-        
+
         [HttpPost]
         [Route("CreateGestor")]
         [ValidateAntiForgeryToken]
@@ -271,7 +271,7 @@ namespace EventoWeb.Controllers
                     }
                 }
 
-                await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoaExistente, 2);
+                await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoaExistente, idEvento, 2);
                 _eventoService.AtualizarVagasDisponiveis(idEvento);
 
                 return RedirectToAction("GerenciarEvento", new { idEvento });
@@ -282,14 +282,14 @@ namespace EventoWeb.Controllers
             return View(gestaoPapelModel);
         }
 
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
-        
+        [Authorize(Roles = "GESTOR")]
+
         [HttpGet]
         [Route("CreateColaborador")]
         public ActionResult CreateColaborador(uint idEvento)
         {
             var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
-            if (User.IsInRole("ADMINISTRADOR") || gestor != null)
+            if (gestor != null)
             {
                 var gestorModel = new GestaoPapelModel
                 {
@@ -306,7 +306,7 @@ namespace EventoWeb.Controllers
             }
         }
 
-        
+
         [HttpPost]
         [Route("CreateColaborador")]
         [ValidateAntiForgeryToken]
@@ -318,50 +318,51 @@ namespace EventoWeb.Controllers
                 var idEvento = gestaoPapelModel.Evento.Id;
                 if (pessoaExistente is null)
                 {
-                    Pessoa pessoa = _mapper.Map<Pessoa>(gestaoPapelModel.Pessoa);
-                    pessoaExistente = pessoa;
+                    ModelState.AddModelError(string.Empty, "Essa pessoa ainda não está no sistema...");
+                    gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
+                    gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 3);
+                    return View(gestaoPapelModel);
                 }
-                else
+                var papel = _inscricaoService.GetPapelPessoaByEvento(pessoaExistente.Id, idEvento);
+
+                if (papel is 2 or 3)
                 {
-                    var papel = _inscricaoService.GetPapelPessoaByEvento(pessoaExistente.Id, idEvento);
+                    var papelNome = "";
 
-                    if (papel is 2 or 3)
+                    switch (papel)
                     {
-                        var papelNome = "";
-
-                        switch (papel)
-                        {
-                            case 2:
-                                papelNome = "gestor";
-                                break;
-                            case 3:
-                                papelNome = "colaborador";
-                                break;
-                        }
-
-                        ModelState.AddModelError(string.Empty, $"A pessoa selecionada já é um {papelNome} do evento.");
-
-                        gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
-                        gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 3);
-
-                        return View(gestaoPapelModel);
+                        case 2:
+                            papelNome = "gestor";
+                            break;
+                        case 3:
+                            papelNome = "colaborador";
+                            break;
                     }
+
+                    ModelState.AddModelError(string.Empty, $"A pessoa selecionada já é um {papelNome} do evento.");
+
+                    gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
+                    gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 3);
+
+                    return View(gestaoPapelModel);
                 }
 
-                
-                await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoaExistente, 3);
+                await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoaExistente, gestaoPapelModel.Evento.Id, 3);
                 _eventoService.AtualizarVagasDisponiveis(idEvento);
-
+                TempData["SuccessMessage"] = "Colaborador adicionado com sucesso!";
                 return RedirectToAction("CreateColaborador", new { idEvento });
             }
-
-            gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(gestaoPapelModel.Evento.Id);
-            gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(gestaoPapelModel.Evento.Id, 3);
+            if (gestaoPapelModel.Evento.Id > 0)
+            {
+                gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(gestaoPapelModel.Evento.Id);
+                gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(gestaoPapelModel.Evento.Id, 3);
+            }
             return View(gestaoPapelModel);
+
         }
 
         [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
-        
+
         [HttpGet]
         [Route("CreateParticipante")]
         public ActionResult CreateParticipante(uint idEvento)
@@ -395,7 +396,7 @@ namespace EventoWeb.Controllers
             }
         }
 
-        
+
         [HttpPost]
         [Route("CreateParticipante")]
         [ValidateAntiForgeryToken]
@@ -418,8 +419,8 @@ namespace EventoWeb.Controllers
 
                 pessoa.NomeCracha = pessoa.Nome;
 
-                
-                _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 4).Wait();
+
+                _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, idEvento,4).Wait();
                 _eventoService.AtualizarVagasDisponiveis(idEvento);
 
                 return RedirectToAction("GerenciarEvento", new { idEvento });
@@ -430,7 +431,7 @@ namespace EventoWeb.Controllers
             return View(gestaoPapelModel);
         }
 
-        
+
         [HttpPost]
         [Route("DeletePessoaPapel")]
         public async Task<IActionResult> DeletePessoaPapel(uint idPessoa, uint idEvento, uint idPapel)
@@ -462,7 +463,7 @@ namespace EventoWeb.Controllers
         }
 
         [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
-        
+
         [HttpGet]
         [Route("GerenciarEventoListar")]
         public async Task<IActionResult> GerenciarEventoListar()
@@ -521,7 +522,7 @@ namespace EventoWeb.Controllers
         }
 
         [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
-        
+
         [HttpGet]
         [Route("GerenciarEvento")]
         public IActionResult GerenciarEvento([FromQuery] uint idEvento)
@@ -645,10 +646,10 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
 
-        
+
         // é um adianto deevento proxima PR de Nadson
         // (tanto adianta quanto quem for mexer com isso vai ver o que Nadson fez/fará).
-        
+
         /*
 		[Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
 		[HttpGet]
