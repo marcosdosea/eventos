@@ -1,11 +1,9 @@
-﻿
-
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using Util;
 
 namespace EventoWeb.Models
 {
-    public class GestaoAdministradorModel
+    public class GestorModel
     {
         public uint Id { get; set; }
 
@@ -26,6 +24,6 @@ namespace EventoWeb.Models
         [Display(Name = "E-mail")]
         [Required(ErrorMessage = "E-mail é obrigatório")]
         public string Email { get; set; } = null!;
-        public List<PessoaModel> Administradores { get; set; } = new List<PessoaModel>();
+        public List<PessoaModel> Gestores { get; set; } = new List<PessoaModel>();
     }
 }

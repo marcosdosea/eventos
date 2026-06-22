@@ -52,16 +52,73 @@ public class PessoaService : IPessoaService
         }
     }
 
-    public void Delete(uint id)
+    public bool Delete(uint id) 
     {
-        var pessoa = _context.Pessoas.Find(id);
-        if (pessoa != null)
+        try
         {
-            _context.Remove(pessoa);
-            _context.SaveChanges();
+            var pessoa = _context.Pessoas.Find(id);
+
+            if (pessoa != null)
+            {
+                Task<List<Pessoa>> administradores = GetAllAdmAsync();
+
+                if (administradores.Result.Count() == 1 && administradores.Result.Any(a => a.Id == id))
+                {
+                    return false;
+
+                }
+
+
+                _context.Remove(pessoa);
+                _context.SaveChanges();
+                return true;
+            }
         }
+        catch (Exception ex)
+        {
+            Trace.TraceError($"Erro ao deletar pessoa com ID {id}: {ex.Message}");
+           
+            return false;
+        }
+
+
+        return false;
     }
 
+    /// <summary>
+    /// Obtém todas as pessoas que possuem o papel de "GESTOR" no sistema Identity.
+    /// </summary>
+    /// <returns>listaGestores</returns>
+    public async Task<List<Pessoa>> GetAllGestorAsync()
+    {
+        var listaPessoa = GetAll();
+        var listaGestores = new List<Pessoa>();
+
+        if (listaPessoa == null)
+            return listaGestores;
+
+        foreach (var pessoa in listaPessoa)
+        {
+            if (pessoa == null || string.IsNullOrWhiteSpace(pessoa.Cpf))
+                continue;
+
+            var userGestor = await _userManager.FindByNameAsync(pessoa.Cpf);
+            if (userGestor == null)
+                continue;
+
+            var isGestor = await _userManager.IsInRoleAsync(userGestor, "GESTOR");
+            if (isGestor)
+                listaGestores.Add(pessoa);
+        }
+
+        return listaGestores;
+    }
+
+    /// <summary>
+    /// Obtém uma pessoa específica por cpf
+    /// </summary>
+    /// <param name="cpf">dados de pessoa</param>
+    /// <returns></returns>
     public Pessoa Get(uint id) => _context.Pessoas.Find(id);
 
     public IEnumerable<Pessoa> GetAll() => _context.Pessoas.AsNoTracking();

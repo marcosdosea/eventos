@@ -1,0 +1,26 @@
+﻿@model IEnumerable<EventoWeb.Models.EventoModel>
+
+@{
+    ViewData["Title"] = "BoraLá";
+}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/_Layout_Inicio.css">
+    <link rel="stylesheet" href="~/css/site.css">
+    <link rel="stylesheet" href="~/css/style.css">
+</head>
+
+<body>
+    <main>
+        <div id="gestorEventosContainer">
+            @await Html.PartialAsync("_GestorEventosList", Model)
+        </div>
+    </main>
+
+</body> 
+</html>
