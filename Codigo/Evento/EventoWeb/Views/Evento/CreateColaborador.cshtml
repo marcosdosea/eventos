@@ -6,6 +6,20 @@
 <hr />
 
 <div class="row">
+	@if (!ViewData.ModelState.IsValid)
+	{
+		<div class="alert alert-danger alert-dismissible fade show position-relative" role="alert" style="padding-right: 2rem;">
+
+			<div>
+				@Html.ValidationSummary(false, "", new { @class = "text-danger m-0" })
+			</div>
+
+			<button type="button" data-bs-dismiss="alert" aria-label="Close"
+					style="background: none; border: none; color: #dc3545; font-size: 1.2rem; line-height: 1; padding: 0; cursor: pointer; position: absolute; top: 8px; right: 10px;">
+				&times;
+			</button>
+		</div>
+	}
 	<div>
 		<form asp-action="CreateColaborador" method="post" onsubmit="return validarFormulario()">
 			<div class="row">
@@ -72,12 +86,7 @@
 		</form>
 	</div>
 </div>
-@if (!ViewData.ModelState.IsValid)
-{
-	<div class="alert alert-danger">
-		@Html.ValidationSummary(false, "", new { @class = "text-danger" })
-	</div>
-}
+
 
 
 <div class="row">
