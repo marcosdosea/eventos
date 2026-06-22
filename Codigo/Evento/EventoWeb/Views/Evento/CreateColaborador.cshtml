@@ -6,21 +6,6 @@
 <hr />
 
 <div class="row">
-	@if (!ViewData.ModelState.IsValid)
-	{
-		<div class="alert alert-danger alert-dismissible fade show position-relative" role="alert" style="padding-right: 2rem;">
-
-			<div>
-				@Html.ValidationSummary(false, "", new { @class = "text-danger m-0" })
-			</div>
-
-			<button type="button" data-bs-dismiss="alert" aria-label="Close"
-					style="background: none; border: none; color: #dc3545; font-size: 1.2rem; line-height: 1; padding: 0; cursor: pointer; position: absolute; top: 8px; right: 10px;">
-				&times;
-			</button>
-		</div>
-	}
-
 	<div>
 		<form asp-action="CreateColaborador" method="post" onsubmit="return validarFormulario()">
 			<div class="row">
@@ -87,7 +72,12 @@
 		</form>
 	</div>
 </div>
-
+@if (!ViewData.ModelState.IsValid)
+{
+<div class="alert alert-danger">
+	@Html.ValidationSummary(false, "", new { @class = "text-danger" })
+</div>
+}
 
 
 <div class="row">
@@ -113,7 +103,7 @@
 								<input type="hidden" name="IdPessoa" value="@inscricaopessoaevento.IdPessoa" />
 								<input type="hidden" name="IdEvento" value="@Model.Evento.Id" />
 								<input type="hidden" name="IdPapel" value="@inscricaopessoaevento.IdPapel" />
-								<a data-bs-toggle="modal" data-bs-target="#confirmRemovalModal" onclick="setModalValues('@inscricaopessoaevento.IdPessoaNavigation.Nome', '@Model.Evento.Nome', '@inscricaopessoaevento.IdPessoa')" class="text-danger" style="text-decoration: none; cursor: pointer;">Remover colaborador</a>
+								<a data-bs-toggle ="modal" data-bs-target="#confirmRemovalModal" onclick="setModalValues('@inscricaopessoaevento.IdPessoaNavigation.Nome', '@Model.Evento.Nome', '@inscricaopessoaevento.IdPessoa')" class="text-danger" style="text-decoration: none; cursor: pointer;">Remover colaborador</a>
 							</form>
 						</td>
 					</tr>
@@ -151,7 +141,7 @@
 		document.getElementById('eventoNome').textContent = eventoNome;
 
 		var removeForm = document.getElementById('removeForm-' + pessoaId);
-		document.getElementById('confirmRemovalButton').onclick = function() {
+		document.getElementById('confirmRemovalButton').onclick = function () {
 			removeForm.submit();
 		};
 	}
@@ -172,7 +162,7 @@
 	<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 	<script src="~/lib/datatable/js/datatables.min.js"></script>
 	<script>
-		$(document).ready(function() {
+		$(document).ready(function () {
 			$('#tablePessoa').DataTable({
 				columnDefs: [
 					{ orderable: true, targets: [0] },
