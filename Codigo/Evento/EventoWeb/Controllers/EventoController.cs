@@ -318,8 +318,10 @@ namespace EventoWeb.Controllers
                 var idEvento = gestaoPapelModel.Evento.Id;
                 if (pessoaExistente is null)
                 {
-                    TempData["Message"] = "Essa pessoa ainda não está no sistema...";
-                    return RedirectToAction("CreateColaborador", new { idEvento });
+                    ModelState.AddModelError(string.Empty, "Essa pessoa ainda não está no sistema...");
+                    gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
+                    gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 3);
+                    return View(gestaoPapelModel);
                 }
                 var papel = _inscricaoService.GetPapelPessoaByEvento(pessoaExistente.Id, idEvento);
 
@@ -347,8 +349,13 @@ namespace EventoWeb.Controllers
 
                 await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoaExistente, gestaoPapelModel.Evento.Id, 3);
                 _eventoService.AtualizarVagasDisponiveis(idEvento);
-
+                TempData["SuccessMessage"] = "Colaborador adicionado com sucesso!";
                 return RedirectToAction("CreateColaborador", new { idEvento });
+            }
+            if (gestaoPapelModel.Evento.Id > 0)
+            {
+                gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(gestaoPapelModel.Evento.Id);
+                gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(gestaoPapelModel.Evento.Id, 3);
             }
             return View(gestaoPapelModel);
 

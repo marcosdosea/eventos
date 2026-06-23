@@ -1,6 +1,22 @@
 ﻿<!DOCTYPE html>
 
+@{
+
+    var eventoId = ViewData["EventoId"]?.ToString();
+
+    if (string.IsNullOrEmpty(eventoId))
+    {
+        eventoId = Context.Request.Query["idEvento"].ToString();
+    }
+
+    if (string.IsNullOrEmpty(eventoId))
+    {
+        eventoId = ViewContext.RouteData.Values["id"]?.ToString();
+    }
+}
+
 <html lang="pt-BR">
+
 
 <head>
     <meta charset="utf-8" />
@@ -16,7 +32,7 @@
     <header class="p-3 mb-3 border-bottom">
         <div class="container">
             <div class="d-flex justify-content-lg-between justify-content-lg-start">
-                @if ((ViewData["ExibirMenuSanduiche"] != null && (bool)ViewData["ExibirMenuSanduiche"]))
+                @if (ViewData["ExibirMenuSanduiche"] is true)
                 {
                     <button class="navbar-toggler navbar-light custom-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
@@ -35,22 +51,22 @@
                                     <a class="nav-link opcao" href="#">Inscrições</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link opcao" asp-controller="Participante" asp-action="Index">Participantes</a>
-                                </li>
-                                <li class="nav-item">
                                     <a class="nav-link opcao" asp-controller="Evento" asp-action="CreateColaborador" asp-route-idEvento="@Model.Evento.Id">Colaboradores</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEventoListar">Meus Eventos</a>
+                                    <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEventoListar">Evento</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link opcao" asp-controller="Participante" asp-action="Index">Usuários</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link opcao" asp-controller="Subevento" asp-action="Index">SubEventos</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link opcao" asp-controller="TipoInscricao" asp-action="Index">Tipo Inscrição</a>
+                                    <a class="nav-link opcao" asp-controller="TipoInscricao" asp-action="Index" asp-route-idEvento="@eventoId">Tipo Inscrição </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link opcao" asp-controller="Modelocracha" asp-action="Index">Modelo Cracha</a>
+                                    <a class="nav-link opcao" asp-controller="Modelocracha" asp-action="Index">Modelo Crachá</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link opcao" asp-controller="Modelocertificado" asp-action="Index">Modelo Certificado</a>
@@ -98,11 +114,23 @@
 
     <div class="container conteudo">
         <main role="main" class="pb-3">
-
             @if (User.IsInRole("GESTOR"))
             {
                 <div id="gestorEventosContainer">
                     @await Html.PartialAsync("_GestorEventosList", new List<EventoWeb.Models.EventoModel>())
+                </div>
+            }
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show position-relative" role="alert" style="padding-right: 2rem;">
+                    <div class="text-success m-0">
+                        @TempData["SuccessMessage"]
+                    </div>
+
+                    <button type="button" data-bs-dismiss="alert" aria-label="Close"
+                            style="background: none; border: none; color: #198754; font-size: 1.2rem; line-height: 1; padding: 0; cursor: pointer; position: absolute; top: 8px; right: 10px;">
+                        &times;
+                    </button>
                 </div>
             }
             @RenderBody()
@@ -120,25 +148,6 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/formHelpers.js"></script>
-
-    @if (User.IsInRole("GESTOR"))
-    {
-        <script>
-            $(document).ready(function () {
-            // Carregar eventos do gestor via AJAX
-            $.ajax({
-            url: '@Url.Action("GetGestorEventos", "Home")',
-            type: 'GET',
-            success: function (data) {
-            $('#gestorEventosContainer').html(data);
-            },
-            error: function () {
-            $('#gestorEventosContainer').html('<div class="alert alert-danger">Erro ao carregar eventos.</div>');
-            }
-            });
-            });
-        </script>
-    }
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
