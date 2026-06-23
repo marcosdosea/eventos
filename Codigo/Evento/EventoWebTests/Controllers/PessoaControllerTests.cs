@@ -33,7 +33,7 @@ namespace EventoWeb.Controllers.Tests
                 .Returns(GetTestPessoas());
             mockService.Setup(service => service.Get(1))
                 .Returns(GetTargetPessoa());
-            mockService.Setup(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), It.IsAny<int>()))
+            mockService.Setup(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), It.IsAny<uint>(), It.IsAny<int>()))
                 .Returns(Task.CompletedTask);
             mockService.Setup(service => service.Delete(It.IsAny<uint>()))
                 .Returns(true);
@@ -97,7 +97,7 @@ namespace EventoWeb.Controllers.Tests
             string? returnUrl = null;
             controller!.ModelState.Clear();
             var mockService = new Mock<IPessoaService>();
-            mockService.Setup(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), It.IsAny<int>()))
+            mockService.Setup(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), It.IsAny<uint>(), It.IsAny<int>()))
                 .Returns(Task.CompletedTask);
 
             controller = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object,
@@ -109,7 +109,7 @@ namespace EventoWeb.Controllers.Tests
             ViewResult viewResult = (ViewResult)result;
             Assert.IsNull(viewResult.ViewName);
            
-            mockService.Verify(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), It.IsAny<int>()), Times.Once);
+            mockService.Verify(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), It.IsAny<uint>(), It.IsAny<int>()), Times.Once);
         }
 
         [TestMethod()]

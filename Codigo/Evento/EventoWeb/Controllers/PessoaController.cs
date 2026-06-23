@@ -1,4 +1,4 @@
-using AutoMapper;
+    using AutoMapper;
 using Core;
 using Core.Service;
 using EventoWeb.Models;
@@ -110,8 +110,8 @@ namespace EventoWeb.Controllers
 
                 try
                 {
-                    
-                    await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 4);
+                    await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 4);
+
                     if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                     {
                       return Redirect(returnUrl);
@@ -267,8 +267,8 @@ namespace EventoWeb.Controllers
                     Email = viewModel.Email
                 };
 
-               
-                await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 1);
+                
+                await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa,0 ,1);
                 TempData["SuccessMessage"] = "Administrador definido com sucesso.";
                 return RedirectToAction(nameof(DefinirAdministrador));
                
