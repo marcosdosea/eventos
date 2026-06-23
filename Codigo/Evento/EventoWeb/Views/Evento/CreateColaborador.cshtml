@@ -4,27 +4,6 @@
 
 <h1 class="blue-normal">Cadastrar Colaboradores do Evento</h1>
 
-<div class="row">
-    <div>
-        <form asp-action="CreateColaborador" method="post" onsubmit="return validarFormulario()">
-            <div class="row">
-                <div class="col-lg-3">
-                    <div class="form-group">
-                        <select id="IdEvento" name="IdEvento" class="form-control d-none" readonly>
-                            @if (Model.Evento == null || Model.Evento.Id == 0)
-                            {
-                                <option value="0">Não Informado</option>
-                            }
-                            else
-                            {
-                                <option value="@Model.Evento.Id" selected>@Model.Evento.Nome</option>
-                            }
-                        </select>
-                        @Html.HiddenFor(model => model.Evento.Id)
-                        @Html.HiddenFor(model => model.Evento.Nome)
-                    </div>
-                </div>
-            </div>
 	@if (!ViewData.ModelState.IsValid)
 	{
 		<div class="alert alert-danger alert-dismissible fade show position-relative" role="alert" style="padding-right: 2rem;">
@@ -65,38 +44,6 @@
 			<h4 class="blue-normal">
 				Dados do colaborador
 			</h4>
-			<div class="row">
-				<div class="col-6 col-sm-6 col-md-3 col-lg-2">
-					<div class="form-group">
-						<label asp-for="Pessoa.Cpf" class="control-label">CPF</label>
-						<input asp-for="Pessoa.Cpf" class="form-control" id="Cpf" placeholder="000.000.000-00" oninput="formatarCPF()" maxlength="14" />
-						<span asp-validation-for="Pessoa.Cpf" class="text-danger"></span>
-					</div>
-				</div>
-				<div class="col-12 col-sm-6 col-md-3 col-lg-4">
-					<div class="form-group">
-						<label asp-for="Pessoa.Nome" class="control-label">Nome</label>
-						<input asp-for="Pessoa.Nome" class="form-control" id="Nome" placeholder="Nome completo" />
-						<span asp-validation-for="Pessoa.Nome" class="text-danger"></span>
-					</div>
-				</div>
-				<div class="col-6 col-sm-6 col-md-3 col-lg-2">
-					<div class="form-group">
-						<label asp-for="Pessoa.Telefone1" class="control-label">Telefone</label>
-						<input asp-for="Pessoa.Telefone1" type="number" class="form-control" id="Telefone1" placeholder="Com o DDD" />
-						<span asp-validation-for="Pessoa.Telefone1" class="text-danger"></span>
-					</div>
-				</div>
-				<div class="col-6 col-sm-6 col-md-3 col-lg-4">
-					<div class="form-group">
-						<label asp-for="Pessoa.Email" class="control-label">Email</label>
-						<input asp-for="Pessoa.Email" class="form-control" id="Email" placeholder="Seu e-mail" />
-						<span asp-validation-for="Pessoa.Email" class="text-danger"></span>
-					</div>
-				</div>
-			</div>
-			<br />
-
             <div class="row">
                 <div class="col-md-4">
                     <div class="form-group">
@@ -153,13 +100,6 @@
                 <br />
         </form>
     </div>
-</div>
-@if (!ViewData.ModelState.IsValid)
-{
-    <div class="alert alert-danger">
-        @Html.ValidationSummary(false, "", new { @class = "text-danger" })
-    </div>
-}
 
 
 <div class="row">
