@@ -349,7 +349,6 @@ namespace EventoWeb.Controllers
 
                 await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoaExistente, gestaoPapelModel.Evento.Id, 3);
                 _eventoService.AtualizarVagasDisponiveis(idEvento);
-                TempData["SuccessMessage"] = "Colaborador adicionado com sucesso!";
                 return RedirectToAction("CreateColaborador", new { idEvento });
             }
             if (gestaoPapelModel.Evento.Id > 0)
