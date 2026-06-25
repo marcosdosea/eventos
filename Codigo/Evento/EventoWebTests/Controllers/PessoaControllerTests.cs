@@ -34,7 +34,7 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.Get(1))
                 .Returns(GetTargetPessoa());
             mockService.Setup(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), It.IsAny<uint>(), It.IsAny<int>()))
-                .Returns(Task.CompletedTask);
+                .ReturnsAsync(true);
             mockService.Setup(service => service.Delete(It.IsAny<uint>()))
                 .Returns(true);
             mockService.Setup(service => service.CreatePessoaIdentityComPapelAsync(GetTargetPessoa(),1,1));
@@ -98,7 +98,7 @@ namespace EventoWeb.Controllers.Tests
             controller!.ModelState.Clear();
             var mockService = new Mock<IPessoaService>();
             mockService.Setup(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), It.IsAny<uint>(), It.IsAny<int>()))
-                .Returns(Task.CompletedTask);
+                .ReturnsAsync(true);
 
             controller = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object,
             new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper());
