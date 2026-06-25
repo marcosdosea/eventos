@@ -1,0 +1,93 @@
+@model  IEnumerable<EventoWeb.Models.PessoaModel>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<link href="~/lib/datatable/css/datatables.min.css" rel="stylesheet" />
+<div class="row">
+    <div class="col-md-12">
+        <table class="table table-striped">
+            <thead class="blue-normal blue-normal-bg-table">
+                <tr>
+                    <th>CPF</th>
+                    <th>Nome</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td style="vertical-align: middle;">@FormatarCPF(@item.Cpf)</td>
+                        <td style="vertical-align: middle;">@item.Nome</td>
+                        <td>
+                            <form id="@(item.Id + "_confirmar")" asp-action="Delete"  asp-route-id="@item.Id">
+                                <button type="button" class="btn btn-danger" onclick="showModal('@(item.Id + "_confirmar")','modalExcluir')" data-bs-toggle="modal" data-bs-target="#modalExcluir" data-bs-id="@item.Id">Excluir</button>
+                                <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modalMudarSenha">Mudar Senha</button>
+                           </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="modalExcluir" tabindex="-1" role="dialog" aria-labelledby="modalExcluirPessoa" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title justify-content-center" id="exampleModalLongTitle">Confirmar exclusão</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close">
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <h4>Tem certeza que deseja excluir?</h4>
+                <span class="text-danger fw-bold small">
+                    Essa operação não pode ser desfeita.
+                </span>
+
+            </div>
+            <form method="post" class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Não</button>
+                <button type="submit" class="btn btn-danger" id="btnConfirmarExclusao">Sim</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalMudarSenha" tabindex="-1" role="dialog" aria-labelledby="modalMudarSenhaPessoa" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title justify-content-center" id="exampleModalLongTitle">Confirmar mudança de senha</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close">
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <h4>Tem certeza que deseja mudar a senha?</h4>
+                <span class="text-black-50 fw-bold small">
+                    Vai receber um e-mail para redefinir a senha.
+                </span>
+
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-danger" id="btnConfirmarMudanca">Sim</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+
+    public static string FormatarCPF(string cpf)
+    {
+        if (string.IsNullOrEmpty(cpf) || cpf.Length != 11)
+            return cpf;
+
+        return Convert.ToUInt64(cpf).ToString(@"000\.000\.000\-00");
+    }
+
+}
