@@ -30,8 +30,8 @@
 					</div>
 					<div class="col-6 col-sm-6 col-md-6 col-lg-6">
 						<div class="form-group mb-4">
-							<label asp-for="Telefone1" class="control-label">Telefone</label>
-							<input asp-for="Telefone1" type="number" class="form-control" id="Telefone1" placeholder="Com o DDD" />
+							<label asp-for="Telefone1" class="control-label">Celular</label>
+							<input asp-for="Telefone1" type="tel" class="form-control" id="Telefone1" placeholder="Com o DDD" />
 							<span asp-validation-for="Telefone1" class="text-danger"></span>
 						</div>
 					</div>
@@ -44,7 +44,7 @@
 					</div>
 					<div class="row">
 						<div class="d-flex flex-row-reverse mb-4">
-							<button type="submit" class="btn btn-lg btn-blue-normal">Adicionar Administrador</button>
+							<button type="submit" class="btn btn-lg btn-blue-normal">Adicionar Administrador do sistema</button>
 						</div>
 					</div>
 				</div>
@@ -57,3 +57,4 @@
 </div>
 
 <partial name="Index" model="Model.Administradores" />
+
