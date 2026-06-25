@@ -620,35 +620,49 @@ namespace EventoWeb.Controllers
                         else
                         {
                             ModelState.AddModelError("Foto", "O arquivo é muito grande. Deve ser menor que 64 KB.");
+                            CarregarDadosEventos(viewModel);
                             return View(viewModel);
                         }
                     }
                 }
-                var evento = _mapper.Map<Evento>(viewModel);
-                var idsAreaInteresse = new List<uint>
+
+                var evento = _eventoService.Get(id);
+                if (evento == null) return NotFound();
+
+                _mapper.Map(viewModel, evento);
+
+                if (fotoSource != null)
                 {
-                    viewModel.IdAreaInteresse
-                };
+                    evento.ImagemPortal = fotoSource;
+                }
+
+                var idsAreaInteresse = viewModel.IdAreaInteresses ?? new List<uint>();
+
                 _eventoService.Edit(evento, idsAreaInteresse);
                 _eventoService.AtualizarVagasDisponiveis(evento.Id);
-                evento.ImagemPortal = fotoSource;
+
                 return RedirectToAction("GerenciarEvento", new { idEvento = id });
             }
 
-            var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
-            var tiposEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
-            var areaInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
-            viewModel.Estados = new SelectList(estados, "Estado", "Nome", viewModel.Estado);
-            viewModel.TiposEventos = new SelectList(tiposEventos, "Id", "Nome", viewModel.IdTipoEvento);
-            viewModel.AreaInteresse = new SelectList(areaInteresse, "Id", "Nome", viewModel.IdAreaInteresse);
-
+            CarregarDadosEventos(viewModel);
             return View(viewModel);
         }
 
-        
+        private void CarregarDadosEventos(EventoModel viewModel)
+        {
+            var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
+            var tiposEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
+            var areaInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
+
+            viewModel.Estados = new SelectList(estados, "Estado", "Nome", viewModel.Estado);
+            viewModel.TiposEventos = new SelectList(tiposEventos, "Id", "Nome", viewModel.IdTipoEvento);
+            viewModel.AreaInteresse = new SelectList(areaInteresse, "Id", "Nome", viewModel.IdAreaInteresses);
+        }
+
+
         // é um adianto deevento proxima PR de Nadson
         // (tanto adianta quanto quem for mexer com isso vai ver o que Nadson fez/fará).
-        
+
         /*
 		[Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
 		[HttpGet]
