@@ -187,7 +187,6 @@ public class PessoaService : IPessoaService
                     2 => "GESTOR",
                     3 => "COLABORADOR",
                     4 => "PARTICIPANTE",
-                    5 => "USUARIO", 
                     _ => throw new ArgumentException("Papel inválido.")
                 };
 

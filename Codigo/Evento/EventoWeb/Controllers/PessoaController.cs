@@ -1,4 +1,4 @@
-    using AutoMapper;
+using AutoMapper;
 using Core;
 using Core.Service;
 using EventoWeb.Models;
@@ -55,7 +55,7 @@ namespace EventoWeb.Controllers
 
             return View(_mapper.Map<PessoaModel>(pessoa));
         }
-        
+
         [Authorize(Roles = "ADMINISTRADOR")]
         [HttpGet]
         [Route("GestoresSistema")]
@@ -101,7 +101,10 @@ namespace EventoWeb.Controllers
 
                 _pessoaService.Create(pessoa);
                 await _pessoaService.CreateAsync(pessoa);
-                await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 5);
+                await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 4);
+                TempData["Sucesso"] = "Usuário cadastrado com sucesso!";
+
+                return RedirectToAction(nameof(CreateUsuario));
 
             }
             return View(viewModel);
@@ -122,7 +125,7 @@ namespace EventoWeb.Controllers
             {
                 Estados = new SelectList(estados, "Estado", "Nome")
             };
-             ViewBag.ReturnUrl = returnUrl;
+            ViewBag.ReturnUrl = returnUrl;
             return View(viewModel);
         }
 
@@ -130,7 +133,7 @@ namespace EventoWeb.Controllers
         [HttpPost]
         [Route("Create")]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Create(PessoaModel viewModel,string? returnUrl)
+        public async Task<ActionResult> Create(PessoaModel viewModel, string? returnUrl)
         {
             if (ModelState.IsValid)
             {
@@ -148,12 +151,12 @@ namespace EventoWeb.Controllers
 
                 try
                 {
-                    await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 5);
+                    await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 4);
 
                     if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                     {
-                      return Redirect(returnUrl);
-                    } 
+                        return Redirect(returnUrl);
+                    }
 
                 }
                 catch (Exception ex)
@@ -167,7 +170,7 @@ namespace EventoWeb.Controllers
         [Authorize]
         [HttpGet]
         [Route("Edit/{id}")]
-        public ActionResult Edit(uint id,string? returnUrl)
+        public ActionResult Edit(uint id, string? returnUrl)
         {
             var pessoa = _pessoaService.Get(id);
             if (pessoa == null) return NotFound();
@@ -211,12 +214,13 @@ namespace EventoWeb.Controllers
                 pessoaEditada.Foto = fotoSource;
                 await _pessoaService.Edit(pessoaEditada);
 
-                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)) { 
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
                     return Redirect(returnUrl);
                 }
 
-                              
-                
+
+
             }
 
             viewModel.Estados = new SelectList(
@@ -237,7 +241,7 @@ namespace EventoWeb.Controllers
             var pessoa = _pessoaService.Get(viewModel.Id);
             if (pessoa == null) return NotFound();
             PessoaModel pessoaModel = _mapper.Map<PessoaModel>(pessoa);
-            
+
             return View(pessoaModel);
         }
 
@@ -247,17 +251,17 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(PessoaModel viewModel)
         {
-                       
-                var sucesso = _pessoaService.Delete(viewModel.Id);
 
-                if (sucesso)
-                {
-                    TempData["SuccessMessage"] = "Exclusão realizada com sucesso!";
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = "Erro ao excluir pessoa";
-                }
+            var sucesso = _pessoaService.Delete(viewModel.Id);
+
+            if (sucesso)
+            {
+                TempData["SuccessMessage"] = "Exclusão realizada com sucesso!";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Erro ao excluir pessoa";
+            }
 
             if (User.IsInRole("ADMINISTRADOR"))
             {
@@ -302,11 +306,11 @@ namespace EventoWeb.Controllers
                     Email = viewModel.Email
                 };
 
-                
-                await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa,0 ,1);
+
+                await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 1);
                 TempData["SuccessMessage"] = "Administrador definido com sucesso.";
                 return RedirectToAction(nameof(DefinirAdministrador));
-               
+
             }
 
             var adminsAtuais = await _pessoaService.GetAllAdmAsync();
