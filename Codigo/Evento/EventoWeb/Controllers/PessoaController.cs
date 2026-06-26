@@ -5,6 +5,7 @@ using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Net;
 
 namespace EventoWeb.Controllers
 {
@@ -256,6 +257,7 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> DefinirAdministrador(GestaoAdministradorModel viewModel)
         {
+           
             if (ModelState.IsValid)
             {
                 var pessoa = new Pessoa
@@ -267,9 +269,25 @@ namespace EventoWeb.Controllers
                     Email = viewModel.Email
                 };
 
-                
-                await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa,0 ,1);
-                TempData["SuccessMessage"] = "Administrador definido com sucesso.";
+                if (await _pessoaService.IsAdmAsync(pessoa))
+                {
+                    TempData["ErrorMessage"] = "Já existe um administrador cadastrado com esse CPF.";
+                }
+                else
+                {
+                    var sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 1);
+
+                    if (sucesso)
+                    {
+                        TempData["SuccessMessage"] = "Administrador definido com sucesso.";
+                    }
+                    else
+                    {
+                        TempData["ErrorMessage"] = "Erro ao cadastrar administrador.";
+                    }
+
+                }
+
                 return RedirectToAction(nameof(DefinirAdministrador));
                
             }

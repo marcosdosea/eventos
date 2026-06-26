@@ -1,7 +1,3 @@
-using Core.DTO;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-
 namespace Core.Service
 {
 
@@ -14,10 +10,11 @@ namespace Core.Service
         Pessoa Get(uint id);
         IEnumerable<Pessoa> GetAll();
         Pessoa GetByCpf(string cpf);
+        Task<bool> IsAdmAsync(Pessoa pessoa);
         Task<List<Pessoa>> GetAllAdmAsync();
         Task<List<Pessoa>> GetAllGestorAsync();
         Task<UsuarioIdentity> CreateAsync(Pessoa pessoa);
-        Task CreatePessoaIdentityComPapelAsync(Pessoa pessoa, uint idEvento, int idPapel);
+        Task <bool> CreatePessoaIdentityComPapelAsync(Pessoa pessoa, uint idEvento, int idPapel);
         Task<List<Pessoa>> GetPessoasPorPapelNoEventoAsync(uint idEvento, int idPapel);
 
     }
