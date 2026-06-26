@@ -69,9 +69,8 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
 
-        [Authorize(Roles = "GESTOR")]
         [HttpGet]
-        [Route("Create")]
+        [Route("CreateUsuario")]
         public ActionResult CreateUsuario()
         {
             var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
@@ -82,8 +81,10 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
 
+
+        [Authorize(Roles = "GESTOR")]
         [HttpPost]
-        [Route("Create")]
+        [Route("CreateUsuario")]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> CreateUsuario(PessoaModel viewModel)
         {
@@ -93,10 +94,13 @@ namespace EventoWeb.Controllers
                 {
                     Cpf = viewModel.Cpf,
                     Nome = viewModel.Nome,
+                    NomeCracha = viewModel.Nome.Length > 20 ? viewModel.Nome.Substring(0, 20) : viewModel.Nome,
                     Telefone1 = viewModel.Telefone1,
                     Email = viewModel.Email
                 };
 
+                _pessoaService.Create(pessoa);
+                await _pessoaService.CreateAsync(pessoa);
                 await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 5);
 
             }
