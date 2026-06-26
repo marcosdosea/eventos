@@ -69,6 +69,40 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
 
+        [Authorize(Roles = "GESTOR")]
+        [HttpGet]
+        [Route("Create")]
+        public ActionResult CreateUsuario()
+        {
+            var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
+            var viewModel = new PessoaModel
+            {
+                Estados = new SelectList(estados, "Estado", "Nome")
+            };
+            return View(viewModel);
+        }
+
+        [HttpPost]
+        [Route("Create")]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> CreateUsuario(PessoaModel viewModel)
+        {
+            if (ModelState.IsValid)
+            {
+                var pessoa = new Pessoa
+                {
+                    Cpf = viewModel.Cpf,
+                    Nome = viewModel.Nome,
+                    Telefone1 = viewModel.Telefone1,
+                    Email = viewModel.Email
+                };
+
+                await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 5);
+
+            }
+            return View(viewModel);
+        }
+
         // =====================================================================
         // CREATE (auto-cadastro — sem autenticação)
         // Cria a Pessoa + usuário Identity com role USUARIO
@@ -110,7 +144,7 @@ namespace EventoWeb.Controllers
 
                 try
                 {
-                    await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 4);
+                    await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 5);
 
                     if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                     {
@@ -123,10 +157,7 @@ namespace EventoWeb.Controllers
                     ModelState.AddModelError("", ex.Message);
                 }
             }
-
-
             return View(viewModel);
-
         }
 
         [Authorize]
