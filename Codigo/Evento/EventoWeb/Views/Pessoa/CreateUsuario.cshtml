@@ -8,6 +8,13 @@
 <html lang="pt-BR">
 <body>
     <h1 class="blue-normal">Adicionar Usuarios ao Sistema</h1>
+    @if (!(TempData["ErrorMessage"] is null))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
     <div class="row">
         <div class="col-md-12">
             <form asp-action="CreateUsuario" method="post" onsubmit="return validarFormulario()">

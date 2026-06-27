@@ -5,6 +5,7 @@ using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Net;
 
 namespace EventoWeb.Controllers
 {
@@ -90,6 +91,7 @@ namespace EventoWeb.Controllers
         {
             if (ModelState.IsValid)
             {
+                
                 var pessoa = new Pessoa
                 {
                     Cpf = viewModel.Cpf,
@@ -98,11 +100,23 @@ namespace EventoWeb.Controllers
                     Telefone1 = viewModel.Telefone1,
                     Email = viewModel.Email
                 };
-
+                var existe = _pessoaService.GetByCpf(pessoa.Cpf);
+                if(existe != null)
+                {
+                    TempData["ErrorMessage"] = "Esse CPF já está associado a um usuário.";
+                    return RedirectToAction(nameof(CreateUsuario));
+                }
                 _pessoaService.Create(pessoa);
                 await _pessoaService.CreateAsync(pessoa);
-                await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 4);
-                TempData["Sucesso"] = "Usuário cadastrado com sucesso!";
+                var sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 4);
+                if (sucesso)
+                {
+                    TempData["SuccessMessage"] = "Usuário cadastrado com sucesso!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Erro ao cadastrar usuário.";
+                }
 
                 return RedirectToAction(nameof(CreateUsuario));
 
@@ -295,6 +309,7 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> DefinirAdministrador(GestaoAdministradorModel viewModel)
         {
+           
             if (ModelState.IsValid)
             {
                 var pessoa = new Pessoa
@@ -309,6 +324,25 @@ namespace EventoWeb.Controllers
 
                 await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 1);
                 TempData["SuccessMessage"] = "Administrador definido com sucesso.";
+
+                if (await _pessoaService.IsAdmAsync(pessoa))
+                {
+                    TempData["ErrorMessage"] = "Já existe um administrador cadastrado com esse CPF.";
+                }
+                else
+                {
+                    var sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 1);
+
+                    if (sucesso)
+                    {
+                        TempData["SuccessMessage"] = "Administrador definido com sucesso.";
+                    }
+                    else
+                    {
+                        TempData["ErrorMessage"] = "Erro ao cadastrar administrador.";
+                    }
+
+                }
                 return RedirectToAction(nameof(DefinirAdministrador));
 
             }

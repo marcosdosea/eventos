@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 using System.Diagnostics;
+using System.Net;
 
 namespace Service;
 
@@ -22,6 +23,7 @@ public class PessoaService : IPessoaService
 
     public uint Create(Pessoa pessoa)
     {
+        
         try
         {
             _context.Add(pessoa);
@@ -126,6 +128,15 @@ public class PessoaService : IPessoaService
     public Pessoa GetByCpf(string cpf)
         => _context.Pessoas.SingleOrDefault(p => p.Cpf == cpf);
 
+    public async Task<bool>IsAdmAsync(Pessoa pessoa)
+    {
+        var user = await _userManager.FindByNameAsync(pessoa.Cpf);
+
+        if (user == null)
+            return false;
+
+        return await _userManager.IsInRoleAsync(user, "ADMINISTRADOR");
+    }
     public async Task<UsuarioIdentity> CreateAsync(Pessoa pessoa)
     {
         var novoUsuario = new UsuarioIdentity
@@ -148,20 +159,27 @@ public class PessoaService : IPessoaService
         return novoUsuario;
     }
 
-    public async Task CreatePessoaIdentityComPapelAsync(Pessoa pessoa, uint idEvento, int idPapel)
+    public async Task<bool> CreatePessoaIdentityComPapelAsync(Pessoa pessoa, uint idEvento, int idPapel)
     {
+        bool sucesso = false;
         uint idPessoa = pessoa.Id;
-        if (GetByCpf(pessoa.Cpf) == null)
-        {
-            return;
-        }
-
         var existingUser = await _userManager.FindByNameAsync(pessoa.Cpf);
 
-        if (existingUser == null)
+        if(idPapel == 1 && existingUser == null && GetByCpf(pessoa.Cpf) == null)
         {
-            return;
+                Create(pessoa);
+                await CreateAsync(pessoa);
+                existingUser = await _userManager.FindByNameAsync(pessoa.Cpf);
+                sucesso = true;
+
         }
+
+        if (GetByCpf(pessoa.Cpf) == null || existingUser == null)
+        {
+            return sucesso;
+
+        }
+        
 
         if (idEvento > 0)
         {
@@ -194,12 +212,16 @@ public class PessoaService : IPessoaService
                 if (!await _userManager.IsInRoleAsync(existingUser, role))
                 {
                     var roleResult = await _userManager.AddToRoleAsync(existingUser, role);
+                    sucesso = true;
                     if (!roleResult.Succeeded)
                     {
                         var errors = string.Join("; ", roleResult.Errors.Select(e => e.Description));
                         throw new Exception($"Erro ao associar o papel '{role.ToLower()}' ao usuário no Identity: {errors}");
+                        
                     }
                 }
+
+                
 
                 await transaction.CommitAsync();
             }
@@ -208,6 +230,8 @@ public class PessoaService : IPessoaService
                 await transaction.RollbackAsync();
                 throw new Exception($"Erro ao criar pessoa, inscrição ou associar papel: {ex.Message}", ex);
             }
+
+            return sucesso;
         }
     }
 

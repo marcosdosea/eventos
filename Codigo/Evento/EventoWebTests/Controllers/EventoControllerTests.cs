@@ -59,7 +59,7 @@ namespace EventoWeb.Controllers.Tests
                 .Returns((uint idPessoa, uint idEvento) => 1);
             mockServicePessoa.Setup(service => service.CreatePessoaIdentityComPapelAsync(
     It.IsAny<Pessoa>(), It.IsAny<uint>(), It.IsAny<int>()))
-    .Returns(Task.CompletedTask)
+    .ReturnsAsync(true)
                 .Verifiable();
             mockService.Setup(service => service.AtualizarVagasDisponiveis(It.IsAny<uint>()))
                 .Verifiable();
