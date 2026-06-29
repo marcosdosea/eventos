@@ -2,10 +2,12 @@ using Core;
 using Core.Service;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System.Data;
 using System.Diagnostics;
 using System.Net;
-
+using System.Security.Policy;
+using System.Threading.Tasks;
 namespace Service;
 
 public class PessoaService : IPessoaService
@@ -13,10 +15,10 @@ public class PessoaService : IPessoaService
     private readonly EventoContext _context;
     private readonly UserManager<UsuarioIdentity> _userManager;
     private readonly IInscricaoService _inscricaoService;
-
+    
     public PessoaService(UserManager<UsuarioIdentity> userManager, EventoContext context, IInscricaoService inscricaoService)
     {
-        _userManager = userManager;
+        _userManager = userManager; 
         _context = context;
         _inscricaoService = inscricaoService;
     }
@@ -137,6 +139,31 @@ public class PessoaService : IPessoaService
 
         return await _userManager.IsInRoleAsync(user, "ADMINISTRADOR");
     }
+
+    public bool EmailConfirmado(string email)
+    {
+        var user = _userManager.FindByEmailAsync(email).Result;
+        if (user == null)
+            return false;
+        var isConfirmed = _userManager.IsEmailConfirmedAsync(user).Result;
+        return isConfirmed;
+    }
+
+    public async Task<string> GerarTokenAsync(String cpf)
+    {
+        String token = "";
+        var user = await _userManager.FindByNameAsync(cpf);
+
+        if (user == null)
+            return token;
+        token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+        return token;
+
+
+
+    }
+
     public async Task<UsuarioIdentity> CreateAsync(Pessoa pessoa)
     {
         var novoUsuario = new UsuarioIdentity

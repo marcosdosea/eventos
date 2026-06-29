@@ -11,6 +11,8 @@ namespace Core.Service
         IEnumerable<Pessoa> GetAll();
         Pessoa GetByCpf(string cpf);
         Task<bool> IsAdmAsync(Pessoa pessoa);
+        public bool EmailConfirmado(string email);
+        Task<string> GerarTokenAsync(String cpf);
         Task<List<Pessoa>> GetAllAdmAsync();
         Task<List<Pessoa>> GetAllGestorAsync();
         Task<UsuarioIdentity> CreateAsync(Pessoa pessoa);
