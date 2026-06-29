@@ -3,9 +3,15 @@ using Core;
 using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.Extensions.Primitives;
+using NuGet.Common;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace EventoWeb.Controllers
 {
@@ -16,15 +22,19 @@ namespace EventoWeb.Controllers
         private readonly IPessoaService _pessoaService;
         private readonly IEstadosbrasilService _estadosbrasilService;
         private readonly IMapper _mapper;
+        private readonly IEmailSender _emailSender;
+
 
         public PessoaController(
             IPessoaService pessoaService,
             IEstadosbrasilService estadosbrasilService,
-            IMapper mapper)
+            IMapper mapper, IEmailSender emailSender)   
         {
             _pessoaService = pessoaService;
             _estadosbrasilService = estadosbrasilService;
             _mapper = mapper;
+           _emailSender = emailSender;    
+            
         }
 
         // =====================================================================
@@ -295,6 +305,46 @@ namespace EventoWeb.Controllers
             var adminsAtuais = await _pessoaService.GetAllAdmAsync();
             viewModel.Administradores = _mapper.Map<List<PessoaModel>>(adminsAtuais.OrderBy(p => p.Nome).ToList());
             return View(viewModel);
+        }
+       
+        [HttpPost, ActionName("EnviarEmailSenha")]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> EnviarEmailSenha(PessoaModel viewModel)
+        {
+           
+            string email = viewModel.Email;
+
+
+            if (_pessoaService.GetByCpf(viewModel.Cpf) == null)
+            {
+                TempData["ErrorMessage"] = "Usuário não encontrado.";
+                return RedirectToAction(nameof(DefinirAdministrador));
+            }
+
+            if (!_pessoaService.EmailConfirmado(email))
+            {
+                TempData["ErrorMessage"] = "E-mail do usuário não confirmado.";
+                return RedirectToAction(nameof(DefinirAdministrador));
+            }
+
+            String token = await _pessoaService.GerarTokenAsync(viewModel.Cpf);
+
+
+           var callbackUrl = Url.Action(
+           action: "ResetPassword",
+           controller: "Account",
+           values: new { email = email, token = token },
+           protocol: Request.Scheme);
+
+            string assunto = "Redefinição de Senha";
+            string mensagemHtml = $@" <h2>Olá!</h2>    
+                                    <p>Bora lá alterar sua senha!</p>
+                                    <p>Para redefinir seu acesso, <a href='{callbackUrl}'>clique aqui</a>.</p><br>
+                                    <p><small>Se você não solicitou essa alteração, por favor, ignore este e-mail.</small></p>";
+            await _emailSender.SendEmailAsync(email, assunto, mensagemHtml);
+
+            TempData["SuccessMessage"] = "E-mail de redefinição enviado com sucesso!";
+            return RedirectToAction(nameof(DefinirAdministrador));
         }
 
         // =====================================================================
