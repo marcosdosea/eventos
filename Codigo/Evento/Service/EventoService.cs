@@ -79,36 +79,58 @@ namespace Service
         {
             try
             {
+                var local = _context.Eventos.Local.FirstOrDefault(e => e.Id == evento.Id);
+                if (local != null)
+                {
+                    _context.Entry(local).State = EntityState.Detached;
+                }
+
                 var eventoExistente = _context.Eventos
                     .Include(e => e.IdAreaInteresses)
                     .FirstOrDefault(e => e.Id == evento.Id);
 
-                if (eventoExistente == null) throw new Exception("Evento não encontrado.");
+                if (eventoExistente == null) throw new ServiceException();
+
+                var idsAtuaisNoBanco = eventoExistente.IdAreaInteresses.Select(ai => ai.Id).ToList();
+                var idsDesejados = novosIdsAreaInteresse ?? new List<uint>();
 
                 _context.Entry(eventoExistente).CurrentValues.SetValues(evento);
 
-                eventoExistente.ImagemPortal = evento.ImagemPortal;
-
+                if (evento.ImagemPortal != null && evento.ImagemPortal.Length > 0)
+                {
+                    eventoExistente.ImagemPortal = evento.ImagemPortal;
+                }
 
                 var paraRemover = eventoExistente.IdAreaInteresses
-                    .Where(ai => !novosIdsAreaInteresse.Contains(ai.Id)).ToList();
-
-                foreach (var area in paraRemover)
-                    eventoExistente.IdAreaInteresses.Remove(area);
-
-                var idsAtuais = eventoExistente.IdAreaInteresses.Select(ai => ai.Id).ToList();
-                var paraAdicionar = _context.Areainteresses
-                    .Where(ai => novosIdsAreaInteresse.Contains(ai.Id) && !idsAtuais.Contains(ai.Id))
+                    .Where(ai => !idsDesejados.Contains(ai.Id))
                     .ToList();
 
-                foreach (var area in paraAdicionar)
-                    eventoExistente.IdAreaInteresses.Add(area);
+                foreach (var area in paraRemover)
+                {
+                    eventoExistente.IdAreaInteresses.Remove(area);
+                }
+
+                var idsParaAdicionar = idsDesejados
+                    .Where(id => !idsAtuaisNoBanco.Contains(id))
+                    .ToList();
+
+                if (idsParaAdicionar.Any())
+                {
+                    var novasAreas = _context.Areainteresses
+                        .Where(ai => idsParaAdicionar.Contains(ai.Id))
+                        .ToList();
+
+                    foreach (var area in novasAreas)
+                    {
+                        eventoExistente.IdAreaInteresses.Add(area);
+                    }
+                }
 
                 _context.SaveChanges();
             }
             catch (Exception ex)
             {
-                throw new Exception($"Erro ao atualizar o evento: {ex.Message}", ex);
+                throw new ServiceException($"Erro ao atualizar o evento: {ex.Message}", ex);
             }
         }
 

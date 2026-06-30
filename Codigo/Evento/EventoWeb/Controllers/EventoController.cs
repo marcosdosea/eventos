@@ -612,7 +612,6 @@ namespace EventoWeb.Controllers
                     using (var memoryStream = new MemoryStream())
                     {
                         viewModel.ImagemPortal.CopyTo(memoryStream);
-
                         if (memoryStream.Length <= 65535)
                         {
                             fotoSource = memoryStream.ToArray();

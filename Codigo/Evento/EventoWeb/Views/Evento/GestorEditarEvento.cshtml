@@ -247,32 +247,34 @@
 		</div>
 		<br />
 		<div>
-			<div class="form-group">
-				<label class="control-label">Área de Interesse</label>
-				<select id="areaInteresseSelect" class="form-control">
-					<option value="">Selecione uma área de interesse</option>
-					@foreach (var area in Model.AreaInteresse)
-					{
-						<option value="@area.Value">@area.Text</option>
-					}
-				</select>
-				<button type="button" id="addAreaButton" class="btn btn-primary mt-2">Adicionar</button>
-				<ul id="selectedAreas" class="mt-2 list-group">
-					@foreach (var idArea in Model.IdAreaInteresses)
-					{
-						var areaNome = Model.AreaInteresse.FirstOrDefault(a => a.Value == idArea.ToString())?.Text;
-						if (!string.IsNullOrEmpty(areaNome))
-						{
-							<li class="list-group-item d-flex justify-content-between align-items-center">
-								@areaNome
-								<button type="button" class="btn btn-danger btn-sm" onclick="removeArea(this, '@idArea')">Remover</button>
-							</li>
-						}
-					}
-				</ul>
-				<span asp-validation-for="IdAreaInteresses" class="text-danger"></span>
-			</div>
-		</div>
+    <div class="form-group">
+        <label class="control-label">Área de Interesse</label>
+        <select id="areaInteresseSelect" class="form-control">
+            <option value="">Selecione uma área de interesse</option>
+            @foreach (var area in Model.AreaInteresse)
+            {
+                <option value="@area.Value">@area.Text</option>
+            }
+        </select>
+        <button type="button" id="addAreaButton" class="btn btn-primary mt-2">Adicionar</button>
+        
+        <ul id="selectedAreas" class="mt-2 list-group">
+            @foreach (var idArea in Model.IdAreaInteresses)
+            {
+                var areaNome = Model.AreaInteresse.FirstOrDefault(a => a.Value == idArea.ToString())?.Text;
+                if (!string.IsNullOrEmpty(areaNome))
+                {
+                    <li class="list-group-item d-flex justify-content-between align-items-center" data-id="@idArea">
+                        @areaNome
+                        <input type="hidden" name="IdAreaInteresses" value="@idArea" />
+                        <button type="button" class="btn btn-danger btn-sm btn-remover-inicial" data-id="@idArea">Remover</button>
+                    </li>
+                }
+            }
+        </ul>
+        <span asp-validation-for="IdAreaInteresses" class="text-danger"></span>
+    </div>
+</div>
 
 		<br />
 		<div class="d-flex justify-content-end">
@@ -292,17 +294,17 @@
 	}
 	<script>
 		document.getElementById('InscricaoGratuita').addEventListener('change', function () {
-			this.nextElementSibling.value = this.checked ? 1 : 0; // Ajusta o valor do campo oculto baseado no estado do checkbox
+			this.nextElementSibling.value = this.checked ? 1 : 0; 
 		});
 	</script>
 	<script>
 		document.getElementById('EventoPublico').addEventListener('change', function () {
-			this.nextElementSibling.value = this.checked ? 1 : 0; // Ajusta o valor do campo oculto baseado no estado do checkbox
+			this.nextElementSibling.value = this.checked ? 1 : 0; 
 		});
 	</script>
 	<script>
 		document.getElementById('PossuiCertificado').addEventListener('change', function () {
-			this.nextElementSibling.value = this.checked ? 1 : 0; // Ajusta o valor do campo oculto baseado no estado do checkbox
+			this.nextElementSibling.value = this.checked ? 1 : 0; 
 		});
 	</script>
 	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -311,9 +313,9 @@
 			var areaInteresseSelect = $('#areaInteresseSelect');
 			var selectedAreasList = $('#selectedAreas');
 
-			function addHiddenInput(value) {
-				var hiddenInput = $('<input type="hidden" name="IdAreaInteresses[]" value="' + value + '" />');
-				selectedAreasList.append(hiddenInput);
+			function addHiddenInput(listItem, value) {
+				var hiddenInput = $('<input type="hidden" name="IdAreaInteresses" value="' + value + '" />');
+				listItem.append(hiddenInput);
 			}
 
 			$('#addAreaButton').on('click', function () {
@@ -329,18 +331,19 @@
 					var removeButton = $('<button type="button" class="btn btn-danger btn-sm">Remover</button>');
 					removeButton.on('click', function () {
 						listItem.remove();
-						$('input[value="' + value + '"]').remove();
 					});
 
 					listItem.append(removeButton);
+
+					addHiddenInput(listItem, value);
+
 					selectedAreasList.append(listItem);
-
-					// Adiciona o campo oculto correspondente
-					addHiddenInput(value);
-
-					// Remove a seleção do dropdown após adicionar
 					areaInteresseSelect.val('');
 				}
+			});
+
+			$(document).on('click', '.btn-remover-inicial', function () {
+				$(this).closest('li').remove();
 			});
 		});
 	</script>
