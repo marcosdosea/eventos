@@ -70,6 +70,7 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
 
+        [Authorize(Roles = "GESTOR")]
         [HttpGet]
         [Route("CreateUsuario")]
         public ActionResult CreateUsuario()
