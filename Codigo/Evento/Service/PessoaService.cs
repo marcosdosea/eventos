@@ -148,7 +148,6 @@ public class PessoaService : IPessoaService
         var isConfirmed = _userManager.IsEmailConfirmedAsync(user).Result;
         return isConfirmed;
     }
-
     public async Task<string> GerarTokenAsync(String cpf)
     {
         String token = "";
