@@ -321,10 +321,6 @@ namespace EventoWeb.Controllers
                     Email = viewModel.Email
                 };
 
-
-                await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 1);
-                TempData["SuccessMessage"] = "Administrador definido com sucesso.";
-
                 if (await _pessoaService.IsAdmAsync(pessoa))
                 {
                     TempData["ErrorMessage"] = "Já existe um administrador cadastrado com esse CPF.";
