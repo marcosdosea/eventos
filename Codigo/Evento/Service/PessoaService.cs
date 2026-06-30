@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 using System.Diagnostics;
+using System.Net;
 
 namespace Service;
 
@@ -22,6 +23,7 @@ public class PessoaService : IPessoaService
 
     public uint Create(Pessoa pessoa)
     {
+        
         try
         {
             _context.Add(pessoa);
@@ -52,7 +54,7 @@ public class PessoaService : IPessoaService
         }
     }
 
-    public bool Delete(uint id) 
+    public bool Delete(uint id)
     {
         try
         {
@@ -77,7 +79,7 @@ public class PessoaService : IPessoaService
         catch (Exception ex)
         {
             Trace.TraceError($"Erro ao deletar pessoa com ID {id}: {ex.Message}");
-           
+
             return false;
         }
 
@@ -126,6 +128,15 @@ public class PessoaService : IPessoaService
     public Pessoa GetByCpf(string cpf)
         => _context.Pessoas.SingleOrDefault(p => p.Cpf == cpf);
 
+    public async Task<bool>IsAdmAsync(Pessoa pessoa)
+    {
+        var user = await _userManager.FindByNameAsync(pessoa.Cpf);
+
+        if (user == null)
+            return false;
+
+        return await _userManager.IsInRoleAsync(user, "ADMINISTRADOR");
+    }
     public async Task<UsuarioIdentity> CreateAsync(Pessoa pessoa)
     {
         var novoUsuario = new UsuarioIdentity
@@ -148,85 +159,46 @@ public class PessoaService : IPessoaService
         return novoUsuario;
     }
 
-    public async Task CreatePessoaIdentityComPapelAsync(Pessoa pessoa, int idPapel)
+    public async Task<bool> CreatePessoaIdentityComPapelAsync(Pessoa pessoa, uint idEvento, int idPapel)
     {
-        if (pessoa.Id > 0 && (pessoa.Inscricaopessoaeventos == null || !pessoa.Inscricaopessoaeventos.Any()))
-        {
-            var pessoaComInscricoes = await _context.Pessoas
-                .Include(p => p.Inscricaopessoaeventos)
-                .FirstOrDefaultAsync(p => p.Id == pessoa.Id);
+        bool sucesso = false;
+        uint idPessoa = pessoa.Id;
+        var existingUser = await _userManager.FindByNameAsync(pessoa.Cpf);
 
-            if (pessoaComInscricoes != null)
-            {
-                pessoa.Inscricaopessoaeventos = pessoaComInscricoes.Inscricaopessoaeventos;
-            }
+        if(idPapel == 1 && existingUser == null && GetByCpf(pessoa.Cpf) == null)
+        {
+                Create(pessoa);
+                await CreateAsync(pessoa);
+                existingUser = await _userManager.FindByNameAsync(pessoa.Cpf);
+                sucesso = true;
+
         }
 
-        var idEventoVinculado = pessoa.Inscricaopessoaeventos.FirstOrDefault()?.IdEvento ?? 0;
+        if (GetByCpf(pessoa.Cpf) == null || existingUser == null)
+        {
+            return sucesso;
+
+        }
+        
+
+        if (idEvento > 0)
+        {
+            var novaInscricao = new Inscricaopessoaevento
+            {
+                IdPessoa = idPessoa,
+                IdEvento = idEvento,
+                IdPapel = idPapel,
+                DataInscricao = DateTime.Now,
+                Status = "S"
+            };
+            _inscricaoService.CreateInscricaoEvento(novaInscricao);
+
+        }
 
         using (var transaction = await _context.Database.BeginTransactionAsync())
         {
             try
             {
-                if (pessoa.Id == 0)
-                {
-                    _context.Add(pessoa);
-                    await _context.SaveChangesAsync();
-                }
-                else
-                {
-                    var local = _context.Set<Pessoa>().Local.FirstOrDefault(p => p.Id == pessoa.Id);
-                    if (local != null)
-                        _context.Entry(local).State = EntityState.Detached;
-
-                    _context.Update(pessoa);
-                    await _context.SaveChangesAsync();
-                }
-
-                if (idEventoVinculado > 0)
-                {
-                    var inscricaoExistente = pessoa.Inscricaopessoaeventos
-                        .FirstOrDefault(i => i.IdEvento == idEventoVinculado && i.IdPapel == idPapel);
-
-                    if (inscricaoExistente == null)
-                    {
-                        var novaInscricao = new Inscricaopessoaevento
-                        {
-                            IdPessoa = pessoa.Id,
-                            IdEvento = idEventoVinculado,
-                            IdPapel = (int)idPapel,
-                            DataInscricao = DateTime.Now,
-                            Status = "Ativa"
-                        };
-                        _context.Inscricaopessoaeventos.Add(novaInscricao);
-                        await _context.SaveChangesAsync();
-                    }
-                }
-
-                if (string.IsNullOrWhiteSpace(pessoa.Cpf))
-                {
-                    throw new Exception("O CPF da pessoa é obrigatório para criar a conta no Identity.");
-                }
-
-                var existingUser = await _userManager.FindByNameAsync(pessoa.Cpf);
-                if (existingUser == null)
-                {
-                    var newUser = new UsuarioIdentity
-                    {
-                        UserName = pessoa.Cpf,
-                        Email = pessoa.Email,
-                        PhoneNumber = pessoa.Telefone1
-                    };
-
-                    var createResult = await _userManager.CreateAsync(newUser, "DefaultPassword123!");
-                    if (!createResult.Succeeded)
-                    {
-                        var errors = string.Join("; ", createResult.Errors.Select(e => e.Description));
-                        throw new Exception($"Erro ao criar usuário no Identity: {errors}");
-                    }
-                    existingUser = newUser;
-                }
-
                 var role = idPapel switch
                 {
                     1 => "ADMINISTRADOR",
@@ -239,12 +211,16 @@ public class PessoaService : IPessoaService
                 if (!await _userManager.IsInRoleAsync(existingUser, role))
                 {
                     var roleResult = await _userManager.AddToRoleAsync(existingUser, role);
+                    sucesso = true;
                     if (!roleResult.Succeeded)
                     {
                         var errors = string.Join("; ", roleResult.Errors.Select(e => e.Description));
                         throw new Exception($"Erro ao associar o papel '{role.ToLower()}' ao usuário no Identity: {errors}");
+                        
                     }
                 }
+
+                
 
                 await transaction.CommitAsync();
             }
@@ -253,6 +229,8 @@ public class PessoaService : IPessoaService
                 await transaction.RollbackAsync();
                 throw new Exception($"Erro ao criar pessoa, inscrição ou associar papel: {ex.Message}", ex);
             }
+
+            return sucesso;
         }
     }
 

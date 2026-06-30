@@ -1,14 +1,11 @@
 ﻿using AutoMapper;
-using Core;               // namespace onde está a entidade Participacaopessoaevento
-using Core.DTO;           // namespace onde estarão seus DTOs (crie ParticipacaoPessoaEventoDTO aqui)
-using Core.Service;       // namespace onde estarão suas interfaces IParticipacaoPessoaEventoService e a implementação
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Service;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using Core;
+using Core.DTO;
+using Core.Service;
 using EventoWeb.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 
 namespace EventoWeb.Controllers
 {
@@ -41,19 +38,23 @@ namespace EventoWeb.Controllers
             _userManager = userManager;
         }
 
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
+        [Authorize(Roles = "GESTOR,COLABORADOR")]
+        [HttpGet]
+        [Route("ParticipacaoPessoaEvento/Index/{idEvento}/{idSubEvento?}")]
         public async Task<IActionResult> Index(uint idEvento, uint? idSubEvento)
         {
+
             var user = await _userManager.GetUserAsync(User);
-            if (user == null)
+            if (user == null || string.IsNullOrEmpty(user.UserName))
             {
                 return Challenge();
             }
 
-            var gestor = _inscricaoService.GetGestorInEvent(user.UserName, idEvento);
-            var colaborador = _inscricaoService.GetColaboradorInEvent(user.UserName, idEvento);
+            var username = user.UserName;
+            var gestor = _inscricaoService.GetGestorInEvent(username, idEvento);
+            var colaborador = _inscricaoService.GetColaboradorInEvent(username, idEvento);
 
-            if (gestor == null && colaborador == null && !User.IsInRole("ADMINISTRADOR"))
+            if (gestor == null && colaborador == null)
             {
                 TempData.Clear();
                 TempData["Message"] = "Você não tem permissão para registrar participação!";
@@ -75,8 +76,16 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RegistrarParticipacao(uint idEvento, uint? idSubEvento, string cpf)
         {
-            var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
-            var colaborador = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, idEvento);
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+            {
+                TempData.Clear();
+                TempData["Message"] = "Usuário não autenticado.";
+                return RedirectToAction("GerenciarEvento", "Evento");
+            }
+
+            var gestor = _inscricaoService.GetGestorInEvent(username, idEvento);
+            var colaborador = _inscricaoService.GetColaboradorInEvent(username, idEvento);
 
             if (gestor == null && colaborador == null && !User.IsInRole("ADMINISTRADOR"))
             {
@@ -85,10 +94,8 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("GerenciarEvento", "Evento");
             }
 
-            // Formata o CPF removendo pontos e traços
             cpf = cpf.Replace(".", "").Replace("-", "");
             
-            // Busca a pessoa pelo CPF
             var pessoa = _pessoaService.GetByCpf(cpf);
             if (pessoa == null)
             {
@@ -96,7 +103,7 @@ namespace EventoWeb.Controllers
                 return RedirectToAction(nameof(Index), new { idEvento, idSubEvento });
             }
 
-            // Verifica se a pessoa está inscrita no evento
+
             var inscricao = _inscricaoService.GetByEventoAndPapel(idEvento, 4)
                 .FirstOrDefault(i => i.IdPessoa == pessoa.Id);
             
@@ -106,7 +113,6 @@ namespace EventoWeb.Controllers
                 return RedirectToAction(nameof(Index), new { idEvento, idSubEvento });
             }
 
-            // Busca a última participação da pessoa no evento
             var ultimaParticipacao = (await _participacaoService.GetAllAsync())
                 .Where(f => f.IdPessoa == pessoa.Id && f.IdEvento == idEvento)
                 .OrderByDescending(f => f.Id)
@@ -145,8 +151,16 @@ namespace EventoWeb.Controllers
                 return NotFound();
             }
 
-            var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
-            var colaborador = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, idEvento);
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+            {
+                TempData.Clear();
+                TempData["Message"] = "Usuário não autenticado.";
+                return RedirectToAction("GerenciarEvento", "Evento");
+            }
+
+            var gestor = _inscricaoService.GetGestorInEvent(username, idEvento);
+            var colaborador = _inscricaoService.GetColaboradorInEvent(username, idEvento);
 
             if (gestor == null && colaborador == null)
             {
