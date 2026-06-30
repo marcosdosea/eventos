@@ -63,7 +63,7 @@ public class AreaInteresseService : IAreaInteresseService
     /// <returns></returns>
     public IEnumerable<Areainteresse> GetAll()
     {
-        return context.Areainteresses.AsNoTracking();
+        return context.Areainteresses.AsNoTracking().ToList();
     }
     
     /// <summary>
