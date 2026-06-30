@@ -22,13 +22,14 @@
                         <td style="vertical-align: middle;">@FormatarCPF(@item.Cpf)</td>
                         <td style="vertical-align: middle;">@item.Nome</td>
                         <td>
-                            <form id="@(item.Id + "_confirmar")" asp-action="Delete"  asp-route-id="@item.Id">
-                                <div class="d-flex flex-wrap gap-2">
-                                    <button type="button" class="btn btn-danger" onclick="showModal('@(item.Id + "_confirmar")','modalExcluir')" data-bs-toggle="modal" data-bs-target="#modalExcluir" data-bs-id="@item.Id">Excluir</button>
-                                    <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#modalMudarSenha">Mudar Senha</button>
-                                </div>
-                                
-                           </form>
+                            <div class="d-flex flex-wrap gap-2">
+                                <form id="@(item.Id + "_confirmar")" asp-action="Delete"  asp-route-id="@item.Id">
+                                   <button type="button" class="btn btn-danger" onclick="showModal('@(item.Id + "_confirmar")','modalExcluir')" data-bs-toggle="modal" data-bs-target="#modalExcluir" data-bs-id="@item.Id">Excluir</button>
+                                </form>
+                                <form id="@(item.Id + "_redefinir")" asp-action="EnviarEmailSenha" asp-route-id="@item.Id">
+                                    <button type="button" class="btn btn-secondary" onclick="showModal('@(item.Id + "_redefinir")','modalMudarSenha')" data-bs-toggle="modal" data-bs-target="#modalMudarSenha" data-bs-id="@item.Id">Mudar Senha</button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 }
@@ -77,14 +78,14 @@
             <div class="modal-body text-center">
                 <h4>Tem certeza que deseja mudar a senha?</h4>
                 <span class="text-black-50 fw-bold small">
-                    Vai receber um e-mail para redefinir a senha.
+                    Essa pessoa vai receber um e-mail para redefinir a senha.
                 </span>
 
             </div>
-            <div class="modal-footer justify-content-center">
+            <form method="post" class="modal-footer justify-content-center">
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="submit" class="btn btn-danger" id="btnConfirmarMudanca">Sim</button>
-            </div>
+            </form>
         </div>
     </div>
 </div>
