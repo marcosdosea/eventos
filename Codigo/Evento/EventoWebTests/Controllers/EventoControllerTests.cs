@@ -252,7 +252,7 @@ namespace EventoWeb.Controllers.Tests
 
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
-            Assert.AreEqual("GerenciarEvento", redirectToActionResult.ActionName);
+            Assert.AreEqual("CreateGestor", redirectToActionResult.ActionName);
         }
 
         [TestMethod()]

@@ -274,7 +274,7 @@ namespace EventoWeb.Controllers
                 await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoaExistente, idEvento, 2);
                 _eventoService.AtualizarVagasDisponiveis(idEvento);
 
-                return RedirectToAction("GerenciarEvento", new { idEvento });
+                return RedirectToAction("CreateGestor", new { idEvento });
             }
 
             gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(gestaoPapelModel.Evento.Id);

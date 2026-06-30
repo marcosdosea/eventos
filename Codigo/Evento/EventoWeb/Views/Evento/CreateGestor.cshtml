@@ -169,25 +169,3 @@
 		return Convert.ToUInt64(cpf).ToString(@"000\.000\.000\-00");
 	}
 }
-
-@section Scripts {
-	<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-	<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-	<script src="~/lib/datatable/js/datatables.min.js"></script>
-	<script>
-		$(document).ready(function () {
-		$('#tablePessoa').DataTable({
-		columnDefs: [
-		{ orderable: true, targets: [0] },
-		{ orderable: false, targets: [1, 2] }
-		],
-		searching: true,
-		ordering: true,
-		paging: true,
-		language: {
-		url: '@Url.Content("~/lib/datatable/js/pt-BR.json")'
-		}
-		});
-		});
-	</script>
-}
