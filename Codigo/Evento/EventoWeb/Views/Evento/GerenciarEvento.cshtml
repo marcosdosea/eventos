@@ -31,7 +31,7 @@
                 new { Nome = "Inscrições", Action = "Index", Controller = "Participacaopessoaevento", Icon = "Inscricoes.png", Parametros = (object)new { idEvento = Model.Evento.Id } },
                 new { Nome = "Colaboradores", Action = "CreateColaborador", Controller = "Evento", Icon = "Colaboradores.png", Parametros = (object)new { idEvento = Model.Evento.Id } },
                 new { Nome = "Evento", Action = "GestorEditarEvento", Controller = "Evento", Icon = "Evento.png", Parametros = (object)new { id = Model.Evento.Id } },
-                new { Nome = "Usuário", Action = "CreateParticipante", Controller = "Evento", Icon = "Participantes.png", Parametros = (object)new { idEvento = Model.Evento.Id } }
+                new { Nome = "Usuário", Action = "CreateUsuario", Controller = "Pessoa", Icon = "Participantes.png", Parametros = (object)new { idEvento = Model.Evento.Id } }
                 };
         }
 
