@@ -187,7 +187,6 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult CreateTipoInscricaoSubevento(TipoInscricaoSubeventoModel model)
         {
-
             if (!ModelState.IsValid)
             {
                 ModelState.AddModelError("", "Por favor, selecione um Tipo de Inscrição válido.");
