@@ -1,4 +1,4 @@
-    using AutoMapper;
+using AutoMapper;
 using Core;
 using Core.Service;
 using EventoWeb.Models;
@@ -67,7 +67,7 @@ namespace EventoWeb.Controllers
 
             return View(_mapper.Map<PessoaModel>(pessoa));
         }
-        
+
         [Authorize(Roles = "ADMINISTRADOR")]
         [HttpGet]
         [Route("GestoresSistema")]
@@ -78,6 +78,61 @@ namespace EventoWeb.Controllers
             {
                 Gestores = _mapper.Map<List<PessoaModel>>(gestores.OrderBy(p => p.Nome))
             };
+            return View(viewModel);
+        }
+
+        [Authorize(Roles = "GESTOR")]
+        [HttpGet]
+        [Route("CreateUsuario")]
+        public ActionResult CreateUsuario()
+        {
+            var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
+            var viewModel = new PessoaModel
+            {
+                Estados = new SelectList(estados, "Estado", "Nome")
+            };
+            return View(viewModel);
+        }
+
+
+        [Authorize(Roles = "GESTOR")]
+        [HttpPost]
+        [Route("CreateUsuario")]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> CreateUsuario(PessoaModel viewModel)
+        {
+            if (ModelState.IsValid)
+            {
+                
+                var pessoa = new Pessoa
+                {
+                    Cpf = viewModel.Cpf,
+                    Nome = viewModel.Nome,
+                    NomeCracha = viewModel.Nome.Length > 20 ? viewModel.Nome.Substring(0, 20) : viewModel.Nome,
+                    Telefone1 = viewModel.Telefone1,
+                    Email = viewModel.Email
+                };
+                var existe = _pessoaService.GetByCpf(pessoa.Cpf);
+                if(existe != null)
+                {
+                    TempData["ErrorMessage"] = "Esse CPF já está associado a um usuário.";
+                    return RedirectToAction(nameof(CreateUsuario));
+                }
+                _pessoaService.Create(pessoa);
+                await _pessoaService.CreateAsync(pessoa);
+                var sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 4);
+                if (sucesso)
+                {
+                    TempData["SuccessMessage"] = "Usuário cadastrado com sucesso!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Erro ao cadastrar usuário.";
+                }
+
+                return RedirectToAction(nameof(CreateUsuario));
+
+            }
             return View(viewModel);
         }
 
@@ -96,7 +151,7 @@ namespace EventoWeb.Controllers
             {
                 Estados = new SelectList(estados, "Estado", "Nome")
             };
-             ViewBag.ReturnUrl = returnUrl;
+            ViewBag.ReturnUrl = returnUrl;
             return View(viewModel);
         }
 
@@ -104,7 +159,7 @@ namespace EventoWeb.Controllers
         [HttpPost]
         [Route("Create")]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Create(PessoaModel viewModel,string? returnUrl)
+        public async Task<ActionResult> Create(PessoaModel viewModel, string? returnUrl)
         {
             if (ModelState.IsValid)
             {
@@ -126,8 +181,8 @@ namespace EventoWeb.Controllers
 
                     if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                     {
-                      return Redirect(returnUrl);
-                    } 
+                        return Redirect(returnUrl);
+                    }
 
                 }
                 catch (Exception ex)
@@ -135,16 +190,13 @@ namespace EventoWeb.Controllers
                     ModelState.AddModelError("", ex.Message);
                 }
             }
-
-
             return View(viewModel);
-
         }
 
         [Authorize]
         [HttpGet]
         [Route("Edit/{id}")]
-        public ActionResult Edit(uint id,string? returnUrl)
+        public ActionResult Edit(uint id, string? returnUrl)
         {
             var pessoa = _pessoaService.Get(id);
             if (pessoa == null) return NotFound();
@@ -188,12 +240,13 @@ namespace EventoWeb.Controllers
                 pessoaEditada.Foto = fotoSource;
                 await _pessoaService.Edit(pessoaEditada);
 
-                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)) { 
+                if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                {
                     return Redirect(returnUrl);
                 }
 
-                              
-                
+
+
             }
 
             viewModel.Estados = new SelectList(
@@ -214,7 +267,7 @@ namespace EventoWeb.Controllers
             var pessoa = _pessoaService.Get(viewModel.Id);
             if (pessoa == null) return NotFound();
             PessoaModel pessoaModel = _mapper.Map<PessoaModel>(pessoa);
-            
+
             return View(pessoaModel);
         }
 
@@ -224,17 +277,17 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(PessoaModel viewModel)
         {
-                       
-                var sucesso = _pessoaService.Delete(viewModel.Id);
 
-                if (sucesso)
-                {
-                    TempData["SuccessMessage"] = "Exclusão realizada com sucesso!";
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = "Erro ao excluir pessoa";
-                }
+            var sucesso = _pessoaService.Delete(viewModel.Id);
+
+            if (sucesso)
+            {
+                TempData["SuccessMessage"] = "Exclusão realizada com sucesso!";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Erro ao excluir pessoa";
+            }
 
             if (User.IsInRole("ADMINISTRADOR"))
             {
@@ -298,9 +351,8 @@ namespace EventoWeb.Controllers
                     }
 
                 }
-
                 return RedirectToAction(nameof(DefinirAdministrador));
-               
+
             }
 
             var adminsAtuais = await _pessoaService.GetAllAdmAsync();

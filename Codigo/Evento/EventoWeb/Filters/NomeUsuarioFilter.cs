@@ -20,8 +20,8 @@ namespace EventoWeb.Filters
 
             if (controller != null && user.Identity != null && user.Identity.IsAuthenticated)
             {
-                var cpf = user.Identity.Name; // o CPF que está vindo do login
-                var pessoa = _pessoaService.GetByCpf(cpf); // precisa existir no seu service
+                var cpf = user.Identity.Name; 
+                var pessoa = _pessoaService.GetByCpf(cpf); 
                 controller.ViewBag.NomeUsuario = pessoa?.Nome ?? "Usuário";
             }
         }

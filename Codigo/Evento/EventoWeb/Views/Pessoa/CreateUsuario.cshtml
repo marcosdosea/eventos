@@ -1,0 +1,86 @@
+@model EventoWeb.Models.PessoaModel
+
+@{
+    ViewData["Title"] = "CreateUsuario";
+}
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<body>
+    <h1 class="blue-normal">Adicionar Usuarios ao Sistema</h1>
+    @if (!(TempData["ErrorMessage"] is null))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    <div class="row">
+        <div class="col-md-12">
+            <form asp-action="CreateUsuario" method="post" onsubmit="return validarFormulario()">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="Cpf" class="control-label">CPF</label>
+                            <input asp-for="Cpf" class="form-control"
+                                   id="Cpf"
+                                   placeholder="000.000.000-00"
+                                   oninput="formatarCPF()"
+                                   maxlength="14" />
+                            <span asp-validation-for="Cpf" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label asp-for="Nome" class="control-label">Nome</label>
+                            <input asp-for="Nome" class="form-control"
+                                   id="Nome"
+                                   placeholder="Nome completo" />
+                            <span asp-validation-for="Nome" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label asp-for="Telefone1" class="control-label">Celular</label>
+                            <input asp-for="Telefone1" class="form-control"
+                                   id="Telefone1"
+                                   placeholder="Com o DDD"
+                                   maxlength="11" />
+                            <span asp-validation-for="Telefone1" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label asp-for="Email" class="control-label">Email</label>
+                            <input asp-for="Email" class="form-control"
+                                   id="Email"
+                                   placeholder="Seu e-mail" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+                <br />
+                <div class="d-flex justify-content-end">
+                    <div class="d-flex flex-row">
+                        <div class="form-group" style="margin-right: 10px;">
+                            <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+                            <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
+                        </div>
+                        <button type="button"
+                                class="btn btn-outline-danger"
+                                onclick="history.back()">
+                            Voltar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
