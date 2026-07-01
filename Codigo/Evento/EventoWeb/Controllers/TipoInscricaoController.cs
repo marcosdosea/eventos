@@ -185,16 +185,17 @@ namespace EventoWeb.Controllers
         // POST: /TipoInscricao/CreateTipoInscricaoSubevento
         [HttpPost("CreateTipoInscricaoSubevento")]
         [ValidateAntiForgeryToken]
-        public ActionResult CreateTipoInscricaoSubevento(uint idSubevento, uint IdTipoInscricao)
+        public ActionResult CreateTipoInscricaoSubevento(TipoInscricaoSubeventoModel model)
         {
-            if (IdTipoInscricao == 0)
+
+            if (!ModelState.IsValid)
             {
                 ModelState.AddModelError("", "Por favor, selecione um Tipo de Inscrição válido.");
 
-                var subevento = _subeventoService.Get(idSubevento);
+                var subevento = _subeventoService.Get(model.Subevento.Id);
                 var subeventoModel = _mapper.Map<SubeventoModel>(subevento);
                 var tiposInscricaos = _tipoInscricaoService.GetByEventoUsadaSubevento(subevento.IdEvento);
-                var tiposInscricaosSubevento = _tipoInscricaoService.GetTiposInscricaosSubevento(idSubevento);
+                var tiposInscricaosSubevento = _tipoInscricaoService.GetTiposInscricaosSubevento(model.Subevento.Id);
 
                 ViewData["EventoId"] = subevento.IdEvento;
 
@@ -207,8 +208,8 @@ namespace EventoWeb.Controllers
                 return View(view);
             }
 
-            _tipoInscricaoService.AssociacaoTipoInscricaoSubevento(idSubevento, IdTipoInscricao);
-            return RedirectToAction("CreateTipoInscricaoSubevento", new { idSubevento });
+            _tipoInscricaoService.AssociacaoTipoInscricaoSubevento(model.Subevento.Id, model.IdTipoInscricao);
+            return RedirectToAction("CreateTipoInscricaoSubevento", new { model.Subevento.Id });
         }
 
         // POST: /TipoInscricao/DeleteTipoInscricaoSubevento

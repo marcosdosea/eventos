@@ -54,7 +54,7 @@
                             <div class="form-group">
                                 <label asp-for="IdTipoInscricao" class="control-label">Tipo de Inscrição</label>
                                 <select asp-for="IdTipoInscricao" class="form-control">
-                                    @if (!Model.TiposInscricaos.Any())
+                                    @if (Model?.TiposInscricaos is null)
                                     {
                                     <option value="">Nenhum Disponível</option>
                                     }
