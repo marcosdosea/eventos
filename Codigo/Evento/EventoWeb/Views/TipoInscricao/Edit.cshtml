@@ -20,15 +20,15 @@
                 <form asp-action="Edit" method="post">
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <input type="hidden" asp-for="Id" />
-                    
+
                     <br />
                     <h4 class="blue-normal">
                         Informações Gerais
                     </h4>
                     <div class="form-group mb-2">
-                            <label asp-for="Nome" class="control-label"></label>
-                            <input asp-for="Nome" class="form-control" />
-                            <span asp-validation-for="Nome" class="text-danger"></span>
+                        <label asp-for="Nome" class="control-label"></label>
+                        <input asp-for="Nome" class="form-control" />
+                        <span asp-validation-for="Nome" class="text-danger"></span>
                     </div>
                     <div class="form-group mb-2">
                         <label asp-for="Descricao" class="control-label"></label>
@@ -36,7 +36,7 @@
                         <span asp-validation-for="Descricao" class="text-danger"></span>
                     </div>
                     <div class="row">
-                        
+
                         <div class="col-md-10">
                             <div class="form-group mb-2">
                                 <label asp-for="IdEvento" class="control-label"></label>
@@ -47,7 +47,8 @@
                         <div class="col-md-2">
                             <div class="form-group" id="valorInscricaoGroup">
                                 <label asp-for="Valor" class="control-label"></label>
-                                <input type="text" asp-for="Valor" class="form-control" onkeypress="return validateInput(event)">
+                                <input type="text" id="valorTela" class="form-control" value="@Model.Valor.ToString("F2", new System.Globalization.CultureInfo("pt-BR"))" placeholder="0,00" />
+                                <input type="hidden" name="Valor" id="valorReal" value="@Model.Valor.ToString("F2", new System.Globalization.CultureInfo("en-US"))" />
                                 <span asp-validation-for="Valor" class="text-danger"></span>
                             </div>
                         </div>
@@ -80,7 +81,7 @@
                                     <div class="form-check">
                                         <!-- Checkbox que marca se o evento ser� usado (valor 1) -->
                                         <input class="form-check-input" type="checkbox" value="1" id="UsadaEvento" name="TipoInscricao.UsadaEvento"
-                                        @(Model.UsadaEvento == 1 ? "checked" : "")>
+                                               @(Model.UsadaEvento == 1 ? "checked" : "")>
                                         <label class="form-check-label" for="UsadaEvento">Usado em Evento</label>
                                         <!-- Campo oculto para enviar valor 0 quando o checkbox n�o est� marcado -->
                                         <input type="hidden" name="TipoInscricao.UsadaEvento" value="0">
@@ -95,7 +96,7 @@
                                     <div class="form-check">
                                         <!-- Checkbox que marca se o subevento ser� usado (valor 1) -->
                                         <input class="form-check-input" type="checkbox" value="1" id="UsadaSubevento" name="TipoInscricao.UsadaSubevento"
-                                        @(Model.UsadaSubevento == 1 ? "checked" : "")>
+                                               @(Model.UsadaSubevento == 1 ? "checked" : "")>
                                         <label class="form-check-label" for="UsadaSubevento">Usado em Subevento</label>
                                         <!-- Campo oculto para enviar valor 0 quando o checkbox n�o est� marcado -->
                                         <input type="hidden" name="TipoInscricao.UsadaSubevento" value="0">
@@ -107,14 +108,14 @@
                     </div>
                     <br />
                     <div class="d-flex justify-content-end">
-                    <div class="d-flex flex-row">
-                        <div class="form-group" style="margin-right: 10px;">
-                            <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
+                        <div class="d-flex flex-row">
+                            <div class="form-group" style="margin-right: 10px;">
+                                <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
+                            </div>
+                            <div class="form-group">
+                                <a href="/TipoInscricao/Index?idEvento=@Model..IdEvento" class="btn btn-outline-danger">Cancelar</a>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <a href="/TipoInscricao/Index?idEvento=@Model..IdEvento" class="btn btn-outline-danger">Cancelar</a>
-                        </div>
-                    </div>
                     </div>
                 </form>
             </div>
@@ -127,6 +128,8 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+    <script src="~/js/converterNumeroComVirgula.js"></script>
+
     <script>
         document.getElementById('UsadaEvento').addEventListener('change', function () {
             this.nextElementSibling.value = this.checked ? 1 : 0; // Ajusta o valor do campo oculto baseado no estado do checkbox
@@ -135,5 +138,4 @@
             this.nextElementSibling.value = this.checked ? 1 : 0; // Ajusta o valor do campo oculto baseado no estado do checkbox
         });
     </script>
-
 }
