@@ -37,5 +37,6 @@
     }
 
     gerenciarCampoMonetario("valorTela", "valorReal");
-
+    gerenciarCampoMonetario('ValorInscricao_Tela', 'ValorInscricao_Real');
+    gerenciarCampoMonetario('FrequenciaMinimaCertificado_Tela', 'FrequenciaMinimaCertificado_Real');
 });
