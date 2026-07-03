@@ -20,11 +20,12 @@ namespace EventoWeb.Models
         public string Cpf { get; set; } = null!;
 
         [Display(Name = "Telefone")]
-        [TelefoneCelular(ErrorMessage = "Digite um número válido")]
+        [TelefoneCelular(ErrorMessage = "Digite um telefone válido com DDD. Ex: (11) 91234-5678")]
         public string? Telefone1 { get; set; }
 
         [Display(Name = "E-mail")]
         [Required(ErrorMessage = "E-mail é obrigatório")]
+        [EmailAddress(ErrorMessage = "Por favor, digite um e-mail em um formato válido.")]
         public string Email { get; set; } = null!;
         public List<PessoaModel> Administradores { get; set; } = new List<PessoaModel>();
     }
