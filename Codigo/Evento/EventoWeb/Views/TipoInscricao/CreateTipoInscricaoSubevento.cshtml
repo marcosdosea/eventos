@@ -21,16 +21,10 @@
                     @Html.AntiForgeryToken()
                     <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                     <div class="row">
-                        <!--<div class="col-2">
-                            <div class="form-group">
-                                
-                            </div>
-                        </div>-->
                             <div class="col-3">
                                 <div class="form-group">
                                     <label for="IdSubevento" class="control-label">Subevento</label>
-                                    <input type="hidden" name="idSubevento" value="@Model?.Subevento?.Id" />
-
+                                    <input type="hidden" name="Subevento.Id" value="@Model?.Subevento?.Id" />
                                     <select class="form-control" disabled>
                                         @if (Model?.Subevento?.Id == null || Model.Subevento.Id == 0)
                                         {
@@ -43,18 +37,11 @@
                                     </select>
                                 </div>
                             </div>
-                    <!--</div>
-                    <div class="row">-->    
-                        <!--<div class="col-2">
-                            <div class="form-group">
-                                
-                            </div>
-                        </div>-->
                         <div class="col-4">
                             <div class="form-group">
                                 <label asp-for="IdTipoInscricao" class="control-label">Tipo de Inscrição</label>
                                 <select asp-for="IdTipoInscricao" class="form-control">
-                                    @if (!Model.TiposInscricaos.Any())
+                                    @if (Model?.TiposInscricaos is null || !Model.TiposInscricaos.Any())
                                     {
                                     <option value="">Nenhum Disponível</option>
                                     }

@@ -139,7 +139,7 @@ namespace Service
                 tipoInscricao.UsadaSubevento = 1;
 
                 subevento.IdTipoInscricaos.Add(tipoInscricao);
-                _context.SaveChanges(); 
+                _context.SaveChanges();
             }
         }
 
