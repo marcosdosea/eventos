@@ -239,36 +239,43 @@ namespace EventoWeb.Controllers
             {
                 var pessoaExistente = _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
                 var idEvento = gestaoPapelModel.Evento.Id;
+
                 if (pessoaExistente is null)
                 {
-                    Pessoa pessoa = _mapper.Map<Pessoa>(gestaoPapelModel.Pessoa);
-                    pessoaExistente = pessoa;
+                    ModelState.AddModelError("Pessoa.Cpf", "CPF não encontrado no sistema.");
+                    gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
+                    gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 2);
+                    return View(gestaoPapelModel);
                 }
-                else
+
+                var nomeDigitado = gestaoPapelModel.Pessoa.Nome?.Trim() ?? "";
+                var nomeComparacao = pessoaExistente.Nome?.Trim() ?? "";
+                var primeiroEspaco = nomeComparacao.IndexOf(' ');
+                var nomeCurto = primeiroEspaco > 0
+                    ? nomeComparacao.Substring(0, primeiroEspaco)
+                    : nomeComparacao.Substring(0, Math.Min(20, nomeComparacao.Length));
+                if (!nomeDigitado.StartsWith(nomeCurto, StringComparison.OrdinalIgnoreCase))
+                    ModelState.AddModelError("Pessoa.Nome", "Nome não confere com o cadastro do CPF informado.");
+
+                if (!pessoaExistente.Email.Equals(gestaoPapelModel.Pessoa.Email, StringComparison.OrdinalIgnoreCase))
+                    ModelState.AddModelError("Pessoa.Email", "E-mail não confere com o cadastro do CPF informado.");
+
+                if (!ModelState.IsValid)
                 {
-                    var papel = _inscricaoService.GetPapelPessoaByEvento(pessoaExistente.Id, idEvento);
+                    gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
+                    gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 2);
+                    return View(gestaoPapelModel);
+                }
 
-                    if (papel is 2 or 3)
-                    {
-                        var papelNome = "";
+                var papel = _inscricaoService.GetPapelPessoaByEvento(pessoaExistente.Id, idEvento);
 
-                        switch (papel)
-                        {
-                            case 2:
-                                papelNome = "gestor";
-                                break;
-                            case 3:
-                                papelNome = "colaborador";
-                                break;
-                        }
-
-                        ModelState.AddModelError(string.Empty, $"A pessoa selecionada já é um {papelNome} do evento.");
-
-                        gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
-                        gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 2);
-
-                        return View(gestaoPapelModel);
-                    }
+                if (papel is 2 or 3)
+                {
+                    var papelNome = papel == 2 ? "gestor" : "colaborador";
+                    ModelState.AddModelError(string.Empty, $"A pessoa selecionada já é um {papelNome} do evento.");
+                    gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
+                    gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 2);
+                    return View(gestaoPapelModel);
                 }
 
                 await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoaExistente, idEvento, 2);
