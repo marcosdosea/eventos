@@ -175,7 +175,6 @@ namespace EventoWeb.Controllers
 
             var view = new TipoInscricaoSubeventoModel()
             {
-                Subevento = subeventoModel,
                 TiposInscricaos = new SelectList(tiposInscricaos, "Id", "Nome"),
                 TiposInscricaosSubevento = tiposInscricaosSubevento
             };
@@ -191,24 +190,23 @@ namespace EventoWeb.Controllers
             {
                 ModelState.AddModelError("", "Por favor, selecione um Tipo de Inscrição válido.");
 
-                var subevento = _subeventoService.Get(model.Subevento.Id);
+                var subevento = _subeventoService.Get(model.IdSubevento);
                 var subeventoModel = _mapper.Map<SubeventoModel>(subevento);
                 var tiposInscricaos = _tipoInscricaoService.GetByEventoUsadaSubevento(subevento.IdEvento);
-                var tiposInscricaosSubevento = _tipoInscricaoService.GetTiposInscricaosSubevento(model.Subevento.Id);
+                var tiposInscricaosSubevento = _tipoInscricaoService.GetTiposInscricaosSubevento(model.IdSubevento);
 
                 ViewData["EventoId"] = subevento.IdEvento;
 
                 var view = new TipoInscricaoSubeventoModel()
                 {
-                    Subevento = subeventoModel,
                     TiposInscricaos = new SelectList(tiposInscricaos, "Id", "Nome"),
                     TiposInscricaosSubevento = tiposInscricaosSubevento
                 };
                 return View(view);
             }
 
-            _tipoInscricaoService.AssociacaoTipoInscricaoSubevento(model.Subevento.Id, model.IdTipoInscricao);
-            return RedirectToAction("CreateTipoInscricaoSubevento", new { model.Subevento.Id });
+            _tipoInscricaoService.AssociacaoTipoInscricaoSubevento(model.IdSubevento, model.IdTipoInscricao);
+            return RedirectToAction("CreateTipoInscricaoSubevento", new { model.IdSubevento });
         }
 
         // POST: /TipoInscricao/DeleteTipoInscricaoSubevento
