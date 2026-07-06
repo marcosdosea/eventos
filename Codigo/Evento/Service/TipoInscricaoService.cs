@@ -124,7 +124,7 @@ namespace Service
         /// </summary>
         public void AssociacaoTipoInscricaoSubevento(uint Idsubevento, uint IdtipoInscricao)
         {
-            var subevento = _context.Subeventos.FirstOrDefault(s => s.Id == Idsubevento);
+            var subevento = _context.Subeventos.Find(Idsubevento);
             if (subevento == null) throw new ServiceException("Subevento não encontrado.");
 
             _context.Entry(subevento).Collection(s => s.IdTipoInscricaos).Load();
@@ -136,10 +136,12 @@ namespace Service
 
             if (!subevento.IdTipoInscricaos.Any(ti => ti.Id == IdtipoInscricao))
             {
-                tipoInscricao.UsadaSubevento = 1;
-
                 subevento.IdTipoInscricaos.Add(tipoInscricao);
                 _context.SaveChanges();
+            }
+            else
+            {
+                throw new ServiceException("Tipo de Inscrição já associado ao subevento.");
             }
         }
 
