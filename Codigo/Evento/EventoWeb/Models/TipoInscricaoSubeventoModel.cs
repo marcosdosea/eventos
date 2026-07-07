@@ -13,7 +13,6 @@ public class TipoInscricaoSubeventoModel
     public SelectList? TiposInscricaos { get; set; }
     public IEnumerable<TipoInscricaoDTO>? TiposInscricaosSubevento { get; set; }
 
-    [Required(ErrorMessage = "É preciso selecionar um tipo de inscrição")]
     public uint IdTipoInscricao { get; set; }
 
 }
