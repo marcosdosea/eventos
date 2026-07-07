@@ -44,7 +44,7 @@ namespace EventoWeb.Models
 		public DateTime? DataFimInscricao { get; set; }
 
         [Display(Name = "Valor da Inscrição", Prompt = "R$ 00,00")]
-        [Range(0.00, double.MaxValue, ErrorMessage = "O valor da inscrição deve ser zero ou maior que zero.")]
+        [Range(0.00, 999999, ErrorMessage = "O valor da inscrição deve ser zero ou maior que zero.")]
         public decimal ValorInscricao { get; set; }
 
         [Display(Name = "Website")]
@@ -84,7 +84,8 @@ namespace EventoWeb.Models
 		public sbyte PossuiCertificado { get; set; }
 
 		[Display(Name = "Frequência Minima para Receber a Certificação")]
-		public decimal FrequenciaMinimaCertificado { get; set; }
+        [Range(0.00, 100, ErrorMessage = "A frequencia minima deve ser entre 0 e 100.")]
+        public decimal FrequenciaMinimaCertificado { get; set; }
 
 		[Display(Name = "ID do Tipo do Evento")]
 		[Required(ErrorMessage = "Informe o Tipo do Evento")]
