@@ -416,7 +416,7 @@ namespace EventoWeb.Controllers
                     return View(gestaoPapelModel);
                 }
 
-                pessoa.NomeCracha = pessoa.Nome;
+              
 
 
                 _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, idEvento,4).Wait();
