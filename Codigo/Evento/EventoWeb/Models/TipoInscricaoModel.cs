@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Util;
 
 namespace EventoWeb.Models
 {
@@ -26,6 +27,7 @@ namespace EventoWeb.Models
 
         [Display(Name = "Data Inicial")]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
+        [DataInicio(nameof(Datafim))]
         public DateTime DataInicio { get; set; }
 
         [Display(Name = "Data Final")]
