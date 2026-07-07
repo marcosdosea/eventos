@@ -62,9 +62,9 @@ namespace Service
 
                     _context.SaveChanges();
                 }
-                catch (Exception ex)
+                catch (ServiceException ex)
                 {
-                    throw new Exception("Não foi possível excluir o evento. Verifique se existem dependências ativas.", ex);
+                    throw new ServiceException("Não foi possível excluir o evento. Verifique se existem dependências ativas.", ex);
                 }
             }
         }
@@ -79,6 +79,7 @@ namespace Service
         {
             try
             {
+                
                 var local = _context.Eventos.Local.FirstOrDefault(e => e.Id == evento.Id);
                 if (local != null)
                 {
@@ -93,6 +94,9 @@ namespace Service
 
                 var idsAtuaisNoBanco = eventoExistente.IdAreaInteresses.Select(ai => ai.Id).ToList();
                 var idsDesejados = novosIdsAreaInteresse ?? new List<uint>();
+
+                evento.FrequenciaMinimaCertificado = Math.Min(evento.FrequenciaMinimaCertificado, 100);
+                evento.ValorInscricao = Math.Min(evento.ValorInscricao, 99999999);
 
                 _context.Entry(eventoExistente).CurrentValues.SetValues(evento);
 
@@ -125,10 +129,11 @@ namespace Service
                         eventoExistente.IdAreaInteresses.Add(area);
                     }
                 }
+                
 
                 _context.SaveChanges();
             }
-            catch (Exception ex)
+            catch (ServiceException ex)
             {
                 throw new ServiceException($"Erro ao atualizar o evento: {ex.Message}", ex);
             }
@@ -177,7 +182,7 @@ namespace Service
             var pessoa = _context.Pessoas.FirstOrDefault(p => p.Cpf == userCpf);
             if (pessoa == null)
             {
-                throw new Exception("Pessoa não encontrada para o CPF fornecido.");
+                throw new ServiceException("Pessoa não encontrada para o CPF fornecido.");
             }
             var eventos = from evento in _context.Eventos
                 join inscricao in _context.Inscricaopessoaeventos
@@ -212,11 +217,10 @@ namespace Service
                    .Select(t => t.Nome)
                    .FirstOrDefault();
         }
-		// No EventoService
 		public IEnumerable<Areainteresse> GetAreasInteresseByEventoId(uint eventoId)
 		{
 			var evento = _context.Eventos
-								 .Include(e => e.IdAreaInteresses) // Carrega as áreas de interesse associadas
+								 .Include(e => e.IdAreaInteresses)
 								 .FirstOrDefault(e => e.Id == eventoId);
 
 			return evento?.IdAreaInteresses ?? Enumerable.Empty<Areainteresse>();
