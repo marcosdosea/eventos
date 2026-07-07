@@ -24,15 +24,15 @@
                             <div class="col-3">
                                 <div class="form-group">
                                     <label for="IdSubevento" class="control-label">Subevento</label>
-                                    <input type="hidden" name="Subevento.Id" value="@Model?.Subevento?.Id" />
+                                    <input type="hidden" name="IdSubevento" value="@Model?.IdSubevento" />
                                     <select class="form-control" disabled>
-                                        @if (Model?.Subevento?.Id == null || Model.Subevento.Id == 0)
+                                        @if (Model?.IdSubevento == null || Model.IdSubevento == 0)
                                         {
                                             <option value="0">Não Informado</option>
                                         }
                                         else
                                         {
-                                            <option value="@Model.Subevento.Id" selected>@Model.Subevento.Nome</option>
+                                            <option value="@Model.NomeSubevento" selected>@Model.NomeSubevento</option>
                                         }
                                     </select>
                                 </div>
@@ -90,7 +90,7 @@
             <td style="vertical-align: middle;">@tipoInscricaoSubevento.Datafim.ToString("dd/MM/yyyy")</td>
             <td style="vertical-align: middle;">
                 <form asp-action="DeleteTipoInscricaoSubevento" method="post" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir?');">
-                    <input type="hidden" name="idSubevento" value="@Model.Subevento.Id" />
+                    <input type="hidden" name="idSubevento" value="@Model.IdSubevento" />
                     <input type="hidden" name="idTipoInscricao" value="@tipoInscricaoSubevento.Id" />
                     <button type="submit" class="btn btn-danger">Excluir</button>
                 </form>
