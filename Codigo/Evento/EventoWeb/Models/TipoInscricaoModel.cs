@@ -26,12 +26,12 @@ namespace EventoWeb.Models
         public decimal Valor { get; set; }
 
         [Display(Name = "Data Inicial")]
-        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = false)]
         [DataInicio(nameof(Datafim))]
         public DateTime DataInicio { get; set; }
 
         [Display(Name = "Data Final")]
-        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = false)]
         public DateTime Datafim { get; set; }
 
         [Display(Name = "Evento")]
