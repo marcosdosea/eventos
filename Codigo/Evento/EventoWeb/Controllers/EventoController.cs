@@ -141,6 +141,8 @@ namespace EventoWeb.Controllers
             viewModel.Estados = new SelectList(estados, "Estado", "Nome", viewModel.Estado);
             viewModel.TiposEventos = new SelectList(tiposEventos, "Id", "Nome", viewModel.Id);
             viewModel.AreaInteresse = new SelectList(areaInteresse, "Id", "Nome", viewModel.Id);
+            viewModel.DataInicioInscricao = DateTime.Today;
+            viewModel.DataFimInscricao = DateTime.Today;
 
             return View(viewModel);
         }

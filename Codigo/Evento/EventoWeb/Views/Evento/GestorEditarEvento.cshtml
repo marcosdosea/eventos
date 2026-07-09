@@ -113,14 +113,14 @@
             <div class="col-md-2">
                 <div class="form-group">
                     <label asp-for="DataInicioInscricao" class="control-label"></label>
-                    <input asp-for="DataInicioInscricao" class="form-control" />
+                    <input asp-for="DataInicioInscricao" type="datetime-local" class="form-control" />
                     <span asp-validation-for="DataInicioInscricao" class="text-danger"></span>
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="form-group">
                     <label asp-for="DataFimInscricao" class="control-label"></label>
-                    <input asp-for="DataFimInscricao" class="form-control" />
+                    <input asp-for="DataFimInscricao" asp-format ="{0:dd-MM-yyyy HH:mm}" type="datetime-local" class="form-control" />
                     <span asp-validation-for="DataFimInscricao" class="text-danger"></span>
                 </div>
             </div>

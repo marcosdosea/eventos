@@ -18,11 +18,13 @@ namespace EventoWeb.Models
 		public string Nome { get; set; } = null!;
 
 		[Display(Name = "Data Inicial")]
+		[DataType(DataType.Date)]
 		[DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
 		public DateTime? DataInicio { get; set; } = DateTime.MinValue;
 
 		[Display(Name = "Data Final")]
-		[DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
+        [DataType(DataType.Date)]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
 		public DateTime? DataFim { get; set; } = DateTime.MinValue;
 
 		[Display(Name = "Descrição")]
@@ -35,11 +37,11 @@ namespace EventoWeb.Models
 		[Required(ErrorMessage = "Status do Evento é obrigatório")]
 		public string Status { get; set; } = null!;
 
-		[Display(Name = "Data Inicial de Inscrição")]
-		[DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
-		public DateTime? DataInicioInscricao { get; set; }
+        [Display(Name = "Data Inicial de Inscrição")]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
+        public DateTime? DataInicioInscricao { get; set; }
 
-		[Display(Name = "Data Final de Inscrição")]
+        [Display(Name = "Data Final de Inscrição")]
 		[DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
 		public DateTime? DataFimInscricao { get; set; }
 
