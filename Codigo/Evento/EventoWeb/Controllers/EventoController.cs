@@ -296,6 +296,7 @@ namespace EventoWeb.Controllers
         public ActionResult CreateColaborador(uint idEvento)
         {
             var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
+           
             if (gestor != null)
             {
                 var gestorModel = new GestaoPapelModel
@@ -322,6 +323,7 @@ namespace EventoWeb.Controllers
             if (ModelState.IsValid)
             {
                 var pessoaExistente = _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
+
                 var idEvento = gestaoPapelModel.Evento.Id;
                 if (pessoaExistente is null)
                 {

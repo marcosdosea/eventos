@@ -51,7 +51,7 @@
                         <input asp-for="Pessoa.Cpf" class="form-control"
                                id="Cpf"
                                placeholder="000.000.000-00"
-                               oninput="formatarCPF()"
+                               oninput="formatarCPF()", 
                                maxlength="14" />
                         <span asp-validation-for="Pessoa.Cpf" class="text-danger"></span>
                     </div>
@@ -184,6 +184,7 @@
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/datatable/js/datatables.min.js"></script>
+    <script src="~/js/autoCompletarDadosCPF.js"></script>
     <script>
         $(document).ready(function() {
             $('#tablePessoa').DataTable({
