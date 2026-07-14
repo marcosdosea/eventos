@@ -20,13 +20,13 @@ namespace EventoWeb.Models
 		[Display(Name = "Data Inicial")]
 		[DataType(DataType.Date)]
 		[DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
-		public DateTime? DataInicio { get; set; } = DateTime.MinValue;
+        [DataInicio(nameof(DataFim))]
+        public DateTime? DataInicio { get; set; } = DateTime.Today;
 
 		[Display(Name = "Data Final")]
-        [DataType(DataType.Date)]
-        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
-		public DateTime? DataFim { get; set; } = DateTime.MinValue;
-
+		[DataType(DataType.Date)]
+		[DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
+		public DateTime? DataFim { get; set; } = DateTime.Today;
 		[Display(Name = "Descrição")]
 		public string? Descricao { get; set; }
 
@@ -37,13 +37,16 @@ namespace EventoWeb.Models
 		[Required(ErrorMessage = "Status do Evento é obrigatório")]
 		public string Status { get; set; } = null!;
 
-        [Display(Name = "Data Inicial de Inscrição")]
-        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = false)]
-        public DateTime? DataInicioInscricao { get; set; }
+		[Display(Name = "Data Inicial de Inscrição")]
+		[Required(ErrorMessage = "A data e hora inicial de inscrição são obrigatórias.")]
+		[DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = false)]
+		[DataInicio(nameof(DataFimInscricao))]
+		public DateTime? DataInicioInscricao { get; set; } = DateTime.Today;
 
-        [Display(Name = "Data Final de Inscrição")]
-        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = false)]
-        public DateTime? DataFimInscricao { get; set; }
+		[Display(Name = "Data Final de Inscrição")]
+		[Required(ErrorMessage = "A data e hora final de inscrição são obrigatórias.")]
+		[DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = false)]
+		public DateTime? DataFimInscricao { get; set; } = DateTime.Today.AddDays(7).AddHours(23).AddMinutes(59);
 
         [Display(Name = "Valor da Inscrição", Prompt = "R$ 00,00")]
         [Range(0.00, 999999, ErrorMessage = "O valor da inscrição deve ser zero ou maior que zero.")]
