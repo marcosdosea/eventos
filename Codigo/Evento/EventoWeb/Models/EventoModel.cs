@@ -38,12 +38,12 @@ namespace EventoWeb.Models
 		public string Status { get; set; } = null!;
 
         [Display(Name = "Data Inicial de Inscrição")]
-        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = false)]
         public DateTime? DataInicioInscricao { get; set; }
 
         [Display(Name = "Data Final de Inscrição")]
-		[DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
-		public DateTime? DataFimInscricao { get; set; }
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = false)]
+        public DateTime? DataFimInscricao { get; set; }
 
         [Display(Name = "Valor da Inscrição", Prompt = "R$ 00,00")]
         [Range(0.00, 999999, ErrorMessage = "O valor da inscrição deve ser zero ou maior que zero.")]
