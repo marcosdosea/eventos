@@ -51,7 +51,6 @@
                     <input asp-for="Pessoa.Cpf" class="form-control"
                            id="Cpf"
                            placeholder="000.000.000-00"
-                           oninput="formatarCPF()"
                            onblur="autoCompletarCPF()"
                            maxlength="14" />
                     <span asp-validation-for="Pessoa.Cpf" class="text-danger"></span>
