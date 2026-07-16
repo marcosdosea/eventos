@@ -21,7 +21,7 @@ namespace EventoWeb.Models
         public string Descricao { get; set; } = null!;
 
         [Display(Name = "Valor", Prompt = "R$ 00.00")]
-        [Range(0.00, double.MaxValue, ErrorMessage = "O valor da inscrição deve ser zero ou maior que zero.")]
+        [Range(0.00, 999999, ErrorMessage = "O valor da inscrição deve ser zero ou maior que zero.")]
         [RegularExpression(@"^\d+(\,\d{1,2})?$", ErrorMessage = "Por favor, insira no máximo duas casas decimais e use ',' como separador decimal.")]
         public decimal Valor { get; set; }
 

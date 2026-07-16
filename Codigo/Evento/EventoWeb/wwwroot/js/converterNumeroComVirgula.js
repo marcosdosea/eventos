@@ -8,12 +8,6 @@
 
         if (!campoTela || !campoReal) return;
 
-        if (campoTela.value) {
-
-            campoReal.value = campoTela.value.replace(/\./g, '').replace(',', '.');
-
-        }
-
         campoTela.addEventListener('input', function (e) {
 
             let value = e.target.value.replace(/\D/g, '');
@@ -30,13 +24,13 @@
 
             e.target.value = value;
 
-            campoReal.value = value.replace(/\./g, '').replace(',', '.');
+            campoReal.value = value;
 
         });
 
     }
 
-    gerenciarCampoMonetario("valorTela", "valorReal");
+    gerenciarCampoMonetario("ValorTela", "ValorReal");
     gerenciarCampoMonetario('ValorInscricao_Tela', 'ValorInscricao_Real');
     gerenciarCampoMonetario('FrequenciaMinimaCertificado_Tela', 'FrequenciaMinimaCertificado_Real');
 });
