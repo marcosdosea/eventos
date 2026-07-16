@@ -214,6 +214,7 @@ public class PessoaService : IPessoaService
                 IdPessoa = idPessoa,
                 IdEvento = idEvento,
                 IdPapel = idPapel,
+                NomeCracha = "o",
                 DataInscricao = DateTime.Now,
                 Status = "S"
             };
