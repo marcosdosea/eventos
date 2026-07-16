@@ -151,6 +151,7 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Edit(uint id, EventoModel viewModel)
         {
+
             if (ModelState.IsValid)
             {
                 byte[] fotoSource = null;
@@ -167,28 +168,32 @@ namespace EventoWeb.Controllers
                         else
                         {
                             ModelState.AddModelError("Foto", "O arquivo é muito grande. Deve ser menor que 64 KB.");
+                            CarregarDadosEventos(viewModel);
                             return View(viewModel);
                         }
                     }
                 }
+
                 var evento = _mapper.Map<Evento>(viewModel);
-                var idsAreaInteresse = new List<uint>
+
+                if (fotoSource != null)
                 {
-                    viewModel.IdAreaInteresse
-                };
-                _eventoService.Edit(evento, idsAreaInteresse); _eventoService.AtualizarVagasDisponiveis(evento.Id);
-                evento.ImagemPortal = fotoSource;
+                    evento.ImagemPortal = fotoSource;
+                }
+
+                var idsAreaInteresse = new List<uint> { viewModel.IdAreaInteresse };
+
+                _eventoService.Edit(evento, idsAreaInteresse);
+
+                _eventoService.AtualizarVagasDisponiveis(evento.Id);
+
                 return RedirectToAction(nameof(Index));
             }
-            var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
-            var tiposEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
-            var areaInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
-            viewModel.Estados = new SelectList(estados, "Estado", "Nome", viewModel.Estado);
-            viewModel.TiposEventos = new SelectList(tiposEventos, "Id", "Nome", viewModel.Id);
-            viewModel.AreaInteresse = new SelectList(areaInteresse, "Id", "Nome", viewModel.Id);
 
+            CarregarDadosEventos(viewModel);
             return View(viewModel);
         }
+
 
         [Authorize(Roles = "ADMINISTRADOR")]
 

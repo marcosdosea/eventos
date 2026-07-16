@@ -17,43 +17,48 @@ namespace EventoWeb.Models
 		[Required(ErrorMessage = "Nome do Evento é obrigatório")]
 		public string Nome { get; set; } = null!;
 
-		[Display(Name = "Data Inicial")]
-		[DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
-		public DateTime? DataInicio { get; set; } = DateTime.MinValue;
+		[Display(Name = "Data Inicio")]
+        [DataType(DataType.Date)]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
+		[DataInicio(nameof(DataFim))]
+		public DateTime? DataInicio { get; set; } = DateTime.Today;
 
-		[Display(Name = "Data Final")]
-		[DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
-		public DateTime? DataFim { get; set; } = DateTime.MinValue;
+        [Display(Name = "Data Fim")]
+        [DataType(DataType.Date)]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
+		public DateTime? DataFim { get; set; } = DateTime.Today;
 
 		[Display(Name = "Descrição")]
 		public string? Descricao { get; set; }
 
-		[Display(Name = "Inscrição Gratuita")]
+		[Display(Name = "Gratuito")]
 		public sbyte InscricaoGratuita { get; set; }
 
 		[Display(Name = "Status")]
 		[Required(ErrorMessage = "Status do Evento é obrigatório")]
 		public string Status { get; set; } = null!;
 
-		[Display(Name = "Data Inicial de Inscrição")]
-		[DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
-		public DateTime? DataInicioInscricao { get; set; }
 
-		[Display(Name = "Data Final de Inscrição")]
-		[DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
-		public DateTime? DataFimInscricao { get; set; }
+		[Required(ErrorMessage = "A data e hora inicial de inscrição são obrigatórias.")]
+		[DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = false)]
+		[DataInicio(nameof(DataFimInscricao))]
+		public DateTime? DataInicioInscricao { get; set; } = DateTime.Today;
 
-        [Display(Name = "Valor da Inscrição", Prompt = "R$ 00,00")]
+		[Required(ErrorMessage = "A data e hora final de inscrição são obrigatórias.")]
+		[DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = false)]
+		public DateTime? DataFimInscricao { get; set; } = DateTime.Today.AddDays(7).AddHours(23).AddMinutes(59);
+
+        [Display(Name = "Menor Valor de Inscrição", Prompt = "R$ 00,00")]
         [Range(0.00, 999999, ErrorMessage = "O valor da inscrição deve ser zero ou maior que zero.")]
         public decimal ValorInscricao { get; set; }
 
         [Display(Name = "Website")]
 		public string? Website { get; set; }
 
-		[Display(Name = "e-mail")]
+		[Display(Name = "E-mail Evento")]
 		public string? EmailEvento { get; set; }
 
-		[Display(Name = "Evento Publico")]
+		[Display(Name = "Publicar Portal")]
 		public sbyte EventoPublico { get; set; }
 
 		[Display(Name = "CEP")]
@@ -83,7 +88,7 @@ namespace EventoWeb.Models
 		[Required(ErrorMessage = "Informe se há Certificação")]
 		public sbyte PossuiCertificado { get; set; }
 
-		[Display(Name = "Frequência Minima para Receber a Certificação")]
+		[Display(Name = "Frequência Minima Emissão Certificado")]
         [Range(0.00, 100, ErrorMessage = "A frequencia minima deve ser entre 0 e 100.")]
         public decimal FrequenciaMinimaCertificado { get; set; }
 
