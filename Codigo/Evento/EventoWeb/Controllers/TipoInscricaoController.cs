@@ -76,6 +76,8 @@ namespace EventoWeb.Controllers
             var viewModel = new TipoInscricaoModel();
             viewModel.IdEvento = idEvento;
             viewModel.Evento = new SelectList(eventos, "Id", "Nome");
+            viewModel.DataInicio = DateTime.Now;
+            viewModel.Datafim = DateTime.Now;
 
             return View(viewModel);
         }
