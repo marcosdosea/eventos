@@ -19,7 +19,7 @@
             </div>
             <div class="col-3">
                 <div class="form-group">
-                    <label asp-for="IdTipoEvento" class="control-label">Tipo do Evento</label>
+                    <label asp-for="IdTipoEvento" class="control-label">Tipo</label>
                     <select asp-for="IdTipoEvento" class="form-select" asp-items="Model.TiposEventos">
                         <option value="">Selecione o tipo de evento</option>
                     </select>
@@ -72,7 +72,7 @@
                             <!-- Checkbox que marca se o Evento é Público (valor 1) -->
                             <input class="form-check-input" type="checkbox" value="1" id="EventoPublico" name="Evento.EventoPublico"
                                    @(Model.EventoPublico == 1 ? "checked" : "")>
-                            <label class="form-check-label" for="EventoPublico">Evento Publico</label>
+                            <label class="form-check-label" for="EventoPublico">Publicar no Portal</label>
                             <!-- Campo oculto para enviar valor 0 quando o checkbox não está marcado -->
                             <input type="hidden" name="Evento.EventoPublico" value="0">
                         </div>
@@ -113,14 +113,14 @@
             <div class="col-md-2">
                 <div class="form-group">
                     <label asp-for="DataInicioInscricao" class="control-label"></label>
-                    <input asp-for="DataInicioInscricao" type="datetime-local" class="form-control" />
+                    <input asp-for="DataInicioInscricao" class="form-control" />
                     <span asp-validation-for="DataInicioInscricao" class="text-danger"></span>
                 </div>
             </div>
             <div class="col-md-2">
                 <div class="form-group">
                     <label asp-for="DataFimInscricao" class="control-label"></label>
-                    <input asp-for="DataFimInscricao" type="datetime-local" class="form-control" />
+                    <input asp-for="DataFimInscricao" class="form-control" />
                     <span asp-validation-for="DataFimInscricao" class="text-danger"></span>
                 </div>
             </div>
@@ -133,7 +133,7 @@
         </div>
         <br />
         <div class="form-group">
-            <label asp-for="EmailEvento" class="control-label">E-mail</label>
+            <label asp-for="EmailEvento" class="control-label">Email Evento</label>
             <input asp-for="EmailEvento" class="form-control" placeholder="E-mail para contato do evento" />
             <span asp-validation-for="EmailEvento" class="text-danger"></span>
         </div>
@@ -212,16 +212,16 @@
             </div>
             <div class="col-3">
                 <div class="form-group">
-                    <label asp-for="CargaHoraria" class="control-label"></label>
-                    <input asp-for="CargaHoraria" class="form-control" />
-                    <span asp-validation-for="CargaHoraria" class="text-danger"></span>
+                    <label asp-for="VagasOfertadas" class="control-label"></label>
+                    <input asp-for="VagasOfertadas" class="form-control" />
+                    <span asp-validation-for="VagasOfertadas" class="text-danger"></span>
                 </div>
             </div>
             <div class="col-3">
                 <div class="form-group">
-                    <label asp-for="VagasOfertadas" class="control-label"></label>
-                    <input asp-for="VagasOfertadas" class="form-control" />
-                    <span asp-validation-for="VagasOfertadas" class="text-danger"></span>
+                    <label asp-for="CargaHoraria" class="control-label"></label>
+                    <input asp-for="CargaHoraria" class="form-control" />
+                    <span asp-validation-for="CargaHoraria" class="text-danger"></span>
                 </div>
             </div>
             <div class="row">
