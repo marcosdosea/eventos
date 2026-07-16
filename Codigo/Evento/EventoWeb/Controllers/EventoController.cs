@@ -343,7 +343,13 @@ namespace EventoWeb.Controllers
                         gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 3);
                         return View(gestaoPapelModel);
                     }
-                    pessoaExistente = pessoa;
+                    pessoaExistente = _pessoaService.Get(_pessoaService.Create(pessoa));
+                    if (pessoaExistente is null)
+                    {
+                        gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(gestaoPapelModel.Evento.Id);
+                        gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(gestaoPapelModel.Evento.Id, 3);
+                        return View(gestaoPapelModel);
+                    }
 
                 }
                 var papel = _inscricaoService.GetPapelPessoaByEvento(pessoaExistente.Id, idEvento);
