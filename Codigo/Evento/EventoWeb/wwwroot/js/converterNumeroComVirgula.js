@@ -1,5 +1,4 @@
-﻿console.log("arquivo JS carregado");
-function gerenciarCampoMonetario(idTela, idReal) {
+﻿function gerenciarCampoMonetario(idTela, idReal) {
     const campoTela = document.getElementById(idTela);
     const campoReal = document.getElementById(idReal);
     if (!campoTela || !campoReal) return;
@@ -13,7 +12,6 @@ function gerenciarCampoMonetario(idTela, idReal) {
         }
         e.target.value = value;
         campoReal.value = value;
-        console.log(campoReal.value);
     });
 }
 gerenciarCampoMonetario("ValorTela", "ValorReal");
