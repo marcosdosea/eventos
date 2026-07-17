@@ -301,6 +301,7 @@ namespace EventoWeb.Controllers
         public ActionResult CreateColaborador(uint idEvento)
         {
             var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
+
             if (gestor != null)
             {
                 var gestorModel = new GestaoPapelModel
@@ -327,13 +328,41 @@ namespace EventoWeb.Controllers
             if (ModelState.IsValid)
             {
                 var pessoaExistente = _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
+
                 var idEvento = gestaoPapelModel.Evento.Id;
                 if (pessoaExistente is null)
                 {
-                    ModelState.AddModelError(string.Empty, "Essa pessoa ainda não está no sistema...");
-                    gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
-                    gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 3);
-                    return View(gestaoPapelModel);
+                    var pessoa = new Pessoa
+                    {
+                        Cpf = gestaoPapelModel.Pessoa.Cpf,
+                        Nome = gestaoPapelModel.Pessoa.Nome,
+                        NomeCracha = gestaoPapelModel.Pessoa.Nome.Length > 20 ? gestaoPapelModel.Pessoa.Nome.Substring(0, 20) : gestaoPapelModel.Pessoa.Nome,
+                        Telefone1 = gestaoPapelModel.Pessoa.Telefone1,
+                        Email = gestaoPapelModel.Pessoa.Email
+                    };
+
+                    var certo = _pessoaService.Create(pessoa);
+       
+                    if (certo > 0)
+                    {
+                        pessoa.Id = certo;
+                        pessoaExistente = pessoa;
+                        var sucesso = await _pessoaService.CreateAsync(pessoa);
+                        if (sucesso is null)
+                        {
+                            ModelState.AddModelError("", "Erro ao tentar adicionar...");
+                            gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
+                            gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 3);
+                            return View(gestaoPapelModel);
+                        }
+
+                    }
+                    else
+                    {
+                        gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(gestaoPapelModel.Evento.Id);
+                        gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(gestaoPapelModel.Evento.Id, 3);
+                        return View(gestaoPapelModel);
+                    }
                 }
                 var papel = _inscricaoService.GetPapelPessoaByEvento(pessoaExistente.Id, idEvento);
 
@@ -431,7 +460,7 @@ namespace EventoWeb.Controllers
               
 
 
-                _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, idEvento,4).Wait();
+                _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, idEvento, 4).Wait();
                 _eventoService.AtualizarVagasDisponiveis(idEvento);
 
                 return RedirectToAction("GerenciarEvento", new { idEvento });
