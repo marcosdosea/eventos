@@ -26,7 +26,7 @@ namespace EventoWeb.Models
         [Display(Name = "Data Fim")]
         [DataType(DataType.Date)]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
-		public DateTime? DataFim { get; set; } = DateTime.Today;
+		public DateTime? DataFim { get; set; } = DateTime.Today.AddDays(7);
 
 		[Display(Name = "Descrição")]
 		public string? Descricao { get; set; }
@@ -37,7 +37,6 @@ namespace EventoWeb.Models
 		[Display(Name = "Status")]
 		[Required(ErrorMessage = "Status do Evento é obrigatório")]
 		public string Status { get; set; } = null!;
-
 
 		[Required(ErrorMessage = "A data e hora inicial de inscrição são obrigatórias.")]
 		[DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = false)]
