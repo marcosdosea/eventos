@@ -1,6 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Core.DTO;
+﻿using Core.DTO;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
+using Util;
 
 namespace EventoWeb.Models
 {
@@ -25,12 +26,15 @@ namespace EventoWeb.Models
         public string Descricao { get; set; } = null!;
 
         [Display(Name = "Data Inicial do Subvento")]
+        [DataType(DataType.Date)]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
-        public DateTime DataInicio { get; set; }
+        [DataInicio(nameof(DataFim))]
+        public DateTime DataInicio { get; set; } = DateTime.Today;
 
         [Display(Name = "Data Final do Subvento")]
+        [DataType(DataType.Date)]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
-        public DateTime DataFim { get; set; }
+        public DateTime DataFim { get; set; } = DateTime.Today.AddDays(7);
 
         [Display(Name = "Incrição gratuita")]
         public sbyte InscricaoGratuita { get; set; }
@@ -51,16 +55,20 @@ namespace EventoWeb.Models
         [Required(ErrorMessage = "Status do Subevento é obrigatório")]
         public string Status { get; set; } = null!;
 
+        [Required(ErrorMessage = "A data e hora inicial de inscrição são obrigatórias.")]
         [Display(Name = "Data Inicial de Inscrição")]
-        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
-        public DateTime DataInicioInscricao { get; set; }
+        [DataType(DataType.Date)]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = false)]
+        [DataInicio(nameof(DataFim))]
+        public DateTime DataInicioInscricao { get; set; } = DateTime.Today;
 
+        [Required(ErrorMessage = "A data e hora final de inscrição são obrigatórias.")]
         [Display(Name = "Data Final de Inscrição")]
-        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
-        public DateTime DataFimInscricao { get; set; }
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = false)]
+        public DateTime DataFimInscricao { get; set; } = DateTime.Today.AddDays(7);
 
-        [Display(Name = "Valor da Inscrição", Prompt = "R$ 00.00")]
-        [Range(typeof(decimal), "0", "9999999999", ErrorMessage = "O valor deve ser zero ou maior que zero.")]
+        [Display(Name = "Menor Valor de Inscrição", Prompt = "R$ 00.00")]
+        [Range(typeof(decimal), "0.00", "999999", ErrorMessage = "O valor deve ser zero ou maior que zero.")]
         [RegularExpression(@"^\d+([.,]\d{1,2})?$", ErrorMessage = "Por favor, insira no máximo duas casas decimais, usando ',' ou '.' como separador decimal.")]
         public decimal ValorInscricao { get; set; }
 
@@ -68,6 +76,7 @@ namespace EventoWeb.Models
         public sbyte PossuiCertificado { get; set; }
 
         [Display(Name = "Frequência Minima")]
+        [Range(0.00, 100, ErrorMessage = "A frequencia minima deve ser entre 0 e 100.")]
         public decimal FrequenciaMinimaCertificado { get; set; }
 
         [Required]
