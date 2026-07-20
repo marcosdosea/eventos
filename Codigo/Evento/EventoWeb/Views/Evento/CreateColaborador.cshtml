@@ -141,18 +141,25 @@
     </div>
 </div>
 <!-- Modal -->
-<div class="modal fade" id="confirmRemovalModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+<div class="modal fade" id="confirmRemovalModal" tabindex="-1" role ="dialog" aria-labelledby="modalRemoverColaborador" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalLabel">Confirmar Remoção</h5>
+            <div class="modal-header  bg-primary text-white">
+                <h5 class="modal-title justify-content-center" id="modalLabel">Confirmar exclusão</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close">
+                </button>
             </div>
-            <div class="modal-body">
-                Quer realmente remover <strong><span id="pessoaNome"></span></strong> como colaborador do evento: <strong><span id="eventoNome"></span></strong>?
+            <div class="modal-body text-center">
+                <h4>
+                Quer realmente Excluir <strong><span id="pessoaNome"></span></strong> como colaborador do evento: <strong><span id="eventoNome"></span></strong>?
+                </h4>
+                <span class="text-danger fw-bold small">
+                    Essa operação não pode ser desfeita.
+                </span>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-blue-normal" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger" id="confirmRemovalButton">Remover</button>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Não</button>
+                <button type="button" class="btn btn-danger" id="confirmRemovalButton">Sim</button>
             </div>
         </div>
     </div>
