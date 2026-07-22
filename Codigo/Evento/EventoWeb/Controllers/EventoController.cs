@@ -229,7 +229,7 @@ namespace EventoWeb.Controllers
             var gestorModel = new GestaoPapelModel
             {
                 Evento = _eventoService.GetEventoSimpleDto(idEvento),
-                Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 2),
+                Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 2)
             };
             return View(gestorModel);
         }

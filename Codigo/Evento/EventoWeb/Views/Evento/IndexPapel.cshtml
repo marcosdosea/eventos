@@ -1,0 +1,83 @@
+@model EventoWeb.Models.GestaoPapelModel
+
+<div class="row">
+    <div class="col-md-12">
+        <h2 class="blue-normal">Lista de Colaboradores do Evento</h2>
+        <table id="tablePessoa" class="table table-striped">
+            <thead class="blue-normal blue-normal-bg-table">
+                <tr>
+                    <th style="width:25%">CPF</th>
+                    <th style="width:50%">Nome</th>
+                    <th style="width:25%">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var inscricaopessoaevento in Model.Inscricoes)
+                {
+                    <tr>
+                        <td style="vertical-align: middle;">@FormatarCPF(inscricaopessoaevento.IdPessoaNavigation.Cpf)</td>
+                        <td style="vertical-align: middle;">@inscricaopessoaevento.IdPessoaNavigation.Nome</td>
+                        <td style="vertical-align: middle;">
+                            <div class="d-flex flex-wrap gap-2">
+                                <form id="@(inscricaopessoaevento.Id + "_confirmar")"
+                                      asp-action="DeletePessoaPapel"
+                                      asp-route-idPessoa="@inscricaopessoaevento.IdPessoa"
+                                      asp-route-idEvento="@inscricaopessoaevento.IdEvento"
+                                      asp-route-idPapel="@inscricaopessoaevento.IdPapel">
+
+                                    <button type="button"
+                                            class="btn btn-danger"
+                                            onclick="showModal('@(inscricaopessoaevento.Id + "_confirmar")','confirmRemovalModal')"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#confirmRemovalModal">
+                                        Excluir
+                                    </button>
+                                </form>
+                                <a data-bs-toggle="modal" data-bs-target="#confirmMudarSenhaModal" onclick="setModalValues('@inscricaopessoaevento.IdPessoaNavigation.Nome', '@Model.Evento.Nome', '@inscricaopessoaevento.IdPessoa')" style="text-decoration: none; cursor: pointer;">Mudar senha</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="d-flex flex-row-reverse">
+    <div class="form-group" style="margin-right: 10px;">
+        <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Model.Evento.Id" class="btn btn-lg btn-blue-normal">Voltar</a>
+    </div>
+</div>
+<!-- Modal -->
+<div class="modal fade" id="confirmRemovalModal" tabindex="-1" role="dialog" aria-labelledby="modalRemoverColaborador" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header  bg-primary text-white">
+                <h5 class="modal-title justify-content-center" id="modalLabel">Confirmar exclusão</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close">
+                </button>
+            </div>
+            <div class="modal-body text-center">
+                <h4>
+                    Quer realmente excluir esse colaborador?
+                </h4>
+                <span class="text-danger fw-bold small">
+                    Essa operação não pode ser desfeita.
+                </span>
+            </div>
+            <form method="post" class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Não</button>
+                <button type="submit" class="btn btn-danger" id="confirmRemovalButton">Sim</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@functions {
+    public static string FormatarCPF(string cpf)
+    {
+        if (string.IsNullOrEmpty(cpf) || cpf.Length != 11)
+            return cpf;
+
+        return Convert.ToUInt64(cpf).ToString(@"000\.000\.000\-00");
+    }
+}
