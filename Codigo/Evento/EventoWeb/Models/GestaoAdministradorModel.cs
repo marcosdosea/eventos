@@ -16,7 +16,7 @@ namespace EventoWeb.Models
         [Required(ErrorMessage = "O campo CPF é obrigatório.")]
         [CPF(ErrorMessage = "CPF inválido")]
         [Display(Name = "CPF", Prompt = "Digite seu CPF")]
-        [StringLength(11, MinimumLength = 11, ErrorMessage = "O campo CPF deve ter 11 caracteres")]
+        [StringLength(11, MinimumLength = 11, ErrorMessage = "O campo CPF deve ter 11 números")]
         public string Cpf { get; set; } = null!;
 
         [Display(Name = "Telefone")]
