@@ -7,18 +7,22 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="NovaPasta1\**" />
     <Compile Remove="NovaPasta\**" />
     <Compile Remove="wwwroot\lib\NovaPasta1\**" />
     <Compile Remove="wwwroot\lib\NovaPasta\**" />
     <Compile Remove="wwwroot\NovaPasta\**" />
+    <Content Remove="NovaPasta1\**" />
     <Content Remove="NovaPasta\**" />
     <Content Remove="wwwroot\lib\NovaPasta1\**" />
     <Content Remove="wwwroot\lib\NovaPasta\**" />
     <Content Remove="wwwroot\NovaPasta\**" />
+    <EmbeddedResource Remove="NovaPasta1\**" />
     <EmbeddedResource Remove="NovaPasta\**" />
     <EmbeddedResource Remove="wwwroot\lib\NovaPasta1\**" />
     <EmbeddedResource Remove="wwwroot\lib\NovaPasta\**" />
     <EmbeddedResource Remove="wwwroot\NovaPasta\**" />
+    <None Remove="NovaPasta1\**" />
     <None Remove="NovaPasta\**" />
     <None Remove="wwwroot\lib\NovaPasta1\**" />
     <None Remove="wwwroot\lib\NovaPasta\**" />
@@ -52,10 +56,6 @@
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="NovaPasta1\" />
   </ItemGroup>
 
 </Project>
