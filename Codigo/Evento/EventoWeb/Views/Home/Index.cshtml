@@ -134,7 +134,9 @@
                                         <div class="card-content">
                                             <h2>@evento.Nome</h2>
                                             @{
-                                                string descricao = evento.Descricao;
+                                                string descricao = string.IsNullOrWhiteSpace(evento.Descricao)
+                                                    ? "Descrição indisponível"
+                                                    : evento.Descricao;
                                             }
                                             <p>@descricao</p>
                                             <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@evento.Id">
@@ -169,20 +171,11 @@
                                         <div class="card-content">
                                             <h2>@evento.Nome</h2>
                                             @{
-                                                string descricao = evento.Descricao;
+                                                var descricao = evento.Descricao;
                                                 int maxCaracteres = 40;
-                                                if (descricao.Length > maxCaracteres)
+                                                if (!string.IsNullOrEmpty(descricao) && descricao.Length > maxCaracteres)
                                                 {
-                                                    descricao = descricao.Substring(0, maxCaracteres);
-                                                    int ultimoEspaco = descricao.LastIndexOf(" ");
-                                                    if (ultimoEspaco != -1)
-                                                    {
-                                                        descricao = descricao.Substring(0, ultimoEspaco) + "...";
-                                                    }
-                                                    else
-                                                    {
-                                                        descricao += "...";
-                                                    }
+                                                    descricao = descricao.Substring(0, maxCaracteres) + "...";
                                                 }
                                             }
                                             <p>@descricao</p>
@@ -251,7 +244,7 @@
                                             @{
                                                 string descricao = evento.Descricao;
                                                 int maxCaracteres = 40;
-                                                if (descricao.Length > maxCaracteres)
+                                                if (!string.IsNullOrEmpty(descricao) && descricao.Length > maxCaracteres)
                                                 {
                                                     descricao = descricao.Substring(0, maxCaracteres);
                                                     int ultimoEspaco = descricao.LastIndexOf(" ");

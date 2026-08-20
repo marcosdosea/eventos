@@ -42,6 +42,7 @@ namespace EventoWeb.Controllers
                     Id = e.Id,
                     DataInicio = e.DataInicio,
                     Nome = e.Nome,
+                    Descricao = e.Descricao ?? string.Empty,
                     Status = e.Status,
                     IdTipoEvento = (uint)e.IdTipoEvento,
                     NomeTipoEvento = tiposEvento.ContainsKey((uint)e.IdTipoEvento) ? tiposEvento[(uint)e.IdTipoEvento] : "Tipo não encontrado"
@@ -50,6 +51,12 @@ namespace EventoWeb.Controllers
             }
             var listarEventos = _eventoService.GetAll().ToList();
             var listarEventosModel = _mapper.Map<List<EventoModel>>(listarEventos);
+
+            foreach (var evento in listarEventosModel)
+            {
+                evento.Descricao = evento.Descricao ?? string.Empty;
+            }
+
             return View(listarEventosModel);
         }
        
