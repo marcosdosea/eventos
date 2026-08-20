@@ -179,9 +179,9 @@ namespace Service.Tests
         }
 
         [TestMethod()]
-        public void DeleteTest()
+        public async Task DeleteTest()
         {
-            _pessoaService.Delete(1);
+            await _pessoaService.Delete(1);
 
             Assert.AreEqual(2, _pessoaService.GetAll().Count());
             var areainteresse = _pessoaService.Get(1);
