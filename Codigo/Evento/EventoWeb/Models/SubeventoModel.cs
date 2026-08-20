@@ -68,7 +68,7 @@ namespace EventoWeb.Models
         public DateTime DataFimInscricao { get; set; } = DateTime.Today.AddDays(7);
 
         [Display(Name = "Menor Valor de Inscrição", Prompt = "R$ 00.00")]
-        [Range(typeof(decimal), "0.00", "999999", ErrorMessage = "O valor deve ser zero ou maior que zero.")]
+        [Range(typeof(decimal), "0", "999999", ErrorMessage = "O valor deve ser zero ou maior que zero.")]
         [RegularExpression(@"^\d+([.,]\d{1,2})?$", ErrorMessage = "Por favor, insira no máximo duas casas decimais, usando ',' ou '.' como separador decimal.")]
         public decimal ValorInscricao { get; set; }
 
@@ -76,8 +76,8 @@ namespace EventoWeb.Models
         public sbyte PossuiCertificado { get; set; }
 
         [Display(Name = "Frequência Minima")]
-        [Range(0.00, 100, ErrorMessage = "A frequencia minima deve ser entre 0 e 100.")]
-        public decimal FrequenciaMinimaCertificado { get; set; }
+        [Range(0, 100, ErrorMessage = "A frequencia minima deve ser entre 0 e 100.")]
+        public decimal FrequenciaMinimaCertificado { get; set; } = 0;
 
         [Required]
         [Range(0, int.MaxValue, ErrorMessage = "O número de vagas ofertadas deve ser um número inteiro positivo.")]
