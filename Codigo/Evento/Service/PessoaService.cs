@@ -79,7 +79,11 @@ public class PessoaService : IPessoaService
                         }
 
                         await _userManager.RemoveFromRoleAsync(existingUser, "ADMINISTRADOR");
-                        if (await _userManager.IsInRoleAsync(existingUser, "ADMINISTRADOR") == false)
+                        var roles = await _userManager.GetRolesAsync(existingUser);
+                        if (roles.Count == 0)
+                        {
+                            return await CreatePessoaIdentityComPapelAsync(pessoa, 0,4);
+                        }
                         return true;
                     }
                     
