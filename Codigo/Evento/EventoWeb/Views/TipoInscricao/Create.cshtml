@@ -13,7 +13,7 @@
 
 <div class="container-fluid no-padding">
     <div class="row">
-        <h1 class="blue-normal">Novo Tipo de Inscri��o</h1>
+        <h1 class="blue-normal">Cadastro de Tipo de Inscrição</h1>
         <div class="row">
             <div>
                 <form asp-action="Create" method="post">
@@ -35,39 +35,36 @@
                     </div>
                     <div class="row">
                         <div class="col-md-10">
-                            <div class="form-group mb-2">
-                                <label asp-for="IdEvento" class="control-label"></label>
-                                <select asp-for="IdEvento" class="form-control" asp-items="Model.Evento" disabled>
-                                    
+                            <div class="form-group mb-2">     
+                                <select asp-for="IdEvento" class="form-control" asp-items="Model.Evento" disabled style="display:none;":>
                                     <option value="@Model.IdEvento" selected>
                                         @Model.Evento.FirstOrDefault(e => e.Value == Model.IdEvento.ToString())?.Text
-                                    </option>
+                                    </option>                  
                                 </select>
                                 <span asp-validation-for="IdEvento" class="text-danger"></span>
                             </div>
                         </div>
+                    </div>
+
+                    <div class="row">
                         <div class="col-md-2">
                             <div class="form-group mb-2">
-                                <label asp-for="Valor" class="control-label"></label>
+                                <label asp-for="Valor" class="control-label">Valor Inscrição (R$)</label>
                                 <input type="number" asp-for="Valor" class="form-control" />
                                 <span asp-validation-for="Valor" class="text-danger"></span>
                             </div>
                         </div>
-                    </div>
-                    <br />
-                    <h4 class="blue-normal">Datas</h4>
-                    <div class="row">
                         <div class="col-3">
                             <div class="form-group">
-                                <label asp-for="DataInicio" class="control-label"></label>
-                                <input asp-for="DataInicio" class="form-control" type="date" />
+                                <label asp-for="DataInicio" class="control-label"> Data Início</label>
+                                <input asp-for="DataInicio" asp-format="{0:yyyy-MM-ddTHH:mm}" class="form-control" type="datetime-local" />
                                 <span asp-validation-for="DataInicio" class="text-danger"></span>
                             </div>
                         </div>
                         <div class="col-3">
                             <div class="form-group">
-                                <label asp-for="Datafim" class="control-label"></label>
-                                <input asp-for="Datafim" class="form-control" type="date" />
+                                <label asp-for="Datafim" class="control-label"> Data Fim</label>
+                                <input asp-for="Datafim" asp-format="{0:yyyy-MM-ddTHH:mm}" class="form-control" type="datetime-local" />
                                 <span asp-validation-for="Datafim" class="text-danger"></span>
                             </div>
                         </div>
@@ -79,7 +76,7 @@
                                 <div class="d-flex align-items-center">
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" value="1" id="UsadaEvento" name="TipoInscricao.UsadaEvento"
-                                        @(Model.UsadaEvento == 1 ? "checked" : "")>
+                                               @(Model.UsadaEvento == 1 ? "checked" : "")>
                                         <label class="form-check-label" for="UsadaEvento">Usado em Evento</label>
                                         <input type="hidden" name="UsadaEvento" value="0">
                                     </div>
@@ -92,7 +89,7 @@
                                 <div class="d-flex align-items-center">
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" value="1" id="UsadaSubevento" name="UsadaSubevento"
-                                        @(Model.UsadaSubevento == 1 ? "checked" : "")>
+                                               @(Model.UsadaSubevento == 1 ? "checked" : "")>
                                         <label class="form-check-label" for="UsadaSubevento">Usado em Subevento</label>
                                         <input type="hidden" name="UsadaSubevento" value="0">
                                     </div>
@@ -108,7 +105,7 @@
                                 <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
                             </div>
                             <div class="form-group">
-                                <a href="/TipoInscricao/Index?idEvento=@Model..IdEvento" class="btn btn-outline-danger">Cancelar</a>
+                                <a href="/TipoInscricao/Index?idEvento=@Model..IdEvento" class="btn btn-outline-danger">Voltar</a>
                             </div>
                         </div>
                     </div>

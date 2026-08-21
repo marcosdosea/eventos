@@ -32,28 +32,30 @@
 				Dados do participante
 			</h4>
 			<div class="row">
-				<div class="col-6 col-sm-6 col-md-3 col-lg-2">
+				<div class="col-md-6">
 					<div class="form-group">
 						<label asp-for="Pessoa.Cpf" class="control-label">CPF</label>
 						<input asp-for="Pessoa.Cpf" class="form-control" id="Cpf" placeholder="000.000.000-00" oninput="formatarCPF()" maxlength="14" />
 						<span asp-validation-for="Pessoa.Cpf" class="text-danger"></span>
 					</div>
 				</div>
-				<div class="col-12 col-sm-6 col-md-3 col-lg-4">
+				<div class="col-md-6">
 					<div class="form-group">
 						<label asp-for="Pessoa.Nome" class="control-label">Nome</label>
 						<input asp-for="Pessoa.Nome" class="form-control" id="Nome" placeholder="Nome completo" />
 						<span asp-validation-for="Pessoa.Nome" class="text-danger"></span>
 					</div>
 				</div>
-				<div class="col-6 col-sm-6 col-md-3 col-lg-2">
+			</div>
+			<div class="row">
+				<div class="col-md-6">
 					<div class="form-group">
-						<label asp-for="Pessoa.Telefone1" class="control-label">Telefone</label>
-						<input asp-for="Pessoa.Telefone1" type="number" class="form-control" id="Telefone1" placeholder="Com o DDD" />
+						<label asp-for="Pessoa.Telefone1" class="control-label">Celular</label>
+						<input asp-for="Pessoa.Telefone1" type="text" class="form-control" id="Telefone1" placeholder="Com o DDD" />
 						<span asp-validation-for="Pessoa.Telefone1" class="text-danger"></span>
 					</div>
 				</div>
-				<div class="col-6 col-sm-6 col-md-3 col-lg-4">
+				<div class="col-md-6">
 					<div class="form-group">
 						<label asp-for="Pessoa.Email" class="control-label">Email</label>
 						<input asp-for="Pessoa.Email" class="form-control" id="Email" placeholder="Seu e-mail" />
@@ -63,9 +65,10 @@
 			</div>
 			<br />
 
-			<div class="d-flex flex-row-reverse">
-				<div class="form-group">
-					<input type="submit" value="Adicionar participante" class="btn btn-lg btn-blue-normal" />
+			<div class="row">
+				<div class="col-12 d-flex justify-content-end gap-3">
+					<button type="submit" class="btn btn-primary" style="min-width: 120px;">Salvar</button>
+					<a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Model.Evento.Id" class="btn btn-outline-secondary" style="min-width: 120px;">Voltar</a>
 				</div>
 			</div>
 			<br />

@@ -47,8 +47,8 @@
                         <div class="col-md-2">
                             <div class="form-group" id="valorInscricaoGroup">
                                 <label asp-for="Valor" class="control-label"></label>
-                                <input type="text" id="valorTela" class="form-control" value="@Model.Valor.ToString("F2", new System.Globalization.CultureInfo("pt-BR"))" placeholder="0,00" />
-                                <input type="hidden" name="Valor" id="valorReal" value="@Model.Valor.ToString("F2", new System.Globalization.CultureInfo("en-US"))" />
+                                <input type="text" id="ValorTela" class="form-control" value="@Model.Valor.ToString("F2", new System.Globalization.CultureInfo("pt-BR"))" placeholder="0,00" />
+                                <input type="hidden" asp-for="Valor" id="ValorReal"/>
                                 <span asp-validation-for="Valor" class="text-danger"></span>
                             </div>
                         </div>

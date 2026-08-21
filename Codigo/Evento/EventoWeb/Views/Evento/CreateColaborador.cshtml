@@ -52,6 +52,7 @@
                            id="Cpf"
                            placeholder="000.000.000-00"
                            onblur="autoCompletarCPF()"
+                           oninput="formatarCPF()"
                            maxlength="14" />
                     <span asp-validation-for="Pessoa.Cpf" class="text-danger"></span>
                 </div>
@@ -150,41 +151,25 @@
             <div class="modal-body">
                 Quer realmente remover <strong><span id="pessoaNome"></span></strong> como colaborador do evento: <strong><span id="eventoNome"></span></strong>?
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-blue-normal" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger" id="confirmRemovalButton">Remover</button>
+        </div>
+        <br />
+
+        <div class="d-flex flex-row-reverse">
+            <div class="form-group">
+                <input type="submit" value="Adicionar colaborador" class="btn btn-lg btn-blue-normal" />
             </div>
         </div>
-    </div>
+        <br />
+    </form>
 </div>
 
-<script>
-    function setModalValues(pessoaNome, eventoNome, pessoaId) {
-        document.getElementById('pessoaNome').textContent = pessoaNome;
-        document.getElementById('eventoNome').textContent = eventoNome;
-
-        var removeForm = document.getElementById('removeForm-' + pessoaId);
-        document.getElementById('confirmRemovalButton').onclick = function() {
-            removeForm.submit();
-        };
-    }
-</script>
-
-@functions {
-    public static string FormatarCPF(string cpf)
-    {
-        if (string.IsNullOrEmpty(cpf) || cpf.Length != 11)
-            return cpf;
-
-        return Convert.ToUInt64(cpf).ToString(@"000\.000\.000\-00");
-    }
-}
 
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/datatable/js/datatables.min.js"></script>
     <script src="~/js/autoCompletarDadosCPF.js"></script>
+    <script src="~/js/modal.js"></script>
     <script>
         $(document).ready(function() {
             $('#tablePessoa').DataTable({
@@ -202,3 +187,5 @@
         });
     </script>
 }
+
+<partial name="IndexPapel" model="Model" />
