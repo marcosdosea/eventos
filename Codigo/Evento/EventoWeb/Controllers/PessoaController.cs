@@ -57,6 +57,19 @@ namespace EventoWeb.Controllers
         // DETAILS
         // =====================================================================
 
+        [Authorize]
+        [HttpGet]
+        [Route("BuscarPessoaPorCpf")]
+        public ActionResult BuscarPessoaPorCpf(string cpf)
+        {
+            var pessoa = _pessoaService.GetByCpf(cpf);
+
+            if (pessoa == null)
+                return NotFound();
+
+            return Json(pessoa);
+        }
+
         [Authorize(Roles = "ADMINISTRADOR")]
         [HttpGet]
         [Route("Details/{id}")]
