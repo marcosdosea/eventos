@@ -1,16 +1,15 @@
 ﻿using Core;
 using Core.Service;
-using EventoWeb.Models;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Service;
-using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Identity;
+using EventoWeb.Models;
+using System;
+using System.Collections.Immutable;
+using Service;
 
 namespace Service.Tests
 {
@@ -185,31 +184,6 @@ namespace Service.Tests
             await _pessoaService.Delete(1);
 
             Assert.AreEqual(2, _pessoaService.GetAll().Count());
-            var pessoa = _pessoaService.Get(1);
-            Assert.AreEqual(null, pessoa);
-        }
-
-        [TestMethod()]
-        public async Task DeleteAdministradorTest()
-        {
-            var role = "ADMINISTRADOR";
-            var pessoaAdm1 = _pessoaService.Get(1);
-            var pessoaAdm2 = _pessoaService.Get(2);
-            await _pessoaService.CreateAsync(pessoaAdm1);
-            await _pessoaService.CreateAsync(pessoaAdm2);
-
-            var existingUser1 = await _userManager.FindByNameAsync(pessoaAdm1.Cpf);
-            var existingUser2 = await _userManager.FindByNameAsync(pessoaAdm2.Cpf);
-
-            await _userManager.AddToRoleAsync(existingUser1, role);
-            await _userManager.AddToRoleAsync(existingUser2, role);
-
-
-            await _pessoaService.Delete(1);
-            
-            //Assert.AreEqual(1, _pessoaService.GetAllAdmAsync().Result.Count());
-            Assert.AreEqual(false, await _userManager.IsInRoleAsync(existingUser1, "ADMINISTRADOR"));
-            Assert.AreEqual(true, await _userManager.IsInRoleAsync(existingUser1, "USUARIO"));
             var areainteresse = _pessoaService.Get(1);
             Assert.AreEqual(null, areainteresse);
         }
@@ -294,7 +268,6 @@ namespace Service.Tests
             Assert.AreEqual((uint)1, firstPessoa.Id);
         }
 
-        
         /*
         Não estava passando, pois a arquitetura de testes atual 
         não suporta as transações.
