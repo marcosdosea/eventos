@@ -3,11 +3,15 @@ using Core.Service;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Org.BouncyCastle.Asn1.Ocsp;
+using System.Collections.Specialized;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Diagnostics;
 using System.Net;
+using System.Net.Mail;
 using System.Security.Policy;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 namespace Service;
 
 public class PessoaService : IPessoaService
@@ -22,7 +26,6 @@ public class PessoaService : IPessoaService
         _context = context;
         _inscricaoService = inscricaoService;
     }
-
     public uint Create(Pessoa pessoa)
     {
         
@@ -139,7 +142,27 @@ public class PessoaService : IPessoaService
 
         return await _userManager.IsInRoleAsync(user, "ADMINISTRADOR");
     }
+    public bool ValidaEmail(String email)
+    {
+        var valida = new EmailAddressAttribute();
+        var endereco = new MailAddress(email);
+        String dominio = endereco.Host;
+        if(!valida.IsValid(email)) return false;
+        if(Regex.IsMatch(dominio, @"\.\p{L}") == false) return false;
+      
+        return true;
+    }
 
+    public async Task<bool> EmailExist(String email, String cpf)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user == null) return false;
+        if (user != null || cpf != user.UserName)
+        {
+            return true;
+        }
+        return false;
+    }
     public bool EmailConfirmado(string email)
     {
         var user = _userManager.FindByEmailAsync(email).Result;
