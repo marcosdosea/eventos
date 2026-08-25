@@ -48,6 +48,11 @@ namespace EventoWeb.Controllers
                 }).ToList();
                 return View("IndexGestor", eventosGestorModel);
             }
+            
+            if(User.IsInRole("ADMINISTRADOR"))
+            {
+                return RedirectToAction("Index", "Evento");
+            }
             var listarEventos = _eventoService.GetAll().ToList();
             var listarEventosModel = _mapper.Map<List<EventoModel>>(listarEventos);
             return View(listarEventosModel);
