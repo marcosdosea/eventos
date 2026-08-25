@@ -70,9 +70,9 @@ public class PessoaService : IPessoaService
                 {
                     if (await _userManager.IsInRoleAsync(existingUser, "ADMINISTRADOR"))
                     {
-                        Task<List<Pessoa>> administradores = GetAllAdmAsync();
+                        var administradores = await GetAllAdmAsync();
 
-                        if (administradores.Result.Count() == 1 && administradores.Result.Any(a => a.Id == id))
+                        if (administradores.Count() == 1 && administradores.Any(a => a.Id == id))
                         {
                             return false;
 
