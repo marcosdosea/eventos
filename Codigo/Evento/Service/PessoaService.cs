@@ -153,6 +153,16 @@ public class PessoaService : IPessoaService
         return true;
     }
 
+    public async Task<bool> EmailExist(String email, String cpf)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user == null) return false;
+        if (user != null || cpf != user.UserName)
+        {
+            return true;
+        }
+        return false;
+    }
     public bool EmailConfirmado(string email)
     {
         var user = _userManager.FindByEmailAsync(email).Result;

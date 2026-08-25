@@ -327,13 +327,12 @@ namespace EventoWeb.Controllers
             {
                 ModelState.AddModelError("Email", "Por favor, digite um e-mail em um formato válido.");
 
-                if (await _pessoaService.IsAdmAsync(pessoa))
-                {
-                    TempData["ErrorMessage"] = "Já existe um administrador cadastrado com esse CPF.";
-                }
-                else
-                {
-                    var sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 1);
+            }
+            else if (await _pessoaService.EmailExist(viewModel.Email, viewModel.Cpf))
+            {
+                ModelState.AddModelError("Email", "O e-mail informado já está em uso.");
+            }
+            else{
 
                 if (ModelState.IsValid)
                 {
