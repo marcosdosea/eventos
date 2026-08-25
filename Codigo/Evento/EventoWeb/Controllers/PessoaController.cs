@@ -341,7 +341,7 @@ namespace EventoWeb.Controllers
                 {
                     Cpf = viewModel.Cpf,
                     Nome = viewModel.Nome,
-                    NomeCracha = viewModel.Nome,
+                    NomeCracha = viewModel.Nome.Trim().Split(' ')[0],
                     Telefone1 = viewModel.Telefone1,
                     Email = viewModel.Email
                 };
@@ -351,8 +351,9 @@ namespace EventoWeb.Controllers
                     TempData["ErrorMessage"] = "Já existe um administrador cadastrado com esse CPF.";
                 }
                 else
-                {
-                    var sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 1);
+                { 
+                    var sucesso = await _pessoaService.VerificaEdit(pessoa);
+                    if (sucesso) sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 1);
 
                     if (sucesso)
                     {
