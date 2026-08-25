@@ -10,6 +10,8 @@ namespace Core.Service
         Pessoa Get(uint id);
         IEnumerable<Pessoa> GetAll();
         Pessoa GetByCpf(string cpf);
+        bool ValidaEmail(String email);
+        Task<bool> EmailExist(String email, String cpf);
         Task<bool> IsAdmAsync(Pessoa pessoa);
         public bool EmailConfirmado(string email);
         Task<string> GerarTokenAsync(String cpf);

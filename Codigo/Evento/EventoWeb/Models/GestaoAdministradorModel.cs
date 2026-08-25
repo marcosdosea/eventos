@@ -26,6 +26,7 @@ namespace EventoWeb.Models
         [Display(Name = "E-mail")]
         [Required(ErrorMessage = "E-mail é obrigatório")]
         [EmailAddress(ErrorMessage = "Por favor, digite um e-mail em um formato válido.")]
+        
         public string Email { get; set; } = null!;
         public List<PessoaModel> Administradores { get; set; } = new List<PessoaModel>();
     }
