@@ -42,7 +42,7 @@ namespace EventoWeb.Controllers
                     Id = e.Id,
                     DataInicio = e.DataInicio,
                     Nome = e.Nome,
-                    Descricao = e.Descricao ?? string.Empty,
+Descricao = string.IsNullOrWhiteSpace(e.Descricao) ? string.Empty : e.Descricao,
                     Status = e.Status,
                     IdTipoEvento = (uint)e.IdTipoEvento,
                     NomeTipoEvento = tiposEvento.ContainsKey((uint)e.IdTipoEvento) ? tiposEvento[(uint)e.IdTipoEvento] : "Tipo não encontrado"
