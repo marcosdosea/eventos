@@ -54,7 +54,7 @@ namespace EventoWeb.Controllers
 
             foreach (var evento in listarEventosModel)
             {
-                evento.Descricao = evento.Descricao ?? string.Empty;
+                evento.Descricao = string.IsNullOrWhiteSpace(evento.Descricao) ? string.Empty : evento.Descricao;
             }
 
             return View(listarEventosModel);
