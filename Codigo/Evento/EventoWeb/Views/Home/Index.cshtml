@@ -134,7 +134,6 @@
                                         <div class="card-content">
                                             <h2>@evento.Nome</h2>
                                             @{
-<<<<<<< HEAD
                                                 var descricaoCompleta = string.IsNullOrWhiteSpace(evento.Descricao)
                                                     ? "Descrição indisponível"
                                                     : evento.Descricao;
@@ -146,9 +145,7 @@
                                                 {
                                                     descricaoExibida = descricaoCompleta.Substring(0, limite).TrimEnd() + "...";
                                                 }
-=======
-string descricao = evento.Descricao;
->>>>>>> f2a72ea88245b635b9fcbabd5cc3f03c80942f34
+
                                             }
                                             <p class="card-description">@descricaoExibida</p>
                                             <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@evento.Id">
