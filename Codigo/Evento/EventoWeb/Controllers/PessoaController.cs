@@ -289,10 +289,10 @@ namespace EventoWeb.Controllers
         [HttpPost, ActionName("Delete")]
         [Route("Delete/{id}")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(PessoaModel viewModel)
+        public async Task<ActionResult> DeleteConfirmed(PessoaModel viewModel)
         {
 
-            var sucesso = _pessoaService.Delete(viewModel.Id);
+            var sucesso = await _pessoaService.Delete(viewModel.Id);
 
             if (sucesso)
             {

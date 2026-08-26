@@ -6,7 +6,7 @@ namespace Core.Service
 
         uint Create(Pessoa pessoa);
         Task Edit(Pessoa pessoa);
-        bool Delete(uint id);
+        Task<bool> Delete(uint id);
         Pessoa Get(uint id);
         IEnumerable<Pessoa> GetAll();
         Pessoa GetByCpf(string cpf);

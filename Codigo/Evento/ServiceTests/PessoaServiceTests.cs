@@ -181,6 +181,7 @@ namespace Service.Tests
         [TestMethod()]
         public void DeleteTest()
         {
+            
             _pessoaService.Delete(1);
 
             Assert.AreEqual(2, _pessoaService.GetAll().Count());

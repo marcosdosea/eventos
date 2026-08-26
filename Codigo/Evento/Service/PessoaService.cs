@@ -59,26 +59,49 @@ public class PessoaService : IPessoaService
         }
     }
 
-    public bool Delete(uint id)
+    public async Task<bool> Delete(uint id)
     {
         try
         {
             var pessoa = _context.Pessoas.Find(id);
+            
 
             if (pessoa != null)
             {
-                Task<List<Pessoa>> administradores = GetAllAdmAsync();
-
-                if (administradores.Result.Count() == 1 && administradores.Result.Any(a => a.Id == id))
+                var existingUser = await _userManager.FindByNameAsync(pessoa.Cpf);
+                if (existingUser != null)
                 {
-                    return false;
+                    if (await _userManager.IsInRoleAsync(existingUser, "ADMINISTRADOR"))
+                    {
+                        var administradores = await GetAllAdmAsync();
+
+                        if (administradores.Count() == 1 && administradores.Any(a => a.Id == id))
+                        {
+                            return false;
+
+                        }
+
+                        await _userManager.RemoveFromRoleAsync(existingUser, "ADMINISTRADOR");
+                        var roles = await _userManager.GetRolesAsync(existingUser);
+                        if (roles.Count == 0)
+                        {
+                            return await CreatePessoaIdentityComPapelAsync(pessoa, 0,4);
+                        }
+                        return true;
+                    }
+                    
+
+                   
+
+                    
 
                 }
-
 
                 _context.Remove(pessoa);
                 _context.SaveChanges();
                 return true;
+
+
             }
         }
         catch (Exception ex)
