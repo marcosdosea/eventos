@@ -56,10 +56,17 @@
 					<td>
 						@Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" })
 						&nbsp;&nbsp;
-						@Html.ActionLink("Excluir", "Delete", new { id = item.Id }, new { @style = "text-decoration:none;", @class = "danger-normal" })
+						<a href="#" style="text-decoration:none;" class="danger-normal" data-bs-toggle="modal" data-bs-target="#modalExcluir-@item.Id">Excluir</a>
 						&nbsp;&nbsp;
 						@Html.ActionLink("Gestores", "CreateGestor", new { idEvento = item.Id}, new { @style = "text-decoration:none;" })
 						&nbsp;&nbsp;
+						<partial name="_DeleteModal" model="@(new EventoWeb.Models.DeleteModel {
+							ModalId = $"modalExcluir-{item.Id}",
+							ActionName = "Delete",
+							ControllerName = "Evento",
+							RouteValues = item.Id,
+							ItemName = item.Nome
+						})" />
 					</td>
 				</tr>
 			}

@@ -13,11 +13,12 @@ namespace EventoWeb.Models
 		[Key]
 		public uint Id { get; set; }
 
-		[Display(Name = "Nome")]
-		[Required(ErrorMessage = "Nome do Evento é obrigatório")]
-		public string Nome { get; set; } = null!;
+        [Display(Name = "Nome")]
+        [Required(ErrorMessage = "Nome do Evento é obrigatório.")]
+        [StringLength(100, MinimumLength = 3, ErrorMessage = "O Nome do Evento deve ter entre 3 e 100 caracteres.")]
+        public string Nome { get; set; } = null!;
 
-		[Display(Name = "Data Inicio")]
+        [Display(Name = "Data Inicio")]
         [DataType(DataType.Date)]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
 		[DataInicio(nameof(DataFim))]
