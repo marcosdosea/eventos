@@ -116,19 +116,11 @@ public class PessoaService : IPessoaService
                         }
                         return true;
                     }
-                    
-
-                   
-
-                    
-
                 }
 
                 _context.Remove(pessoa);
                 _context.SaveChanges();
                 return true;
-
-
             }
         }
         catch (Exception ex)
@@ -207,7 +199,7 @@ public class PessoaService : IPessoaService
     {
         var user = await _userManager.FindByEmailAsync(email);
         if (user == null) return false;
-        if (user != null || cpf != user.UserName)
+        if (cpf != user.UserName)
         {
             return true;
         }

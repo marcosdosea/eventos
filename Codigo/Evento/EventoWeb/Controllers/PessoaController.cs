@@ -338,25 +338,7 @@ namespace EventoWeb.Controllers
            
             if (! _pessoaService.ValidaEmail(viewModel.Email))
             {
-                var pessoa = new Pessoa
-                {
-                    Cpf = viewModel.Cpf,
-                    Nome = viewModel.Nome,
-                    NomeCracha = viewModel.Nome.Trim().Split(' ')[0],
-                    Telefone1 = viewModel.Telefone1,
-                    Email = viewModel.Email
-                };
-
-                if (await _pessoaService.IsAdmAsync(pessoa))
-                {
-                    TempData["ErrorMessage"] = "Já existe um administrador cadastrado com esse CPF.";
-                }
-                else
-                { 
-                    var sucesso = await _pessoaService.VerificaEdit(pessoa);
-                    if (sucesso) sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 1);
                 ModelState.AddModelError("Email", "Por favor, digite um e-mail em um formato válido.");
-
             }
             else if (await _pessoaService.EmailExist(viewModel.Email, viewModel.Cpf))
             {
@@ -370,7 +352,7 @@ namespace EventoWeb.Controllers
                     {
                         Cpf = viewModel.Cpf,
                         Nome = viewModel.Nome,
-                        NomeCracha = viewModel.Nome,
+                        NomeCracha = viewModel.Nome.Trim().Split(' ')[0],
                         Telefone1 = viewModel.Telefone1,
                         Email = viewModel.Email
                     };
