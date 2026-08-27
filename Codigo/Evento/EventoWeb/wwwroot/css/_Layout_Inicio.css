@@ -235,12 +235,13 @@
     line-height: 150%;
 }
 
-.card-content p {
+.card-description {
     font-size: 1rem;
-    margin: 0 0 15px;
-    max-height: 60px;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    margin: 0;
+    line-height: 1.5;
+    width: 100%;
+    white-space: normal;
+    overflow-wrap: break-word;
 }
 
 .destaque {
@@ -321,8 +322,8 @@
     .card-content {
         padding: 0.75rem;
     }
-    .card-content p {
-        display: none;
+    .card-description {
+        font-size: 0.95rem;
     }
     .card-content h2 {
         font-size: 1.0rem;
@@ -382,8 +383,8 @@
     .card-content {
         padding: 0.75rem;
     }
-    .card-content p {
-        display: none;
+    .card-description {
+        font-size: 0.95rem;
     }
     .card-content h2 {
         font-size: 1.0rem;

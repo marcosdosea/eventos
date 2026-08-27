@@ -37,8 +37,7 @@ namespace EventoWeb.Controllers.Tests
                 .Returns(GetTargetPessoa());
             mockService.Setup(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), It.IsAny<uint>(), It.IsAny<int>()))
                 .ReturnsAsync(true);
-            mockService.Setup(service => service.Delete(It.IsAny<uint>()))
-                .Returns(true);
+            mockService.Setup(service => service.Delete(It.IsAny<uint>()));
             mockService.Setup(service => service.CreatePessoaIdentityComPapelAsync(GetTargetPessoa(),1,1));
             mockService.Setup(service => service.Edit(It.IsAny<Pessoa>()))
                 .Returns(Task.CompletedTask);
@@ -236,33 +235,31 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public void DeleteTest_Post_Valid()
+        public async Task DeleteTest_Post_Valid()
         {
-                    
+                            
             controller!.ControllerContext = new ControllerContext
             {
                 HttpContext = new DefaultHttpContext()
             };
             controller.TempData = new TempDataDictionary(controller.HttpContext, Mock.Of<ITempDataProvider>());
 
-            var result = controller!.DeleteConfirmed(GetTargetPessoaModel());
+            var result = await controller!.DeleteConfirmed(GetTargetPessoaModel());
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
-
-
         }
 
 
         [TestMethod()]
-        public void DeleteAdmTest_Post_Valid()
+        public async Task DeleteAdmTest_Post_Valid()
         {
             var pessoa = GetTargetPessoa();
             var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
-{
-                new Claim(ClaimTypes.Name, pessoa.Cpf),
-                new Claim(ClaimTypes.Role, "ADMINISTRADOR")
-            }, "mock"));
+    {
+        new Claim(ClaimTypes.Name, pessoa.Cpf),
+        new Claim(ClaimTypes.Role, "ADMINISTRADOR")
+    }, "mock"));
 
             controller!.ControllerContext = new ControllerContext
             {
@@ -270,12 +267,10 @@ namespace EventoWeb.Controllers.Tests
             };
             controller.TempData = new TempDataDictionary(controller.HttpContext, Mock.Of<ITempDataProvider>());
 
-            var result = controller!.DeleteConfirmed(GetTargetPessoaModel());
+            var result = await controller!.DeleteConfirmed(GetTargetPessoaModel());
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.AreEqual("DefinirAdministrador", redirectToActionResult.ActionName);
-
-
         }
 
         private PessoaModel GetNewPessoa()

@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Primitives;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 using NuGet.Common;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
@@ -288,10 +289,10 @@ namespace EventoWeb.Controllers
         [HttpPost, ActionName("Delete")]
         [Route("Delete/{id}")]
         [ValidateAntiForgeryToken]
-        public ActionResult DeleteConfirmed(PessoaModel viewModel)
+        public async Task<ActionResult> DeleteConfirmed(PessoaModel viewModel)
         {
 
-            var sucesso = _pessoaService.Delete(viewModel.Id);
+            var sucesso = await _pessoaService.Delete(viewModel.Id);
 
             if (sucesso)
             {
@@ -335,7 +336,7 @@ namespace EventoWeb.Controllers
         public async Task<ActionResult> DefinirAdministrador(GestaoAdministradorModel viewModel)
         {
            
-            if (ModelState.IsValid)
+            if (! _pessoaService.ValidaEmail(viewModel.Email))
             {
                 var pessoa = new Pessoa
                 {
@@ -354,21 +355,48 @@ namespace EventoWeb.Controllers
                 { 
                     var sucesso = await _pessoaService.VerificaEdit(pessoa);
                     if (sucesso) sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 1);
+                ModelState.AddModelError("Email", "Por favor, digite um e-mail em um formato válido.");
 
-                    if (sucesso)
+            }
+            else if (await _pessoaService.EmailExist(viewModel.Email, viewModel.Cpf))
+            {
+                ModelState.AddModelError("Email", "O e-mail informado já está em uso.");
+            }
+            else{
+
+                if (ModelState.IsValid)
+                {
+                    var pessoa = new Pessoa
                     {
-                        TempData["SuccessMessage"] = "Administrador definido com sucesso.";
+                        Cpf = viewModel.Cpf,
+                        Nome = viewModel.Nome,
+                        NomeCracha = viewModel.Nome,
+                        Telefone1 = viewModel.Telefone1,
+                        Email = viewModel.Email
+                    };
+
+                    if (await _pessoaService.IsAdmAsync(pessoa))
+                    {
+                        TempData["ErrorMessage"] = "Já existe um administrador cadastrado com esse CPF.";
                     }
                     else
                     {
-                        TempData["ErrorMessage"] = "Erro ao cadastrar administrador.";
+                        var sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 1);
+
+                        if (sucesso)
+                        {
+                            TempData["SuccessMessage"] = "Administrador definido com sucesso.";
+                        }
+                        else
+                        {
+                            TempData["ErrorMessage"] = "Erro ao cadastrar administrador.";
+                        }
+
                     }
+                    return RedirectToAction(nameof(DefinirAdministrador));
 
                 }
-                return RedirectToAction(nameof(DefinirAdministrador));
-
             }
-
             var adminsAtuais = await _pessoaService.GetAllAdmAsync();
             viewModel.Administradores = _mapper.Map<List<PessoaModel>>(adminsAtuais.OrderBy(p => p.Nome).ToList());
             return View(viewModel);

@@ -42,14 +42,26 @@ namespace EventoWeb.Controllers
                     Id = e.Id,
                     DataInicio = e.DataInicio,
                     Nome = e.Nome,
+                    Descricao = string.IsNullOrWhiteSpace(e.Descricao) ? string.Empty : e.Descricao,
                     Status = e.Status,
                     IdTipoEvento = (uint)e.IdTipoEvento,
                     NomeTipoEvento = tiposEvento.ContainsKey((uint)e.IdTipoEvento) ? tiposEvento[(uint)e.IdTipoEvento] : "Tipo não encontrado"
                 }).ToList();
                 return View("IndexGestor", eventosGestorModel);
             }
+            
+            if(User.IsInRole("ADMINISTRADOR"))
+            {
+                return RedirectToAction("Index", "Evento");
+            }
             var listarEventos = _eventoService.GetAll().ToList();
             var listarEventosModel = _mapper.Map<List<EventoModel>>(listarEventos);
+
+            foreach (var evento in listarEventosModel)
+            {
+                evento.Descricao = string.IsNullOrWhiteSpace(evento.Descricao) ? string.Empty : evento.Descricao;
+            }
+
             return View(listarEventosModel);
         }
        

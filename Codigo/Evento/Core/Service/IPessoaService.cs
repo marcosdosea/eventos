@@ -6,10 +6,12 @@ namespace Core.Service
 
         uint Create(Pessoa pessoa);
         Task Edit(Pessoa pessoa);
-        bool Delete(uint id);
+        Task<bool> Delete(uint id);
         Pessoa Get(uint id);
         IEnumerable<Pessoa> GetAll();
         Pessoa GetByCpf(string cpf);
+        bool ValidaEmail(String email);
+        Task<bool> EmailExist(String email, String cpf);
         Task<bool> IsAdmAsync(Pessoa pessoa);
         public bool EmailConfirmado(string email);
         Task<string> GerarTokenAsync(String cpf);
