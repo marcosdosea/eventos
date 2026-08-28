@@ -1,20 +1,35 @@
-﻿@model EventoWeb.Models.DeleteModel
+@model EventoWeb.Models.DeleteModel
 
-<div class="modal fade" id="@Model.ModalId" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalLabel">Confirmar Exclusão</h5>
+<div class="modal fade text-wrap" id="@(Model?.ModalId ?? "modalExcluir")" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white position-relative">
+                <h5 class="modal-title w-100 text-center fw-bold" id="modalLabel">Confirmar exclusão</h5>
+                <button type="button" class="btn-close btn-close-white position-absolute end-0 me-3" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                @Model.ConfirmMessage
+            <div class="modal-body text-center p-4 text-break">
+                <h5 class="fs-5 fw-normal text-break mb-3">
+                    @if (!string.IsNullOrEmpty(Model?.ConfirmMessage))
+                    {
+                        @Model.ConfirmMessage
+                    }
+                    else if (!string.IsNullOrEmpty(Model?.ItemName))
+                    {
+                        @:Tem certeza que deseja excluir "<strong>@Model.ItemName</strong>"?
+                    }
+                    else
+                    {
+                        @:Tem certeza que deseja excluir?
+                    }
+                </h5>
+                <div class="text-danger fw-bold small">
+                    Essa operação não pode ser desfeita.
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-blue-normal" data-dismiss="modal">Cancelar</button>
-                <form asp-action="@Model.ActionName" asp-controller="@Model.ControllerName" asp-route-id="@Model.RouteValues" method="post">
-                    <button type="submit" class="btn btn-danger">Excluir</button>
-                </form>
-            </div>
+            <form asp-action="@Model?.ActionName" asp-controller="@Model?.ControllerName" asp-route-id="@Model?.RouteValues" method="post" class="modal-footer justify-content-center border-top-0 pt-0 pb-4">
+                <button type="button" class="btn btn-primary px-4 me-2" data-bs-dismiss="modal">Não</button>
+                <button type="submit" class="btn btn-danger px-4" id="btnConfirmarExclusao">Sim</button>
+            </form>
         </div>
     </div>
 </div>
