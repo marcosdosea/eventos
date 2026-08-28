@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -66,6 +66,7 @@ namespace EventoWeb.Models
 		public string? Cep { get; set; }
 
 		[Display(Name = "Estado")]
+		[Required(ErrorMessage = "O campo Estado é obrigatório.")]
 		public string? Estado { get; set; }
 
 		[Display(Name = "Cidade")]
