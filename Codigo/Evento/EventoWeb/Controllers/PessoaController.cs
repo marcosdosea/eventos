@@ -335,18 +335,14 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> DefinirAdministrador(GestaoAdministradorModel viewModel)
         {
-            if (ModelState.IsValid)
-            {
-                if (!_pessoaService.ValidaEmail(viewModel.Email))
-                {
+            if (ModelState.IsValid) {
+
+                if (!_pessoaService.ValidaEmail(viewModel.Email)) {
                     ModelState.AddModelError("Email", "Por favor, digite um e-mail em um formato válido.");
-                }
-                else if (await _pessoaService.EmailExist(viewModel.Email, viewModel.Cpf))
-                {
+                } else if (await _pessoaService.EmailExist(viewModel.Email, viewModel.Cpf)) {
                     ModelState.AddModelError("Email", "O e-mail informado já está em uso.");
-                }
-                else
-                {
+                } else {
+
                     var pessoa = new Pessoa
                     {
                         Cpf = viewModel.Cpf,
@@ -356,20 +352,15 @@ namespace EventoWeb.Controllers
                         Email = viewModel.Email
                     };
 
-                    if (await _pessoaService.IsAdmAsync(pessoa))
-                    {
+                    if (await _pessoaService.IsAdmAsync(pessoa)) {
                         TempData["ErrorMessage"] = "Já existe um administrador cadastrado com esse CPF.";
-                    }
-                    else
-                    {
+                    } else {
+
                         var sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 1);
 
-                        if (sucesso)
-                        {
+                        if (sucesso) {
                             TempData["SuccessMessage"] = "Administrador definido com sucesso.";
-                        }
-                        else
-                        {
+                        } else {
                             TempData["ErrorMessage"] = "Erro ao cadastrar administrador.";
                         }
 
@@ -379,7 +370,6 @@ namespace EventoWeb.Controllers
                 }
 
             }
-
             var adminsAtuais = await _pessoaService.GetAllAdmAsync();
             viewModel.Administradores = _mapper.Map<List<PessoaModel>>(adminsAtuais.OrderBy(p => p.Nome).ToList());
             return View(viewModel);

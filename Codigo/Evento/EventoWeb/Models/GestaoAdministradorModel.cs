@@ -21,6 +21,7 @@ namespace EventoWeb.Models
 
         [Display(Name = "Telefone")]
         [TelefoneCelular(ErrorMessage = "Digite um telefone válido com DDD. Ex: (11) 91234-5678")]
+        [StringLength(11, MinimumLength = 11, ErrorMessage = "O campo telefone deve ter 11 números")]
         public string? Telefone1 { get; set; }
 
         [Display(Name = "E-mail")]

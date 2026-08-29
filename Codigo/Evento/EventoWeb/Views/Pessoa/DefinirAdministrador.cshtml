@@ -31,7 +31,7 @@
 					<div class="col-6 col-sm-6 col-md-6 col-lg-6">
 						<div class="form-group mb-4">
 							<label asp-for="Telefone1" class="control-label">Celular</label>
-							<input asp-for="Telefone1" type="tel" class="form-control" id="Telefone1" placeholder="Com o DDD" />
+							<input asp-for="Telefone1" type="tel" class="form-control" id="Telefone1" placeholder="Com o DDD" oninput="formatarTelefoneForm(Telefone1)" maxlength="15" />
 							<span asp-validation-for="Telefone1" class="text-danger"></span>
 						</div>
 					</div>
