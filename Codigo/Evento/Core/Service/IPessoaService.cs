@@ -18,6 +18,7 @@ namespace Core.Service
         Task<List<Pessoa>> GetAllAdmAsync();
         Task<List<Pessoa>> GetAllGestorAsync();
         Task<UsuarioIdentity> CreateAsync(Pessoa pessoa);
+        Task<bool> VerificaEdit(Pessoa pessoaAtualizada);
         Task <bool> CreatePessoaIdentityComPapelAsync(Pessoa pessoa, uint idEvento, int idPapel);
         Task<List<Pessoa>> GetPessoasPorPapelNoEventoAsync(uint idEvento, int idPapel);
 
