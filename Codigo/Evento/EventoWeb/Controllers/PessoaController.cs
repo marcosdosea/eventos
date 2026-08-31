@@ -335,25 +335,24 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> DefinirAdministrador(GestaoAdministradorModel viewModel)
         {
-           
-            if (! _pessoaService.ValidaEmail(viewModel.Email))
-            {
-                ModelState.AddModelError("Email", "Por favor, digite um e-mail em um formato válido.");
 
-            }
-            else if (await _pessoaService.EmailExist(viewModel.Email, viewModel.Cpf))
+            if (ModelState.IsValid)
             {
-                ModelState.AddModelError("Email", "O e-mail informado já está em uso.");
-            }
-            else{
-
-                if (ModelState.IsValid)
+                if (!_pessoaService.ValidaEmail(viewModel.Email))
+                {
+                    ModelState.AddModelError("Email", "Por favor, digite um e-mail em um formato válido.");
+                }
+                else if (await _pessoaService.EmailExist(viewModel.Email, viewModel.Cpf))
+                {
+                    ModelState.AddModelError("Email", "O e-mail informado já está em uso.");
+                }
+                else
                 {
                     var pessoa = new Pessoa
                     {
                         Cpf = viewModel.Cpf,
                         Nome = viewModel.Nome,
-                        NomeCracha = viewModel.Nome,
+                        NomeCracha = viewModel.Nome.Trim().Split(' ')[0],
                         Telefone1 = viewModel.Telefone1,
                         Email = viewModel.Email
                     };
@@ -364,22 +363,34 @@ namespace EventoWeb.Controllers
                     }
                     else
                     {
-                        var sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 1);
+                        var sucesso = await  _pessoaService.VerificaEdit(pessoa);
 
                         if (sucesso)
                         {
-                            TempData["SuccessMessage"] = "Administrador definido com sucesso.";
+                            sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 1);
+
+                            if (sucesso)
+                            {
+                                TempData["SuccessMessage"] = "Administrador definido com sucesso.";
+                            }
+                            else
+                            {
+                                TempData["ErrorMessage"] = "Erro ao cadastrar administrador.";
+                            }
                         }
                         else
                         {
                             TempData["ErrorMessage"] = "Erro ao cadastrar administrador.";
                         }
+                        
 
                     }
                     return RedirectToAction(nameof(DefinirAdministrador));
 
                 }
+
             }
+
             var adminsAtuais = await _pessoaService.GetAllAdmAsync();
             viewModel.Administradores = _mapper.Map<List<PessoaModel>>(adminsAtuais.OrderBy(p => p.Nome).ToList());
             return View(viewModel);
