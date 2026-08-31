@@ -364,16 +364,25 @@ namespace EventoWeb.Controllers
                     else
                     {
                         var sucesso = await  _pessoaService.VerificaEdit(pessoa);
-                        sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 1);
 
                         if (sucesso)
                         {
-                            TempData["SuccessMessage"] = "Administrador definido com sucesso.";
+                            sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 1);
+
+                            if (sucesso)
+                            {
+                                TempData["SuccessMessage"] = "Administrador definido com sucesso.";
+                            }
+                            else
+                            {
+                                TempData["ErrorMessage"] = "Erro ao cadastrar administrador.";
+                            }
                         }
                         else
                         {
                             TempData["ErrorMessage"] = "Erro ao cadastrar administrador.";
                         }
+                        
 
                     }
                     return RedirectToAction(nameof(DefinirAdministrador));
