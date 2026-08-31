@@ -335,6 +335,7 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> DefinirAdministrador(GestaoAdministradorModel viewModel)
         {
+
             if (ModelState.IsValid)
             {
                 if (!_pessoaService.ValidaEmail(viewModel.Email))
@@ -362,7 +363,8 @@ namespace EventoWeb.Controllers
                     }
                     else
                     {
-                        var sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 1);
+                        var sucesso = await  _pessoaService.VerificaEdit(pessoa);
+                        sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 1);
 
                         if (sucesso)
                         {
