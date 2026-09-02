@@ -3,7 +3,10 @@
 @{
     ViewData["Title"] = "Modelos de Certificado";
 }
-<h1>Modelos de Certificado</h1>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">Modelos de Certificado</h1>
+    <a asp-controller="Evento" asp-action="GerenciarEventoListar" class="btn btn-secondary">Voltar</a>
+</div>
 <p>
     <a asp-action="Create" class="btn btn-primary">Novo Modelo</a>
 </p>
