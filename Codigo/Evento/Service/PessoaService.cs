@@ -2,15 +2,10 @@ using Core;
 using Core.Service;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Asn1.Ocsp;
-using System.Collections.Specialized;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Diagnostics;
-using System.Net;
 using System.Net.Mail;
-using System.Security.Policy;
-using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 namespace Service;
 
