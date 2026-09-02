@@ -123,6 +123,8 @@ namespace EventoWeb.Controllers
             if (entity == null) return NotFound();
 
             var model = _mapper.Map<ParticipacaoPessoaSubEventoModel>(entity);
+            model.NomePessoa = _pessoaService.Get(entity.IdPessoa)?.Nome ?? string.Empty;
+            model.NomeSubEvento = _subeventoService.Get((uint)idSubEvento)?.Nome ?? string.Empty;
             return View(model);
         }
 
@@ -130,7 +132,13 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id, int idSubEvento)
         {
+            var entity = _participacaoService
+                .GetBySubEvento((uint)idSubEvento)
+                .FirstOrDefault(p => p.Id == (uint)id);
+            if (entity == null) return NotFound();
+
             _participacaoService.Delete((uint)id);
+            TempData["Message"] = "Participante removido do sub-evento com sucesso.";
             return RedirectToAction(nameof(Index), new { idSubEvento });
         }
     }

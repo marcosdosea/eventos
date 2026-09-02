@@ -41,6 +41,12 @@
 {
     <div class="alert alert-danger">
         @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+    </div>
+}
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">
         @TempData["Message"]
     </div>
 }
@@ -64,11 +70,21 @@
                         <td>@(participacao.Saida.HasValue ? "Saída" : "Entrada")</td>
                         <td>@(participacao.Saida.HasValue ? participacao.Saida.Value.ToString("dd/MM/yyyy às HH:mm\\h") : participacao.Entrada.ToString("dd/MM/yyyy às HH:mm\\h"))</td>
                         <td>
-                            <form style="display: inline;" method="post" asp-action="ExcluirParticipacao">
+                            <form style="display: inline;" method="post" asp-action="ExcluirParticipacao" id="formExcluir_@participacao.Id">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="id" value="@participacao.Id" />
                                 <input type="hidden" name="idEvento" value="@Model.Evento.Id" />
-                                <button type="submit" class="btn btn-link text-danger p-0" style="text-decoration: none;" onclick="return confirm('Deseja realmente excluir este registro?')">
+                                @if (Model.SubEvento != null)
+                                {
+                                    <input type="hidden" name="idSubEvento" value="@Model.SubEvento.Id" />
+                                }
+                                <button type="button"
+                                        class="btn btn-link text-danger p-0 btn-excluir-participacao"
+                                        style="text-decoration: none;"
+                                        data-form-id="formExcluir_@participacao.Id"
+                                        data-nome="@participacao.IdPessoaNavigation.Nome"
+                                        data-tipo="@(participacao.Saida.HasValue ? "Saída" : "Entrada")"
+                                        data-data="@(participacao.Saida.HasValue ? participacao.Saida.Value.ToString("dd/MM/yyyy 'às' HH:mm") : participacao.Entrada.ToString("dd/MM/yyyy 'às' HH:mm"))">
                                     Excluir
                                 </button>
                             </form>
@@ -83,6 +99,31 @@
 <div class="d-flex flex-row-reverse mt-3">
     <div class="form-group">
         <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Model.Evento.Id" class="btn btn-lg btn-blue-normal">Voltar</a>
+    </div>
+</div>
+
+<div class="modal fade" id="modalExcluirParticipacao" tabindex="-1" role="dialog" aria-labelledby="modalExcluirParticipacaoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white position-relative">
+                <h5 class="modal-title w-100 text-center fw-bold" id="modalExcluirParticipacaoLabel">Confirmar remoção</h5>
+                <button type="button" class="btn-close btn-close-white position-absolute end-0 me-3" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <h5 class="fs-5 fw-normal mb-3">
+                    Tem certeza que deseja remover a participação de
+                    "<strong id="nomeParticipanteExcluir"></strong>"?
+                </h5>
+                <p class="text-muted small mb-2" id="detalheParticipacaoExcluir"></p>
+                <span class="text-danger fw-bold small">
+                    Essa operação não pode ser desfeita.
+                </span>
+            </div>
+            <div class="modal-footer justify-content-center border-top-0 pt-0 pb-4">
+                <button type="button" class="btn btn-primary px-4 me-2" data-bs-dismiss="modal">Não</button>
+                <button type="button" class="btn btn-danger px-4" id="confirmRemovalButton">Sim</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -109,6 +150,22 @@
                     $(this).val(value);
                 }
             });
+
+            // Confirmação de exclusão: exibe nome e dados do registro antes de remover
+            var formExcluirAtual = null;
+
+            $(document).on('click', '.btn-excluir-participacao', function () {
+                formExcluirAtual = document.getElementById($(this).data('form-id'));
+                $('#nomeParticipanteExcluir').text($(this).data('nome'));
+                $('#detalheParticipacaoExcluir').text('Registro de ' + $(this).data('tipo') + ' em ' + $(this).data('data'));
+                $('#modalExcluirParticipacao').modal('show');
+            });
+
+            $('#confirmRemovalButton').on('click', function () {
+                if (formExcluirAtual) {
+                    formExcluirAtual.submit();
+                }
+            });
         });
     </script>
-} 
+}

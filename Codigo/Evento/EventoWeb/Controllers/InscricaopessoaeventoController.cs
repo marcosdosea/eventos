@@ -13,11 +13,19 @@ namespace EventoWeb.Controllers
     public class InscricaopessoaeventoController : Controller
     {
         private readonly IInscricaopessoaeventoService _service;
+        private readonly IPessoaService _pessoaService;
+        private readonly IEventoService _eventoService;
         private readonly IMapper _mapper;
 
-        public InscricaopessoaeventoController(IInscricaopessoaeventoService service, IMapper mapper)
+        public InscricaopessoaeventoController(
+            IInscricaopessoaeventoService service,
+            IPessoaService pessoaService,
+            IEventoService eventoService,
+            IMapper mapper)
         {
             _service = service;
+            _pessoaService = pessoaService;
+            _eventoService = eventoService;
             _mapper = mapper;
         }
 
@@ -105,6 +113,8 @@ namespace EventoWeb.Controllers
                 return NotFound();
 
             var dto = _mapper.Map<InscricaopessoaeventoDTO>(inscricao);
+            ViewBag.NomePessoa = _pessoaService.Get(inscricao.IdPessoa)?.Nome ?? string.Empty;
+            ViewBag.NomeEvento = _eventoService.GetNomeById(inscricao.IdEvento);
             return View(dto);
         }
 
@@ -113,7 +123,12 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(uint id)
         {
+            var inscricao = _service.GetById(id);
+            if (inscricao == null)
+                return NotFound();
+
             _service.Delete(id);
+            TempData["Message"] = "Inscrição do participante removida com sucesso.";
             return RedirectToAction(nameof(Index));
         }
 
