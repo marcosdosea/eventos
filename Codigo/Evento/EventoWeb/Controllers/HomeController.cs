@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -21,22 +21,24 @@ namespace EventoWeb.Controllers
             _tipoEventoService = tipoEventoService;
         }
 
-        // Ação Index para listar eventos
-        public IActionResult Index()
+        public IActionResult Index(bool vitrine = false)
         {
             if (!User.Identity.IsAuthenticated)
             {
                 TempData.Remove("Message");
             }
 
-            if (User.IsInRole("GESTOR"))
+            if (!vitrine)
             {
-                return RedirectToAction("GerenciarEventoListar", "Evento");
-            }
+                if (User.IsInRole("GESTOR"))
+                {
+                    return RedirectToAction("GerenciarEventoListar", "Evento");
+                }
 
-            if(User.IsInRole("ADMINISTRADOR"))
-            {
-                return RedirectToAction("Index", "Evento");
+                if(User.IsInRole("ADMINISTRADOR"))
+                {
+                    return RedirectToAction("Index", "Evento");
+                }
             }
             var listarEventos = _eventoService.GetAll().ToList();
             var listarEventosModel = _mapper.Map<List<EventoModel>>(listarEventos);

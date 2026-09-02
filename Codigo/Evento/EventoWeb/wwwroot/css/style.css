@@ -207,3 +207,39 @@ body {
 .no-padding {
     padding: 0 !important;
 }
+/* Custom styles for LayoutGestor Alert */
+.alert-dismissible-custom {
+    padding-right: 2rem;
+}
+
+.btn-close-custom {
+    background: none;
+    border: none;
+    color: #198754;
+    font-size: 1.2rem;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
+    position: absolute;
+    top: 8px;
+    right: 10px;
+}
+
+/* Custom DataTables Pagination Styling */
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+    color: #FFFFFF !important;
+    background: #232ed0 !important;
+    border: 1px solid #232ed0 !important;
+    border-radius: 4px;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    border-radius: 4px;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    color: #FFFFFF !important;
+    background: #2029bb !important;
+    border: 1px solid #2029bb !important;
+}

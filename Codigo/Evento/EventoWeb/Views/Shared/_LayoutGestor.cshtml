@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 
 @{
 
@@ -7,6 +7,11 @@
     if (string.IsNullOrEmpty(eventoId))
     {
         eventoId = Context.Request.Query["idEvento"].ToString();
+    }
+
+    if (string.IsNullOrEmpty(eventoId))
+    {
+        eventoId = ViewContext.RouteData.Values["idEvento"]?.ToString();
     }
 
     if (string.IsNullOrEmpty(eventoId))
@@ -33,10 +38,17 @@
 <body>
     <header class="p-3 mb-3 border-bottom">
         <div class="container">
-            <div class="d-flex justify-content-lg-between justify-content-lg-start">
-                <button class="navbar-toggler navbar-light custom-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+            <div class="d-flex align-items-center justify-content-between w-100">
+                <div class="d-flex align-items-center">
+                    <button class="navbar-toggler navbar-light custom-toggler me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="logo">
+                        <a href="@Url.Action("Index", "Home", new { area = "", vitrine = true })" title="Ir para a vitrine dos eventos">
+                            <img src="/img/LOGOTIPO.png" alt="Logotipo" />
+                        </a>
+                    </div>
+                </div>
                 <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
                     <div class="offcanvas-header">
                         <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Menu</h5>
@@ -47,65 +59,52 @@
                                 <li class="nav-item">
                                     <a class="nav-link active titulo">Gestor do Evento</a>
                                 </li>
-                                <li class="nav-item">
-                                    <a class="nav-link opcao" href="#">Inscrições</a>
-                                </li>
-                                <li class="nav-item">
-                                    @if (possuiEvento)
-                                    {
+                                @if (possuiEvento)
+                                {
+                                    <li class="nav-item">
+                                        <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEventoListar">
+                                            Eventos
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link opcao" asp-controller="Participacaopessoaevento" asp-action="Index" asp-route-idEvento="@eventoId">Inscrições</a>
+                                    </li>
+                                    <li class="nav-item">
                                         <a class="nav-link opcao" asp-controller="Evento" asp-action="CreateColaborador" asp-route-idEvento="@eventoId">Colaboradores</a>
-                                    }
-                                    else
-                                    {
-                                        <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEventoListar">Colaboradores</a>
-                                    }
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEventoListar">Evento</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link opcao" asp-controller="Participante" asp-action="Index">Usuários</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link opcao" asp-controller="Subevento" asp-action="Index">SubEventos</a>
-                                </li>
-                                <li class="nav-item">
-                                    @if (possuiEvento)
-                                    {
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@eventoId">Detalhes do Evento</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link opcao" asp-controller="Participante" asp-action="Index" asp-route-idEvento="@eventoId">Usuários</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link opcao" asp-controller="Subevento" asp-action="Index" asp-route-idEvento="@eventoId">SubEventos</a>
+                                    </li>
+                                    <li class="nav-item">
                                         <a class="nav-link opcao" asp-controller="TipoInscricao" asp-action="Index" asp-route-idEvento="@eventoId">Tipo Inscrição </a>
-                                    }
-                                    else
-                                    {
-                                        <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEventoListar">Tipo Inscrição </a>
-                                    }
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link opcao" asp-controller="Modelocracha" asp-action="Index">Modelo Crachá</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a class="nav-link opcao" asp-controller="Modelocertificado" asp-action="Index">Modelo Certificado</a>
-                                </li>
-                                <li class="nav-item">
-                                    @if (possuiEvento)
-                                    {
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link opcao" asp-controller="Modelocracha" asp-action="Index" asp-route-idEvento="@eventoId">Modelo Crachá</a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link opcao" asp-controller="Modelocertificado" asp-action="Index" asp-route-idEvento="@eventoId">Modelo Certificado</a>
+                                    </li>
+                                    <li class="nav-item">
                                         <a class="nav-link opcao" asp-controller="Evento" asp-action="CreateParticipante" asp-route-idEvento="@eventoId">Participantes</a>
-                                    }
-                                    else
-                                    {
-                                        <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEventoListar">Participantes</a>
-                                    }
-                                </li>
+                                    </li>
+                                }
+                                else
+                                {
+                                    <li class="nav-item">
+                                        <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEventoListar">Eventos</a>
+                                    </li>
+                                }
                         </ul>
                     </div>
                 </div>
 
-                <div class="container-fluid">
-                    <div class="logo me-3">
-                        <a href="/" title="Ir para a página inicial">
-                            <img src="/img/LOGOTIPO.png" alt="Logotipo" />
-                        </a>
-                    </div>
-                </div>
+
                 <div class="flex-shrink-0 dropdown align-content-center">
                     <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser2" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
                         Olá, @ViewBag.NomeUsuario!
@@ -139,13 +138,12 @@
         <main role="main" class="pb-3">
             @if (TempData["SuccessMessage"] != null)
             {
-                <div class="alert alert-success alert-dismissible fade show position-relative" role="alert" style="padding-right: 2rem;">
+                <div class="alert alert-success alert-dismissible fade show position-relative alert-dismissible-custom" role="alert">
                     <div class="text-success m-0">
                         @TempData["SuccessMessage"]
                     </div>
 
-                    <button type="button" data-bs-dismiss="alert" aria-label="Close"
-                            style="background: none; border: none; color: #198754; font-size: 1.2rem; line-height: 1; padding: 0; cursor: pointer; position: absolute; top: 8px; right: 10px;">
+                    <button type="button" class="btn-close-custom" data-bs-dismiss="alert" aria-label="Close">
                         &times;
                     </button>
                 </div>
