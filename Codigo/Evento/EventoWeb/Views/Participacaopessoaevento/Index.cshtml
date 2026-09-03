@@ -128,7 +128,6 @@
 </div>
 
 @section Scripts {
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/datatable/js/datatables.min.js"></script>
     <script>
         $(document).ready(function () {
@@ -154,11 +153,19 @@
             // Confirmação de exclusão: exibe nome e dados do registro antes de remover
             var formExcluirAtual = null;
 
+<<<<<<< HEAD
            $(document).on('click', '.btn-excluir-participacao', function () {
                 formExcluirAtual = document.getElementById($(this).data('form-id'));
                 $('#nomeParticipanteExcluir').text($(this).data('nome'));
                 $('#detalheParticipacaoExcluir').text('Registro de ' + $(this).data('tipo') + ' em ' + $(this).data('data'));
                 new bootstrap.Modal(document.getElementById('modalExcluirParticipacao')).show();
+=======
+            $(document).on('click', '.btn-excluir-participacao', function () {
+                formExcluirAtual = document.getElementById($(this).data('form-id'));
+                $('#nomeParticipanteExcluir').text($(this).data('nome'));
+                $('#detalheParticipacaoExcluir').text('Registro de ' + $(this).data('tipo') + ' em ' + $(this).data('data'));
+                $('#modalExcluirParticipacao').modal('show');
+>>>>>>> ab9c9efe95e07bc841d7bbbc2d3a2a57c7fa5385
             });
 
             $('#confirmRemovalButton').on('click', function () {

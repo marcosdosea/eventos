@@ -3,7 +3,6 @@ using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
-using System.Security.Claims;
 
 namespace EventoWeb.Controllers
 {
@@ -25,31 +24,16 @@ namespace EventoWeb.Controllers
         // Ação Index para listar eventos
         public IActionResult Index()
         {
+            if (!User.Identity.IsAuthenticated)
+            {
+                TempData.Remove("Message");
+            }
+
             if (User.IsInRole("GESTOR"))
             {
-                string userCpf = User.FindFirstValue(ClaimTypes.Name);
-                if (string.IsNullOrEmpty(userCpf))
-                {
-                    return View("IndexGestor", new List<EventoModel>());
-                }
-                var eventosGestor = _eventoService.GetEventByCpf(userCpf, 2); // 2 = papel de gestor
-                var eventosList = eventosGestor.ToList();
-
-                var tiposEvento = _tipoEventoService.GetAll().ToDictionary(t => t.Id, t => t.Nome);
-
-                var eventosGestorModel = eventosList.Select(e => new EventoModel
-                {
-                    Id = e.Id,
-                    DataInicio = e.DataInicio,
-                    Nome = e.Nome,
-                    Descricao = string.IsNullOrWhiteSpace(e.Descricao) ? string.Empty : e.Descricao,
-                    Status = e.Status,
-                    IdTipoEvento = (uint)e.IdTipoEvento,
-                    NomeTipoEvento = tiposEvento.ContainsKey((uint)e.IdTipoEvento) ? tiposEvento[(uint)e.IdTipoEvento] : "Tipo não encontrado"
-                }).ToList();
-                return View("IndexGestor", eventosGestorModel);
+                return RedirectToAction("GerenciarEventoListar", "Evento");
             }
-            
+
             if(User.IsInRole("ADMINISTRADOR"))
             {
                 return RedirectToAction("Index", "Evento");
