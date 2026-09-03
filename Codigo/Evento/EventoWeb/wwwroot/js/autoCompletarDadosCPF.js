@@ -16,6 +16,10 @@
             document.getElementById('Nome').value = resposta.nome;
             document.getElementById('Telefone1').value = resposta.telefone1;
             document.getElementById('Email').value = resposta.email;
+            let campoTelefone = document.getElementById("Telefone1");
+           
+                formatarTelefoneForm(campoTelefone);
+            
         }
     });
 }
