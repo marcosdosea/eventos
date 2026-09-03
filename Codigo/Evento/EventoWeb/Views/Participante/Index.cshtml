@@ -18,7 +18,9 @@
 </head>
 <body>
     <div>
-        <h1 class="blue-normal">Bem-vindo</h1>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1 class="blue-normal mb-0">Bem-vindo</h1>
+        </div>
         <button type="button" class="btn btn-lg btn-blue-normal mb-2" onclick="location.href='@Url.Action("Create")'">
             Adicionar Participante
         </button>
@@ -70,6 +72,12 @@
                     </table>
                 </div>
             </div>
+        </div>
+        <br />
+        <div class="d-flex justify-content-end">
+            <button type="button" class="btn-blue-normal btn btn-lg mb-2">
+                <a asp-controller="Evento" asp-action="GerenciarEventoListar" style="text-decoration:none; color:white">Voltar</a>
+            </button>
         </div>
     </div>
 
