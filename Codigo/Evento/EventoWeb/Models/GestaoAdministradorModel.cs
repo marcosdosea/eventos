@@ -11,6 +11,7 @@ namespace EventoWeb.Models
 
         [Display(Name = "Nome")]
         [Required(ErrorMessage = "Nome é obrigatório")]
+        [StringLength(50, ErrorMessage = "O nome não pode ser maior que 50 caracteres")]
         public string Nome { get; set; } = null!;
 
         [Required(ErrorMessage = "O campo CPF é obrigatório.")]
