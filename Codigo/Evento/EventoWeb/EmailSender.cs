@@ -40,7 +40,6 @@ namespace EventoWeb
 
             return _client.SendMailAsync(mailMessage);
         }
-
         public async Task<bool> ModeloEmailReset(String token,Pessoa pessoa, String callbackUrl)
         {
             string email = pessoa.Email;
