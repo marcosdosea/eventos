@@ -2,15 +2,10 @@ using Core;
 using Core.Service;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Asn1.Ocsp;
-using System.Collections.Specialized;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Diagnostics;
-using System.Net;
 using System.Net.Mail;
-using System.Security.Policy;
-using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 namespace Service;
 
@@ -19,7 +14,6 @@ public class PessoaService : IPessoaService
     private readonly EventoContext _context;
     private readonly UserManager<UsuarioIdentity> _userManager;
     private readonly IInscricaoService _inscricaoService;
-    
     public PessoaService(UserManager<UsuarioIdentity> userManager, EventoContext context, IInscricaoService inscricaoService)
     {
         _userManager = userManager; 
@@ -194,7 +188,6 @@ public class PessoaService : IPessoaService
       
         return true;
     }
-
     public async Task<bool> EmailExist(String email, String cpf)
     {
         var user = await _userManager.FindByEmailAsync(email);
@@ -227,7 +220,6 @@ public class PessoaService : IPessoaService
 
 
     }
-
     public async Task<UsuarioIdentity> CreateAsync(Pessoa pessoa)
     {
         var novoUsuario = new UsuarioIdentity
