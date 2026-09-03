@@ -139,37 +139,49 @@
 })
 
 @section Scripts {
-<script>
-	(function () {
-		var modalElement = document.getElementById('modalExcluir');
-		var modalForm = modalElement.querySelector('form');
-		var modalMessage = modalElement.querySelector('.modal-body h5');
+	
+	<script src="~/lib/datatable/js/datatables.min.js"></script>
 
-		document.querySelectorAll('.link-remover-participante').forEach(function (link) {
-			link.addEventListener('click', function () {
-				var dados = this.dataset;
-
-				modalMessage.innerHTML = 'Tem certeza que deseja excluir "<strong>' +
-					dados.nomePessoa + '</strong>" como participante do evento "<strong>' +
-					dados.nomeEvento + '</strong>"?';
-
-				modalForm.querySelectorAll('input[data-remocao]').forEach(function (input) { input.remove(); });
-
-				[['IdPessoa', dados.idPessoa], ['IdEvento', dados.idEvento], ['IdPapel', dados.idPapel]]
-					.forEach(function (campo) {
-						var input = document.createElement('input');
-						input.type = 'hidden';
-						input.name = campo[0];
-						input.value = campo[1];
-						input.setAttribute('data-remocao', '');
-						modalForm.appendChild(input);
-					});
-
-				new bootstrap.Modal(modalElement).show();
+	<script>
+		$(document).ready(function () {
+			
+			$('#tablePessoa').DataTable({
+				language: {
+					url: '@Url.Content("~/lib/datatable/js/pt-BR.json")'
+				}
 			});
 		});
-	})();
-</script>
+
+		(function () {
+			var modalElement = document.getElementById('modalExcluir');
+			var modalForm = modalElement.querySelector('form');
+			var modalMessage = modalElement.querySelector('.modal-body h5');
+
+			document.querySelectorAll('.link-remover-participante').forEach(function (link) {
+				link.addEventListener('click', function () {
+					var dados = this.dataset;
+
+					modalMessage.innerHTML = 'Tem certeza que deseja excluir "<strong>' +
+						dados.nomePessoa + '</strong>" como participante do evento "<strong>' +
+						dados.nomeEvento + '</strong>"?';
+
+					modalForm.querySelectorAll('input[data-remocao]').forEach(function (input) { input.remove(); });
+
+					[['IdPessoa', dados.idPessoa], ['IdEvento', dados.idEvento], ['IdPapel', dados.idPapel]]
+						.forEach(function (campo) {
+							var input = document.createElement('input');
+							input.type = 'hidden';
+							input.name = campo[0];
+							input.value = campo[1];
+							input.setAttribute('data-remocao', '');
+							modalForm.appendChild(input);
+						});
+
+					new bootstrap.Modal(modalElement).show();
+				});
+			});
+		})();
+	</script>
 }
 
 

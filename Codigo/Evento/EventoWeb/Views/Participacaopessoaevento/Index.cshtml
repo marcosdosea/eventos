@@ -37,7 +37,7 @@
     </div>
 </div>
 
-@if (!ViewData.ModelState.IsValid || TempData["Message"] != null)
+@if (!ViewData.ModelState.IsValid)
 {
     <div class="alert alert-danger">
         @Html.ValidationSummary(false, "", new { @class = "text-danger" })
@@ -154,11 +154,11 @@
             // Confirmação de exclusão: exibe nome e dados do registro antes de remover
             var formExcluirAtual = null;
 
-            $(document).on('click', '.btn-excluir-participacao', function () {
+           $(document).on('click', '.btn-excluir-participacao', function () {
                 formExcluirAtual = document.getElementById($(this).data('form-id'));
                 $('#nomeParticipanteExcluir').text($(this).data('nome'));
                 $('#detalheParticipacaoExcluir').text('Registro de ' + $(this).data('tipo') + ' em ' + $(this).data('data'));
-                $('#modalExcluirParticipacao').modal('show');
+                new bootstrap.Modal(document.getElementById('modalExcluirParticipacao')).show();
             });
 
             $('#confirmRemovalButton').on('click', function () {
