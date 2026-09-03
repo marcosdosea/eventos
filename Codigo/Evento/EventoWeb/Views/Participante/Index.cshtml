@@ -73,11 +73,8 @@
                 </div>
             </div>
         </div>
-        <br />
-        <div class="d-flex justify-content-end">
-            <button type="button" class="btn-blue-normal btn btn-lg mb-2">
-                <a asp-controller="Evento" asp-action="GerenciarEventoListar" style="text-decoration:none; color:white">Voltar</a>
-            </button>
+        <div class="d-flex justify-content-end mt-4 mb-2">
+            <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Context.Request.Query["idEvento"]" class="btn btn-blue-normal btn-lg text-white" style="text-decoration: none;">Voltar</a>
         </div>
     </div>
 

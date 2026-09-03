@@ -1,5 +1,3 @@
-﻿using Core;
-using Core.Service;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using System.Net;
 using System.Net.Mail;
