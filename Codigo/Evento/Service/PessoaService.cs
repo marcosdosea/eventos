@@ -14,7 +14,6 @@ public class PessoaService : IPessoaService
     private readonly EventoContext _context;
     private readonly UserManager<UsuarioIdentity> _userManager;
     private readonly IInscricaoService _inscricaoService;
-    
     public PessoaService(UserManager<UsuarioIdentity> userManager, EventoContext context, IInscricaoService inscricaoService)
     {
         _userManager = userManager; 
@@ -35,7 +34,34 @@ public class PessoaService : IPessoaService
             throw new Exception($"Erro ao salvar pessoa: {ex.InnerException?.Message ?? ex.Message}", ex);
         }
     }
+    public async Task<bool> VerificaEdit(Pessoa pessoaAtualizada)
+    {
+        if (pessoaAtualizada == null) return false;
+        var pessoaAtual = GetByCpf(pessoaAtualizada.Cpf);
+        
+        if(pessoaAtual != null) {
 
+            
+
+            if(pessoaAtual.Nome != pessoaAtualizada.Nome || pessoaAtual.Email != pessoaAtualizada.Email || pessoaAtual.Telefone1 != pessoaAtualizada.Telefone1 || pessoaAtual.Telefone2 != pessoaAtualizada.Telefone2)
+            {
+                pessoaAtualizada.Id = pessoaAtual.Id;
+                pessoaAtualizada.Sexo = pessoaAtual.Sexo;
+
+                try
+                {
+                    await Edit(pessoaAtualizada);
+                    return true;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
+    }   
     public async Task Edit(Pessoa pessoa)
     {
         try
@@ -84,19 +110,11 @@ public class PessoaService : IPessoaService
                         }
                         return true;
                     }
-                    
-
-                   
-
-                    
-
                 }
 
                 _context.Remove(pessoa);
                 _context.SaveChanges();
                 return true;
-
-
             }
         }
         catch (Exception ex)
@@ -170,12 +188,11 @@ public class PessoaService : IPessoaService
       
         return true;
     }
-
     public async Task<bool> EmailExist(String email, String cpf)
     {
         var user = await _userManager.FindByEmailAsync(email);
         if (user == null) return false;
-        if (user != null || cpf != user.UserName)
+        if (cpf != user.UserName)
         {
             return true;
         }
@@ -203,7 +220,6 @@ public class PessoaService : IPessoaService
 
 
     }
-
     public async Task<UsuarioIdentity> CreateAsync(Pessoa pessoa)
     {
         var novoUsuario = new UsuarioIdentity
