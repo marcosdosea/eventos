@@ -44,6 +44,7 @@ namespace EventoWeb
         public async Task<bool> ModeloEmailReset(String token,Pessoa pessoa, String callbackUrl)
         {
             string email = pessoa.Email;
+            
             string assunto = "Redefinição de Senha";
             string caminhoTemplate = Path.Combine(_enviroment.WebRootPath, "templates", "EmailRedefinicaoSenha.html");
             try
