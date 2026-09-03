@@ -3,6 +3,7 @@ using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using System.Security.Claims;
 
 namespace EventoWeb.Controllers
 {

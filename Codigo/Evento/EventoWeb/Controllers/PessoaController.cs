@@ -3,17 +3,10 @@ using Core;
 using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.Extensions.Primitives;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
-using NuGet.Common;
 using System.ComponentModel.DataAnnotations;
-using System.Net;
-using System.Threading.Tasks;
+
 
 namespace EventoWeb.Controllers
 {
@@ -24,13 +17,13 @@ namespace EventoWeb.Controllers
         private readonly IPessoaService _pessoaService;
         private readonly IEstadosbrasilService _estadosbrasilService;
         private readonly IMapper _mapper;
-        private readonly IEmailSender _emailSender;
+        private readonly IEmailService _emailSender;
 
 
         public PessoaController(
             IPessoaService pessoaService,
             IEstadosbrasilService estadosbrasilService,
-            IMapper mapper, IEmailSender emailSender)   
+            IMapper mapper, IEmailService emailSender)   
         {
             _pessoaService = pessoaService;
             _estadosbrasilService = estadosbrasilService;
@@ -341,13 +334,10 @@ namespace EventoWeb.Controllers
                 if (!_pessoaService.ValidaEmail(viewModel.Email))
                 {
                     ModelState.AddModelError("Email", "Por favor, digite um e-mail em um formato válido.");
-                }
-                else if (await _pessoaService.EmailExist(viewModel.Email, viewModel.Cpf))
-                {
+                } else if (await _pessoaService.EmailExist(viewModel.Email, viewModel.Cpf)) {
                     ModelState.AddModelError("Email", "O e-mail informado já está em uso.");
-                }
-                else
-                {
+                } else {
+
                     var pessoa = new Pessoa
                     {
                         Cpf = viewModel.Cpf,
@@ -357,8 +347,7 @@ namespace EventoWeb.Controllers
                         Email = viewModel.Email
                     };
 
-                    if (await _pessoaService.IsAdmAsync(pessoa))
-                    {
+                    if (await _pessoaService.IsAdmAsync(pessoa)) {
                         TempData["ErrorMessage"] = "Já existe um administrador cadastrado com esse CPF.";
                     }
                     else
@@ -390,7 +379,6 @@ namespace EventoWeb.Controllers
                 }
 
             }
-
             var adminsAtuais = await _pessoaService.GetAllAdmAsync();
             viewModel.Administradores = _mapper.Map<List<PessoaModel>>(adminsAtuais.OrderBy(p => p.Nome).ToList());
             return View(viewModel);
@@ -400,45 +388,54 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> EnviarEmailSenha(PessoaModel viewModel)
         {
-           
             Pessoa pessoa = _pessoaService.Get(viewModel.Id);
-           
-            if (pessoa == null)
-            {
-                TempData["ErrorMessage"] = "Usuário não encontrado.";
-                return RedirectToAction(nameof(DefinirAdministrador));
-            }
-            string email = pessoa.Email;
             var validadorDeEmail = new EmailAddressAttribute();
+            string email = "";
+            if (pessoa != null){
+                String token = await _pessoaService.GerarTokenAsync(pessoa.Cpf);
+                if(String.IsNullOrWhiteSpace(token)){
+                    TempData["ErrorMessage"] = "Não foi possível gerar o token para redefinição de senha.";
+                    return RedirecionamentoPessoa();
+                }
+                email = pessoa.Email;
+                if (validadorDeEmail.IsValid(email)){
+                    if (_pessoaService.EmailConfirmado(email)){
 
-            if (!validadorDeEmail.IsValid(email))
-            {
-                TempData["ErrorMessage"] = "Não é possível enviar a mensagem, o email está incorreto.";
-                return RedirectToAction(nameof(DefinirAdministrador));
+                        var callbackUrl = Url.Page(
+                        pageName: "/Account/ResetPassword",
+                        pageHandler: null,
+                        values: new { area = "Identity", code = token },
+                        protocol: Request.Scheme);
+
+                        var sucesso = await _emailSender.ModeloEmailReset(token, pessoa, callbackUrl);
+                        if (sucesso){
+                            TempData["SuccessMessage"] = "E-mail de redefinição enviado com sucesso!";
+                        }else{
+                            TempData["ErrorMessage"] = "Não foi possível enviar o e-mail.Tente novamente em alguns minutos.";
+                        }
+                        
+                    }else{
+                        TempData["ErrorMessage"] = "E-mail não foi confirmado.";
+                    }
+
+                }else{
+                    TempData["ErrorMessage"] = "Não é possível enviar a mensagem, o email está incorreto.";
+                }
+          
+            }else{
+                TempData["ErrorMessage"] = "Usuário não encontrado.";      
             }
+        
+            return RedirecionamentoPessoa();
 
-            if (!_pessoaService.EmailConfirmado(email))
-            {
-                TempData["ErrorMessage"] = "E-mail não foi confirmado.";
-                return RedirectToAction(nameof(DefinirAdministrador));
-            }
-            
-           String token = await _pessoaService.GerarTokenAsync(pessoa.Cpf);
-
-
-            var callbackUrl = Url.Page(
-            pageName: "/Account/ResetPassword",
-            pageHandler: null,
-            values: new { area = "Identity", code = token }, 
-            protocol: Request.Scheme);
-
-            string assunto = "Redefinição de Senha";
-            string mensagemHtml = $@"<h2>Olá, {pessoa.Nome}!</h2><p>Bora lá alterar sua senha?</p><p>Para redefinir seu acesso, <a href='{callbackUrl}'>clique aqui</a>.</p><br><p><small>Se você não solicitou essa alteração, por favor, ignore este e-mail.</small></p>"; await _emailSender.SendEmailAsync(email, assunto, mensagemHtml);
-
-            TempData["SuccessMessage"] = "E-mail de redefinição enviado com sucesso!";
-            return RedirectToAction(nameof(DefinirAdministrador));
         }
-
+        private ActionResult RedirecionamentoPessoa()
+        {
+            if (User.IsInRole("ADMINISTRADOR")){
+                return RedirectToAction("DefinirAdministrador", "Pessoa");
+            }
+            return RedirectToAction("Index", "Pessoa");
+        }
         // =====================================================================
         // HELPER PRIVADO
         // =====================================================================
