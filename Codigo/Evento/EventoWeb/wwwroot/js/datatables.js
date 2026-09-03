@@ -1,4 +1,6 @@
 $(document).ready(function () {
+	var langUrl = $('#datatable-script').data('lang-url') || '/lib/datatable/js/pt-BR.json';
+
 	$('#tablePessoa').DataTable({
 		order: [[1, 'asc']],
 		columnDefs: [
@@ -9,7 +11,7 @@ $(document).ready(function () {
 		ordering: true,
 		paging: true,
 		language: {
-			url: '/lib/datatable/js/pt-BR.json'
+			url: langUrl
 		}
 	});
 
@@ -25,7 +27,7 @@ $(document).ready(function () {
             paging: true,
             pageLength: 10,
             language: {
-                url: '/lib/datatable/js/pt-BR.json'
+                url: langUrl
             }
         });
     }

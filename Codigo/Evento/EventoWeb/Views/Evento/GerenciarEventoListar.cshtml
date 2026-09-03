@@ -9,41 +9,7 @@
 }
 
 <link href="~/lib/datatable/css/datatables.min.css" rel="stylesheet" />
-<style>
-    .dataTables_filter {
-        float: right;
-        margin-bottom: 16px;
-    }
 
-    .dataTables_length {
-        float: left;
-        margin-bottom: 16px;
-    }
-
-    .dataTables_wrapper .dataTables_paginate .paginate_button {
-        padding: 0.2em 0.5em;
-        margin-left: 2px;
-        color: white !important;
-        background-color: #232ed0;
-        border: none;
-        border-radius: 3px;
-    }
-
-    .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-        background-color: #232ed0;
-    }
-
-    .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-        background-color: #232ed0;
-        color: white !important;
-    }
-
-    .dataTables_filter input:focus {
-        border-color: #232ed0;
-        box-shadow: none;
-        outline: none;
-    }
-</style>
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="blue-normal">@ViewData["Title"]</h2>
@@ -118,5 +84,5 @@
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="~/lib/datatable/js/datatables.min.js"></script>
-    <script src="~/js/datatables.js"></script>
+    <script id="datatable-script" src="~/js/datatables.js" data-lang-url="@Url.Content("~/lib/datatable/js/pt-BR.json")"></script>
 }

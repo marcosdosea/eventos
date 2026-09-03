@@ -226,20 +226,33 @@ body {
 }
 
 /* Custom DataTables Pagination Styling */
-.dataTables_wrapper .dataTables_paginate .paginate_button.current,
-.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
-    color: #FFFFFF !important;
-    background: #232ed0 !important;
-    border: 1px solid #232ed0 !important;
-    border-radius: 4px;
-}
-
 .dataTables_wrapper .dataTables_paginate .paginate_button {
-    border-radius: 4px;
+    padding: 6px 14px !important;
+    margin: 0 4px !important;
+    border: none !important;
+    background: transparent !important;
+    color: #232ed0 !important; /* Texto em azul vibrante para Anterior/Próximo */
+    border-radius: 4px !important;
+    font-weight: 500;
 }
 
 .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: #e9ecef !important;
+    color: #151c7d !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover,
+.dataTables_wrapper .dataTables_paginate span .paginate_button.current {
+    background: #232ed0 !important; /* Fundo azul vibrante igual ao botão Voltar */
+    background-color: #232ed0 !important;
+    background-image: none !important;
     color: #FFFFFF !important;
-    background: #2029bb !important;
-    border: 1px solid #2029bb !important;
+}
+
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+    color: #6c757d !important;
+    background: transparent !important;
+    cursor: not-allowed !important;
 }
