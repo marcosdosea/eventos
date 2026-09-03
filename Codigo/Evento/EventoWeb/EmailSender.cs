@@ -1,3 +1,5 @@
+using Core;
+using Core.Service;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using System.Net;
 using System.Net.Mail;
@@ -38,10 +40,10 @@ namespace EventoWeb
 
             return _client.SendMailAsync(mailMessage);
         }
-
         public async Task<bool> ModeloEmailReset(String token,Pessoa pessoa, String callbackUrl)
         {
             string email = pessoa.Email;
+            
             string assunto = "Redefinição de Senha";
             string caminhoTemplate = Path.Combine(_enviroment.WebRootPath, "templates", "EmailRedefinicaoSenha.html");
             try
