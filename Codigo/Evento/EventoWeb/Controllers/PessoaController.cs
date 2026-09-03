@@ -335,11 +335,9 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> DefinirAdministrador(GestaoAdministradorModel viewModel)
         {
-
-            if (ModelState.IsValid)
-            {
-                if (!_pessoaService.ValidaEmail(viewModel.Email))
-                {
+            var sucesso = true;
+            if (ModelState.IsValid){
+                if (!_pessoaService.ValidaEmail(viewModel.Email)){
                     ModelState.AddModelError("Email", "Por favor, digite um e-mail em um formato válido.");
                 } else if (await _pessoaService.EmailExist(viewModel.Email, viewModel.Cpf)) {
                     ModelState.AddModelError("Email", "O e-mail informado já está em uso.");
@@ -354,28 +352,23 @@ namespace EventoWeb.Controllers
                         Email = viewModel.Email
                     };
 
-                    if (await _pessoaService.IsAdmAsync(pessoa)) {
+                    if (await _pessoaService.IsAdmAsync(pessoa)){
                         TempData["ErrorMessage"] = "Já existe um administrador cadastrado com esse CPF.";
-                    }
-                    else
-                    {
-                        var sucesso = await  _pessoaService.VerificaEdit(pessoa);
-
-                        if (sucesso)
+                    }else{
+                        if (_pessoaService.GetByCpf(pessoa.Cpf) != null)
                         {
+                            sucesso = await _pessoaService.VerificaEdit(pessoa);
+                        }
+                        
+                        if (sucesso){
                             sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 1);
 
-                            if (sucesso)
-                            {
+                            if (sucesso){
                                 TempData["SuccessMessage"] = "Administrador definido com sucesso.";
-                            }
-                            else
-                            {
+                            }else{
                                 TempData["ErrorMessage"] = "Erro ao cadastrar administrador.";
                             }
-                        }
-                        else
-                        {
+                        }else{
                             TempData["ErrorMessage"] = "Erro ao cadastrar administrador.";
                         }
                         
