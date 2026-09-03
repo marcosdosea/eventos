@@ -143,7 +143,7 @@ namespace EventoWeb.Controllers
         [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ExcluirParticipacao(uint id, uint idEvento)
+        public async Task<IActionResult> ExcluirParticipacao(uint id, uint idEvento, uint? idSubEvento)
         {
             var participacao = await _participacaoService.GetByIdAsync(id);
             if (participacao == null)
@@ -170,7 +170,9 @@ namespace EventoWeb.Controllers
             }
 
             await _participacaoService.DeleteAsync(id);
-            return RedirectToAction(nameof(Index), new { idEvento });
+
+            // CORREÇÃO: Agora o redirecionamento repassa o idSubEvento (se existir) para manter a tela no lugar certo
+            return RedirectToAction(nameof(Index), new { idEvento, idSubEvento });
         }
 
         [Authorize(Roles = "ADMINISTRADOR")]
