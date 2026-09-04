@@ -1,0 +1,96 @@
+@using Core.Service
+@inject ITipoeventoService TipoEventoService
+@inject IAreaInteresseService AreaInteresseService
+@inject IEstadosbrasilService EstadosbrasilService
+
+<div class="d-flex align-items-center header-search-container">
+    <div class="position-relative me-2 search-input-wrapper">
+        <form id="headerSearchForm" action="/Home/Buscar" method="get" class="input-group w-100">
+            <span class="input-group-text search-icon-bg">
+                <i class="bi bi-search"></i>
+            </span>
+            <input id="headerSearchInput" type="text" name="TermoBusca" class="form-control custom-input search-input" placeholder="Pesquisar eventos..." aria-label="Search"
+                   value="@Context.Request.Query["TermoBusca"]" oninput="toggleClearButton()">
+            
+            <i class="bi bi-x-circle-fill text-secondary position-absolute clear-search-icon" id="btnClearSearch" 
+               onclick="clearSearch()"></i>
+               
+            <input type="hidden" name="IdTipoEvento" id="hidden_IdTipoEvento" value="@Context.Request.Query["IdTipoEvento"]" />
+            <input type="hidden" name="IdAreaInteresse" id="hidden_IdAreaInteresse" value="@Context.Request.Query["IdAreaInteresse"]" />
+            <input type="hidden" name="Estado" id="hidden_Estado" value="@Context.Request.Query["Estado"]" />
+            <input type="hidden" name="Cidade" id="hidden_Cidade" value="@Context.Request.Query["Cidade"]" />
+            <input type="hidden" name="Data" id="hidden_Data" value="@Context.Request.Query["Data"]" />
+        </form>
+    </div>
+
+    <div class="dropdown filter-dropdown">
+        <button class="btn filter-toggle-btn" type="button" id="filterDropdownMenu" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="Filtros Avançados">
+            <i class="bi bi-funnel"></i>
+        </button>
+        <div class="dropdown-menu dropdown-menu-end p-3 shadow filter-dropdown-menu" aria-labelledby="filterDropdownMenu">
+            <h6 class="dropdown-header px-0 text-dark fw-bold mb-3 filter-header">Filtros de Busca</h6>
+            
+            <div class="mb-3">
+                <label class="form-label small mb-1 fw-bold text-secondary">Área de Interesse</label>
+                <select id="drop_AreaInteresse" class="form-select form-select-sm" onchange="syncFilter('IdAreaInteresse', this.value)">
+                    <option value="">Todas as Áreas</option>
+                    @foreach(var a in AreaInteresseService.GetAll().OrderBy(x => x.Nome))
+                    {
+                        if(Context.Request.Query["IdAreaInteresse"] == a.Id.ToString()) {
+                            <option value="@a.Id" selected>@a.Nome</option>
+                        } else {
+                            <option value="@a.Id">@a.Nome</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small mb-1 fw-bold text-secondary">Tipo de Evento</label>
+                <select id="drop_TipoEvento" class="form-select form-select-sm" onchange="syncFilter('IdTipoEvento', this.value)">
+                    <option value="">Todos os Tipos</option>
+                    @foreach(var t in TipoEventoService.GetAll().OrderBy(x => x.Nome))
+                    {
+                        if(Context.Request.Query["IdTipoEvento"] == t.Id.ToString()) {
+                            <option value="@t.Id" selected>@t.Nome</option>
+                        } else {
+                            <option value="@t.Id">@t.Nome</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small mb-1 fw-bold text-secondary">Estado (UF)</label>
+                <select id="drop_Estado" class="form-select form-select-sm" onchange="syncFilter('Estado', this.value); loadCidades(this.value);">
+                    <option value="">Todos os Estados</option>
+                    @foreach(var e in EstadosbrasilService.GetAll().OrderBy(x => x.Nome))
+                    {
+                        if(Context.Request.Query["Estado"] == e.Estado) {
+                            <option value="@e.Estado" selected>@e.Nome (@e.Estado)</option>
+                        } else {
+                            <option value="@e.Estado">@e.Nome (@e.Estado)</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small mb-1 fw-bold text-secondary">Cidade</label>
+                <select id="drop_Cidade" class="form-select form-select-sm" onchange="syncFilter('Cidade', this.value)" disabled>
+                    <option value="">Selecione um Estado primeiro</option>
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label small mb-1 fw-bold text-secondary">A partir de (Data)</label>
+                <input type="date" id="drop_Data" class="form-control form-control-sm" value="@Context.Request.Query["Data"]" onchange="syncFilter('Data', this.value)" />
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="clearAllFilters()">Limpar</button>
+                <button type="button" class="btn btn-sm btn-primary" onclick="applyFilters()">Aplicar Filtros</button>
+            </div>
+        </div>
+    </div>
+</div>

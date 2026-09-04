@@ -13,13 +13,18 @@ namespace EventoWeb.Controllers
         private readonly IEventoService _eventoService;
         private readonly IMapper _mapper;
         private readonly ITipoeventoService _tipoEventoService;
+        private readonly IAreaInteresseService _areaInteresseService;
+        private readonly IEstadosbrasilService _estadosbrasilService;
 
-        public HomeController(ILogger<HomeController> logger, IEventoService eventoService, IMapper mapper, ITipoeventoService tipoEventoService)
+        public HomeController(ILogger<HomeController> logger, IEventoService eventoService, IMapper mapper, 
+            ITipoeventoService tipoEventoService, IAreaInteresseService areaInteresseService, IEstadosbrasilService estadosbrasilService)
         {
             _logger = logger;
             _eventoService = eventoService;
             _mapper = mapper;
             _tipoEventoService = tipoEventoService;
+            _areaInteresseService = areaInteresseService;
+            _estadosbrasilService = estadosbrasilService;
         }
 
         public IActionResult Index(bool vitrine = false)
@@ -51,7 +56,20 @@ namespace EventoWeb.Controllers
 
             return View(listarEventosModel);
         }
-       
+
+        [HttpGet]
+        public IActionResult Buscar([FromQuery] Core.DTO.EventoFilterDTO filter)
+        {
+            var eventos = _eventoService.Search(filter);
+            var eventosModel = _mapper.Map<List<EventoModel>>(eventos);
+
+            ViewBag.TiposEventos = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_tipoEventoService.GetAll().OrderBy(t => t.Nome), "Id", "Nome", filter.IdTipoEvento);
+            ViewBag.AreasInteresse = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_areaInteresseService.GetAll().OrderBy(a => a.Nome), "Id", "Nome", filter.IdAreaInteresse);
+            ViewBag.Estados = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_estadosbrasilService.GetAll().OrderBy(e => e.Nome), "Estado", "Nome", filter.Estado);
+            ViewBag.FiltroAtual = filter;
+
+            return View(eventosModel);
+        }
 
         // Outras ações do controlador
         public IActionResult Privacy()

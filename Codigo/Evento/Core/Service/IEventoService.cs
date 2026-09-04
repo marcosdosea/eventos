@@ -1,4 +1,4 @@
-﻿using Core.DTO;
+using Core.DTO;
 
 namespace Core.Service
 {
@@ -23,5 +23,7 @@ namespace Core.Service
 		string GetNomeById(uint id);
 
         void AtualizarVagasDisponiveis(uint idEvento);
+
+        IEnumerable<Evento> Search(EventoFilterDTO filter);
     }
 }

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" type="text/css" href="~/css/style.css">
     <link rel="stylesheet" type="text/css" href="~/css/headerAndFooter.css">
+    <link rel="stylesheet" type="text/css" href="~/css/headerSearch.css">
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
 </head>
@@ -27,14 +28,8 @@
                     </button>
                     <div class="collapse navbar-collapse" id="navbarSupportedContent">
                         <ul class="navbar-nav me-auto">
-                            <li class="nav-item">
-                                <div class="input-group me-3" style="width: auto;">
-                                    <span class="input-group-text" style="border-radius: 10px 0 0 10px; background-color: #fff; border-right: 0; border-color: blue;">
-                                        <i class="bi bi-search"></i>
-                                    </span>
-                                    <input type="text" class="form-control custom-input" placeholder="Pesquisar eventos..." aria-label="Search"
-                                           style="border-radius: 0 10px 10px 0; border-left: 0; border-color: blue;">
-                                </div>
+                            <li class="nav-item d-flex align-items-center">
+                                <partial name="_HeaderSearch" />
                             </li>
                             <li class="nav-item menu-view"><a class="nav-link">Localização</a></li>
                             <li class="nav-item menu-view"><a class="nav-link" asp-controller="Evento" asp-action="Create">Seu evento aqui!</a></li>
@@ -104,6 +99,8 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/formHelpers.js"></script>
+    <script src="~/js/headerSearch.js"></script>
+    
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 

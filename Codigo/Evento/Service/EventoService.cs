@@ -1,4 +1,4 @@
-﻿using Core;
+using Core;
 using Core.Service;
 using Core.DTO;
 using Microsoft.EntityFrameworkCore;
@@ -242,6 +242,50 @@ namespace Service
 
                 _context.SaveChanges();
             }
+        }
+
+        public IEnumerable<Evento> Search(EventoFilterDTO filter)
+        {
+            var query = _context.Eventos
+                .Include(e => e.IdTipoEventoNavigation)
+                .Include(e => e.IdAreaInteresses)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(filter.TermoBusca))
+            {
+                var termo = filter.TermoBusca.ToLower();
+                query = query.Where(e => e.Nome.ToLower().Contains(termo) || 
+                                         (e.Descricao != null && e.Descricao.ToLower().Contains(termo)));
+            }
+
+            if (filter.IdAreaInteresse.HasValue)
+            {
+                query = query.Where(e => e.IdAreaInteresses.Any(ai => ai.Id == filter.IdAreaInteresse.Value));
+            }
+
+            if (filter.IdTipoEvento.HasValue)
+            {
+                query = query.Where(e => e.IdTipoEvento == filter.IdTipoEvento.Value);
+            }
+
+            if (filter.Data.HasValue)
+            {
+                query = query.Where(e => e.DataInicio.HasValue && e.DataInicio.Value.Date == filter.Data.Value.Date);
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.Estado))
+            {
+                query = query.Where(e => e.Estado == filter.Estado);
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.Cidade))
+            {
+                query = query.Where(e => e.Cidade == filter.Cidade);
+            }
+
+            query = query.Where(e => e.Status == "A" || e.Status == "C");
+
+            return query.AsNoTracking().ToList();
         }
 
     }
