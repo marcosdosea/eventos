@@ -25,7 +25,8 @@ namespace Service.Tests
         public void Initialize()
         {
             var builder = new DbContextOptionsBuilder<EventoContext>();
-            builder.UseInMemoryDatabase("Evento");
+            builder.UseInMemoryDatabase("Evento")
+                .ConfigureWarnings(w => w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.InMemoryEventId.TransactionIgnoredWarning));
             var options = builder.Options;
 
             _context = new EventoContext(options);
@@ -269,39 +270,491 @@ namespace Service.Tests
             Assert.AreEqual((uint)1, firstPessoa.Id);
         }
 
-        /*
-        Não estava passando, pois a arquitetura de testes atual 
-        não suporta as transações.
-        */
+        [TestMethod()]
+        public async Task GetAllAdmAsync_ReturnsOnlyAdmins()
+        {
+            var pessoaAdm = new Pessoa
+            {
+                Id = 4,
+                Nome = "Admin Teste",
+                NomeCracha = "Admin",
+                Cpf = "111.111.111-11",
+                Sexo = "M",
+                Email = "admin@teste.com",
+                Telefone1 = "7999999999"
+            };
+            _context.Pessoas.Add(pessoaAdm);
+            await _context.SaveChangesAsync();
 
-        //[TestMethod()]
-        //public async Task CreateGestorModelTest()
-        //{
-        //    var pessoa = _pessoaService.Get(1);
-        //    await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 2);
-        //    var usuario = await _userManager.FindByNameAsync(pessoa.Cpf);
-        //    Assert.IsNotNull(usuario);
-        //    Assert.IsTrue(await _userManager.IsInRoleAsync(usuario, "GESTOR"));
-        //}
+            var usuarioAdm = new UsuarioIdentity
+            {
+                UserName = pessoaAdm.Cpf,
+                Email = pessoaAdm.Email,
+                PhoneNumber = pessoaAdm.Telefone1,
+                EmailConfirmed = true
+            };
+            await _userManager.CreateAsync(usuarioAdm, "Temp@1234!");
+            await _userManager.AddToRoleAsync(usuarioAdm, "ADMINISTRADOR");
 
-        //[TestMethod()]
-        //public async Task CreateAdministradorAsync()
-        //{
-        //    var pessoa = new Pessoa
-        //    {
-        //        Id = 4,
-        //        Nome = "Sinéad O'Connor Null Nullberg",
-        //        NomeCracha = "Sineád O'Connor",
-        //        Cpf = "883.069.820-29",
-        //        Email = "sine_connor.9@academico.ufs.br",
-        //        Telefone1 = "7999990011"
-        //    };
-        //    await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 1);
-        //    var usuario = await _userManager.FindByNameAsync(pessoa.Cpf);
-        //    Assert.IsNotNull(usuario);
-        //    Assert.IsTrue(await _userManager.IsInRoleAsync(usuario, "ADMINISTRADOR"));
-        //    Assert.AreEqual(pessoa.Email, usuario.Email);
-        //    Assert.AreEqual(pessoa.Telefone1, usuario.PhoneNumber);
-        //}
+            // Pessoa sem vínculo Identity não deve aparecer na lista de admins
+            var pessoaSemUsuario = new Pessoa
+            {
+                Id = 5,
+                Nome = "Sem Usuario",
+                NomeCracha = "SemUsuario",
+                Cpf = "555.555.555-55",
+                Sexo = "M",
+                Email = "semusuario@teste.com",
+                Telefone1 = "7999999998"
+            };
+            _context.Pessoas.Add(pessoaSemUsuario);
+
+            // Pessoa com usuário mas sem papel de admin não deve aparecer
+            var pessoaComum = _pessoaService.Get(1);
+            var usuarioComum = new UsuarioIdentity
+            {
+                UserName = pessoaComum.Cpf,
+                Email = pessoaComum.Email,
+                PhoneNumber = pessoaComum.Telefone1,
+                EmailConfirmed = true
+            };
+            await _userManager.CreateAsync(usuarioComum, "Temp@1234!");
+            await _userManager.AddToRoleAsync(usuarioComum, "USUARIO");
+            await _context.SaveChangesAsync();
+
+            var admins = await _pessoaService.GetAllAdmAsync();
+
+            Assert.IsNotNull(admins);
+            Assert.AreEqual(1, admins.Count);
+            Assert.AreEqual((uint)4, admins[0].Id);
+            Assert.AreEqual("Admin Teste", admins[0].Nome);
+            Assert.AreEqual("Admin", admins[0].NomeCracha);
+            Assert.AreEqual(pessoaAdm.Cpf, admins[0].Cpf);
+            Assert.AreEqual("admin@teste.com", admins[0].Email);
+            Assert.AreEqual("7999999999", admins[0].Telefone1);
+            Assert.IsFalse(admins.Any(a => a.Cpf == pessoaComum.Cpf));
+            Assert.IsFalse(admins.Any(a => a.Cpf == pessoaSemUsuario.Cpf));
+        }
+
+        [TestMethod()]
+        public async Task GetAllAdmAsync_ReturnsEmpty_WhenNoAdmins()
+        {
+            var admins = await _pessoaService.GetAllAdmAsync();
+
+            Assert.IsNotNull(admins);
+            Assert.AreEqual(0, admins.Count);
+        }
+
+        [TestMethod()]
+        public async Task IsAdmAsync_ReturnsTrue_WhenUserIsAdmin()
+        {
+            var pessoa = _pessoaService.Get(1);
+            var usuario = new UsuarioIdentity
+            {
+                UserName = pessoa.Cpf,
+                Email = pessoa.Email,
+                PhoneNumber = pessoa.Telefone1,
+                EmailConfirmed = true
+            };
+            await _userManager.CreateAsync(usuario, "Temp@1234!");
+            await _userManager.AddToRoleAsync(usuario, "ADMINISTRADOR");
+
+            var isAdm = await _pessoaService.IsAdmAsync(pessoa);
+
+            Assert.IsTrue(isAdm);
+        }
+
+        [TestMethod()]
+        public async Task IsAdmAsync_ReturnsFalse_WhenUserIsNotAdmin()
+        {
+            var pessoa = _pessoaService.Get(1);
+            var usuario = new UsuarioIdentity
+            {
+                UserName = pessoa.Cpf,
+                Email = pessoa.Email,
+                PhoneNumber = pessoa.Telefone1,
+                EmailConfirmed = true
+            };
+            await _userManager.CreateAsync(usuario, "Temp@1234!");
+            await _userManager.AddToRoleAsync(usuario, "USUARIO");
+
+            var isAdm = await _pessoaService.IsAdmAsync(pessoa);
+
+            Assert.IsFalse(isAdm);
+        }
+
+        [TestMethod()]
+        public async Task IsAdmAsync_ReturnsFalse_WhenUserNotFound()
+        {
+            var pessoa = new Pessoa
+            {
+                Id = 999,
+                Nome = "Não Existe",
+                Cpf = "999.999.999-99",
+                Email = "naoexiste@teste.com"
+            };
+
+            var isAdm = await _pessoaService.IsAdmAsync(pessoa);
+
+            Assert.IsFalse(isAdm);
+        }
+
+        [TestMethod()]
+        public async Task CreateAdministradorAsync_CreatesAdminWithRole()
+        {
+            var pessoa = new Pessoa
+            {
+                Id = 4,
+                Nome = "Novo Admin",
+                NomeCracha = "Admin",
+                Cpf = "111.111.111-11",
+                Sexo = "M",
+                Cep = "48370-000",
+                Rua = "Rua Teste",
+                Bairro = "Centro",
+                Cidade = "Irece",
+                Estado = "BA",
+                Numero = "100",
+                Complemento = "casa",
+                Email = "novo@admin.com",
+                Telefone1 = "7999999999",
+                Telefone2 = "NULL"
+            };
+
+            var sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 1);
+
+            Assert.IsTrue(sucesso);
+            var usuario = await _userManager.FindByNameAsync(pessoa.Cpf);
+            Assert.IsNotNull(usuario);
+            Assert.IsTrue(await _userManager.IsInRoleAsync(usuario, "ADMINISTRADOR"));
+            Assert.AreEqual(pessoa.Cpf, usuario.UserName);
+            Assert.AreEqual(pessoa.Email, usuario.Email);
+            Assert.AreEqual(pessoa.Telefone1, usuario.PhoneNumber);
+            Assert.IsTrue(usuario.EmailConfirmed);
+
+            // Pessoa deve estar persistida no contexto
+            var pessoaPersistida = _pessoaService.GetByCpf(pessoa.Cpf);
+            Assert.IsNotNull(pessoaPersistida);
+            Assert.AreEqual("Novo Admin", pessoaPersistida.Nome);
+            Assert.AreEqual("novo@admin.com", pessoaPersistida.Email);
+            Assert.AreEqual(4, _pessoaService.GetAll().Count());
+        }
+
+        [TestMethod()]
+        public async Task CreateAdministradorAsync_ReturnsFalse_WhenAdminAlreadyExists()
+        {
+            var pessoaExistente = _pessoaService.Get(1);
+            var usuario = new UsuarioIdentity
+            {
+                UserName = pessoaExistente.Cpf,
+                Email = pessoaExistente.Email,
+                PhoneNumber = pessoaExistente.Telefone1,
+                EmailConfirmed = true
+            };
+            await _userManager.CreateAsync(usuario, "Temp@1234!");
+            await _userManager.AddToRoleAsync(usuario, "ADMINISTRADOR");
+
+            var pessoaNova = new Pessoa
+            {
+                Id = 4,
+                Nome = "Outro Admin",
+                NomeCracha = "Admin2",
+                Cpf = pessoaExistente.Cpf,
+                Sexo = "M",
+                Email = "outro@admin.com",
+                Telefone1 = "7999999999"
+            };
+
+            var sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoaNova, 0, 1);
+
+            Assert.IsFalse(sucesso);
+            // Nenhuma pessoa duplicada deve ser criada
+            Assert.AreEqual(3, _pessoaService.GetAll().Count());
+            var usuarioMantido = await _userManager.FindByNameAsync(pessoaExistente.Cpf);
+            Assert.IsNotNull(usuarioMantido);
+            Assert.IsTrue(await _userManager.IsInRoleAsync(usuarioMantido, "ADMINISTRADOR"));
+        }
+
+        [TestMethod()]
+        public async Task CreatePessoaIdentityComPapelAsync_CreatesGestor_WhenIdPapelIs2()
+        {
+            var pessoa = new Pessoa
+            {
+                Id = 4,
+                Nome = "Novo Gestor",
+                NomeCracha = "Gestor",
+                Cpf = "222.222.222-22",
+                Sexo = "M",
+                Email = "gestor@teste.com",
+                Telefone1 = "7999999999"
+            };
+            _pessoaService.Create(pessoa);
+
+            var usuario = new UsuarioIdentity
+            {
+                UserName = pessoa.Cpf,
+                Email = pessoa.Email,
+                PhoneNumber = pessoa.Telefone1,
+                EmailConfirmed = true
+            };
+            await _userManager.CreateAsync(usuario, "Temp@1234!");
+
+            var sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 2);
+
+            Assert.IsTrue(sucesso);
+            var usuarioResult = await _userManager.FindByNameAsync(pessoa.Cpf);
+            Assert.IsNotNull(usuarioResult);
+            Assert.IsTrue(await _userManager.IsInRoleAsync(usuarioResult, "GESTOR"));
+        }
+
+        [TestMethod()]
+        public async Task CreatePessoaIdentityComPapelAsync_CreatesUsuario_WhenIdPapelIs4()
+        {
+            var pessoa = new Pessoa
+            {
+                Id = 4,
+                Nome = "Novo Usuario",
+                NomeCracha = "Usuario",
+                Cpf = "333.333.333-33",
+                Sexo = "M",
+                Email = "usuario@teste.com",
+                Telefone1 = "7999999999"
+            };
+            _pessoaService.Create(pessoa);
+
+            var usuario = new UsuarioIdentity
+            {
+                UserName = pessoa.Cpf,
+                Email = pessoa.Email,
+                PhoneNumber = pessoa.Telefone1,
+                EmailConfirmed = true
+            };
+            await _userManager.CreateAsync(usuario, "Temp@1234!");
+
+            var sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 4);
+
+            Assert.IsTrue(sucesso);
+            var usuarioResult = await _userManager.FindByNameAsync(pessoa.Cpf);
+            Assert.IsNotNull(usuarioResult);
+            Assert.IsTrue(await _userManager.IsInRoleAsync(usuarioResult, "USUARIO"));
+            Assert.IsFalse(await _userManager.IsInRoleAsync(usuarioResult, "ADMINISTRADOR"));
+            Assert.IsNotNull(_pessoaService.GetByCpf(pessoa.Cpf));
+        }
+
+        [TestMethod()]
+        public async Task CreatePessoaIdentityComPapelAsync_Throws_WhenPapelInvalido()
+        {
+            var pessoa = new Pessoa
+            {
+                Id = 4,
+                Nome = "Papel Invalido",
+                NomeCracha = "Invalido",
+                Cpf = "444.444.444-44",
+                Sexo = "M",
+                Email = "invalido@teste.com",
+                Telefone1 = "7999999999"
+            };
+            _pessoaService.Create(pessoa);
+            var usuario = new UsuarioIdentity
+            {
+                UserName = pessoa.Cpf,
+                Email = pessoa.Email,
+                PhoneNumber = pessoa.Telefone1,
+                EmailConfirmed = true
+            };
+            await _userManager.CreateAsync(usuario, "Temp@1234!");
+
+            await Assert.ThrowsExceptionAsync<Exception>(() =>
+                _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 99));
+        }
+
+        [TestMethod()]
+        public void ValidaEmail_ReturnsTrue_ForValidEmail()
+        {
+            Assert.IsTrue(_pessoaService.ValidaEmail("admin@teste.com"));
+            Assert.IsTrue(_pessoaService.ValidaEmail("nome.sobrenome@dominio.com.br"));
+        }
+
+        [TestMethod()]
+        public void ValidaEmail_ReturnsFalse_WhenDomainHasNoDot()
+        {
+            // MailAddress aceita, mas o domínio sem ponto é rejeitado pelo regex
+            Assert.IsFalse(_pessoaService.ValidaEmail("teste@example"));
+        }
+
+        [TestMethod()]
+        public async Task EmailExist_ReturnsFalse_WhenEmailNotRegistered()
+        {
+            Assert.IsFalse(await _pessoaService.EmailExist("ninguem@teste.com", "000.000.000-00"));
+        }
+
+        [TestMethod()]
+        public async Task EmailExist_ReturnsFalse_WhenEmailBelongsToSameCpf()
+        {
+            var pessoa = _pessoaService.Get(1);
+            var usuario = new UsuarioIdentity
+            {
+                UserName = pessoa.Cpf,
+                Email = pessoa.Email,
+                PhoneNumber = pessoa.Telefone1,
+                EmailConfirmed = true
+            };
+            await _userManager.CreateAsync(usuario, "Temp@1234!");
+
+            Assert.IsFalse(await _pessoaService.EmailExist(pessoa.Email, pessoa.Cpf));
+        }
+
+        [TestMethod()]
+        public async Task EmailExist_ReturnsTrue_WhenEmailBelongsToOtherCpf()
+        {
+            var pessoa = _pessoaService.Get(1);
+            var usuario = new UsuarioIdentity
+            {
+                UserName = pessoa.Cpf,
+                Email = pessoa.Email,
+                PhoneNumber = pessoa.Telefone1,
+                EmailConfirmed = true
+            };
+            await _userManager.CreateAsync(usuario, "Temp@1234!");
+
+            Assert.IsTrue(await _pessoaService.EmailExist(pessoa.Email, "000.000.000-00"));
+        }
+
+        [TestMethod()]
+        public async Task VerificaEdit_ReturnsFalse_WhenPessoaIsNull()
+        {
+            Assert.IsFalse(await _pessoaService.VerificaEdit(null));
+        }
+
+        [TestMethod()]
+        public async Task VerificaEdit_ReturnsFalse_WhenCpfNotFound()
+        {
+            var pessoa = new Pessoa
+            {
+                Id = 99,
+                Nome = "Fantasma",
+                Cpf = "000.000.000-00",
+                Email = "fantasma@teste.com",
+                Telefone1 = "7999999999"
+            };
+
+            Assert.IsFalse(await _pessoaService.VerificaEdit(pessoa));
+        }
+
+        [TestMethod()]
+        public async Task VerificaEdit_ReturnsTrue_WithoutChanges()
+        {
+            var pessoaAtual = _pessoaService.Get(1);
+            var pessoaIgual = new Pessoa
+            {
+                Id = pessoaAtual.Id,
+                Nome = pessoaAtual.Nome,
+                NomeCracha = pessoaAtual.NomeCracha,
+                Cpf = pessoaAtual.Cpf,
+                Sexo = pessoaAtual.Sexo,
+                Email = pessoaAtual.Email,
+                Telefone1 = pessoaAtual.Telefone1,
+                Telefone2 = pessoaAtual.Telefone2
+            };
+
+            var resultado = await _pessoaService.VerificaEdit(pessoaIgual);
+
+            Assert.IsTrue(resultado);
+            var mantida = _pessoaService.Get(1);
+            Assert.AreEqual(pessoaAtual.Nome, mantida.Nome);
+            Assert.AreEqual(pessoaAtual.Email, mantida.Email);
+        }
+
+        [TestMethod()]
+        public async Task VerificaEdit_Updates_WhenDataChanges()
+        {
+            var pessoaAtualizada = new Pessoa
+            {
+                Nome = "João Vitor Atualizado",
+                NomeCracha = "João",
+                Cpf = "040.268.930-57",
+                Email = "novoemail@teste.com",
+                Telefone1 = "7999990000",
+                Telefone2 = "NULL"
+            };
+
+            var resultado = await _pessoaService.VerificaEdit(pessoaAtualizada);
+
+            Assert.IsTrue(resultado);
+            var verificada = _pessoaService.Get(1);
+            Assert.AreEqual((uint)1, verificada.Id);
+            Assert.AreEqual("João Vitor Atualizado", verificada.Nome);
+            Assert.AreEqual("novoemail@teste.com", verificada.Email);
+            Assert.AreEqual("7999990000", verificada.Telefone1);
+            // Sexo é preservado do registro atual
+            Assert.AreEqual("M", verificada.Sexo);
+        }
+
+        [TestMethod()]
+        public async Task Delete_ReturnsFalse_ForLastAdministrator()
+        {
+            var pessoa = _pessoaService.Get(1);
+            var usuario = new UsuarioIdentity
+            {
+                UserName = pessoa.Cpf,
+                Email = pessoa.Email,
+                PhoneNumber = pessoa.Telefone1,
+                EmailConfirmed = true
+            };
+            await _userManager.CreateAsync(usuario, "Temp@1234!");
+            await _userManager.AddToRoleAsync(usuario, "ADMINISTRADOR");
+
+            var sucesso = await _pessoaService.Delete(1);
+
+            Assert.IsFalse(sucesso);
+            // Último admin não pode ser removido: pessoa permanece no contexto
+            Assert.IsNotNull(_pessoaService.Get(1));
+            Assert.AreEqual(3, _pessoaService.GetAll().Count());
+            Assert.IsTrue(await _userManager.IsInRoleAsync(usuario, "ADMINISTRADOR"));
+        }
+
+        [TestMethod()]
+        public async Task Delete_RemovesAdminRole_WhenOtherAdminExists()
+        {
+            foreach (var pessoaBase in _pessoaService.GetAll().Take(2).ToList())
+            {
+                var usuarioBase = new UsuarioIdentity
+                {
+                    UserName = pessoaBase.Cpf,
+                    Email = pessoaBase.Email,
+                    PhoneNumber = pessoaBase.Telefone1,
+                    EmailConfirmed = true
+                };
+                await _userManager.CreateAsync(usuarioBase, "Temp@1234!");
+                await _userManager.AddToRoleAsync(usuarioBase, "ADMINISTRADOR");
+            }
+
+            var pessoa = _pessoaService.Get(1);
+            var sucesso = await _pessoaService.Delete(1);
+
+            Assert.IsTrue(sucesso);
+            var usuario = await _userManager.FindByNameAsync(pessoa.Cpf);
+            Assert.IsNotNull(usuario);
+            Assert.IsFalse(await _userManager.IsInRoleAsync(usuario, "ADMINISTRADOR"));
+            // Sem outros papéis, o usuário é rebaixado para USUARIO e a pessoa é mantida
+            Assert.IsTrue(await _userManager.IsInRoleAsync(usuario, "USUARIO"));
+            Assert.IsNotNull(_pessoaService.Get(1));
+        }
+
+        [TestMethod()]
+        public async Task Delete_RemovesCommonPerson()
+        {
+            var sucesso = await _pessoaService.Delete(2);
+
+            Assert.IsTrue(sucesso);
+            Assert.IsNull(_pessoaService.Get(2));
+            Assert.AreEqual(2, _pessoaService.GetAll().Count());
+        }
+
+        [TestMethod()]
+        public async Task Delete_ReturnsFalse_WhenPersonNotFound()
+        {
+            Assert.IsFalse(await _pessoaService.Delete(999));
+        }
     }
 }
