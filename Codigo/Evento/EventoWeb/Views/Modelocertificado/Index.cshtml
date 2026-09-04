@@ -1,9 +1,11 @@
-﻿@* Views/Modelocertificado/Index.cshtml *@
+@* Views/Modelocertificado/Index.cshtml *@
 @model IEnumerable<EventoWeb.Models.ModelocertificadoModel>
 @{
     ViewData["Title"] = "Modelos de Certificado";
 }
-<h1>Modelos de Certificado</h1>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">Modelos de Certificado</h1>
+</div>
 <p>
     <a asp-action="Create" class="btn btn-primary">Novo Modelo</a>
 </p>
@@ -32,3 +34,9 @@
         }
     </tbody>
 </table>
+<br />
+<div class="d-flex justify-content-end">
+    <button type="button" class="btn-blue-normal btn btn-lg mb-2 ">
+        <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@ViewData["EventoId"]" style="text-decoration:none; color:white">Voltar</a>
+    </button>
+</div>

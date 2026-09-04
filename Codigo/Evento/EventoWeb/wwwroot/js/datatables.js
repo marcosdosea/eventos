@@ -1,4 +1,6 @@
-﻿$(document).ready(function () {
+$(document).ready(function () {
+	var langUrl = $('#datatable-script').data('lang-url') || '/lib/datatable/js/pt-BR.json';
+
 	$('#tablePessoa').DataTable({
 		order: [[1, 'asc']],
 		columnDefs: [
@@ -9,7 +11,24 @@
 		ordering: true,
 		paging: true,
 		language: {
-			url: '@Url.Content("~/lib/datatable/js/pt-BR.json")'
+			url: langUrl
 		}
 	});
+
+    if ($('#tableGestorEventListar').length) {
+        $('#tableGestorEventListar').DataTable({
+            columnDefs: [
+                { orderable: true, targets: [0, 1, 2, 3, 4] },
+                { orderable: false, targets: [5] }
+            ],
+            order: [[1, 'desc']],
+            searching: true,
+            ordering: true,
+            paging: true,
+            pageLength: 10,
+            language: {
+                url: langUrl
+            }
+        });
+    }
 });
