@@ -3,8 +3,11 @@ using Core;
 using Core.Service;
 using EventoWeb.Mappers;
 using EventoWeb.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
+using System.Reflection;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -246,6 +249,20 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
+        }
+
+        // Issue #667: disparo de reset de senha precisa exigir ADMINISTRADOR
+        [TestMethod()]
+        public void EnviarEmailSenha_ExigeAdministrador()
+        {
+            var metodo = typeof(PessoaController).GetMethod(
+                "EnviarEmailSenha", new Type[] { typeof(PessoaModel) });
+            Assert.IsNotNull(metodo, "Ação EnviarEmailSenha não encontrada.");
+
+            var autorizacao = metodo!.GetCustomAttributes(typeof(AuthorizeAttribute), false)
+                .Cast<AuthorizeAttribute>().FirstOrDefault();
+            Assert.IsNotNull(autorizacao, "POST EnviarEmailSenha sem [Authorize] — falha de controle de acesso (issue #667).");
+            Assert.AreEqual("ADMINISTRADOR", autorizacao!.Roles, "POST EnviarEmailSenha com cargos incorretos.");
         }
 
 

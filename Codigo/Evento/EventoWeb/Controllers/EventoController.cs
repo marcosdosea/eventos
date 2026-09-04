@@ -146,6 +146,7 @@ namespace EventoWeb.Controllers
         }
 
 
+        [Authorize(Roles = "ADMINISTRADOR")]
         [HttpPost]
         [Route("Edit/{id}")]
         [ValidateAntiForgeryToken]
@@ -211,6 +212,7 @@ namespace EventoWeb.Controllers
         }
 
 
+        [Authorize(Roles = "ADMINISTRADOR")]
         [HttpPost]
         [Route("Delete/{id}")]
         [ValidateAntiForgeryToken]
@@ -235,6 +237,7 @@ namespace EventoWeb.Controllers
         }
 
 
+        [Authorize(Roles = "ADMINISTRADOR")]
         [HttpPost]
         [Route("CreateGestor")]
         [ValidateAntiForgeryToken]
@@ -320,11 +323,22 @@ namespace EventoWeb.Controllers
         }
 
 
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
         [HttpPost]
         [Route("CreateColaborador")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateColaborador(GestaoPapelModel gestaoPapelModel)
         {
+            var idEventoColaborador = gestaoPapelModel.Evento?.Id ?? 0;
+            var isAdminColaborador = User.IsInRole("ADMINISTRADOR");
+            var gestorColaborador = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEventoColaborador);
+            if (!isAdminColaborador && gestorColaborador == null)
+            {
+                TempData.Clear();
+                TempData["Message"] = "Você não tem permissão para criar um colaborador!";
+                return RedirectToAction("GerenciarEvento", "Evento", new { idEvento = idEventoColaborador });
+            }
+
             if (ModelState.IsValid)
             {
                 var pessoaExistente = _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
@@ -437,11 +451,23 @@ namespace EventoWeb.Controllers
         }
 
 
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
         [HttpPost]
         [Route("CreateParticipante")]
         [ValidateAntiForgeryToken]
         public ActionResult CreateParticipante(GestaoPapelModel gestaoPapelModel)
         {
+            var idEventoParticipante = gestaoPapelModel.Evento?.Id ?? 0;
+            var isAdminParticipante = User.IsInRole("ADMINISTRADOR");
+            var gestorParticipante = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEventoParticipante);
+            var colaboradorParticipante = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, idEventoParticipante);
+            if (!isAdminParticipante && gestorParticipante == null && colaboradorParticipante == null)
+            {
+                TempData.Clear();
+                TempData["Message"] = "Você não tem permissão para criar um participante!";
+                return RedirectToAction("GerenciarEvento", new { idEvento = idEventoParticipante });
+            }
+
             if (ModelState.IsValid)
             {
                 var pessoa = _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
@@ -472,10 +498,43 @@ namespace EventoWeb.Controllers
         }
 
 
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
         [HttpPost]
         [Route("DeletePessoaPapel")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeletePessoaPapel(uint idPessoa, uint idEvento, uint idPapel)
         {
+            var isAdminDelete = User.IsInRole("ADMINISTRADOR");
+            var gestorDelete = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
+            var colaboradorDelete = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, idEvento);
+
+            bool autorizado = isAdminDelete;
+            if (!autorizado)
+            {
+                switch (idPapel)
+                {
+                    case 2:
+                        autorizado = false;
+                        break;
+                    case 3:
+                        autorizado = gestorDelete != null;
+                        break;
+                    case 4:
+                        autorizado = gestorDelete != null || colaboradorDelete != null;
+                        break;
+                    default:
+                        autorizado = false;
+                        break;
+                }
+            }
+
+            if (!autorizado)
+            {
+                TempData.Clear();
+                TempData["Message"] = "Você não tem permissão para remover esta pessoa!";
+                return RedirectToAction("GerenciarEvento", new { idEvento });
+            }
+
             var pessoa = _pessoaService.Get(idPessoa);
             if (pessoa == null || string.IsNullOrEmpty(pessoa.Cpf))
             {
