@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Core;
 using Microsoft.AspNetCore.Mvc;
 using EventoWeb.Models;
@@ -13,6 +14,8 @@ using Core.DTO;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using System.Reflection;
+using System.Linq;
 
 namespace EventoWeb.Controllers.Tests
 {
@@ -302,6 +305,28 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.AreEqual("GerenciarEvento", redirectToActionResult.ActionName);
+        }
+
+        // Issue #667: POSTs que alteram dados precisam exigir o cargo correto (IDOR/Broken Access Control)
+        [TestMethod()]
+        [DataRow("Edit", new Type[] { typeof(uint), typeof(EventoModel) }, "ADMINISTRADOR")]
+        [DataRow("Delete", new Type[] { typeof(uint), typeof(EventoModel) }, "ADMINISTRADOR")]
+        [DataRow("CreateGestor", new Type[] { typeof(GestaoPapelModel) }, "ADMINISTRADOR")]
+        [DataRow("CreateColaborador", new Type[] { typeof(GestaoPapelModel) }, "ADMINISTRADOR,GESTOR")]
+        [DataRow("CreateParticipante", new Type[] { typeof(GestaoPapelModel) }, "ADMINISTRADOR,GESTOR,COLABORADOR")]
+        [DataRow("DeletePessoaPapel", new Type[] { typeof(uint), typeof(uint), typeof(uint) }, "ADMINISTRADOR,GESTOR,COLABORADOR")]
+        public void Post_ExigeCargoCorreto(string nomeAcao, Type[] tiposParametros, string cargosEsperados)
+        {
+            var metodo = typeof(EventoController).GetMethod(nomeAcao, tiposParametros);
+            Assert.IsNotNull(metodo, $"Ação {nomeAcao} não encontrada.");
+
+            var autorizacao = metodo!.GetCustomAttributes(typeof(AuthorizeAttribute), false)
+                .Cast<AuthorizeAttribute>().FirstOrDefault();
+            Assert.IsNotNull(autorizacao, $"POST {nomeAcao} sem [Authorize] — falha de controle de acesso (issue #667).");
+            Assert.AreEqual(cargosEsperados, autorizacao!.Roles, $"POST {nomeAcao} com cargos incorretos.");
+
+            var antiFalsificacao = metodo.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), false);
+            Assert.IsTrue(antiFalsificacao.Length > 0, $"POST {nomeAcao} sem [ValidateAntiForgeryToken].");
         }
 
         private EventoModel GetNewEvento()
