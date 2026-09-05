@@ -599,7 +599,9 @@ namespace EventoWeb.Controllers
                 Status = e.Status,
                 IdTipoEvento = (uint)e.IdTipoEvento,
                 NomeTipoEvento = tiposEvento.ContainsKey((uint)e.IdTipoEvento) ? tiposEvento[(uint)e.IdTipoEvento] : "Tipo não encontrado"
-            }).ToList();
+            })
+            .OrderByDescending(e => e.DataInicio)
+            .ToList();
 
             return View(listarEventosModel);
         }

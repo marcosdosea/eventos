@@ -1,10 +1,10 @@
-﻿@model EventoWeb.Models.EventoModel
+@model EventoWeb.Models.EventoModel
 
 @{
     ViewData["Title"] = "GestorEditarEvento";
 }
 
-<h1 class="blue-normal">Gerir Evento</h1>
+<h1 class="blue-normal">Editar Evento</h1>
 <div class="row">
     <form asp-action="GestorEditarEvento" enctype="multipart/form-data">
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
@@ -284,7 +284,7 @@
                 <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
             </div>
             <div class="form-group">
-                <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Model..Id" class="btn btn-outline-danger">Voltar</a>
+                <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Model.Id" class="btn btn-outline-danger">Voltar</a>
             </div>
         </div>
     </form>
