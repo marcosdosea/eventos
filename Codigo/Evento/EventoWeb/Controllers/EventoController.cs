@@ -442,32 +442,75 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult CreateParticipante(GestaoPapelModel gestaoPapelModel)
         {
+            var eventoId = gestaoPapelModel?.Evento?.Id ?? 0;
+
             if (ModelState.IsValid)
             {
-                var pessoa = _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
-                var idEvento = gestaoPapelModel.Evento.Id;
+                var cpfLimpo = gestaoPapelModel.Pessoa?.Cpf?.Replace(".", "").Replace("-", "").Trim() ?? string.Empty;
 
-                var papel = _inscricaoService.GetPapelPessoaByEvento(pessoa.Id, idEvento);
-
-                if (papel == 4)
+                if (string.IsNullOrWhiteSpace(cpfLimpo))
                 {
-                    ModelState.AddModelError(string.Empty, "A pessoa selecionada já é um participante.");
-                    gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
-                    gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 4);
+                    ModelState.AddModelError("Pessoa.Cpf", "Informe um CPF válido.");
+                    gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(eventoId);
+                    gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(eventoId, 4);
                     return View(gestaoPapelModel);
                 }
 
-              
+                // Localiza a pessoa pelo CPF (limpo ou formatado).
+                var pessoa = _pessoaService.GetByCpf(cpfLimpo) ?? _pessoaService.GetByCpf(gestaoPapelModel.Pessoa?.Cpf ?? string.Empty);
 
+                // Se a pessoa já existe e já está vinculada ao evento, informa o papel atual.
+                if (pessoa != null && _inscricaoService.IsInscrito(pessoa.Id, eventoId))
+                {
+                    var papel = _inscricaoService.GetPapelPessoaByEvento(pessoa.Id, eventoId);
+                    var mensagem = papel switch
+                    {
+                        2 => "A pessoa selecionada já é gestora deste evento.",
+                        3 => "A pessoa selecionada já é colaboradora deste evento.",
+                        4 => "A pessoa selecionada já é um participante.",
+                        _ => "A pessoa selecionada já está vinculada a este evento."
+                    };
+                    ModelState.AddModelError(string.Empty, mensagem);
+                    gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(eventoId);
+                    gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(eventoId, 4);
+                    return View(gestaoPapelModel);
+                }
 
-                _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, idEvento, 4).Wait();
-                _eventoService.AtualizarVagasDisponiveis(idEvento);
+                // Monta os dados da pessoa a ser criada/inscrita.
+                // O serviço CreatePessoaIdentityComPapelAsync cria Pessoa + Identity + Papel
+                // + Inscrição de forma coesa quando a pessoa ainda não existe.
+                var nome = pessoa?.Nome ?? gestaoPapelModel.Pessoa?.Nome ?? "Participante";
+                var pessoaParaInscrever = pessoa ?? new Pessoa
+                {
+                    Cpf = cpfLimpo,
+                    Nome = nome,
+                    NomeCracha = !string.IsNullOrWhiteSpace(gestaoPapelModel.Pessoa?.NomeCracha)
+                        ? gestaoPapelModel.Pessoa.NomeCracha
+                        : (nome.Length > 20 ? nome.Substring(0, 20) : nome),
+                    Telefone1 = gestaoPapelModel.Pessoa?.Telefone1,
+                    Email = !string.IsNullOrWhiteSpace(gestaoPapelModel.Pessoa?.Email)
+                        ? gestaoPapelModel.Pessoa.Email
+                        : $"{cpfLimpo}@temp.com"
+                };
 
-                return RedirectToAction("GerenciarEvento", new { idEvento });
+                try
+                {
+                    _pessoaService.CreatePessoaIdentityComPapelAsync(pessoaParaInscrever, eventoId, 4).GetAwaiter().GetResult();
+                    _eventoService.AtualizarVagasDisponiveis(eventoId);
+                    return RedirectToAction("GerenciarEvento", new { idEvento = eventoId });
+                }
+                catch (Exception ex)
+                {
+                    var msg = ex.InnerException?.Message ?? ex.Message;
+                    ModelState.AddModelError(string.Empty, "Erro ao cadastrar participante: " + msg);
+                    gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(eventoId);
+                    gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(eventoId, 4);
+                    return View(gestaoPapelModel);
+                }
             }
 
-            gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(gestaoPapelModel.Evento.Id);
-            gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(gestaoPapelModel.Evento.Id, 4);
+            gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(eventoId);
+            gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(eventoId, 4);
             return View(gestaoPapelModel);
         }
 
