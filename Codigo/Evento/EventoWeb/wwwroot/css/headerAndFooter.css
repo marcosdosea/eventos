@@ -93,6 +93,7 @@ header {
     border: none;
     outline: none;
     background: transparent;
+    padding-left: 0;
 }
 
 .custom-toggler .navbar-toggler-icon {

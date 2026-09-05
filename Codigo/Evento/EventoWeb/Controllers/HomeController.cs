@@ -60,7 +60,20 @@ namespace EventoWeb.Controllers
         [HttpGet]
         public IActionResult Buscar([FromQuery] Core.DTO.EventoFilterDTO filter)
         {
-            var eventos = _eventoService.Search(filter);
+            IEnumerable<Core.Evento> eventos = new List<Core.Evento>();
+
+            bool temFiltro = !string.IsNullOrWhiteSpace(filter.TermoBusca) ||
+                             filter.IdAreaInteresse.HasValue ||
+                             filter.IdTipoEvento.HasValue ||
+                             filter.Data.HasValue ||
+                             !string.IsNullOrWhiteSpace(filter.Estado) ||
+                             !string.IsNullOrWhiteSpace(filter.Cidade);
+
+            if (temFiltro)
+            {
+                eventos = _eventoService.Search(filter);
+            }
+
             var eventosModel = _mapper.Map<List<EventoModel>>(eventos);
 
             ViewBag.TiposEventos = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_tipoEventoService.GetAll().OrderBy(t => t.Nome), "Id", "Nome", filter.IdTipoEvento);

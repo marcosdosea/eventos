@@ -102,11 +102,22 @@
         </main>
     </div>
 
-    <footer class="container footer">
-        <div class="container">
-            &copy; @DateTime.Now.Year
-        </div>
-    </footer>
+    @{
+        var showFooter = ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && 
+                         (ViewContext.RouteData.Values["action"]?.ToString() == "Index" || ViewContext.RouteData.Values["action"]?.ToString() == "Buscar");
+    }
+    @if (showFooter)
+    {
+        <partial name="_Footer" />
+    }
+    else
+    {
+        <footer class="container footer">
+            <div class="container">
+                &copy; @DateTime.Now.Year
+            </div>
+        </footer>
+    }
 
     <!-- Scripts na ordem correta -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

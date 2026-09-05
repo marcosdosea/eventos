@@ -19,12 +19,9 @@
                     bool eventoGratuito = evento.InscricaoGratuita == 1 || evento.ValorInscricao == 0;
 
                     <div class="card">
-                        <img src="~/Imagens_Eventos/Evento-BoraLá.png" alt="Imagem do Evento">
-                        
-                        <div class="card-content">
-                            <h2>@evento.Nome</h2>
-                            
-                            <div class="badges-container">
+                        <div style="position: relative; line-height: 0;">
+                            <img src="~/Imagens_Eventos/Evento-BoraLá.png" alt="Imagem do Evento" style="width: 100%;">
+                            <div class="badges-container" style="position: absolute; bottom: 8px; left: 8px; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; margin: 0;">
                                 @if (inscricaoAberta)
                                 {
                                     <span class="badge badge-open">Inscrições Abertas</span>
@@ -39,7 +36,11 @@
                                     <span class="badge badge-free">Gratuito</span>
                                 }
                             </div>
-
+                        </div>
+                        
+                        <div class="card-content">
+                            <h2>@evento.Nome</h2>
+                            
                             @{
                                 var descricaoCompleta = string.IsNullOrWhiteSpace(evento.Descricao)
                                     ? "Descrição indisponível"

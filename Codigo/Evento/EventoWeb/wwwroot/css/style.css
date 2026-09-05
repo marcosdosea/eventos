@@ -274,3 +274,9 @@ body {
 .badge-open { background-color: #198754; }
 .badge-closed { background-color: #dc3545; }
 .badge-free { background-color: #0dcaf0; color: #000; }
+
+@media (min-width: 1400px) {
+    .container {
+        max-width: 79.625rem !important;
+    }
+}
