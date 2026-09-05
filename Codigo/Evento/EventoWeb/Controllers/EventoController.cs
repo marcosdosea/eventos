@@ -497,7 +497,8 @@ namespace EventoWeb.Controllers
                 {
                     _pessoaService.CreatePessoaIdentityComPapelAsync(pessoaParaInscrever, eventoId, 4).GetAwaiter().GetResult();
                     _eventoService.AtualizarVagasDisponiveis(eventoId);
-                    return RedirectToAction("GerenciarEvento", new { idEvento = eventoId });
+                    TempData["SuccessMessage"] = $"Participante \"{nome}\" cadastrado com sucesso!";
+                    return RedirectToAction("CreateParticipante", new { idEvento = eventoId });
                 }
                 catch (Exception ex)
                 {
