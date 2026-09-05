@@ -41,7 +41,7 @@
     <header class="p-3 mb-3 border-bottom fixed-top">
         <div class="container">
             <nav class="navbar navbar-light p-0 w-100">
-                <div class="w-100 d-flex justify-content-between align-items-center flex-wrap">
+                <div class="w-100 d-flex justify-content-between align-items-center flex-wrap flex-md-nowrap">
                 
                 <div class="d-flex align-items-center">
                     @{
@@ -67,7 +67,7 @@
                                 {
                                     <ul class="navbar-nav justify-content-start flex-grow-1 pe-3">
                                             <li class="nav-item">
-                                                <a class="nav-link active titulo">Gestor do Evento</a>
+                                                <a class="nav-link active titulo blue-normal fw-bold">Gestor do Evento</a>
                                             </li>
                                             @if (possuiEvento)
                                             {
@@ -129,7 +129,7 @@
                     }
                     @if (showSearch)
                     {
-                        <div class="d-flex align-items-center ms-md-3 order-3 order-md-0 w-100 w-md-auto mt-2 mt-md-0 justify-content-center flex-grow-1 flex-md-grow-0">
+                        <div class="d-flex align-items-center ms-md-3 me-md-auto order-3 order-md-0 w-100 w-md-auto mt-2 mt-md-0 justify-content-center flex-grow-1 flex-md-grow-0">
                             <partial name="_HeaderSearch" />
                         </div>
                     }

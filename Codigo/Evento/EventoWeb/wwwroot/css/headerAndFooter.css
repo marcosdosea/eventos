@@ -62,10 +62,11 @@ header {
     line-height: 120%
 }
 
-.nav-link.opcao:hover {
+.nav-link.opcao:hover,
+.nav-link.opcao.active-opcao {
     border-right: 3px solid var(--Foundation-Blue-Normal, #232ED0);
     background: var(--Foundation-Blue-Light, #E9EAFA);
-
+    color: var(--Foundation-Blue-Normal, #232ED0) !important;
 }
 
 .nav-link.titulo {
