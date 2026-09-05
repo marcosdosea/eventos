@@ -62,17 +62,7 @@ namespace EventoWeb.Controllers
         {
             IEnumerable<Core.Evento> eventos = new List<Core.Evento>();
 
-            bool temFiltro = !string.IsNullOrWhiteSpace(filter.TermoBusca) ||
-                             filter.IdAreaInteresse.HasValue ||
-                             filter.IdTipoEvento.HasValue ||
-                             filter.Data.HasValue ||
-                             !string.IsNullOrWhiteSpace(filter.Estado) ||
-                             !string.IsNullOrWhiteSpace(filter.Cidade);
-
-            if (temFiltro)
-            {
-                eventos = _eventoService.Search(filter);
-            }
+            eventos = _eventoService.Search(filter);
 
             var eventosModel = _mapper.Map<List<EventoModel>>(eventos);
 

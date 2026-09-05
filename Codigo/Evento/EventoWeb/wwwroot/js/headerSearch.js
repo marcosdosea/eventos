@@ -33,6 +33,8 @@ function clearAllFilters() {
     syncFilter('Estado', '');
     syncFilter('Cidade', '');
     syncFilter('Data', '');
+    
+    applyFilters();
 }
 
 function clearSearch() {
