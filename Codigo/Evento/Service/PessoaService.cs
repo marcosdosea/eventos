@@ -245,78 +245,86 @@ public class PessoaService : IPessoaService
     public async Task<bool> CreatePessoaIdentityComPapelAsync(Pessoa pessoa, uint idEvento, int idPapel)
     {
         bool sucesso = false;
+
+        // Mapeia o papel para a role correspondente no Identity.
+        // Papel 4 (participante/usuário) usa a role "USUARIO", que é a role
+        // efetivamente cadastrada no seed (IdentityInitializer).
+        var role = idPapel switch
+        {
+            1 => "ADMINISTRADOR",
+            2 => "GESTOR",
+            3 => "COLABORADOR",
+            4 => "USUARIO",
+            5 => "USUARIO",
+            _ => throw new ArgumentException("Papel inválido.")
+        };
+
+        // Garante que a Pessoa exista no banco. Se ainda não existir, cria.
+        var pessoaExistente = GetByCpf(pessoa.Cpf);
+        if (pessoaExistente == null)
+        {
+            var novoId = Create(pessoa);
+            if (novoId == 0)
+            {
+                return false;
+            }
+            pessoa.Id = novoId;
+        }
+        else
+        {
+            pessoa.Id = pessoaExistente.Id;
+        }
+
         uint idPessoa = pessoa.Id;
+
+        // Garante que o usuário Identity exista. Se ainda não existir, cria.
         var existingUser = await _userManager.FindByNameAsync(pessoa.Cpf);
-
-        if(idPapel == 1 && existingUser == null && GetByCpf(pessoa.Cpf) == null)
+        if (existingUser == null)
         {
-                Create(pessoa);
-                await CreateAsync(pessoa);
-                existingUser = await _userManager.FindByNameAsync(pessoa.Cpf);
-                sucesso = true;
+            await CreateAsync(pessoa);
+            existingUser = await _userManager.FindByNameAsync(pessoa.Cpf);
 
+            if (existingUser == null)
+            {
+                throw new Exception($"Não foi possível criar o usuário Identity para o CPF {pessoa.Cpf}.");
+            }
         }
 
-        if (GetByCpf(pessoa.Cpf) == null || existingUser == null)
-        {
-            return sucesso;
-
-        }
-        
-
+        // Cria a inscrição no evento, quando aplicável.
+        // CreateInscricaoEvento já é idempotente: retorna 0 se a pessoa já
+        // estiver inscrita neste evento, evitando duplicidade.
         if (idEvento > 0)
         {
+            var nomeCracha = !string.IsNullOrWhiteSpace(pessoa.NomeCracha)
+                ? pessoa.NomeCracha
+                : (pessoa.Nome?.Length > 20 ? pessoa.Nome.Substring(0, 20) : pessoa.Nome ?? "Participante");
+
             var novaInscricao = new Inscricaopessoaevento
             {
                 IdPessoa = idPessoa,
                 IdEvento = idEvento,
                 IdPapel = idPapel,
-                NomeCracha = "o",
+                NomeCracha = nomeCracha,
                 DataInscricao = DateTime.Now,
                 Status = "S"
             };
             _inscricaoService.CreateInscricaoEvento(novaInscricao);
-
+            sucesso = true;
         }
 
-        using (var transaction = await _context.Database.BeginTransactionAsync())
+        // Associa o papel (role) ao usuário no Identity, caso ainda não possua.
+        if (!await _userManager.IsInRoleAsync(existingUser, role))
         {
-            try
+            var roleResult = await _userManager.AddToRoleAsync(existingUser, role);
+            if (!roleResult.Succeeded)
             {
-                var role = idPapel switch
-                {
-                    1 => "ADMINISTRADOR",
-                    2 => "GESTOR",
-                    3 => "COLABORADOR",
-                    4 => "USUARIO",
-                    5 => "PARTICIPANTE",
-                    _ => throw new ArgumentException("Papel inválido.")
-                };
-
-                if (!await _userManager.IsInRoleAsync(existingUser, role))
-                {
-                    var roleResult = await _userManager.AddToRoleAsync(existingUser, role);
-                    sucesso = true;
-                    if (!roleResult.Succeeded)
-                    {
-                        var errors = string.Join("; ", roleResult.Errors.Select(e => e.Description));
-                        throw new Exception($"Erro ao associar o papel '{role.ToLower()}' ao usuário no Identity: {errors}");
-                        
-                    }
-                }
-
-                
-
-                await transaction.CommitAsync();
+                var errors = string.Join("; ", roleResult.Errors.Select(e => e.Description));
+                throw new Exception($"Erro ao associar o papel '{role.ToLower()}' ao usuário no Identity: {errors}");
             }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                throw new Exception($"Erro ao criar pessoa, inscrição ou associar papel: {ex.Message}", ex);
-            }
-
-            return sucesso;
+            sucesso = true;
         }
+
+        return sucesso;
     }
 
     public async Task<List<Pessoa>> GetAllAdmAsync()

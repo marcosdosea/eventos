@@ -269,6 +269,58 @@ namespace Service.Tests
             Assert.AreEqual((uint)1, firstPessoa.Id);
         }
 
+        // Fluxo: gestor insere participante por CPF cuja pessoa já existe no sistema.
+        // Deve criar a inscrição (papel 4) sem lançar exception.
+        [TestMethod()]
+        public async Task CreatePessoaIdentityComPapel_PessoaExistente_InscreveParticipante()
+        {
+            var pessoa = _pessoaService.Get(1);
+
+            var sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 1, 4);
+
+            Assert.IsTrue(sucesso);
+            var usuario = await _userManager.FindByNameAsync(pessoa.Cpf);
+            Assert.IsNotNull(usuario);
+            Assert.IsTrue(_inscricaoService.IsInscrito(pessoa.Id, 1));
+        }
+
+        // Fluxo: gestor insere participante por CPF que ainda não existe.
+        // Deve criar Pessoa + Identity + Inscrição (papel 4) sem lançar exception.
+        [TestMethod()]
+        public async Task CreatePessoaIdentityComPapel_PessoaNova_CriaEInscreve()
+        {
+            var novaPessoa = new Pessoa
+            {
+                Nome = "Participante Novo Via Gestor",
+                NomeCracha = "Novo Gestor",
+                Cpf = "12345678909",
+                Email = "novo.gestor@teste.com",
+                Telefone1 = "79999990000"
+            };
+
+            var sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(novaPessoa, 1, 4);
+
+            Assert.IsTrue(sucesso);
+            var pessoaCriada = _pessoaService.GetByCpf("12345678909");
+            Assert.IsNotNull(pessoaCriada);
+            var usuario = await _userManager.FindByNameAsync("12345678909");
+            Assert.IsNotNull(usuario);
+            Assert.IsTrue(_inscricaoService.IsInscrito(pessoaCriada.Id, 1));
+        }
+
+        // Fluxo: papel 5 (participante) deve ser mapeado para a role USUARIO
+        // existente no seed, sem lançar ArgumentException/erro de role inexistente.
+        [TestMethod()]
+        public async Task CreatePessoaIdentityComPapel_Papel5_NaoLancaExcecao()
+        {
+            var pessoa = _pessoaService.Get(2);
+
+            var sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 1, 5);
+
+            Assert.IsTrue(sucesso);
+            Assert.IsTrue(_inscricaoService.IsInscrito(pessoa.Id, 1));
+        }
+
         /*
         Não estava passando, pois a arquitetura de testes atual 
         não suporta as transações.

@@ -53,9 +53,19 @@
                  <dd>Total
                 R$@valorTotal
         </dd>
-        <form method="post" asp-action="realizarInscricao" asp-controller="inscricao">
-            <button type="submit" class="btn btn-primary" asp-route-idEvento="@Model.eventoNavigation.Id"}>Inscrever-se</button>
-        </form>
+        @if (ViewBag.JaInscrito == true)
+        {
+            <div class="alert alert-info mt-3" role="alert">
+                <strong>Atenção:</strong> Você já está inscrito neste evento.
+            </div>
+            <a asp-action="MinhasInscricoes" asp-controller="Inscricao" class="btn btn-primary">Ver Minhas Inscrições</a>
+        }
+        else
+        {
+            <form method="post" asp-action="realizarInscricao" asp-controller="Inscricao">
+                <button type="submit" class="btn btn-primary" asp-route-idEvento="@Model.eventoNavigation.Id">Inscrever-se</button>
+            </form>
+        }
         <a asp-action="Index" asp-controller="Home">
             <button class="btn btn-danger">Voltar</button>
         </a>
