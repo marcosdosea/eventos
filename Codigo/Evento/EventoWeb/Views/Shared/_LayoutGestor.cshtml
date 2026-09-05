@@ -33,13 +33,16 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" type="text/css" href="~/css/style.css">
     <link rel="stylesheet" type="text/css" href="~/css/headerAndFooter.css">
+    <link rel="stylesheet" type="text/css" href="~/css/headerSearch.css" asp-append-version="true">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
 </head>
 
 <body>
-    <header class="p-3 mb-3 border-bottom">
+    <header class="p-3 mb-3 border-bottom fixed-top">
         <div class="container">
-            <div class="d-flex align-items-center justify-content-between w-100">
+            <nav class="navbar navbar-light p-0 w-100">
+                <div class="w-100 d-flex justify-content-between align-items-center">
+                
                 <div class="d-flex align-items-center">
                     @{
                         var isGerenciarEventoListar = ViewContext.RouteData.Values["controller"]?.ToString() == "Evento" && 
@@ -51,80 +54,92 @@
                             <span class="navbar-toggler-icon"></span>
                         </button>
                     }
+                    
+                    @if (!isGerenciarEventoListar)
+                    {
+                        <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+                            <div class="offcanvas-header">
+                                <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Menu</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                            </div>
+                            <div class="offcanvas-body">
+                                @if (User.Identity.IsAuthenticated && User.IsInRole("GESTOR"))
+                                {
+                                    <ul class="navbar-nav justify-content-start flex-grow-1 pe-3">
+                                            <li class="nav-item">
+                                                <a class="nav-link active titulo">Gestor do Evento</a>
+                                            </li>
+                                            @if (possuiEvento)
+                                            {
+                                                <li class="nav-item">
+                                                    <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEventoListar">
+                                                        Eventos
+                                                    </a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a class="nav-link opcao" asp-controller="Participacaopessoaevento" asp-action="Index" asp-route-idEvento="@eventoId">Inscrições</a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a class="nav-link opcao" asp-controller="Evento" asp-action="CreateColaborador" asp-route-idEvento="@eventoId">Colaboradores</a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@eventoId">Detalhes do Evento</a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a class="nav-link opcao" asp-controller="Participante" asp-action="Index" asp-route-idEvento="@eventoId">Usuários</a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a class="nav-link opcao" asp-controller="Subevento" asp-action="Index" asp-route-idEvento="@eventoId">SubEventos</a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a class="nav-link opcao" asp-controller="TipoInscricao" asp-action="Index" asp-route-idEvento="@eventoId">Tipo Inscrição </a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a class="nav-link opcao" asp-controller="Modelocracha" asp-action="Index" asp-route-idEvento="@eventoId">Modelo Crachá</a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a class="nav-link opcao" asp-controller="Modelocertificado" asp-action="Index" asp-route-idEvento="@eventoId">Modelo Certificado</a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a class="nav-link opcao" asp-controller="Evento" asp-action="CreateParticipante" asp-route-idEvento="@eventoId">Participantes</a>
+                                                </li>
+                                            }
+                                            else
+                                            {
+                                                <li class="nav-item">
+                                                    <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEventoListar">Eventos</a>
+                                                </li>
+                                            }
+                                    </ul>
+                                }
+                            </div>
+                        </div>
+                    }
+
                     <div class="logo">
-                        <a href="@Url.Action("Index", "Home", new { area = "", vitrine = true })" title="Ir para a vitrine dos eventos">
+                        <a href="@Url.Action("Index", "Home", new { area = "", vitrine = true })" title="Ir para a página inicial">
                             <img src="/img/LOGOTIPO.png" alt="Logotipo" />
                         </a>
                     </div>
+                    
+                    @{
+                        var showSearch = ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && 
+                                         (ViewContext.RouteData.Values["action"]?.ToString() == "Index" || ViewContext.RouteData.Values["action"]?.ToString() == "Buscar");
+                    }
+                    @if (showSearch)
+                    {
+                        <div class="d-none d-md-flex align-items-center ms-3">
+                            <partial name="_HeaderSearch" />
+                        </div>
+                    }
                 </div>
-                @if (!isGerenciarEventoListar)
-                {
-                    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
-                        <div class="offcanvas-header">
-                            <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Menu</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-                        </div>
-                        <div class="offcanvas-body">
-                            @if (User.Identity.IsAuthenticated && User.IsInRole("GESTOR"))
-                            {
-                                <ul class="navbar-nav justify-content-start flex-grow-1 pe-3">
-                                        <li class="nav-item">
-                                            <a class="nav-link active titulo">Gestor do Evento</a>
-                                        </li>
-                                        @if (possuiEvento)
-                                        {
-                                            <li class="nav-item">
-                                                <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEventoListar">
-                                                    Eventos
-                                                </a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a class="nav-link opcao" asp-controller="Participacaopessoaevento" asp-action="Index" asp-route-idEvento="@eventoId">Inscrições</a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a class="nav-link opcao" asp-controller="Evento" asp-action="CreateColaborador" asp-route-idEvento="@eventoId">Colaboradores</a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@eventoId">Detalhes do Evento</a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a class="nav-link opcao" asp-controller="Participante" asp-action="Index" asp-route-idEvento="@eventoId">Usuários</a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a class="nav-link opcao" asp-controller="Subevento" asp-action="Index" asp-route-idEvento="@eventoId">SubEventos</a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a class="nav-link opcao" asp-controller="TipoInscricao" asp-action="Index" asp-route-idEvento="@eventoId">Tipo Inscrição </a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a class="nav-link opcao" asp-controller="Modelocracha" asp-action="Index" asp-route-idEvento="@eventoId">Modelo Crachá</a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a class="nav-link opcao" asp-controller="Modelocertificado" asp-action="Index" asp-route-idEvento="@eventoId">Modelo Certificado</a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a class="nav-link opcao" asp-controller="Evento" asp-action="CreateParticipante" asp-route-idEvento="@eventoId">Participantes</a>
-                                            </li>
-                                        }
-                                        else
-                                        {
-                                            <li class="nav-item">
-                                                <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEventoListar">Eventos</a>
-                                            </li>
-                                        }
-                                </ul>
-                            }
-                        </div>
-                    </div>
-                }
 
-
-                <div class="flex-shrink-0 dropdown align-content-center">
-                    <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser2" data-bs-toggle="dropdown" aria-expanded="false">
-                        Olá, @ViewBag.NomeUsuario!
+                <div class="flex-shrink-0 dropdown">
+                    <a href="#" class="d-flex align-items-center link-dark text-decoration-none dropdown-toggle" id="dropdownUser2" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="d-none d-md-block">Olá, @ViewBag.NomeUsuario!</span>
                         <img src="/img/img-user.svg" alt="User" width="32" height="32" class="rounded-circle ms-2">
                     </a>
-                    <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser2">
+                    <ul class="dropdown-menu dropdown-menu-end text-small shadow" aria-labelledby="dropdownUser2">
                         @if (User.IsInRole("ADMINISTRADOR"))
                         {
                             <li>
@@ -144,18 +159,15 @@
                         </li>
                     </ul>
                 </div>
+                
             </div>
+            </nav>
         </div>
     </header>
 
     <div class="container conteudo">
         <main role="main" class="pb-3">
-            @if (User.IsInRole("GESTOR"))
-            {
-                <div id="gestorEventosContainer">
-                    @await Html.PartialAsync("_GestorEventosList", new List<EventoWeb.Models.EventoModel>())
-                </div>
-            }
+
             @if (TempData["SuccessMessage"] != null)
             {
                 <div class="alert alert-success alert-dismissible fade show position-relative alert-dismissible-custom" role="alert">

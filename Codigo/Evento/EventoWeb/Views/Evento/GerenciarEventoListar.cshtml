@@ -21,69 +21,76 @@
         }
     </div>
 
-    <div class="card">
-        <div class="card-body">
-            <table id="tableGestorEventListar" class="table table-striped table-hover">
-                <thead class="blue-normal blue-normal-bg-table">
-                    <tr>
-                        <th>@ViewData["Id"]</th>
-                        <th>@ViewData["DataInicio"]</th>
-                        <th>@ViewData["Nome"]</th>
-                        <th>@ViewData["NomeTipoEvento"]</th>
-                        <th>Status</th>
-                        <th class="text-center">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach(var item in Model)
-                    {
+    @if (Model != null && Model.Any())
+    {
+        <div class="card">
+            <div class="card-body">
+                <table id="tableGestorEventListar" class="table table-striped table-hover">
+                    <thead class="blue-normal blue-normal-bg-table">
                         <tr>
-                            <td>@Html.DisplayFor(modelItem => item.Id)</td>
-                            <td>@(item.DataInicio.HasValue ? item.DataInicio.Value.ToString("dd/MM/yyyy") : "-")</td>
-                            <td>@Html.DisplayFor(modelItem => item.Nome)</td>
-                            <td>@Html.DisplayFor(modelItem => item.NomeTipoEvento)</td>
-                            <td>
-                                @{
-                                    string statusDescricao = "Desconhecido";
-                                    string statusClass = "";
-                                    switch (item.Status)
-                                    {
-                                        case "A":
-                                            statusDescricao = "Ativo";
-                                            statusClass = "text-success";
-                                            break;
-                                        case "C":
-                                            statusDescricao = "Cadastro";
-                                            statusClass = "text-primary";
-                                            break;
-                                        case "F":
-                                            statusDescricao = "Finalizado";
-                                            statusClass = "text-secondary";
-                                            break;
-                                        case "I":
-                                            statusDescricao = "Inativo";
-                                            statusClass = "text-danger";
-                                            break;
-                                    }
-                                }
-                                <span class="@statusClass">@statusDescricao</span>
-                            </td>
-                            <td class="text-center">
-                                <a asp-action="GerenciarEvento" asp-route-idEvento="@item.Id" class="btn btn-sm btn-primary" title="Gerenciar Evento">
-                                    <i class="bi bi-gear"></i> Gerenciar
-                                </a>
-                            </td>
+                            <th>@ViewData["Id"]</th>
+                            <th>@ViewData["DataInicio"]</th>
+                            <th>@ViewData["Nome"]</th>
+                            <th>@ViewData["NomeTipoEvento"]</th>
+                            <th>Status</th>
+                            <th class="text-center">Ações</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach(var item in Model)
+                        {
+                            <tr>
+                                <td>@Html.DisplayFor(modelItem => item.Id)</td>
+                                <td>@(item.DataInicio.HasValue ? item.DataInicio.Value.ToString("dd/MM/yyyy") : "-")</td>
+                                <td>@Html.DisplayFor(modelItem => item.Nome)</td>
+                                <td>@Html.DisplayFor(modelItem => item.NomeTipoEvento)</td>
+                                <td>
+                                    @{
+                                        string statusDescricao = "Desconhecido";
+                                        string statusClass = "";
+                                        switch (item.Status)
+                                        {
+                                            case "A":
+                                                statusDescricao = "Ativo";
+                                                statusClass = "text-success";
+                                                break;
+                                            case "C":
+                                                statusDescricao = "Cadastro";
+                                                statusClass = "text-primary";
+                                                break;
+                                            case "F":
+                                                statusDescricao = "Finalizado";
+                                                statusClass = "text-secondary";
+                                                break;
+                                            case "I":
+                                                statusDescricao = "Inativo";
+                                                statusClass = "text-danger";
+                                                break;
+                                        }
+                                    }
+                                    <span class="@statusClass">@statusDescricao</span>
+                                </td>
+                                <td class="text-center">
+                                    <a asp-action="GerenciarEvento" asp-route-idEvento="@item.Id" class="btn btn-sm btn-primary" title="Gerenciar Evento">
+                                        <i class="bi bi-gear"></i> Gerenciar
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
+    }
+    else
+    {
+        <div class="alert alert-info mt-4" role="alert">
+            <i class="bi bi-info-circle"></i> Você ainda não possui eventos atribuídos para gerenciar.
+        </div>
+    }
 </div>
 
 @section Scripts {
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/datatable/js/datatables.min.js"></script>
     <script id="datatable-script" src="~/js/datatables.js" data-lang-url="@Url.Content("~/lib/datatable/js/pt-BR.json")"></script>
 }

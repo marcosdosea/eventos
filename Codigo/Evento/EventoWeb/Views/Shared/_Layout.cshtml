@@ -8,16 +8,16 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" type="text/css" href="~/css/style.css">
     <link rel="stylesheet" type="text/css" href="~/css/headerAndFooter.css">
-    <link rel="stylesheet" type="text/css" href="~/css/headerSearch.css">
+    <link rel="stylesheet" type="text/css" href="~/css/headerSearch.css" asp-append-version="true">
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
 </head>
 
 <body>
-    <header class="p-3 mb-3 border-bottom">
+    <header class="p-3 mb-3 border-bottom fixed-top">
         <div class="container">
-            <nav class="navbar navbar-expand-lg navbar-light">
-                <div class="container-fluid">
+            <nav class="navbar navbar-expand-lg navbar-light p-0">
+                <div class="w-100 d-flex flex-wrap align-items-center justify-content-between">
                     <div class="logo me-3">
                         <a href="/" title="Ir para a página inicial">
                             <img src="/img/LOGOTIPO.png" alt="Logotipo" />
@@ -26,22 +26,28 @@
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
                     </button>
-                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                        <ul class="navbar-nav me-auto">
-                            <li class="nav-item d-flex align-items-center">
+                    <div class="collapse navbar-collapse justify-content-between" id="navbarSupportedContent">
+                        @{
+                            var showSearch = ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && 
+                                             (ViewContext.RouteData.Values["action"]?.ToString() == "Index" || ViewContext.RouteData.Values["action"]?.ToString() == "Buscar");
+                        }
+                        @if (showSearch)
+                        {
+                            <div class="d-flex align-items-center my-2 my-lg-0">
                                 <partial name="_HeaderSearch" />
-                            </li>
-                            <li class="nav-item menu-view"><a class="nav-link">Localização</a></li>
-                            <li class="nav-item menu-view"><a class="nav-link" asp-controller="Evento" asp-action="Create">Seu evento aqui!</a></li>
-                        </ul>
-                        <div class="buton-menu custom-flex-row">
-                            <div class="custom-flex-row custom-hide">
-                                <div class="nav-item me-3 align-content-center color: blue-normal">
-                                    <a>Localização</a>
-                                </div>
-                                <div class="nav-item me-3 align-content-center color: blue-normal">
-                                    <a asp-controller="Evento" asp-action="Create">Seu evento aqui!</a>
-                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div></div>
+                        }
+                        
+                        <div class="d-flex flex-column flex-lg-row align-items-lg-center mt-3 mt-lg-0">
+                            <div class="nav-item me-3 mb-2 mb-lg-0 align-content-center">
+                                <a class="nav-link fw-bold text-dark" style="cursor: pointer;">Localização</a>
+                            </div>
+                            <div class="nav-item me-3 mb-2 mb-lg-0 align-content-center">
+                                <a class="nav-link fw-bold text-primary" asp-controller="Evento" asp-action="Create">Seu evento aqui!</a>
                             </div>
                             <partial name="_LoginPartial" />
                         </div>
@@ -99,7 +105,7 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/formHelpers.js"></script>
-    <script src="~/js/headerSearch.js"></script>
+    <script src="~/js/headerSearch.js" asp-append-version="true"></script>
     
     @await RenderSectionAsync("Scripts", required: false)
 </body>

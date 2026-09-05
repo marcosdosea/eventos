@@ -5,15 +5,16 @@
 
 <div class="d-flex align-items-center header-search-container">
     <div class="position-relative me-2 search-input-wrapper">
-        <form id="headerSearchForm" action="/Home/Buscar" method="get" class="input-group w-100">
-            <span class="input-group-text search-icon-bg">
-                <i class="bi bi-search"></i>
+        <form id="headerSearchForm" action="/Home/Buscar" method="get" class="input-group w-100" role="search">
+            <span class="input-group-text search-icon-bg" id="search-addon">
+                <i class="bi bi-search" aria-hidden="true"></i>
             </span>
-            <input id="headerSearchInput" type="text" name="TermoBusca" class="form-control custom-input search-input" placeholder="Pesquisar eventos..." aria-label="Search"
+            <input id="headerSearchInput" type="search" name="TermoBusca" class="form-control custom-input search-input" placeholder="Pesquisar eventos..." aria-label="Pesquisar eventos" aria-describedby="search-addon"
                    value="@Context.Request.Query["TermoBusca"]" oninput="toggleClearButton()">
             
-            <i class="bi bi-x-circle-fill text-secondary position-absolute clear-search-icon" id="btnClearSearch" 
-               onclick="clearSearch()"></i>
+            <button type="button" class="btn position-absolute clear-search-btn" id="btnClearSearch" aria-label="Limpar pesquisa" onclick="clearSearch()">
+                <i class="bi bi-x-circle-fill text-secondary" aria-hidden="true"></i>
+            </button>
                
             <input type="hidden" name="IdTipoEvento" id="hidden_IdTipoEvento" value="@Context.Request.Query["IdTipoEvento"]" />
             <input type="hidden" name="IdAreaInteresse" id="hidden_IdAreaInteresse" value="@Context.Request.Query["IdAreaInteresse"]" />
@@ -24,15 +25,15 @@
     </div>
 
     <div class="dropdown filter-dropdown">
-        <button class="btn filter-toggle-btn" type="button" id="filterDropdownMenu" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="Filtros Avançados">
-            <i class="bi bi-funnel"></i>
+        <button class="btn filter-toggle-btn" type="button" id="filterDropdownMenu" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-haspopup="true" aria-label="Filtros Avançados" title="Filtros Avançados">
+            <i class="bi bi-funnel" aria-hidden="true"></i>
         </button>
         <div class="dropdown-menu dropdown-menu-end p-3 shadow filter-dropdown-menu" aria-labelledby="filterDropdownMenu">
             <h6 class="dropdown-header px-0 text-dark fw-bold mb-3 filter-header">Filtros de Busca</h6>
             
             <div class="mb-3">
-                <label class="form-label small mb-1 fw-bold text-secondary">Área de Interesse</label>
-                <select id="drop_AreaInteresse" class="form-select form-select-sm" onchange="syncFilter('IdAreaInteresse', this.value)">
+                <label for="drop_AreaInteresse" class="form-label small mb-1 fw-bold text-secondary">Área de Interesse</label>
+                <select id="drop_AreaInteresse" class="form-select form-select-sm" onchange="syncFilter('IdAreaInteresse', this.value)" aria-label="Selecione a área de interesse">
                     <option value="">Todas as Áreas</option>
                     @foreach(var a in AreaInteresseService.GetAll().OrderBy(x => x.Nome))
                     {
@@ -46,8 +47,8 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label small mb-1 fw-bold text-secondary">Tipo de Evento</label>
-                <select id="drop_TipoEvento" class="form-select form-select-sm" onchange="syncFilter('IdTipoEvento', this.value)">
+                <label for="drop_TipoEvento" class="form-label small mb-1 fw-bold text-secondary">Tipo de Evento</label>
+                <select id="drop_TipoEvento" class="form-select form-select-sm" onchange="syncFilter('IdTipoEvento', this.value)" aria-label="Selecione o tipo de evento">
                     <option value="">Todos os Tipos</option>
                     @foreach(var t in TipoEventoService.GetAll().OrderBy(x => x.Nome))
                     {
@@ -61,8 +62,8 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label small mb-1 fw-bold text-secondary">Estado (UF)</label>
-                <select id="drop_Estado" class="form-select form-select-sm" onchange="syncFilter('Estado', this.value); loadCidades(this.value);">
+                <label for="drop_Estado" class="form-label small mb-1 fw-bold text-secondary">Estado (UF)</label>
+                <select id="drop_Estado" class="form-select form-select-sm" onchange="syncFilter('Estado', this.value); loadCidades(this.value);" aria-label="Selecione o estado">
                     <option value="">Todos os Estados</option>
                     @foreach(var e in EstadosbrasilService.GetAll().OrderBy(x => x.Nome))
                     {
@@ -76,15 +77,15 @@
             </div>
 
             <div class="mb-3">
-                <label class="form-label small mb-1 fw-bold text-secondary">Cidade</label>
-                <select id="drop_Cidade" class="form-select form-select-sm" onchange="syncFilter('Cidade', this.value)" disabled>
+                <label for="drop_Cidade" class="form-label small mb-1 fw-bold text-secondary">Cidade</label>
+                <select id="drop_Cidade" class="form-select form-select-sm" onchange="syncFilter('Cidade', this.value)" aria-label="Selecione a cidade" disabled>
                     <option value="">Selecione um Estado primeiro</option>
                 </select>
             </div>
             
             <div class="mb-3">
-                <label class="form-label small mb-1 fw-bold text-secondary">A partir de (Data)</label>
-                <input type="date" id="drop_Data" class="form-control form-control-sm" value="@Context.Request.Query["Data"]" onchange="syncFilter('Data', this.value)" />
+                <label for="drop_Data" class="form-label small mb-1 fw-bold text-secondary">A partir de (Data)</label>
+                <input type="date" id="drop_Data" class="form-control form-control-sm" value="@Context.Request.Query["Data"]" onchange="syncFilter('Data', this.value)" aria-label="Selecione a data a partir de qual o evento ocorre" />
             </div>
 
             <div class="d-flex justify-content-between mt-4">

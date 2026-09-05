@@ -256,3 +256,21 @@ body {
     background: transparent !important;
     cursor: not-allowed !important;
 }
+
+/* Badge styles from Buscar */
+.badges-container {
+    margin-bottom: 10px;
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+.badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: white;
+}
+.badge-open { background-color: #198754; }
+.badge-closed { background-color: #dc3545; }
+.badge-free { background-color: #0dcaf0; color: #000; }

@@ -40,23 +40,7 @@ function clearSearch() {
     if (input) {
         input.value = '';
         toggleClearButton();
-        
-        var urlParams = new URLSearchParams(window.location.search);
-        urlParams.delete("TermoBusca");
-        
-        var hasFilters = false;
-        for (var key of urlParams.keys()) {
-            if (urlParams.get(key) !== '') {
-                hasFilters = true;
-                break;
-            }
-        }
-        
-        if (!hasFilters) {
-            window.location.href = '/';
-        } else {
-            window.location.href = '/Home/Buscar?' + urlParams.toString();
-        }
+        input.focus();
     }
 }
 

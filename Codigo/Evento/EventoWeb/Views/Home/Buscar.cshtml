@@ -4,137 +4,67 @@
     ViewData["Title"] = "Buscar Eventos";
 }
 
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewData["Title"]</title>
-    <link rel="stylesheet" href="~/css/_Layout_Inicio.css">
-    <link rel="stylesheet" href="~/css/site.css">
-    <link rel="stylesheet" href="~/css/style.css">
-    <style>
-        .search-container {
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .search-form {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: flex-end;
-        }
-        .search-form .form-group {
-            flex: 1 1 200px;
-        }
-        .search-form label {
-            font-size: 0.9rem;
-            font-weight: 500;
-            color: #495057;
-            margin-bottom: 5px;
-            display: block;
-        }
-        .search-form select, .search-form input[type="date"] {
-            width: 100%;
-            padding: 0.5rem;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
-        }
-        .badges-container {
-            margin-bottom: 10px;
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-        }
-        .badge {
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            color: white;
-        }
-        .badge-open { background-color: #198754; }
-        .badge-closed { background-color: #dc3545; }
-        .badge-free { background-color: #0dcaf0; color: #000; }
-    </style>
-</head>
+<link rel="stylesheet" href="~/css/_Layout_Inicio.css" />
 
-<body>
-    <main>
-        <section class="eventos">
-            <h1>Resultados da Busca</h1>
-            
+<section class="eventos">
+    <h1>Resultados da Busca</h1>
 
+    <div class="scroll-wrapper" style="overflow: visible;">
+        <div class="cards-container" style="flex-wrap: wrap; justify-content: center; gap: 20px;">
+            @if (Model != null && Model.Any())
+            {
+                foreach (var evento in Model)
+                {
+                    bool inscricaoAberta = evento.DataInicioInscricao <= DateTime.Now && evento.DataFimInscricao >= DateTime.Now;
+                    bool eventoGratuito = evento.InscricaoGratuita == 1 || evento.ValorInscricao == 0;
 
-            <div class="scroll-wrapper" style="overflow: visible;">
-                <div class="cards-container" style="flex-wrap: wrap; justify-content: center; gap: 20px;">
-                    @if (Model != null && Model.Any())
-                    {
-                        foreach (var evento in Model)
-                        {
-                            bool inscricaoAberta = evento.DataInicioInscricao <= DateTime.Now && evento.DataFimInscricao >= DateTime.Now;
-                            bool eventoGratuito = evento.InscricaoGratuita == 1 || evento.ValorInscricao == 0;
-
-                            <div class="card">
-                                @if (!string.IsNullOrEmpty(evento.ImagemPortalBase64))
+                    <div class="card">
+                        <img src="~/Imagens_Eventos/Evento-BoraLá.png" alt="Imagem do Evento">
+                        
+                        <div class="card-content">
+                            <h2>@evento.Nome</h2>
+                            
+                            <div class="badges-container">
+                                @if (inscricaoAberta)
                                 {
-                                    <img src="@evento.ImagemPortalBase64" alt="Imagem do Evento">
+                                    <span class="badge badge-open">Inscrições Abertas</span>
                                 }
                                 else
                                 {
-                                    <img src="~/Imagens_Eventos/Evento-BoraLá.png" alt="Imagem do Evento">
+                                    <span class="badge badge-closed">Inscrições Encerradas</span>
                                 }
                                 
-                                <div class="card-content">
-                                    <h2>@evento.Nome</h2>
-                                    
-                                    <div class="badges-container">
-                                        @if (inscricaoAberta)
-                                        {
-                                            <span class="badge badge-open">Inscrições Abertas</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge badge-closed">Inscrições Encerradas</span>
-                                        }
-                                        
-                                        @if (eventoGratuito)
-                                        {
-                                            <span class="badge badge-free">Gratuito</span>
-                                        }
-                                    </div>
-
-                                    @{
-                                        var descricaoCompleta = string.IsNullOrWhiteSpace(evento.Descricao)
-                                            ? "Descrição indisponível"
-                                            : evento.Descricao;
-                                        var descricaoExibida = descricaoCompleta;
-                                        if (descricaoCompleta.Length > 80)
-                                        {
-                                            descricaoExibida = descricaoCompleta.Substring(0, 80).TrimEnd() + "...";
-                                        }
-                                    }
-                                    <p class="card-description" style="min-height: 45px;">@descricaoExibida</p>
-                                    
-                                    <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@evento.Id">
-                                        <button class="btn btn-blue-normal">Bora lá</button>
-                                    </a>
-                                </div>
+                                @if (eventoGratuito)
+                                {
+                                    <span class="badge badge-free">Gratuito</span>
+                                }
                             </div>
-                        }
-                    }
-                    else
-                    {
-                        <p style="text-align: center; width: 100%; margin-top: 20px; font-size: 1.1rem; color: #666;">
-                            Nenhum evento encontrado para os critérios selecionados.
-                        </p>
-                    }
-                </div>
-            </div>
-        </section>
-    </main>
-</body>
-</html>
+
+                            @{
+                                var descricaoCompleta = string.IsNullOrWhiteSpace(evento.Descricao)
+                                    ? "Descrição indisponível"
+                                    : evento.Descricao;
+                                var descricaoExibida = descricaoCompleta;
+                                if (descricaoCompleta.Length > 80)
+                                {
+                                    descricaoExibida = descricaoCompleta.Substring(0, 80).TrimEnd() + "...";
+                                }
+                            }
+                            <p class="card-description" style="min-height: 45px;">@descricaoExibida</p>
+                            
+                            <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@evento.Id">
+                                <button class="btn btn-blue-normal">Bora lá</button>
+                            </a>
+                        </div>
+                    </div>
+                }
+            }
+            else
+            {
+                <p style="text-align: center; width: 100%; margin-top: 20px; font-size: 1.1rem; color: #666;">
+                    Nenhum evento encontrado para os critérios selecionados.
+                </p>
+            }
+        </div>
+    </div>
+</section>
