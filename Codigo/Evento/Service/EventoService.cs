@@ -253,9 +253,9 @@ namespace Service
 
             if (!string.IsNullOrWhiteSpace(filter.TermoBusca))
             {
-                var termo = filter.TermoBusca.ToLower();
-                query = query.Where(e => e.Nome.ToLower().Contains(termo) || 
-                                         (e.Descricao != null && e.Descricao.ToLower().Contains(termo)));
+                var termo = $"%{filter.TermoBusca}%";
+                query = query.Where(e => EF.Functions.Like(e.Nome, termo) || 
+                                         (e.Descricao != null && EF.Functions.Like(e.Descricao, termo)));
             }
 
             if (filter.IdAreaInteresse.HasValue)

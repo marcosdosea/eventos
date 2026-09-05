@@ -39,7 +39,7 @@
     appearance: none;
 }
 
-.clear-search-btn {
+.input-group .clear-search-btn {
     display: none;
     padding: 0;
     background: transparent;
@@ -47,7 +47,7 @@
     right: 10px;
     top: 50%;
     transform: translateY(-50%);
-    z-index: 10;
+    z-index: 10 !important;
     font-size: 1.1rem;
 }
 
