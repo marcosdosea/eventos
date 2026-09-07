@@ -506,12 +506,19 @@ namespace EventoWeb.Controllers
 
         [HttpGet]
         [Route("GerenciarEventoListar")]
-        public async Task<IActionResult> GerenciarEventoListar()
+        public async Task<IActionResult> GerenciarEventoListar(bool adminRemovido = false)
         {
             string userCpf = null;
             uint idPapel = 0;
             bool isAdmin = false;
 
+            if (adminRemovido)
+            {
+               
+                TempData["SuccessMessage"] = "Aviso: Seu cargo de administrador foi removido!";
+                TempData["ToastTimeout"] = 5000;
+            }
+            
             if (User.Identity.IsAuthenticated)
             {
                 userCpf = User.FindFirstValue(ClaimTypes.Name);
