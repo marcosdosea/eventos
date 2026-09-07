@@ -21,7 +21,7 @@ namespace EventoWeb.Models
         public string Cpf { get; set; } = null!;
 
         [Display(Name = "Telefone")]
-        [TelefoneCelular(ErrorMessage = "Digite um telefone válido com DDD. Ex: (11) 91234-5678")]
+        [TelefoneCelular(ErrorMessage = "Digite um telefone válido com 11 dígitos. Ex: (11) 91234-5678")]
         [StringLength(11, MinimumLength = 11)]
         public string? Telefone1 { get; set; }
 
