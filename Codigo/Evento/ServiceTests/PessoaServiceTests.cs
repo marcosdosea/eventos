@@ -20,6 +20,7 @@ namespace Service.Tests
         private IPessoaService _pessoaService;
         private MockUserManager<UsuarioIdentity> _userManager;
         private IInscricaoService _inscricaoService;
+        private SignInManager<UsuarioIdentity> _signInManager;
 
         [TestInitialize]
         public void Initialize()
@@ -135,7 +136,7 @@ namespace Service.Tests
 
             _userManager = new MockUserManager<UsuarioIdentity>();
             _inscricaoService = new InscricaoService(_context, _userManager);
-            _pessoaService = new PessoaService(_userManager, _context, _inscricaoService);
+            _pessoaService = new PessoaService(_userManager, _context, _inscricaoService, _signInManager);
         }
 
         [TestMethod()]
