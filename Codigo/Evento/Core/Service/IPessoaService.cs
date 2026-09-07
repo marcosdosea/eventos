@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Identity;
+
 namespace Core.Service
 {
 
@@ -9,6 +11,8 @@ namespace Core.Service
         Task<bool> Delete(uint id);
         Pessoa Get(uint id);
         IEnumerable<Pessoa> GetAll();
+        Task AtualizarSessao(uint id);
+        Task<bool> UserLogado(uint idUserRemovido, String idUserLogado);
         Pessoa GetByCpf(string cpf);
         bool ValidaEmail(String email);
         Task<bool> EmailExist(String email, String cpf);
