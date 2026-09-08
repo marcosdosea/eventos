@@ -12,3 +12,6 @@
 /Codigo/Evento/ServiceTests/obj
 /Codigo/Evento/Util/obj
 /Codigo/Evento/Util/bin
+
+# Notas de sessao do assistente (NAO versionar)
+NOTAS_SESSAO_ASSISTENTE.md
