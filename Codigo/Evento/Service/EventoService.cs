@@ -169,12 +169,107 @@ namespace Service
         }
     
         /// <summary>
-        /// Busca todos os eventos
+        /// Busca todos os eventos (lista materializada; sem deferred fora do contexto).
+        /// Para listagens paginadas prefira <see cref="GetPagedAsync"/>.
         /// </summary>
         /// <returns></returns>
         public IEnumerable<Evento> GetAll()
         {
-            return _context.Eventos.AsNoTracking();
+            return _context.Eventos.AsNoTracking().ToList();
+        }
+
+        /// <summary>
+        /// Listagem paginada com projeção leve (sem ImagemPortal): 2 queries (COUNT + página).
+        /// </summary>
+        public async Task<PagedResult<EventoListDTO>> GetPagedAsync(int page, int pageSize)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 20;
+            if (pageSize > 100) pageSize = 100;
+
+            var query = _context.Eventos.AsNoTracking();
+
+            var total = await query.CountAsync();
+
+            var items = await query
+                .OrderBy(e => e.Nome)
+                .Select(e => new EventoListDTO
+                {
+                    Id = e.Id,
+                    Nome = e.Nome,
+                    DataInicio = e.DataInicio,
+                    Status = e.Status,
+                    IdTipoEvento = (uint)(e.IdTipoEvento ?? 0),
+                    NomeTipoEvento = e.IdTipoEventoNavigation != null
+                        ? e.IdTipoEventoNavigation.Nome
+                        : "Tipo não encontrado"
+                })
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PagedResult<EventoListDTO>
+            {
+                Items = items,
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = total
+            };
+        }
+
+        /// <summary>
+        /// Listagem paginada por CPF/papel (gestor/colaborador): 2 queries (COUNT + página).
+        /// </summary>
+        public async Task<PagedResult<EventoListDTO>> GetPagedByCpfAsync(string userCpf, uint idPapel, int page, int pageSize)
+        {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 20;
+            if (pageSize > 100) pageSize = 100;
+
+            var pessoa = await _context.Pessoas.AsNoTracking().FirstOrDefaultAsync(p => p.Cpf == userCpf);
+            if (pessoa == null)
+            {
+                return new PagedResult<EventoListDTO>
+                {
+                    Items = new List<EventoListDTO>(),
+                    Page = page,
+                    PageSize = pageSize,
+                    TotalCount = 0
+                };
+            }
+
+            var baseQuery = from evento in _context.Eventos.AsNoTracking()
+                            join inscricao in _context.Inscricaopessoaeventos.AsNoTracking()
+                                on evento.Id equals inscricao.IdEvento
+                            where inscricao.IdPessoa == pessoa.Id && inscricao.IdPapel == idPapel
+                            select evento;
+
+            var total = await baseQuery.CountAsync();
+
+            var items = await baseQuery
+                .OrderBy(e => e.Nome)
+                .Select(e => new EventoListDTO
+                {
+                    Id = e.Id,
+                    Nome = e.Nome,
+                    DataInicio = e.DataInicio,
+                    Status = e.Status,
+                    IdTipoEvento = (uint)(e.IdTipoEvento ?? 0),
+                    NomeTipoEvento = e.IdTipoEventoNavigation != null
+                        ? e.IdTipoEventoNavigation.Nome
+                        : "Tipo não encontrado"
+                })
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return new PagedResult<EventoListDTO>
+            {
+                Items = items,
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = total
+            };
         }
 
         public IEnumerable<Evento> GetEventByCpf(string userCpf, uint idPapel)

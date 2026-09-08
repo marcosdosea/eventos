@@ -72,6 +72,20 @@
 			}
 		</tbody>
 	</table>
+	@if (ViewBag.TotalPages > 1)
+	{
+		<nav aria-label="Paginação de eventos">
+			<ul class="pagination">
+				<li class="page-item @(ViewBag.Page <= 1 ? "disabled" : "")">
+					<a class="page-link" asp-action="Index" asp-route-page="@(ViewBag.Page - 1)" asp-route-pageSize="@ViewBag.PageSize">Anterior</a>
+				</li>
+				<li class="page-item disabled"><span class="page-link">Página @ViewBag.Page de @ViewBag.TotalPages (@ViewBag.TotalCount eventos)</span></li>
+				<li class="page-item @(ViewBag.Page >= ViewBag.TotalPages ? "disabled" : "")">
+					<a class="page-link" asp-action="Index" asp-route-page="@(ViewBag.Page + 1)" asp-route-pageSize="@ViewBag.PageSize">Próxima</a>
+				</li>
+			</ul>
+		</nav>
+	}
 </div>
 
 @section Scripts {

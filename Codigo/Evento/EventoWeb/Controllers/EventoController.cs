@@ -41,19 +41,24 @@ namespace EventoWeb.Controllers
         [HttpGet]
         [Route("")]
         [Route("Index")]
-        public ActionResult Index()
+        public async Task<IActionResult> Index(int page = 1, int pageSize = 20)
         {
-            var listarEventos = _eventoService.GetAll().ToList();
-            var listarEventosModel = listarEventos.Select(e => new EventoModel
+            var paged = await _eventoService.GetPagedAsync(page, pageSize);
+
+            var listarEventosModel = paged.Items.Select(e => new EventoModel
             {
                 Id = e.Id,
-                DataInicio = (DateTime)e.DataInicio,
+                DataInicio = e.DataInicio ?? DateTime.Today,
                 Nome = e.Nome,
                 Status = e.Status,
-                IdTipoEvento = (uint)e.IdTipoEvento,
-                NomeTipoEvento = _tipoEventoService.GetNomeById((uint)e.IdTipoEvento)
-
+                IdTipoEvento = e.IdTipoEvento,
+                NomeTipoEvento = e.NomeTipoEvento
             }).ToList();
+
+            ViewBag.Page = paged.Page;
+            ViewBag.PageSize = paged.PageSize;
+            ViewBag.TotalCount = paged.TotalCount;
+            ViewBag.TotalPages = paged.TotalPages;
 
             return View(listarEventosModel);
         }
@@ -522,7 +527,7 @@ namespace EventoWeb.Controllers
 
         [HttpGet]
         [Route("GerenciarEventoListar")]
-        public async Task<IActionResult> GerenciarEventoListar()
+        public async Task<IActionResult> GerenciarEventoListar(int page = 1, int pageSize = 20)
         {
             string userCpf = null;
             uint idPapel = 0;
@@ -551,30 +556,32 @@ namespace EventoWeb.Controllers
                 }
             }
 
-            IEnumerable<Evento> listarEventos;
+            Core.DTO.PagedResult<Core.DTO.EventoListDTO> paged;
             if (isAdmin)
             {
-                listarEventos = _eventoService.GetAll();
+                paged = await _eventoService.GetPagedAsync(page, pageSize);
             }
             else
             {
-                listarEventos = _eventoService.GetEventByCpf(userCpf, idPapel);
+                paged = await _eventoService.GetPagedByCpfAsync(userCpf, idPapel, page, pageSize);
             }
 
-            var eventosList = listarEventos.ToList();
-            var tiposEvento = _tipoEventoService.GetAll().ToDictionary(t => t.Id, t => t.Nome);
-
-            var listarEventosModel = eventosList.Select(e => new EventoModel
+            var listarEventosModel = paged.Items.Select(e => new EventoModel
             {
                 Id = e.Id,
-                DataInicio = (DateTime)e.DataInicio,
+                DataInicio = e.DataInicio ?? DateTime.Today,
                 Nome = e.Nome,
                 Status = e.Status,
-                IdTipoEvento = (uint)e.IdTipoEvento,
-                NomeTipoEvento = tiposEvento.ContainsKey((uint)e.IdTipoEvento) ? tiposEvento[(uint)e.IdTipoEvento] : "Tipo não encontrado"
+                IdTipoEvento = e.IdTipoEvento,
+                NomeTipoEvento = e.NomeTipoEvento
             })
             .OrderByDescending(e => e.DataInicio)
             .ToList();
+
+            ViewBag.Page = paged.Page;
+            ViewBag.PageSize = paged.PageSize;
+            ViewBag.TotalCount = paged.TotalCount;
+            ViewBag.TotalPages = paged.TotalPages;
 
             return View(listarEventosModel);
         }

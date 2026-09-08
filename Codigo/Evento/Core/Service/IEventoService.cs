@@ -13,6 +13,10 @@ namespace Core.Service
         EventoSimpleDTO GetEventoSimpleDto(uint id);
 
         IEnumerable<Evento> GetAll();
+
+        Task<PagedResult<EventoListDTO>> GetPagedAsync(int page, int pageSize);
+
+        Task<PagedResult<EventoListDTO>> GetPagedByCpfAsync(string userCpf, uint idPapel, int page, int pageSize);
         
         IEnumerable<Evento> GetEventByCpf(string userCpf, uint idPapel);
 

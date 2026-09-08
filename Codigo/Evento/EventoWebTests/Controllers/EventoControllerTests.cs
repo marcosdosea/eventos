@@ -40,6 +40,27 @@ namespace EventoWeb.Controllers.Tests
 
             mockService.Setup(service => service.GetAll())
                 .Returns(GetTestEventos());
+            mockService.Setup(service => service.GetPagedAsync(It.IsAny<int>(), It.IsAny<int>()))
+                .ReturnsAsync((int page, int pageSize) =>
+                {
+                    var eventos = GetTestEventos().ToList();
+                    var items = eventos.Select(e => new EventoListDTO
+                    {
+                        Id = e.Id,
+                        Nome = e.Nome,
+                        DataInicio = e.DataInicio,
+                        Status = e.Status,
+                        IdTipoEvento = (uint)(e.IdTipoEvento ?? 0),
+                        NomeTipoEvento = "Tipo Teste"
+                    }).ToList();
+                    return new PagedResult<EventoListDTO>
+                    {
+                        Items = items.Skip((page - 1) * pageSize).Take(pageSize).ToList(),
+                        Page = page,
+                        PageSize = pageSize,
+                        TotalCount = items.Count
+                    };
+                });
             mockService.Setup(service => service.Get(1))
                 .Returns(GetTargetEvento());
             mockService.Setup(service => service.Create(It.IsAny<Evento>()))
@@ -82,9 +103,9 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public void IndexTest()
+        public async Task IndexTest()
         {
-            var result = controller.Index();
+            var result = await controller.Index();
 
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
@@ -285,9 +306,9 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public void Participante_Post_Valid()
+        public async Task Participante_Post_Valid()
         {
-            var result = controller.CreateParticipante(GetNewGestaoPapel());
+            var result = await controller.CreateParticipante(GetNewGestaoPapel());
 
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
