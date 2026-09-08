@@ -440,12 +440,31 @@ namespace EventoWeb.Controllers
         [HttpPost]
         [Route("CreateParticipante")]
         [ValidateAntiForgeryToken]
-        public ActionResult CreateParticipante(GestaoPapelModel gestaoPapelModel)
+        public async Task<IActionResult> CreateParticipante(GestaoPapelModel gestaoPapelModel)
         {
+            var idEvento = gestaoPapelModel.Evento?.Id ?? 0;
+
             if (ModelState.IsValid)
             {
-                var pessoa = _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
-                var idEvento = gestaoPapelModel.Evento.Id;
+                var cpf = gestaoPapelModel.Pessoa?.Cpf;
+
+                if (string.IsNullOrWhiteSpace(cpf))
+                {
+                    ModelState.AddModelError("Pessoa.Cpf", "Informe um CPF válido.");
+                    gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
+                    gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 4);
+                    return View(gestaoPapelModel);
+                }
+
+                var pessoa = _pessoaService.GetByCpf(cpf);
+
+                if (pessoa == null)
+                {
+                    ModelState.AddModelError("Pessoa.Cpf", "CPF não encontrado no sistema.");
+                    gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
+                    gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 4);
+                    return View(gestaoPapelModel);
+                }
 
                 var papel = _inscricaoService.GetPapelPessoaByEvento(pessoa.Id, idEvento);
 
@@ -457,17 +476,14 @@ namespace EventoWeb.Controllers
                     return View(gestaoPapelModel);
                 }
 
-              
-
-
-                _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, idEvento, 4).Wait();
+                await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, idEvento, 4);
                 _eventoService.AtualizarVagasDisponiveis(idEvento);
 
                 return RedirectToAction("GerenciarEvento", new { idEvento });
             }
 
-            gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(gestaoPapelModel.Evento.Id);
-            gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(gestaoPapelModel.Evento.Id, 4);
+            gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
+            gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 4);
             return View(gestaoPapelModel);
         }
 
