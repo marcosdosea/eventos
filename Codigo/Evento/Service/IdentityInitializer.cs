@@ -6,9 +6,7 @@ public static class IdentityInitializer
 {
     public static async Task InitializeRoles(RoleManager<IdentityRole> roleManager)
     {
-        string[] roles = { "ADMINISTRADOR", "GESTOR", "COLABORADOR", "USUARIO" };
-
-        foreach (var roleName in roles)
+        foreach (var roleName in Core.PapelMap.AllRoles)
         {
             var roleExists = await roleManager.RoleExistsAsync(roleName);
             if (!roleExists)

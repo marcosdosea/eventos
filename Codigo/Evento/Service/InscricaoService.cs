@@ -22,6 +22,13 @@ namespace Service
             return inscricaopessoaevento.Id;
         }
 
+        public async Task<uint> CreateInscricaoEventoAsync(Inscricaopessoaevento inscricaopessoaevento)
+        {
+            _context.Add(inscricaopessoaevento);
+            await _context.SaveChangesAsync();
+            return inscricaopessoaevento.Id;
+        }
+
         public async Task DeletePessoaPapelAsync(uint idPessoa, uint idEvento, uint idPapel, string cpf)
         {
             var pessoa = await _context.Pessoas.FirstOrDefaultAsync(p => p.Id == idPessoa && p.Cpf == cpf);
@@ -44,7 +51,7 @@ namespace Service
 
             if (!existePapelUsuario && idPapel != 4)
             {
-                RemoveUserRole(idPessoa, idPapel, cpf).GetAwaiter().GetResult();
+                await RemoveUserRole(idPessoa, idPapel, cpf);
             }
         }
 
@@ -58,13 +65,7 @@ namespace Service
                 throw new Exception("Usuário não encontrado.");
             }
 
-            string role = idPapel switch
-            {
-                1 => "GESTOR",
-                2 => "GESTOR",
-                3 => "COLABORADOR",
-                _ => throw new ArgumentException("Papel inválido.")
-            };
+            string role = Core.PapelMap.ToRole((int)idPapel);
 
             if (await _userManager.IsInRoleAsync(user, role))
             {
