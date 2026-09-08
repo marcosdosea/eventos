@@ -38,6 +38,7 @@ namespace EventoWeb.Controllers
         }
 
 
+        [Authorize(Roles = "ADMINISTRADOR")]
         [HttpGet]
         [Route("")]
         [Route("Index")]
