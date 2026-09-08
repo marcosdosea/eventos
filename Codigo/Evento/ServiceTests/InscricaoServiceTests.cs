@@ -1,4 +1,4 @@
-﻿using Core;
+using Core;
 using Core.Service;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -220,6 +220,24 @@ namespace Service.Tests
                     Telefone1 = "7999900113344",
                     Telefone2 = "NULL",
                 },
+                new Pessoa
+                {
+                    Id = 4,
+                    Nome = "Novo Participante Teste",
+                    NomeCracha = "Novo",
+                    Cpf = "99988877766",
+                    Sexo = "M",
+                    Cep = "45340086",
+                    Rua = "Rua Teste",
+                    Bairro = "Centro",
+                    Cidade = "Aracaju",
+                    Estado = "SE",
+                    Numero = "100",
+                    Complemento = "casa",
+                    Email = "novo@teste.com",
+                    Telefone1 = "7999900113344",
+                    Telefone2 = "NULL",
+                },
             };
 
             var papel = new Papel
@@ -253,7 +271,7 @@ namespace Service.Tests
             _inscricaoService.CreateInscricaoEvento(new Inscricaopessoaevento()
             {
                 Id = 4,
-                IdPessoa = 3,
+                IdPessoa = 4,
                 IdEvento = 1,
                 IdPapel = 1,
                 IdTipoInscricao = 1,
@@ -279,6 +297,35 @@ namespace Service.Tests
             Assert.AreEqual((decimal)0, firstInscricao.ValorTotal);
             Assert.AreEqual("A", firstInscricao.Status);
             Assert.AreEqual((decimal)1, firstInscricao.FrequenciaFinal);
+        }
+
+        [TestMethod()]
+        public void CreateTest_JaInscrito_RetornaZeroENaoDuplica()
+        {
+            var countAntes = _inscricaoService.GetByEventoAndPapel(1, 1).Count();
+            var id = _inscricaoService.CreateInscricaoEvento(new Inscricaopessoaevento()
+            {
+                Id = 10,
+                IdPessoa = 1,
+                IdEvento = 1,
+                IdPapel = 1,
+                IdTipoInscricao = 1,
+                DataInscricao = DateTime.Now,
+                ValorTotal = 0,
+                Status = "S",
+                FrequenciaFinal = 0,
+            });
+
+            Assert.AreEqual((uint)0, id);
+            var countDepois = _inscricaoService.GetByEventoAndPapel(1, 1).Count();
+            Assert.AreEqual(countAntes, countDepois);
+        }
+
+        [TestMethod()]
+        public void IsInscritoTest()
+        {
+            Assert.IsTrue(_inscricaoService.IsInscrito(1, 1));
+            Assert.IsFalse(_inscricaoService.IsInscrito(99, 1));
         }
 
         [TestMethod()]
