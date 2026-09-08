@@ -15,8 +15,19 @@ namespace Service
             _context = context;
         }
 
+        public bool IsInscrito(uint idPessoa, uint idEvento)
+        {
+            return _context.Inscricaopessoaeventos
+                .Any(i => i.IdPessoa == idPessoa && i.IdEvento == idEvento);
+        }
+
         public uint CreateInscricaoEvento(Inscricaopessoaevento inscricaopessoaevento)
         {
+            if (IsInscrito(inscricaopessoaevento.IdPessoa, inscricaopessoaevento.IdEvento))
+            {
+                return 0;
+            }
+
             _context.Add(inscricaopessoaevento);
             _context.SaveChanges();
             return inscricaopessoaevento.Id;

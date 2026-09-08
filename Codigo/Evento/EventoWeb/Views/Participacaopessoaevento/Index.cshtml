@@ -44,10 +44,19 @@
     </div>
 }
 
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
 @if (TempData["Message"] != null)
 {
-    <div class="alert alert-success">
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
         @TempData["Message"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
 
@@ -63,10 +72,12 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var participacao in Model.Frequencias)
+                @if (Model.Frequencias != null)
                 {
+                    foreach (var participacao in Model.Frequencias)
+                    {
                     <tr>
-                        <td>@participacao.IdPessoaNavigation.Nome</td>
+                        <td>@participacao.IdPessoaNavigation?.Nome</td>
                         <td>@(participacao.Saida.HasValue ? "Saída" : "Entrada")</td>
                         <td>@(participacao.Saida.HasValue ? participacao.Saida.Value.ToString("dd/MM/yyyy às HH:mm\\h") : participacao.Entrada.ToString("dd/MM/yyyy às HH:mm\\h"))</td>
                         <td>
@@ -82,7 +93,7 @@
                                         class="btn btn-link text-danger p-0 btn-excluir-participacao"
                                         style="text-decoration: none;"
                                         data-form-id="formExcluir_@participacao.Id"
-                                        data-nome="@participacao.IdPessoaNavigation.Nome"
+                                        data-nome="@participacao.IdPessoaNavigation?.Nome"
                                         data-tipo="@(participacao.Saida.HasValue ? "Saída" : "Entrada")"
                                         data-data="@(participacao.Saida.HasValue ? participacao.Saida.Value.ToString("dd/MM/yyyy 'às' HH:mm") : participacao.Entrada.ToString("dd/MM/yyyy 'às' HH:mm"))">
                                     Excluir
@@ -90,6 +101,7 @@
                             </form>
                         </td>
                     </tr>
+                    }
                 }
             </tbody>
         </table>

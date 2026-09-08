@@ -288,7 +288,9 @@ public class PessoaService : IPessoaService
                             IdPessoa = pessoa.Id,
                             IdEvento = idEvento,
                             IdPapel = idPapel,
-                            NomeCracha = !string.IsNullOrWhiteSpace(pessoa.NomeCracha) ? pessoa.NomeCracha : pessoa.Nome,
+                            NomeCracha = !string.IsNullOrWhiteSpace(pessoa.NomeCracha)
+                                ? pessoa.NomeCracha
+                                : (pessoa.Nome?.Length > 20 ? pessoa.Nome.Substring(0, 20) : pessoa.Nome ?? "Participante"),
                             DataInscricao = DateTime.UtcNow,
                             Status = "S"
                         });

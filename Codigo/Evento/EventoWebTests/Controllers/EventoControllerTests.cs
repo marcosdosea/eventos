@@ -12,6 +12,7 @@ using System.Security.Cryptography;
 using Core.DTO;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using System.Security.Claims;
 
 namespace EventoWeb.Controllers.Tests
@@ -308,11 +309,12 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public async Task Participante_Post_Valid()
         {
+            controller.TempData = new TempDataDictionary(controller.HttpContext, Mock.Of<ITempDataProvider>());
             var result = await controller.CreateParticipante(GetNewGestaoPapel());
 
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
-            Assert.AreEqual("GerenciarEvento", redirectToActionResult.ActionName);
+            Assert.AreEqual("CreateParticipante", redirectToActionResult.ActionName);
         }
 
         [TestMethod()]
