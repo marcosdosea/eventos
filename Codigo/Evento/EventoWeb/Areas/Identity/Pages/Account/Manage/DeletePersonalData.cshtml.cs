@@ -2,14 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
-using System;
-using System.ComponentModel.DataAnnotations;
-using System.Threading.Tasks;
 using Core;
+using Core.Service;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Logging;
+using System.ComponentModel.DataAnnotations;
 
 namespace EventoWeb.Areas.Identity.Pages.Account.Manage
 {
@@ -18,15 +16,16 @@ namespace EventoWeb.Areas.Identity.Pages.Account.Manage
         private readonly UserManager<UsuarioIdentity> _userManager;
         private readonly SignInManager<UsuarioIdentity> _signInManager;
         private readonly ILogger<DeletePersonalDataModel> _logger;
-
+        private readonly IPessoaService _pessoaService;
         public DeletePersonalDataModel(
             UserManager<UsuarioIdentity> userManager,
             SignInManager<UsuarioIdentity> signInManager,
-            ILogger<DeletePersonalDataModel> logger)
+            ILogger<DeletePersonalDataModel> logger, IPessoaService pessoaService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _logger = logger;
+            _pessoaService = pessoaService;
         }
 
         /// <summary>
@@ -70,7 +69,7 @@ namespace EventoWeb.Areas.Identity.Pages.Account.Manage
         }
 
         public async Task<IActionResult> OnPostAsync()
-        {
+        {   
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
@@ -87,17 +86,33 @@ namespace EventoWeb.Areas.Identity.Pages.Account.Manage
                 }
             }
 
-            var result = await _userManager.DeleteAsync(user);
+            Pessoa pessoaExcluida = _pessoaService.GetByCpf(user.NormalizedUserName);
             var userId = await _userManager.GetUserIdAsync(user);
-            if (!result.Succeeded)
+
+            String retorno = await _pessoaService.DeletePessoaIdentityAsync(user);
+           
+            if (!String.IsNullOrEmpty(retorno))
             {
-                throw new InvalidOperationException($"Unexpected error occurred deleting user.");
+                _logger.LogError($"Erro ao tentar deletar a pessoa com ID {pessoaExcluida.Id}."+retorno);
+                ModelState.AddModelError(string.Empty, "Ocorreu um erro ao tentar deletar a conta. Por favor, verifique se você" +
+                    " possui vinculo com algum evento e tente novamente mais tarde."); 
+                return Page();
+            }
+            else
+            {
+                var result = await _userManager.DeleteAsync(user);
+                if (!result.Succeeded) {
+                    _logger.LogError($"Erro ao tentar deletar a pessoa com ID {userId}." + retorno);
+                    ModelState.AddModelError(string.Empty, "Ocorreu um erro ao tentar deletar a conta. Por favor, verifique se " +
+                        "você possui vinculo com algum evento e tente novamente mais tarde.");
+                    return Page();
+
+                }
             }
 
             await _signInManager.SignOutAsync();
 
             _logger.LogInformation("User with ID '{UserId}' deleted themselves.", userId);
-
             return Redirect("~/");
         }
     }
