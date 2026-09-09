@@ -16,7 +16,7 @@ namespace EventoWeb.Controllers
         private readonly IAreaInteresseService _areaInteresseService;
         private readonly IEstadosbrasilService _estadosbrasilService;
 
-        public HomeController(ILogger<HomeController> logger, IEventoService eventoService, IMapper mapper, 
+        public HomeController(ILogger<HomeController> logger, IEventoService eventoService, IMapper mapper,
             ITipoeventoService tipoEventoService, IAreaInteresseService areaInteresseService, IEstadosbrasilService estadosbrasilService)
         {
             _logger = logger;
@@ -41,7 +41,7 @@ namespace EventoWeb.Controllers
                     return RedirectToAction("GerenciarEventoListar", "Evento");
                 }
 
-                if(User.IsInRole("ADMINISTRADOR"))
+                if (User.IsInRole("ADMINISTRADOR"))
                 {
                     return RedirectToAction("Index", "Evento");
                 }
