@@ -2,15 +2,10 @@ using Core;
 using Core.Service;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Asn1.Ocsp;
-using System.Collections.Specialized;
 using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Diagnostics;
-using System.Net;
 using System.Net.Mail;
-using System.Security.Policy;
-using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 namespace Service;
 
@@ -87,7 +82,45 @@ public class PessoaService : IPessoaService
         try
         {
             var pessoa = _context.Pessoas.Find(id);
-            
+
+
+            if (pessoa != null)
+            {
+                _context.Remove(pessoa);
+                _context.SaveChanges();
+                return true;
+            }
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError($"Erro ao deletar pessoa com ID {id}: {ex.Message}");
+
+            return false;
+        }
+
+
+        return false;
+    }
+    public async Task<bool> DeleteAllRoles(String id)
+    {
+        try
+        {
+            int linhasAfetadas = await _context.Database.ExecuteSqlRawAsync(
+                "DELETE FROM itatechusers.aspnetuserroles WHERE UserId = {0}", id);
+
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    public async Task<bool> DeleteRole(uint id)
+    {
+        try
+        {
+            var pessoa = _context.Pessoas.Find(id);
+
 
             if (pessoa != null)
             {
@@ -108,15 +141,12 @@ public class PessoaService : IPessoaService
                         var roles = await _userManager.GetRolesAsync(existingUser);
                         if (roles.Count == 0)
                         {
-                            return await CreatePessoaIdentityComPapelAsync(pessoa, 0,4);
+                            return await CreatePessoaIdentityComPapelAsync(pessoa, 0, 4);
                         }
                         return true;
                     }
                 }
 
-                _context.Remove(pessoa);
-                _context.SaveChanges();
-                return true;
             }
         }
         catch (Exception ex)
@@ -130,6 +160,36 @@ public class PessoaService : IPessoaService
         return false;
     }
 
+    public async Task<String> DeletePessoaIdentityAsync(UsuarioIdentity user)
+    {
+        if(user.NormalizedUserName == null) return "NormalizedUserName está vazio.";
+        var pessoa = GetByCpf(user.NormalizedUserName);
+        if (pessoa == null) return "Pessoa não encontrada.";
+
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+           
+            if (!await DeleteAllRoles(user.Id)){
+                
+                return "Erro ao tentar deletar os papéis do usuário.";
+            }
+
+            if (!await Delete(pessoa.Id)){
+      
+                return "Erro ao tentar deletar os dados da pessoa.";
+            }
+
+            await transaction.CommitAsync();
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            return $"Ocorreu uma exceção ao deletar: {ex.Message}";
+        }
+    }
     /// <summary>
     /// Obtém todas as pessoas que possuem o papel de "GESTOR" no sistema Identity.
     /// </summary>
