@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Core;
 using Microsoft.AspNetCore.Mvc;
 using EventoWeb.Models;
@@ -42,7 +42,7 @@ namespace EventoWeb.Controllers.Tests
                 .Returns(GetTestEventos());
             mockService.Setup(service => service.Get(1))
                 .Returns(GetTargetEvento());
-            mockService.Setup(service => service.Create(It.IsAny<Evento>()))
+            mockService.Setup(service => service.Create(It.IsAny<Evento>(), It.IsAny<List<uint>>()))
                 .Verifiable();
 
             mockServiceInscricao.Setup(service => service.GetByEventoAndPapel(It.IsAny<uint>(), It.IsAny<int>()))
