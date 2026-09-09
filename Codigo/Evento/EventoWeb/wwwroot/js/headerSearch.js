@@ -94,6 +94,12 @@ document.addEventListener("DOMContentLoaded", function() {
         searchInput.addEventListener("keypress", function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
+                
+                if (searchInput.value.trim() === '') {
+                    alert('Insira algum texto na barra de pesquisa');
+                    return;
+                }
+                
                 applyFilters();
             }
         });
