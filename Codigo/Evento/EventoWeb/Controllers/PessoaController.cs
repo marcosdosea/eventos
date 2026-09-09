@@ -3,17 +3,10 @@ using Core;
 using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.Extensions.Primitives;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
-using NuGet.Common;
 using System.ComponentModel.DataAnnotations;
-using System.Net;
-using System.Threading.Tasks;
 
 namespace EventoWeb.Controllers
 {
@@ -292,7 +285,7 @@ namespace EventoWeb.Controllers
         public async Task<ActionResult> DeleteConfirmed(PessoaModel viewModel)
         {
 
-            var sucesso = await _pessoaService.Delete(viewModel.Id);
+            var sucesso = await _pessoaService.DeleteRole(viewModel.Id);
 
             if (sucesso)
             {
