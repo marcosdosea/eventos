@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using AutoMapper;
 using Core.Service;
 using Core;
@@ -30,9 +30,14 @@ namespace EventoWeb.Controllers
         [HttpGet]
         [Route("")]
         [Route("Index")]
-        public IActionResult Index()
+        public IActionResult Index(uint? idEvento)
         {
             var items = _service.GetAll();
+            if (idEvento.HasValue)
+            {
+                items = items.Where(x => x.IdEvento == idEvento.Value);
+                ViewData["EventoId"] = idEvento.Value;
+            }
             var model = items.Select(x => _mapper.Map<ModelocertificadoModel>(x)).ToList();
             return View(model);
         }

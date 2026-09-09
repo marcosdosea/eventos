@@ -60,7 +60,7 @@ namespace EventoWeb
             //builder.Services.AddTransient<IParticipanteService, ParticipanteService>();
             builder.Services.AddTransient<IParticipanteService, ParticipanteService>();
             builder.Services.AddTransient<IInscricaopessoaeventoService, InscricaopessoaeventoService>();
-
+            builder.Services.AddTransient<IEmailService, EmailSender>();
             builder.Services.AddDbContext<EventoContext>(
                 options => options.UseMySQL(builder.Configuration.GetConnectionString("EventoDatabase")));
 

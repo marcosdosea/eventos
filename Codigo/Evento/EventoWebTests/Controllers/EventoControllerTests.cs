@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Core;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using EventoWeb.Models;
 using EventoWeb.Mappers;
 using Core.Service;
@@ -79,6 +80,7 @@ namespace EventoWeb.Controllers.Tests
             var claimsPrincipal = new ClaimsPrincipal(identity);
             controller.ControllerContext = new ControllerContext();
             controller.ControllerContext.HttpContext = new DefaultHttpContext { User = claimsPrincipal };
+            controller.TempData = new TempDataDictionary(controller.ControllerContext.HttpContext, Mock.Of<ITempDataProvider>());
         }
 
         [TestMethod()]
@@ -291,7 +293,7 @@ namespace EventoWeb.Controllers.Tests
 
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
-            Assert.AreEqual("GerenciarEvento", redirectToActionResult.ActionName);
+            Assert.AreEqual("CreateParticipante", redirectToActionResult.ActionName);
         }
 
         [TestMethod()]
