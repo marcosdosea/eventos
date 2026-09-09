@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Core.Service;
 using Core;
 using Core.DTO;
@@ -136,6 +136,11 @@ namespace EventoWeb.Controllers
         public IActionResult realizarInscricao(uint idEvento, uint? idSubevento)
         {
             Evento evento = _eventoService.Get(idEvento);
+            if (evento == null)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
             EventoModel eventoModel = _mapper.Map<EventoModel>(evento);
             var tipoInscricaoModel = _tipoinscricaoService.GetByEvento(idEvento).ToList();
 
@@ -143,6 +148,15 @@ namespace EventoWeb.Controllers
                 tipoInscricao = tipoInscricaoModel,
                 eventoNavigation = eventoModel
             };
+
+            if (User.Identity != null && !string.IsNullOrEmpty(User.Identity.Name))
+            {
+                var pessoa = _pessoaService.GetByCpf(User.Identity.Name);
+                if (pessoa != null && _inscricaoService.IsInscrito(pessoa.Id, idEvento))
+                {
+                    ViewBag.JaInscrito = true;
+                }
+            }
             
             return View(model);
         }
@@ -153,43 +167,58 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> realizarInscricao(uint idEvento, InscricaoEventoModel inscricaoEvento)
         {
-           
-                var pessoaId = _pessoaService.GetByCpf(User.Identity.Name);
-                var novaInscricao = new InscricaoEventoModel()
-                {
-                    IdPessoa = pessoaId.Id,
-                    IdEvento = idEvento,
-                    IdPapel = 4,
-                    DataInscricao = DateTime.Now,
-                    NomeCracha = User.Identity.Name,
-                    Status = "S",
-                    IdTipoInscricao = inscricaoEvento.IdTipoInscricao,
-                    FrequenciaFinal = 0m,
-                    ValorTotal = inscricaoEvento.ValorTotal 
-                };
+            var pessoa = _pessoaService.GetByCpf(User.Identity.Name);
+            if (pessoa == null)
+            {
+                return RedirectToAction("Index", "Home");
+            }
 
-                var inscricao = _mapper.Map<Inscricaopessoaevento>(novaInscricao);
-                _inscricaoService.CreateInscricaoEvento(inscricao);
-                
-            
-            return RedirectToAction("Index", "Home");
+            if (_inscricaoService.IsInscrito(pessoa.Id, idEvento))
+            {
+                TempData["ParticipanteMessage"] = "Você já está inscrito neste evento!";
+                return RedirectToAction("minhasInscricoes", new { idEvento = idEvento });
+            }
+
+            var novaInscricao = new InscricaoEventoModel()
+            {
+                IdPessoa = pessoa.Id,
+                IdEvento = idEvento,
+                IdPapel = 4,
+                DataInscricao = DateTime.Now,
+                NomeCracha = User.Identity.Name,
+                Status = "S",
+                IdTipoInscricao = inscricaoEvento.IdTipoInscricao,
+                FrequenciaFinal = 0m,
+                ValorTotal = inscricaoEvento.ValorTotal 
+            };
+
+            var inscricao = _mapper.Map<Inscricaopessoaevento>(novaInscricao);
+            _inscricaoService.CreateInscricaoEvento(inscricao);
+            _eventoService.AtualizarVagasDisponiveis(idEvento);
+
+            TempData["ParticipanteSuccessMessage"] = "Inscrição realizada com sucesso!";
+            return RedirectToAction("minhasInscricoes", new { idEvento = idEvento });
         }
 
         [Authorize]
         [HttpGet]
         [Route("MinhasInscricoes")]
-        public async Task<IActionResult> minhasInscricoes(){
-        var inscricaoUser = _inscricaoService.GetAllEventsByUserId(User.Identity.Name);
-        var listarEventosModel = inscricaoUser.Select(i => new InscricaoEventoModel
-			{
-				Id = i.Id,
-				DataInscricao = (DateTime)i.DataInscricao,
-				NomeCracha = i.NomeCracha,
-				Status = i.Status,
+        public async Task<IActionResult> minhasInscricoes(uint? idEvento)
+        {
+            var inscricaoUser = _inscricaoService.GetAllEventsByUserId(User.Identity.Name);
+            var listarEventosModel = inscricaoUser.Select(i => new InscricaoEventoModel
+            {
+                Id = i.Id,
+                IdEvento = i.IdEvento,
+                DataInscricao = (DateTime)i.DataInscricao,
+                NomeCracha = i.NomeCracha,
+                Status = i.Status,
                 FrequenciaFinal = i.FrequenciaFinal,
                 IdEventoNavigation = i.IdEventoNavigation
-			}).ToList();
-         return View(listarEventosModel);
+            }).ToList();
+
+            ViewBag.EventoId = idEvento ?? listarEventosModel.FirstOrDefault()?.IdEvento;
+            return View(listarEventosModel);
         }
 
     }

@@ -9,6 +9,8 @@ namespace Core.Service
         uint Create(Pessoa pessoa);
         Task Edit(Pessoa pessoa);
         Task<bool> Delete(uint id);
+        Task<bool> DeleteRole(uint id);
+        Task<bool> DeleteAllRoles(String id);
         Pessoa Get(uint id);
         IEnumerable<Pessoa> GetAll();
         Task AtualizarSessao(uint id);
@@ -23,6 +25,7 @@ namespace Core.Service
         Task<List<Pessoa>> GetAllGestorAsync();
         Task<UsuarioIdentity> CreateAsync(Pessoa pessoa);
         Task<bool> VerificaEdit(Pessoa pessoaAtualizada);
+        Task<String> DeletePessoaIdentityAsync(UsuarioIdentity user);
         Task <bool> CreatePessoaIdentityComPapelAsync(Pessoa pessoa, uint idEvento, int idPapel);
         Task<List<Pessoa>> GetPessoasPorPapelNoEventoAsync(uint idEvento, int idPapel);
 

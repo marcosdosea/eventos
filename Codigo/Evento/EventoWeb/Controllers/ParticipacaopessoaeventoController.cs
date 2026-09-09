@@ -61,11 +61,15 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });
             }
 
+            var todasParticipacoes = await _participacaoService.GetAllAsync();
+            var participacoesDoEvento = todasParticipacoes
+                .Where(f => f.IdEvento == idEvento);
+
             var viewModel = new FrequenciaViewModel
             {
                 Evento = _eventoService.GetEventoSimpleDto(idEvento),
                 SubEvento = idSubEvento.HasValue ? _subeventoService.Get(idSubEvento.Value) : null,
-                Frequencias = await _participacaoService.GetAllAsync()
+                Frequencias = participacoesDoEvento.ToList()
             };
 
             return View(viewModel);
@@ -80,7 +84,7 @@ namespace EventoWeb.Controllers
             if (string.IsNullOrEmpty(username))
             {
                 TempData.Clear();
-                TempData["Message"] = "Usuário não autenticado.";
+                TempData["ErrorMessage"] = "Usuário não autenticado.";
                 return RedirectToAction("GerenciarEvento", "Evento");
             }
 
@@ -90,7 +94,7 @@ namespace EventoWeb.Controllers
             if (gestor == null && colaborador == null && !User.IsInRole("ADMINISTRADOR"))
             {
                 TempData.Clear();
-                TempData["Message"] = "Você não tem permissão para registrar participação!";
+                TempData["ErrorMessage"] = "Você não tem permissão para registrar participação!";
                 return RedirectToAction("GerenciarEvento", "Evento");
             }
 
@@ -99,7 +103,7 @@ namespace EventoWeb.Controllers
             var pessoa = _pessoaService.GetByCpf(cpf);
             if (pessoa == null)
             {
-                TempData["Message"] = "Pessoa não encontrada com o CPF informado.";
+                TempData["ErrorMessage"] = "Pessoa não encontrada com o CPF informado.";
                 return RedirectToAction(nameof(Index), new { idEvento, idSubEvento });
             }
 
@@ -109,8 +113,34 @@ namespace EventoWeb.Controllers
             
             if (inscricao == null)
             {
-                TempData["Message"] = "Pessoa não está inscrita neste evento.";
-                return RedirectToAction(nameof(Index), new { idEvento, idSubEvento });
+                // A pessoa não é participante (papel 4) neste evento.
+                // Se já estiver vinculada em papel conflitante (gestor/colaborador),
+                // é um impedimento e informamos em vermelho.
+                if (_inscricaoService.IsInscrito(pessoa.Id, idEvento))
+                {
+                    var papel = _inscricaoService.GetPapelPessoaByEvento(pessoa.Id, idEvento);
+                    TempData["ErrorMessage"] = papel switch
+                    {
+                        2 => "Impedimento: esta pessoa já está cadastrada neste evento como gestora.",
+                        3 => "Impedimento: esta pessoa já está cadastrada neste evento como colaboradora.",
+                        _ => "Impedimento: esta pessoa já está cadastrada neste evento."
+                    };
+                    return RedirectToAction(nameof(Index), new { idEvento, idSubEvento });
+                }
+
+                // Caso contrário, inscreve a pessoa como participante (papel 4)
+                // automaticamente, permitindo registrar a participação em seguida.
+                var novaInscricao = new Inscricaopessoaevento
+                {
+                    IdPessoa = pessoa.Id,
+                    IdEvento = idEvento,
+                    IdPapel = 4,
+                    DataInscricao = DateTime.Now,
+                    NomeCracha = !string.IsNullOrWhiteSpace(pessoa.NomeCracha) ? pessoa.NomeCracha : pessoa.Nome,
+                    Status = "S"
+                };
+                _inscricaoService.CreateInscricaoEvento(novaInscricao);
+                _eventoService.AtualizarVagasDisponiveis(idEvento);
             }
 
             var ultimaParticipacao = (await _participacaoService.GetAllAsync())
@@ -130,11 +160,13 @@ namespace EventoWeb.Controllers
             {
                 ultimaParticipacao.Saida = DateTime.Now;
                 await _participacaoService.UpdateAsync(ultimaParticipacao);
+                TempData["Message"] = "Saída registrada com sucesso.";
             }
             else
             {
                 // Caso contrário, registra uma nova entrada
                 await _participacaoService.AddAsync(novaParticipacao);
+                TempData["Message"] = "Entrada registrada com sucesso.";
             }
 
             return RedirectToAction(nameof(Index), new { idEvento, idSubEvento });
@@ -155,7 +187,7 @@ namespace EventoWeb.Controllers
             if (string.IsNullOrEmpty(username))
             {
                 TempData.Clear();
-                TempData["Message"] = "Usuário não autenticado.";
+                TempData["ErrorMessage"] = "Usuário não autenticado.";
                 return RedirectToAction("GerenciarEvento", "Evento");
             }
 
@@ -165,11 +197,12 @@ namespace EventoWeb.Controllers
             if (gestor == null && colaborador == null)
             {
                 TempData.Clear();
-                TempData["Message"] = "Você não tem permissão para excluir participação!";
+                TempData["ErrorMessage"] = "Você não tem permissão para excluir participação!";
                 return RedirectToAction("GerenciarEvento", "Evento");
             }
 
             await _participacaoService.DeleteAsync(id);
+            TempData["Message"] = "Participação removida com sucesso.";
 
             // CORREÇÃO: Agora o redirecionamento repassa o idSubEvento (se existir) para manter a tela no lugar certo
             return RedirectToAction(nameof(Index), new { idEvento, idSubEvento });

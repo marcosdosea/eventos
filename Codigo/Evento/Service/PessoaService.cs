@@ -41,31 +41,27 @@ public class PessoaService : IPessoaService
     }
     public async Task<bool> VerificaEdit(Pessoa pessoaAtualizada)
     {
-        if (pessoaAtualizada == null) return false;
-        var pessoaAtual = GetByCpf(pessoaAtualizada.Cpf);
+       var pessoaAtual = GetByCpf(pessoaAtualizada.Cpf);
         
-        if(pessoaAtual != null) {
+       if(pessoaAtual.Nome != pessoaAtualizada.Nome || pessoaAtual.Email != pessoaAtualizada.Email || pessoaAtual.Telefone1 != pessoaAtualizada.Telefone1)
+       {
+            pessoaAtual.Nome = pessoaAtualizada.Nome;
+            pessoaAtual.Email = pessoaAtualizada.Email;
+            pessoaAtual.Telefone1 = pessoaAtualizada.Telefone1;
 
-            
-
-            if(pessoaAtual.Nome != pessoaAtualizada.Nome || pessoaAtual.Email != pessoaAtualizada.Email || pessoaAtual.Telefone1 != pessoaAtualizada.Telefone1 || pessoaAtual.Telefone2 != pessoaAtualizada.Telefone2)
-            {
-                pessoaAtualizada.Id = pessoaAtual.Id;
-                pessoaAtualizada.Sexo = pessoaAtual.Sexo;
-
-                try
+            try
                 {
-                    await Edit(pessoaAtualizada);
+                    await Edit(pessoaAtual);
                     return true;
                 }
                 catch (Exception)
                 {
                     return false;
                 }
-            }
-            return true;
-        }
-        return false;
+       }
+       return true;
+        
+       
     }   
     public async Task Edit(Pessoa pessoa)
     {
@@ -90,7 +86,45 @@ public class PessoaService : IPessoaService
         try
         {
             var pessoa = _context.Pessoas.Find(id);
-            
+
+
+            if (pessoa != null)
+            {
+                _context.Remove(pessoa);
+                _context.SaveChanges();
+                return true;
+            }
+        }
+        catch (Exception ex)
+        {
+            Trace.TraceError($"Erro ao deletar pessoa com ID {id}: {ex.Message}");
+
+            return false;
+        }
+
+
+        return false;
+    }
+    public async Task<bool> DeleteAllRoles(String id)
+    {
+        try
+        {
+            int linhasAfetadas = await _context.Database.ExecuteSqlRawAsync(
+                "DELETE FROM itatechusers.aspnetuserroles WHERE UserId = {0}", id);
+
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    public async Task<bool> DeleteRole(uint id)
+    {
+        try
+        {
+            var pessoa = _context.Pessoas.Find(id);
+
 
             if (pessoa != null)
             {
@@ -111,15 +145,12 @@ public class PessoaService : IPessoaService
                         var roles = await _userManager.GetRolesAsync(existingUser);
                         if (roles.Count == 0)
                         {
-                            return await CreatePessoaIdentityComPapelAsync(pessoa, 0,4);
+                            return await CreatePessoaIdentityComPapelAsync(pessoa, 0, 4);
                         }
                         return true;
                     }
                 }
 
-                _context.Remove(pessoa);
-                _context.SaveChanges();
-                return true;
             }
         }
         catch (Exception ex)
@@ -133,6 +164,36 @@ public class PessoaService : IPessoaService
         return false;
     }
 
+    public async Task<String> DeletePessoaIdentityAsync(UsuarioIdentity user)
+    {
+        if(user.NormalizedUserName == null) return "NormalizedUserName está vazio.";
+        var pessoa = GetByCpf(user.NormalizedUserName);
+        if (pessoa == null) return "Pessoa não encontrada.";
+
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        try
+        {
+           
+            if (!await DeleteAllRoles(user.Id)){
+                
+                return "Erro ao tentar deletar os papéis do usuário.";
+            }
+
+            if (!await Delete(pessoa.Id)){
+      
+                return "Erro ao tentar deletar os dados da pessoa.";
+            }
+
+            await transaction.CommitAsync();
+
+            return null;
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            return $"Ocorreu uma exceção ao deletar: {ex.Message}";
+        }
+    }
     /// <summary>
     /// Obtém todas as pessoas que possuem o papel de "GESTOR" no sistema Identity.
     /// </summary>
@@ -276,78 +337,86 @@ public class PessoaService : IPessoaService
     public async Task<bool> CreatePessoaIdentityComPapelAsync(Pessoa pessoa, uint idEvento, int idPapel)
     {
         bool sucesso = false;
+
+        // Mapeia o papel para a role correspondente no Identity.
+        // Papel 4 (participante/usuário) usa a role "USUARIO", que é a role
+        // efetivamente cadastrada no seed (IdentityInitializer).
+        var role = idPapel switch
+        {
+            1 => "ADMINISTRADOR",
+            2 => "GESTOR",
+            3 => "COLABORADOR",
+            4 => "USUARIO",
+            5 => "USUARIO",
+            _ => throw new ArgumentException("Papel inválido.")
+        };
+
+        // Garante que a Pessoa exista no banco. Se ainda não existir, cria.
+        var pessoaExistente = GetByCpf(pessoa.Cpf);
+        if (pessoaExistente == null)
+        {
+            var novoId = Create(pessoa);
+            if (novoId == 0)
+            {
+                return false;
+            }
+            pessoa.Id = novoId;
+        }
+        else
+        {
+            pessoa.Id = pessoaExistente.Id;
+        }
+
         uint idPessoa = pessoa.Id;
+
+        // Garante que o usuário Identity exista. Se ainda não existir, cria.
         var existingUser = await _userManager.FindByNameAsync(pessoa.Cpf);
-
-        if(idPapel == 1 && existingUser == null && GetByCpf(pessoa.Cpf) == null)
+        if (existingUser == null)
         {
-                Create(pessoa);
-                await CreateAsync(pessoa);
-                existingUser = await _userManager.FindByNameAsync(pessoa.Cpf);
-                sucesso = true;
+            await CreateAsync(pessoa);
+            existingUser = await _userManager.FindByNameAsync(pessoa.Cpf);
 
+            if (existingUser == null)
+            {
+                throw new Exception($"Não foi possível criar o usuário Identity para o CPF {pessoa.Cpf}.");
+            }
         }
 
-        if (GetByCpf(pessoa.Cpf) == null || existingUser == null)
-        {
-            return sucesso;
-
-        }
-        
-
+        // Cria a inscrição no evento, quando aplicável.
+        // CreateInscricaoEvento já é idempotente: retorna 0 se a pessoa já
+        // estiver inscrita neste evento, evitando duplicidade.
         if (idEvento > 0)
         {
+            var nomeCracha = !string.IsNullOrWhiteSpace(pessoa.NomeCracha)
+                ? pessoa.NomeCracha
+                : (pessoa.Nome?.Length > 20 ? pessoa.Nome.Substring(0, 20) : pessoa.Nome ?? "Participante");
+
             var novaInscricao = new Inscricaopessoaevento
             {
                 IdPessoa = idPessoa,
                 IdEvento = idEvento,
                 IdPapel = idPapel,
-                NomeCracha = "o",
+                NomeCracha = nomeCracha,
                 DataInscricao = DateTime.Now,
                 Status = "S"
             };
             _inscricaoService.CreateInscricaoEvento(novaInscricao);
-
+            sucesso = true;
         }
 
-        using (var transaction = await _context.Database.BeginTransactionAsync())
+        // Associa o papel (role) ao usuário no Identity, caso ainda não possua.
+        if (!await _userManager.IsInRoleAsync(existingUser, role))
         {
-            try
+            var roleResult = await _userManager.AddToRoleAsync(existingUser, role);
+            if (!roleResult.Succeeded)
             {
-                var role = idPapel switch
-                {
-                    1 => "ADMINISTRADOR",
-                    2 => "GESTOR",
-                    3 => "COLABORADOR",
-                    4 => "USUARIO",
-                    5 => "PARTICIPANTE",
-                    _ => throw new ArgumentException("Papel inválido.")
-                };
-
-                if (!await _userManager.IsInRoleAsync(existingUser, role))
-                {
-                    var roleResult = await _userManager.AddToRoleAsync(existingUser, role);
-                    sucesso = true;
-                    if (!roleResult.Succeeded)
-                    {
-                        var errors = string.Join("; ", roleResult.Errors.Select(e => e.Description));
-                        throw new Exception($"Erro ao associar o papel '{role.ToLower()}' ao usuário no Identity: {errors}");
-                        
-                    }
-                }
-
-                
-
-                await transaction.CommitAsync();
+                var errors = string.Join("; ", roleResult.Errors.Select(e => e.Description));
+                throw new Exception($"Erro ao associar o papel '{role.ToLower()}' ao usuário no Identity: {errors}");
             }
-            catch (Exception ex)
-            {
-                await transaction.RollbackAsync();
-                throw new Exception($"Erro ao criar pessoa, inscrição ou associar papel: {ex.Message}", ex);
-            }
-
-            return sucesso;
+            sucesso = true;
         }
+
+        return sucesso;
     }
 
     public async Task<List<Pessoa>> GetAllAdmAsync()

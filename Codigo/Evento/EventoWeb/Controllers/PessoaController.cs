@@ -4,11 +4,11 @@ using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
-
 
 namespace EventoWeb.Controllers
 {
@@ -350,28 +350,23 @@ namespace EventoWeb.Controllers
                         Email = viewModel.Email
                     };
 
-                    if (await _pessoaService.IsAdmAsync(pessoa)) {
+                    if (await _pessoaService.IsAdmAsync(pessoa)){
                         TempData["ErrorMessage"] = "Já existe um administrador cadastrado com esse CPF.";
-                    }
-                    else
-                    {
-                        var sucesso = true; // await  _pessoaService.VerificaEdit(pessoa);
-
-                        if (sucesso)
+                    }else{
+                        if (_pessoaService.GetByCpf(pessoa.Cpf) != null)
                         {
+                            sucesso = await _pessoaService.VerificaEdit(pessoa);
+                        }
+                        
+                        if (sucesso){
                             sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 1);
 
-                            if (sucesso)
-                            {
+                            if (sucesso){
                                 TempData["SuccessMessage"] = "Administrador definido com sucesso.";
-                            }
-                            else
-                            {
+                            }else{
                                 TempData["ErrorMessage"] = "Erro ao cadastrar administrador.";
                             }
-                        }
-                        else
-                        {
+                        }else{
                             TempData["ErrorMessage"] = "Erro ao cadastrar administrador.";
                         }
                         
