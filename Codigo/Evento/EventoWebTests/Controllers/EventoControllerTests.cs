@@ -312,8 +312,8 @@ namespace EventoWeb.Controllers.Tests
         [DataRow("Edit", new Type[] { typeof(uint), typeof(EventoModel) }, "ADMINISTRADOR")]
         [DataRow("Delete", new Type[] { typeof(uint), typeof(EventoModel) }, "ADMINISTRADOR")]
         [DataRow("CreateGestor", new Type[] { typeof(GestaoPapelModel) }, "ADMINISTRADOR")]
-        [DataRow("CreateColaborador", new Type[] { typeof(GestaoPapelModel) }, "ADMINISTRADOR,GESTOR")]
-        [DataRow("CreateParticipante", new Type[] { typeof(GestaoPapelModel) }, "ADMINISTRADOR,GESTOR,COLABORADOR")]
+        [DataRow("CreateColaborador", new Type[] { typeof(GestaoPapelModel) }, "GESTOR")]
+        [DataRow("CreateParticipante", new Type[] { typeof(GestaoPapelModel) }, "GESTOR,COLABORADOR")]
         [DataRow("DeletePessoaPapel", new Type[] { typeof(uint), typeof(uint), typeof(uint) }, "ADMINISTRADOR,GESTOR,COLABORADOR")]
         public void Post_ExigeCargoCorreto(string nomeAcao, Type[] tiposParametros, string cargosEsperados)
         {

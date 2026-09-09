@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Core;
 using Core.Service;
 using EventoWeb.Models;
@@ -323,16 +323,15 @@ namespace EventoWeb.Controllers
         }
 
 
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
+        [Authorize(Roles = "GESTOR")]
         [HttpPost]
         [Route("CreateColaborador")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateColaborador(GestaoPapelModel gestaoPapelModel)
         {
             var idEventoColaborador = gestaoPapelModel.Evento?.Id ?? 0;
-            var isAdminColaborador = User.IsInRole("ADMINISTRADOR");
             var gestorColaborador = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEventoColaborador);
-            if (!isAdminColaborador && gestorColaborador == null)
+            if (gestorColaborador == null)
             {
                 TempData.Clear();
                 TempData["Message"] = "Você não tem permissão para criar um colaborador!";
@@ -415,7 +414,7 @@ namespace EventoWeb.Controllers
 
         }
 
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
+        [Authorize(Roles = "GESTOR,COLABORADOR")]
 
         [HttpGet]
         [Route("CreateParticipante")]
@@ -431,9 +430,8 @@ namespace EventoWeb.Controllers
 
             var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
             var colaborador = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, idEvento);
-            var isAdmin = User.IsInRole("ADMINISTRADOR");
 
-            if (!isAdmin && gestor == null && colaborador == null)
+            if (gestor == null && colaborador == null)
             {
                 TempData.Clear();
                 TempData["Message"] = "Você não tem permissão para criar um participante!";
@@ -451,49 +449,90 @@ namespace EventoWeb.Controllers
         }
 
 
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
+        [Authorize(Roles = "GESTOR,COLABORADOR")]
         [HttpPost]
         [Route("CreateParticipante")]
         [ValidateAntiForgeryToken]
         public ActionResult CreateParticipante(GestaoPapelModel gestaoPapelModel)
         {
-            var idEventoParticipante = gestaoPapelModel.Evento?.Id ?? 0;
-            var isAdminParticipante = User.IsInRole("ADMINISTRADOR");
-            var gestorParticipante = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEventoParticipante);
-            var colaboradorParticipante = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, idEventoParticipante);
-            if (!isAdminParticipante && gestorParticipante == null && colaboradorParticipante == null)
+            var eventoId = gestaoPapelModel?.Evento?.Id ?? 0;
+            var gestorParticipante = _inscricaoService.GetGestorInEvent(User.Identity.Name, eventoId);
+            var colaboradorParticipante = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, eventoId);
+            if (gestorParticipante == null && colaboradorParticipante == null)
             {
                 TempData.Clear();
                 TempData["Message"] = "Você não tem permissão para criar um participante!";
-                return RedirectToAction("GerenciarEvento", new { idEvento = idEventoParticipante });
+                return RedirectToAction("GerenciarEvento", new { idEvento = eventoId });
             }
 
             if (ModelState.IsValid)
             {
-                var pessoa = _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
-                var idEvento = gestaoPapelModel.Evento.Id;
+                var cpfLimpo = gestaoPapelModel.Pessoa?.Cpf?.Replace(".", "").Replace("-", "").Trim() ?? string.Empty;
 
-                var papel = _inscricaoService.GetPapelPessoaByEvento(pessoa.Id, idEvento);
-
-                if (papel == 4)
+                if (string.IsNullOrWhiteSpace(cpfLimpo))
                 {
-                    ModelState.AddModelError(string.Empty, "A pessoa selecionada já é um participante.");
-                    gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
-                    gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 4);
+                    ModelState.AddModelError("Pessoa.Cpf", "Informe um CPF válido.");
+                    gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(eventoId);
+                    gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(eventoId, 4);
                     return View(gestaoPapelModel);
                 }
 
-              
+                // Localiza a pessoa pelo CPF (limpo ou formatado).
+                var pessoa = _pessoaService.GetByCpf(cpfLimpo) ?? _pessoaService.GetByCpf(gestaoPapelModel.Pessoa?.Cpf ?? string.Empty);
 
+                // Se a pessoa já existe e já está vinculada ao evento, informa o papel atual.
+                if (pessoa != null && _inscricaoService.IsInscrito(pessoa.Id, eventoId))
+                {
+                    var papel = _inscricaoService.GetPapelPessoaByEvento(pessoa.Id, eventoId);
+                    var mensagem = papel switch
+                    {
+                        2 => "A pessoa selecionada já é gestora deste evento.",
+                        3 => "A pessoa selecionada já é colaboradora deste evento.",
+                        4 => "A pessoa selecionada já é um participante.",
+                        _ => "A pessoa selecionada já está vinculada a este evento."
+                    };
+                    ModelState.AddModelError(string.Empty, mensagem);
+                    gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(eventoId);
+                    gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(eventoId, 4);
+                    return View(gestaoPapelModel);
+                }
 
-                _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, idEvento, 4).Wait();
-                _eventoService.AtualizarVagasDisponiveis(idEvento);
+                // Monta os dados da pessoa a ser criada/inscrita.
+                // O serviço CreatePessoaIdentityComPapelAsync cria Pessoa + Identity + Papel
+                // + Inscrição de forma coesa quando a pessoa ainda não existe.
+                var nome = pessoa?.Nome ?? gestaoPapelModel.Pessoa?.Nome ?? "Participante";
+                var pessoaParaInscrever = pessoa ?? new Pessoa
+                {
+                    Cpf = cpfLimpo,
+                    Nome = nome,
+                    NomeCracha = !string.IsNullOrWhiteSpace(gestaoPapelModel.Pessoa?.NomeCracha)
+                        ? gestaoPapelModel.Pessoa.NomeCracha
+                        : (nome.Length > 20 ? nome.Substring(0, 20) : nome),
+                    Telefone1 = gestaoPapelModel.Pessoa?.Telefone1,
+                    Email = !string.IsNullOrWhiteSpace(gestaoPapelModel.Pessoa?.Email)
+                        ? gestaoPapelModel.Pessoa.Email
+                        : $"{cpfLimpo}@temp.com"
+                };
 
-                return RedirectToAction("GerenciarEvento", new { idEvento });
+                try
+                {
+                    _pessoaService.CreatePessoaIdentityComPapelAsync(pessoaParaInscrever, eventoId, 4).GetAwaiter().GetResult();
+                    _eventoService.AtualizarVagasDisponiveis(eventoId);
+                    TempData["SuccessMessage"] = $"Participante \"{nome}\" cadastrado com sucesso!";
+                    return RedirectToAction("CreateParticipante", new { idEvento = eventoId });
+                }
+                catch (Exception ex)
+                {
+                    var msg = ex.InnerException?.Message ?? ex.Message;
+                    ModelState.AddModelError(string.Empty, "Erro ao cadastrar participante: " + msg);
+                    gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(eventoId);
+                    gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(eventoId, 4);
+                    return View(gestaoPapelModel);
+                }
             }
 
-            gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(gestaoPapelModel.Evento.Id);
-            gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(gestaoPapelModel.Evento.Id, 4);
+            gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(eventoId);
+            gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(eventoId, 4);
             return View(gestaoPapelModel);
         }
 
@@ -508,24 +547,23 @@ namespace EventoWeb.Controllers
             var gestorDelete = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
             var colaboradorDelete = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, idEvento);
 
-            bool autorizado = isAdminDelete;
-            if (!autorizado)
+            // UML: Manter Gestor (papel 2) = ADMINISTRADOR; Manter Colaborador (3) = GESTOR;
+            // Manter Inscricao Participante (4) = GESTOR/COLABORADOR. Admin nao remove 3/4.
+            bool autorizado;
+            switch (idPapel)
             {
-                switch (idPapel)
-                {
-                    case 2:
-                        autorizado = false;
-                        break;
-                    case 3:
-                        autorizado = gestorDelete != null;
-                        break;
-                    case 4:
-                        autorizado = gestorDelete != null || colaboradorDelete != null;
-                        break;
-                    default:
-                        autorizado = false;
-                        break;
-                }
+                case 2:
+                    autorizado = isAdminDelete;
+                    break;
+                case 3:
+                    autorizado = gestorDelete != null;
+                    break;
+                case 4:
+                    autorizado = gestorDelete != null || colaboradorDelete != null;
+                    break;
+                default:
+                    autorizado = false;
+                    break;
             }
 
             if (!autorizado)
