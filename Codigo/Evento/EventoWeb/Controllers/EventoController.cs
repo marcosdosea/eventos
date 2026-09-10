@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Core;
 using Core.Service;
 using EventoWeb.Models;
@@ -154,6 +154,7 @@ namespace EventoWeb.Controllers
         }
 
 
+        [Authorize(Roles = "ADMINISTRADOR")]
         [HttpPost]
         [Route("Edit/{id}")]
         [ValidateAntiForgeryToken]
@@ -219,6 +220,7 @@ namespace EventoWeb.Controllers
         }
 
 
+        [Authorize(Roles = "ADMINISTRADOR")]
         [HttpPost]
         [Route("Delete/{id}")]
         [ValidateAntiForgeryToken]
@@ -243,6 +245,7 @@ namespace EventoWeb.Controllers
         }
 
 
+        [Authorize(Roles = "ADMINISTRADOR")]
         [HttpPost]
         [Route("CreateGestor")]
         [ValidateAntiForgeryToken]
@@ -328,11 +331,21 @@ namespace EventoWeb.Controllers
         }
 
 
+        [Authorize(Roles = "GESTOR")]
         [HttpPost]
         [Route("CreateColaborador")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateColaborador(GestaoPapelModel gestaoPapelModel)
         {
+            var idEventoColaborador = gestaoPapelModel.Evento?.Id ?? 0;
+            var gestorColaborador = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEventoColaborador);
+            if (gestorColaborador == null)
+            {
+                TempData.Clear();
+                TempData["Message"] = "Você não tem permissão para criar um colaborador!";
+                return RedirectToAction("GerenciarEvento", "Evento", new { idEvento = idEventoColaborador });
+            }
+
             if (ModelState.IsValid)
             {
                 var pessoaExistente = _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
@@ -409,7 +422,7 @@ namespace EventoWeb.Controllers
 
         }
 
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
+        [Authorize(Roles = "GESTOR,COLABORADOR")]
 
         [HttpGet]
         [Route("CreateParticipante")]
@@ -425,9 +438,8 @@ namespace EventoWeb.Controllers
 
             var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
             var colaborador = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, idEvento);
-            var isAdmin = User.IsInRole("ADMINISTRADOR");
 
-            if (!isAdmin && gestor == null && colaborador == null)
+            if (gestor == null && colaborador == null)
             {
                 TempData.Clear();
                 TempData["Message"] = "Você não tem permissão para criar um participante!";
@@ -445,12 +457,21 @@ namespace EventoWeb.Controllers
         }
 
 
+        [Authorize(Roles = "GESTOR,COLABORADOR")]
         [HttpPost]
         [Route("CreateParticipante")]
         [ValidateAntiForgeryToken]
         public ActionResult CreateParticipante(GestaoPapelModel gestaoPapelModel)
         {
             var eventoId = gestaoPapelModel?.Evento?.Id ?? 0;
+            var gestorParticipante = _inscricaoService.GetGestorInEvent(User.Identity.Name, eventoId);
+            var colaboradorParticipante = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, eventoId);
+            if (gestorParticipante == null && colaboradorParticipante == null)
+            {
+                TempData.Clear();
+                TempData["Message"] = "Você não tem permissão para criar um participante!";
+                return RedirectToAction("GerenciarEvento", new { idEvento = eventoId });
+            }
 
             if (ModelState.IsValid)
             {
@@ -464,10 +485,8 @@ namespace EventoWeb.Controllers
                     return View(gestaoPapelModel);
                 }
 
-                // Localiza a pessoa pelo CPF (limpo ou formatado).
                 var pessoa = _pessoaService.GetByCpf(cpfLimpo) ?? _pessoaService.GetByCpf(gestaoPapelModel.Pessoa?.Cpf ?? string.Empty);
 
-                // Se a pessoa já existe e já está vinculada ao evento, informa o papel atual.
                 if (pessoa != null && _inscricaoService.IsInscrito(pessoa.Id, eventoId))
                 {
                     var papel = _inscricaoService.GetPapelPessoaByEvento(pessoa.Id, eventoId);
@@ -484,9 +503,6 @@ namespace EventoWeb.Controllers
                     return View(gestaoPapelModel);
                 }
 
-                // Monta os dados da pessoa a ser criada/inscrita.
-                // O serviço CreatePessoaIdentityComPapelAsync cria Pessoa + Identity + Papel
-                // + Inscrição de forma coesa quando a pessoa ainda não existe.
                 var nome = pessoa?.Nome ?? gestaoPapelModel.Pessoa?.Nome ?? "Participante";
                 var pessoaParaInscrever = pessoa ?? new Pessoa
                 {
@@ -524,10 +540,127 @@ namespace EventoWeb.Controllers
         }
 
 
+        [Authorize(Roles = "GESTOR,COLABORADOR")]
+        [HttpGet]
+        [Route("CreateUsuario")]
+        public ActionResult CreateUsuario(uint idEvento)
+        {
+            var evento = _eventoService.Get(idEvento);
+            if (evento == null)
+            {
+                TempData.Clear();
+                TempData["Message"] = "Evento não encontrado!";
+                return RedirectToAction("Index", "Home");
+            }
+
+            var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
+            var colaborador = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, idEvento);
+            if (gestor == null && colaborador == null)
+            {
+                TempData.Clear();
+                TempData["Message"] = "Você não tem permissão para criar um usuário!";
+                return RedirectToAction("GerenciarEvento", new { idEvento });
+            }
+
+            var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
+            var viewModel = new PessoaModel
+            {
+                Estados = new SelectList(estados, "Estado", "Nome")
+            };
+            ViewBag.IdEvento = idEvento;
+            return View("~/Views/Pessoa/CreateUsuario.cshtml", viewModel);
+        }
+
+
+        [Authorize(Roles = "GESTOR,COLABORADOR")]
+        [HttpPost]
+        [Route("CreateUsuario")]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> CreateUsuario(PessoaModel viewModel, uint idEvento)
+        {
+            var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
+            var colaborador = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, idEvento);
+            if (gestor == null && colaborador == null)
+            {
+                TempData.Clear();
+                TempData["Message"] = "Você não tem permissão para criar um usuário!";
+                return RedirectToAction("GerenciarEvento", new { idEvento });
+            }
+
+            ViewBag.IdEvento = idEvento;
+            if (ModelState.IsValid)
+            {
+                var nome = viewModel.Nome ?? string.Empty;
+                var pessoa = new Pessoa
+                {
+                    Cpf = viewModel.Cpf,
+                    Nome = viewModel.Nome,
+                    NomeCracha = nome.Length > 20 ? nome.Substring(0, 20) : nome,
+                    Telefone1 = viewModel.Telefone1,
+                    Email = viewModel.Email
+                };
+                var existe = _pessoaService.GetByCpf(pessoa.Cpf);
+                if (existe != null)
+                {
+                    TempData["ErrorMessage"] = "Esse CPF já está associado a um usuário.";
+                    return RedirectToAction(nameof(CreateUsuario), new { idEvento });
+                }
+                _pessoaService.Create(pessoa);
+                await _pessoaService.CreateAsync(pessoa);
+                var sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 4);
+                if (sucesso)
+                {
+                    TempData["SuccessMessage"] = "Usuário cadastrado com sucesso!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Erro ao cadastrar usuário.";
+                }
+
+                return RedirectToAction(nameof(CreateUsuario), new { idEvento });
+            }
+
+            var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
+            viewModel.Estados = new SelectList(estados, "Estado", "Nome");
+            return View("~/Views/Pessoa/CreateUsuario.cshtml", viewModel);
+        }
+
+
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
         [HttpPost]
         [Route("DeletePessoaPapel")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeletePessoaPapel(uint idPessoa, uint idEvento, uint idPapel)
         {
+            var pessoaLogada = _pessoaService.GetByCpf(User.Identity?.Name ?? string.Empty);
+            var isAdminDelete = pessoaLogada != null && await _pessoaService.IsAdmAsync(pessoaLogada);
+            var gestorDelete = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
+            var colaboradorDelete = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, idEvento);
+
+            bool autorizado;
+            switch (idPapel)
+            {
+                case 2:
+                    autorizado = isAdminDelete;
+                    break;
+                case 3:
+                    autorizado = gestorDelete != null;
+                    break;
+                case 4:
+                    autorizado = gestorDelete != null || colaboradorDelete != null;
+                    break;
+                default:
+                    autorizado = false;
+                    break;
+            }
+
+            if (!autorizado)
+            {
+                TempData.Clear();
+                TempData["Message"] = "Você não tem permissão para remover esta pessoa!";
+                return RedirectToAction("GerenciarEvento", new { idEvento });
+            }
+
             var pessoa = _pessoaService.Get(idPessoa);
             if (pessoa == null || string.IsNullOrEmpty(pessoa.Cpf))
             {
@@ -754,8 +887,6 @@ namespace EventoWeb.Controllers
         }
 
 
-        // é um adianto deevento proxima PR de Nadson
-        // (tanto adianta quanto quem for mexer com isso vai ver o que Nadson fez/fará).
 
         /*
 		[Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
