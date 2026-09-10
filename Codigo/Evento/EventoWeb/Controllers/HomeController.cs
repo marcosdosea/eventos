@@ -13,16 +13,21 @@ namespace EventoWeb.Controllers
         private readonly IEventoService _eventoService;
         private readonly IMapper _mapper;
         private readonly ITipoeventoService _tipoEventoService;
+        private readonly IAreaInteresseService _areaInteresseService;
+        private readonly IEstadosbrasilService _estadosbrasilService;
 
-        public HomeController(ILogger<HomeController> logger, IEventoService eventoService, IMapper mapper, ITipoeventoService tipoEventoService)
+        public HomeController(ILogger<HomeController> logger, IEventoService eventoService, IMapper mapper,
+            ITipoeventoService tipoEventoService, IAreaInteresseService areaInteresseService, IEstadosbrasilService estadosbrasilService)
         {
             _logger = logger;
             _eventoService = eventoService;
             _mapper = mapper;
             _tipoEventoService = tipoEventoService;
+            _areaInteresseService = areaInteresseService;
+            _estadosbrasilService = estadosbrasilService;
         }
 
-        public IActionResult Index(bool vitrine = false)
+        public IActionResult Index(bool vitrine = false, bool adminRemovido = false)
         {
             if (!User.Identity.IsAuthenticated)
             {
@@ -32,14 +37,20 @@ namespace EventoWeb.Controllers
             if (!vitrine)
             {
                 if (User.IsInRole("GESTOR"))
-                {
+                {   if (adminRemovido) return RedirectToAction("GerenciarEventoListar", "Evento", new { adminRemovido = true });
+                    
                     return RedirectToAction("GerenciarEventoListar", "Evento");
                 }
 
-                if(User.IsInRole("ADMINISTRADOR"))
+                if (User.IsInRole("ADMINISTRADOR"))
                 {
                     return RedirectToAction("Index", "Evento");
                 }
+            }
+            if (adminRemovido)
+            {
+                TempData["SuccessMessage"] = "Aviso: Seu cargo de administrador foi removido!";
+                TempData["ToastTimeout"] = 5000;
             }
             var listarEventos = _eventoService.GetAll().ToList();
             var listarEventosModel = _mapper.Map<List<EventoModel>>(listarEventos);
@@ -51,7 +62,23 @@ namespace EventoWeb.Controllers
 
             return View(listarEventosModel);
         }
-       
+
+        [HttpGet]
+        public IActionResult Buscar([FromQuery] Core.DTO.EventoFilterDTO filter)
+        {
+            IEnumerable<Core.Evento> eventos = new List<Core.Evento>();
+
+            eventos = _eventoService.Search(filter);
+
+            var eventosModel = _mapper.Map<List<EventoModel>>(eventos);
+
+            ViewBag.TiposEventos = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_tipoEventoService.GetAll().OrderBy(t => t.Nome), "Id", "Nome", filter.IdTipoEvento);
+            ViewBag.AreasInteresse = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_areaInteresseService.GetAll().OrderBy(a => a.Nome), "Id", "Nome", filter.IdAreaInteresse);
+            ViewBag.Estados = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_estadosbrasilService.GetAll().OrderBy(e => e.Nome), "Estado", "Nome", filter.Estado);
+            ViewBag.FiltroAtual = filter;
+
+            return View(eventosModel);
+        }
 
         // Outras ações do controlador
         public IActionResult Privacy()

@@ -15,9 +15,17 @@
     </div>
     TempData.Remove("Message");
 }
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger" role="alert" id="alerterror2">
+        @TempData["ErrorMessage"]
+    </div>
+    TempData.Remove("ErrorMessage");
+}
 <script>
     setTimeout(function() {
         $("#alerterror").fadeOut("slow");
+        $("#alerterror2").fadeOut("slow");
     }, 3000);</script>
 <div class="container mt-4">
     <div class="w-100 mb-4">
@@ -31,7 +39,7 @@
                 new { Nome = "Inscrições", Action = "Index", Controller = "Participacaopessoaevento", Icon = "Inscricoes.png", Parametros = (object)new { idEvento = Model.Evento.Id } },
                 new { Nome = "Colaboradores", Action = "CreateColaborador", Controller = "Evento", Icon = "Colaboradores.png", Parametros = (object)new { idEvento = Model.Evento.Id } },
                 new { Nome = "Evento", Action = "GestorEditarEvento", Controller = "Evento", Icon = "Evento.png", Parametros = (object)new { id = Model.Evento.Id } },
-                new { Nome = "Usuário", Action = "CreateUsuario", Controller = "Pessoa", Icon = "Participantes.png", Parametros = (object)new { idEvento = Model.Evento.Id } }
+                new { Nome = "Usuário", Action = "CreateUsuario", Controller = "Evento", Icon = "Participantes.png", Parametros = (object)new { idEvento = Model.Evento.Id } }
                 };
         }
 

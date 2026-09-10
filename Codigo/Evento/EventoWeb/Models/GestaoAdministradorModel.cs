@@ -11,6 +11,7 @@ namespace EventoWeb.Models
 
         [Display(Name = "Nome")]
         [Required(ErrorMessage = "Nome é obrigatório")]
+        [StringLength(50, ErrorMessage = "O nome não pode ser maior que 50 caracteres")]
         public string Nome { get; set; } = null!;
 
         [Required(ErrorMessage = "O campo CPF é obrigatório.")]
@@ -20,14 +21,14 @@ namespace EventoWeb.Models
         public string Cpf { get; set; } = null!;
 
         [Display(Name = "Telefone")]
-        [TelefoneCelular(ErrorMessage = "Digite um telefone válido com DDD. Ex: (11) 91234-5678")]
-        [StringLength(11, MinimumLength = 11, ErrorMessage = "O campo telefone deve ter 11 números")]
+        [TelefoneCelular(ErrorMessage = "Digite um telefone válido com 11 dígitos. Ex: (11) 91234-5678")]
+        [StringLength(11, MinimumLength = 11)]
         public string? Telefone1 { get; set; }
 
         [Display(Name = "E-mail")]
         [Required(ErrorMessage = "E-mail é obrigatório")]
         [EmailAddress(ErrorMessage = "Por favor, digite um e-mail em um formato válido.")]
-        
+        [StringLength(50, ErrorMessage = "O e-mail não pode ser maior que 50 caracteres")]
         public string Email { get; set; } = null!;
         public List<PessoaModel> Administradores { get; set; } = new List<PessoaModel>();
     }

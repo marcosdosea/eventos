@@ -3,10 +3,12 @@ using Core;
 using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
-
+using System.Security.Claims;
 
 namespace EventoWeb.Controllers
 {
@@ -18,6 +20,7 @@ namespace EventoWeb.Controllers
         private readonly IEstadosbrasilService _estadosbrasilService;
         private readonly IMapper _mapper;
         private readonly IEmailService _emailSender;
+        
 
 
         public PessoaController(
@@ -28,8 +31,7 @@ namespace EventoWeb.Controllers
             _pessoaService = pessoaService;
             _estadosbrasilService = estadosbrasilService;
             _mapper = mapper;
-           _emailSender = emailSender;    
-            
+           _emailSender = emailSender;
         }
 
         // =====================================================================
@@ -284,25 +286,25 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> DeleteConfirmed(PessoaModel viewModel)
         {
-
+            string? cpf = User.Identity?.Name;
+            var loginAtivo = await _pessoaService.UserLogado(viewModel.Id, cpf);
+            
             var sucesso = await _pessoaService.Delete(viewModel.Id);
-
-            if (sucesso)
-            {
-                TempData["SuccessMessage"] = "Exclusão realizada com sucesso!";
+            if (sucesso){
+                if (loginAtivo){
+                    await _pessoaService.AtualizarSessao(viewModel.Id);
+                   
+                        return RedirectToAction("Index", "Home", new { adminRemovido = true });
+                    
+                }
+                TempData["SuccessMessage"] = "Remoção realizada com sucesso!";
             }
             else
             {
-                TempData["ErrorMessage"] = "Erro ao excluir pessoa";
+                TempData["ErrorMessage"] = "Erro ao remover pessoa!";
             }
 
-            if (User.IsInRole("ADMINISTRADOR"))
-            {
-                return RedirectToAction("DefinirAdministrador", "Pessoa");
-            }
-
-
-            return RedirectToAction("Index", "Pessoa");
+            return RedirecionamentoPessoa();
         }
 
         // =====================================================================
@@ -328,9 +330,11 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> DefinirAdministrador(GestaoAdministradorModel viewModel)
         {
+            var sucesso = true;
 
             if (ModelState.IsValid)
             {
+                var nomeFormatado = viewModel.Nome.Trim().Split(' ')[0];
                 if (!_pessoaService.ValidaEmail(viewModel.Email))
                 {
                     ModelState.AddModelError("Email", "Por favor, digite um e-mail em um formato válido.");
@@ -342,33 +346,29 @@ namespace EventoWeb.Controllers
                     {
                         Cpf = viewModel.Cpf,
                         Nome = viewModel.Nome,
-                        NomeCracha = viewModel.Nome.Trim().Split(' ')[0],
+                        NomeCracha = nomeFormatado.Substring(0, Math.Min(nomeFormatado.Length, 20)),
                         Telefone1 = viewModel.Telefone1,
                         Email = viewModel.Email
                     };
 
-                    if (await _pessoaService.IsAdmAsync(pessoa)) {
+                    if (await _pessoaService.IsAdmAsync(pessoa)){
                         TempData["ErrorMessage"] = "Já existe um administrador cadastrado com esse CPF.";
-                    }
-                    else
-                    {
-                        var sucesso = await  _pessoaService.VerificaEdit(pessoa);
+                    }else{
 
-                        if (sucesso)
+                        if (_pessoaService.GetByCpf(pessoa.Cpf) != null)
                         {
+                            sucesso = await _pessoaService.VerificaEdit(pessoa);
+                        }
+                        
+                        if (sucesso){
                             sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 1);
 
-                            if (sucesso)
-                            {
+                            if (sucesso){
                                 TempData["SuccessMessage"] = "Administrador definido com sucesso.";
-                            }
-                            else
-                            {
+                            }else{
                                 TempData["ErrorMessage"] = "Erro ao cadastrar administrador.";
                             }
-                        }
-                        else
-                        {
+                        }else{
                             TempData["ErrorMessage"] = "Erro ao cadastrar administrador.";
                         }
                         
@@ -384,6 +384,7 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
        
+        [Authorize(Roles = "ADMINISTRADOR")]
         [HttpPost, ActionName("EnviarEmailSenha")]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> EnviarEmailSenha(PessoaModel viewModel)
@@ -429,12 +430,15 @@ namespace EventoWeb.Controllers
             return RedirecionamentoPessoa();
 
         }
+
         private ActionResult RedirecionamentoPessoa()
         {
             if (User.IsInRole("ADMINISTRADOR")){
                 return RedirectToAction("DefinirAdministrador", "Pessoa");
+            }else if (User.IsInRole("GESTOR")){
+                return RedirectToAction("GerenciarEventoListar", "Evento");
             }
-            return RedirectToAction("Index", "Pessoa");
+            return RedirectToAction("Index", "Home");
         }
         // =====================================================================
         // HELPER PRIVADO

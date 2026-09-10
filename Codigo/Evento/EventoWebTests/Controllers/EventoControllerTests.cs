@@ -1,6 +1,8 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Core;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using EventoWeb.Models;
 using EventoWeb.Mappers;
 using Core.Service;
@@ -13,6 +15,8 @@ using Core.DTO;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using System.Reflection;
+using System.Linq;
 
 namespace EventoWeb.Controllers.Tests
 {
@@ -42,7 +46,7 @@ namespace EventoWeb.Controllers.Tests
                 .Returns(GetTestEventos());
             mockService.Setup(service => service.Get(1))
                 .Returns(GetTargetEvento());
-            mockService.Setup(service => service.Create(It.IsAny<Evento>()))
+            mockService.Setup(service => service.Create(It.IsAny<Evento>(), It.IsAny<List<uint>>()))
                 .Verifiable();
 
             mockServiceInscricao.Setup(service => service.GetByEventoAndPapel(It.IsAny<uint>(), It.IsAny<int>()))
@@ -79,6 +83,7 @@ namespace EventoWeb.Controllers.Tests
             var claimsPrincipal = new ClaimsPrincipal(identity);
             controller.ControllerContext = new ControllerContext();
             controller.ControllerContext.HttpContext = new DefaultHttpContext { User = claimsPrincipal };
+            controller.TempData = new TempDataDictionary(controller.ControllerContext.HttpContext, Mock.Of<ITempDataProvider>());
         }
 
         [TestMethod()]
@@ -291,7 +296,7 @@ namespace EventoWeb.Controllers.Tests
 
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
-            Assert.AreEqual("GerenciarEvento", redirectToActionResult.ActionName);
+            Assert.AreEqual("CreateParticipante", redirectToActionResult.ActionName);
         }
 
         [TestMethod()]
@@ -302,6 +307,27 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.AreEqual("GerenciarEvento", redirectToActionResult.ActionName);
+        }
+
+        [TestMethod()]
+        [DataRow("Edit", new Type[] { typeof(uint), typeof(EventoModel) }, "ADMINISTRADOR")]
+        [DataRow("Delete", new Type[] { typeof(uint), typeof(EventoModel) }, "ADMINISTRADOR")]
+        [DataRow("CreateGestor", new Type[] { typeof(GestaoPapelModel) }, "ADMINISTRADOR")]
+        [DataRow("CreateColaborador", new Type[] { typeof(GestaoPapelModel) }, "GESTOR")]
+        [DataRow("CreateParticipante", new Type[] { typeof(GestaoPapelModel) }, "GESTOR,COLABORADOR")]
+        [DataRow("DeletePessoaPapel", new Type[] { typeof(uint), typeof(uint), typeof(uint) }, "ADMINISTRADOR,GESTOR,COLABORADOR")]
+        public void Post_ExigeCargoCorreto(string nomeAcao, Type[] tiposParametros, string cargosEsperados)
+        {
+            var metodo = typeof(EventoController).GetMethod(nomeAcao, tiposParametros);
+            Assert.IsNotNull(metodo, $"Ação {nomeAcao} não encontrada.");
+
+            var autorizacao = metodo!.GetCustomAttributes(typeof(AuthorizeAttribute), false)
+                .Cast<AuthorizeAttribute>().FirstOrDefault();
+            Assert.IsNotNull(autorizacao, $"A ação POST {nomeAcao} deve possuir [Authorize] para garantir o controle de acesso.");
+            Assert.AreEqual(cargosEsperados, autorizacao!.Roles, $"POST {nomeAcao} com cargos incorretos.");
+
+            var antiFalsificacao = metodo.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), false);
+            Assert.IsTrue(antiFalsificacao.Length > 0, $"POST {nomeAcao} sem [ValidateAntiForgeryToken].");
         }
 
         private EventoModel GetNewEvento()
