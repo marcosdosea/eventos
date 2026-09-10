@@ -537,6 +537,92 @@ namespace EventoWeb.Controllers
         }
 
 
+        [Authorize(Roles = "GESTOR,COLABORADOR")]
+        [HttpGet]
+        [Route("CreateUsuario")]
+        public ActionResult CreateUsuario(uint idEvento)
+        {
+            var evento = _eventoService.Get(idEvento);
+            if (evento == null)
+            {
+                TempData.Clear();
+                TempData["Message"] = "Evento não encontrado!";
+                return RedirectToAction("Index", "Home");
+            }
+
+            var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
+            var colaborador = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, idEvento);
+            if (gestor == null && colaborador == null)
+            {
+                TempData.Clear();
+                TempData["Message"] = "Você não tem permissão para criar um usuário!";
+                return RedirectToAction("GerenciarEvento", new { idEvento });
+            }
+
+            var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
+            var viewModel = new PessoaModel
+            {
+                Estados = new SelectList(estados, "Estado", "Nome")
+            };
+            ViewBag.IdEvento = idEvento;
+            return View("~/Views/Pessoa/CreateUsuario.cshtml", viewModel);
+        }
+
+
+        [Authorize(Roles = "GESTOR,COLABORADOR")]
+        [HttpPost]
+        [Route("CreateUsuario")]
+        [ValidateAntiForgeryToken]
+        public async Task<ActionResult> CreateUsuario(PessoaModel viewModel, uint idEvento)
+        {
+            var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
+            var colaborador = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, idEvento);
+            if (gestor == null && colaborador == null)
+            {
+                TempData.Clear();
+                TempData["Message"] = "Você não tem permissão para criar um usuário!";
+                return RedirectToAction("GerenciarEvento", new { idEvento });
+            }
+
+            ViewBag.IdEvento = idEvento;
+            if (ModelState.IsValid)
+            {
+                var nome = viewModel.Nome ?? string.Empty;
+                var pessoa = new Pessoa
+                {
+                    Cpf = viewModel.Cpf,
+                    Nome = viewModel.Nome,
+                    NomeCracha = nome.Length > 20 ? nome.Substring(0, 20) : nome,
+                    Telefone1 = viewModel.Telefone1,
+                    Email = viewModel.Email
+                };
+                var existe = _pessoaService.GetByCpf(pessoa.Cpf);
+                if (existe != null)
+                {
+                    TempData["ErrorMessage"] = "Esse CPF já está associado a um usuário.";
+                    return RedirectToAction(nameof(CreateUsuario), new { idEvento });
+                }
+                _pessoaService.Create(pessoa);
+                await _pessoaService.CreateAsync(pessoa);
+                var sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 4);
+                if (sucesso)
+                {
+                    TempData["SuccessMessage"] = "Usuário cadastrado com sucesso!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Erro ao cadastrar usuário.";
+                }
+
+                return RedirectToAction(nameof(CreateUsuario), new { idEvento });
+            }
+
+            var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
+            viewModel.Estados = new SelectList(estados, "Estado", "Nome");
+            return View("~/Views/Pessoa/CreateUsuario.cshtml", viewModel);
+        }
+
+
         [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
         [HttpPost]
         [Route("DeletePessoaPapel")]
