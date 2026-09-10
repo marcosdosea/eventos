@@ -114,7 +114,15 @@ namespace EventoWeb.Controllers
                     }
                 }
                 var evento = _mapper.Map<Evento>(eventoModel);
-                _eventoService.Create(evento);
+                
+                var idsAreaInteresse = new List<uint>();
+                if (eventoModel.IdAreaInteresses != null && eventoModel.IdAreaInteresses.Any()) {
+                    idsAreaInteresse.AddRange(eventoModel.IdAreaInteresses);
+                } else if (eventoModel.IdAreaInteresse > 0) {
+                    idsAreaInteresse.Add(eventoModel.IdAreaInteresse);
+                }
+
+                _eventoService.Create(evento, idsAreaInteresse);
                 evento.ImagemPortal = fotoSource;
                 return RedirectToAction(nameof(Index));
             }
