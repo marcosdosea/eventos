@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Core;
 using EventoWeb.Models;
 
@@ -13,7 +13,8 @@ public class EventoProfile : Profile
 		.ForMember(dest => dest.ImagemPortal, opt => opt.MapFrom(src => src.ImagemPortal != null ? FormFileToByteArray(src.ImagemPortal) : null))
 		.ReverseMap()
         .ForMember(dest => dest.ImagemPortal, opt => opt.Ignore())
-        .ForMember(dest => dest.ImagemPortalBase64, opt => opt.MapFrom(src => src.ImagemPortal != null ? Convert.ToBase64String(src.ImagemPortal) : string.Empty));
+        .ForMember(dest => dest.ImagemPortalBase64, opt => opt.MapFrom(src => src.ImagemPortal != null ? Convert.ToBase64String(src.ImagemPortal) : string.Empty))
+        .ForMember(dest => dest.IdAreaInteresses, opt => opt.MapFrom(src => src.IdAreaInteresses != null ? src.IdAreaInteresses.Select(ai => ai.Id).ToList() : new List<uint>()));
 
     }
 

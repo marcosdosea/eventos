@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using EventoWeb.Models;
 using Core;
@@ -12,6 +13,7 @@ namespace Service.Tests
     public class MockUserManager<TUser> : UserManager<TUser> where TUser : class
     {
         private readonly Dictionary<string, TUser> _users = new();
+        private readonly Dictionary<string, List<string>> _userRoles = new();
 
         public MockUserManager()
             : base(new Mock<IUserStore<TUser>>().Object,
@@ -37,6 +39,8 @@ namespace Service.Tests
 
                 if (!string.IsNullOrEmpty(usuario.Id))
                     _users[usuario.Id] = user;
+                
+                _userRoles[usuario.UserName] = new List<string>();
             }
             return Task.FromResult(IdentityResult.Success);
         }
@@ -70,23 +74,42 @@ namespace Service.Tests
 
         public override Task<IdentityResult> AddToRoleAsync(TUser user, string role)
         {
+            if (user is UsuarioIdentity usuario)
+            {
+                if (!_userRoles.ContainsKey(usuario.UserName))
+                    _userRoles[usuario.UserName] = new List<string>();
+                
+                if (!_userRoles[usuario.UserName].Contains(role))
+                    _userRoles[usuario.UserName].Add(role);
+            }
             return Task.FromResult(IdentityResult.Success);
         }
 
         public override Task<IdentityResult> RemoveFromRoleAsync(TUser user, string role)
         {
+            if (user is UsuarioIdentity usuario && _userRoles.ContainsKey(usuario.UserName))
+            {
+                _userRoles[usuario.UserName].Remove(role);
+            }
             return Task.FromResult(IdentityResult.Success);
         }
 
         public override Task<bool> IsInRoleAsync(TUser user, string role)
         {
-            // Simula que está na role para permitir remoção
-            return Task.FromResult(true);
+            if (user is UsuarioIdentity usuario && _userRoles.ContainsKey(usuario.UserName))
+            {
+                return Task.FromResult(_userRoles[usuario.UserName].Contains(role));
+            }
+            return Task.FromResult(false);
         }
 
         public override Task<IList<string>> GetRolesAsync(TUser user)
         {
-            return Task.FromResult<IList<string>>(new List<string> { "Participante" });
+            if (user is UsuarioIdentity usuario && _userRoles.ContainsKey(usuario.UserName))
+            {
+                return Task.FromResult<IList<string>>(_userRoles[usuario.UserName].ToList());
+            }
+            return Task.FromResult<IList<string>>(new List<string>());
         }
     }
 }

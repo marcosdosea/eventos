@@ -1,4 +1,4 @@
-﻿using Core;
+using Core;
 using Core.Service;
 using Core.DTO;
 using Microsoft.EntityFrameworkCore;
@@ -20,8 +20,17 @@ namespace Service
         /// <param name="evento"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public uint Create(Evento evento)
+        public uint Create(Evento evento, List<uint> idsAreaInteresse = null)
         {
+            if (idsAreaInteresse != null && idsAreaInteresse.Any())
+            {
+                var areas = _context.Areainteresses.Where(a => idsAreaInteresse.Contains(a.Id)).ToList();
+                foreach (var area in areas)
+                {
+                    evento.IdAreaInteresses.Add(area);
+                }
+            }
+            
             _context.Add(evento);
             _context.SaveChanges();
             return (uint)evento.Id;
@@ -242,6 +251,59 @@ namespace Service
 
                 _context.SaveChanges();
             }
+        }
+
+        public IEnumerable<Evento> Search(EventoFilterDTO filter)
+        {
+            var query = _context.Eventos
+                .Include(e => e.IdTipoEventoNavigation)
+                .Include(e => e.IdAreaInteresses)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(filter.TermoBusca))
+            {
+                var termos = filter.TermoBusca.Trim().Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                foreach (var termo in termos)
+                {
+                    var termoLike = $"%{termo}%";
+                    query = query.Where(e => 
+                        EF.Functions.Like(e.Nome, termoLike) || 
+                        EF.Functions.Like(e.Descricao, termoLike) ||
+                        (e.IdTipoEventoNavigation != null && EF.Functions.Like(e.IdTipoEventoNavigation.Nome, termoLike)) ||
+                        e.IdAreaInteresses.Any(ai => EF.Functions.Like(ai.Nome, termoLike))
+                    );
+                }
+            }
+
+            if (filter.IdAreaInteresse.HasValue)
+            {
+                query = query.Where(e => e.IdAreaInteresses.Select(ai => ai.Id).Contains(filter.IdAreaInteresse.Value));
+            }
+
+            if (filter.IdTipoEvento.HasValue)
+            {
+                query = query.Where(e => e.IdTipoEvento == filter.IdTipoEvento.Value);
+            }
+
+            if (filter.Data.HasValue)
+            {
+                query = query.Where(e => e.DataInicio.HasValue && e.DataInicio.Value.Date >= filter.Data.Value.Date);
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.Estado))
+            {
+                var estadoLimpo = filter.Estado.Trim();
+                query = query.Where(e => e.Estado != null && e.Estado.Trim() == estadoLimpo);
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.Cidade))
+            {
+                query = query.Where(e => e.Cidade == filter.Cidade);
+            }
+
+            query = query.Where(e => e.Status == "A" || e.Status == "C");
+
+            return query.AsNoTracking().ToList();
         }
 
     }

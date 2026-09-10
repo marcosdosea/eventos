@@ -384,6 +384,7 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
        
+        [Authorize(Roles = "ADMINISTRADOR")]
         [HttpPost, ActionName("EnviarEmailSenha")]
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> EnviarEmailSenha(PessoaModel viewModel)

@@ -1,10 +1,10 @@
-﻿using Core.DTO;
+using Core.DTO;
 
 namespace Core.Service
 {
     public interface IEventoService
     {
-        uint Create(Evento evento);
+        uint Create(Evento evento, List<uint> idsAreaInteresse = null);
         void Edit(Evento evento, List<uint> idsAreaInteresse);
         void Delete(uint Id);
 
@@ -23,5 +23,7 @@ namespace Core.Service
 		string GetNomeById(uint id);
 
         void AtualizarVagasDisponiveis(uint idEvento);
+
+        IEnumerable<Evento> Search(EventoFilterDTO filter);
     }
 }
