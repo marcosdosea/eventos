@@ -2,7 +2,7 @@
 
 <link href="~/lib/datatable/css/datatables.min.css" rel="stylesheet" />
 
-<h1 class="blue-normal">Participação do Participante</h1>
+<h1 class="blue-normal">Frequência</h1>
 <hr />
 
 <div class="row mb-4">
@@ -20,6 +20,7 @@
     <div class="col-md-6">
         <form id="participacaoForm" asp-action="RegistrarParticipacao" method="post">
             @Html.AntiForgeryToken()
+            <input type="hidden" name="actionRetorno" value="Frequencia" />
             <input type="hidden" name="idEvento" value="@Model.Evento.Id" />
             @if (Model.SubEvento != null)
             {
@@ -83,6 +84,7 @@
                         <td>
                             <form style="display: inline;" method="post" asp-action="ExcluirParticipacao" id="formExcluir_@participacao.Id">
                                 @Html.AntiForgeryToken()
+                                <input type="hidden" name="actionRetorno" value="Frequencia" />
                                 <input type="hidden" name="id" value="@participacao.Id" />
                                 <input type="hidden" name="idEvento" value="@Model.Evento.Id" />
                                 @if (Model.SubEvento != null)

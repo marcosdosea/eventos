@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Core;
 using Core.DTO;
 using Core.Service;
@@ -41,6 +41,7 @@ namespace EventoWeb.Controllers
         [Authorize(Roles = "GESTOR,COLABORADOR")]
         [HttpGet]
         [Route("ParticipacaoPessoaEvento/Index/{idEvento}/{idSubEvento?}")]
+        [Route("ParticipacaoPessoaEvento/Index")]
         public async Task<IActionResult> Index(uint idEvento, uint? idSubEvento)
         {
 
@@ -50,16 +51,167 @@ namespace EventoWeb.Controllers
                 return Challenge();
             }
 
-            var username = user.UserName;
+            var username = User.Identity?.Name ?? user.UserName;
+            var cpfLimpo = username.Replace(".", "").Replace("-", "");
+
+            if (idEvento == 0)
+            {
+                uint idEncontrado = 0;
+                try
+                {
+                    var ev = _eventoService.GetEventByCpf(username, 3).FirstOrDefault();
+                    if (ev == null && cpfLimpo != username)
+                    {
+                        ev = _eventoService.GetEventByCpf(cpfLimpo, 3).FirstOrDefault();
+                    }
+                    if (ev != null)
+                    {
+                        idEncontrado = ev.Id;
+                    }
+                }
+                catch { }
+
+                if (idEncontrado == 0)
+                {
+                    try
+                    {
+                        var inscricoes = _inscricaoService.GetAllEventsByUserId(username);
+                        var inscricao = inscricoes.FirstOrDefault(i => i.IdPapel == 3) ?? inscricoes.FirstOrDefault(i => i.IdPapel == 2);
+                        if (inscricao == null && cpfLimpo != username)
+                        {
+                            inscricoes = _inscricaoService.GetAllEventsByUserId(cpfLimpo);
+                            inscricao = inscricoes.FirstOrDefault(i => i.IdPapel == 3) ?? inscricoes.FirstOrDefault(i => i.IdPapel == 2);
+                        }
+                        if (inscricao != null)
+                        {
+                            idEncontrado = inscricao.IdEvento;
+                        }
+                    }
+                    catch { }
+                }
+
+                if (idEncontrado > 0)
+                {
+                    return RedirectToAction(nameof(Index), new { idEvento = idEncontrado, idSubEvento });
+                }
+            }
+
             var gestor = _inscricaoService.GetGestorInEvent(username, idEvento);
             var colaborador = _inscricaoService.GetColaboradorInEvent(username, idEvento);
 
             if (gestor == null && colaborador == null)
             {
+                gestor = _inscricaoService.GetGestorInEvent(cpfLimpo, idEvento);
+                colaborador = _inscricaoService.GetColaboradorInEvent(cpfLimpo, idEvento);
+            }
+
+            if (gestor == null && colaborador == null)
+            {
                 TempData.Clear();
                 TempData["Message"] = "Você não tem permissão para registrar participação!";
-                return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });
+                if (idEvento > 0 && (User.IsInRole("GESTOR") || User.IsInRole("ADMINISTRADOR")))
+                {
+                    return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });
+                }
+                return RedirectToAction("Index", "Home");
             }
+
+            ViewData["EventoId"] = idEvento;
+
+            var todasParticipacoes = await _participacaoService.GetAllAsync();
+            var participacoesDoEvento = todasParticipacoes
+                .Where(f => f.IdEvento == idEvento);
+
+            var viewModel = new FrequenciaViewModel
+            {
+                Evento = _eventoService.GetEventoSimpleDto(idEvento),
+                SubEvento = idSubEvento.HasValue ? _subeventoService.Get(idSubEvento.Value) : null,
+                Frequencias = participacoesDoEvento.ToList()
+            };
+
+            return View(viewModel);
+        }
+
+        [Authorize(Roles = "GESTOR,COLABORADOR")]
+        [HttpGet]
+        [Route("ParticipacaoPessoaEvento/Frequencia/{idEvento}/{idSubEvento?}")]
+        [Route("ParticipacaoPessoaEvento/Frequencia")]
+        [Route("Frequencia/{idEvento?}")]
+        [Route("Frequencia/Index/{idEvento?}/{idSubEvento?}")]
+        public async Task<IActionResult> Frequencia(uint idEvento, uint? idSubEvento)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || string.IsNullOrEmpty(user.UserName))
+            {
+                return Challenge();
+            }
+
+            var username = User.Identity?.Name ?? user.UserName;
+            var cpfLimpo = username.Replace(".", "").Replace("-", "");
+
+            if (idEvento == 0)
+            {
+                uint idEncontrado = 0;
+                try
+                {
+                    var ev = _eventoService.GetEventByCpf(username, 3).FirstOrDefault();
+                    if (ev == null && cpfLimpo != username)
+                    {
+                        ev = _eventoService.GetEventByCpf(cpfLimpo, 3).FirstOrDefault();
+                    }
+                    if (ev != null)
+                    {
+                        idEncontrado = ev.Id;
+                    }
+                }
+                catch { }
+
+                if (idEncontrado == 0)
+                {
+                    try
+                    {
+                        var inscricoes = _inscricaoService.GetAllEventsByUserId(username);
+                        var inscricao = inscricoes.FirstOrDefault(i => i.IdPapel == 3) ?? inscricoes.FirstOrDefault(i => i.IdPapel == 2);
+                        if (inscricao == null && cpfLimpo != username)
+                        {
+                            inscricoes = _inscricaoService.GetAllEventsByUserId(cpfLimpo);
+                            inscricao = inscricoes.FirstOrDefault(i => i.IdPapel == 3) ?? inscricoes.FirstOrDefault(i => i.IdPapel == 2);
+                        }
+                        if (inscricao != null)
+                        {
+                            idEncontrado = inscricao.IdEvento;
+                        }
+                    }
+                    catch { }
+                }
+
+                if (idEncontrado > 0)
+                {
+                    return RedirectToAction(nameof(Frequencia), new { idEvento = idEncontrado, idSubEvento });
+                }
+            }
+
+            var gestor = _inscricaoService.GetGestorInEvent(username, idEvento);
+            var colaborador = _inscricaoService.GetColaboradorInEvent(username, idEvento);
+
+            if (gestor == null && colaborador == null)
+            {
+                gestor = _inscricaoService.GetGestorInEvent(cpfLimpo, idEvento);
+                colaborador = _inscricaoService.GetColaboradorInEvent(cpfLimpo, idEvento);
+            }
+
+            if (gestor == null && colaborador == null)
+            {
+                TempData.Clear();
+                TempData["Message"] = "Você não tem permissão para registrar participação!";
+                if (idEvento > 0 && (User.IsInRole("GESTOR") || User.IsInRole("ADMINISTRADOR")))
+                {
+                    return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });
+                }
+                return RedirectToAction("Index", "Home");
+            }
+
+            ViewData["EventoId"] = idEvento;
 
             var todasParticipacoes = await _participacaoService.GetAllAsync();
             var participacoesDoEvento = todasParticipacoes
@@ -78,13 +230,18 @@ namespace EventoWeb.Controllers
         [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> RegistrarParticipacao(uint idEvento, uint? idSubEvento, string cpf)
+        public async Task<IActionResult> RegistrarParticipacao(uint idEvento, uint? idSubEvento, string cpf, string actionRetorno = "Index")
         {
+            var destino = actionRetorno == "Frequencia" ? nameof(Frequencia) : nameof(Index);
             var username = User.Identity?.Name;
             if (string.IsNullOrEmpty(username))
             {
                 TempData.Clear();
                 TempData["ErrorMessage"] = "Usuário não autenticado.";
+                if (actionRetorno == "Frequencia" || !(User.IsInRole("GESTOR") || User.IsInRole("ADMINISTRADOR")))
+                {
+                    return RedirectToAction("Index", "Home");
+                }
                 return RedirectToAction("GerenciarEvento", "Evento");
             }
 
@@ -95,6 +252,10 @@ namespace EventoWeb.Controllers
             {
                 TempData.Clear();
                 TempData["ErrorMessage"] = "Você não tem permissão para registrar participação!";
+                if (actionRetorno == "Frequencia" || !(User.IsInRole("GESTOR") || User.IsInRole("ADMINISTRADOR")))
+                {
+                    return RedirectToAction("Index", "Home");
+                }
                 return RedirectToAction("GerenciarEvento", "Evento");
             }
 
@@ -104,7 +265,7 @@ namespace EventoWeb.Controllers
             if (pessoa == null)
             {
                 TempData["ErrorMessage"] = "Pessoa não encontrada com o CPF informado.";
-                return RedirectToAction(nameof(Index), new { idEvento, idSubEvento });
+                return RedirectToAction(destino, new { idEvento, idSubEvento });
             }
 
 
@@ -125,7 +286,7 @@ namespace EventoWeb.Controllers
                         3 => "Impedimento: esta pessoa já está cadastrada neste evento como colaboradora.",
                         _ => "Impedimento: esta pessoa já está cadastrada neste evento."
                     };
-                    return RedirectToAction(nameof(Index), new { idEvento, idSubEvento });
+                    return RedirectToAction(destino, new { idEvento, idSubEvento });
                 }
 
                 // Caso contrário, inscreve a pessoa como participante (papel 4)
@@ -169,14 +330,15 @@ namespace EventoWeb.Controllers
                 TempData["Message"] = "Entrada registrada com sucesso.";
             }
 
-            return RedirectToAction(nameof(Index), new { idEvento, idSubEvento });
+            return RedirectToAction(destino, new { idEvento, idSubEvento });
         }
 
         [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ExcluirParticipacao(uint id, uint idEvento, uint? idSubEvento)
+        public async Task<IActionResult> ExcluirParticipacao(uint id, uint idEvento, uint? idSubEvento, string actionRetorno = "Index")
         {
+            var destino = actionRetorno == "Frequencia" ? nameof(Frequencia) : nameof(Index);
             var participacao = await _participacaoService.GetByIdAsync(id);
             if (participacao == null)
             {
@@ -188,6 +350,10 @@ namespace EventoWeb.Controllers
             {
                 TempData.Clear();
                 TempData["ErrorMessage"] = "Usuário não autenticado.";
+                if (actionRetorno == "Frequencia" || !(User.IsInRole("GESTOR") || User.IsInRole("ADMINISTRADOR")))
+                {
+                    return RedirectToAction("Index", "Home");
+                }
                 return RedirectToAction("GerenciarEvento", "Evento");
             }
 
@@ -198,6 +364,10 @@ namespace EventoWeb.Controllers
             {
                 TempData.Clear();
                 TempData["ErrorMessage"] = "Você não tem permissão para excluir participação!";
+                if (actionRetorno == "Frequencia" || !(User.IsInRole("GESTOR") || User.IsInRole("ADMINISTRADOR")))
+                {
+                    return RedirectToAction("Index", "Home");
+                }
                 return RedirectToAction("GerenciarEvento", "Evento");
             }
 
@@ -205,11 +375,11 @@ namespace EventoWeb.Controllers
             TempData["Message"] = "Participação removida com sucesso.";
 
             // CORREÇÃO: Agora o redirecionamento repassa o idSubEvento (se existir) para manter a tela no lugar certo
-            return RedirectToAction(nameof(Index), new { idEvento, idSubEvento });
+            return RedirectToAction(destino, new { idEvento, idSubEvento });
         }
 
         [Authorize(Roles = "ADMINISTRADOR")]
-        [HttpGet]
+        [HttpGet("GetAll")]
         public async Task<ActionResult<IEnumerable<ParticipacaoPessoaEventoDTO>>> GetAll()
         {
             // Obtém todas as entidades do banco
