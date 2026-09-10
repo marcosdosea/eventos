@@ -309,7 +309,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("GerenciarEvento", redirectToActionResult.ActionName);
         }
 
-        // Issue #667: POSTs que alteram dados precisam exigir o cargo correto (IDOR/Broken Access Control)
+        // Garante que os POSTs que alteram dados exijam o cargo correto,
+        // evitando falha de controle de acesso (Broken Access Control).
         [TestMethod()]
         [DataRow("Edit", new Type[] { typeof(uint), typeof(EventoModel) }, "ADMINISTRADOR")]
         [DataRow("Delete", new Type[] { typeof(uint), typeof(EventoModel) }, "ADMINISTRADOR")]
@@ -324,7 +325,7 @@ namespace EventoWeb.Controllers.Tests
 
             var autorizacao = metodo!.GetCustomAttributes(typeof(AuthorizeAttribute), false)
                 .Cast<AuthorizeAttribute>().FirstOrDefault();
-            Assert.IsNotNull(autorizacao, $"POST {nomeAcao} sem [Authorize] — falha de controle de acesso (issue #667).");
+            Assert.IsNotNull(autorizacao, $"A ação POST {nomeAcao} deve possuir [Authorize] para garantir o controle de acesso.");
             Assert.AreEqual(cargosEsperados, autorizacao!.Roles, $"POST {nomeAcao} com cargos incorretos.");
 
             var antiFalsificacao = metodo.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), false);

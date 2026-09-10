@@ -543,7 +543,8 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeletePessoaPapel(uint idPessoa, uint idEvento, uint idPapel)
         {
-            var isAdminDelete = User.IsInRole("ADMINISTRADOR");
+            var pessoaLogada = _pessoaService.GetByCpf(User.Identity?.Name ?? string.Empty);
+            var isAdminDelete = pessoaLogada != null && await _pessoaService.IsAdmAsync(pessoaLogada);
             var gestorDelete = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
             var colaboradorDelete = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, idEvento);
 

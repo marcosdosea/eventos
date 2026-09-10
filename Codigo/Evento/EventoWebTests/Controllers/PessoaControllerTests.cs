@@ -251,7 +251,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
         }
 
-        // Issue #667: disparo de reset de senha precisa exigir ADMINISTRADOR
+        // Garante que o disparo de reset de senha exija ADMINISTRADOR,
+        // evitando falha de controle de acesso.
         [TestMethod()]
         public void EnviarEmailSenha_ExigeAdministrador()
         {
@@ -261,7 +262,7 @@ namespace EventoWeb.Controllers.Tests
 
             var autorizacao = metodo!.GetCustomAttributes(typeof(AuthorizeAttribute), false)
                 .Cast<AuthorizeAttribute>().FirstOrDefault();
-            Assert.IsNotNull(autorizacao, "POST EnviarEmailSenha sem [Authorize] — falha de controle de acesso (issue #667).");
+            Assert.IsNotNull(autorizacao, "A ação POST EnviarEmailSenha deve possuir [Authorize] para garantir o controle de acesso.");
             Assert.AreEqual("ADMINISTRADOR", autorizacao!.Roles, "POST EnviarEmailSenha com cargos incorretos.");
         }
 
