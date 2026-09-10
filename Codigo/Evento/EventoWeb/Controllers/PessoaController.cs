@@ -330,6 +330,7 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<ActionResult> DefinirAdministrador(GestaoAdministradorModel viewModel)
         {
+            var sucesso = true;
 
             if (ModelState.IsValid)
             {
@@ -353,6 +354,7 @@ namespace EventoWeb.Controllers
                     if (await _pessoaService.IsAdmAsync(pessoa)){
                         TempData["ErrorMessage"] = "Já existe um administrador cadastrado com esse CPF.";
                     }else{
+
                         if (_pessoaService.GetByCpf(pessoa.Cpf) != null)
                         {
                             sucesso = await _pessoaService.VerificaEdit(pessoa);
