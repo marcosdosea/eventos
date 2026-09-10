@@ -30,11 +30,12 @@
 	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 	<link rel="stylesheet" type="text/css" href="~/css/style.css">
 	<link rel="stylesheet" type="text/css" href="~/css/headerAndFooter.css">
+    <link rel="stylesheet" type="text/css" href="~/css/headerSearch.css" asp-append-version="true">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
 </head>
 
 <body>
-    <header class="p-3 mb-3 border-bottom">
+    <header class="p-3 mb-3 border-bottom fixed-top">
         <div class="container">
             <div class="d-flex justify-content-lg-between justify-content-lg-start">
                 @{
@@ -67,42 +68,48 @@
                                 </li>
                             </ul>
                         </div>
-                    </div>
-                }
-
-                <div class="container-fluid">
-                    <div class="logo me-3">
-                        <a href="/" title="Ir para a página inicial">
-                            <img src="/img/LOGOTIPO.png" alt="Logotipo" />
-                        </a>
-                    </div>
-                </div>
-                <div class="flex-shrink-0 dropdown align-content-center">
-                    <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser2" data-bs-toggle="dropdown" aria-expanded="false">
-                        Olá, @ViewBag.NomeUsuario!
-                        <img src="/img/img-user.svg" alt="User" width="32" height="32" class="rounded-circle ms-2">
-                    </a>
-                    <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser2">
-                        @if (User.IsInRole("ADMINISTRADOR"))
-                        {
-                            <li>
-                                <a class="dropdown-item" asp-controller="Evento" asp-action="GerenciarEventoListar">Gerenciar Evento</a>
-                            </li>
+                        
+                        @{
+                            var showSearch = ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && 
+                                             (ViewContext.RouteData.Values["action"]?.ToString() == "Index" || ViewContext.RouteData.Values["action"]?.ToString() == "Buscar");
                         }
-                        <li>
-                            <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Gerenciar Conta</a>
-                        </li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li>
-                            <form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-                                <button id="logout" type="submit" class="dropdown-item">Sair</button>
-                            </form>
-                        </li>
-                    </ul>
+                    </div>
+                    
+                    @if (showSearch)
+                    {
+                        <div class="d-flex align-items-center ms-md-3 me-md-auto order-3 order-md-0 w-100 w-md-auto mt-2 mt-md-0 justify-content-center flex-grow-1 flex-md-grow-0">
+                            <partial name="_HeaderSearch" />
+                        </div>
+                    }
+
+                    <div class="flex-shrink-0 dropdown order-2 order-md-0">
+                        <a href="#" class="d-flex align-items-center link-dark text-decoration-none dropdown-toggle" id="dropdownUser2" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="d-none d-md-block">Olá, @ViewBag.NomeUsuario!</span>
+                            <img src="/img/img-user.svg" alt="User" width="32" height="32" class="rounded-circle ms-2">
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end text-small shadow" aria-labelledby="dropdownUser2">
+                            @if (User.IsInRole("ADMINISTRADOR"))
+                            {
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Evento" asp-action="GerenciarEventoListar">Gerenciar Evento</a>
+                                </li>
+                            }
+                            <li>
+                                <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Gerenciar Conta</a>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                                    <button id="logout" type="submit" class="dropdown-item">Sair</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                    
                 </div>
-            </div>
+            </nav>
         </div>
     </header>
 
@@ -112,17 +119,29 @@
         </main>
     </div>
 
-    <footer class="container footer">
-        <div class="container">
-            &copy; @DateTime.Now.Year
-        </div>
-    </footer>
+    @{
+        var showFooter = ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && 
+                         (ViewContext.RouteData.Values["action"]?.ToString() == "Index" || ViewContext.RouteData.Values["action"]?.ToString() == "Buscar");
+    }
+    @if (showFooter)
+    {
+        <partial name="_Footer" />
+    }
+    else
+    {
+        <footer class="container footer">
+            <div class="container">
+                &copy; @DateTime.Now.Year
+            </div>
+        </footer>
+    }
 
     <!-- Scripts na ordem correta -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/formHelpers.js"></script>
+    <script src="~/js/headerSearch.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 
