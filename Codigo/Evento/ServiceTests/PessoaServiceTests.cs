@@ -186,8 +186,8 @@ namespace Service.Tests
             _pessoaService.Delete(1);
 
             Assert.AreEqual(2, _pessoaService.GetAll().Count());
-            var areainteresse = _pessoaService.Get(1);
-            Assert.AreEqual(null, areainteresse);
+            var pessoa = _pessoaService.Get(1);
+            Assert.AreEqual(null, pessoa);
         }
 
         [TestMethod()]
@@ -296,7 +296,6 @@ namespace Service.Tests
             await _userManager.CreateAsync(usuarioAdm, "Temp@1234!");
             await _userManager.AddToRoleAsync(usuarioAdm, "ADMINISTRADOR");
 
-            // Pessoa sem vínculo Identity não deve aparecer na lista de admins
             var pessoaSemUsuario = new Pessoa
             {
                 Id = 5,
@@ -309,7 +308,6 @@ namespace Service.Tests
             };
             _context.Pessoas.Add(pessoaSemUsuario);
 
-            // Pessoa com usuário mas sem papel de admin não deve aparecer
             var pessoaComum = _pessoaService.Get(1);
             var usuarioComum = new UsuarioIdentity
             {
@@ -422,8 +420,12 @@ namespace Service.Tests
             };
 
             var sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 1);
-        // Fluxo: gestor insere participante por CPF cuja pessoa já existe no sistema.
-        // Deve criar a inscrição (papel 4) sem lançar exception.
+
+            Assert.IsTrue(sucesso);
+            var usuario = await _userManager.FindByNameAsync(pessoa.Cpf);
+            Assert.IsNotNull(usuario);
+            Assert.IsTrue(await _userManager.IsInRoleAsync(usuario, "ADMINISTRADOR"));
+        }
         [TestMethod()]
         public async Task CreatePessoaIdentityComPapel_PessoaExistente_InscreveParticipante()
         {
@@ -434,18 +436,18 @@ namespace Service.Tests
             Assert.IsTrue(sucesso);
             var usuario = await _userManager.FindByNameAsync(pessoa.Cpf);
             Assert.IsNotNull(usuario);
-            Assert.IsTrue(await _userManager.IsInRoleAsync(usuario, "ADMINISTRADOR"));
+            Assert.IsTrue(await _userManager.IsInRoleAsync(usuario, "USUARIO"));
             Assert.AreEqual(pessoa.Cpf, usuario.UserName);
             Assert.AreEqual(pessoa.Email, usuario.Email);
             Assert.AreEqual(pessoa.Telefone1, usuario.PhoneNumber);
             Assert.IsTrue(usuario.EmailConfirmed);
 
-            // Pessoa deve estar persistida no contexto
             var pessoaPersistida = _pessoaService.GetByCpf(pessoa.Cpf);
             Assert.IsNotNull(pessoaPersistida);
-            Assert.AreEqual("Novo Admin", pessoaPersistida.Nome);
-            Assert.AreEqual("novo@admin.com", pessoaPersistida.Email);
-            Assert.AreEqual(4, _pessoaService.GetAll().Count());
+            Assert.AreEqual("João Vitor Sodré", pessoaPersistida.Nome);
+            Assert.AreEqual("email@gmail.com", pessoaPersistida.Email);
+            Assert.AreEqual(3, _pessoaService.GetAll().Count());
+            Assert.IsTrue(_inscricaoService.IsInscrito(pessoa.Id, 1));
         }
 
         [TestMethod()]
@@ -476,7 +478,6 @@ namespace Service.Tests
             var sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoaNova, 0, 1);
 
             Assert.IsFalse(sucesso);
-            // Nenhuma pessoa duplicada deve ser criada
             Assert.AreEqual(3, _pessoaService.GetAll().Count());
             var usuarioMantido = await _userManager.FindByNameAsync(pessoaExistente.Cpf);
             Assert.IsNotNull(usuarioMantido);
@@ -572,7 +573,7 @@ namespace Service.Tests
             };
             await _userManager.CreateAsync(usuario, "Temp@1234!");
 
-            await Assert.ThrowsExceptionAsync<Exception>(() =>
+            await Assert.ThrowsExceptionAsync<ArgumentException>(() =>
                 _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 99));
         }
 
@@ -586,7 +587,6 @@ namespace Service.Tests
         [TestMethod()]
         public void ValidaEmail_ReturnsFalse_WhenDomainHasNoDot()
         {
-            // MailAddress aceita, mas o domínio sem ponto é rejeitado pelo regex
             Assert.IsFalse(_pessoaService.ValidaEmail("teste@example"));
         }
 
@@ -694,7 +694,6 @@ namespace Service.Tests
             Assert.AreEqual("João Vitor Atualizado", verificada.Nome);
             Assert.AreEqual("novoemail@teste.com", verificada.Email);
             Assert.AreEqual("7999990000", verificada.Telefone1);
-            // Sexo é preservado do registro atual
             Assert.AreEqual("M", verificada.Sexo);
         }
 
@@ -715,7 +714,6 @@ namespace Service.Tests
             var sucesso = await _pessoaService.Delete(1);
 
             Assert.IsFalse(sucesso);
-            // Último admin não pode ser removido: pessoa permanece no contexto
             Assert.IsNotNull(_pessoaService.Get(1));
             Assert.AreEqual(3, _pessoaService.GetAll().Count());
             Assert.IsTrue(await _userManager.IsInRoleAsync(usuario, "ADMINISTRADOR"));
@@ -744,7 +742,6 @@ namespace Service.Tests
             var usuario = await _userManager.FindByNameAsync(pessoa.Cpf);
             Assert.IsNotNull(usuario);
             Assert.IsFalse(await _userManager.IsInRoleAsync(usuario, "ADMINISTRADOR"));
-            // Sem outros papéis, o usuário é rebaixado para USUARIO e a pessoa é mantida
             Assert.IsTrue(await _userManager.IsInRoleAsync(usuario, "USUARIO"));
             Assert.IsNotNull(_pessoaService.Get(1));
         }
@@ -764,11 +761,7 @@ namespace Service.Tests
         {
             Assert.IsFalse(await _pessoaService.Delete(999));
         }
-            Assert.IsTrue(_inscricaoService.IsInscrito(pessoa.Id, 1));
-        }
 
-        // Fluxo: gestor insere participante por CPF que ainda não existe.
-        // Deve criar Pessoa + Identity + Inscrição (papel 4) sem lançar exception.
         [TestMethod()]
         public async Task CreatePessoaIdentityComPapel_PessoaNova_CriaEInscreve()
         {
@@ -791,8 +784,6 @@ namespace Service.Tests
             Assert.IsTrue(_inscricaoService.IsInscrito(pessoaCriada.Id, 1));
         }
 
-        // Fluxo: papel 5 (participante) deve ser mapeado para a role USUARIO
-        // existente no seed, sem lançar ArgumentException/erro de role inexistente.
         [TestMethod()]
         public async Task CreatePessoaIdentityComPapel_Papel5_NaoLancaExcecao()
         {
@@ -803,40 +794,5 @@ namespace Service.Tests
             Assert.IsTrue(sucesso);
             Assert.IsTrue(_inscricaoService.IsInscrito(pessoa.Id, 1));
         }
-
-        /*
-        Não estava passando, pois a arquitetura de testes atual 
-        não suporta as transações.
-        */
-
-        //[TestMethod()]
-        //public async Task CreateGestorModelTest()
-        //{
-        //    var pessoa = _pessoaService.Get(1);
-        //    await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 2);
-        //    var usuario = await _userManager.FindByNameAsync(pessoa.Cpf);
-        //    Assert.IsNotNull(usuario);
-        //    Assert.IsTrue(await _userManager.IsInRoleAsync(usuario, "GESTOR"));
-        //}
-
-        //[TestMethod()]
-        //public async Task CreateAdministradorAsync()
-        //{
-        //    var pessoa = new Pessoa
-        //    {
-        //        Id = 4,
-        //        Nome = "Sinéad O'Connor Null Nullberg",
-        //        NomeCracha = "Sineád O'Connor",
-        //        Cpf = "883.069.820-29",
-        //        Email = "sine_connor.9@academico.ufs.br",
-        //        Telefone1 = "7999990011"
-        //    };
-        //    await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 1);
-        //    var usuario = await _userManager.FindByNameAsync(pessoa.Cpf);
-        //    Assert.IsNotNull(usuario);
-        //    Assert.IsTrue(await _userManager.IsInRoleAsync(usuario, "ADMINISTRADOR"));
-        //    Assert.AreEqual(pessoa.Email, usuario.Email);
-        //    Assert.AreEqual(pessoa.Telefone1, usuario.PhoneNumber);
-        //}
     }
 }

@@ -66,8 +66,6 @@ namespace EventoWeb.Controllers.Tests
             IMapper mapper = new MapperConfiguration(cfg =>
             cfg.AddProfile(new PessoaProfile())).CreateMapper();
 
-            var IEmailSenderMock = new Mock<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender>();
-
             mockService.Setup(service => service.GetAll())
                 .Returns(GetTestPessoas());
             mockService.Setup(service => service.Get(1))
@@ -322,8 +320,8 @@ namespace EventoWeb.Controllers.Tests
             var mockService = new Mock<IPessoaService>();
             mockService.Setup(service => service.Delete(1)).ReturnsAsync(true);
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var IEmailSenderMock = new Mock<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender>();
-            var localController = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, mapper, IEmailSenderMock.Object);
+            var IEmailServiceMock = new Mock<IEmailService>();
+            var localController = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, mapper, IEmailServiceMock.Object);
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
             {
@@ -376,9 +374,9 @@ namespace EventoWeb.Controllers.Tests
                 }
             };
             mockService.Setup(service => service.GetAllAdmAsync()).ReturnsAsync(admins);
-            var IEmailSenderMock = new Mock<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender>();
+            var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailSenderMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -400,10 +398,7 @@ namespace EventoWeb.Controllers.Tests
             GestaoAdministradorModel model = (GestaoAdministradorModel)viewResult.ViewData.Model;
             Assert.AreEqual(2, model.Administradores.Count);
 
-            // Ordenação por nome aplicada pelo controller: João < Maria
             Assert.IsTrue(string.Compare(model.Administradores[0].Nome, model.Administradores[1].Nome, StringComparison.Ordinal) < 0);
-
-            // Additional assertions - verify admin properties are mapped correctly
             Assert.AreEqual((uint)1, model.Administradores[0].Id);
             Assert.AreEqual("João Vitor Sodré", model.Administradores[0].Nome);
             Assert.AreEqual("040.268.930-57", model.Administradores[0].Cpf);
@@ -428,9 +423,9 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.VerificaEdit(It.IsAny<Pessoa>())).ReturnsAsync(true);
             mockService.Setup(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), 0, 1)).ReturnsAsync(true);
             mockService.Setup(service => service.GetAllAdmAsync()).ReturnsAsync(new List<Pessoa> { GetTargetPessoa() });
-            var IEmailSenderMock = new Mock<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender>();
+            var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailSenderMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -461,7 +456,6 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("DefinirAdministrador", redirectResult.ActionName);
             Assert.IsNull(redirectResult.ControllerName);
 
-            // Additional assertions - verify success message and service calls
             Assert.AreEqual("Administrador definido com sucesso.", localController.TempData["SuccessMessage"]);
             Assert.IsNull(localController.TempData["ErrorMessage"]);
             mockService.Verify(service => service.ValidaEmail("novo@admin.com"), Times.Once);
@@ -474,7 +468,6 @@ namespace EventoWeb.Controllers.Tests
                 p.NomeCracha == "Novo" &&
                 p.Email == "novo@admin.com" &&
                 p.Telefone1 == "7999999999"), 0, 1), Times.Once);
-            // Caminho de sucesso redireciona sem recarregar a lista de admins
             mockService.Verify(service => service.GetAllAdmAsync(), Times.Never);
         }
 
@@ -485,9 +478,9 @@ namespace EventoWeb.Controllers.Tests
             var mockEstadosService = new Mock<IEstadosbrasilService>();
             mockService.Setup(service => service.ValidaEmail(It.IsAny<string>())).Returns(false);
             mockService.Setup(service => service.GetAllAdmAsync()).ReturnsAsync(new List<Pessoa> { GetTargetPessoa() });
-            var IEmailSenderMock = new Mock<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender>();
+            var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailSenderMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -519,14 +512,10 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual(1, localController.ModelState.ErrorCount);
             Assert.IsTrue(localController.ModelState.ContainsKey("Email"));
             Assert.AreEqual("Por favor, digite um e-mail em um formato válido.", localController.ModelState["Email"].Errors[0].ErrorMessage);
-
-            // Additional assertions - verify view model is returned with admin list
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(GestaoAdministradorModel));
             GestaoAdministradorModel model = (GestaoAdministradorModel)viewResult.ViewData.Model;
             Assert.AreEqual(1, model.Administradores.Count);
             Assert.AreEqual((uint)1, model.Administradores[0].Id);
-
-            // Verify service was not called to create admin
             mockService.Verify(service => service.ValidaEmail("email-invalido"), Times.Once);
             mockService.Verify(service => service.EmailExist(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
             mockService.Verify(service => service.IsAdmAsync(It.IsAny<Pessoa>()), Times.Never);
@@ -543,9 +532,9 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.ValidaEmail(It.IsAny<string>())).Returns(true);
             mockService.Setup(service => service.EmailExist(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(true);
             mockService.Setup(service => service.GetAllAdmAsync()).ReturnsAsync(new List<Pessoa> { GetTargetPessoa() });
-            var IEmailSenderMock = new Mock<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender>();
+            var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailSenderMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -577,14 +566,10 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual(1, localController.ModelState.ErrorCount);
             Assert.IsTrue(localController.ModelState.ContainsKey("Email"));
             Assert.AreEqual("O e-mail informado já está em uso.", localController.ModelState["Email"].Errors[0].ErrorMessage);
-
-            // Additional assertions
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(GestaoAdministradorModel));
             GestaoAdministradorModel model = (GestaoAdministradorModel)viewResult.ViewData.Model;
             Assert.AreEqual(1, model.Administradores.Count);
             Assert.AreEqual((uint)1, model.Administradores[0].Id);
-
-            // Verify service was not called to create admin
             mockService.Verify(service => service.ValidaEmail("existente@gmail.com"), Times.Once);
             mockService.Verify(service => service.EmailExist("existente@gmail.com", "999.999.999-99"), Times.Once);
             mockService.Verify(service => service.IsAdmAsync(It.IsAny<Pessoa>()), Times.Never);
@@ -602,9 +587,9 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.EmailExist(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(false);
             mockService.Setup(service => service.IsAdmAsync(It.IsAny<Pessoa>())).ReturnsAsync(true);
             mockService.Setup(service => service.GetAllAdmAsync()).ReturnsAsync(new List<Pessoa> { GetTargetPessoa() });
-            var IEmailSenderMock = new Mock<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender>();
+            var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailSenderMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -651,9 +636,9 @@ namespace EventoWeb.Controllers.Tests
             var mockService = new Mock<IPessoaService>();
             var mockEstadosService = new Mock<IEstadosbrasilService>();
             mockService.Setup(service => service.GetAllAdmAsync()).ReturnsAsync(new List<Pessoa> { GetTargetPessoa() });
-            var IEmailSenderMock = new Mock<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender>();
+            var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailSenderMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
 
             localController.ControllerContext = new ControllerContext()
             {
@@ -697,9 +682,9 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.EmailExist(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(false);
             mockService.Setup(service => service.IsAdmAsync(It.IsAny<Pessoa>())).ReturnsAsync(false);
             mockService.Setup(service => service.VerificaEdit(It.IsAny<Pessoa>())).ReturnsAsync(false);
-            var IEmailSenderMock = new Mock<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender>();
+            var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailSenderMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
 
             localController.ControllerContext = new ControllerContext()
             {
@@ -739,9 +724,9 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.IsAdmAsync(It.IsAny<Pessoa>())).ReturnsAsync(false);
             mockService.Setup(service => service.VerificaEdit(It.IsAny<Pessoa>())).ReturnsAsync(true);
             mockService.Setup(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), 0, 1)).ReturnsAsync(false);
-            var IEmailSenderMock = new Mock<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender>();
+            var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailSenderMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
 
             localController.ControllerContext = new ControllerContext()
             {
@@ -780,9 +765,10 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.Get(pessoa.Id)).Returns(pessoa);
             mockService.Setup(service => service.EmailConfirmado(pessoa.Email)).Returns(true);
             mockService.Setup(service => service.GerarTokenAsync(pessoa.Cpf)).ReturnsAsync("test-token");
-            var IEmailSenderMock = new Mock<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender>();
+            var IEmailServiceMock = new Mock<IEmailService>();
+            IEmailServiceMock.Setup(sender => sender.ModeloEmailReset(It.IsAny<string>(), It.IsAny<Pessoa>(), It.IsAny<string>())).ReturnsAsync(true);
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailSenderMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -804,16 +790,16 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectResult = (RedirectToActionResult)result;
             Assert.AreEqual("DefinirAdministrador", redirectResult.ActionName);
-            Assert.IsNull(redirectResult.ControllerName);
+            Assert.AreEqual("Pessoa", redirectResult.ControllerName);
             Assert.AreEqual("E-mail de redefinição enviado com sucesso!", localController.TempData["SuccessMessage"]);
             Assert.IsNull(localController.TempData["ErrorMessage"]);
             mockService.Verify(service => service.Get(pessoa.Id), Times.Once);
             mockService.Verify(service => service.EmailConfirmado(pessoa.Email), Times.Once);
             mockService.Verify(service => service.GerarTokenAsync(pessoa.Cpf), Times.Once);
-            IEmailSenderMock.Verify(sender => sender.SendEmailAsync(
-                pessoa.Email,
-                "Redefinição de Senha",
-                It.Is<string>(msg => msg.Contains(pessoa.Nome) && msg.Contains("test-token"))), Times.Once);
+            IEmailServiceMock.Verify(sender => sender.ModeloEmailReset(
+                "test-token",
+                It.Is<Pessoa>(p => p.Cpf == pessoa.Cpf),
+                It.IsAny<string>()), Times.Once);
         }
 
         [TestMethod()]
@@ -822,9 +808,9 @@ namespace EventoWeb.Controllers.Tests
             var mockService = new Mock<IPessoaService>();
             var mockEstadosService = new Mock<IEstadosbrasilService>();
             mockService.Setup(service => service.Get(999)).Returns((Pessoa?)null);
-            var IEmailSenderMock = new Mock<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender>();
+            var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailSenderMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -850,7 +836,7 @@ namespace EventoWeb.Controllers.Tests
             mockService.Verify(service => service.Get(999), Times.Once);
             mockService.Verify(service => service.EmailConfirmado(It.IsAny<string>()), Times.Never);
             mockService.Verify(service => service.GerarTokenAsync(It.IsAny<string>()), Times.Never);
-            IEmailSenderMock.Verify(sender => sender.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            IEmailServiceMock.Verify(sender => sender.ModeloEmailReset(It.IsAny<string>(), It.IsAny<Pessoa>(), It.IsAny<string>()), Times.Never);
         }
 
         [TestMethod()]
@@ -861,13 +847,20 @@ namespace EventoWeb.Controllers.Tests
             var pessoa = GetTargetPessoa();
             pessoa.Email = "email-invalido";
             mockService.Setup(service => service.Get(pessoa.Id)).Returns(pessoa);
-            var IEmailSenderMock = new Mock<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender>();
+            mockService.Setup(service => service.GerarTokenAsync(pessoa.Cpf)).ReturnsAsync("test-token");
+            var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailSenderMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
+
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, pessoa.Cpf),
+                new Claim(ClaimTypes.Role, "ADMINISTRADOR")
+            }, "mock"));
 
             localController.ControllerContext = new ControllerContext()
             {
-                HttpContext = new DefaultHttpContext()
+                HttpContext = new DefaultHttpContext() { User = user }
             };
             localController.TempData = new TempDataDictionary(localController.HttpContext, Mock.Of<ITempDataProvider>());
 
@@ -882,8 +875,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsNull(localController.TempData["SuccessMessage"]);
             mockService.Verify(service => service.Get(pessoa.Id), Times.Once);
             mockService.Verify(service => service.EmailConfirmado(It.IsAny<string>()), Times.Never);
-            mockService.Verify(service => service.GerarTokenAsync(It.IsAny<string>()), Times.Never);
-            IEmailSenderMock.Verify(sender => sender.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            mockService.Verify(service => service.GerarTokenAsync(pessoa.Cpf), Times.Once);
+            IEmailServiceMock.Verify(sender => sender.ModeloEmailReset(It.IsAny<string>(), It.IsAny<Pessoa>(), It.IsAny<string>()), Times.Never);
         }
 
         [TestMethod()]
@@ -893,10 +886,11 @@ namespace EventoWeb.Controllers.Tests
             var mockEstadosService = new Mock<IEstadosbrasilService>();
             var pessoa = GetTargetPessoa();
             mockService.Setup(service => service.Get(pessoa.Id)).Returns(pessoa);
+            mockService.Setup(service => service.GerarTokenAsync(pessoa.Cpf)).ReturnsAsync("test-token");
             mockService.Setup(service => service.EmailConfirmado(pessoa.Email)).Returns(false);
-            var IEmailSenderMock = new Mock<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender>();
+            var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailSenderMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -921,8 +915,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsNull(localController.TempData["SuccessMessage"]);
             mockService.Verify(service => service.Get(pessoa.Id), Times.Once);
             mockService.Verify(service => service.EmailConfirmado(pessoa.Email), Times.Once);
-            mockService.Verify(service => service.GerarTokenAsync(It.IsAny<string>()), Times.Never);
-            IEmailSenderMock.Verify(sender => sender.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            mockService.Verify(service => service.GerarTokenAsync(pessoa.Cpf), Times.Once);
+            IEmailServiceMock.Verify(sender => sender.ModeloEmailReset(It.IsAny<string>(), It.IsAny<Pessoa>(), It.IsAny<string>()), Times.Never);
         }
 
         private PessoaModel GetNewPessoa()
