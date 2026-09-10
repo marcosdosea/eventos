@@ -477,10 +477,8 @@ namespace EventoWeb.Controllers
                     return View(gestaoPapelModel);
                 }
 
-                // Localiza a pessoa pelo CPF (limpo ou formatado).
                 var pessoa = _pessoaService.GetByCpf(cpfLimpo) ?? _pessoaService.GetByCpf(gestaoPapelModel.Pessoa?.Cpf ?? string.Empty);
 
-                // Se a pessoa já existe e já está vinculada ao evento, informa o papel atual.
                 if (pessoa != null && _inscricaoService.IsInscrito(pessoa.Id, eventoId))
                 {
                     var papel = _inscricaoService.GetPapelPessoaByEvento(pessoa.Id, eventoId);
@@ -497,9 +495,6 @@ namespace EventoWeb.Controllers
                     return View(gestaoPapelModel);
                 }
 
-                // Monta os dados da pessoa a ser criada/inscrita.
-                // O serviço CreatePessoaIdentityComPapelAsync cria Pessoa + Identity + Papel
-                // + Inscrição de forma coesa quando a pessoa ainda não existe.
                 var nome = pessoa?.Nome ?? gestaoPapelModel.Pessoa?.Nome ?? "Participante";
                 var pessoaParaInscrever = pessoa ?? new Pessoa
                 {
@@ -634,8 +629,6 @@ namespace EventoWeb.Controllers
             var gestorDelete = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
             var colaboradorDelete = _inscricaoService.GetColaboradorInEvent(User.Identity.Name, idEvento);
 
-            // UML: Manter Gestor (papel 2) = ADMINISTRADOR; Manter Colaborador (3) = GESTOR;
-            // Manter Inscricao Participante (4) = GESTOR/COLABORADOR. Admin nao remove 3/4.
             bool autorizado;
             switch (idPapel)
             {
@@ -886,8 +879,6 @@ namespace EventoWeb.Controllers
         }
 
 
-        // é um adianto deevento proxima PR de Nadson
-        // (tanto adianta quanto quem for mexer com isso vai ver o que Nadson fez/fará).
 
         /*
 		[Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]

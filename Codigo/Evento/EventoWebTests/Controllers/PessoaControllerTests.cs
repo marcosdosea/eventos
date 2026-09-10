@@ -251,8 +251,6 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
         }
 
-        // Garante que o disparo de reset de senha exija ADMINISTRADOR,
-        // evitando falha de controle de acesso.
         [TestMethod()]
         public void EnviarEmailSenha_ExigeAdministrador()
         {

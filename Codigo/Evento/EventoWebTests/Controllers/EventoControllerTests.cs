@@ -309,8 +309,6 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("GerenciarEvento", redirectToActionResult.ActionName);
         }
 
-        // Garante que os POSTs que alteram dados exijam o cargo correto,
-        // evitando falha de controle de acesso (Broken Access Control).
         [TestMethod()]
         [DataRow("Edit", new Type[] { typeof(uint), typeof(EventoModel) }, "ADMINISTRADOR")]
         [DataRow("Delete", new Type[] { typeof(uint), typeof(EventoModel) }, "ADMINISTRADOR")]
