@@ -3,8 +3,11 @@ using Core;
 using Core.Service;
 using EventoWeb.Mappers;
 using EventoWeb.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
+using System.Reflection;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.AspNetCore.Routing;
@@ -286,6 +289,19 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("Pessoa", redirectToActionResult.ControllerName);
             Assert.AreEqual("Erro ao excluir pessoa", controller.TempData["ErrorMessage"]);
             Assert.IsNull(controller.TempData["SuccessMessage"]);
+        }
+
+        [TestMethod()]
+        public void EnviarEmailSenha_ExigeAdministrador()
+        {
+            var metodo = typeof(PessoaController).GetMethod(
+                "EnviarEmailSenha", new Type[] { typeof(PessoaModel) });
+            Assert.IsNotNull(metodo, "Ação EnviarEmailSenha não encontrada.");
+
+            var autorizacao = metodo!.GetCustomAttributes(typeof(AuthorizeAttribute), false)
+                .Cast<AuthorizeAttribute>().FirstOrDefault();
+            Assert.IsNotNull(autorizacao, "A ação POST EnviarEmailSenha deve possuir [Authorize] para garantir o controle de acesso.");
+            Assert.AreEqual("ADMINISTRADOR", autorizacao!.Roles, "POST EnviarEmailSenha com cargos incorretos.");
         }
 
 
