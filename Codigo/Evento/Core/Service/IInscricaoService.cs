@@ -22,6 +22,8 @@ namespace Core.Service
         Inscricaopessoaevento GetGestorInEvent(string username, uint idEvento);
 
         Inscricaopessoaevento GetColaboradorInEvent(string username, uint idEvento);
+
+        bool IsInscrito(uint idPessoa, uint idEvento);
     }
 }
 

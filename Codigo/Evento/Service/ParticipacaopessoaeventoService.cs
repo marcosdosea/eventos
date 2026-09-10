@@ -16,7 +16,9 @@ namespace Core.Service
 
         public async Task<List<Participacaopessoaevento>> GetAllAsync()
         {
-            return await _context.Participacaopessoaeventos.ToListAsync();
+            return await _context.Participacaopessoaeventos
+                .Include(p => p.IdPessoaNavigation)
+                .ToListAsync();
         }
 
         public async Task<Participacaopessoaevento> GetByIdAsync(uint id)
