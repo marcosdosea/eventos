@@ -242,11 +242,18 @@ namespace EventoWeb.Controllers
                 {
                     return RedirectToAction("Index", "Home");
                 }
-                return RedirectToAction("GerenciarEvento", "Evento");
+                return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });
             }
 
             var gestor = _inscricaoService.GetGestorInEvent(username, idEvento);
             var colaborador = _inscricaoService.GetColaboradorInEvent(username, idEvento);
+
+            if (gestor == null && colaborador == null && !User.IsInRole("ADMINISTRADOR"))
+            {
+                var cpfUsuario = username.Replace(".", "").Replace("-", "");
+                gestor = _inscricaoService.GetGestorInEvent(cpfUsuario, idEvento);
+                colaborador = _inscricaoService.GetColaboradorInEvent(cpfUsuario, idEvento);
+            }
 
             if (gestor == null && colaborador == null && !User.IsInRole("ADMINISTRADOR"))
             {
@@ -256,7 +263,13 @@ namespace EventoWeb.Controllers
                 {
                     return RedirectToAction("Index", "Home");
                 }
-                return RedirectToAction("GerenciarEvento", "Evento");
+                return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });
+            }
+
+            if (string.IsNullOrWhiteSpace(cpf))
+            {
+                TempData["ErrorMessage"] = "Informe o CPF.";
+                return RedirectToAction(destino, new { idEvento, idSubEvento });
             }
 
             cpf = cpf.Replace(".", "").Replace("-", "");
@@ -354,13 +367,20 @@ namespace EventoWeb.Controllers
                 {
                     return RedirectToAction("Index", "Home");
                 }
-                return RedirectToAction("GerenciarEvento", "Evento");
+                return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });
             }
 
             var gestor = _inscricaoService.GetGestorInEvent(username, idEvento);
             var colaborador = _inscricaoService.GetColaboradorInEvent(username, idEvento);
 
-            if (gestor == null && colaborador == null)
+            if (gestor == null && colaborador == null && !User.IsInRole("ADMINISTRADOR"))
+            {
+                var cpfUsuario = username.Replace(".", "").Replace("-", "");
+                gestor = _inscricaoService.GetGestorInEvent(cpfUsuario, idEvento);
+                colaborador = _inscricaoService.GetColaboradorInEvent(cpfUsuario, idEvento);
+            }
+
+            if (gestor == null && colaborador == null && !User.IsInRole("ADMINISTRADOR"))
             {
                 TempData.Clear();
                 TempData["ErrorMessage"] = "Você não tem permissão para excluir participação!";
@@ -368,7 +388,7 @@ namespace EventoWeb.Controllers
                 {
                     return RedirectToAction("Index", "Home");
                 }
-                return RedirectToAction("GerenciarEvento", "Evento");
+                return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });
             }
 
             await _participacaoService.DeleteAsync(id);

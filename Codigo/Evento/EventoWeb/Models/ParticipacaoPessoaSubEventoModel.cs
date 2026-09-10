@@ -1,4 +1,4 @@
-﻿// EventoWeb/Models/ParticipacaoPessoaSubEventoModel.cs
+// EventoWeb/Models/ParticipacaoPessoaSubEventoModel.cs
 using System;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -31,6 +31,6 @@ namespace EventoWeb.Models
         [Display(Name = "Sub-Evento")]
         public string NomeSubEvento { get; set; } = string.Empty;
 
-        public SelectList Pessoas { get; set; } = new SelectList(Array.Empty<object>(), "Id", "NomePessoa");
+        public SelectList Pessoas { get; set; } = new SelectList(Array.Empty<object>(), "Id", "Nome");
     }
 }
