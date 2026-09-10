@@ -27,7 +27,7 @@ namespace EventoWeb.Controllers
             _estadosbrasilService = estadosbrasilService;
         }
 
-        public IActionResult Index(bool vitrine = false)
+        public IActionResult Index(bool vitrine = false, bool adminRemovido = false)
         {
             if (!User.Identity.IsAuthenticated)
             {
@@ -37,7 +37,8 @@ namespace EventoWeb.Controllers
             if (!vitrine)
             {
                 if (User.IsInRole("GESTOR"))
-                {
+                {   if (adminRemovido) return RedirectToAction("GerenciarEventoListar", "Evento", new { adminRemovido = true });
+                    
                     return RedirectToAction("GerenciarEventoListar", "Evento");
                 }
 
@@ -45,6 +46,11 @@ namespace EventoWeb.Controllers
                 {
                     return RedirectToAction("Index", "Evento");
                 }
+            }
+            if (adminRemovido)
+            {
+                TempData["SuccessMessage"] = "Aviso: Seu cargo de administrador foi removido!";
+                TempData["ToastTimeout"] = 5000;
             }
             var listarEventos = _eventoService.GetAll().ToList();
             var listarEventosModel = _mapper.Map<List<EventoModel>>(listarEventos);

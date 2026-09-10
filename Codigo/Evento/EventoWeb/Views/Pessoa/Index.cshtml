@@ -24,7 +24,14 @@
                         <td>
                             <div class="d-flex flex-wrap gap-2">
                                 <form id="@(item.Id + "_confirmar")" asp-action="Delete"  asp-route-id="@item.Id">
-                                   <button type="button" class="btn btn-danger" onclick="showModal('@(item.Id + "_confirmar")','modalExcluir')" data-bs-toggle="modal" data-bs-target="#modalExcluir" data-bs-id="@item.Id">Excluir</button>
+                                   <button type="button"
+                                       class="btn btn-danger" 
+                                       data-bs-toggle="modal"
+                                       data-bs-target="#modalExcluir" 
+                                       data-bs-id="@item.Id"
+                                       data-nome="@item.NomeCracha"
+                                       onclick="showModal('@(item.Id + "_confirmar")','modalExcluir')">
+                                       Excluir</button>
                                 </form>
                                 <form id="@(item.Id + "_redefinir")" asp-action="EnviarEmailSenha" asp-route-id="@item.Id">
                                     <button type="button" class="btn btn-secondary" onclick="showModal('@(item.Id + "_redefinir")','modalMudarSenha')" data-bs-toggle="modal" data-bs-target="#modalMudarSenha" data-bs-id="@item.Id">Mudar Senha</button>
@@ -48,20 +55,40 @@
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title justify-content-center" id="exampleModalLongTitle">Confirmar exclusão</h5>
+                <h5 class="modal-title w-100 text-center" id="exampleModalLongTitle">Confirmar remoção</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close">
                 </button>
             </div>
             <div class="modal-body text-center">
-                <h4>Tem certeza que deseja excluir?</h4>
-                <span class="text-danger fw-bold small">
-                    Essa operação não pode ser desfeita.
-                </span>
-
+                @if (User.IsInRole("ADMINISTRADOR")){
+                    <h4 class="d-inline">Tem certeza que deseja remover</h4>
+                    <h4 class="nome-item mb-3 d-inline"></h4>
+                    <h4> do seu cargo?</h4>
+                    <span class="text-danger fw-bold small">
+                        Essa ação irá retirar o acesso às funções de administração.
+                    </span>
+                }
+                else if (User.IsInRole("GESTOR") || User.IsInRole("COLABORADOR"))
+                {
+                    <h4 class="d-inline">Tem certeza que deseja remover</h4>
+                    <h4 class="nome-item mb-3 d-inline"></h4>
+                    <h4> deste evento?</h4>
+                    <span class="text-danger fw-bold small">
+                        Essa ação irá retirar o acesso às funções relacionadas a este evento.
+                    </span>
+                
+                }else{
+                    <h4 class="d-inline">Tem certeza que deseja remover</h4>
+                    <h4 class="nome-item mb-3 d-inline"></h4>
+                    <h4> do seu cargo?</h4>
+                    <span class="text-danger fw-bold small">
+                        Essa ação irá retirar o acesso às funções associadas do seu cargo.
+                    </span>
+                }
             </div>
             <form method="post" class="modal-footer justify-content-center">
-                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Não</button>
-                <button type="submit" class="btn btn-danger" id="btnConfirmarExclusao">Sim</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-danger" id="btnConfirmarExclusao">Sim, remover</button>
             </form>
         </div>
     </div>

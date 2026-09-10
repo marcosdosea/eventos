@@ -14,11 +14,16 @@ public class PessoaService : IPessoaService
     private readonly EventoContext _context;
     private readonly UserManager<UsuarioIdentity> _userManager;
     private readonly IInscricaoService _inscricaoService;
-    public PessoaService(UserManager<UsuarioIdentity> userManager, EventoContext context, IInscricaoService inscricaoService)
+    private readonly SignInManager<UsuarioIdentity> _signInManager;
+    public PessoaService(UserManager<UsuarioIdentity> userManager,
+        EventoContext context,
+        IInscricaoService inscricaoService,
+        SignInManager<UsuarioIdentity> signInManager)
     {
         _userManager = userManager; 
         _context = context;
         _inscricaoService = inscricaoService;
+        _signInManager = signInManager;
     }
     public uint Create(Pessoa pessoa)
     {
@@ -227,6 +232,32 @@ public class PessoaService : IPessoaService
 
     public IEnumerable<Pessoa> GetAll() => _context.Pessoas.AsNoTracking();
 
+    public async Task AtualizarSessao(uint id)
+    {
+        string cpf = Get(id).Cpf;
+
+        if (string.IsNullOrEmpty(cpf))
+        {
+            return;
+        }
+        UsuarioIdentity? user = await _userManager.FindByNameAsync(cpf);
+        if(user != null)
+        {
+            await _signInManager.RefreshSignInAsync(user);
+        }
+        
+    }
+    public async Task<bool> UserLogado(uint idUserRemovido, String cpfUserLogado)
+    {
+        string cpfUserRemovido = Get(idUserRemovido).Cpf;
+        if (string.IsNullOrEmpty(cpfUserRemovido) || String.IsNullOrEmpty(cpfUserLogado)) return false;
+        
+        if(String.Compare(cpfUserRemovido, cpfUserLogado) == 0)
+        {
+            return true;
+        }
+        return false;
+    }
     public Pessoa GetByCpf(string cpf)
         => _context.Pessoas.SingleOrDefault(p => p.Cpf == cpf);
 
