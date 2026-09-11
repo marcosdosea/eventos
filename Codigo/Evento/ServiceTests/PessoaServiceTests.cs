@@ -712,7 +712,7 @@ namespace Service.Tests
             await _userManager.CreateAsync(usuario, "Temp@1234!");
             await _userManager.AddToRoleAsync(usuario, "ADMINISTRADOR");
 
-            var sucesso = await _pessoaService.Delete(1);
+            var sucesso = await _pessoaService.DeleteRole(1);
 
             Assert.IsFalse(sucesso);
             Assert.IsNotNull(_pessoaService.Get(1));
@@ -737,7 +737,7 @@ namespace Service.Tests
             }
 
             var pessoa = _pessoaService.Get(1);
-            var sucesso = await _pessoaService.Delete(1);
+            var sucesso = await _pessoaService.DeleteRole(1);
 
             Assert.IsTrue(sucesso);
             var usuario = await _userManager.FindByNameAsync(pessoa.Cpf);

@@ -286,8 +286,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
-            Assert.AreEqual("Pessoa", redirectToActionResult.ControllerName);
-            Assert.AreEqual("Erro ao excluir pessoa", controller.TempData["ErrorMessage"]);
+            Assert.AreEqual("Home", redirectToActionResult.ControllerName);
+            Assert.AreEqual("Erro ao remover pessoa!", controller.TempData["ErrorMessage"]);
             Assert.IsNull(controller.TempData["SuccessMessage"]);
         }
 
@@ -326,7 +326,7 @@ namespace EventoWeb.Controllers.Tests
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.AreEqual("DefinirAdministrador", redirectToActionResult.ActionName);
             Assert.AreEqual("Pessoa", redirectToActionResult.ControllerName);
-            Assert.AreEqual("Erro ao excluir pessoa", controller.TempData["ErrorMessage"]);
+            Assert.AreEqual("Erro ao remover pessoa!", controller.TempData["ErrorMessage"]);
             Assert.IsNull(controller.TempData["SuccessMessage"]);
         }
 
@@ -357,7 +357,7 @@ namespace EventoWeb.Controllers.Tests
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.AreEqual("DefinirAdministrador", redirectToActionResult.ActionName);
             Assert.AreEqual("Pessoa", redirectToActionResult.ControllerName);
-            Assert.AreEqual("Exclusão realizada com sucesso!", localController.TempData["SuccessMessage"]);
+            Assert.AreEqual("Remoção realizada com sucesso!", localController.TempData["SuccessMessage"]);
             Assert.IsNull(localController.TempData["ErrorMessage"]);
             mockService.Verify(service => service.Delete(1), Times.Once);
         }
@@ -477,7 +477,6 @@ namespace EventoWeb.Controllers.Tests
             mockService.Verify(service => service.ValidaEmail("novo@admin.com"), Times.Once);
             mockService.Verify(service => service.EmailExist("novo@admin.com", "999.999.999-99"), Times.Once);
             mockService.Verify(service => service.IsAdmAsync(It.IsAny<Pessoa>()), Times.Once);
-            mockService.Verify(service => service.VerificaEdit(It.IsAny<Pessoa>()), Times.Once);
             mockService.Verify(service => service.CreatePessoaIdentityComPapelAsync(It.Is<Pessoa>(p =>
                 p.Cpf == "999.999.999-99" &&
                 p.Nome == "Novo Admin" &&
@@ -726,8 +725,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("Erro ao cadastrar administrador.", localController.TempData["ErrorMessage"]);
             Assert.IsNull(localController.TempData["SuccessMessage"]);
 
-            mockService.Verify(service => service.VerificaEdit(It.Is<Pessoa>(p => p.Cpf == "999.999.999-99" && p.NomeCracha == "Novo")), Times.Once);
-            mockService.Verify(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), It.IsAny<uint>(), It.IsAny<int>()), Times.Never);
+       
+            mockService.Verify(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), It.IsAny<uint>(), It.IsAny<int>()), Times.Once);
         }
 
         [TestMethod()]
@@ -768,7 +767,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("Erro ao cadastrar administrador.", localController.TempData["ErrorMessage"]);
             Assert.IsNull(localController.TempData["SuccessMessage"]);
 
-            mockService.Verify(service => service.VerificaEdit(It.IsAny<Pessoa>()), Times.Once);
+            mockService.Verify(service => service.VerificaEdit(It.IsAny<Pessoa>()), Times.Never);
             mockService.Verify(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), 0, 1), Times.Once);
         }
 
