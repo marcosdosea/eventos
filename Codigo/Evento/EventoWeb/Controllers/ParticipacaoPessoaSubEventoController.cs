@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using AutoMapper;
 using Core;
@@ -63,7 +63,7 @@ namespace EventoWeb.Controllers
             {
                 IdSubEvento = (uint)idSubEvento,
                 Entrada = DateTime.Now,
-                Pessoas = new SelectList(pessoas, "Id", "NomePessoa")
+                Pessoas = new SelectList(pessoas, "Id", "Nome")
             };
             return View(model);
         }
@@ -75,7 +75,7 @@ namespace EventoWeb.Controllers
             if (!ModelState.IsValid)
             {
                 model.Pessoas = new SelectList(
-                    _pessoaService.GetAll(), "Id", "NomePessoa", model.IdPessoa);
+                    _pessoaService.GetAll(), "Id", "Nome", model.IdPessoa);
                 return View(model);
             }
 
@@ -94,7 +94,7 @@ namespace EventoWeb.Controllers
 
             var model = _mapper.Map<ParticipacaoPessoaSubEventoModel>(entity);
             model.Pessoas = new SelectList(
-                _pessoaService.GetAll(), "Id", "NomePessoa", model.IdPessoa);
+                _pessoaService.GetAll(), "Id", "Nome", model.IdPessoa);
             return View(model);
         }
 
@@ -105,7 +105,7 @@ namespace EventoWeb.Controllers
             if (!ModelState.IsValid)
             {
                 model.Pessoas = new SelectList(
-                    _pessoaService.GetAll(), "Id", "NomePessoa", model.IdPessoa);
+                    _pessoaService.GetAll(), "Id", "Nome", model.IdPessoa);
                 return View(model);
             }
 
