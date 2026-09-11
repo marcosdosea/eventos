@@ -41,9 +41,11 @@ public class PessoaService : IPessoaService
     }
     public async Task<bool> VerificaEdit(Pessoa pessoaAtualizada)
     {
-       var pessoaAtual = GetByCpf(pessoaAtualizada.Cpf);
-        
-       if(pessoaAtual.Nome != pessoaAtualizada.Nome || pessoaAtual.Email != pessoaAtualizada.Email || pessoaAtual.Telefone1 != pessoaAtualizada.Telefone1)
+        if (pessoaAtualizada == null) return false;
+        var pessoaAtual = GetByCpf(pessoaAtualizada.Cpf);
+        if (pessoaAtual == null) return false;
+
+        if (pessoaAtual.Nome != pessoaAtualizada.Nome || pessoaAtual.Email != pessoaAtualizada.Email || pessoaAtual.Telefone1 != pessoaAtualizada.Telefone1)
        {
             pessoaAtual.Nome = pessoaAtualizada.Nome;
             pessoaAtual.Email = pessoaAtualizada.Email;
@@ -59,9 +61,9 @@ public class PessoaService : IPessoaService
                     return false;
                 }
        }
-       return true;
-        
-       
+        return true;
+
+
     }   
     public async Task Edit(Pessoa pessoa)
     {
