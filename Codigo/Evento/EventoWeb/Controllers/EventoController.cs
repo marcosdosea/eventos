@@ -462,7 +462,7 @@ namespace EventoWeb.Controllers
         [HttpPost]
         [Route("CreateParticipante")]
         [ValidateAntiForgeryToken]
-        public ActionResult CreateParticipante(GestaoPapelModel gestaoPapelModel)
+        public async Task<IActionResult> CreateParticipante(GestaoPapelModel gestaoPapelModel)
         {
             var eventoId = gestaoPapelModel?.Evento?.Id ?? 0;
             var gestorParticipante = _inscricaoService.GetGestorInEvent(User.Identity.Name, eventoId);
@@ -520,7 +520,7 @@ namespace EventoWeb.Controllers
 
                 try
                 {
-                    _pessoaService.CreatePessoaIdentityComPapelAsync(pessoaParaInscrever, eventoId, 4).GetAwaiter().GetResult();
+                    await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoaParaInscrever, eventoId, 4);
                     _eventoService.AtualizarVagasDisponiveis(eventoId);
                     TempData["SuccessMessage"] = $"Participante \"{nome}\" cadastrado com sucesso!";
                     return RedirectToAction("CreateParticipante", new { idEvento = eventoId });
