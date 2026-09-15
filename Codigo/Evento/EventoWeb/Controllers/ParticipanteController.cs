@@ -142,17 +142,18 @@ namespace EventoWeb.Controllers
         [Route("Details/{cpf}")]
         public async Task<ActionResult> Details(string cpf)
         {
-         
+            if (string.IsNullOrWhiteSpace(cpf))
+            {
+                return NotFound();
+            }
             var participante = await _participanteService.GetParticipanteByCpfAsync(cpf);
             if (participante == null)
             {
                 return NotFound();
             }
-            var participantes = await _participanteService.GetParticipantesAsync();
             var participanteModel = new ParticipanteModel
             {
-                Participante = _mapper.Map<PessoaModel>(participante),
-                Participantes = _mapper.Map<IEnumerable<ParticipanteDTO>>(participantes)
+                Participante = _mapper.Map<PessoaModel>(participante)
             };
             return View(participanteModel);
         }
