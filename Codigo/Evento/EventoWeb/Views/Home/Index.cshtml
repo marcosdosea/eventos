@@ -2,6 +2,12 @@
 
 @{
     ViewData["Title"] = "BoraLá";
+
+    // Conjunto de IDs de eventos que o usuário logado gerencia como GESTOR.
+    // Preenchido pelo HomeController. Quando o evento pertence a esse conjunto,
+    // exibimos o botão "Gerenciar" (que leva à tela de gerenciamento) no lugar
+    // do "Bora lá" (que levaria à inscrição).
+    var eventosGerenciadosIds = ViewBag.EventosGerenciadosIds as HashSet<uint> ?? new HashSet<uint>();
 }
 
 
@@ -148,9 +154,18 @@
 
                                             }
                                             <p class="card-description">@descricaoExibida</p>
-                                            <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@evento.Id">
-                                                <button class="btn btn-blue-normal">Bora lá</button>
-                                            </a>
+                                            @if (eventosGerenciadosIds.Contains(evento.Id))
+                                            {
+                                                <a asp-action="GerenciarEvento" asp-controller="Evento" asp-route-idEvento="@evento.Id">
+                                                    <button class="btn btn-blue-normal"><i class="bi bi-gear"></i> Gerenciar</button>
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@evento.Id">
+                                                    <button class="btn btn-blue-normal">Bora lá</button>
+                                                </a>
+                                            }
                                         </div>
                                     </div>
                                 }
@@ -188,7 +203,16 @@
                                                 }
                                             }
                                             <p>@descricao</p>
-                                            <button class="btn btn-blue-normal">Bora lá</button>
+                                            @if (eventosGerenciadosIds.Contains(evento.Id))
+                                            {
+                                                <a asp-action="GerenciarEvento" asp-controller="Evento" asp-route-idEvento="@evento.Id">
+                                                    <button class="btn btn-blue-normal"><i class="bi bi-gear"></i> Gerenciar</button>
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-blue-normal">Bora lá</button>
+                                            }
                                         </div>
                                     </div>
                                 }
@@ -221,7 +245,16 @@
                                                 string descricao = evento.Descricao;
                                             }
                                             <p>@descricao</p>
-                                            <button class="btn btn-blue-normal">Bora lá</button>
+                                            @if (eventosGerenciadosIds.Contains(evento.Id))
+                                            {
+                                                <a asp-action="GerenciarEvento" asp-controller="Evento" asp-route-idEvento="@evento.Id">
+                                                    <button class="btn btn-blue-normal"><i class="bi bi-gear"></i> Gerenciar</button>
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-blue-normal">Bora lá</button>
+                                            }
                                         </div>
                                     </div>
                                 }
@@ -268,7 +301,16 @@
                                                 }
                                             }
                                             <p>@descricao</p>
-                                            <button class="btn btn-blue-normal">Bora lá</button>
+                                            @if (eventosGerenciadosIds.Contains(evento.Id))
+                                            {
+                                                <a asp-action="GerenciarEvento" asp-controller="Evento" asp-route-idEvento="@evento.Id">
+                                                    <button class="btn btn-blue-normal"><i class="bi bi-gear"></i> Gerenciar</button>
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-blue-normal">Bora lá</button>
+                                            }
                                         </div>
                                     </div>
                                 }
