@@ -80,11 +80,11 @@
                             <div class="d-flex align-items-center">
                                 <div class="form-check">
                                     <!-- Checkbox que marca se a inscrição será gratuita (valor 1) -->
-                                    <input class="form-check-input" type="checkbox" value="1" id="Gratuito" name="Gratuito"
+                                    <input class="form-check-input" type="checkbox" id="InscricaoGratuita_Checkbox"
                                     @(Model.InscricaoGratuita == 1 ? "checked" : "")>
-                                    <label class="form-check-label" for="UsadaEvento">Gratuito</label>
-                                    <!-- Campo oculto para enviar valor 0 quando o checkbox não está marcado -->
-                                    <input type="hidden" name="Gratuito" value="0">
+                                    <label class="form-check-label" for="InscricaoGratuita_Checkbox">Gratuito</label>
+                                    <!-- Campo oculto para enviar 1 ou 0 correspondente à propriedade do Model -->
+                                    <input type="hidden" id="InscricaoGratuita" name="InscricaoGratuita" value="@(Model.InscricaoGratuita == 1 ? 1 : 0)">
                                 </div>
                             </div>
                             <span asp-validation-for="InscricaoGratuita" class="text-danger"></span>
@@ -94,12 +94,12 @@
                         <div class="form-group mb-3">
                             <div class="d-flex align-items-center">
                                 <div class="form-check">
-                                    <!-- Checkbox que marca se o subevento será usado (valor 1) -->
-                                    <input class="form-check-input" type="checkbox" value="1" id="Certificado" name="Certificado"
+                                    <!-- Checkbox que marca se o subevento terá certificado (valor 1) -->
+                                    <input class="form-check-input" type="checkbox" id="PossuiCertificado_Checkbox"
                                     @(Model.PossuiCertificado == 1 ? "checked" : "")>
-                                    <label class="form-check-label" for="Usada">Possui certificado</label>
-                                    <!-- Campo oculto para enviar valor 0 quando o checkbox não está marcado -->
-                                    <input type="hidden" name="Certificado" value="0">
+                                    <label class="form-check-label" for="PossuiCertificado_Checkbox">Possui certificado</label>
+                                    <!-- Campo oculto para enviar 1 ou 0 correspondente à propriedade do Model -->
+                                    <input type="hidden" id="PossuiCertificado" name="PossuiCertificado" value="@(Model.PossuiCertificado == 1 ? 1 : 0)">
                                 </div>
                             </div>
                             <span asp-validation-for="PossuiCertificado" class="text-danger"></span>
@@ -140,7 +140,8 @@
                     <div class="form-group" id="FrequenciaMinimaCertificado">
                         <label asp-for="FrequenciaMinimaCertificado" class="control-label">Frequência mínima de emissão de certificado</label>
                         <div class="input-group" style="width:10rem;">
-                            <input asp-for="FrequenciaMinimaCertificado" class="form-control" style="border-right-style:none;" type="number" value="" step="0.01" min="0" max="100" value="@Model.FrequenciaMinimaCertificado.ToString("F2", new System.Globalization.CultureInfo("pt-BR"))" placeholder="0,00"/>
+                            <input type="text" id="FrequenciaMinimaCertificado_Tela" class="form-control" style="border-right-style:none;" value="@Model.FrequenciaMinimaCertificado.ToString("F2", new System.Globalization.CultureInfo("pt-BR"))" placeholder="0,00" />
+                            <input type="hidden" asp-for="FrequenciaMinimaCertificado" id="FrequenciaMinimaCertificado_Real" />
                             <span class="input-group-text" style="background-color:white;">%</span>
                         </div>
                         <span asp-validation-for="FrequenciaMinimaCertificado" class="text-danger"></span>
@@ -164,18 +165,16 @@
             <div class="row">
                 <div class="col-md-4">
                     <div class="form-group" id="valorInscricaoGroup">
-                        <span>
-                            <label asp-for="ValorInscricao" class="control-label">Menor valor de inscrição (R$)</label>
-                            <div class="input-group" style="width:10rem;">
-                                <span class="input-group-text" style="background-color:white;">R$</span>
-                                <input asp-for="ValorInscricao" class="form-control" style="border-left-style:none;" type="number" id="valorInscricao" />
-                            </div>
-                        </span>
-
+                        <label asp-for="ValorInscricao" class="control-label">Menor valor de inscrição (R$)</label>
+                        <div class="input-group" style="width:10rem;">
+                            <span class="input-group-text" style="background-color:white;">R$</span>
+                            <input type="text" id="ValorInscricao_Tela" class="form-control" style="border-left-style:none;" value="@Model.ValorInscricao.ToString("F2", new System.Globalization.CultureInfo("pt-BR"))" placeholder="0,00" />
+                            <input type="hidden" asp-for="ValorInscricao" id="ValorInscricao_Real" />
+                        </div>
+                        <span id="valorInscricaoMsg" class="text-danger d-block"></span>
+                        <span asp-validation-for="ValorInscricao" class="text-danger"></span>
                     </div>
-
                 </div>
-                <span asp-validation-for="ValorInscricao" class="text-danger"></span>
             </div>
             <div class="col-md-6">
                 <!-- Espaço em branco -->
@@ -183,7 +182,7 @@
             <div class="d-flex justify-content-end">
                 <div class="d-flex flex-row">
                     <div class="form-group" style="margin-right: 10px;">
-                        <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" value="@Model.ValorInscricao.ToString("F2", new System.Globalization.CultureInfo("pt-BR"))" placeholder="0,00" />
+                        <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
                     </div>
                     <div class="form-group">
                         <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Model.IdEvento" class="btn btn-outline-danger">Voltar</a>
@@ -196,13 +195,99 @@
 </div>
 
 <script>
-    //Marcar e desmarcar checkbox--
+    document.addEventListener('DOMContentLoaded', function () {
+        function gerenciarCampoDecimal(idTela, idReal) {
+            const campoTela = document.getElementById(idTela);
+            const campoReal = document.getElementById(idReal);
+            if (!campoTela || !campoReal) return;
 
-    document.getElementById('Gratuito').addEventListener('change', function () {
-        this.nextElementSibling.value = this.checked ? 1 : 0; // Ajusta o valor do campo oculto baseado no estado do checkbox
-    });
-    document.getElementById('Certificado').addEventListener('change', function () {
-        this.nextElementSibling.value = this.checked ? 1 : 0; // Ajusta o valor do campo oculto baseado no estado do checkbox
+            if (!campoReal.value || campoReal.value === '') {
+                campoReal.value = campoTela.value;
+            }
+
+            campoTela.addEventListener('input', function (e) {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 0) {
+                    value = (parseFloat(value) / 100).toFixed(2).replace('.', ',');
+                } else {
+                    value = '0,00';
+                }
+                e.target.value = value;
+                campoReal.value = value;
+
+                if (idTela === 'ValorInscricao_Tela') {
+                    validarGratuitoValor();
+                }
+            });
+        }
+
+        gerenciarCampoDecimal('FrequenciaMinimaCertificado_Tela', 'FrequenciaMinimaCertificado_Real');
+        gerenciarCampoDecimal('ValorInscricao_Tela', 'ValorInscricao_Real');
+
+        const checkboxGratuito = document.getElementById('InscricaoGratuita_Checkbox');
+        const hiddenGratuito = document.getElementById('InscricaoGratuita');
+        const campoValorTela = document.getElementById('ValorInscricao_Tela');
+        const campoValorReal = document.getElementById('ValorInscricao_Real');
+        const msgValor = document.getElementById('valorInscricaoMsg');
+
+        function validarGratuitoValor() {
+            if (!checkboxGratuito || !campoValorReal) return true;
+            const isGratuito = checkboxGratuito.checked;
+            const valorTexto = campoValorReal.value || '0,00';
+            const valorNumerico = parseFloat(valorTexto.replace('.', '').replace(',', '.'));
+
+            if (isGratuito && valorNumerico > 0) {
+                if (msgValor) {
+                    msgValor.innerText = 'Para subeventos gratuitos, o valor de inscrição deve ser 0,00.';
+                }
+                return false;
+            } else {
+                if (msgValor) {
+                    msgValor.innerText = '';
+                }
+                return true;
+            }
+        }
+
+        if (checkboxGratuito) {
+            checkboxGratuito.addEventListener('change', function () {
+                if (hiddenGratuito) {
+                    hiddenGratuito.value = this.checked ? '1' : '0';
+                }
+                if (this.checked) {
+                    if (campoValorTela) campoValorTela.value = '0,00';
+                    if (campoValorReal) campoValorReal.value = '0,00';
+                    if (msgValor) msgValor.innerText = '';
+                } else {
+                    validarGratuitoValor();
+                }
+            });
+        }
+
+        const checkboxCertificado = document.getElementById('PossuiCertificado_Checkbox');
+        const hiddenCertificado = document.getElementById('PossuiCertificado');
+        if (checkboxCertificado) {
+            checkboxCertificado.addEventListener('change', function () {
+                if (hiddenCertificado) {
+                    hiddenCertificado.value = this.checked ? '1' : '0';
+                }
+            });
+        }
+
+        const form = document.querySelector('form');
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                if (!validarGratuitoValor()) {
+                    e.preventDefault();
+                    if (campoValorTela) {
+                        campoValorTela.focus();
+                    }
+                    return false;
+                }
+            });
+        }
+
+        validarGratuitoValor();
     });
 </script>
 
