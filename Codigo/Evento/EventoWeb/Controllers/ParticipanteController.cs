@@ -157,13 +157,15 @@ namespace EventoWeb.Controllers
             return View(participanteModel);
         }
 
-        // No ParticipanteController.cs
-
         [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
         [HttpGet]
-        [Route("ConfirmDelete/{cpf}")] // Nova rota para a p�gina de confirma��o
-        public async Task<ActionResult> ConfirmDelete(string cpf) // Novo nome para o m�todo GET
+        [Route("ConfirmDelete/{cpf}")]
+        public async Task<ActionResult> ConfirmDelete(string cpf)
         {
+            if (string.IsNullOrWhiteSpace(cpf))
+            {
+                return BadRequest();
+            }
             var participantes = await _participanteService.GetParticipantesAsync();
             var participante = participantes.FirstOrDefault(c => c.Cpf == cpf);
             if (participante == null)
@@ -173,20 +175,37 @@ namespace EventoWeb.Controllers
             var participanteModel = new ParticipanteModel
             {
                 Participante = _mapper.Map<PessoaModel>(participante),
-                // Pode remover a linha abaixo se n�o for usar 'Participantes' na view de confirma��o
                 Participantes = _mapper.Map<IEnumerable<ParticipanteDTO>>(participantes)
             };
-            return View("Delete", participanteModel); // Isso renderizaria ConfirmDelete.cshtml (ou Delete.cshtml, se preferir manter o nome do arquivo da view)
+            return View("Delete", participanteModel);
         }
 
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
         [HttpPost]
-        [Route("Delete/{id}")] // Esta rota e m�todo ficam como est�o para o POST de exclus�o
+        [Route("Delete/{id}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(string id)
         {
-            await _participanteService.DeleteAsync(id);
-            return RedirectToAction("Index");
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                return BadRequest();
+            }
+            var participantes = await _participanteService.GetParticipantesAsync();
+            var participante = participantes.FirstOrDefault(c => c.Cpf == id);
+            if (participante == null)
+            {
+                return NotFound();
+            }
+            try
+            {
+                await _participanteService.DeleteAsync(id);
+            }
+            catch
+            {
+                return NotFound();
+            }
+            TempData["SuccessMessage"] = "Participante removido com sucesso.";
+            return RedirectToAction(nameof(Index));
         }
     }
 }
