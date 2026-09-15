@@ -171,8 +171,7 @@
                             <input type="text" id="ValorInscricao_Tela" class="form-control" style="border-left-style:none;" value="@Model.ValorInscricao.ToString("F2", new System.Globalization.CultureInfo("pt-BR"))" placeholder="0,00" />
                             <input type="hidden" asp-for="ValorInscricao" id="ValorInscricao_Real" />
                         </div>
-                        <span id="valorInscricaoMsg" class="text-danger d-block"></span>
-                        <span asp-validation-for="ValorInscricao" class="text-danger"></span>
+                        <span asp-validation-for="ValorInscricao" id="valorInscricaoMsg" class="text-danger d-block"></span>
                     </div>
                 </div>
             </div>
