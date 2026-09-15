@@ -1,74 +1,219 @@
 @model EventoWeb.Models.InscricaoEventoViewModel
 
 @{
-    ViewData["Title"] = "Detalhes";
+    ViewData["Title"] = "Inscrição - " + Model.eventoNavigation.Nome;
 }
-<h2 class="blue-normal">Detalhes do evento</h2>
 
-<div class="row">
-<div class="col-md-4">
-    <dd>
-        @Model.eventoNavigation.Nome
-    </dd>
-    <dt>Data de início das incrições</dt>
-    <dd> @Model.eventoNavigation.DataInicioInscricao</dd>
-    <dt>Data limite das inscrições</dt>
-    <dd> @Model.eventoNavigation.DataFimInscricao</dd>
-    <dt>Vagas disponíveis</dt>
-    @{
-        var vagasDisponiveisTotal = @Model.eventoNavigation.VagasOfertadas - @Model.eventoNavigation.VagasReservadas; 
-    }
-    <dd> @vagasDisponiveisTotal </dd>
-    <dt>Status do evento</dt>
-    <dd class="col-sm-10">
-        @{
-            var status = Model.eventoNavigation.Status switch
-            {
-                "C" => "Cadastrado",
-                "I" => "Inativo",
-                "A" => "Em andamento",
-                "F" => "Finalizado",
-                _ => "Desconhecido"
-            };
-            @status
-        }
-    </dd>
+<link rel="stylesheet" href="~/css/realizarInscricao.css" asp-append-version="true" />
 
-</div>
-
-    <div class="col-md-8">
-        <div>
-            <h5 class="blue-normal">Tipo de inscrição</h5>
-                @foreach (var item in Model.tipoInscricao)
+<main class="inscricao-page">
+    <div class="inscricao-container inscricao-container-top">
+        
+        <article class="card-inscricao">
+            
+            <div class="inscricao-header">
+                @if (!string.IsNullOrEmpty(Model.eventoNavigation.ImagemPortalBase64))
                 {
-                <div class="form-check">
-                   <input type="checkbox" class="form-check-input" id="tipoInscricaoId" name="Tipodeinscrição" value="@item.Id">
-                   <label class="form-check-label" for="tipoInscricaoId">@item.Nome</label>
-                </div>
+                    <img src="data:image/jpeg;base64,@Model.eventoNavigation.ImagemPortalBase64" alt="Imagem do Evento" class="inscricao-header-img" />
                 }
-        </div>
-            @{
-                var valorTotal = Model.eventoNavigation.ValorInscricao;
-            }
-                 <dd>Total
-                R$@valorTotal
-        </dd>
+                else
+                {
+                    <!-- Fallback para caso o evento não tenha uma imagem salva no banco -->
+                    <img src="~/Imagens_Eventos/Evento-BoraLá.png" alt="Imagem Padrão do Evento" class="inscricao-header-img" />
+                }
+                <div>
+                    <h1 class="inscricao-header-title">@Model.eventoNavigation.Nome</h1>
+                    <p class="inscricao-header-subtitle">Detalhes e Inscrição</p>
+                </div>
+            </div>
+            <h2 class="section-title">Informações do Evento</h2>
+            
+            <section class="info-grid">
+                <div class="info-item">
+                    <div class="info-icon" aria-hidden="true"><i class="bi bi-calendar3"></i></div>
+                    <div class="info-text">
+                        <h3>Data</h3>
+                        <p>@(Model.eventoNavigation.DataInicio?.ToString("dd/MM/yyyy") ?? "A definir") a @(Model.eventoNavigation.DataFim?.ToString("dd/MM/yyyy") ?? "A definir")</p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon" aria-hidden="true"><i class="bi bi-geo-alt-fill"></i></div>
+                    <div class="info-text">
+                        <h3>Local</h3>
+                        @{
+                            string local = "Local não informado";
+                            if (!string.IsNullOrEmpty(Model.eventoNavigation.Cidade) && !string.IsNullOrEmpty(Model.eventoNavigation.Estado))
+                            {
+                                local = $"{Model.eventoNavigation.Cidade}, {Model.eventoNavigation.Estado}";
+                            }
+                            else if (!string.IsNullOrEmpty(Model.eventoNavigation.Estado))
+                            {
+                                local = Model.eventoNavigation.Estado;
+                            }
+                        }
+                        <p>@local</p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon" aria-hidden="true"><i class="bi bi-clock-fill"></i></div>
+                    <div class="info-text">
+                        <h3>Carga Horária</h3>
+                        <p>@Model.eventoNavigation.CargaHoraria Horas @(Model.eventoNavigation.PossuiCertificado == 1 ? "(Com Certificado)" : "")</p>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon" aria-hidden="true"><i class="bi bi-ticket-perforated-fill"></i></div>
+                    <div class="info-text">
+                        <h3>Entrada</h3>
+                        @if (Model.eventoNavigation.InscricaoGratuita == 1 || Model.eventoNavigation.ValorInscricao == 0)
+                        {
+                            <p class="entry-free">Gratuita</p>
+                        }
+                        else
+                        {
+                            <p>R$ @Model.eventoNavigation.ValorInscricao.ToString("N2")</p>
+                        }
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon" aria-hidden="true"><i class="bi bi-people-fill"></i></div>
+                    <div class="info-text">
+                        <h3>Vagas</h3>
+                        <p>@(Model.eventoNavigation.VagasOfertadas - Model.eventoNavigation.VagasReservadas) disponíveis</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="evento-sobre">
+                <h2 class="section-title mt-20">Sobre o Evento</h2>
+                <p class="evento-sobre-text">
+                    @(string.IsNullOrWhiteSpace(Model.eventoNavigation.Descricao) ? "Nenhuma descrição disponível para este evento." : Model.eventoNavigation.Descricao)
+                </p>
+            </section>
+
+
+        </article>
+
         @if (ViewBag.JaInscrito == true)
         {
-            <div class="alert alert-info mt-3" role="alert">
-                <strong>Atenção:</strong> Você já está inscrito neste evento.
-            </div>
-            <a asp-action="MinhasInscricoes" asp-controller="Inscricao" class="btn btn-primary">Ver Minhas Inscrições</a>
+            <aside class="alert alert-info mt-3 card-inscricao text-center alert-inscricao" role="alert">
+                <h4 class="alert-heading text-info">Atenção!</h4>
+                <p>Você já está inscrito neste evento.</p>
+                <hr>
+                <a asp-action="MinhasInscricoes" asp-controller="Inscricao" class="btn btn-primary mt-2">Ver Minhas Inscrições</a>
+                <a asp-action="Index" asp-controller="Home" class="btn btn-outline-danger mt-2 ms-2">Voltar</a>
+            </aside>
         }
         else
         {
-            <form method="post" asp-action="realizarInscricao" asp-controller="Inscricao">
-                <button type="submit" class="btn btn-primary" asp-route-idEvento="@Model.eventoNavigation.Id">Inscrever-se</button>
+            <form method="post" asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@Model.eventoNavigation.Id">
+                <section class="card-inscricao">
+                    <h2 class="section-title">Opções de Inscrição</h2>
+                    <p class="section-description">
+                        Selecione o tipo de inscrição desejado:
+                    </p>
+                    
+                    <fieldset class="subevent-list">
+                        <legend class="visually-hidden">Escolha seu tipo de inscrição</legend>
+                        @if (Model.tipoInscricao != null && Model.tipoInscricao.Any())
+                        {
+                            foreach (var item in Model.tipoInscricao)
+                            {
+                                <label class="subevent-item">
+                                    <div class="subevent-info">
+                                        <h4>@item.Nome</h4>
+                                        <p>@item.Descricao</p>
+                                        @if(item.Valor == 0)
+                                        {
+                                            <span class="badge-custom badge-success">Gratuito</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge-custom badge-primary">R$ @item.Valor.ToString("N2")</span>
+                                        }
+                                    </div>
+                                    <div class="checkbox-wrapper">
+                                        <input type="radio" name="IdTipoInscricao" value="@item.Id" data-valor="@item.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture)" onchange="toggleSelect(this)" required aria-label="Selecionar @item.Nome" />
+                                    </div>
+                                </label>
+                            }
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning">Nenhum tipo de inscrição configurado para este evento. A inscrição padrão será aplicada.</div>
+                            <input type="hidden" name="IdTipoInscricao" value="0" />
+                        }
+                    </fieldset>
+
+                    @if (Model.SubeventosOpcoes != null && Model.SubeventosOpcoes.Any())
+                    {
+                        <h2 class="section-title mt-40">Programação / Subeventos</h2>
+                        <p class="section-description mb-20">Selecione os subeventos dos quais deseja participar e escolha o tipo de inscrição para cada um:</p>
+                        <div class="subeventos-wrapper">
+                            @foreach (var subOpcao in Model.SubeventosOpcoes)
+                            {
+                                var sub = subOpcao.Subevento;
+                                <label class="subevento-container">
+                                    <div class="subevento-header">
+                                        <div>
+                                            <h4>@sub.Nome</h4>
+                                            <p>
+                                                <i class="bi bi-tag-fill me-1"></i> @sub.NomeTipoEvento | 
+                                                <i class="bi bi-person-check-fill me-1"></i> Vagas: @sub.VagasDisponiveis / @sub.VagasOfertadas
+                                            </p>
+                                        </div>
+                                        <div class="subevento-checkbox-wrapper">
+                                            <input type="checkbox" name="SelectedSubeventos" value="@sub.Id" class="subevento-checkbox" onchange="toggleSubeventoSelect(this, @sub.Id)" />
+                                        </div>
+                                    </div>
+                                    <div class="subevento-tipo-wrapper" id="wrapper-tipo-@sub.Id">
+                                        <label>Selecione o Tipo de Inscrição:</label>
+                                        <select name="TipoInscricaoSubevento_@sub.Id" id="select-tipo-@sub.Id" class="form-select subevento-tipo-select" onchange="calcularValorTotal()" disabled>
+                                            @if (subOpcao.TiposInscricao != null && subOpcao.TiposInscricao.Any())
+                                            {
+                                                @foreach(var tipo in subOpcao.TiposInscricao)
+                                                {
+                                                    <option value="@tipo.Id" data-valor="@tipo.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+                                                        @tipo.Nome - @(tipo.Valor == 0 ? "Gratuito" : $"R$ {tipo.Valor.ToString("N2")}")
+                                                    </option>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <option value="" data-valor="0">Nenhum tipo disponível (Gratuito)</option>
+                                            }
+                                        </select>
+                                    </div>
+                                </label>
+                            }
+                        </div>
+                    }
+
+                    <footer class="summary">
+                        <div>
+                            <p class="summary-title">Valor Total Estimado</p>
+                            <div class="price-total" aria-live="polite">
+                                @if (Model.eventoNavigation.InscricaoGratuita == 1 || Model.eventoNavigation.ValorInscricao == 0)
+                                {
+                                    @:Gratuito
+                                }
+                                else
+                                {
+                                    @:R$ @Model.eventoNavigation.ValorInscricao.ToString("N2")
+                                }
+                            </div>
+                        </div>
+                        <div class="actions-wrapper">
+                            <a asp-action="Index" asp-controller="Home" class="btn-voltar">Voltar</a>
+                            <button type="submit" class="btn-submit">Confirmar Inscrição</button>
+                        </div>
+                    </footer>
+                </section>
             </form>
         }
-        <a asp-action="Index" asp-controller="Home">
-            <button class="btn btn-danger">Voltar</button>
-        </a>
-        
     </div>
-</div>
+</main>
+
+@section Scripts {
+    <script src="~/js/realizarInscricao.js" asp-append-version="true"></script>
+}
