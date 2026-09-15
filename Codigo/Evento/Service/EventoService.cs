@@ -2,6 +2,7 @@ using Core;
 using Core.Service;
 using Core.DTO;
 using Microsoft.EntityFrameworkCore;
+using System.Diagnostics;
 
 namespace Service
 {
@@ -84,7 +85,7 @@ namespace Service
         /// <param name="evento"></param>
         /// <returns></returns>
         /// <exception cref="NotImplementedException"></exception>
-        public void Edit(Evento evento, List<uint> novosIdsAreaInteresse)
+        public bool Edit(Evento evento, List<uint> novosIdsAreaInteresse)
         {
             try
             {
@@ -141,10 +142,12 @@ namespace Service
                 
 
                 _context.SaveChanges();
+                return true;
             }
-            catch (ServiceException ex)
+            catch (Exception ex)
             {
-                throw new ServiceException($"Erro ao atualizar o evento: {ex.Message}", ex);
+                Trace.TraceError($"Erro ao atualizar o evento: {ex.Message}", ex);
+                return false;
             }
         }
 
