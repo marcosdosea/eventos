@@ -390,3 +390,21 @@
         font-size: 1.0rem;
     }
 }
+
+/* Estilos para Paginação */
+.custom-pagination .page-link {
+    color: #232ED0;
+    border-radius: 0.25rem;
+    margin: 0 0.125rem;
+}
+
+.custom-pagination .page-item.active .page-link {
+    background-color: #232ED0;
+    border-color: #232ED0;
+    color: white;
+}
+
+.custom-pagination .page-item.disabled .page-link {
+    color: #6c757d;
+}
+

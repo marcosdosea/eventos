@@ -253,7 +253,7 @@ namespace Service
             }
         }
 
-        public IEnumerable<Evento> Search(EventoFilterDTO filter)
+        public IEnumerable<Evento> Search(EventoFilterDTO filter, int pagina, int tamanhoPagina, out int totalRegistros)
         {
             var query = _context.Eventos
                 .Include(e => e.IdTipoEventoNavigation)
@@ -303,7 +303,14 @@ namespace Service
 
             query = query.Where(e => e.Status == "A" || e.Status == "C");
 
-            return query.AsNoTracking().ToList();
+            totalRegistros = query.Count();
+
+            // Paginacao (ordenando para garantir resultados consistentes)
+            return query.OrderBy(e => e.Id)
+                        .Skip((pagina - 1) * tamanhoPagina)
+                        .Take(tamanhoPagina)
+                        .AsNoTracking()
+                        .ToList();
         }
 
     }

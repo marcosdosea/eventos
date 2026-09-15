@@ -73,5 +73,32 @@
                 </div>
             }
         </div>
+
+        @if (ViewBag.TotalPaginas > 0)
+        {
+            var filter = ViewBag.FiltroAtual as Core.DTO.EventoFilterDTO;
+            <nav aria-label="Navegação de páginas de eventos">
+                <ul class="pagination justify-content-center custom-pagination">
+                    <li class="page-item @(ViewBag.PaginaAtual <= 1 ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("Buscar", new { pagina = ViewBag.PaginaAtual - 1, TermoBusca = filter?.TermoBusca, IdAreaInteresse = filter?.IdAreaInteresse, IdTipoEvento = filter?.IdTipoEvento, Data = filter?.Data?.ToString("yyyy-MM-dd"), Estado = filter?.Estado, Cidade = filter?.Cidade })" aria-label="Anterior">
+                            <span aria-hidden="true">&laquo; Anterior</span>
+                        </a>
+                    </li>
+                    
+                    @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+                    {
+                        <li class="page-item @(i == ViewBag.PaginaAtual ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Buscar", new { pagina = i, TermoBusca = filter?.TermoBusca, IdAreaInteresse = filter?.IdAreaInteresse, IdTipoEvento = filter?.IdTipoEvento, Data = filter?.Data?.ToString("yyyy-MM-dd"), Estado = filter?.Estado, Cidade = filter?.Cidade })">@i</a>
+                        </li>
+                    }
+
+                    <li class="page-item @(ViewBag.PaginaAtual >= ViewBag.TotalPaginas ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("Buscar", new { pagina = ViewBag.PaginaAtual + 1, TermoBusca = filter?.TermoBusca, IdAreaInteresse = filter?.IdAreaInteresse, IdTipoEvento = filter?.IdTipoEvento, Data = filter?.Data?.ToString("yyyy-MM-dd"), Estado = filter?.Estado, Cidade = filter?.Cidade })" aria-label="Próximo">
+                            <span aria-hidden="true">Próximo &raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
     </div>
 </section>
