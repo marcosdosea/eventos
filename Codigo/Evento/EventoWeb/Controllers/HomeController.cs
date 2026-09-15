@@ -60,9 +60,7 @@ namespace EventoWeb.Controllers
                 evento.Descricao = string.IsNullOrWhiteSpace(evento.Descricao) ? string.Empty : evento.Descricao;
             }
 
-            // IDs dos eventos que o usuário autenticado gerencia como GESTOR (idPapel = 2).
-            // Usados na vitrine para exibir o botão "Gerenciar" no lugar de "Bora lá",
-            // já que não faz sentido um gestor se inscrever no evento que gerencia.
+
             var eventosGerenciadosIds = new HashSet<uint>();
             if (User.Identity.IsAuthenticated && User.IsInRole("GESTOR"))
             {

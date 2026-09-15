@@ -3,10 +3,6 @@
 @{
     ViewData["Title"] = "BoraLá";
 
-    // Conjunto de IDs de eventos que o usuário logado gerencia como GESTOR.
-    // Preenchido pelo HomeController. Quando o evento pertence a esse conjunto,
-    // exibimos o botão "Gerenciar" (que leva à tela de gerenciamento) no lugar
-    // do "Bora lá" (que levaria à inscrição).
     var eventosGerenciadosIds = ViewBag.EventosGerenciadosIds as HashSet<uint> ?? new HashSet<uint>();
 }
 
