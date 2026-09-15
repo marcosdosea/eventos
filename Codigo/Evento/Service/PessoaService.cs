@@ -340,9 +340,6 @@ public class PessoaService : IPessoaService
     {
         bool sucesso = false;
 
-        // Mapeia o papel para a role correspondente no Identity.
-        // Papel 4 (participante/usuário) usa a role "USUARIO", que é a role
-        // efetivamente cadastrada no seed (IdentityInitializer).
         var role = idPapel switch
         {
             1 => "ADMINISTRADOR",
@@ -353,7 +350,6 @@ public class PessoaService : IPessoaService
             _ => throw new ArgumentException("Papel inválido.")
         };
 
-        // Garante que a Pessoa exista no banco. Se ainda não existir, cria.
         var pessoaExistente = GetByCpf(pessoa.Cpf);
         if (pessoaExistente == null)
         {
@@ -371,7 +367,6 @@ public class PessoaService : IPessoaService
 
         uint idPessoa = pessoa.Id;
 
-        // Garante que o usuário Identity exista. Se ainda não existir, cria.
         var existingUser = await _userManager.FindByNameAsync(pessoa.Cpf);
         if (existingUser == null)
         {
@@ -384,9 +379,6 @@ public class PessoaService : IPessoaService
             }
         }
 
-        // Cria a inscrição no evento, quando aplicável.
-        // CreateInscricaoEvento já é idempotente: retorna 0 se a pessoa já
-        // estiver inscrita neste evento, evitando duplicidade.
         if (idEvento > 0)
         {
             var nomeCracha = !string.IsNullOrWhiteSpace(pessoa.NomeCracha)
@@ -406,7 +398,6 @@ public class PessoaService : IPessoaService
             sucesso = true;
         }
 
-        // Associa o papel (role) ao usuário no Identity, caso ainda não possua.
         if (!await _userManager.IsInRoleAsync(existingUser, role))
         {
             var roleResult = await _userManager.AddToRoleAsync(existingUser, role);
