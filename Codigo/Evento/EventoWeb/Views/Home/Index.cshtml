@@ -1,7 +1,7 @@
-Ôªø@model IEnumerable<EventoWeb.Models.EventoModel>
+@model IEnumerable<EventoWeb.Models.EventoModel>
 
 @{
-    ViewData["Title"] = "BoraL√°";
+    ViewData["Title"] = "BoraL·";
 }
 
 
@@ -38,37 +38,37 @@
                     <ul class="categorias-list">
                         <li>
                             <a href="#">
-                                <img src="~/√≠cones/Palestras.png" alt="Palestras">
+                                <img src="~/Ìcones/Palestras.png" alt="Palestras">
                                 <span>Palestras</span>
                             </a>
                         </li>
                         <li>
                             <a href="#">
-                                <img src="~/√≠cones/Teatros.png" alt="Teatros">
+                                <img src="~/Ìcones/Teatros.png" alt="Teatros">
                                 <span>Teatros</span>
                             </a>
                         </li>
                         <li>
                             <a href="#">
-                                <img src="~/√≠cones/Shows.png" alt="Shows" class="i">
+                                <img src="~/Ìcones/Shows.png" alt="Shows" class="i">
                                 <span>Shows</span>
                             </a>
                         </li>
                         <li>
                             <a href="#">
-                                <img src="~/√≠cones/Stand-up.png" alt="Stand-up">
+                                <img src="~/Ìcones/Stand-up.png" alt="Stand-up">
                                 <span>Stand-Up</span>
                             </a>
                         </li>
                         <li>
                             <a href="#">
-                                <img src="~/√≠cones/Culturais.png" alt="Culturais">
+                                <img src="~/Ìcones/Culturais.png" alt="Culturais">
                                 <span>Culturais</span>
                             </a>
                         </li>
                         <li>
                             <a href="#">
-                                <img src="~/√≠cones/Religiosos.png" alt="Religiosos">
+                                <img src="~/Ìcones/Religiosos.png" alt="Religiosos">
                                 <span>Religiosos</span>
                             </a>
                         </li>
@@ -84,28 +84,28 @@
                         <img src="~/Imagens_Eventos/Evento-Semac.png" alt="IV SEMAC">
                         <div class="carrossel-content">
                             <h2>IV SEMAC</h2>
-                            <p>‚ÄúEmerg√™ncias contempor√¢neas e transforma√ß√£o social‚Äù</p>
+                            <p>ìEmergÍncias contempor‚neas e transformaÁ„o socialî</p>
                         </div>
                     </div>
                     <div class="carrossel-slide">
                         <img src="~/Imagens_Eventos/Evento-Jazz.png" alt="IV SEMAC">
                         <div class="carrossel-content">
                             <h2>Jazz Under the Stars</h2>
-                            <p>‚ÄúA noite do Jazz‚Äù</p>
+                            <p>ìA noite do Jazzî</p>
                         </div>
                     </div>
                     <div class="carrossel-slide">
                         <img src="~/Imagens_Eventos/Evento-Rock.png" alt="IV SEMAC">
                         <div class="carrossel-content">
                             <h2>Rock Fest 2024</h2>
-                            <p>‚ÄúFestival de Rock‚Äù</p>
+                            <p>ìFestival de Rockî</p>
                         </div>
                     </div>
                     <div class="carrossel-slide">
                         <img src="~/Imagens_Eventos/Evento-Eletronica.png" alt="IV SEMAC">
                         <div class="carrossel-content">
                             <h2>EDM Festival</h2>
-                            <p>‚ÄúFestival de m√∫sica eletr√¥nica‚Äù</p>
+                            <p>ìFestival de m˙sica eletrÙnicaî</p>
                         </div>
                     </div>
                 </div>
@@ -120,7 +120,7 @@
             </section>
 
             <section class="eventos">
-                <h1>Recomenda√ß√µes</h1>
+                <h1>RecomendaÁıes</h1>
                 <div class="scroll-wrapper">
                     <div class="cards-container">
                         @if (Model != null)
@@ -135,7 +135,7 @@
                                             <h2>@evento.Nome</h2>
                                             @{
                                                 var descricaoCompleta = string.IsNullOrWhiteSpace(evento.Descricao)
-                                                    ? "Descri√ß√£o indispon√≠vel"
+                                                    ? "DescriÁ„o indisponÌvel"
                                                     : evento.Descricao;
 
                                                 var descricaoExibida = descricaoCompleta;
@@ -149,7 +149,7 @@
                                             }
                                             <p class="card-description">@descricaoExibida</p>
                                             <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@evento.Id">
-                                                <button class="btn btn-blue-normal">Bora l√°</button>
+                                                <button class="btn btn-blue-normal">Bora l·</button>
                                             </a>
                                         </div>
                                     </div>
@@ -158,7 +158,7 @@
                         }
                         else
                         {
-                            <p>N√£o h√° eventos para exibir.</p>
+                            <p>N„o h· eventos para exibir.</p>
                         }
                     </div>
                 </div>
@@ -188,14 +188,14 @@
                                                 }
                                             }
                                             <p>@descricao</p>
-                                            <button class="btn btn-blue-normal">Bora l√°</button>
+                                            <button class="btn btn-blue-normal">Bora l·</button>
                                         </div>
                                     </div>
                                 }
                             }
                             else
                             {
-                                <p>N√£o h√° eventos para exibir.</p>
+                                <p>N„o h· eventos para exibir.</p>
                             }
                         }
                     </div>
@@ -221,14 +221,14 @@
                                                 string descricao = evento.Descricao;
                                             }
                                             <p>@descricao</p>
-                                            <button class="btn btn-blue-normal">Bora l√°</button>
+                                            <button class="btn btn-blue-normal">Bora l·</button>
                                         </div>
                                     </div>
                                 }
                             }
                             else
                             {
-                                <p>N√£o h√° eventos para exibir.</p>
+                                <p>N„o h· eventos para exibir.</p>
                             }
                         }
                     </div>
@@ -268,14 +268,14 @@
                                                 }
                                             }
                                             <p>@descricao</p>
-                                            <button class="btn btn-blue-normal">Bora l√°</button>
+                                            <button class="btn btn-blue-normal">Bora l·</button>
                                         </div>
                                     </div>
                                 }
                             }
                             else
                             {
-                                <p>N√£o h√° eventos para exibir.</p>
+                                <p>N„o h· eventos para exibir.</p>
                             }
                         }
                     </div>
@@ -285,7 +285,7 @@
             <section class="destaque">
                 <div class="destaque-content">
                     <h1>Crie seu evento</h1>
-                    <p>Voc√™ est√° planejando um evento e quer garantir<br> que ele alcance o m√°ximo de pessoas poss√≠veis? <br>O Boral√° √© o lugar certo para voc√™!</p>
+                    <p>VocÍ est· planejando um evento e quer garantir<br> que ele alcance o m·ximo de pessoas possÌveis? <br>O Boral· È o lugar certo para vocÍ!</p>
                     <a href="/Evento" class="btn btn-blue-normal">Criar meu evento!</a>
                 </div>
             </section>

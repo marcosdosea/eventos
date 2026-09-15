@@ -12,14 +12,14 @@
         <article class="card-inscricao">
             
             <div class="inscricao-header">
-                @if (!string.IsNullOrEmpty(Model.eventoNavigation.ImagemPortalBase64))
+                @if (!string.IsNullOrEmpty(Model.eventoNavigation.ImagemPortalBase64) && Model.eventoNavigation.ImagemPortalBase64.Length > 100)
                 {
                     <img src="data:image/jpeg;base64,@Model.eventoNavigation.ImagemPortalBase64" alt="Imagem do Evento" class="inscricao-header-img" />
                 }
                 else
                 {
                     <!-- Fallback para caso o evento não tenha uma imagem salva no banco -->
-                    <img src="~/Imagens_Eventos/Evento-BoraLá.png" alt="Imagem Padrão do Evento" class="inscricao-header-img" />
+                    <img src="@Url.Content("~/Imagens_Eventos/Evento-BoraLa.png")" alt="Imagem Padrão do Evento" class="inscricao-header-img" />
                 }
                 <div>
                     <h1 class="inscricao-header-title">@Model.eventoNavigation.Nome</h1>
@@ -79,7 +79,7 @@
                     <div class="info-icon" aria-hidden="true"><i class="bi bi-people-fill"></i></div>
                     <div class="info-text">
                         <h3>Vagas</h3>
-                        <p>@(Model.eventoNavigation.VagasOfertadas - Model.eventoNavigation.VagasReservadas) disponíveis</p>
+                        <p>@Model.eventoNavigation.VagasDisponiveis disponíveis</p>
                     </div>
                 </div>
             </section>

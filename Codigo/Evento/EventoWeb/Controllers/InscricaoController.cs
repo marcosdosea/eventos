@@ -231,9 +231,9 @@ namespace EventoWeb.Controllers
                         Status = "S",
                         FrequenciaFinal = 0m,
                         Valor = valorSubevento,
-                        IdTipoInscricao = idTipo
                     };
                     _inscricaoService.CreateInscricaoSubEvento(novaInscricaoSub);
+                    _subeventoService.AtualizarVagasDisponiveis(idSubevento);
                 }
             }
 
