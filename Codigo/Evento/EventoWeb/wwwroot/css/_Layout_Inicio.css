@@ -176,7 +176,6 @@
 
 .scroll-wrapper {
     overflow-x: auto;
-    white-space: nowrap;
     -webkit-overflow-scrolling: touch;
     margin-bottom: -1.25rem;
     scrollbar-width: thin;
@@ -195,13 +194,16 @@
 }
 
 .cards-container {
-    display: inline-flex;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
     gap: 1.25rem;
     padding-bottom: 1.25rem;
+    justify-content: center;
 }
 
 .card {
-    width: 18.625rem;
+    width: 100%;
+    max-width: 18.625rem;
     height: 23.375rem;
     display: flex;
     flex-direction: column;
@@ -209,6 +211,7 @@
     overflow: hidden;
     background-color: rgba(238, 238, 238, 1);
     flex-shrink: 0;
+    margin: 0 auto;
 }
 
 .card-content img {
@@ -391,7 +394,7 @@
     }
 }
 
-/* Estilos para Paginação */
+/* Estilos para PaginaÃ§Ã£o */
 .custom-pagination .page-link {
     color: #232ED0;
     border-radius: 0.25rem;
