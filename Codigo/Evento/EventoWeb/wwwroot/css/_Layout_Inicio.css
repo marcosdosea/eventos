@@ -1,4 +1,4 @@
-.categorias {
+ï»¿.categorias {
     margin: 1.25rem auto;
     width: 100%;
     white-space: nowrap;
@@ -233,6 +233,10 @@
     font-size: 1.25rem;
     font-weight: 600;
     line-height: 150%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
 }
 
 .card-description {
@@ -397,7 +401,7 @@
     }
 }
 
-/* Estilos para Paginação */
+/* Estilos para Paginaï¿½ï¿½o */
 .custom-pagination .page-link {
     color: #232ED0;
     border-radius: 0.25rem;
@@ -415,7 +419,7 @@
 }
 
 
-/* Estilos para a página de busca */
+/* Estilos para a pï¿½gina de busca */
 .search-cards-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -423,5 +427,6 @@
     padding-bottom: 1.25rem;
     justify-content: center;
 }
+
 
 
