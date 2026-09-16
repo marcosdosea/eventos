@@ -301,7 +301,7 @@ namespace Service
                 query = query.Where(e => e.Cidade == filter.Cidade);
             }
 
-            query = query.Where(e => e.Status == "A" && e.DataInicioInscricao <= DateTime.Now && e.DataFimInscricao >= DateTime.Now);
+            query = query.Where(e => e.Status == "A" && e.DataFimInscricao >= DateTime.Now);
 
             totalRegistros = query.Count();
 

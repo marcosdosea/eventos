@@ -16,6 +16,7 @@
                 foreach (var evento in Model)
                 {
                     bool inscricaoAberta = evento.DataInicioInscricao <= DateTime.Now && evento.DataFimInscricao >= DateTime.Now;
+                    bool inscricaoFutura = evento.DataInicioInscricao > DateTime.Now;
                     bool eventoGratuito = evento.InscricaoGratuita == 1 || evento.ValorInscricao == 0;
 
                     <div class="card">
@@ -25,6 +26,10 @@
                                 @if (inscricaoAberta)
                                 {
                                     <span class="badge badge-open">Inscrições Abertas</span>
+                                }
+                                else if (inscricaoFutura)
+                                {
+                                    <span class="badge badge-future">Em breve</span>
                                 }
                                 else
                                 {
@@ -97,4 +102,5 @@
         }
     </div>
 </section>
+
 
