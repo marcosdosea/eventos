@@ -240,8 +240,14 @@
     margin: 0;
     line-height: 1.5;
     width: 100%;
+    height: 3rem;
     white-space: normal;
     overflow-wrap: break-word;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .destaque {
@@ -417,3 +423,5 @@
     padding-bottom: 1.25rem;
     justify-content: center;
 }
+
+

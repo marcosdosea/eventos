@@ -1,4 +1,4 @@
-@model IEnumerable<EventoWeb.Models.EventoModel>
+﻿@model IEnumerable<EventoWeb.Models.EventoModel>
 
 @{
     ViewData["Title"] = "Buscar Eventos";
@@ -49,13 +49,8 @@
                                 var descricaoCompleta = string.IsNullOrWhiteSpace(evento.Descricao)
                                     ? "Descrição indisponível"
                                     : evento.Descricao;
-                                var descricaoExibida = descricaoCompleta;
-                                if (descricaoCompleta.Length > 80)
-                                {
-                                    descricaoExibida = descricaoCompleta.Substring(0, 80).TrimEnd() + "...";
-                                }
                             }
-                            <p class="card-description" style="min-height: 45px;">@descricaoExibida</p>
+                            <p class="card-description">@descricaoCompleta</p>
                             
                             <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@evento.Id">
                                 <button class="btn btn-blue-normal">Bora lá</button>
@@ -102,3 +97,4 @@
         }
     </div>
 </section>
+
