@@ -108,7 +108,7 @@ namespace EventoWeb.Controllers
             if (gestor == null && colaborador == null)
             {
                 TempData.Clear();
-                TempData["Message"] = "Você não tem permissão para registrar participação!";
+                TempData["Message"] = "Você não possui um evento vinculado para registrar participação!";
                 if (idEvento > 0 && (User.IsInRole("GESTOR") || User.IsInRole("ADMINISTRADOR")))
                 {
                     return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });
@@ -203,7 +203,7 @@ namespace EventoWeb.Controllers
             if (gestor == null && colaborador == null)
             {
                 TempData.Clear();
-                TempData["Message"] = "Você não tem permissão para registrar participação!";
+                TempData["Message"] = "Você não possui um evento vinculado para registrar participação!";
                 if (idEvento > 0 && (User.IsInRole("GESTOR") || User.IsInRole("ADMINISTRADOR")))
                 {
                     return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });
@@ -258,7 +258,7 @@ namespace EventoWeb.Controllers
             if (gestor == null && colaborador == null && !User.IsInRole("ADMINISTRADOR"))
             {
                 TempData.Clear();
-                TempData["ErrorMessage"] = "Você não tem permissão para registrar participação!";
+                TempData["ErrorMessage"] = "Você não possui um evento vinculado para registrar participação!";
                 if (actionRetorno == "Frequencia" || !(User.IsInRole("GESTOR") || User.IsInRole("ADMINISTRADOR")))
                 {
                     return RedirectToAction("Index", "Home");
