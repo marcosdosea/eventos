@@ -64,11 +64,13 @@ namespace EventoWeb.Controllers
         }
 
         [HttpGet]
-        public IActionResult Buscar([FromQuery] Core.DTO.EventoFilterDTO filter)
+        public IActionResult Buscar([FromQuery] Core.DTO.EventoFilterDTO filter, int pagina = 1)
         {
+            int tamanhoPagina = 16; // Garante máximo de 4 linhas x 4 colunas (16 eventos por página)
             IEnumerable<Core.Evento> eventos = new List<Core.Evento>();
 
-            eventos = _eventoService.Search(filter);
+            int totalRegistros;
+            eventos = _eventoService.Search(filter, pagina, tamanhoPagina, out totalRegistros);
 
             var eventosModel = _mapper.Map<List<EventoModel>>(eventos);
 
@@ -76,6 +78,12 @@ namespace EventoWeb.Controllers
             ViewBag.AreasInteresse = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_areaInteresseService.GetAll().OrderBy(a => a.Nome), "Id", "Nome", filter.IdAreaInteresse);
             ViewBag.Estados = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_estadosbrasilService.GetAll().OrderBy(e => e.Nome), "Estado", "Nome", filter.Estado);
             ViewBag.FiltroAtual = filter;
+            
+            // Dados de paginação para a view
+            ViewBag.PaginaAtual = pagina;
+            ViewBag.TotalPaginas = (int)Math.Ceiling((double)totalRegistros / tamanhoPagina);
+            ViewBag.TamanhoPagina = tamanhoPagina;
+            ViewBag.TotalRegistros = totalRegistros;
 
             return View(eventosModel);
         }

@@ -1,4 +1,4 @@
-/* Cores Base */
+﻿/* Cores Base */
 .blue-light {
     color: #e9eafa;
 }
@@ -273,6 +273,7 @@ body {
 }
 .badge-open { background-color: #198754; }
 .badge-closed { background-color: #dc3545; }
+.badge-future { background-color: #ffc107; color: #000; }
 .badge-free { background-color: #0dcaf0; color: #000; }
 
 @media (min-width: 1400px) {
@@ -280,3 +281,4 @@ body {
         max-width: 79.625rem !important;
     }
 }
+
