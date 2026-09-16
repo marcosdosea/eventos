@@ -66,7 +66,7 @@ namespace EventoWeb.Controllers
         [HttpGet]
         public IActionResult Buscar([FromQuery] Core.DTO.EventoFilterDTO filter, int pagina = 1)
         {
-            int tamanhoPagina = 16; // Exibe 16 eventos por página (4 colunas x 4 linhas em telas grandes)
+            int tamanhoPagina = 16; // Garante máximo de 4 linhas x 4 colunas (16 eventos por página)
             IEnumerable<Core.Evento> eventos = new List<Core.Evento>();
 
             int totalRegistros;

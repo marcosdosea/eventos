@@ -176,6 +176,7 @@
 
 .scroll-wrapper {
     overflow-x: auto;
+    white-space: nowrap;
     -webkit-overflow-scrolling: touch;
     margin-bottom: -1.25rem;
     scrollbar-width: thin;
@@ -194,16 +195,13 @@
 }
 
 .cards-container {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    display: inline-flex;
     gap: 1.25rem;
     padding-bottom: 1.25rem;
-    justify-content: center;
 }
 
 .card {
-    width: 100%;
-    max-width: 18.625rem;
+    width: 18.625rem;
     height: 23.375rem;
     display: flex;
     flex-direction: column;
@@ -211,7 +209,6 @@
     overflow: hidden;
     background-color: rgba(238, 238, 238, 1);
     flex-shrink: 0;
-    margin: 0 auto;
 }
 
 .card-content img {
@@ -394,7 +391,7 @@
     }
 }
 
-/* Estilos para PaginaÃ§Ã£o */
+/* Estilos para Paginação */
 .custom-pagination .page-link {
     color: #232ED0;
     border-radius: 0.25rem;
@@ -411,3 +408,12 @@
     color: #6c757d;
 }
 
+
+/* Estilos para a página de busca */
+.search-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+    padding-bottom: 1.25rem;
+    justify-content: center;
+}
