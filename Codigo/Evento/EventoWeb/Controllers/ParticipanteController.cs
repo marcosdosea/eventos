@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace EventoWeb.Controllers
 {
+    [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
     [Route("[controller]")]
     public class ParticipanteController : Controller
     {
