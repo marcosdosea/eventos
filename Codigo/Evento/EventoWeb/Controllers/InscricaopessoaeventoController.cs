@@ -4,6 +4,7 @@ using Core.DTO;
 using AutoMapper;
 using Core;
 using EventoWeb.Models;
+using Microsoft.AspNetCore.Authorization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,17 +16,20 @@ namespace EventoWeb.Controllers
         private readonly IInscricaopessoaeventoService _service;
         private readonly IPessoaService _pessoaService;
         private readonly IEventoService _eventoService;
+        private readonly ITipoInscricaoService _tipoInscricaoService;
         private readonly IMapper _mapper;
 
         public InscricaopessoaeventoController(
             IInscricaopessoaeventoService service,
             IPessoaService pessoaService,
             IEventoService eventoService,
+            ITipoInscricaoService tipoInscricaoService,
             IMapper mapper)
         {
             _service = service;
             _pessoaService = pessoaService;
             _eventoService = eventoService;
+            _tipoInscricaoService = tipoInscricaoService;
             _mapper = mapper;
         }
 
@@ -135,24 +139,38 @@ namespace EventoWeb.Controllers
         // ------------------ TELA PÚBLICA DE INSCRIÇÃO ------------------
 
         // GET: /Inscricaopessoaevento/Inscrever/5
+        [Authorize]
         public IActionResult Inscrever(uint idEvento)
         {
-            // Monte aqui os dados do evento e dos lotes
-            var lotes = new List<LoteInscricaoModel>
-            {
-                new LoteInscricaoModel { Id = "1", NomeLote = "2,5km - 1º Lote", Descricao = "Inscrições até 06/09/2025", Preco = 167, Quantidade = 0 },
-                new LoteInscricaoModel { Id = "2", NomeLote = "5km - 2º Lote", Descricao = "Inscrições até 06/09/2025", Preco = 187, Quantidade = 0 }
-            };
+            var evento = _eventoService.Get(idEvento);
+            if (evento == null)
+                return NotFound();
+
+            var lotes = _tipoInscricaoService.GetByEvento(idEvento)
+                .Select(t => new LoteInscricaoModel
+                {
+                    Id = t.Id.ToString(),
+                    NomeLote = t.Nome,
+                    Descricao = t.Descricao,
+                    Preco = t.Valor,
+                    Quantidade = 0
+                }).ToList();
 
             var model = new InscricaopessoaeventoModel
             {
-                IdEvento = idEvento,
-                NomeEvento = "WE CAN RUN Rede Primavera 2025",
-                BannerUrl = "/images/banner-wecanrun.png",
-                DataEvento = new DateTime(2025, 9, 6, 16, 0, 0),
-                DataFimEvento = new DateTime(2025, 9, 6, 23, 0, 0),
-                LocalEvento = "Central Garden, Aracaju - SE",
-                DescricaoEvento = "Evento de corrida com várias modalidades. Escolha seu lote e inscreva-se!",
+                IdEvento = evento.Id,
+                NomeEvento = evento.Nome,
+                // Evento não possui campo de banner; view exibe bloco neutro quando vazio.
+                BannerUrl = string.Empty,
+                DataEvento = evento.DataInicio ?? DateTime.Today,
+                DataFimEvento = evento.DataFim ?? DateTime.Today,
+                LocalEvento = string.Join(", ", new[]
+                {
+                    string.Join(" ", new[] { evento.Rua, evento.Numero }.Where(s => !string.IsNullOrWhiteSpace(s))),
+                    evento.Bairro,
+                    string.Join(" - ", new[] { evento.Cidade, evento.Estado }.Where(s => !string.IsNullOrWhiteSpace(s)))
+                }.Where(s => !string.IsNullOrWhiteSpace(s))),
+                DescricaoEvento = evento.Descricao ?? string.Empty,
                 Lotes = lotes,
                 TotalSelecionado = 0
             };

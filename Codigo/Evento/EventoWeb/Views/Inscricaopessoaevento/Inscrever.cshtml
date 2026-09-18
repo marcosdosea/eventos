@@ -9,7 +9,10 @@
         <!-- Banner do evento -->
         <div class="col-12 mb-3">
             <div class="bg-dark text-light rounded p-3 d-flex align-items-center" style="min-height:160px;">
-                <img src="@Model.BannerUrl" alt="Banner" class="img-fluid rounded me-4" style="height:120px;width:auto;">
+                @if (!string.IsNullOrEmpty(Model.BannerUrl))
+                {
+                    <img src="@Model.BannerUrl" alt="Banner" class="img-fluid rounded me-4" style="height:120px;width:auto;">
+                }
                 <div>
                     <h2 class="mb-1">@Model.NomeEvento</h2>
                     <div class="text-muted">
@@ -27,7 +30,7 @@
         <!-- Descrição do evento -->
         <div class="col-md-8">
             <h4>Descrição do evento</h4>
-            <p>@Html.Raw(Model.DescricaoEvento)</p>
+            <p>@Model.DescricaoEvento</p>
         </div>
 
         <!-- Box de inscrições -->
