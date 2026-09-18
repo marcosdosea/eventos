@@ -292,14 +292,24 @@ public class PessoaService : IPessoaService
         }
         return false;
     }
-    public bool EmailConfirmado(string email)
+    public async Task<bool>  EmailConfirmado(string email)
     {
-        var user = _userManager.FindByEmailAsync(email).Result;
-        if (user == null)
-            return false;
-        var isConfirmed = _userManager.IsEmailConfirmedAsync(user).Result;
-        return isConfirmed;
+        try
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+                return false;
+            var isConfirmed = await _userManager.IsEmailConfirmedAsync(user);
+            return isConfirmed;
+
+        }
+        catch (Exception ex)
+        {
+           Trace.TraceError($"Não foi possível verificar se o email está confirmado : {ex.Message}");
+           return false;
+        }
     }
+      
     public async Task<string> GerarTokenAsync(String cpf)
     {
         String token = "";

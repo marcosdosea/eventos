@@ -774,11 +774,12 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public async Task EnviarEmailSenhaTest_Post_Valid()
         {
+            
             var mockService = new Mock<IPessoaService>();
             var mockEstadosService = new Mock<IEstadosbrasilService>();
             var pessoa = GetTargetPessoa();
             mockService.Setup(service => service.Get(pessoa.Id)).Returns(pessoa);
-            mockService.Setup(service => service.EmailConfirmado(pessoa.Email)).Returns(true);
+            mockService.Setup(service => service.EmailConfirmado(pessoa.Email)).Returns(Task.FromResult(true));
             mockService.Setup(service => service.GerarTokenAsync(pessoa.Cpf)).ReturnsAsync("test-token");
             var IEmailServiceMock = new Mock<IEmailService>();
             IEmailServiceMock.Setup(sender => sender.ModeloEmailReset(It.IsAny<string>(), It.IsAny<Pessoa>(), It.IsAny<string>())).ReturnsAsync(true);
@@ -902,7 +903,7 @@ namespace EventoWeb.Controllers.Tests
             var pessoa = GetTargetPessoa();
             mockService.Setup(service => service.Get(pessoa.Id)).Returns(pessoa);
             mockService.Setup(service => service.GerarTokenAsync(pessoa.Cpf)).ReturnsAsync("test-token");
-            mockService.Setup(service => service.EmailConfirmado(pessoa.Email)).Returns(false);
+            mockService.Setup(service => service.EmailConfirmado(pessoa.Email)).Returns(Task.FromResult(false));
             var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
             var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
