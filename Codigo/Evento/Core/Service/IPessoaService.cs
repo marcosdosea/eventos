@@ -19,7 +19,7 @@ namespace Core.Service
         bool ValidaEmail(String email);
         Task<bool> EmailExist(String email, String cpf);
         Task<bool> IsAdmAsync(Pessoa pessoa);
-        public bool EmailConfirmado(string email);
+        Task<bool> EmailConfirmado(string email);
         Task<string> GerarTokenAsync(String cpf);
         Task<List<Pessoa>> GetAllAdmAsync();
         Task<List<Pessoa>> GetAllGestorAsync();
