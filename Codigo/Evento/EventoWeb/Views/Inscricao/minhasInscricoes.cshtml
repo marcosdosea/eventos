@@ -25,15 +25,6 @@
     </div>
 }
 
-@if (ViewBag.EventoId != null && (uint)ViewBag.EventoId > 0)
-{
-    <div class="mb-3">
-        <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@ViewBag.EventoId" class="btn btn-primary">
-            &larr; Voltar para Inscrição do Evento
-        </a>
-    </div>
-}
-
 <div>
     <table id="tableEvento" class="table table-striped table-bordered dt-responsive nowrap">
         <thead>
