@@ -217,7 +217,6 @@ namespace EventoWeb.Controllers
                         return View(model);
                     }
 
-                    // Preço sempre recalculado no servidor; nunca confia no valor vindo do form.
                     var tipo = _tipoInscricaoService.Get(idTipoInscricao);
                     if (tipo == null || tipo.IdEvento != model.IdEvento)
                     {
@@ -230,11 +229,11 @@ namespace EventoWeb.Controllers
                     {
                         IdEvento = model.IdEvento,
                         IdPessoa = pessoa.Id,
-                        IdPapel = 4, // 4 = PARTICIPANTE
+                        IdPapel = 4,
                         IdTipoInscricao = tipo.Id,
                         DataInscricao = DateTime.Now,
                         ValorTotal = tipo.Valor * lote.Quantidade,
-                        Status = "S", // S = SOLICITADA
+                        Status = "S",
                         FrequenciaFinal = 0,
                         NomeCracha = pessoa.NomeCracha
                     };
@@ -251,12 +250,6 @@ namespace EventoWeb.Controllers
             }
         }
 
-        /// <summary>
-        /// Repopula os dados de exibição (evento + lotes) quando o POST precisa
-        /// devolver a View com erro. O form posta apenas Id/Quantidade dos lotes,
-        /// então Nome/Preço/Descrição são recarregados do servidor preservando
-        /// as quantidades digitadas.
-        /// </summary>
         private void RecarregarDadosTela(InscricaopessoaeventoModel model)
         {
             var quantidades = (model.Lotes ?? new List<LoteInscricaoModel>())
