@@ -22,8 +22,6 @@ namespace EventoWeb
             var builder = WebApplication.CreateBuilder(args);
             DotNetEnv.Env.Load();
 
-            var smtpServer = Environment.GetEnvironmentVariable("EMAIL_SMTP");
-
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
