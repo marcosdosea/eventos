@@ -160,7 +160,6 @@ namespace EventoWeb.Controllers
             {
                 IdEvento = evento.Id,
                 NomeEvento = evento.Nome,
-                // Evento não possui campo de banner; view exibe bloco neutro quando vazio.
                 BannerUrl = string.Empty,
                 DataEvento = evento.DataInicio ?? DateTime.Today,
                 DataFimEvento = evento.DataFim ?? DateTime.Today,
