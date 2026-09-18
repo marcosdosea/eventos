@@ -56,44 +56,34 @@ namespace EventoWeb.Controllers
 
             if (idEvento == 0)
             {
-                uint idEncontrado = 0;
+                var eventos = new List<Evento>();
                 try
                 {
-                    var ev = _eventoService.GetEventByCpf(username, 3).FirstOrDefault();
-                    if (ev == null && cpfLimpo != username)
+                    var evs = _eventoService.GetEventByCpf(username, 3)?.ToList() ?? new List<Evento>();
+                    if (!evs.Any() && cpfLimpo != username)
                     {
-                        ev = _eventoService.GetEventByCpf(cpfLimpo, 3).FirstOrDefault();
+                        evs = _eventoService.GetEventByCpf(cpfLimpo, 3)?.ToList() ?? new List<Evento>();
                     }
-                    if (ev != null)
+
+                    if (!evs.Any())
                     {
-                        idEncontrado = ev.Id;
+                        evs = _eventoService.GetEventByCpf(username, 2)?.ToList() ?? new List<Evento>();
+                        if (!evs.Any() && cpfLimpo != username)
+                        {
+                            evs = _eventoService.GetEventByCpf(cpfLimpo, 2)?.ToList() ?? new List<Evento>();
+                        }
                     }
+
+                    eventos = evs;
                 }
                 catch { }
 
-                if (idEncontrado == 0)
+                if (eventos.Count == 1)
                 {
-                    try
-                    {
-                        var inscricoes = _inscricaoService.GetAllEventsByUserId(username);
-                        var inscricao = inscricoes.FirstOrDefault(i => i.IdPapel == 3) ?? inscricoes.FirstOrDefault(i => i.IdPapel == 2);
-                        if (inscricao == null && cpfLimpo != username)
-                        {
-                            inscricoes = _inscricaoService.GetAllEventsByUserId(cpfLimpo);
-                            inscricao = inscricoes.FirstOrDefault(i => i.IdPapel == 3) ?? inscricoes.FirstOrDefault(i => i.IdPapel == 2);
-                        }
-                        if (inscricao != null)
-                        {
-                            idEncontrado = inscricao.IdEvento;
-                        }
-                    }
-                    catch { }
+                    return RedirectToAction(nameof(Index), new { idEvento = eventos[0].Id, idSubEvento });
                 }
 
-                if (idEncontrado > 0)
-                {
-                    return RedirectToAction(nameof(Index), new { idEvento = idEncontrado, idSubEvento });
-                }
+                return RedirectToAction("GerenciarEventoListar", "Evento");
             }
 
             var gestor = _inscricaoService.GetGestorInEvent(username, idEvento);
@@ -112,6 +102,10 @@ namespace EventoWeb.Controllers
                 if (idEvento > 0 && (User.IsInRole("GESTOR") || User.IsInRole("ADMINISTRADOR")))
                 {
                     return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });
+                }
+                if (User.IsInRole("COLABORADOR"))
+                {
+                    return RedirectToAction("GerenciarEventoListar", "Evento");
                 }
                 return RedirectToAction("Index", "Home");
             }
@@ -151,44 +145,34 @@ namespace EventoWeb.Controllers
 
             if (idEvento == 0)
             {
-                uint idEncontrado = 0;
+                var eventos = new List<Evento>();
                 try
                 {
-                    var ev = _eventoService.GetEventByCpf(username, 3).FirstOrDefault();
-                    if (ev == null && cpfLimpo != username)
+                    var evs = _eventoService.GetEventByCpf(username, 3)?.ToList() ?? new List<Evento>();
+                    if (!evs.Any() && cpfLimpo != username)
                     {
-                        ev = _eventoService.GetEventByCpf(cpfLimpo, 3).FirstOrDefault();
+                        evs = _eventoService.GetEventByCpf(cpfLimpo, 3)?.ToList() ?? new List<Evento>();
                     }
-                    if (ev != null)
+
+                    if (!evs.Any())
                     {
-                        idEncontrado = ev.Id;
+                        evs = _eventoService.GetEventByCpf(username, 2)?.ToList() ?? new List<Evento>();
+                        if (!evs.Any() && cpfLimpo != username)
+                        {
+                            evs = _eventoService.GetEventByCpf(cpfLimpo, 2)?.ToList() ?? new List<Evento>();
+                        }
                     }
+
+                    eventos = evs;
                 }
                 catch { }
 
-                if (idEncontrado == 0)
+                if (eventos.Count == 1)
                 {
-                    try
-                    {
-                        var inscricoes = _inscricaoService.GetAllEventsByUserId(username);
-                        var inscricao = inscricoes.FirstOrDefault(i => i.IdPapel == 3) ?? inscricoes.FirstOrDefault(i => i.IdPapel == 2);
-                        if (inscricao == null && cpfLimpo != username)
-                        {
-                            inscricoes = _inscricaoService.GetAllEventsByUserId(cpfLimpo);
-                            inscricao = inscricoes.FirstOrDefault(i => i.IdPapel == 3) ?? inscricoes.FirstOrDefault(i => i.IdPapel == 2);
-                        }
-                        if (inscricao != null)
-                        {
-                            idEncontrado = inscricao.IdEvento;
-                        }
-                    }
-                    catch { }
+                    return RedirectToAction(nameof(Frequencia), new { idEvento = eventos[0].Id, idSubEvento });
                 }
 
-                if (idEncontrado > 0)
-                {
-                    return RedirectToAction(nameof(Frequencia), new { idEvento = idEncontrado, idSubEvento });
-                }
+                return RedirectToAction("GerenciarEventoListar", "Evento");
             }
 
             var gestor = _inscricaoService.GetGestorInEvent(username, idEvento);
@@ -207,6 +191,10 @@ namespace EventoWeb.Controllers
                 if (idEvento > 0 && (User.IsInRole("GESTOR") || User.IsInRole("ADMINISTRADOR")))
                 {
                     return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });
+                }
+                if (User.IsInRole("COLABORADOR"))
+                {
+                    return RedirectToAction("GerenciarEventoListar", "Evento");
                 }
                 return RedirectToAction("Index", "Home");
             }

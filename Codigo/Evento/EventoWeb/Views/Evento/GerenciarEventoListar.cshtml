@@ -71,9 +71,24 @@
                                     <span class="@statusClass">@statusDescricao</span>
                                 </td>
                                 <td class="text-center">
-                                    <a asp-action="GerenciarEvento" asp-route-idEvento="@item.Id" class="btn btn-sm btn-primary" title="Gerenciar Evento">
-                                        <i class="bi bi-gear"></i> Gerenciar
-                                    </a>
+                                    @if (User.IsInRole("COLABORADOR") && !User.IsInRole("GESTOR") && !User.IsInRole("ADMINISTRADOR"))
+                                    {
+                                        <a asp-controller="ParticipacaoPessoaEvento" asp-action="Frequencia" asp-route-idEvento="@item.Id" class="btn btn-sm btn-primary me-1" title="Gerenciar Frequência">
+                                            <i class="bi bi-calendar-check"></i> Frequência
+                                        </a>
+                                    }
+                                    @if (User.IsInRole("ADMINISTRADOR") || User.IsInRole("GESTOR"))
+                                    {
+                                        <a asp-action="GerenciarEvento" asp-route-idEvento="@item.Id" class="btn btn-sm btn-primary" title="Gerenciar Evento">
+                                            <i class="bi bi-gear"></i> Gerenciar
+                                        </a>
+                                    }
+                                    else if (User.IsInRole("COLABORADOR"))
+                                    {
+                                        <a asp-action="GerenciarEvento" asp-route-idEvento="@item.Id" class="btn btn-sm btn-outline-primary" title="Detalhes do Evento">
+                                            <i class="bi bi-info-circle"></i> Detalhes
+                                        </a>
+                                    }
                                 </td>
                             </tr>
                         }

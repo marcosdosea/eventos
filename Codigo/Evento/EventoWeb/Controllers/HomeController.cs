@@ -36,7 +36,7 @@ namespace EventoWeb.Controllers
 
             if (!vitrine)
             {
-                if (User.IsInRole("GESTOR"))
+                if (User.IsInRole("GESTOR") || User.IsInRole("COLABORADOR"))
                 {   if (adminRemovido) return RedirectToAction("GerenciarEventoListar", "Evento", new { adminRemovido = true });
                     
                     return RedirectToAction("GerenciarEventoListar", "Evento");
