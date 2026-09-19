@@ -290,9 +290,9 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public void Participante_Post_Valid()
+        public async Task Participante_Post_Valid()
         {
-            var result = controller.CreateParticipante(GetNewGestaoPapel());
+            var result = await controller.CreateParticipante(GetNewGestaoPapel());
 
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
