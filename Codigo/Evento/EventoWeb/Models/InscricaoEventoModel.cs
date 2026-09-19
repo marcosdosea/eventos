@@ -1,4 +1,4 @@
-﻿using Core;
+using Core;
 using System.ComponentModel.DataAnnotations;
 namespace EventoWeb.Models;
 
@@ -39,4 +39,6 @@ public class InscricaoEventoModel
     public virtual Tipoinscricao? IdTipoInscricaoNavigation { get; set; }
 
     public virtual ICollection<Pagamento> Pagamentos { get; set; } = new List<Pagamento>();
+
+    public List<uint> SelectedSubeventos { get; set; } = new List<uint>();
 }

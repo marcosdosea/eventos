@@ -1,4 +1,4 @@
-﻿using Core;
+using Core;
 using Core.DTO;
 using Core.Service;
 using Microsoft.EntityFrameworkCore;
@@ -135,6 +135,25 @@ namespace Service
                 };
 
             return query.ToList();
+        }
+
+        public void AtualizarVagasDisponiveis(uint idSubevento)
+        {
+            var subevento = _context.Subeventos
+                .Include(s => s.Inscricaopessoasubeventos)
+                .FirstOrDefault(s => s.Id == idSubevento);
+
+            if (subevento != null)
+            {
+                var quantidadeParticipantes = subevento.Inscricaopessoasubeventos
+                    .Count(i => i.IdPapel == 4);
+
+                int vagasRestantes = (int)subevento.VagasOfertadas - quantidadeParticipantes;
+                subevento.VagasDisponiveis = (uint)(vagasRestantes < 0 ? 0 : vagasRestantes);
+
+                _context.Update(subevento);
+                _context.SaveChanges();
+            }
         }
     }
 }

@@ -143,10 +143,18 @@ namespace EventoWeb.Controllers
 
             EventoModel eventoModel = _mapper.Map<EventoModel>(evento);
             var tipoInscricaoModel = _tipoinscricaoService.GetByEvento(idEvento).ToList();
+            var subeventos = _subeventoService.GetByIdEvento(idEvento).ToList();
+            var subeventosOpcoes = new List<SubeventoOpcao>();
+            foreach(var sub in subeventos)
+            {
+                var tipos = _tipoinscricaoService.GetTiposInscricaosSubevento(sub.Id);
+                subeventosOpcoes.Add(new SubeventoOpcao { Subevento = sub, TiposInscricao = tipos });
+            }
 
             var model = new InscricaoEventoViewModel(){
                 tipoInscricao = tipoInscricaoModel,
-                eventoNavigation = eventoModel
+                eventoNavigation = eventoModel,
+                SubeventosOpcoes = subeventosOpcoes
             };
 
             if (User.Identity != null && !string.IsNullOrEmpty(User.Identity.Name))
@@ -195,6 +203,39 @@ namespace EventoWeb.Controllers
             var inscricao = _mapper.Map<Inscricaopessoaevento>(novaInscricao);
             _inscricaoService.CreateInscricaoEvento(inscricao);
             _eventoService.AtualizarVagasDisponiveis(idEvento);
+
+            if (inscricaoEvento.SelectedSubeventos != null && inscricaoEvento.SelectedSubeventos.Any())
+            {
+                foreach (var idSubevento in inscricaoEvento.SelectedSubeventos)
+                {
+                    var tipoValueString = Request.Form[$"TipoInscricaoSubevento_{idSubevento}"];
+                    uint? idTipo = null;
+                    decimal valorSubevento = 0m;
+
+                    if (!string.IsNullOrEmpty(tipoValueString) && uint.TryParse(tipoValueString, out uint parsedIdTipo))
+                    {
+                        idTipo = parsedIdTipo;
+                        var tipoObj = _tipoinscricaoService.Get(parsedIdTipo);
+                        if (tipoObj != null)
+                        {
+                            valorSubevento = tipoObj.Valor;
+                        }
+                    }
+
+                    var novaInscricaoSub = new Inscricaopessoasubevento()
+                    {
+                        IdPessoa = pessoa.Id,
+                        IdSubEvento = idSubevento,
+                        IdPapel = 4,
+                        DataInscricao = DateTime.Now,
+                        Status = "S",
+                        FrequenciaFinal = 0m,
+                        Valor = valorSubevento,
+                    };
+                    _inscricaoService.CreateInscricaoSubEvento(novaInscricaoSub);
+                    _subeventoService.AtualizarVagasDisponiveis(idSubevento);
+                }
+            }
 
             TempData["ParticipanteSuccessMessage"] = "Inscrição realizada com sucesso!";
             return RedirectToAction("minhasInscricoes", new { idEvento = idEvento });
