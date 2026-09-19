@@ -8,18 +8,21 @@
 
 <main class="inscricao-page">
     <div class="inscricao-container inscricao-container-top">
-        
-        <article class="card-inscricao">
+        <div class="inscricao-grid-layout">
             
+            <!-- Coluna da Esquerda: Informações do Evento -->
+            <div class="inscricao-left-col">
+                <article class="card-inscricao">
+                    
             <div class="inscricao-header">
                 @if (!string.IsNullOrEmpty(Model.eventoNavigation.ImagemPortalBase64) && Model.eventoNavigation.ImagemPortalBase64.Length > 100)
                 {
-                    <img src="data:image/jpeg;base64,@Model.eventoNavigation.ImagemPortalBase64" alt="Imagem do Evento" class="inscricao-header-img" />
+                    <img src="data:image/jpeg;base64,@Model.eventoNavigation.ImagemPortalBase64" alt="Imagem do Evento" class="inscricao-header-img" onclick="openImageModal(this.src)" style="cursor: zoom-in;" title="Clique para ampliar" />
                 }
                 else
                 {
                     <!-- Fallback para caso o evento não tenha uma imagem salva no banco -->
-                    <img src="@Url.Content("~/Imagens_Eventos/Evento-BoraLa.png")" alt="Imagem Padrão do Evento" class="inscricao-header-img" />
+                    <img src="@Url.Content("~/Imagens_Eventos/Evento-BoraLa.png")" alt="Imagem Padrão do Evento" class="inscricao-header-img" onclick="openImageModal(this.src)" style="cursor: zoom-in;" title="Clique para ampliar" />
                 }
                 <div>
                     <h1 class="inscricao-header-title">@Model.eventoNavigation.Nome</h1>
@@ -93,7 +96,10 @@
 
 
         </article>
+            </div>
 
+            <!-- Coluna da Direita: Opções e Formulário -->
+            <div class="inscricao-right-col">
         @if (ViewBag.JaInscrito == true)
         {
             <aside class="alert alert-info mt-3 card-inscricao text-center alert-inscricao" role="alert">
@@ -211,6 +217,14 @@
                 </section>
             </form>
         }
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Imagem -->
+    <div id="imageModal" class="image-modal" onclick="closeImageModal()">
+        <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
+        <img class="image-modal-content" id="expandedImg">
     </div>
 </main>
 

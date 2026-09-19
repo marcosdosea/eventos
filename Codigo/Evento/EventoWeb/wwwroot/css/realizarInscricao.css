@@ -1,4 +1,4 @@
-﻿:root {
+:root {
     --blue-normal: #232ed0;
     --blue-dark: #151c7d;
     --yellow-normal: #f3d058;
@@ -16,38 +16,51 @@ body {
 }
 
 .inscricao-container {
-    max-width: 900px;
+    max-width: 1200px;
     margin: 0 auto 40px auto;
     padding: 0 15px;
     position: relative;
     z-index: 10;
 }
 
+.inscricao-grid-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    align-items: start;
+}
+
+@media (max-width: 992px) {
+    .inscricao-grid-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
 .card-inscricao {
     background: var(--white);
-    border-radius: 20px;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.06);
-    padding: 30px;
-    margin-bottom: 30px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    padding: 20px;
+    margin-bottom: 20px;
     transition: transform 0.3s;
     overflow: hidden;
 }
 
 .section-title {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
     color: var(--blue-dark);
     border-bottom: 3px solid var(--yellow-normal);
-    padding-bottom: 10px;
-    margin-bottom: 25px;
+    padding-bottom: 6px;
+    margin-bottom: 15px;
     display: inline-block;
     border-radius: 2px;
 }
 
 .info-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 20px;
-    margin-bottom: 35px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
 }
 
 .info-item {
@@ -59,13 +72,13 @@ body {
 .info-icon {
     background: rgba(35, 46, 208, 0.08);
     color: var(--blue-normal);
-    width: 50px;
-    height: 50px;
-    border-radius: 12px;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.4rem;
+    font-size: 1.2rem;
     flex-shrink: 0;
 }
 
@@ -90,20 +103,20 @@ body {
 .subevent-list {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
 }
 
 .subevent-item {
     border: 2px solid #f0f0f5;
-    border-radius: 16px;
-    padding: 20px;
+    border-radius: 12px;
+    padding: 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     transition: all 0.2s ease-in-out;
     cursor: pointer;
     background: #ffffff;
-    gap: 15px;
+    gap: 12px;
 }
 
 .subevent-item:hover {
@@ -166,13 +179,13 @@ body {
 .summary {
     background: #fafafc;
     border-top: 2px solid #f0f0f5;
-    padding: 25px 30px;
-    margin: 30px -30px -30px -30px;
+    padding: 15px 20px;
+    margin: 20px -20px -20px -20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: 15px;
 }
 
 .price-total {
@@ -261,27 +274,27 @@ body {
 .inscricao-header {
     display: flex;
     align-items: center;
-    gap: 30px;
-    margin-bottom: 40px;
-    padding-bottom: 30px;
+    gap: 20px;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
     border-bottom: 2px solid #f0f0f5;
     flex-wrap: wrap;
 }
 
 .inscricao-header-img {
-    max-width: 280px; 
-    max-height: 350px; 
+    max-width: 200px; 
+    max-height: 250px; 
     width: auto;
     height: auto;
     object-fit: contain; 
-    border-radius: 20px; 
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    border-radius: 16px; 
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
 .inscricao-header-title {
-    margin: 0 0 10px 0;
+    margin: 0 0 8px 0;
     color: var(--blue-dark);
-    font-size: 2.2rem;
+    font-size: 1.8rem;
     font-weight: 800;
 }
 
@@ -296,11 +309,11 @@ body {
 }
 
 .section-title.mt-20 {
-    margin-top: 20px;
+    margin-top: 10px;
 }
 
 .section-title.mt-40 {
-    margin-top: 40px;
+    margin-top: 20px;
 }
 
 .evento-sobre-text {
@@ -316,12 +329,12 @@ body {
 
 .section-description {
     color: var(--text-light);
-    margin-bottom: 30px;
-    font-size: 1.05rem;
+    margin-bottom: 15px;
+    font-size: 1rem;
 }
 
 .section-description.mb-20 {
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .subevent-list {
@@ -333,18 +346,18 @@ body {
 .subeventos-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    margin-bottom: 30px;
+    gap: 12px;
+    margin-bottom: 20px;
 }
 
 .subevento-container {
     border-left: 4px solid var(--blue-normal);
-    padding: 15px;
+    padding: 12px;
     background: #fafafc;
     border-radius: 0 10px 10px 0;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     cursor: pointer;
     transition: background 0.2s;
 }
@@ -401,5 +414,54 @@ body {
 }
 
 .inscricao-container-top {
-    margin-top: 40px;
+    margin-top: 20px;
+}
+
+/* Modal de Imagem */
+.image-modal {
+    display: none;
+    position: fixed;
+    z-index: 1050;
+    padding-top: 50px;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(5px);
+}
+
+.image-modal-content {
+    margin: auto;
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-width: 95vw;
+    max-height: 90vh;
+    object-fit: contain;
+    animation: zoomIn 0.3s ease;
+}
+
+.image-modal-close {
+    position: absolute;
+    top: 20px;
+    right: 35px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.image-modal-close:hover,
+.image-modal-close:focus {
+    color: #bbb;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+@keyframes zoomIn {
+    from {transform: scale(0)} 
+    to {transform: scale(1)}
 }

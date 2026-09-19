@@ -51,3 +51,24 @@ function calcularValorTotal() {
         priceElement.textContent = "R$ " + total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 }
+
+// Modal functions
+function openImageModal(src) {
+    var modal = document.getElementById("imageModal");
+    var modalImg = document.getElementById("expandedImg");
+    modal.style.display = "block";
+    modalImg.src = src;
+    document.body.style.overflow = "hidden";
+}
+
+function closeImageModal() {
+    var modal = document.getElementById("imageModal");
+    modal.style.display = "none";
+    document.body.style.overflow = "auto";
+}
+
+document.addEventListener('keydown', function(event) {
+    if (event.key === "Escape") {
+        closeImageModal();
+    }
+});
