@@ -81,8 +81,8 @@
                 <div class="info-item">
                     <div class="info-icon" aria-hidden="true"><i class="bi bi-people-fill"></i></div>
                     <div class="info-text">
-                        <h3>Vagas</h3>
-                        <p>@Model.eventoNavigation.VagasDisponiveis disponíveis</p>
+                        <h3>Vagas Disponíveis</h3>
+                        <p>@Model.eventoNavigation.VagasDisponiveis de @Model.eventoNavigation.VagasOfertadas</p>
                     </div>
                 </div>
             </section>
@@ -165,7 +165,7 @@
                                             <h4>@sub.Nome</h4>
                                             <p>
                                                 <i class="bi bi-tag-fill me-1"></i> @sub.NomeTipoEvento | 
-                                                <i class="bi bi-person-check-fill me-1"></i> Vagas: @sub.VagasDisponiveis / @sub.VagasOfertadas
+                                                <i class="bi bi-person-check-fill me-1"></i> Disponíveis: @sub.VagasDisponiveis de @sub.VagasOfertadas
                                             </p>
                                         </div>
                                         <div class="subevento-checkbox-wrapper">
