@@ -2,6 +2,8 @@
 
 @{
     ViewData["Title"] = "BoraLá";
+
+    var eventosGerenciadosIds = ViewBag.EventosGerenciadosIds as HashSet<uint> ?? new HashSet<uint>();
 }
 
 
@@ -142,6 +144,32 @@
                                             <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@evento.Id">
                                                 <button class="btn btn-blue-normal">Bora lá</button>
                                             </a>
+                                                var descricaoCompleta = string.IsNullOrWhiteSpace(evento.Descricao)
+                                                    ? "Descrição indisponível"
+                                                    : evento.Descricao;
+
+                                                var descricaoExibida = descricaoCompleta;
+                                                const int limite = 33;
+
+                                                if (descricaoCompleta.Length > limite)
+                                                {
+                                                    descricaoExibida = descricaoCompleta.Substring(0, limite).TrimEnd() + "...";
+                                                }
+
+                                            }
+                                            <p class="card-description">@descricaoExibida</p>
+                                            @if (eventosGerenciadosIds.Contains(evento.Id))
+                                            {
+                                                <a asp-action="GerenciarEvento" asp-controller="Evento" asp-route-idEvento="@evento.Id">
+                                                    <button class="btn btn-blue-normal"><i class="bi bi-gear"></i> Gerenciar</button>
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@evento.Id">
+                                                    <button class="btn btn-blue-normal">Bora lá</button>
+                                                </a>
+                                            }
                                         </div>
                                     </div>
                                 }
@@ -175,8 +203,19 @@
                                                       ? "Descrição indisponível"
                                                       : evento.Descricao;
                                             }
-                                            <p class="card-description">@descricaoCompleta</p>
-                                            <button class="btn btn-blue-normal">Bora lá</button>
+<p class="card-description">@descricaoCompleta</p>
+                                            @if (eventosGerenciadosIds.Contains(evento.Id))
+                                            {
+                                                <a asp-action="GerenciarEvento" asp-controller="Evento" asp-route-idEvento="@evento.Id">
+                                                    <button class="btn btn-blue-normal"><i class="bi bi-gear"></i> Gerenciar</button>
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@evento.Id">
+                                                    <button class="btn btn-blue-normal">Bora lá</button>
+                                                </a>
+                                            }
                                         </div>
                                     </div>
                                 }
@@ -210,8 +249,19 @@
                                                       ? "Descrição indisponível"
                                                       : evento.Descricao;
                                             }
-                                            <p class="card-description">@descricaoCompleta</p>
-                                            <button class="btn btn-blue-normal">Bora lá</button>
+<p class="card-description">@descricaoCompleta</p>
+                                            @if (eventosGerenciadosIds.Contains(evento.Id))
+                                            {
+                                                <a asp-action="GerenciarEvento" asp-controller="Evento" asp-route-idEvento="@evento.Id">
+                                                    <button class="btn btn-blue-normal"><i class="bi bi-gear"></i> Gerenciar</button>
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@evento.Id">
+                                                    <button class="btn btn-blue-normal">Bora lá</button>
+                                                </a>
+                                            }
                                         </div>
                                     </div>
                                 }
@@ -245,8 +295,19 @@
                                                       ? "Descrição indisponível"
                                                       : evento.Descricao;
                                             }
-                                            <p class="card-description">@descricaoCompleta</p>
-                                            <button class="btn btn-blue-normal">Bora lá</button>
+<p class="card-description">@descricaoCompleta</p>
+                                            @if (eventosGerenciadosIds.Contains(evento.Id))
+                                            {
+                                                <a asp-action="GerenciarEvento" asp-controller="Evento" asp-route-idEvento="@evento.Id">
+                                                    <button class="btn btn-blue-normal"><i class="bi bi-gear"></i> Gerenciar</button>
+                                                </a>
+                                            }
+                                            else
+                                            {
+                                                <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@evento.Id">
+                                                    <button class="btn btn-blue-normal">Bora lá</button>
+                                                </a>
+                                            }
                                         </div>
                                     </div>
                                 }

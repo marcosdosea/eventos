@@ -60,6 +60,28 @@ namespace EventoWeb.Controllers
                 evento.Descricao = string.IsNullOrWhiteSpace(evento.Descricao) ? string.Empty : evento.Descricao;
             }
 
+
+            var eventosGerenciadosIds = new HashSet<uint>();
+            if (User.Identity.IsAuthenticated && User.IsInRole("GESTOR"))
+            {
+                var userCpf = User.FindFirstValue(ClaimTypes.Name);
+                if (!string.IsNullOrEmpty(userCpf))
+                {
+                    try
+                    {
+                        foreach (var evento in _eventoService.GetEventByCpf(userCpf, 2))
+                        {
+                            eventosGerenciadosIds.Add(evento.Id);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Não foi possível obter os eventos gerenciados pelo usuário na vitrine.");
+                    }
+                }
+            }
+            ViewBag.EventosGerenciadosIds = eventosGerenciadosIds;
+
             return View(listarEventosModel);
         }
 
