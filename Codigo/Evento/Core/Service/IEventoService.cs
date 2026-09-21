@@ -24,6 +24,6 @@ namespace Core.Service
 
         void AtualizarVagasDisponiveis(uint idEvento);
 
-        IEnumerable<Evento> Search(EventoFilterDTO filter);
+        IEnumerable<Evento> Search(EventoFilterDTO filter, int pagina, int tamanhoPagina, out int totalRegistros);
     }
 }
