@@ -23,15 +23,10 @@ function applyFilters() {
 function clearAllFilters() {
     document.getElementById('drop_AreaInteresse').value = '';
     document.getElementById('drop_TipoEvento').value = '';
-    document.getElementById('drop_Estado').value = '';
-    document.getElementById('drop_Cidade').value = '';
     document.getElementById('drop_Data').value = '';
-    document.getElementById('drop_Cidade').disabled = true;
     
     syncFilter('IdAreaInteresse', '');
     syncFilter('IdTipoEvento', '');
-    syncFilter('Estado', '');
-    syncFilter('Cidade', '');
     syncFilter('Data', '');
     
     applyFilters();
@@ -43,45 +38,6 @@ function clearSearch() {
         input.value = '';
         toggleClearButton();
         input.focus();
-    }
-}
-
-async function loadCidades(uf, selectedCidade) {
-    var dropCidade = document.getElementById('drop_Cidade');
-    dropCidade.innerHTML = '<option value="">Carregando...</option>';
-    dropCidade.disabled = true;
-
-    if (!uf) {
-        dropCidade.innerHTML = '<option value="">Selecione um Estado primeiro</option>';
-        syncFilter('Cidade', '');
-        return;
-    }
-
-    try {
-        const response = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${uf}/municipios`);
-        const cidades = await response.json();
-        
-        dropCidade.innerHTML = '<option value="">Todas as Cidades</option>';
-        
-        var found = false;
-        cidades.forEach(c => {
-            var option = document.createElement('option');
-            option.value = c.nome;
-            option.text = c.nome;
-            if(c.nome === selectedCidade) {
-                option.selected = true;
-                found = true;
-            }
-            dropCidade.appendChild(option);
-        });
-
-        if(!found) {
-            syncFilter('Cidade', '');
-        }
-        
-        dropCidade.disabled = false;
-    } catch (error) {
-        dropCidade.innerHTML = '<option value="">Erro ao carregar cidades</option>';
     }
 }
 
@@ -103,14 +59,5 @@ document.addEventListener("DOMContentLoaded", function() {
                 applyFilters();
             }
         });
-    }
-
-    // Load cities if a state is already selected
-    var dropEstado = document.getElementById('drop_Estado');
-    var dropCidade = document.getElementById('drop_Cidade');
-    if(dropEstado && dropEstado.value) {
-        // Read selected value from hidden input to re-select after loading
-        var selectedCidade = document.getElementById('hidden_Cidade') ? document.getElementById('hidden_Cidade').value : '';
-        loadCidades(dropEstado.value, selectedCidade);
     }
 });
