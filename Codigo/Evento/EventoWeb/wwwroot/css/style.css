@@ -280,3 +280,8 @@ body {
         max-width: 79.625rem !important;
     }
 }
+
+/*Opacidade Modal*/
+.modal-backdrop.show {
+    opacity: 0.5;
+}

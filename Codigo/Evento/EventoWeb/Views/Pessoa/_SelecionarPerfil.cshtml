@@ -1,0 +1,51 @@
+﻿@model string
+@{
+    ViewData["Title"] = "Confirmar Mudança de Senha";
+}
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/css/_Layout_Inicio.css">
+    <link rel="stylesheet" href="~/css/site.css">
+    <link rel="stylesheet" href="~/css/style.css">
+</head>
+
+<div class="modal fade" id="modalEscolherPerfil" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Selecione o Perfil de Acesso</h5>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <p class="mb-4">Sua conta possui acesso de <strong>Gestor</strong> e <strong>Administrador</strong>. Como deseja entrar?</p>
+
+                    <form asp-action="SelecionarPerfil" method="post" class="d-grid gap-3">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="userId" value="@ViewBag.UserId" />
+
+                        <button type="submit" name="perfil" value="ADMINISTRADOR" class="btn btn-outline-primary btn-lg fw-bold">
+                            Entrar como Administrador
+                        </button>
+
+                        <button type="submit" name="perfil" value="GESTOR" class="btn btn-outline-success btn-lg fw-bold">
+                            Entrar como Gestor
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+@section Scripts {
+   
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                var modal = new bootstrap.Modal(document.getElementById('modalEscolherPerfil'));
+                modal.show();
+            });
+        </script>
+   
+}

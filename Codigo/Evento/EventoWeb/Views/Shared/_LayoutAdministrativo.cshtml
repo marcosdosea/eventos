@@ -78,6 +78,12 @@
                             <li>
                                 <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Gerenciar Conta</a>
                             </li>
+                            @if (User.IsInRole("GESTOR"))
+                            {
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Pessoa" asp-action="SelecionarPerfil" title="Selecionar Perfil">Selecionar Perfil</a>
+                                </li>
+                            }
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
