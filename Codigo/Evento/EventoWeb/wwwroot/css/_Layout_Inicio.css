@@ -1,4 +1,4 @@
-﻿.categorias {
+.categorias {
     margin: 1.25rem auto;
     width: 100%;
     white-space: nowrap;
@@ -428,5 +428,24 @@
     justify-content: center;
 }
 
+.empty-state-alert {
+    max-width: 600px;
+    width: 100%;
+    border-radius: 12px;
+    background-color: #fff9e6;
+    border-color: #ffeeb2;
+    white-space: normal;
+    word-wrap: break-word;
+    grid-column: 1 / -1;
+}
 
+.empty-state-alert-title {
+    color: #665000;
+    white-space: normal;
+}
 
+.empty-state-alert-text {
+    color: #8c7314;
+    white-space: normal;
+    overflow: visible;
+}

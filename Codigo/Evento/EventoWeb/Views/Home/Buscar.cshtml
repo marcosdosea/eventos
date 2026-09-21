@@ -1,4 +1,4 @@
-﻿@model IEnumerable<EventoWeb.Models.EventoModel>
+@model IEnumerable<EventoWeb.Models.EventoModel>
 
 @{
     ViewData["Title"] = "Buscar Eventos";
@@ -66,10 +66,10 @@
             }
             else
             {
-                <div class="alert alert-warning text-center shadow-sm p-4 my-5 mx-auto" role="alert" style="max-width: 600px; width: 100%; border-radius: 12px; background-color: #fff9e6; border-color: #ffeeb2; white-space: normal; word-wrap: break-word;">
+                <div class="alert alert-warning text-center shadow-sm p-4 my-5 mx-auto empty-state-alert" role="alert">
                     <i class="bi bi-exclamation-triangle-fill fs-1 text-warning mb-3 d-block"></i>
-                    <h4 class="alert-heading fw-bold" style="color: #665000; white-space: normal;">Nenhum evento encontrado!</h4>
-                    <p class="mb-0" style="color: #8c7314; white-space: normal; overflow: visible;">Experimente ajustar seus termos de busca, pesquisar por palavras mais curtas, ou remover alguns filtros para encontrar mais resultados.</p>
+                    <h4 class="alert-heading fw-bold empty-state-alert-title">Nenhum evento encontrado!</h4>
+                    <p class="mb-0 empty-state-alert-text">Experimente ajustar seus termos de busca, pesquisar por palavras mais curtas, ou remover alguns filtros para encontrar mais resultados.</p>
                 </div>
             }
         </div>
