@@ -629,6 +629,9 @@
     white-space: normal;
     word-wrap: break-word;
     grid-column: 1 / -1;
+    justify-self: center;
+    align-self: center;
+    text-align: center;
 }
 
 .empty-state-alert-title {
