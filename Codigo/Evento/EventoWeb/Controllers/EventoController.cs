@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Diagnostics;
 using System.Security.Claims;
 
 namespace EventoWeb.Controllers
@@ -164,38 +165,25 @@ namespace EventoWeb.Controllers
 
             if (ModelState.IsValid)
             {
-                byte[] fotoSource = null;
-                if (viewModel.ImagemPortal != null && viewModel.ImagemPortal.Length > 0)
-                {
-                    using (var memoryStream = new MemoryStream())
-                    {
-                        viewModel.ImagemPortal.CopyTo(memoryStream);
+                var eventoExistente = _eventoService.Get(id);
+                eventoExistente.Nome = viewModel.Nome;
+                eventoExistente.IdTipoEvento = viewModel.IdTipoEvento;
+                eventoExistente.Estado = viewModel.Estado;
+                eventoExistente.Status = viewModel.Status;
 
-                        if (memoryStream.Length <= 65535)
-                        {
-                            fotoSource = memoryStream.ToArray();
-                        }
-                        else
-                        {
-                            ModelState.AddModelError("Foto", "O arquivo é muito grande. Deve ser menor que 64 KB.");
-                            CarregarDadosEventos(viewModel);
-                            return View(viewModel);
-                        }
-                    }
-                }
-
-                var evento = _mapper.Map<Evento>(viewModel);
-
-                if (fotoSource != null)
-                {
-                    evento.ImagemPortal = fotoSource;
-                }
 
                 var idsAreaInteresse = new List<uint> { viewModel.IdAreaInteresse };
 
-                _eventoService.Edit(evento, idsAreaInteresse);
+                if (_eventoService.Edit(eventoExistente, idsAreaInteresse))
+                {
+                    TempData["SuccessMessage"] = "Evento alterado com sucesso!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Erro ao alterar o evento.";
+                }
 
-                _eventoService.AtualizarVagasDisponiveis(evento.Id);
+                _eventoService.AtualizarVagasDisponiveis(eventoExistente.Id);
 
                 return RedirectToAction(nameof(Index));
             }
@@ -872,8 +860,16 @@ namespace EventoWeb.Controllers
                 }
 
                 var idsAreaInteresse = viewModel.IdAreaInteresses ?? new List<uint>();
+               
 
-                _eventoService.Edit(evento, idsAreaInteresse);
+                if (_eventoService.Edit(evento, idsAreaInteresse))
+                {
+                    TempData["SuccessMessage"] = "Evento alterado com sucesso!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Erro ao alterar o evento.";
+                }
                 _eventoService.AtualizarVagasDisponiveis(evento.Id);
 
                 return RedirectToAction("GerenciarEvento", new { idEvento = id });
@@ -893,78 +889,5 @@ namespace EventoWeb.Controllers
             viewModel.TiposEventos = new SelectList(tiposEventos, "Id", "Nome", viewModel.IdTipoEvento);
             viewModel.AreaInteresse = new SelectList(areaInteresse, "Id", "Nome", viewModel.IdAreaInteresses);
         }
-
-
-
-        /*
-		[Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
-		[HttpGet]
-		[Route("AtribuirPapel")]
-		public IActionResult AtribuirPapel(uint idEvento, int idPapel)
-		{
-			ViewBag.IdEvento = idEvento;
-			ViewBag.IdPapel = idPapel;
-			ViewBag.NomePapel = NomePapel(idPapel);
-			ViewBag.ViewPapel = ViewPapel(idPapel);
-
-			var modelo = new GestaoPapelModel
-			{
-				Evento = _eventoService.GetEventoSimpleDto(idEvento),
-				Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, idPapel),
-				Pessoa = new PessoaModel()
-			};
-
-			CarregarViewBags();
-			return View(modelo);
-		}
-
-		[HttpPost]
-		[Route("AtribuirPapel")]
-		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> AtribuirPapel(GestaoPapelModel model, int idPapel)
-		{
-			uint idEvento = model.Evento.Id;
-			LimparValidacoesSelects();
-
-			if (ModelState.IsValid)
-			{
-				var pessoa = _mapper.Map<Pessoa>(model.Pessoa);
-				await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, idPapel);
-				
-				if (idPapel == 4)
-					_eventoService.AtualizarVagasDisponiveis(idEvento);
-			}
-			return RedirectToAction(nameof(AtribuirPapel), new { idEvento, idPapel });
-		}
-
-		private void CarregarViewBags()
-		{
-			ViewBag.Estados = new SelectList(_estadosbrasilService.GetAll().OrderBy(e => e.Nome), "Estado", "Nome");
-			ViewBag.TiposEventos = new SelectList(_tipoEventoService.GetAll().OrderBy(t => t.Nome), "Id", "Nome");
-			ViewBag.AreaInteresse = new SelectList(_areaInteresseService.GetAll().OrderBy(a => a.Nome), "Id", "Nome");
-		}
-
-		private void LimparValidacoesSelects()
-		{
-			ModelState.Remove("Estados");
-			ModelState.Remove("TiposEventos");
-			ModelState.Remove("AreaInteresse");
-		}
-
-		private static string NomePapel(int idPapel) => idPapel switch
-		{
-			2 => "Gestor",
-			3 => "Colaborador",
-			4 => "Participante",
-			_ => "Desconhecido"
-		};
-
-		private static string ViewPapel(int idPapel) => idPapel switch
-		{
-			2 => "CreateGestor",
-			3 => "CreateColaborador",
-			_ => "CreateParticipante"
-		};
-		*/
     }
 }
