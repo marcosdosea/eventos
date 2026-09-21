@@ -2,7 +2,7 @@
 
 <link href="~/lib/datatable/css/datatables.min.css" rel="stylesheet" />
 
-<h1 class="blue-normal">Frequência</h1>
+<h1 class="blue-normal">Frequência do Participante</h1>
 <hr />
 
 <div class="row mb-4">
@@ -31,7 +31,7 @@
                 <div class="d-flex">
                     <input type="text" id="cpf" name="cpf" class="form-control me-2" placeholder="000.000.000-00" required 
                            pattern="\d{3}\.\d{3}\.\d{3}-\d{2}" title="Digite um CPF válido no formato 000.000.000-00"/>
-                    <button type="submit" class="btn btn-primary">Adicionar Participação</button>
+                    <button type="submit" class="btn btn-primary">Adicionar Frequência</button>
                 </div>
             </div>
         </form>
@@ -80,7 +80,7 @@
                     <tr>
                         <td>@participacao.IdPessoaNavigation?.Nome</td>
                         <td>@(participacao.Saida.HasValue ? "Saída" : "Entrada")</td>
-                        <td>@(participacao.Saida.HasValue ? participacao.Saida.Value.ToString("dd/MM/yyyy às HH:mm\\h") : participacao.Entrada.ToString("dd/MM/yyyy às HH:mm\\h"))</td>
+                        <td>@(participacao.Saida.HasValue ? participacao.Saida.Value.ToString("dd/MM/yyyy 'às' HH:mm'h'") : participacao.Entrada.ToString("dd/MM/yyyy 'às' HH:mm'h'"))</td>
                         <td>
                             <form style="display: inline;" method="post" asp-action="ExcluirParticipacao" id="formExcluir_@participacao.Id">
                                 @Html.AntiForgeryToken()
@@ -97,7 +97,7 @@
                                         data-form-id="formExcluir_@participacao.Id"
                                         data-nome="@participacao.IdPessoaNavigation?.Nome"
                                         data-tipo="@(participacao.Saida.HasValue ? "Saída" : "Entrada")"
-                                        data-data="@(participacao.Saida.HasValue ? participacao.Saida.Value.ToString("dd/MM/yyyy 'às' HH:mm") : participacao.Entrada.ToString("dd/MM/yyyy 'às' HH:mm"))">
+                                        data-data="@(participacao.Saida.HasValue ? participacao.Saida.Value.ToString("dd/MM/yyyy 'às' HH:mm'h'") : participacao.Entrada.ToString("dd/MM/yyyy 'às' HH:mm'h'"))">
                                     Excluir
                                 </button>
                             </form>
