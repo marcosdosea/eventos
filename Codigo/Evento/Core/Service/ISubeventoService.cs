@@ -1,4 +1,4 @@
-﻿using Core.DTO;
+using Core.DTO;
 
 namespace Core.Service
 {
@@ -11,6 +11,7 @@ namespace Core.Service
         IEnumerable<Subevento> GetAll();
         IEnumerable<SubeventoDTO> GetByNome(string nome);
         IEnumerable<SubeventoEventoDTO> GetByIdEvento(uint idEvento);
+        void AtualizarVagasDisponiveis(uint idSubevento);
     }
 }
 

@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Core;
 using Core.Service;
 using EventoWeb.Models;
@@ -770,6 +770,7 @@ namespace EventoWeb.Controllers
             }
             else
             {
+                ViewData["EventoId"] = idEvento;
                 var viewModel = new GerenciarEventoModel()
                 {
                     Evento = _mapper.Map<EventoModel>(evento),

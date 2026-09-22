@@ -37,6 +37,8 @@ namespace EventoWeb.Controllers.Tests
             var mockUserStore = new Mock<IUserStore<UsuarioIdentity>>();
             _mockUserManager = new Mock<UserManager<UsuarioIdentity>>(
                 mockUserStore.Object, null, null, null, null, null, null, null, null);
+            _mockUserManager.Setup(m => m.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
+                .ReturnsAsync(new UsuarioIdentity { UserName = "gestor@teste.com" });
 
             _mapper = new MapperConfiguration(cfg => { }).CreateMapper();
 
@@ -159,6 +161,58 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsNull(controller.TempData["ErrorMessage"]);
             Assert.IsNotNull(controller.TempData["Message"]);
             StringAssert.Contains(controller.TempData["Message"]!.ToString()!, "Entrada registrada");
+        }
+
+        [TestMethod()]
+        public async Task Frequencia_IdEventoZero_ComMultiplosEventos_RedirecionaParaGerenciarEventoListar()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+            _mockEvento.Setup(s => s.GetEventByCpf(It.IsAny<string>(), 3))
+                .Returns(new List<Evento> { new Evento { Id = 1 }, new Evento { Id = 2 } });
+
+            var result = await controller.Frequencia(0, null) as RedirectToActionResult;
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual("GerenciarEventoListar", result.ActionName);
+            Assert.AreEqual("Evento", result.ControllerName);
+        }
+
+        [TestMethod()]
+        public async Task Frequencia_IdEventoZero_ComEventoUnico_RedirecionaParaFrequenciaDoEvento()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+            _mockEvento.Setup(s => s.GetEventByCpf(It.IsAny<string>(), 3))
+                .Returns(new List<Evento> { new Evento { Id = 42 } });
+
+            var result = await controller.Frequencia(0, null) as RedirectToActionResult;
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(nameof(controller.Frequencia), result.ActionName);
+            Assert.AreEqual((uint)42, result.RouteValues?["idEvento"]);
+        }
+
+        [TestMethod()]
+        public async Task Frequencia_SemPermissao_Colaborador_RedirecionaParaGerenciarEventoListar()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+            _mockInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
+                .Returns((Inscricaopessoaevento)null);
+            _mockInscricao.Setup(s => s.GetColaboradorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
+                .Returns((Inscricaopessoaevento)null);
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "colaborador@teste.com"),
+                new Claim(ClaimTypes.Role, "COLABORADOR")
+            };
+            var identity = new ClaimsIdentity(claims, "TestAuthType");
+            controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(identity);
+
+            var result = await controller.Frequencia(10, null) as RedirectToActionResult;
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual("GerenciarEventoListar", result.ActionName);
+            Assert.AreEqual("Evento", result.ControllerName);
         }
     }
 }

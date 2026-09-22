@@ -87,6 +87,9 @@
                                                     <a class="nav-link opcao" asp-controller="Participacaopessoaevento" asp-action="Index" asp-route-idEvento="@eventoId">Inscrições</a>
                                                 </li>
                                                 <li class="nav-item">
+                                                    <a class="nav-link opcao" asp-controller="ParticipacaoPessoaEvento" asp-action="Frequencia" asp-route-idEvento="@eventoId">Frequência</a>
+                                                </li>
+                                                <li class="nav-item">
                                                     <a class="nav-link opcao" asp-controller="Evento" asp-action="CreateColaborador" asp-route-idEvento="@eventoId">Colaboradores</a>
                                                 </li>
                                                 <li class="nav-item">
@@ -157,10 +160,10 @@
                             <img src="/img/img-user.svg" alt="User" width="32" height="32" class="rounded-circle ms-2">
                         </a>
                     <ul class="dropdown-menu dropdown-menu-end text-small shadow" aria-labelledby="dropdownUser2">
-                        @if (User.IsInRole("ADMINISTRADOR"))
+                        @if (User.IsInRole("ADMINISTRADOR") || User.IsInRole("GESTOR") || User.IsInRole("COLABORADOR"))
                         {
                             <li>
-                                <a class="dropdown-item" asp-controller="Evento" asp-action="GerenciarEventoListar">Gerenciar Evento</a>
+                                <a class="dropdown-item" asp-controller="Evento" asp-action="GerenciarEventoListar">Gerenciar Eventos</a>
                             </li>
                         }
                         <li>

@@ -7,6 +7,8 @@ namespace Core.Service
     {
         uint CreateInscricaoEvento(Inscricaopessoaevento inscricaopessoaevento);
 
+        void CreateInscricaoSubEvento(Inscricaopessoasubevento inscricaopessoasubevento);
+
         Task DeletePessoaPapelAsync(uint idPessoa, uint idEvento, uint idPapel, string cpf);
 
         IEnumerable<Inscricaopessoaevento> GetByEventoAndPapel(uint idEvento, int idPapel);
