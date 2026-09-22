@@ -83,6 +83,7 @@ namespace EventoWeb.Areas.Identity.Pages.Account
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
             [Display(Name = "Lembre-me")]
+            [Required(ErrorMessage = "O campo Lembre-me é obrigatório.")]
             public bool RememberMe { get; set; }
         }
 

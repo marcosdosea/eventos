@@ -92,6 +92,7 @@ namespace EventoWeb
                     options.Lockout.MaxFailedAccessAttempts = 5;
                     options.Lockout.AllowedForNewUsers = true;
                 }).AddRoles<IdentityRole>()
+                .AddErrorDescriber<IdentityErrorDescriberPtBr>()
                 .AddEntityFrameworkStores<IdentityContext>();
 
             //Configure tokens life
