@@ -19,6 +19,7 @@ namespace EventoWeb.Controllers.Tests
     public class ParticipacaoPessoaEventoControllerTests
     {
         private Mock<IParticipacaoPessoaEventoService> _mockParticipacao = null!;
+        private Mock<IParticipacaoPessoaSubEventoService> _mockParticipacaoSubEvento = null!;
         private Mock<IEventoService> _mockEvento = null!;
         private Mock<ISubeventoService> _mockSubevento = null!;
         private Mock<IPessoaService> _mockPessoa = null!;
@@ -29,6 +30,7 @@ namespace EventoWeb.Controllers.Tests
         private ParticipacaoPessoaEventoController CriarController(bool comInscricaoParticipante, bool jaVinculado, int papelSeVinculado)
         {
             _mockParticipacao = new Mock<IParticipacaoPessoaEventoService>();
+            _mockParticipacaoSubEvento = new Mock<IParticipacaoPessoaSubEventoService>();
             _mockEvento = new Mock<IEventoService>();
             _mockSubevento = new Mock<ISubeventoService>();
             _mockPessoa = new Mock<IPessoaService>();
@@ -74,12 +76,15 @@ namespace EventoWeb.Controllers.Tests
             _mockParticipacao.Setup(s => s.AddAsync(It.IsAny<Participacaopessoaevento>()))
                 .ReturnsAsync(new Participacaopessoaevento());
 
+            _mockParticipacaoSubEvento.Setup(s => s.GetBySubEvento(It.IsAny<uint>()))
+                .Returns(new List<Participacaopessoasubevento>());
+
             _mockInscricao.Setup(s => s.CreateInscricaoEvento(It.IsAny<Inscricaopessoaevento>()))
                 .Returns((uint)99);
             _mockEvento.Setup(s => s.AtualizarVagasDisponiveis(It.IsAny<uint>()));
 
             var controller = new ParticipacaoPessoaEventoController(
-                _mockParticipacao.Object, _mockEvento.Object, _mockSubevento.Object,
+                _mockParticipacao.Object, _mockParticipacaoSubEvento.Object, _mockEvento.Object, _mockSubevento.Object,
                 _mockPessoa.Object, _mockInscricao.Object, _mapper, _mockUserManager.Object);
 
             var claims = new List<Claim>
@@ -231,6 +236,86 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual((uint)7, viewModel.SubEvento.Id);
             Assert.AreEqual("Workshop .NET", viewModel.SubEvento.Nome);
             _mockSubevento.Verify(s => s.Get((uint)7), Times.Once);
+        }
+
+        [TestMethod()]
+        public async Task Frequencia_ComIdSubEvento_CarregaApenasParticipacoesDoSubEvento()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+            _mockSubevento.Setup(s => s.Get((uint)7)).Returns(new Subevento { Id = 7, Nome = "Workshop" });
+            _mockParticipacaoSubEvento.Setup(s => s.GetBySubEvento((uint)7)).Returns(new List<Participacaopessoasubevento>
+            {
+                new Participacaopessoasubevento
+                {
+                    Id = 101,
+                    IdPessoa = 10,
+                    IdSubEvento = 7,
+                    Entrada = DateTime.Now,
+                    IdPessoaNavigation = new Pessoa { Id = 10, Nome = "Participante Sub" }
+                }
+            });
+
+            var result = await controller.Frequencia(1, 7) as ViewResult;
+
+            Assert.IsNotNull(result);
+            var viewModel = result.Model as FrequenciaViewModel;
+            Assert.IsNotNull(viewModel);
+            Assert.AreEqual(1, viewModel.Frequencias.Count());
+            Assert.AreEqual((uint)101, viewModel.Frequencias.First().Id);
+            Assert.AreEqual("Participante Sub", viewModel.Frequencias.First().IdPessoaNavigation.Nome);
+            _mockParticipacao.Verify(s => s.GetAllAsync(), Times.Never);
+        }
+
+        [TestMethod()]
+        public async Task RegistrarParticipacao_ComIdSubEvento_RegistraEntradaNoSubEvento_SemAlterarEventoPrincipal()
+        {
+            var controller = CriarController(comInscricaoParticipante: true, jaVinculado: true, papelSeVinculado: 4);
+            _mockParticipacaoSubEvento.Setup(s => s.GetBySubEvento((uint)7))
+                .Returns(new List<Participacaopessoasubevento>());
+
+            var result = await controller.RegistrarParticipacao(1, 7, "123.456.789-09");
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            Assert.AreEqual("Entrada registrada com sucesso.", controller.TempData["Message"]);
+            _mockParticipacaoSubEvento.Verify(s => s.Create(It.Is<Participacaopessoasubevento>(p => p.IdSubEvento == 7 && p.IdPessoa == 10)), Times.Once);
+            _mockParticipacao.Verify(s => s.AddAsync(It.IsAny<Participacaopessoaevento>()), Times.Never);
+            _mockParticipacao.Verify(s => s.UpdateAsync(It.IsAny<Participacaopessoaevento>()), Times.Never);
+        }
+
+        [TestMethod()]
+        public async Task RegistrarParticipacao_ComIdSubEvento_EntradaExistenteSemSaida_RegistraSaidaNoSubEvento_SemAlterarEventoPrincipal()
+        {
+            var controller = CriarController(comInscricaoParticipante: true, jaVinculado: true, papelSeVinculado: 4);
+            var entradaSub = new Participacaopessoasubevento
+            {
+                Id = 55,
+                IdPessoa = 10,
+                IdSubEvento = 7,
+                Entrada = DateTime.Now.AddHours(-1),
+                Saida = null
+            };
+            _mockParticipacaoSubEvento.Setup(s => s.GetBySubEvento((uint)7))
+                .Returns(new List<Participacaopessoasubevento> { entradaSub });
+
+            var result = await controller.RegistrarParticipacao(1, 7, "123.456.789-09");
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            Assert.AreEqual("Saída registrada com sucesso.", controller.TempData["Message"]);
+            _mockParticipacaoSubEvento.Verify(s => s.Update(It.Is<Participacaopessoasubevento>(p => p.Id == 55 && p.Saida.HasValue)), Times.Once);
+            _mockParticipacao.Verify(s => s.UpdateAsync(It.IsAny<Participacaopessoaevento>()), Times.Never);
+        }
+
+        [TestMethod()]
+        public async Task ExcluirParticipacao_ComIdSubEvento_ExcluiApenasDoSubEvento()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+
+            var result = await controller.ExcluirParticipacao(99, 1, 7);
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            Assert.AreEqual("Participação removida com sucesso.", controller.TempData["Message"]);
+            _mockParticipacaoSubEvento.Verify(s => s.Delete((uint)99), Times.Once);
+            _mockParticipacao.Verify(s => s.DeleteAsync(It.IsAny<uint>()), Times.Never);
         }
     }
 }
