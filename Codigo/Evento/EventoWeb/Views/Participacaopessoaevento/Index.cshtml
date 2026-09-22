@@ -114,6 +114,10 @@
         {
             <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Model.Evento.Id" class="btn btn-lg btn-blue-normal">Voltar</a>
         }
+        else if (User.IsInRole("COLABORADOR"))
+        {
+            <a asp-controller="Evento" asp-action="GerenciarEventoListar" class="btn btn-lg btn-blue-normal">Voltar</a>
+        }
         else
         {
             <a asp-controller="Home" asp-action="Index" class="btn btn-lg btn-blue-normal">Voltar</a>
