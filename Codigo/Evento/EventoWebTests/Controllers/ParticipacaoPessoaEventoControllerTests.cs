@@ -214,5 +214,23 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("GerenciarEventoListar", result.ActionName);
             Assert.AreEqual("Evento", result.ControllerName);
         }
+
+        [TestMethod()]
+        public async Task Frequencia_ComIdSubEvento_CarregaSubEventoNoViewModel()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+            var subeventoEsperado = new Subevento { Id = 7, Nome = "Workshop .NET", IdEvento = 1 };
+            _mockSubevento.Setup(s => s.Get((uint)7)).Returns(subeventoEsperado);
+
+            var result = await controller.Frequencia(1, 7) as ViewResult;
+
+            Assert.IsNotNull(result);
+            var viewModel = result.Model as FrequenciaViewModel;
+            Assert.IsNotNull(viewModel);
+            Assert.IsNotNull(viewModel.SubEvento);
+            Assert.AreEqual((uint)7, viewModel.SubEvento.Id);
+            Assert.AreEqual("Workshop .NET", viewModel.SubEvento.Nome);
+            _mockSubevento.Verify(s => s.Get((uint)7), Times.Once);
+        }
     }
 }
