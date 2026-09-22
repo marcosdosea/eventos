@@ -3,8 +3,6 @@ using Core;
 using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
@@ -400,7 +398,8 @@ namespace EventoWeb.Controllers
                 }
                 email = pessoa.Email;
                 if (validadorDeEmail.IsValid(email)){
-                    if (_pessoaService.EmailConfirmado(email)){
+
+                    if (await _pessoaService.EmailConfirmado(email)){
 
                         var callbackUrl = Url.Page(
                         pageName: "/Account/ResetPassword",

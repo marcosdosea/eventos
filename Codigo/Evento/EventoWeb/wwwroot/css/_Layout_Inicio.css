@@ -233,6 +233,10 @@
     font-size: 1.25rem;
     font-weight: 600;
     line-height: 150%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
 }
 
 .card-description {
@@ -240,8 +244,14 @@
     margin: 0;
     line-height: 1.5;
     width: 100%;
+    height: 3rem;
     white-space: normal;
     overflow-wrap: break-word;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .destaque {
@@ -389,4 +399,248 @@
     .card-content h2 {
         font-size: 1.0rem;
     }
+}
+
+/* Estilos para Pagina��o */
+.custom-pagination .page-link {
+    color: #232ED0;
+    border-radius: 0.25rem;
+    margin: 0 0.125rem;
+}
+
+.custom-pagination .page-item.active .page-link {
+    background-color: #232ED0;
+    border-color: #232ED0;
+    color: white;
+}
+
+.custom-pagination .page-item.disabled .page-link {
+    color: #6c757d;
+}
+
+
+/* Estilos para a p�gina de busca */
+.search-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    color: var(--Foundation-Blue-Normal, #232ED0);
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 150%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+.card-description {
+    font-size: 1rem;
+    margin: 0;
+    line-height: 1.5;
+    width: 100%;
+    height: 3rem;
+    white-space: normal;
+    overflow-wrap: break-word;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.destaque {
+    padding: 3.125rem 1.25rem;
+    text-align: center;
+}
+
+.destaque-content {
+    max-width: 50rem;
+    margin: 0 auto;
+}
+
+.destaque h1 {
+    color: #182AD5;
+    font-size: 3.125rem;
+    font-weight: 700;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.destaque p {
+    color: #1A1A1A;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    margin-top: 1.25rem;
+    margin-bottom: 1.25rem;
+    text-align: center;
+}
+
+
+
+@media (min-width: 576px) and (max-width: 991px) {
+
+    .carrossel {
+        max-width: 100%;
+    }
+
+    .carrossel-content h2 {
+        font-size: 1.3rem;
+    }
+
+    .carrossel-content p {
+        font-size: 0.975rem;
+    }
+
+    .carrossel-slide {
+        height: 40vh; 
+    }
+
+    .carrossel-slide img {
+        height: 100%; 
+        object-fit: cover; /
+    }
+
+    .carrossel-content {
+        bottom: 1rem;
+    }
+    .eventos h1 {
+        text-align: left;
+    }
+    .destaque-content p {
+        font-size: 0.975rem;
+    }
+    .destaque-content h1 {
+        font-size: 2.25rem;
+    }
+      .categorias-list{
+        justify-content: flex-start;
+
+    }
+
+ 
+    .card {
+        width: 14rem;
+        height: 16rem;
+    }
+    .card-content {
+        padding: 0.75rem;
+    }
+    .card-description {
+        font-size: 0.95rem;
+    }
+    .card-content h2 {
+        font-size: 1.0rem;
+    }
+   
+}
+
+@media (max-width: 575.98px) {
+    .categorias-list{
+        justify-content: flex-start;
+
+    }
+
+    .carrossel-content h2 {
+        font-size: 1.3rem;
+    }
+
+   
+    .eventos h1 {
+        text-align: left;
+    }
+    .destaque-content p {
+        font-size: 0.975rem;
+    }
+    .destaque-content h1 {
+        font-size: 2.25rem;
+    }
+    .carrossel {
+        max-width: 100%;
+    }
+
+    .carrossel-content h2 {
+        font-size: 1rem;
+    }
+
+    .carrossel-content p {
+        font-size: 0.875rem;
+    }
+
+    .carrossel-slide {
+        height: 40vh; 
+    }
+
+    .carrossel-slide img {
+        height: 100%; 
+        object-fit: cover;
+    }
+
+    .carrossel-content {
+        bottom: 1rem;
+    }
+  
+    .card {
+        width: 14rem;
+        height: 16rem;
+    }
+    .card-content {
+        padding: 0.75rem;
+    }
+    .card-description {
+        font-size: 0.95rem;
+    }
+    .card-content h2 {
+        font-size: 1.0rem;
+    }
+}
+
+/* Estilos para Paginao */
+.custom-pagination .page-link {
+    color: #232ED0;
+    border-radius: 0.25rem;
+    margin: 0 0.125rem;
+}
+
+.custom-pagination .page-item.active .page-link {
+    background-color: #232ED0;
+    border-color: #232ED0;
+    color: white;
+}
+
+.custom-pagination .page-item.disabled .page-link {
+    color: #6c757d;
+}
+
+
+/* Estilos para a pgina de busca */
+.search-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.25rem;
+    padding-bottom: 1.25rem;
+    justify-content: center;
+}
+
+.empty-state-alert {
+    max-width: 600px;
+    width: 100%;
+    white-space: normal;
+    word-wrap: break-word;
+    grid-column: 1 / -1;
+    justify-self: center;
+    align-self: center;
+    text-align: center;
+}
+
+.empty-state-alert-title {
+    color: #333;
+    white-space: normal;
+}
+
+.empty-state-alert-text {
+    color: #666;
+    white-space: normal;
+    overflow: visible;
 }

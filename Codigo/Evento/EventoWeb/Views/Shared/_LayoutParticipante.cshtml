@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 
 <html lang="pt-BR">
 
@@ -7,7 +7,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
 	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-	<link rel="stylesheet" type="text/css" href="~/css/style.css">
+	<link rel="stylesheet" type="text/css" href="~/css/style.css" asp-append-version="true">
 	<link rel="stylesheet" type="text/css" href="~/css/headerAndFooter.css">
 	<link rel="stylesheet" type="text/css" href="~/css/headerSearch.css" asp-append-version="true">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
@@ -35,7 +35,7 @@
                                         <a class="nav-link active titulo blue-normal fw-bold" >Participante</a>
                                     </li>
                                     <li class="nav-item">
-                                        <a class="nav-link opcao" asp-controller="Evento" asp-action="Create">Inscrição</a>
+                                        <a class="nav-link opcao" asp-controller="Inscricao" asp-action="MinhasInscricoes">Minhas Inscrições</a>
                                     </li>
                                     <li class="nav-item">
                                         <a class="nav-link opcao" asp-controller="Modelocertificado" asp-action="Index">Certificado</a>
@@ -128,3 +128,4 @@
 </body>
 
 </html>
+

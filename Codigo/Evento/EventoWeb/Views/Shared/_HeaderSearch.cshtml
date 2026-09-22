@@ -1,7 +1,6 @@
 @using Core.Service
 @inject ITipoeventoService TipoEventoService
 @inject IAreaInteresseService AreaInteresseService
-@inject IEstadosbrasilService EstadosbrasilService
 
 <div class="d-flex align-items-center header-search-container justify-content-center justify-content-md-start">
     <div class="position-relative me-md-2 search-input-wrapper px-3 px-md-0">
@@ -18,8 +17,6 @@
                
             <input type="hidden" name="IdTipoEvento" id="hidden_IdTipoEvento" value="@Context.Request.Query["IdTipoEvento"]" />
             <input type="hidden" name="IdAreaInteresse" id="hidden_IdAreaInteresse" value="@Context.Request.Query["IdAreaInteresse"]" />
-            <input type="hidden" name="Estado" id="hidden_Estado" value="@Context.Request.Query["Estado"]" />
-            <input type="hidden" name="Cidade" id="hidden_Cidade" value="@Context.Request.Query["Cidade"]" />
             <input type="hidden" name="Data" id="hidden_Data" value="@Context.Request.Query["Data"]" />
         </form>
     </div>
@@ -69,29 +66,6 @@
                     </select>
                 </div>
 
-                <div class="mb-3">
-                    <label for="drop_Estado" class="form-label small mb-1 fw-bold text-secondary">Estado (UF)</label>
-                    <select id="drop_Estado" class="form-select form-select-sm" onchange="syncFilter('Estado', this.value); applyFilters();" aria-label="Selecione o estado">
-                        <option value="">Todos os Estados</option>
-                        @foreach(var e in EstadosbrasilService.GetAll().OrderBy(x => x.Nome))
-                        {
-                            var selectedEstado = Context.Request.Query["Estado"].ToString().Trim();
-                            if(selectedEstado == e.Estado.Trim()) {
-                                <option value="@e.Estado" selected>@e.Nome (@e.Estado)</option>
-                            } else {
-                                <option value="@e.Estado">@e.Nome (@e.Estado)</option>
-                            }
-                        }
-                    </select>
-                </div>
-
-                <div class="mb-3">
-                    <label for="drop_Cidade" class="form-label small mb-1 fw-bold text-secondary">Cidade</label>
-                    <select id="drop_Cidade" class="form-select form-select-sm" onchange="syncFilter('Cidade', this.value); applyFilters();" aria-label="Selecione a cidade" disabled>
-                        <option value="">Todas as Cidades</option>
-                    </select>
-                </div>
-                
                 <div class="mb-3">
                     <label for="drop_Data" class="form-label small mb-1 fw-bold text-secondary">A partir de (Data)</label>
                     <input type="date" id="drop_Data" class="form-control form-control-sm" value="@Context.Request.Query["Data"]" onchange="syncFilter('Data', this.value); applyFilters();" aria-label="Selecione a data a partir de qual o evento ocorre" />

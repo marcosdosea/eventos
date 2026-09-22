@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Core;
 using Core.Service;
 using EventoWeb.Models;
@@ -144,16 +144,19 @@ namespace EventoWeb.Controllers
             {
                 ModelState.Remove("TiposEventos");
                 ModelState.Remove("Evento.Nome");
+
+                if (subeventoModel.InscricaoGratuita == 1 && subeventoModel.ValorInscricao > 0)
+                {
+                    ModelState.AddModelError("ValorInscricao", "Para subeventos gratuitos, o valor de inscrição deve ser 0,00.");
+                }
+
                 if (ModelState.IsValid)
                 {
                     var subevento = _mapper.Map<Subevento>(subeventoModel);
 
-                    var idSubevento = (uint?)subevento.Id;
-
-                    if (idSubevento.HasValue)
+                    if (subevento.Id != 0)
                     {
                         subevento.IdEvento = idEvento;
-                        subevento.Id = idSubevento.Value;
                         _subeventoService.Edit(subevento);
                     }
                     else

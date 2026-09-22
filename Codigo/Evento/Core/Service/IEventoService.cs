@@ -5,7 +5,7 @@ namespace Core.Service
     public interface IEventoService
     {
         uint Create(Evento evento, List<uint> idsAreaInteresse = null);
-        void Edit(Evento evento, List<uint> idsAreaInteresse);
+        bool Edit(Evento evento, List<uint> idsAreaInteresse);
         void Delete(uint Id);
 
         Evento Get(uint Id);
@@ -24,6 +24,6 @@ namespace Core.Service
 
         void AtualizarVagasDisponiveis(uint idEvento);
 
-        IEnumerable<Evento> Search(EventoFilterDTO filter);
+        IEnumerable<Evento> Search(EventoFilterDTO filter, int pagina, int tamanhoPagina, out int totalRegistros);
     }
 }

@@ -292,14 +292,24 @@ public class PessoaService : IPessoaService
         }
         return false;
     }
-    public bool EmailConfirmado(string email)
+    public async Task<bool>  EmailConfirmado(string email)
     {
-        var user = _userManager.FindByEmailAsync(email).Result;
-        if (user == null)
-            return false;
-        var isConfirmed = _userManager.IsEmailConfirmedAsync(user).Result;
-        return isConfirmed;
+        try
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+                return false;
+            var isConfirmed = await _userManager.IsEmailConfirmedAsync(user);
+            return isConfirmed;
+
+        }
+        catch (Exception ex)
+        {
+           Trace.TraceError($"Não foi possível verificar se o email está confirmado : {ex.Message}");
+           return false;
+        }
     }
+      
     public async Task<string> GerarTokenAsync(String cpf)
     {
         String token = "";
@@ -340,9 +350,6 @@ public class PessoaService : IPessoaService
     {
         bool sucesso = false;
 
-        // Mapeia o papel para a role correspondente no Identity.
-        // Papel 4 (participante/usuário) usa a role "USUARIO", que é a role
-        // efetivamente cadastrada no seed (IdentityInitializer).
         var role = idPapel switch
         {
             1 => "ADMINISTRADOR",
@@ -353,7 +360,6 @@ public class PessoaService : IPessoaService
             _ => throw new ArgumentException("Papel inválido.")
         };
 
-        // Garante que a Pessoa exista no banco. Se ainda não existir, cria.
         var pessoaExistente = GetByCpf(pessoa.Cpf);
         if (pessoaExistente == null)
         {
@@ -371,7 +377,6 @@ public class PessoaService : IPessoaService
 
         uint idPessoa = pessoa.Id;
 
-        // Garante que o usuário Identity exista. Se ainda não existir, cria.
         var existingUser = await _userManager.FindByNameAsync(pessoa.Cpf);
         if (existingUser == null)
         {
@@ -384,9 +389,6 @@ public class PessoaService : IPessoaService
             }
         }
 
-        // Cria a inscrição no evento, quando aplicável.
-        // CreateInscricaoEvento já é idempotente: retorna 0 se a pessoa já
-        // estiver inscrita neste evento, evitando duplicidade.
         if (idEvento > 0)
         {
             var nomeCracha = !string.IsNullOrWhiteSpace(pessoa.NomeCracha)
@@ -406,7 +408,6 @@ public class PessoaService : IPessoaService
             sucesso = true;
         }
 
-        // Associa o papel (role) ao usuário no Identity, caso ainda não possua.
         if (!await _userManager.IsInRoleAsync(existingUser, role))
         {
             var roleResult = await _userManager.AddToRoleAsync(existingUser, role);

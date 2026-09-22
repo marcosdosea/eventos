@@ -10,12 +10,13 @@
     <h1>Resultados da Busca</h1>
 
     <div class="container-fluid px-3">
-        <div class="d-flex flex-wrap justify-content-center gap-4" style="margin-bottom: 2rem;">
+        <div class="search-cards-grid" style="margin-bottom: 2rem;">
             @if (Model != null && Model.Any())
             {
                 foreach (var evento in Model)
                 {
                     bool inscricaoAberta = evento.DataInicioInscricao <= DateTime.Now && evento.DataFimInscricao >= DateTime.Now;
+                    bool inscricaoFutura = evento.DataInicioInscricao > DateTime.Now;
                     bool eventoGratuito = evento.InscricaoGratuita == 1 || evento.ValorInscricao == 0;
 
                     <div class="card">
@@ -25,6 +26,10 @@
                                 @if (inscricaoAberta)
                                 {
                                     <span class="badge badge-open">Inscrições Abertas</span>
+                                }
+                                else if (inscricaoFutura)
+                                {
+                                    <span class="badge badge-future">Em breve</span>
                                 }
                                 else
                                 {
@@ -49,13 +54,8 @@
                                 var descricaoCompleta = string.IsNullOrWhiteSpace(evento.Descricao)
                                     ? "Descrição indisponível"
                                     : evento.Descricao;
-                                var descricaoExibida = descricaoCompleta;
-                                if (descricaoCompleta.Length > 80)
-                                {
-                                    descricaoExibida = descricaoCompleta.Substring(0, 80).TrimEnd() + "...";
-                                }
                             }
-                            <p class="card-description" style="min-height: 45px;">@descricaoExibida</p>
+                            <p class="card-description">@descricaoCompleta</p>
                             
                             <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@evento.Id">
                                 <button class="btn btn-blue-normal">Bora lá</button>
@@ -66,12 +66,41 @@
             }
             else
             {
-                <div class="alert alert-warning text-center shadow-sm p-4 my-5 mx-auto" role="alert" style="max-width: 600px; width: 100%; border-radius: 12px; background-color: #fff9e6; border-color: #ffeeb2; white-space: normal; word-wrap: break-word;">
-                    <i class="bi bi-exclamation-triangle-fill fs-1 text-warning mb-3 d-block"></i>
-                    <h4 class="alert-heading fw-bold" style="color: #665000; white-space: normal;">Nenhum evento encontrado!</h4>
-                    <p class="mb-0" style="color: #8c7314; white-space: normal; overflow: visible;">Experimente ajustar seus termos de busca, pesquisar por palavras mais curtas, ou remover alguns filtros para encontrar mais resultados.</p>
+                <div class="text-center p-4 my-5 mx-auto empty-state-alert">
+                    <i class="bi bi-search fs-1 text-muted mb-3 d-block"></i>
+                    <h4 class="fw-bold empty-state-alert-title">Nenhum evento encontrado!</h4>
+                    <p class="mb-0 empty-state-alert-text">Experimente ajustar seus termos de busca, pesquisar por palavras mais curtas, ou remover alguns filtros para encontrar mais resultados.</p>
                 </div>
             }
         </div>
+
+        @if (ViewBag.TotalPaginas > 0)
+        {
+            var filter = ViewBag.FiltroAtual as Core.DTO.EventoFilterDTO;
+            <nav aria-label="Navegação de páginas de eventos">
+                <ul class="pagination justify-content-center custom-pagination">
+                    <li class="page-item @(ViewBag.PaginaAtual <= 1 ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("Buscar", new { pagina = ViewBag.PaginaAtual - 1, TermoBusca = filter?.TermoBusca, IdAreaInteresse = filter?.IdAreaInteresse, IdTipoEvento = filter?.IdTipoEvento, Data = filter?.Data?.ToString("yyyy-MM-dd"), Estado = filter?.Estado, Cidade = filter?.Cidade })" aria-label="Anterior">
+                            <span aria-hidden="true">&laquo; Anterior</span>
+                        </a>
+                    </li>
+                    
+                    @for (int i = 1; i <= ViewBag.TotalPaginas; i++)
+                    {
+                        <li class="page-item @(i == ViewBag.PaginaAtual ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Buscar", new { pagina = i, TermoBusca = filter?.TermoBusca, IdAreaInteresse = filter?.IdAreaInteresse, IdTipoEvento = filter?.IdTipoEvento, Data = filter?.Data?.ToString("yyyy-MM-dd"), Estado = filter?.Estado, Cidade = filter?.Cidade })">@i</a>
+                        </li>
+                    }
+
+                    <li class="page-item @(ViewBag.PaginaAtual >= ViewBag.TotalPaginas ? "disabled" : "")">
+                        <a class="page-link" href="@Url.Action("Buscar", new { pagina = ViewBag.PaginaAtual + 1, TermoBusca = filter?.TermoBusca, IdAreaInteresse = filter?.IdAreaInteresse, IdTipoEvento = filter?.IdTipoEvento, Data = filter?.Data?.ToString("yyyy-MM-dd"), Estado = filter?.Estado, Cidade = filter?.Cidade })" aria-label="Próximo">
+                            <span aria-hidden="true">Próximo &raquo;</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        }
     </div>
 </section>
+
+
