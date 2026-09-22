@@ -17,7 +17,16 @@ function syncFilter(hiddenId, value) {
 }
 
 function applyFilters() {
-    document.getElementById('headerSearchForm').submit();
+    const form = document.getElementById('headerSearchForm');
+    if (form) {
+        // requestSubmit fires the submit event listeners, unlike form.submit()
+        if (typeof form.requestSubmit === 'function') {
+            form.requestSubmit();
+        } else {
+            form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+            form.submit();
+        }
+    }
 }
 
 function clearAllFilters() {
