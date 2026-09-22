@@ -387,6 +387,8 @@ namespace EventoWeb.Controllers
                 if (ultimaParticipacaoSub != null && !ultimaParticipacaoSub.Saida.HasValue)
                 {
                     ultimaParticipacaoSub.Saida = DateTime.Now;
+                    ultimaParticipacaoSub.IdPessoaNavigation = null!;
+                    ultimaParticipacaoSub.IdSubEventoNavigation = null!;
                     _participacaoSubEventoService.Update(ultimaParticipacaoSub);
                     TempData["Message"] = "Saída registrada com sucesso.";
                 }
