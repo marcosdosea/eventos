@@ -750,6 +750,11 @@ namespace EventoWeb.Controllers
         [Route("GerenciarEvento")]
         public IActionResult GerenciarEvento([FromQuery] uint idEvento)
         {
+            if (idEvento == 0)
+            {
+                return RedirectToAction("GerenciarEventoListar");
+            }
+
             Evento evento = _eventoService.Get(idEvento);
             if (evento == null)
             {
