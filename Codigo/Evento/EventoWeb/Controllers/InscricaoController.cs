@@ -238,7 +238,7 @@ namespace EventoWeb.Controllers
                 int quantidade = kvp.Value;
 
                 decimal valorMain = 0m;
-                uint? idTipoToSave = idTipo;
+                uint? idTipoToSave = (idTipo != 0 && idTipo != 999999) ? (uint?)idTipo : null;
 
                 if (idTipo != 0 && idTipo != 999999)
                 {
@@ -248,7 +248,6 @@ namespace EventoWeb.Controllers
                 else if (idTipo == 999999)
                 {
                     valorMain = evento != null ? (evento.ValorInscricao / 2m) : 0m;
-                    idTipoToSave = 0;
                 }
                 else
                 {
@@ -271,7 +270,16 @@ namespace EventoWeb.Controllers
                     };
 
                     var inscricao = _mapper.Map<Inscricaopessoaevento>(novaInscricao);
-                    _inscricaoService.CreateInscricaoEvento(inscricao);
+                    
+                    if (evento.PossuiCertificado == 0)
+                    {
+                        _inscricaoService.CreateInscricaoEventoLote(inscricao);
+                    }
+                    else
+                    {
+                        _inscricaoService.CreateInscricaoEvento(inscricao);
+                    }
+                    
                     _eventoService.AtualizarVagasDisponiveis(idEvento);
                 }
             }
