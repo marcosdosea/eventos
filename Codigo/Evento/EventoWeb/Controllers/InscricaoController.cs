@@ -166,6 +166,11 @@ namespace EventoWeb.Controllers
                 }
             }
             
+            if (evento.PossuiCertificado == 0)
+            {
+                return View("RealizarInscricaoLote", model);
+            }
+
             return View(model);
         }
 
@@ -187,53 +192,155 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("minhasInscricoes", new { idEvento = idEvento });
             }
 
-            var novaInscricao = new InscricaoEventoModel()
-            {
-                IdPessoa = pessoa.Id,
-                IdEvento = idEvento,
-                IdPapel = 4,
-                DataInscricao = DateTime.Now,
-                NomeCracha = User.Identity.Name,
-                Status = "S",
-                IdTipoInscricao = inscricaoEvento.IdTipoInscricao,
-                FrequenciaFinal = 0m,
-                ValorTotal = inscricaoEvento.ValorTotal 
-            };
+            var evento = _eventoService.Get(idEvento);
 
-            var inscricao = _mapper.Map<Inscricaopessoaevento>(novaInscricao);
-            _inscricaoService.CreateInscricaoEvento(inscricao);
-            _eventoService.AtualizarVagasDisponiveis(idEvento);
+            var mainEventQuantities = new Dictionary<uint, int>();
+            int totalEventTickets = 0;
+
+            foreach (var key in Request.Form.Keys)
+            {
+                if (key.StartsWith("QuantidadeTipoInscricao_"))
+                {
+                    if (uint.TryParse(key.Replace("QuantidadeTipoInscricao_", ""), out uint idTipo))
+                    {
+                        if (int.TryParse(Request.Form[key], out int qtd) && qtd > 0)
+                        {
+                            mainEventQuantities[idTipo] = qtd;
+                            totalEventTickets += qtd;
+                        }
+                    }
+                }
+            }
+
+            if (evento.PossuiCertificado != 0 || totalEventTickets < 1)
+            {
+                totalEventTickets = 1;
+                if (mainEventQuantities.Count > 0)
+                {
+                    var firstKey = mainEventQuantities.Keys.First();
+                    mainEventQuantities.Clear();
+                    mainEventQuantities[firstKey] = 1;
+                }
+                else
+                {
+                    mainEventQuantities[inscricaoEvento.IdTipoInscricao ?? 0] = 1;
+                }
+            }
+            else if (totalEventTickets > 8)
+            {
+                TempData["ParticipanteMessage"] = "Limite máximo de ingressos excedido.";
+                return RedirectToAction("Index", "Home"); 
+            }
+
+            foreach (var kvp in mainEventQuantities)
+            {
+                uint idTipo = kvp.Key;
+                int quantidade = kvp.Value;
+
+                decimal valorMain = 0m;
+                uint? idTipoToSave = idTipo;
+
+                if (idTipo != 0 && idTipo != 999999)
+                {
+                    var tipoObjMain = _tipoinscricaoService.Get(idTipo);
+                    valorMain = tipoObjMain != null ? tipoObjMain.Valor : 0m;
+                }
+                else if (idTipo == 999999)
+                {
+                    valorMain = evento != null ? (evento.ValorInscricao / 2m) : 0m;
+                    idTipoToSave = 0;
+                }
+                else
+                {
+                    valorMain = evento != null ? evento.ValorInscricao : 0m;
+                }
+
+                for (int i = 0; i < quantidade; i++)
+                {
+                    var novaInscricao = new InscricaoEventoModel()
+                    {
+                        IdPessoa = pessoa.Id,
+                        IdEvento = idEvento,
+                        IdPapel = 4,
+                        DataInscricao = DateTime.Now,
+                        NomeCracha = User.Identity.Name,
+                        Status = "S",
+                        IdTipoInscricao = idTipoToSave,
+                        FrequenciaFinal = 0m,
+                        ValorTotal = valorMain 
+                    };
+
+                    var inscricao = _mapper.Map<Inscricaopessoaevento>(novaInscricao);
+                    _inscricaoService.CreateInscricaoEvento(inscricao);
+                    _eventoService.AtualizarVagasDisponiveis(idEvento);
+                }
+            }
 
             if (inscricaoEvento.SelectedSubeventos != null && inscricaoEvento.SelectedSubeventos.Any())
             {
                 foreach (var idSubevento in inscricaoEvento.SelectedSubeventos)
                 {
-                    var tipoValueString = Request.Form[$"TipoInscricaoSubevento_{idSubevento}"];
-                    uint? idTipo = null;
-                    decimal valorSubevento = 0m;
+                    var subevento = _subeventoService.Get(idSubevento);
+                    var subEventQuantities = new Dictionary<uint, int>();
+                    int totalSubTickets = 0;
 
-                    if (!string.IsNullOrEmpty(tipoValueString) && uint.TryParse(tipoValueString, out uint parsedIdTipo))
+                    foreach (var key in Request.Form.Keys)
                     {
-                        idTipo = parsedIdTipo;
-                        var tipoObj = _tipoinscricaoService.Get(parsedIdTipo);
-                        if (tipoObj != null)
+                        string prefix = $"QuantidadeTipoInscricaoSubevento_{idSubevento}_";
+                        if (key.StartsWith(prefix))
                         {
-                            valorSubevento = tipoObj.Valor;
+                            if (uint.TryParse(key.Replace(prefix, ""), out uint idTipoSub))
+                            {
+                                if (int.TryParse(Request.Form[key], out int qtd) && qtd > 0)
+                                {
+                                    subEventQuantities[idTipoSub] = qtd;
+                                    totalSubTickets += qtd;
+                                }
+                            }
                         }
                     }
-
-                    var novaInscricaoSub = new Inscricaopessoasubevento()
+                    
+                    if (totalSubTickets > 8)
                     {
-                        IdPessoa = pessoa.Id,
-                        IdSubEvento = idSubevento,
-                        IdPapel = 4,
-                        DataInscricao = DateTime.Now,
-                        Status = "S",
-                        FrequenciaFinal = 0m,
-                        Valor = valorSubevento,
-                    };
-                    _inscricaoService.CreateInscricaoSubEvento(novaInscricaoSub);
-                    _subeventoService.AtualizarVagasDisponiveis(idSubevento);
+                        continue; 
+                    }
+
+                    foreach (var kvpSub in subEventQuantities)
+                    {
+                        uint idTipoSub = kvpSub.Key;
+                        int quantidadeSub = kvpSub.Value;
+
+                        decimal valorSub = 0m;
+                        if (idTipoSub != 0 && idTipoSub != 999999)
+                        {
+                            var tipoObjSub = _tipoinscricaoService.Get(idTipoSub);
+                            valorSub = tipoObjSub != null ? tipoObjSub.Valor : 0m;
+                        }
+                        else if (idTipoSub == 999999)
+                        {
+                            valorSub = subevento != null ? (subevento.ValorInscricao / 2m) : 0m;
+                        }
+                        else
+                        {
+                            valorSub = subevento != null ? subevento.ValorInscricao : 0m;
+                        }
+
+                        for (int j = 0; j < quantidadeSub; j++)
+                        {
+                            var novaInscricaoSub = new Inscricaopessoasubevento()
+                            {
+                                IdPessoa = pessoa.Id,
+                                IdSubEvento = idSubevento,
+                                IdPapel = 4,
+                                DataInscricao = DateTime.Now,
+                                Status = "S",
+                                FrequenciaFinal = 0m,
+                                Valor = valorSub,
+                            };
+                            _inscricaoService.CreateInscricaoSubEvento(novaInscricaoSub);
+                            _subeventoService.AtualizarVagasDisponiveis(idSubevento);
+                        }
+                    }
                 }
             }
 

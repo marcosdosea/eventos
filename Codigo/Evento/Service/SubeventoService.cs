@@ -131,7 +131,9 @@ namespace Service
                     Nome = subevento.Nome,
                     VagasOfertadas = subevento.VagasOfertadas,
                     VagasDisponiveis = subevento.VagasDisponiveis,
-                    NomeTipoEvento = subevento.IdTipoEventoNavigation.Nome
+                    NomeTipoEvento = subevento.IdTipoEventoNavigation.Nome,
+                    InscricaoGratuita = subevento.InscricaoGratuita,
+                    ValorInscricao = subevento.ValorInscricao
                 };
 
             return query.ToList();
