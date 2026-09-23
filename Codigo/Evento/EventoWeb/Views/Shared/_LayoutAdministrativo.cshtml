@@ -16,10 +16,10 @@
 
 <body>
     @{
-        var controller = ViewContext.RouteData.Values["controller"]?.ToString();
-        var action = ViewContext.RouteData.Values["action"]?.ToString();
-        bool showLocation = (controller == "Home" && (action == "Index" || action == "Buscar")) ||
-                            (controller == "Inscricao" && action == "realizarInscricao");
+        var controller = ViewContext.RouteData.Values["controller"]?.ToString()?.ToLower();
+        var action = ViewContext.RouteData.Values["action"]?.ToString()?.ToLower();
+        bool showLocation = (controller == "home" && (action == "index" || action == "buscar")) ||
+                            (controller == "inscricao" && (action == "realizarinscricao" || action == "minhasinscricoes" || action == "realizarinscricaolote"));
     }
     <header class="p-3 mb-3 border-bottom fixed-top">
         <div class="container">
