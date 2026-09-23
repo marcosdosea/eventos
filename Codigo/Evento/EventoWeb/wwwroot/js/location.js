@@ -206,7 +206,7 @@ function saveManualLocation() {
     if (window.location.pathname.toLowerCase().includes('/home/buscar') || window.location.pathname.toLowerCase() === '/buscar') {
         const searchForm = document.getElementById('headerSearchForm');
         if (searchForm) {
-            searchForm.submit();
+            searchForm.requestSubmit();
         } else {
             window.location.reload();
         }
@@ -225,7 +225,7 @@ function clearManualLocation() {
     if (window.location.pathname.toLowerCase().includes('/home/buscar')) {
          const searchForm = document.getElementById('headerSearchForm');
          if (searchForm) {
-             searchForm.submit();
+             searchForm.requestSubmit();
          }
     }
 }
