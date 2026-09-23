@@ -121,6 +121,11 @@ namespace EventoWeb.Controllers
             if (idSubEvento.HasValue && idSubEvento.Value > 0)
             {
                 subEvento = _subeventoService.Get(idSubEvento.Value);
+                if (subEvento == null || subEvento.IdEvento != idEvento)
+                {
+                    return NotFound();
+                }
+
                 frequencias = _participacaoSubEventoService.GetBySubEvento(idSubEvento.Value)
                     .OrderByDescending(f => f.Entrada)
                     .Select(f => new Participacaopessoaevento
@@ -233,6 +238,11 @@ namespace EventoWeb.Controllers
             if (idSubEvento.HasValue && idSubEvento.Value > 0)
             {
                 subEvento = _subeventoService.Get(idSubEvento.Value);
+                if (subEvento == null || subEvento.IdEvento != idEvento)
+                {
+                    return NotFound();
+                }
+
                 frequencias = _participacaoSubEventoService.GetBySubEvento(idSubEvento.Value)
                     .OrderByDescending(f => f.Entrada)
                     .Select(f => new Participacaopessoaevento
@@ -301,6 +311,15 @@ namespace EventoWeb.Controllers
                     return RedirectToAction("Index", "Home");
                 }
                 return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });
+            }
+
+            if (idSubEvento.HasValue && idSubEvento.Value > 0)
+            {
+                var subEvento = _subeventoService.Get(idSubEvento.Value);
+                if (subEvento == null || subEvento.IdEvento != idEvento)
+                {
+                    return NotFound();
+                }
             }
 
             if (string.IsNullOrWhiteSpace(cpf))
@@ -477,13 +496,23 @@ namespace EventoWeb.Controllers
 
             if (idSubEvento.HasValue && idSubEvento.Value > 0)
             {
+                var subEvento = _subeventoService.Get(idSubEvento.Value);
+                var participacaoSub = _participacaoSubEventoService
+                    .GetBySubEvento(idSubEvento.Value)
+                    .FirstOrDefault(p => p.Id == id);
+
+                if (subEvento == null || subEvento.IdEvento != idEvento || participacaoSub == null)
+                {
+                    return NotFound();
+                }
+
                 _participacaoSubEventoService.Delete(id);
                 TempData["Message"] = "Participação removida com sucesso.";
                 return RedirectToAction(destino, new { idEvento, idSubEvento });
             }
 
             var participacao = await _participacaoService.GetByIdAsync(id);
-            if (participacao == null)
+            if (participacao == null || participacao.IdEvento != idEvento)
             {
                 return NotFound();
             }
