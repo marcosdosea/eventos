@@ -9,9 +9,11 @@ using Microsoft.AspNetCore.Authorization;
 using Core;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Hosting;
 
 namespace EventoWeb.Areas.Identity.Pages.Account
 {
@@ -20,11 +22,13 @@ namespace EventoWeb.Areas.Identity.Pages.Account
     {
         private readonly UserManager<UsuarioIdentity> _userManager;
         private readonly IEmailSender _sender;
+        private readonly IWebHostEnvironment _environment;
 
-        public RegisterConfirmationModel(UserManager<UsuarioIdentity> userManager, IEmailSender sender)
+        public RegisterConfirmationModel(UserManager<UsuarioIdentity> userManager, IEmailSender sender, IWebHostEnvironment environment)
         {
             _userManager = userManager;
             _sender = sender;
+            _environment = environment;
         }
 
         /// <summary>
@@ -60,8 +64,8 @@ namespace EventoWeb.Areas.Identity.Pages.Account
             }
 
             Email = email;
-            // Once you add a real email sender, you should remove this code that lets you confirm the account
-            DisplayConfirmAccountLink = true;
+            // Exibe o link de confirmação apenas em desenvolvimento.
+            DisplayConfirmAccountLink = _environment.IsDevelopment();
             if (DisplayConfirmAccountLink)
             {
                 var userId = await _userManager.GetUserIdAsync(user);
