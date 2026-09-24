@@ -346,6 +346,11 @@ namespace EventoWeb.Controllers
                 return NotFound();
             }
 
+            if (participacao.IdEvento != idEvento)
+            {
+                return Forbid();
+            }
+
             var username = User.Identity?.Name;
             if (string.IsNullOrEmpty(username))
             {
