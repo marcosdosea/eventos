@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 
 @{
 
@@ -31,7 +31,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" type="text/css" href="~/css/style.css">
+    <link rel="stylesheet" type="text/css" href="~/css/style.css" asp-append-version="true">
     <link rel="stylesheet" type="text/css" href="~/css/headerAndFooter.css">
     <link rel="stylesheet" type="text/css" href="~/css/headerSearch.css" asp-append-version="true">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
@@ -80,13 +80,13 @@
                                                     <a class="nav-link opcao" asp-controller="Participacaopessoaevento" asp-action="Index" asp-route-idEvento="@eventoId">Inscrições</a>
                                                 </li>
                                                 <li class="nav-item">
+                                                    <a class="nav-link opcao" asp-controller="ParticipacaoPessoaEvento" asp-action="Frequencia" asp-route-idEvento="@eventoId">Frequência</a>
+                                                </li>
+                                                <li class="nav-item">
                                                     <a class="nav-link opcao" asp-controller="Evento" asp-action="CreateColaborador" asp-route-idEvento="@eventoId">Colaboradores</a>
                                                 </li>
                                                 <li class="nav-item">
                                                     <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@eventoId">Detalhes do Evento</a>
-                                                </li>
-                                                <li class="nav-item">
-                                                    <a class="nav-link opcao" asp-controller="Participante" asp-action="Index" asp-route-idEvento="@eventoId">Usuários</a>
                                                 </li>
                                                 <li class="nav-item">
                                                     <a class="nav-link opcao" asp-controller="Subevento" asp-action="Index" asp-route-idEvento="@eventoId">SubEventos</a>
@@ -140,10 +140,10 @@
                         <img src="/img/img-user.svg" alt="User" width="32" height="32" class="rounded-circle ms-2">
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end text-small shadow" aria-labelledby="dropdownUser2">
-                        @if (User.IsInRole("ADMINISTRADOR"))
+                        @if (User.IsInRole("ADMINISTRADOR") || User.IsInRole("GESTOR") || User.IsInRole("COLABORADOR"))
                         {
                             <li>
-                                <a class="dropdown-item" asp-controller="Evento" asp-action="GerenciarEventoListar">Gerenciar Evento</a>
+                                <a class="dropdown-item" asp-controller="Evento" asp-action="GerenciarEventoListar">Gerenciar Eventos</a>
                             </li>
                             <li>
                                 <a class="dropdown-item" asp-controller="Pessoa" asp-action="SelecionarPerfil/{perfil}" title="Selecionar Perfil">Selecionar Perfil</a>

@@ -15,18 +15,18 @@ namespace EventoWeb
 
         public EmailSender(IConfiguration configuration, IWebHostEnvironment enviroment, ILogger<IEmailSender> logger)
         {
-            _from = configuration["Smtp:From"];
+            _from = Environment.GetEnvironmentVariable("EMAIL_USER");
             _client = new SmtpClient
             {
-                Host = configuration["Smtp:Host"],
-                Port = int.Parse(configuration["Smtp:Port"]),
-                Credentials = new NetworkCredential(configuration["Smtp:Username"], configuration["Smtp:Password"]),
+                Host = Environment.GetEnvironmentVariable("EMAIL_SMTP"),
+                Port = int.Parse(Environment.GetEnvironmentVariable("EMAIL_PORT")),
+                Credentials = new NetworkCredential(Environment.GetEnvironmentVariable("EMAIL_USER"), Environment.GetEnvironmentVariable("EMAIL_PASS")),
                 EnableSsl = true
             };
             _enviroment = enviroment;
             _logger = logger;
         }
-
+   
         public Task SendEmailAsync(string email, string subject, string htmlMessage)
         {
             var mailMessage = new MailMessage
@@ -43,7 +43,7 @@ namespace EventoWeb
         public async Task<bool> ModeloEmailReset(String token,Pessoa pessoa, String callbackUrl)
         {
             string email = pessoa.Email;
-            
+            string contato = "https://beacons.ai/itatechjr";
             string assunto = "Redefinição de Senha";
             string caminhoTemplate = Path.Combine(_enviroment.WebRootPath, "templates", "EmailRedefinicaoSenha.html");
             try
@@ -51,7 +51,8 @@ namespace EventoWeb
                 string mensagemHtml = await File.ReadAllTextAsync(caminhoTemplate);
                 mensagemHtml = mensagemHtml
                 .Replace("{{Nome}}", pessoa.Nome)
-                .Replace("{{LinkCallback}}", callbackUrl);
+                .Replace("{{LinkCallback}}", callbackUrl)
+                .Replace("{{LinkContato}}", contato);
                 await SendEmailAsync(email, assunto, mensagemHtml);
               
               _logger.LogInformation("E-mail de redefinição de senha enviado com sucesso para {Email}", email);

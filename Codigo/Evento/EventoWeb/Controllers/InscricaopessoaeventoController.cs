@@ -4,6 +4,8 @@ using Core.DTO;
 using AutoMapper;
 using Core;
 using EventoWeb.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,17 +17,23 @@ namespace EventoWeb.Controllers
         private readonly IInscricaopessoaeventoService _service;
         private readonly IPessoaService _pessoaService;
         private readonly IEventoService _eventoService;
+        private readonly ITipoInscricaoService _tipoInscricaoService;
+        private readonly ILogger<InscricaopessoaeventoController> _logger;
         private readonly IMapper _mapper;
 
         public InscricaopessoaeventoController(
             IInscricaopessoaeventoService service,
             IPessoaService pessoaService,
             IEventoService eventoService,
+            ITipoInscricaoService tipoInscricaoService,
+            ILogger<InscricaopessoaeventoController> logger,
             IMapper mapper)
         {
             _service = service;
             _pessoaService = pessoaService;
             _eventoService = eventoService;
+            _tipoInscricaoService = tipoInscricaoService;
+            _logger = logger;
             _mapper = mapper;
         }
 
@@ -135,24 +143,37 @@ namespace EventoWeb.Controllers
         // ------------------ TELA PÚBLICA DE INSCRIÇÃO ------------------
 
         // GET: /Inscricaopessoaevento/Inscrever/5
+        [Authorize]
         public IActionResult Inscrever(uint idEvento)
         {
-            // Monte aqui os dados do evento e dos lotes
-            var lotes = new List<LoteInscricaoModel>
-            {
-                new LoteInscricaoModel { Id = "1", NomeLote = "2,5km - 1º Lote", Descricao = "Inscrições até 06/09/2025", Preco = 167, Quantidade = 0 },
-                new LoteInscricaoModel { Id = "2", NomeLote = "5km - 2º Lote", Descricao = "Inscrições até 06/09/2025", Preco = 187, Quantidade = 0 }
-            };
+            var evento = _eventoService.Get(idEvento);
+            if (evento == null)
+                return NotFound();
+
+            var lotes = _tipoInscricaoService.GetByEvento(idEvento)
+                .Select(t => new LoteInscricaoModel
+                {
+                    Id = t.Id.ToString(),
+                    NomeLote = t.Nome,
+                    Descricao = t.Descricao,
+                    Preco = t.Valor,
+                    Quantidade = 0
+                }).ToList();
 
             var model = new InscricaopessoaeventoModel
             {
-                IdEvento = idEvento,
-                NomeEvento = "WE CAN RUN Rede Primavera 2025",
-                BannerUrl = "/images/banner-wecanrun.png",
-                DataEvento = new DateTime(2025, 9, 6, 16, 0, 0),
-                DataFimEvento = new DateTime(2025, 9, 6, 23, 0, 0),
-                LocalEvento = "Central Garden, Aracaju - SE",
-                DescricaoEvento = "Evento de corrida com várias modalidades. Escolha seu lote e inscreva-se!",
+                IdEvento = evento.Id,
+                NomeEvento = evento.Nome,
+                BannerUrl = string.Empty,
+                DataEvento = evento.DataInicio ?? DateTime.Today,
+                DataFimEvento = evento.DataFim ?? DateTime.Today,
+                LocalEvento = string.Join(", ", new[]
+                {
+                    string.Join(" ", new[] { evento.Rua, evento.Numero }.Where(s => !string.IsNullOrWhiteSpace(s))),
+                    evento.Bairro,
+                    string.Join(" - ", new[] { evento.Cidade, evento.Estado }.Where(s => !string.IsNullOrWhiteSpace(s)))
+                }.Where(s => !string.IsNullOrWhiteSpace(s))),
+                DescricaoEvento = evento.Descricao ?? string.Empty,
                 Lotes = lotes,
                 TotalSelecionado = 0
             };
@@ -161,32 +182,123 @@ namespace EventoWeb.Controllers
         }
 
         // POST: /Inscricaopessoaevento/Inscrever/5
+        [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Inscrever(InscricaopessoaeventoModel model)
         {
-            // Processa as inscrições selecionadas
-            foreach (var lote in model.Lotes)
+            if (!ModelState.IsValid)
             {
-                if (lote.Quantidade > 0)
+                RecarregarDadosTela(model);
+                return View(model);
+            }
+
+            if (model.Lotes == null || !model.Lotes.Any(l => l.Quantidade > 0))
+            {
+                ModelState.AddModelError(string.Empty, "Selecione ao menos um lote.");
+                RecarregarDadosTela(model);
+                return View(model);
+            }
+
+            if (model.Lotes.Any(l => l.Quantidade < 0))
+            {
+                ModelState.AddModelError(string.Empty, "Quantidade inválida.");
+                RecarregarDadosTela(model);
+                return View(model);
+            }
+
+            var cpf = User.Identity?.Name;
+            if (string.IsNullOrEmpty(cpf))
+                return Challenge();
+
+            var pessoa = _pessoaService.GetByCpf(cpf);
+            if (pessoa == null)
+                return Forbid();
+
+            var evento = _eventoService.Get(model.IdEvento);
+            if (evento == null)
+                return NotFound();
+
+            try
+            {
+                foreach (var lote in model.Lotes.Where(l => l.Quantidade > 0))
                 {
-                    // Aqui você pode montar o DTO/Entidade e salvar no banco
+                    if (!uint.TryParse(lote.Id, out uint idTipoInscricao))
+                    {
+                        ModelState.AddModelError(string.Empty, "Lote inválido.");
+                        RecarregarDadosTela(model);
+                        return View(model);
+                    }
+
+                    var tipo = _tipoInscricaoService.Get(idTipoInscricao);
+                    if (tipo == null || tipo.IdEvento != model.IdEvento)
+                    {
+                        ModelState.AddModelError(string.Empty, "Lote inválido para este evento.");
+                        RecarregarDadosTela(model);
+                        return View(model);
+                    }
+
                     var inscricao = new Inscricaopessoaevento
                     {
                         IdEvento = model.IdEvento,
-                        IdPessoa = 1, // <-- Troque para o id do participante real!
-                        IdPapel = 1, // <-- Ajuste conforme necessário
-                        IdTipoInscricao = uint.TryParse(lote.Id, out uint tipo) ? tipo : (uint?)null,
+                        IdPessoa = pessoa.Id,
+                        IdPapel = 4,
+                        IdTipoInscricao = tipo.Id,
                         DataInscricao = DateTime.Now,
-                        ValorTotal = lote.Preco * lote.Quantidade,
-                        Status = "A",
+                        ValorTotal = tipo.Valor * lote.Quantidade,
+                        Status = "S",
                         FrequenciaFinal = 0,
-                        NomeCracha = ""
+                        NomeCracha = pessoa.NomeCracha
                     };
-                    // _service.Create(inscricao);
+                    _service.Create(inscricao);
                 }
+                return RedirectToAction("Sucesso");
             }
-            return RedirectToAction("Sucesso");
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Inscrever falhou evento {Evento} user {User}", model.IdEvento, User.Identity?.Name);
+                ModelState.AddModelError(string.Empty, "Não foi possível concluir a inscrição. Tente novamente.");
+                RecarregarDadosTela(model);
+                return View(model);
+            }
+        }
+
+        private void RecarregarDadosTela(InscricaopessoaeventoModel model)
+        {
+            var quantidades = (model.Lotes ?? new List<LoteInscricaoModel>())
+                .Where(l => l != null && l.Id != null)
+                .GroupBy(l => l.Id)
+                .ToDictionary(g => g.Key, g => g.Max(l => l.Quantidade));
+
+            var evento = _eventoService.Get(model.IdEvento);
+            if (evento != null)
+            {
+                model.NomeEvento = evento.Nome;
+                if (evento.DataInicio.HasValue)
+                    model.DataEvento = evento.DataInicio.Value;
+                if (evento.DataFim.HasValue)
+                    model.DataFimEvento = evento.DataFim.Value;
+                model.LocalEvento = string.Join(", ", new[]
+                {
+                    string.Join(" ", new[] { evento.Rua, evento.Numero }.Where(s => !string.IsNullOrWhiteSpace(s))),
+                    evento.Bairro,
+                    string.Join(" - ", new[] { evento.Cidade, evento.Estado }.Where(s => !string.IsNullOrWhiteSpace(s)))
+                }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                model.DescricaoEvento = evento.Descricao ?? string.Empty;
+            }
+
+            var tipos = _tipoInscricaoService.GetByEvento(model.IdEvento);
+            if (tipos != null)
+            {
+                model.Lotes = tipos.Select(t => new LoteInscricaoModel
+                {
+                    Id = t.Id.ToString(),
+                    NomeLote = t.Nome,
+                    Descricao = t.Descricao,
+                    Preco = t.Valor,
+                    Quantidade = quantidades.TryGetValue(t.Id.ToString(), out int qtd) && qtd > 0 ? qtd : 0
+                }).ToList();
+            }
         }
 
         // GET: /Inscricaopessoaevento/Sucesso

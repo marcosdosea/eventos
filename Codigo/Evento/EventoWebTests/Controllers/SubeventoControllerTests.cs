@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Core;
 using Core.DTO;
 using Core.Service;
@@ -152,6 +152,24 @@ namespace EventoWeb.Controllers.Tests
 
             // Assert
             Assert.AreEqual(1, controller.ModelState.ErrorCount);
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            ViewResult viewResult = (ViewResult)result;
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(SubeventoModel));
+        }
+
+        [TestMethod()]
+        public void CreateTest_GratuitoComValor_Invalid()
+        {
+            // Arrange
+            var subevento = GetNewSubevento();
+            subevento.InscricaoGratuita = 1;
+            subevento.ValorInscricao = 10.00m;
+
+            // Act
+            var result = controller.CreateOrEdit(1, subevento);
+
+            // Assert
+            Assert.IsTrue(controller.ModelState.ContainsKey("ValorInscricao"));
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(SubeventoModel));
