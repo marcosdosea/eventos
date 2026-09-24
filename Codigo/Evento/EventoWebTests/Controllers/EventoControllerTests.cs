@@ -24,13 +24,14 @@ namespace EventoWeb.Controllers.Tests
     public class EventoControllerTests
     {
         private static EventoController controller = null!;
+        private static Mock<IInscricaoService> mockServiceInscricao = null!;
 
         [TestInitialize]
         public void Initialize()
         {
             var mockService = new Mock<IEventoService>();
             var mockServiceEstado = new Mock<IEstadosbrasilService>();
-            var mockServiceInscricao = new Mock<IInscricaoService>();
+            mockServiceInscricao = new Mock<IInscricaoService>();
             var mockServiceTipoevento = new Mock<ITipoeventoService>();
             var mockServiceAreaInteresse = new Mock<IAreaInteresseService>();
             var mockServicePessoa = new Mock<IPessoaService>();
@@ -40,7 +41,10 @@ namespace EventoWeb.Controllers.Tests
                 mockUserStore.Object, null, null, null, null, null, null, null, null);
 
             IMapper mapper = new MapperConfiguration(cfg =>
-            cfg.AddProfile(new EventoProfile())).CreateMapper();
+            {
+                cfg.AddProfile(new EventoProfile());
+                cfg.AddProfile(new PessoaProfile());
+            }).CreateMapper();
 
             mockService.Setup(service => service.GetAll())
                 .Returns(GetTestEventos());
@@ -300,6 +304,34 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
+        public void EditParticipante_Get_Valid()
+        {
+            mockServiceInscricao.Setup(s => s.GetPapelPessoaByEvento(1, 1)).Returns(4);
+
+            var result = controller.EditParticipante(1, 1);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            ViewResult viewResult = (ViewResult)result;
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(GestaoPapelModel));
+            var model = (GestaoPapelModel)viewResult.ViewData.Model;
+            Assert.AreEqual((uint)1, model.Evento.Id);
+            Assert.AreEqual("Teste", model.Pessoa.Nome);
+        }
+
+        [TestMethod()]
+        public async Task EditParticipante_Post_Valid()
+        {
+            var model = GetNewGestaoPapel();
+            model.Pessoa.Id = 1;
+
+            var result = await controller.EditParticipante(model);
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
+            Assert.AreEqual("CreateParticipante", redirectToActionResult.ActionName);
+        }
+
+        [TestMethod()]
         public async Task DeletePessoaPapel_Post_Valid()
         {
             var result = await controller.DeletePessoaPapel(1, 1, 1);
@@ -315,6 +347,7 @@ namespace EventoWeb.Controllers.Tests
         [DataRow("CreateGestor", new Type[] { typeof(GestaoPapelModel) }, "ADMINISTRADOR")]
         [DataRow("CreateColaborador", new Type[] { typeof(GestaoPapelModel) }, "GESTOR")]
         [DataRow("CreateParticipante", new Type[] { typeof(GestaoPapelModel) }, "GESTOR,COLABORADOR")]
+        [DataRow("EditParticipante", new Type[] { typeof(GestaoPapelModel) }, "GESTOR,COLABORADOR")]
         [DataRow("DeletePessoaPapel", new Type[] { typeof(uint), typeof(uint), typeof(uint) }, "ADMINISTRADOR,GESTOR,COLABORADOR")]
         public void Post_ExigeCargoCorreto(string nomeAcao, Type[] tiposParametros, string cargosEsperados)
         {
