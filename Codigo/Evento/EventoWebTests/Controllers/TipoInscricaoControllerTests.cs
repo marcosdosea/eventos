@@ -7,6 +7,8 @@ using Core.Service;
 using Moq;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 using Service;
 namespace EventoWeb.Controllers.Tests
 {
@@ -42,7 +44,21 @@ namespace EventoWeb.Controllers.Tests
             mockServiceEvento.Setup(service => service.GetNomeById(It.IsAny<uint>()))
                 .Returns((uint id) => GetTestEventos().FirstOrDefault(e => e.Id == id)?.Nome);
 
-            controller = new TipoInscricaoController(mockService.Object, mapper, mockServiceEvento.Object, mockServiceSubevento.Object);
+            var mockServiceInscricao = new Mock<IInscricaoService>();
+            mockServiceInscricao.Setup(service => service.GetGestorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+
+            controller = new TipoInscricaoController(mockService.Object, mapper, mockServiceEvento.Object, mockServiceSubevento.Object, mockServiceInscricao.Object);
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "12345678900"),
+                new Claim(ClaimTypes.Role, "GESTOR")
+            };
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) }
+            };
         }
         
 

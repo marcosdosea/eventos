@@ -9,20 +9,32 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 namespace EventoWeb.Controllers
 {
     [Route("[controller]")]
-    [Authorize(Roles = "GESTOR")]
+    [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
     public class TipoInscricaoController : Controller
     {
         private readonly ITipoInscricaoService _tipoInscricaoService;
         private readonly IEventoService _eventoService;
         private readonly ISubeventoService _subeventoService;
+        private readonly IInscricaoService _inscricaoService;
         private readonly IMapper _mapper;
 
-        public TipoInscricaoController(ITipoInscricaoService tipoInscricaoService, IMapper mapper, IEventoService eventoService, ISubeventoService subeventoService)
+        public TipoInscricaoController(ITipoInscricaoService tipoInscricaoService, IMapper mapper, IEventoService eventoService, ISubeventoService subeventoService, IInscricaoService inscricaoService)
         {
             this._tipoInscricaoService = tipoInscricaoService;
             this._eventoService = eventoService;
             this._subeventoService = subeventoService;
+            this._inscricaoService = inscricaoService;
             this._mapper = mapper;
+        }
+
+        private bool IsAuthorized(uint idEvento)
+        {
+            if (User.IsInRole("ADMINISTRADOR"))
+                return true;
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+                return false;
+            return _inscricaoService.GetGestorInEvent(username, idEvento) != null;
         }
 
         // GET: /TipoInscricaocontroller
@@ -31,6 +43,8 @@ namespace EventoWeb.Controllers
         {
             if (idEvento.HasValue)
             {
+                if (!IsAuthorized(idEvento.Value))
+                    return Forbid();
                 var listaTipoInscricao = _tipoInscricaoService.GetByEvento(idEvento.Value).ToList();
                 var listaTipoInscricaoModel = listaTipoInscricao.Select(e => new TipoInscricaoModel
                 {
@@ -64,6 +78,9 @@ namespace EventoWeb.Controllers
             Tipoinscricao tipoinscricao = _tipoInscricaoService.Get(id);
             if (tipoinscricao == null) return NotFound();
 
+            if (!IsAuthorized(tipoinscricao.IdEvento))
+                return Forbid();
+
             TipoInscricaoModel tipoInscricaoModel = _mapper.Map<TipoInscricaoModel>(tipoinscricao);
             return View(tipoInscricaoModel);
         }
@@ -72,6 +89,8 @@ namespace EventoWeb.Controllers
         [HttpGet("Create")]
         public ActionResult Create(uint idEvento)
         {
+            if (!IsAuthorized(idEvento))
+                return Forbid();
             var eventos = _eventoService.GetAll().OrderBy(e => e.Nome);
             var viewModel = new TipoInscricaoModel();
             viewModel.IdEvento = idEvento;
@@ -87,6 +106,8 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create(TipoInscricaoModel tipoInscricaoModel)
         {
+            if (!IsAuthorized(tipoInscricaoModel.IdEvento))
+                return Forbid();
             ModelState.Remove("Evento");
             if (ModelState.IsValid)
             {
@@ -110,6 +131,9 @@ namespace EventoWeb.Controllers
                 return NotFound();
             }
 
+            if (!IsAuthorized(tipoinscricao.IdEvento))
+                return Forbid();
+
             var tipoInscricaoModel = _mapper.Map<TipoInscricaoModel>(tipoinscricao);
             var eventos = _eventoService.GetAll().OrderBy(e => e.Nome);
             var viewModel = tipoInscricaoModel;
@@ -123,6 +147,11 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Edit(uint id, TipoInscricaoModel tipoInscricaoModel)
         {
+            var existente = _tipoInscricaoService.Get(id);
+            if (existente == null)
+                return NotFound();
+            if (!IsAuthorized(existente.IdEvento) || !IsAuthorized(tipoInscricaoModel.IdEvento))
+                return Forbid();
             ModelState.Remove("Evento");
             if (ModelState.IsValid)
             {
@@ -145,6 +174,9 @@ namespace EventoWeb.Controllers
             Tipoinscricao tipoinscricao = _tipoInscricaoService.Get(id);
             if (tipoinscricao == null) return NotFound();
 
+            if (!IsAuthorized(tipoinscricao.IdEvento))
+                return Forbid();
+
             TipoInscricaoModel tipoInscricaoModel = _mapper.Map<TipoInscricaoModel>(tipoinscricao);
 
             string nomeEvento = _eventoService.GetNomeById(tipoinscricao.IdEvento);
@@ -158,6 +190,11 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Delete(uint id, uint idEvento)
         {
+            var existente = _tipoInscricaoService.Get(id);
+            if (existente == null)
+                return NotFound();
+            if (!IsAuthorized(existente.IdEvento) || !IsAuthorized(idEvento))
+                return Forbid();
             _tipoInscricaoService.Delete(id);
             return RedirectToAction(nameof(Index), new { idEvento = idEvento });
         }
@@ -168,6 +205,9 @@ namespace EventoWeb.Controllers
         {
             var subevento = _subeventoService.Get(idSubevento);
             if (subevento == null) return NotFound();
+
+            if (!IsAuthorized(subevento.IdEvento))
+                return Forbid();
 
             var subeventoModel = _mapper.Map<SubeventoModel>(subevento);
             var tiposInscricaos = _tipoInscricaoService.GetByEventoUsadaSubevento(subevento.IdEvento);
@@ -190,11 +230,14 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult CreateTipoInscricaoSubevento(TipoInscricaoSubeventoModel model)
         {
+            var subeventoM = _subeventoService.Get(model.IdSubevento);
+            if (subeventoM == null) return NotFound();
+            if (!IsAuthorized(subeventoM.IdEvento))
+                return Forbid();
             if (!ModelState.IsValid)
             {
                 ModelState.AddModelError("", "Por favor, preencha todos os campos obrigatórios.");
 
-                var subeventoM = _subeventoService.Get(model.IdSubevento);
                 var tiposInscricaos = _tipoInscricaoService.GetByEventoUsadaSubevento(subeventoM.IdEvento);
                 var tiposInscricaosSubevento = _tipoInscricaoService.GetTiposInscricaosSubevento(model.IdSubevento);
 
@@ -241,6 +284,10 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DeleteTipoInscricaoSubevento(uint idSubevento, uint IdTipoInscricao)
         {
+            var subevento = _subeventoService.Get(idSubevento);
+            if (subevento == null) return NotFound();
+            if (!IsAuthorized(subevento.IdEvento))
+                return Forbid();
             _tipoInscricaoService.DeleteTipoInscricaoSubevento(idSubevento, IdTipoInscricao);
             return RedirectToAction("CreateTipoInscricaoSubevento", new { idSubevento });
         }

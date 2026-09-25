@@ -12,21 +12,33 @@ using System.Security.Claims;
 namespace EventoWeb.Controllers
 {
     [Route("[controller]")]
-    [Authorize(Roles = "GESTOR")]
+    [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
     public class SubeventoController : Controller
     {
         private readonly ISubeventoService _subeventoService;
         private readonly IEventoService _eventoService;
         private readonly ITipoeventoService _tipoEventoService;
         private readonly ITipoInscricaoService _tipoInscricaoService;
+        private readonly IInscricaoService _inscricaoService;
         private readonly IMapper _mapper;
-        public SubeventoController(ISubeventoService subeventoService, IMapper mapper, IEventoService eventoService, ITipoeventoService tipoeventoService, ITipoInscricaoService tipoInscricaoService)
+        public SubeventoController(ISubeventoService subeventoService, IMapper mapper, IEventoService eventoService, ITipoeventoService tipoeventoService, ITipoInscricaoService tipoInscricaoService, IInscricaoService inscricaoService)
         {
             _subeventoService = subeventoService;
             _eventoService = eventoService;
             _tipoEventoService = tipoeventoService;
             _mapper = mapper;
             _tipoInscricaoService = tipoInscricaoService;
+            _inscricaoService = inscricaoService;
+        }
+
+        private bool IsAuthorized(uint idEvento)
+        {
+            if (User.IsInRole("ADMINISTRADOR"))
+                return true;
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+                return false;
+            return _inscricaoService.GetGestorInEvent(username, idEvento) != null;
         }
 
         // GET: SubeventoController
@@ -52,15 +64,22 @@ namespace EventoWeb.Controllers
             var todosSubeventos = _subeventoService.GetAll();
             if (todosSubeventos != null)
             {
-                var eventosDoUsuario = _eventoService.GetEventByCpf(userCpf, 2);
+                if (User.IsInRole("ADMINISTRADOR"))
+                {
+                    listaSubeventos = todosSubeventos.ToList();
+                }
+                else
+                {
+                    var eventosDoUsuario = _eventoService.GetEventByCpf(userCpf, 2);
 
-                var idsEventosDoUsuario = eventosDoUsuario != null
-                    ? eventosDoUsuario.Select(ev => ev.Id).ToHashSet()
-                    : new HashSet<uint>();
+                    var idsEventosDoUsuario = eventosDoUsuario != null
+                        ? eventosDoUsuario.Select(ev => ev.Id).ToHashSet()
+                        : new HashSet<uint>();
 
-                listaSubeventos = todosSubeventos
-                    .Where(s => idsEventosDoUsuario.Contains(s.IdEvento))
-                    .ToList();
+                    listaSubeventos = todosSubeventos
+                        .Where(s => idsEventosDoUsuario.Contains(s.IdEvento))
+                        .ToList();
+                }
             }
 
             var todosEventos = _eventoService.GetAll();
@@ -101,6 +120,9 @@ namespace EventoWeb.Controllers
             public ActionResult Details(uint id)
             {
                 Subevento subevento = _subeventoService.Get(id);
+                if (subevento == null) return NotFound();
+                if (!IsAuthorized(subevento.IdEvento))
+                    return Forbid();
                 SubeventoModel subeventoModel = _mapper.Map<SubeventoModel>(subevento);
                 return View(subeventoModel);
             }
@@ -110,6 +132,8 @@ namespace EventoWeb.Controllers
             [Route("CreateOrEdit/{idEvento}/{idSubevento?}")]
             public ActionResult CreateOrEdit(uint idEvento, uint? idSubevento)
             {
+                if (!IsAuthorized(idEvento))
+                    return Forbid();
                 SubeventoModel subeventoModel;
                 if (idSubevento.HasValue)
                 {
@@ -118,6 +142,8 @@ namespace EventoWeb.Controllers
                     {
                         return NotFound();
                     }
+                    if (subevento.IdEvento != idEvento)
+                        return Forbid();
                     subeventoModel = _mapper.Map<SubeventoModel>(subevento);
                 }
                 else
@@ -142,6 +168,17 @@ namespace EventoWeb.Controllers
             [ValidateAntiForgeryToken]
             public ActionResult CreateOrEdit(uint idEvento, SubeventoModel subeventoModel)
             {
+                if (!IsAuthorized(idEvento))
+                    return Forbid();
+                // Impede mover subevento de evento alheio para o próprio evento
+                if (subeventoModel.Id != 0)
+                {
+                    var existente = _subeventoService.Get(subeventoModel.Id);
+                    if (existente == null)
+                        return NotFound();
+                    if (!IsAuthorized(existente.IdEvento))
+                        return Forbid();
+                }
                 ModelState.Remove("TiposEventos");
                 ModelState.Remove("Evento.Nome");
 
@@ -182,6 +219,9 @@ namespace EventoWeb.Controllers
             {
 
                 var subevento = _subeventoService.Get(id);
+                if (subevento == null) return NotFound();
+                if (!IsAuthorized(subevento.IdEvento))
+                    return Forbid();
                 var subeventoModel = _mapper.Map<SubeventoModel>(subevento);
 
                 string nomeEvento = _eventoService.GetNomeById(subevento.IdEvento);
@@ -198,6 +238,10 @@ namespace EventoWeb.Controllers
             [ValidateAntiForgeryToken]
             public ActionResult Delete(uint id, SubeventoModel subeventoModel)
             {
+                var existente = _subeventoService.Get(id);
+                if (existente == null) return NotFound();
+                if (!IsAuthorized(existente.IdEvento))
+                    return Forbid();
                 var tiposInscricao = _tipoInscricaoService.GetTiposInscricaosSubevento(id);
 
                 if (tiposInscricao.Any())
