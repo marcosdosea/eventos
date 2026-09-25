@@ -38,6 +38,7 @@
 </head>
 
 <body>
+    
     <header class="p-3 mb-3 border-bottom fixed-top">
         <div class="container">
             <nav class="navbar navbar-light p-0 w-100">
@@ -140,15 +141,21 @@
                         <img src="/img/img-user.svg" alt="User" width="32" height="32" class="rounded-circle ms-2">
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end text-small shadow" aria-labelledby="dropdownUser2">
-                        @if (User.IsInRole("ADMINISTRADOR") || User.IsInRole("GESTOR") || User.IsInRole("COLABORADOR"))
-                        {
-                            <li>
-                                <a class="dropdown-item" asp-controller="Evento" asp-action="GerenciarEventoListar">Gerenciar Eventos</a>
-                            </li>
-                        }
+                        <li>
+                            <a class="dropdown-item" asp-controller="Evento" asp-action="GerenciarEventoListar">Gerenciar Evento</a>
+                        </li>
+                         
                         <li>
                             <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Gerenciar Conta</a>
                         </li>
+                        @if (User.IsInRole("ADMINISTRADOR") && (User.IsInRole("GESTOR") || User.IsInRole("COLABORADOR") || User.IsInRole("USUARIO") || User.IsInRole("PARTICIPANTE")))
+                        {
+                                
+                                <li>
+                                    <a class="dropdown-item" style="cursor: pointer;" onclick="exibirModalSelecionarPerfil()" data-bs-toggle="modal" data-bs-target="#modalEscolherPerfil">Selecionar Perfil</a>
+                                </li>
+                                
+                        }
                         <li>
                             <hr class="dropdown-divider">
                         </li>
@@ -201,6 +208,7 @@
         </footer>
     }
 
+    <partial name="_SelecionarPerfil" model="null" />
     <!-- Scripts na ordem correta -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

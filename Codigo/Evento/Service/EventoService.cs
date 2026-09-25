@@ -316,5 +316,43 @@ namespace Service
                         .ToList();
         }
 
+        public uint VerificarPerfilAtual(IList<string> roles, String perfilAtivo, uint idPapel)
+        {
+            if (!string.IsNullOrEmpty(perfilAtivo))
+            {
+
+                if (perfilAtivo == "ADMINISTRADOR")
+                {
+                    idPapel = 1;
+                }
+                else if (perfilAtivo == "GESTOR")
+                {
+                    idPapel = 2;
+                }
+                else if (perfilAtivo == "COLABORADOR")
+                {
+                    idPapel = 3;
+
+
+                }
+            }
+            else
+            {
+                if (roles.Contains("ADMINISTRADOR"))
+                {
+                    idPapel = 1;
+                }
+                else if (roles.Contains("GESTOR"))
+                {
+                    idPapel = 2;
+                }
+                else if (roles.Contains("COLABORADOR"))
+                {
+                    idPapel = 3;
+                }   
+            }
+            
+            return idPapel;
+        }
     }
 }

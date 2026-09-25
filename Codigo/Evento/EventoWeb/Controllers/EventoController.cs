@@ -701,23 +701,13 @@ namespace EventoWeb.Controllers
                 if (user != null)
                 {
                     var roles = await _userManager.GetRolesAsync(user);
-                    if (roles.Contains("ADMINISTRADOR"))
-                    {
-                        isAdmin = true;
-                    }
-                    else if (roles.Contains("GESTOR"))
-                    {
-                        idPapel = 2;
-                    }
-                    else if (roles.Contains("COLABORADOR"))
-                    {
-                        idPapel = 3;
-                    }
+                    var perfilAtivo = HttpContext.Session.GetString("PerfilAtivo");
+                    idPapel = _eventoService.VerificarPerfilAtual(roles, perfilAtivo, idPapel);
                 }
             }
 
             IEnumerable<Evento> listarEventos;
-            if (isAdmin)
+            if (idPapel == 1)
             {
                 listarEventos = _eventoService.GetAll();
             }

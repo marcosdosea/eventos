@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 
 <html lang="pt-BR">
 
@@ -7,7 +7,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
 	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-	<link rel="stylesheet" type="text/css" href="~/css/style.css" asp-append-version="true">
+	<link rel="stylesheet" type="text/css" href="~/css/style.css">
 	<link rel="stylesheet" type="text/css" href="~/css/headerAndFooter.css">
 	<link rel="stylesheet" type="text/css" href="~/css/headerSearch.css" asp-append-version="true">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
@@ -72,12 +72,20 @@
                             @if (User.IsInRole("ADMINISTRADOR"))
                             {
                                 <li>
-                                    <a class="dropdown-item" asp-controller="Evento" asp-action="GerenciarEventoListar">Gerenciar Evento</a>
+                                    <a class="dropdown-item" asp-controller="Evento" asp-action="Index">Gerenciar Evento</a>
                                 </li>
                             }
                             <li>
                                 <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Gerenciar Conta</a>
                             </li>
+                            @if (User.IsInRole("ADMINISTRADOR") && (User.IsInRole("COLABORADOR") ||User.IsInRole("GESTOR") || User.IsInRole("USUARIO") || User.IsInRole("PARTICIPANTE")))
+                            {
+                            
+                                <li>
+                                    <a class="dropdown-item" style="cursor: pointer;" onclick="exibirModalSelecionarPerfil()" data-bs-toggle="modal" data-bs-target="#modalEscolherPerfil">Selecionar Perfil</a>
+                                </li>
+                            
+                            }
                             <li>
                                 <hr class="dropdown-divider">
                             </li>
@@ -118,6 +126,7 @@
         </footer>
     }
 
+    <partial name="_SelecionarPerfil" model="null" />
     <!-- Scripts na ordem correta -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
@@ -130,10 +139,10 @@
     <script id="datatable-script" src="~/js/datatables.js" data-lang-url="@Url.Content("~/lib/datatable/js/pt-BR.json")"></script>
     <script src="~/js/autoCompletarDadosCPF.js"></script>
     <script src="~/js/FormatarCampoCadastro.js" asp-append-version="true"></script>
+    <script src="~/js/modalSelecionarPerfil.js"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
  
 </body>
 
 </html>
-

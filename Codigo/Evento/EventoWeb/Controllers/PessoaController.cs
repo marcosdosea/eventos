@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
-using System.Security.Claims;
 
 namespace EventoWeb.Controllers
 {
@@ -438,6 +437,37 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("GerenciarEventoListar", "Evento");
             }
             return RedirectToAction("Index", "Home");
+        }
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
+        [HttpGet]
+        [Route("SelecionarPerfil")]
+        public ActionResult SelecionarPerfil()
+        {
+
+            return View();
+        }
+
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
+        [HttpPost]
+        [Route("SelecionarPerfil")]
+        [ValidateAntiForgeryToken]
+        public ActionResult SelecionarPerfil(string perfil)
+        {
+            if (string.IsNullOrEmpty(perfil))
+            {
+                return RedirectToAction("SelecionarAcesso");
+            }
+            HttpContext.Session.SetString("PerfilAtivo", perfil);
+
+            if (perfil == "GESTOR" || perfil == "COLABORADOR")
+            {
+                return RedirectToAction("GerenciarEventoListar", "Evento");
+            }else if (perfil == "PARTICIPANTE" || perfil == "USUARIO")
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            return RedirectToAction("Index", "Evento");
         }
         // =====================================================================
         // HELPER PRIVADO
