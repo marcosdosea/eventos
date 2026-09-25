@@ -13,6 +13,7 @@ namespace EventoWeb.Controllers
     public class ParticipacaoPessoaEventoController : Controller
     {
         private readonly IParticipacaoPessoaEventoService _participacaoService;
+        private readonly IParticipacaoPessoaSubEventoService _participacaoSubEventoService;
         private readonly IEventoService _eventoService;
         private readonly ISubeventoService _subeventoService;
         private readonly IPessoaService _pessoaService;
@@ -22,6 +23,7 @@ namespace EventoWeb.Controllers
 
         public ParticipacaoPessoaEventoController(
             IParticipacaoPessoaEventoService participacaoService,
+            IParticipacaoPessoaSubEventoService participacaoSubEventoService,
             IEventoService eventoService,
             ISubeventoService subeventoService,
             IPessoaService pessoaService,
@@ -30,6 +32,7 @@ namespace EventoWeb.Controllers
             UserManager<UsuarioIdentity> userManager)
         {
             _participacaoService = participacaoService;
+            _participacaoSubEventoService = participacaoSubEventoService;
             _eventoService = eventoService;
             _subeventoService = subeventoService;
             _pessoaService = pessoaService;
@@ -112,15 +115,43 @@ namespace EventoWeb.Controllers
 
             ViewData["EventoId"] = idEvento;
 
-            var todasParticipacoes = await _participacaoService.GetAllAsync();
-            var participacoesDoEvento = todasParticipacoes
-                .Where(f => f.IdEvento == idEvento);
+            List<Participacaopessoaevento> frequencias;
+            Subevento? subEvento = null;
+
+            if (idSubEvento.HasValue && idSubEvento.Value > 0)
+            {
+                subEvento = _subeventoService.Get(idSubEvento.Value);
+                if (subEvento == null || subEvento.IdEvento != idEvento)
+                {
+                    return NotFound();
+                }
+
+                frequencias = _participacaoSubEventoService.GetBySubEvento(idSubEvento.Value)
+                    .OrderByDescending(f => f.Entrada)
+                    .Select(f => new Participacaopessoaevento
+                    {
+                        Id = f.Id,
+                        IdPessoa = f.IdPessoa,
+                        IdEvento = idEvento,
+                        Entrada = f.Entrada,
+                        Saida = f.Saida,
+                        IdPessoaNavigation = f.IdPessoaNavigation
+                    }).ToList();
+            }
+            else
+            {
+                var todasParticipacoes = await _participacaoService.GetAllAsync();
+                frequencias = todasParticipacoes
+                    .Where(f => f.IdEvento == idEvento)
+                    .OrderByDescending(f => f.Entrada)
+                    .ToList();
+            }
 
             var viewModel = new FrequenciaViewModel
             {
                 Evento = _eventoService.GetEventoSimpleDto(idEvento),
-                SubEvento = idSubEvento.HasValue ? _subeventoService.Get(idSubEvento.Value) : null,
-                Frequencias = participacoesDoEvento.ToList()
+                SubEvento = subEvento,
+                Frequencias = frequencias
             };
 
             return View(viewModel);
@@ -201,15 +232,43 @@ namespace EventoWeb.Controllers
 
             ViewData["EventoId"] = idEvento;
 
-            var todasParticipacoes = await _participacaoService.GetAllAsync();
-            var participacoesDoEvento = todasParticipacoes
-                .Where(f => f.IdEvento == idEvento);
+            List<Participacaopessoaevento> frequencias;
+            Subevento? subEvento = null;
+
+            if (idSubEvento.HasValue && idSubEvento.Value > 0)
+            {
+                subEvento = _subeventoService.Get(idSubEvento.Value);
+                if (subEvento == null || subEvento.IdEvento != idEvento)
+                {
+                    return NotFound();
+                }
+
+                frequencias = _participacaoSubEventoService.GetBySubEvento(idSubEvento.Value)
+                    .OrderByDescending(f => f.Entrada)
+                    .Select(f => new Participacaopessoaevento
+                    {
+                        Id = f.Id,
+                        IdPessoa = f.IdPessoa,
+                        IdEvento = idEvento,
+                        Entrada = f.Entrada,
+                        Saida = f.Saida,
+                        IdPessoaNavigation = f.IdPessoaNavigation
+                    }).ToList();
+            }
+            else
+            {
+                var todasParticipacoes = await _participacaoService.GetAllAsync();
+                frequencias = todasParticipacoes
+                    .Where(f => f.IdEvento == idEvento)
+                    .OrderByDescending(f => f.Entrada)
+                    .ToList();
+            }
 
             var viewModel = new FrequenciaViewModel
             {
                 Evento = _eventoService.GetEventoSimpleDto(idEvento),
-                SubEvento = idSubEvento.HasValue ? _subeventoService.Get(idSubEvento.Value) : null,
-                Frequencias = participacoesDoEvento.ToList()
+                SubEvento = subEvento,
+                Frequencias = frequencias
             };
 
             return View(viewModel);
@@ -252,6 +311,15 @@ namespace EventoWeb.Controllers
                     return RedirectToAction("Index", "Home");
                 }
                 return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });
+            }
+
+            if (idSubEvento.HasValue && idSubEvento.Value > 0)
+            {
+                var subEvento = _subeventoService.Get(idSubEvento.Value);
+                if (subEvento == null || subEvento.IdEvento != idEvento)
+                {
+                    return NotFound();
+                }
             }
 
             if (string.IsNullOrWhiteSpace(cpf))
@@ -305,6 +373,59 @@ namespace EventoWeb.Controllers
                 _eventoService.AtualizarVagasDisponiveis(idEvento);
             }
 
+            if (idSubEvento.HasValue && idSubEvento.Value > 0)
+            {
+                var inscricoesSub = _inscricaoService.GetSubByEvento(idEvento);
+                var inscricaoSub = inscricoesSub?.FirstOrDefault(i => i.IdPessoa == pessoa.Id && i.IdSubEvento == idSubEvento.Value);
+                if (inscricaoSub == null)
+                {
+                    var novaInscricaoSub = new Inscricaopessoasubevento
+                    {
+                        IdPessoa = pessoa.Id,
+                        IdSubEvento = idSubEvento.Value,
+                        IdPapel = 4,
+                        DataInscricao = DateTime.Now,
+                        Status = "S",
+                        FrequenciaFinal = 0m,
+                        Valor = 0m
+                    };
+                    try
+                    {
+                        _inscricaoService.CreateInscricaoSubEvento(novaInscricaoSub);
+                        _subeventoService.AtualizarVagasDisponiveis(idSubEvento.Value);
+                    }
+                    catch { }
+                }
+
+                var ultimaParticipacaoSub = _participacaoSubEventoService
+                    .GetBySubEvento(idSubEvento.Value)
+                    .Where(f => f.IdPessoa == pessoa.Id)
+                    .OrderByDescending(f => f.Id)
+                    .FirstOrDefault();
+
+                if (ultimaParticipacaoSub != null && !ultimaParticipacaoSub.Saida.HasValue)
+                {
+                    ultimaParticipacaoSub.Saida = DateTime.Now;
+                    ultimaParticipacaoSub.IdPessoaNavigation = null!;
+                    ultimaParticipacaoSub.IdSubEventoNavigation = null!;
+                    _participacaoSubEventoService.Update(ultimaParticipacaoSub);
+                    TempData["Message"] = "Saída registrada com sucesso.";
+                }
+                else
+                {
+                    var novaParticipacaoSub = new Participacaopessoasubevento
+                    {
+                        IdPessoa = pessoa.Id,
+                        IdSubEvento = idSubEvento.Value,
+                        Entrada = DateTime.Now
+                    };
+                    _participacaoSubEventoService.Create(novaParticipacaoSub);
+                    TempData["Message"] = "Entrada registrada com sucesso.";
+                }
+
+                return RedirectToAction(destino, new { idEvento, idSubEvento });
+            }
+
             var ultimaParticipacao = (await _participacaoService.GetAllAsync())
                 .Where(f => f.IdPessoa == pessoa.Id && f.IdEvento == idEvento)
                 .OrderByDescending(f => f.Id)
@@ -340,12 +461,6 @@ namespace EventoWeb.Controllers
         public async Task<IActionResult> ExcluirParticipacao(uint id, uint idEvento, uint? idSubEvento, string actionRetorno = "Index")
         {
             var destino = actionRetorno == "Frequencia" ? nameof(Frequencia) : nameof(Index);
-            var participacao = await _participacaoService.GetByIdAsync(id);
-            if (participacao == null)
-            {
-                return NotFound();
-            }
-
             var username = User.Identity?.Name;
             if (string.IsNullOrEmpty(username))
             {
@@ -377,6 +492,29 @@ namespace EventoWeb.Controllers
                     return RedirectToAction("Index", "Home");
                 }
                 return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });
+            }
+
+            if (idSubEvento.HasValue && idSubEvento.Value > 0)
+            {
+                var subEvento = _subeventoService.Get(idSubEvento.Value);
+                var participacaoSub = _participacaoSubEventoService
+                    .GetBySubEvento(idSubEvento.Value)
+                    .FirstOrDefault(p => p.Id == id);
+
+                if (subEvento == null || subEvento.IdEvento != idEvento || participacaoSub == null)
+                {
+                    return NotFound();
+                }
+
+                _participacaoSubEventoService.Delete(id);
+                TempData["Message"] = "Participação removida com sucesso.";
+                return RedirectToAction(destino, new { idEvento, idSubEvento });
+            }
+
+            var participacao = await _participacaoService.GetByIdAsync(id);
+            if (participacao == null || participacao.IdEvento != idEvento)
+            {
+                return NotFound();
             }
 
             await _participacaoService.DeleteAsync(id);

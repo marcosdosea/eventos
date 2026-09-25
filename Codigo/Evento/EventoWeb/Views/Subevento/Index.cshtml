@@ -72,6 +72,10 @@
                         @Html.DisplayFor(modelItem => item.NomeTipoEvento)
                     </td>
                     <td>
+                        @Html.ActionLink("Frequência", "Frequencia", "ParticipacaoPessoaEvento",
+                            new { idEvento = item.IdEvento, idSubEvento = item.Id },
+                            new { @style = "text-decoration:none;" })
+                        &nbsp;&nbsp;
                         @Html.ActionLink("Editar", "CreateOrEdit",
                         new { idEvento = item.IdEvento, idSubevento = item.Id }, new { @style = "text-decoration:none;" })
                     &nbsp;&nbsp;
