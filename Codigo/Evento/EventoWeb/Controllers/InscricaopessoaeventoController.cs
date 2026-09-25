@@ -40,6 +40,7 @@ namespace EventoWeb.Controllers
         // ------------------ CRUD ADMINISTRATIVO ------------------
 
         // GET: /Inscricaopessoaevento/
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
         public IActionResult Index()
         {
             var inscricoes = _service.GetAll();
@@ -48,6 +49,7 @@ namespace EventoWeb.Controllers
         }
 
         // GET: /Inscricaopessoaevento/Details/5
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
         public IActionResult Details(uint id)
         {
             var inscricao = _service.GetById(id);
@@ -59,12 +61,14 @@ namespace EventoWeb.Controllers
         }
 
         // GET: /Inscricaopessoaevento/Create
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
         public IActionResult Create()
         {
             return View();
         }
 
         // POST: /Inscricaopessoaevento/Create
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Create(InscricaopessoaeventoDTO dto)
@@ -79,13 +83,15 @@ namespace EventoWeb.Controllers
                 }
                 catch (Exception ex)
                 {
-                    ModelState.AddModelError(string.Empty, ex.Message);
+                    _logger.LogError(ex, "Erro ao salvar inscrição");
+                    ModelState.AddModelError(string.Empty, "Não foi possível salvar");
                 }
             }
             return View(dto);
         }
 
         // GET: /Inscricaopessoaevento/Edit/5
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
         public IActionResult Edit(uint id)
         {
             var inscricao = _service.GetById(id);
@@ -97,6 +103,7 @@ namespace EventoWeb.Controllers
         }
 
         // POST: /Inscricaopessoaevento/Edit/5
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Edit(uint id, InscricaopessoaeventoDTO dto)
@@ -106,14 +113,23 @@ namespace EventoWeb.Controllers
 
             if (ModelState.IsValid)
             {
-                var inscricao = _mapper.Map<Inscricaopessoaevento>(dto);
-                _service.Update(inscricao);
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    var inscricao = _mapper.Map<Inscricaopessoaevento>(dto);
+                    _service.Update(inscricao);
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Erro ao salvar inscrição {Id}", id);
+                    ModelState.AddModelError(string.Empty, "Não foi possível salvar");
+                }
             }
             return View(dto);
         }
 
         // GET: /Inscricaopessoaevento/Delete/5
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
         public IActionResult Delete(uint id)
         {
             var inscricao = _service.GetById(id);
@@ -127,6 +143,7 @@ namespace EventoWeb.Controllers
         }
 
         // POST: /Inscricaopessoaevento/Delete/5
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(uint id)
@@ -135,7 +152,17 @@ namespace EventoWeb.Controllers
             if (inscricao == null)
                 return NotFound();
 
-            _service.Delete(id);
+            try
+            {
+                _service.Delete(id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao salvar inscrição {Id}", id);
+                ModelState.AddModelError(string.Empty, "Não foi possível salvar");
+                var dto = _mapper.Map<InscricaopessoaeventoDTO>(inscricao);
+                return View("Delete", dto);
+            }
             TempData["Message"] = "Inscrição do participante removida com sucesso.";
             return RedirectToAction(nameof(Index));
         }
@@ -302,6 +329,7 @@ namespace EventoWeb.Controllers
         }
 
         // GET: /Inscricaopessoaevento/Sucesso
+        [Authorize]
         public IActionResult Sucesso()
         {
             return View();
