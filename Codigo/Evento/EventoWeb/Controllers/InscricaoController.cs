@@ -252,6 +252,7 @@ namespace EventoWeb.Controllers
                 Id = i.Id,
                 IdEvento = i.IdEvento,
                 DataInscricao = (DateTime)i.DataInscricao,
+                ValorTotal = i.ValorTotal,
                 NomeCracha = i.NomeCracha,
                 Status = i.Status,
                 FrequenciaFinal = i.FrequenciaFinal,
