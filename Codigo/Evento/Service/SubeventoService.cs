@@ -133,7 +133,10 @@ namespace Service
                     VagasDisponiveis = subevento.VagasDisponiveis,
                     NomeTipoEvento = subevento.IdTipoEventoNavigation.Nome,
                     InscricaoGratuita = subevento.InscricaoGratuita,
-                    ValorInscricao = subevento.ValorInscricao
+                    ValorInscricao = subevento.ValorInscricao,
+                    Status = subevento.Status,
+                    DataInicioInscricao = subevento.DataInicioInscricao,
+                    DataFimInscricao = subevento.DataFimInscricao
                 };
 
             return query.ToList();

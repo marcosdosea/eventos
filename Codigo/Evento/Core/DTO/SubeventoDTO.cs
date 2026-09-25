@@ -35,5 +35,11 @@ namespace Core.DTO
         public sbyte InscricaoGratuita { get; set; }
         
         public decimal ValorInscricao { get; set; }
+        
+        public string Status { get; set; } = null!;
+        
+        public DateTime DataInicioInscricao { get; set; }
+        
+        public DateTime DataFimInscricao { get; set; }
     }
 }

@@ -159,10 +159,9 @@
                             @foreach (var subOpcao in Model.SubeventosOpcoes)
                             {
                                 var sub = subOpcao.Subevento;
-                                @{
-                                    bool isEncerrado = sub.Status == "F" || sub.DataFimInscricao < DateTime.Now;
-                                    bool isEmBreve = sub.DataInicioInscricao > DateTime.Now;
-                                }
+                                bool isEncerrado = sub.Status == "F" || sub.DataFimInscricao < DateTime.Now;
+                                bool isEmBreve = sub.DataInicioInscricao > DateTime.Now;
+                                
                                 <label class="subevento-container @(isEncerrado ? "opacity-50" : "")">
                                     <div class="subevento-header">
                                         <div>
