@@ -1,6 +1,7 @@
 using AutoMapper;
 using Core.Service;
 using EventoWeb.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using System.Security.Claims;
@@ -29,23 +30,39 @@ namespace EventoWeb.Controllers
 
         public IActionResult Index(bool vitrine = false, bool adminRemovido = false)
         {
+            
             if (!User.Identity.IsAuthenticated)
             {
                 TempData.Remove("Message");
             }
-
+            TempData["SelecionarPerfil"] = "false";
             if (!vitrine)
             {
-                if (User.IsInRole("GESTOR") || User.IsInRole("COLABORADOR"))
-                {   if (adminRemovido) return RedirectToAction("GerenciarEventoListar", "Evento", new { adminRemovido = true });
-                    
-                    return RedirectToAction("GerenciarEventoListar", "Evento");
-                }
-
-                if (User.IsInRole("ADMINISTRADOR"))
+                if(User.IsInRole("ADMINISTRADOR") && (User.IsInRole("GESTOR") || User.IsInRole("PARTICIPANTE") || User.IsInRole("COLABORADOR") || User.IsInRole("USUARIO")))
                 {
-                    return RedirectToAction("Index", "Evento");
+                    var perfilAtivo = HttpContext.Session.GetString("PerfilAtivo");
+                    if (string.IsNullOrEmpty(perfilAtivo))
+                    {
+                        ViewBag.ExibirModal = "true";
+                        TempData["SelecionarPerfil"] = "true";
+                    }
                 }
+                else
+                {
+                   
+                    if (User.IsInRole("GESTOR"))
+                    {
+                        if (adminRemovido) return RedirectToAction("GerenciarEventoListar", "Evento", new { adminRemovido = true });
+
+                        return RedirectToAction("GerenciarEventoListar", "Evento");
+                    }
+
+                    if (User.IsInRole("ADMINISTRADOR"))
+                    {
+                        return RedirectToAction("Index", "Evento");
+                    }
+                }
+               
             }
             if (adminRemovido)
             {

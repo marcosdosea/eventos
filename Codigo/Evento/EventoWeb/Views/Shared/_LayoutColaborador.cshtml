@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 
 <html lang="pt-BR">
 
@@ -21,8 +21,6 @@
     {
         eventoId = ViewContext.RouteData.Values["id"]?.ToString();
     }
-
-    var possuiEvento = uint.TryParse(eventoId, out var eventoIdNumero) && eventoIdNumero > 0;
 }
 
 <head>
@@ -30,7 +28,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
 	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-	<link rel="stylesheet" type="text/css" href="~/css/style.css" asp-append-version="true">
+	<link rel="stylesheet" type="text/css" href="~/css/style.css">
 	<link rel="stylesheet" type="text/css" href="~/css/headerAndFooter.css">
     <link rel="stylesheet" type="text/css" href="~/css/headerSearch.css" asp-append-version="true">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
@@ -63,17 +61,14 @@
                                             <a class="nav-link active titulo blue-normal fw-bold" >Colaborador</a>
                                         </li>
                                         <li class="nav-item">
-                                            <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEventoListar">Eventos</a>
+                                            <a class="nav-link opcao" href="#">Inscrições</a>
                                         </li>
-                                        @if (possuiEvento)
-                                        {
-                                            <li class="nav-item">
-                                                <a class="nav-link opcao" asp-controller="ParticipacaoPessoaEvento" asp-action="Frequencia" asp-route-idEvento="@eventoId">Frequência</a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a class="nav-link opcao" asp-controller="Evento" asp-action="CreateParticipante" asp-route-idEvento="@eventoId">Participantes</a>
-                                            </li>
-                                        }
+                                        <li class="nav-item">
+                                            <a class="nav-link opcao" asp-controller="Evento" asp-action="CreateParticipante" asp-route-idEvento="@eventoId">Participantes</a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a class="nav-link opcao" asp-controller="ParticipacaoPessoaEvento" asp-action="Frequencia" asp-route-idEvento="@eventoId">Frequência</a>
+                                        </li>
                                     </ul>
                                 </div>
                             </div>
@@ -104,24 +99,28 @@
                             <img src="/img/img-user.svg" alt="User" width="32" height="32" class="rounded-circle ms-2">
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end text-small shadow" aria-labelledby="dropdownUser2">
-                            @if (User.IsInRole("ADMINISTRADOR") || User.IsInRole("GESTOR") || User.IsInRole("COLABORADOR"))
-                            {
+                        <li>
+                            <a class="dropdown-item" asp-controller="Evento" asp-action="GerenciarEventoListar">Gerenciar Evento</a>
+                        </li>
+                         
+                        <li>
+                            <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Gerenciar Conta</a>
+                        </li>
+                        @if (User.IsInRole("ADMINISTRADOR") && (User.IsInRole("COLABORADOR") ||User.IsInRole("GESTOR") || User.IsInRole("USUARIO") || User.IsInRole("PARTICIPANTE")))
+                        {
                                 <li>
-                                    <a class="dropdown-item" asp-controller="Evento" asp-action="GerenciarEventoListar">Gerenciar Eventos</a>
+                                    <a class="dropdown-item" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#modalEscolherPerfil">Selecionar Perfil</a>
                                 </li>
-                            }
-                            <li>
-                                <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Gerenciar Conta</a>
-                            </li>
-                            <li>
-                                <hr class="dropdown-divider">
-                            </li>
-                            <li>
-                                <form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-                                    <button id="logout" type="submit" class="dropdown-item">Sair</button>
-                                </form>
-                            </li>
-                        </ul>
+                        }
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                                <button id="logout" type="submit" class="dropdown-item">Sair</button>
+                            </form>
+                        </li>
+                    </ul>
                     </div>
                     
                 </div>
@@ -151,6 +150,7 @@
             </div>
         </footer>
     }
+    <partial name="_SelecionarPerfil" model="null" />
 
     <!-- Scripts na ordem correta -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
@@ -158,8 +158,8 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/formHelpers.js"></script>
     <script src="~/js/headerSearch.js" asp-append-version="true"></script>
+    <script src="~/js/modalSelecionarPerfil.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 
 </html>
-
