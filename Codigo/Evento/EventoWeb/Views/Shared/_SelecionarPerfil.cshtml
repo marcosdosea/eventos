@@ -1,9 +1,18 @@
 ﻿@model string
 @{
     ViewData["Title"] = "Alterar Perfil";
+
+    var perfilAtivo = Context.Session?.GetString("PerfilAtivo");
+    if (string.IsNullOrEmpty(perfilAtivo))
+    {
+        perfilAtivo = "Nenhum perfil ativo";
+    }
+
 }
 
-<div class="modal fade" id="modalEscolherPerfil" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+
+
+<div class="modal fade" id="modalEscolherPerfil" data-exibir="@Model" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
@@ -12,44 +21,71 @@
                 <div class="modal-body text-center py-4">
                 <div class="container-fluid">
                     <p class="mb-4">Você possui mais de um cargo, para acessar o sistema selecione como você quer entrar.</p>
-                    <form class="row g-2 justify-content-center" asp-action="SelecionarPerfil" method="post">
+                    <form class="row g-2 justify-content-center align-items-stretch" asp-controller="Pessoa" asp-action="SelecionarPerfil" method="post">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="userId" value="@ViewBag.UserId" />
                             @if (User.IsInRole("ADMINISTRADOR"))
                             {
-                            <div class="col-12 col-sm-6 col-lg-3">
-                            <button type="submit" name="perfil" value="ADMINISTRADOR" class="btn btn-outline-primary  btn-lg fw-bold d-flex flex-column align-items-center w-100">
-                                <img alt="icone do usuario" src="/img/user.svg" onerror="this.style.display='none';"  class="img-fluid mb-2" />
-                                <span>Administrador</span>
-                            </button>
-                            </div>
+                                bool isAtivo = perfilAtivo == "ADMINISTRADOR";
+                                string classeCor = isAtivo ? "btn-primary active" : "btn-outline-primary";
+
+                                <div class="col-12 col-sm-6 col-lg-3 d-flex">
+                                    <button type="submit" name="perfil" value="ADMINISTRADOR" class="btn @classeCor  btn-lg fw-bold d-flex flex-column align-items-center w-100">
+                                        @if (isAtivo)
+                                        {
+                                            <span class="badge bg-light text-primary mb-2 rounded-pill px-3 py-1 fs-6 fw-normal">Perfil Atual</span>
+                                        }
+                                    <img alt="icone do usuario" src="/img/user.svg" onerror="this.style.display='none';"  class="img-fluid mb-2" />
+                                    <span>Administrador</span>
+                                </button>
+                                </div>
                             }
                             @if (User.IsInRole("GESTOR"))
                             {
-                            <div class="col-12 col-sm-6 col-lg-3">
-                             <button type="submit" name="perfil" value="GESTOR" class="btn btn-outline-success btn-lg fw-bold d-flex flex-column align-items-center w-100">
-                                <img alt="icone do gestor" src="/img/user.svg" onerror="this.style.display='none';" class="img-fluid mb-2" />
-                                <span>Gestor</span>
-                             </button>
-                            </div>
+                                bool isAtivo = perfilAtivo == "GESTOR";
+                                string classeCor = isAtivo ? "btn-success active" : "btn-outline-success";
+                                <div class="col-12 col-sm-6 col-lg-3 d-flex">
+                                 <button type="submit" name="perfil" value="GESTOR" class="btn @classeCor btn-lg fw-bold d-flex flex-column align-items-center w-100">
+                                        @if (isAtivo)
+                                        {
+                                            <span class="badge bg-light text-primary mb-2 rounded-pill px-3 py-1 fs-6 fw-normal">Perfil Atual</span>
+                                        }
+                                     <img alt="icone do gestor" src="/img/user.svg" onerror="this.style.display='none';" class="img-fluid mb-2" />
+                                    <span>Gestor</span>
+                                 </button>
+                                </div>
                             }
-                            @if (User.IsInRole("USUARIO"))
-                            {
-                            <div class="col-12 col-sm-6 col-lg-3">
-                            <button type="submit" name="perfil" value="USUARIO" class="btn btn-outline-secondary btn-lg fw-bold d-flex flex-column align-items-center w-100">
-                                <img alt="icone do usuario" src="/img/user.svg" onerror="this.style.display='none';" class="img-fluid mb-2 " />
-                                <span>Usuario</span>
-                            </button>
-                            </div>
-                            }
+                            
                             @if (User.IsInRole("COLABORADOR"))
                             {
-                           <div class="col-12 col-sm-6 col-lg-3">
-                            <button type="submit" name="perfil" value="COLABORADOR" class="btn btn-outline-warning btn-lg fw-bold d-flex flex-column align-items-center w-100">
-                                <img alt="icone do colaborador" src="/img/user.svg" onerror="this.style.display='none';" class="img-fluid mb-2" />
-                                <span>Colaborador</span>
-                            </button>
-                            </div>
+                                bool isAtivo = perfilAtivo == "COLABORADOR";
+                            string classeCor = isAtivo ? "btn-colaborador-ativo active" : "btn-outline-colaborador";
+                                <div class="col-12 col-sm-6 col-lg-3  d-flex">
+                                <button type="submit" name="perfil" value="COLABORADOR" class="btn @classeCor btn-lg fw-bold d-flex flex-column align-items-center w-100">
+                                    @if (isAtivo)
+                                    {
+                                        <span class="badge bg-light text-primary mb-2 rounded-pill px-3 py-1 fs-6 fw-normal">Perfil Atual</span>
+                                    }
+                                    <img alt="icone do colaborador" src="/img/user.svg" onerror="this.style.display='none';" class="img-fluid mb-2" />
+                                    <span>Colaborador</span>
+                                </button>
+                                </div>
+                            }
+                            @if (User.IsInRole("USUARIO") || User.IsInRole("PARTICIPANTE"))
+                            {
+                                bool isAtivo = perfilAtivo == "USUARIO" || perfilAtivo == "PARTICIPANTE";
+                                string classeCor = isAtivo ? "btn-secondary active" : "btn-outline-secondary";
+
+                                <div class="col-12 col-sm-6 col-lg-3 d-flex">
+                                <button type="submit" name="perfil" value="USUARIO" class="btn @classeCor btn-lg fw-bold d-flex flex-column align-items-center w-100">
+                                        @if (isAtivo)
+                                        {
+                                            <span class="badge bg-light text-primary mb-2 rounded-pill px-3 py-1 fs-6 fw-normal">Perfil Atual</span>
+                                        }
+                                    <img alt="icone do usuario" src="/img/user.svg" onerror="this.style.display='none';" class="img-fluid mb-2 " />
+                                    <span>Usuario</span>
+                                </button>
+                                </div>
                             }
                     </form>
                 </div>
@@ -59,5 +95,3 @@
             </div>    
     </div>
 </div>
-
-
