@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Core.Service;
 using Core;
 using Core.DTO;
@@ -141,6 +141,12 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
+            if (User.Identity != null && !string.IsNullOrEmpty(User.Identity.Name)
+                && _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento) != null)
+            {
+                return RedirectToAction("GerenciarEvento", "Evento", new { idEvento = idEvento });
+            }
+
             string referer = Request.Headers["Referer"].ToString();
             if (!string.IsNullOrEmpty(referer) && !referer.Contains("Account/Login", StringComparison.OrdinalIgnoreCase) && !referer.Contains("RealizarInscricao", StringComparison.OrdinalIgnoreCase))
             {
@@ -154,25 +160,25 @@ namespace EventoWeb.Controllers
             }
             else
             {
-                ViewBag.UrlVoltar = Url.Action("Index", "Home");
+                ViewBag.UrlVoltar = Url.Action("Index", "Home", new { vitrine = "true" });
             }
 
             if (evento.Status != "A")
             {
                 TempData["ParticipanteMessage"] = "Este evento não está ativo para inscrições.";
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "Home", new { vitrine = "true" });
             }
 
             if (evento.DataInicioInscricao.HasValue && evento.DataInicioInscricao.Value > DateTime.Now)
             {
                 TempData["ParticipanteMessage"] = "O período de inscrições para este evento ainda não começou.";
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "Home", new { vitrine = "true" });
             }
 
             if (evento.DataFimInscricao.HasValue && evento.DataFimInscricao.Value < DateTime.Now)
             {
                 TempData["ParticipanteMessage"] = "O período de inscrições para este evento já foi encerrado.";
-                return RedirectToAction("Index", "Home");
+                return RedirectToAction("Index", "Home", new { vitrine = "true" });
             }
 
             EventoModel eventoModel = _mapper.Map<EventoModel>(evento);
@@ -231,25 +237,25 @@ namespace EventoWeb.Controllers
 
             if (evento.Status != "A")
             {
-                TempData["ParticipanteMessage"] = "Este evento não está ativo para inscrições.";
+                TempData["ParticipanteMessage"] = "Este evento nÃ£o estÃ¡ ativo para inscriÃ§Ãµes.";
                 return RedirectToAction("Index", "Home");
             }
 
             if (evento.DataInicioInscricao.HasValue && evento.DataInicioInscricao.Value > DateTime.Now)
             {
-                TempData["ParticipanteMessage"] = "O período de inscrições para este evento ainda não começou.";
+                TempData["ParticipanteMessage"] = "O perÃ­odo de inscriÃ§Ãµes para este evento ainda nÃ£o comeÃ§ou.";
                 return RedirectToAction("Index", "Home");
             }
 
             if (evento.DataFimInscricao.HasValue && evento.DataFimInscricao.Value < DateTime.Now)
             {
-                TempData["ParticipanteMessage"] = "O período de inscrições para este evento já foi encerrado.";
+                TempData["ParticipanteMessage"] = "O perÃ­odo de inscriÃ§Ãµes para este evento jÃ¡ foi encerrado.";
                 return RedirectToAction("Index", "Home");
             }
 
             if (evento.PossuiCertificado != 0 && _inscricaoService.IsInscrito(pessoa.Id, idEvento))
             {
-                TempData["ParticipanteMessage"] = "Você já está inscrito neste evento!";
+                TempData["ParticipanteMessage"] = "VocÃª jÃ¡ estÃ¡ inscrito neste evento!";
                 return RedirectToAction("minhasInscricoes", new { idEvento = idEvento });
             }
 
@@ -287,7 +293,7 @@ namespace EventoWeb.Controllers
             }
             else if (totalEventTickets > 8)
             {
-                TempData["ParticipanteMessage"] = "Limite máximo de ingressos excedido.";
+                TempData["ParticipanteMessage"] = "Limite mÃ¡ximo de ingressos excedido.";
                 return RedirectToAction("Index", "Home"); 
             }
 
@@ -416,7 +422,7 @@ namespace EventoWeb.Controllers
                 }
             }
 
-            TempData["ParticipanteSuccessMessage"] = "Inscrição realizada com sucesso!";
+            TempData["ParticipanteSuccessMessage"] = "InscriÃ§Ã£o realizada com sucesso!";
             return RedirectToAction("minhasInscricoes", new { idEvento = idEvento });
         }
 
