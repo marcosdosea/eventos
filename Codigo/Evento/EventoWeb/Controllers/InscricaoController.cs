@@ -187,6 +187,35 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("minhasInscricoes", new { idEvento = idEvento });
             }
 
+            // Calcula o valor total no servidor a partir dos tipos escolhidos.
+            // O formulario nao posta ValorTotal (o JS atualiza apenas o texto exibido),
+            // entao nunca confiar em valor vindo do cliente.
+            decimal valorTotal = 0m;
+            if (inscricaoEvento.IdTipoInscricao.HasValue && inscricaoEvento.IdTipoInscricao.Value > 0)
+            {
+                var tipoEventoEscolhido = _tipoinscricaoService.Get(inscricaoEvento.IdTipoInscricao.Value);
+                if (tipoEventoEscolhido != null)
+                {
+                    valorTotal += tipoEventoEscolhido.Valor;
+                }
+            }
+
+            if (inscricaoEvento.SelectedSubeventos != null && inscricaoEvento.SelectedSubeventos.Any())
+            {
+                foreach (var idSubevento in inscricaoEvento.SelectedSubeventos)
+                {
+                    var tipoSubValueString = Request.Form[$"TipoInscricaoSubevento_{idSubevento}"];
+                    if (!string.IsNullOrEmpty(tipoSubValueString) && uint.TryParse(tipoSubValueString, out uint parsedIdTipoSub))
+                    {
+                        var tipoSub = _tipoinscricaoService.Get(parsedIdTipoSub);
+                        if (tipoSub != null)
+                        {
+                            valorTotal += tipoSub.Valor;
+                        }
+                    }
+                }
+            }
+
             var novaInscricao = new InscricaoEventoModel()
             {
                 IdPessoa = pessoa.Id,
@@ -197,7 +226,7 @@ namespace EventoWeb.Controllers
                 Status = "S",
                 IdTipoInscricao = inscricaoEvento.IdTipoInscricao,
                 FrequenciaFinal = 0m,
-                ValorTotal = inscricaoEvento.ValorTotal 
+                ValorTotal = valorTotal
             };
 
             var inscricao = _mapper.Map<Inscricaopessoaevento>(novaInscricao);
