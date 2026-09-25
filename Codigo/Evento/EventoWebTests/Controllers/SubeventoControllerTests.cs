@@ -54,7 +54,11 @@ namespace EventoWeb.Controllers.Tests
             mockServiceTipoInscricao.Setup(service => service.GetTiposInscricaosSubevento(1))
                 .Returns(new List<TipoInscricaoDTO>());
 
-            controller = new SubeventoController(mockService.Object, mapper, mockServiceEvento.Object, mockServiceTipoevento.Object, mockServiceTipoInscricao.Object);
+            var mockServiceInscricao = new Mock<IInscricaoService>();
+            mockServiceInscricao.Setup(service => service.GetGestorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+
+            controller = new SubeventoController(mockService.Object, mapper, mockServiceEvento.Object, mockServiceTipoevento.Object, mockServiceTipoInscricao.Object, mockServiceInscricao.Object);
 
             var claims = new List<Claim>
             {

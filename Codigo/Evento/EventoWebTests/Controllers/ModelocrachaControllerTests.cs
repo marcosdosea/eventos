@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.AspNetCore.Http;
 using System;
+using System.Security.Claims;
 using Core.DTO;
 using MySqlX.XDevAPI.Common;
 
@@ -36,11 +37,25 @@ namespace EventoWeb.Controllers.Tests
                 .Returns(GetTestModelocracha());
             mockService.Setup(service => service.Get(1))
                 .Returns(GetTargetModelocracha());
+            mockService.Setup(service => service.Get(It.IsAny<uint>()))
+                .Returns(GetTargetModelocracha());
             mockService.Setup(service => service.Create(It.IsAny<Modelocracha>()))
                 .Verifiable();
             mockService.Setup(service => service.GetByEvento(It.IsAny<uint>()))
             .Returns(GetTestModelocracha());
+            mockServiceInscricao.Setup(service => service.GetGestorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
             controller = new ModelocrachaController(mockService.Object, mockServiceEvento.Object, mockServicePessoa.Object, mockServiceInscricao.Object, mapper);
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "12345678900"),
+                new Claim(ClaimTypes.Role, "GESTOR")
+            };
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) }
+            };
         }
 
         [TestMethod]

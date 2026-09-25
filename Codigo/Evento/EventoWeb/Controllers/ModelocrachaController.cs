@@ -9,7 +9,7 @@ using Util;
 namespace EventoWeb.Controllers
 {
     [Route("[controller]")]
-    [Authorize(Roles = "GESTOR")]
+    [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
     public class ModelocrachaController : Controller
     {
         private readonly IModelocrachaService _modelocrachaService;
@@ -27,6 +27,16 @@ namespace EventoWeb.Controllers
             _mapper = mapper;
         }
 
+        private bool IsAuthorized(uint idEvento)
+        {
+            if (User.IsInRole("ADMINISTRADOR"))
+                return true;
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+                return false;
+            return _inscricaoService.GetGestorInEvent(username, idEvento) != null;
+        }
+
         // GET: ModelocrachaController
         [HttpGet]
         [Route("")]
@@ -36,6 +46,8 @@ namespace EventoWeb.Controllers
         {
             if (idEvento.HasValue)
             {
+                if (!IsAuthorized(idEvento.Value))
+                    return Forbid();
                 var listaModeloCrachas = _modelocrachaService.GetByEvento(idEvento.Value).ToList();
                 var listaModeloCrachaModel = listaModeloCrachas.Select(m =>
                 {
@@ -56,6 +68,10 @@ namespace EventoWeb.Controllers
             else
             {
                 var items = _modelocrachaService.GetAll();
+                if (!User.IsInRole("ADMINISTRADOR"))
+                {
+                    items = items.Where(x => IsAuthorized(x.IdEvento)).ToList();
+                }
                 var model = items.Select(x => _mapper.Map<ModelocrachaModel>(x)).ToList();
                 return View(model);
             }
@@ -68,6 +84,9 @@ namespace EventoWeb.Controllers
         public ActionResult Details(uint id, uint? idPessoa)
         {
             var modelocracha = _modelocrachaService.Get(id);
+            if (modelocracha == null) return NotFound();
+            if (!IsAuthorized(modelocracha.IdEvento))
+                return Forbid();
             var modelocrachaModel = _mapper.Map<ModelocrachaModel>(modelocracha);
             modelocrachaModel.NomeEvento = _eventoService.GetNomeById(modelocracha.IdEvento);
             modelocrachaModel.LogotipoBase64 = modelocracha.Logotipo != null
@@ -130,6 +149,8 @@ namespace EventoWeb.Controllers
         [Route("Create/{idEvento}")]
         public ActionResult Create(uint idEvento)
         {
+            if (!IsAuthorized(idEvento))
+                return Forbid();
             var evento = _eventoService.GetEventoSimpleDto(idEvento);
             var viewModel = new ModelocrachaModel();
             viewModel.Evento = evento;
@@ -142,6 +163,9 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create(ModelocrachaModel modelocrachaModel)
         {
+            var idEvento = modelocrachaModel.Evento?.Id ?? modelocrachaModel.IdEvento;
+            if (!IsAuthorized(idEvento))
+                return Forbid();
             if (ModelState.IsValid)
             {
                 byte[] logoTipoSource = null;
@@ -194,6 +218,8 @@ namespace EventoWeb.Controllers
             {
                 return NotFound();
             }
+            if (!IsAuthorized(modelocracha.IdEvento))
+                return Forbid();
             var viewModel = _mapper.Map<ModelocrachaModel>(modelocracha);
             viewModel.Evento = _eventoService.GetEventoSimpleDto(modelocracha.IdEvento);
             
@@ -207,6 +233,14 @@ namespace EventoWeb.Controllers
         public ActionResult Edit(uint id, ModelocrachaModel viewModel)
         {
             viewModel.Id = id;
+            var existente = _modelocrachaService.Get(id);
+            if (existente == null)
+                return NotFound();
+            var idEventoAlvo = viewModel.Evento?.Id ?? viewModel.IdEvento;
+            if (idEventoAlvo == 0)
+                idEventoAlvo = existente.IdEvento;
+            if (!IsAuthorized(existente.IdEvento) || !IsAuthorized(idEventoAlvo))
+                return Forbid();
             if (ModelState.IsValid)
             {
                 byte[] logoTipoSource = null;
@@ -260,6 +294,8 @@ namespace EventoWeb.Controllers
             {
                 return NotFound();
             }
+            if (!IsAuthorized(modelocracha.IdEvento))
+                return Forbid();
             var viewModel = _mapper.Map<ModelocrachaModel>(modelocracha);
             viewModel.Evento = _eventoService.GetEventoSimpleDto(modelocracha.IdEvento);
             return View(viewModel);
@@ -271,6 +307,11 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Delete(uint id, uint idEvento)
         {
+            var existente = _modelocrachaService.Get(id);
+            if (existente == null)
+                return NotFound();
+            if (!IsAuthorized(existente.IdEvento) || !IsAuthorized(idEvento))
+                return Forbid();
             _modelocrachaService.Delete(id);
             return RedirectToAction(nameof(Index), new { idEvento = idEvento });
         }
