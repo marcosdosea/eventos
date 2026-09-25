@@ -187,11 +187,8 @@ namespace EventoWeb.Controllers
             var subeventosOpcoes = new List<SubeventoOpcao>();
             foreach(var sub in subeventos)
             {
-                if (sub.Status != "C") // Mostra os abertos, em breve e finalizados
-                {
-                    var tipos = _tipoinscricaoService.GetTiposInscricaosSubevento(sub.Id);
-                    subeventosOpcoes.Add(new SubeventoOpcao { Subevento = sub, TiposInscricao = tipos });
-                }
+                var tipos = _tipoinscricaoService.GetTiposInscricaosSubevento(sub.Id);
+                subeventosOpcoes.Add(new SubeventoOpcao { Subevento = sub, TiposInscricao = tipos });
             }
 
             var model = new InscricaoEventoViewModel(){

@@ -1,4 +1,4 @@
-﻿@model EventoWeb.Models.InscricaoEventoViewModel
+@model EventoWeb.Models.InscricaoEventoViewModel
 
 @{
     ViewData["Title"] = "InscriÃ§Ã£o - " + Model.eventoNavigation.Nome;
@@ -160,9 +160,11 @@
                             {
                                 var sub = subOpcao.Subevento;
                                 bool isEncerrado = sub.Status == "F" || sub.DataFimInscricao < DateTime.Now;
+                                bool isEmCadastro = sub.Status == "C";
                                 bool isEmBreve = sub.DataInicioInscricao > DateTime.Now;
+                                bool isDisabled = isEncerrado || isEmCadastro;
                                 
-                                <label class="subevento-container @(isEncerrado ? "opacity-50" : "")">
+                                <label class="subevento-container @(isDisabled ? "opacity-50" : "")">
                                     <div class="subevento-header">
                                         <div>
                                             <h4>
@@ -170,6 +172,10 @@
                                                 @if (isEncerrado)
                                                 {
                                                     <span class="badge bg-secondary ms-2" style="font-size: 0.6em; vertical-align: middle;">Encerrado</span>
+                                                }
+                                                else if (isEmCadastro)
+                                                {
+                                                    <span class="badge bg-info text-dark ms-2" style="font-size: 0.6em; vertical-align: middle;">Em Cadastro</span>
                                                 }
                                                 else if (isEmBreve)
                                                 {
@@ -182,7 +188,7 @@
                                             </p>
                                         </div>
                                         <div class="subevento-checkbox-wrapper">
-                                            <input type="checkbox" name="SelectedSubeventos" value="@sub.Id" class="subevento-checkbox" onchange="toggleSubeventoSelect(this, @sub.Id)" @(isEncerrado ? "disabled" : "") />
+                                            <input type="checkbox" name="SelectedSubeventos" value="@sub.Id" class="subevento-checkbox" onchange="toggleSubeventoSelect(this, @sub.Id)" @(isDisabled ? "disabled" : "") />
                                         </div>
                                     </div>
                                     <div class="subevento-tipo-wrapper" id="wrapper-tipo-@sub.Id">
