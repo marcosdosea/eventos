@@ -216,6 +216,17 @@ namespace EventoWeb.Controllers
                 }
             }
 
+            // Fallback: evento sem tipos configurados posta IdTipoInscricao = 0 e a tela
+            // informa que "a inscrição padrão será aplicada", exibindo Evento.ValorInscricao.
+            if (!inscricaoEvento.IdTipoInscricao.HasValue || inscricaoEvento.IdTipoInscricao.Value == 0)
+            {
+                var evento = _eventoService.Get(idEvento);
+                if (evento != null && evento.InscricaoGratuita != 1)
+                {
+                    valorTotal += evento.ValorInscricao;
+                }
+            }
+
             var novaInscricao = new InscricaoEventoModel()
             {
                 IdPessoa = pessoa.Id,
@@ -276,17 +287,7 @@ namespace EventoWeb.Controllers
         public async Task<IActionResult> minhasInscricoes(uint? idEvento)
         {
             var inscricaoUser = _inscricaoService.GetAllEventsByUserId(User.Identity.Name);
-            var listarEventosModel = inscricaoUser.Select(i => new InscricaoEventoModel
-            {
-                Id = i.Id,
-                IdEvento = i.IdEvento,
-                DataInscricao = (DateTime)i.DataInscricao,
-                ValorTotal = i.ValorTotal,
-                NomeCracha = i.NomeCracha,
-                Status = i.Status,
-                FrequenciaFinal = i.FrequenciaFinal,
-                IdEventoNavigation = i.IdEventoNavigation
-            }).ToList();
+            var listarEventosModel = inscricaoUser.Select(i => _mapper.Map<InscricaoEventoModel>(i)).ToList();
 
             ViewBag.EventoId = idEvento ?? listarEventosModel.FirstOrDefault()?.IdEvento;
             return View(listarEventosModel);

@@ -27,11 +27,14 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.GetAllEventsByUserId(UsernameTeste))
                 .Returns(GetTestInscricoes());
 
+            IMapper getMapper = new MapperConfiguration(cfg =>
+                cfg.AddProfile(new InscricaoProfile())).CreateMapper();
+
             controller = new InscricaoController(
                 null!,
                 Mock.Of<ITipoInscricaoService>(),
                 Mock.Of<IEventoService>(),
-                Mock.Of<IMapper>(),
+                getMapper,
                 mockService.Object,
                 Mock.Of<IPessoaService>(),
                 Mock.Of<ISubeventoService>());
@@ -137,9 +140,61 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual(0m, criadas[0].ValorTotal);
         }
 
+        [TestMethod()]
+        public async Task RealizarInscricaoTest_Post_NoTiposConfigured_UsesEventDefaultPrice()
+        {
+            // Arrange: evento pago sem tipos configurados posta IdTipoInscricao = 0;
+            // a tela informa que "a inscrição padrão será aplicada".
+            var (postController, criadas) = CreatePostController(
+                new Dictionary<uint, Tipoinscricao>(),
+                new Dictionary<string, string>(),
+                new Evento { Id = 1, InscricaoGratuita = 0, ValorInscricao = 100m });
+
+            var input = new InscricaoEventoModel
+            {
+                IdTipoInscricao = 0,
+                SelectedSubeventos = new List<uint>(),
+                ValorTotal = 0m
+            };
+
+            // Act
+            var result = await postController.realizarInscricao(1, input);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            Assert.AreEqual(1, criadas.Count);
+            Assert.AreEqual(100m, criadas[0].ValorTotal);
+        }
+
+        [TestMethod()]
+        public async Task RealizarInscricaoTest_Post_NoTiposConfigured_GratuitousEvent_SavesZero()
+        {
+            // Arrange
+            var (postController, criadas) = CreatePostController(
+                new Dictionary<uint, Tipoinscricao>(),
+                new Dictionary<string, string>(),
+                new Evento { Id = 1, InscricaoGratuita = 1, ValorInscricao = 0m });
+
+            var input = new InscricaoEventoModel
+            {
+                IdTipoInscricao = 0,
+                SelectedSubeventos = new List<uint>(),
+                ValorTotal = 0m
+            };
+
+            // Act
+            var result = await postController.realizarInscricao(1, input);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            Assert.AreEqual(1, criadas.Count);
+            Assert.AreEqual(0m, criadas[0].ValorTotal);
+        }
+
         private static (InscricaoController, List<Inscricaopessoaevento>) CreatePostController(
             Dictionary<uint, Tipoinscricao> tipos,
-            Dictionary<string, string> formFields)
+            Dictionary<string, string> formFields,
+            Evento? evento = null)
         {
             var mockPessoaService = new Mock<IPessoaService>();
             mockPessoaService.Setup(service => service.GetByCpf(UsernameTeste))
@@ -157,13 +212,17 @@ namespace EventoWeb.Controllers.Tests
             mockTipoService.Setup(service => service.Get(It.IsAny<uint>()))
                 .Returns<uint>(id => tipos.TryGetValue(id, out var tipo) ? tipo : null);
 
+            var mockEventoService = new Mock<IEventoService>();
+            mockEventoService.Setup(service => service.Get(It.IsAny<uint>()))
+                .Returns(evento);
+
             IMapper mapper = new MapperConfiguration(cfg =>
                 cfg.AddProfile(new InscricaoProfile())).CreateMapper();
 
             var postController = new InscricaoController(
                 null!,
                 mockTipoService.Object,
-                Mock.Of<IEventoService>(),
+                mockEventoService.Object,
                 mapper,
                 mockInscricaoService.Object,
                 mockPessoaService.Object,
