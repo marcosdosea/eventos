@@ -286,3 +286,20 @@ body {
 .modal-backdrop.show {
     opacity: 0.5;
 }
+
+.btn-outline-colaborador {
+    color: #cc8900;
+    border-color: #f59e0b;
+}
+
+    .btn-outline-colaborador:hover {
+        background-color: #f59e0b;
+        color: #ffffff;
+        border-color: #f59e0b;
+    }
+
+.btn-colaborador-ativo {
+    background-color: #cc8900;
+    border-color: #b45309;
+    color: #ffffff;
+}
