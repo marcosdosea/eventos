@@ -127,6 +127,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(SubeventoModel));
+            SubeventoModel subeventoModel = (SubeventoModel)viewResult.ViewData.Model;
+            Assert.AreEqual((uint)1, subeventoModel.IdEvento);
         }
 
         [TestMethod()]
@@ -155,6 +157,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(SubeventoModel));
+            SubeventoModel subeventoModel = (SubeventoModel)viewResult.ViewData.Model;
+            Assert.AreEqual((uint)1, subeventoModel.IdEvento);
         }
 
         [TestMethod()]
