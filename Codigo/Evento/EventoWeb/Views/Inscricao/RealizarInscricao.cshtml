@@ -107,7 +107,7 @@
                 <p>Você já está inscrito neste evento.</p>
                 <hr>
                 <a asp-action="MinhasInscricoes" asp-controller="Inscricao" class="btn btn-primary mt-2">Ver Minhas Inscrições</a>
-                <a asp-action="Index" asp-controller="Home" class="btn btn-outline-danger mt-2 ms-2">Voltar</a>
+                <a asp-action="Index" asp-controller="Home" asp-route-vitrine="true" class="btn btn-outline-danger mt-2 ms-2">Voltar</a>
             </aside>
         }
         else
@@ -210,7 +210,7 @@
                             </div>
                         </div>
                         <div class="actions-wrapper">
-                            <a asp-action="Index" asp-controller="Home" class="btn-voltar">Voltar</a>
+                            <a asp-action="Index" asp-controller="Home" asp-route-vitrine="true" class="btn-voltar">Voltar</a>
                             <button type="submit" class="btn-submit">Confirmar Inscrição</button>
                         </div>
                     </footer>
