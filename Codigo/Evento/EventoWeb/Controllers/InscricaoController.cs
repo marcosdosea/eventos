@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Core.Service;
 using Core;
 using Core.DTO;
@@ -141,10 +141,22 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            if (User.Identity != null && !string.IsNullOrEmpty(User.Identity.Name)
-                && _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento) != null)
+            if (evento.Status != "A")
             {
-                return RedirectToAction("GerenciarEvento", "Evento", new { idEvento = idEvento });
+                TempData["ParticipanteMessage"] = "Este evento não está ativo para inscrições.";
+                return RedirectToAction("Index", "Home", new { vitrine = "true" });
+            }
+
+            if (evento.DataInicioInscricao.HasValue && evento.DataInicioInscricao.Value > DateTime.Now)
+            {
+                TempData["ParticipanteMessage"] = "O período de inscrições para este evento ainda não começou.";
+                return RedirectToAction("Index", "Home", new { vitrine = "true" });
+            }
+
+            if (evento.DataFimInscricao.HasValue && evento.DataFimInscricao.Value < DateTime.Now)
+            {
+                TempData["ParticipanteMessage"] = "O período de inscrições para este evento já foi encerrado.";
+                return RedirectToAction("Index", "Home", new { vitrine = "true" });
             }
 
             string referer = Request.Headers["Referer"].ToString();
@@ -163,22 +175,10 @@ namespace EventoWeb.Controllers
                 ViewBag.UrlVoltar = Url.Action("Index", "Home", new { vitrine = "true" });
             }
 
-            if (evento.Status != "A")
+            if (User.Identity != null && !string.IsNullOrEmpty(User.Identity.Name)
+                && _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento) != null)
             {
-                TempData["ParticipanteMessage"] = "Este evento não está ativo para inscrições.";
-                return RedirectToAction("Index", "Home", new { vitrine = "true" });
-            }
-
-            if (evento.DataInicioInscricao.HasValue && evento.DataInicioInscricao.Value > DateTime.Now)
-            {
-                TempData["ParticipanteMessage"] = "O período de inscrições para este evento ainda não começou.";
-                return RedirectToAction("Index", "Home", new { vitrine = "true" });
-            }
-
-            if (evento.DataFimInscricao.HasValue && evento.DataFimInscricao.Value < DateTime.Now)
-            {
-                TempData["ParticipanteMessage"] = "O período de inscrições para este evento já foi encerrado.";
-                return RedirectToAction("Index", "Home", new { vitrine = "true" });
+                return RedirectToAction("GerenciarEvento", "Evento", new { idEvento = idEvento });
             }
 
             EventoModel eventoModel = _mapper.Map<EventoModel>(evento);
