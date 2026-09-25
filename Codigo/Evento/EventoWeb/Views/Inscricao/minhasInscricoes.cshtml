@@ -48,6 +48,9 @@
                     @Html.DisplayNameFor(model => model.DataInscricao)
                 </th>
                 <th>
+                    @Html.DisplayNameFor(model => model.ValorTotal)
+                </th>
+                <th>
                     @Html.DisplayNameFor(model => model.FrequenciaFinal)
                 </th>
                 <th>
@@ -81,6 +84,9 @@
                 </td>
                 <td style="vertical-align: middle;">
                     @Html.DisplayFor(modelItem => item.DataInscricao)
+                </td>
+                <td style="vertical-align: middle;">
+                    @item.ValorTotal.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))
                 </td>
                 <td style="vertical-align: middle;">
                     @Html.DisplayFor(modelItem => item.FrequenciaFinal)
