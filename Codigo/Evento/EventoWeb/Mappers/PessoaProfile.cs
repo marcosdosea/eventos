@@ -47,8 +47,6 @@ public class PessoaProfile : Profile
             .ForMember(dest => dest.Foto, opt => opt.Ignore()) // Ignorar a propriedade Foto no mapeamento reverso
             .ForMember(dest => dest.FotoBase64, opt => opt.MapFrom(src => src.Foto != null ? Convert.ToBase64String(src.Foto) : null));
 
-        CreateMap<Pessoa, ParticipanteDTO>();
-        CreateMap<PessoaSimpleDTO, ParticipanteDTO>();
         CreateMap<PessoaSimpleDTO, PessoaModel>();
     }
 

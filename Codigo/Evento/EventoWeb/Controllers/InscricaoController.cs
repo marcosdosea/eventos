@@ -141,6 +141,12 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
+            if (User.Identity != null && !string.IsNullOrEmpty(User.Identity.Name)
+                && _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento) != null)
+            {
+                return RedirectToAction("GerenciarEvento", "Evento", new { idEvento = idEvento });
+            }
+
             EventoModel eventoModel = _mapper.Map<EventoModel>(evento);
             var tipoInscricaoModel = _tipoinscricaoService.GetByEvento(idEvento).ToList();
             var subeventos = _subeventoService.GetByIdEvento(idEvento).ToList();

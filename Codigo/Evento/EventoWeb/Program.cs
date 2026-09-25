@@ -59,7 +59,6 @@ namespace EventoWeb
             builder.Services.AddTransient<IEmailSender, EmailSender>();
             builder.Services.AddTransient<IParticipacaoPessoaEventoService, ParticipacaoPessoaEventoService>();
             builder.Services.AddTransient<IParticipacaoPessoaSubEventoService, ParticipacaoPessoaSubEventoService>();
-            //builder.Services.AddTransient<IParticipanteService, ParticipanteService>();
             builder.Services.AddTransient<IParticipanteService, ParticipanteService>();
             builder.Services.AddTransient<IInscricaopessoaeventoService, InscricaopessoaeventoService>();
             builder.Services.AddTransient<IEmailService, EmailSender>();
