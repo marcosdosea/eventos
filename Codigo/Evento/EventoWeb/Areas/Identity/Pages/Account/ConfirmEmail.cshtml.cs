@@ -40,12 +40,12 @@ namespace EventoWeb.Areas.Identity.Pages.Account
             var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
             {
-                return NotFound($"Unable to load user with ID '{userId}'.");
+                return NotFound($"Não foi possível carregar o usuário com ID '{userId}'.");
             }
 
             code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code));
             var result = await _userManager.ConfirmEmailAsync(user, code);
-            StatusMessage = result.Succeeded ? "Thank you for confirming your email." : "Error confirming your email.";
+            StatusMessage = result.Succeeded ? "Obrigado por confirmar seu e-mail." : "Erro ao confirmar seu e-mail.";
             return Page();
         }
     }

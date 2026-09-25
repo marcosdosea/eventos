@@ -8,27 +8,50 @@ namespace EventoWeb
 {
     public class EmailSender : IEmailService,IEmailSender
     {
-        private readonly SmtpClient _client;
+        private readonly SmtpClient? _client;
         private readonly string _from;
         private readonly IWebHostEnvironment _enviroment;
         private readonly ILogger<IEmailSender> _logger;
 
         public EmailSender(IConfiguration configuration, IWebHostEnvironment enviroment, ILogger<IEmailSender> logger)
         {
-            _from = Environment.GetEnvironmentVariable("EMAIL_USER");
-            _client = new SmtpClient
-            {
-                Host = Environment.GetEnvironmentVariable("EMAIL_SMTP"),
-                Port = int.Parse(Environment.GetEnvironmentVariable("EMAIL_PORT")),
-                Credentials = new NetworkCredential(Environment.GetEnvironmentVariable("EMAIL_USER"), Environment.GetEnvironmentVariable("EMAIL_PASS")),
-                EnableSsl = true
-            };
             _enviroment = enviroment;
             _logger = logger;
+
+            _from = Environment.GetEnvironmentVariable("EMAIL_USER")
+                ?? configuration["Smtp:From"]
+                ?? configuration["Smtp:Username"]
+                ?? string.Empty;
+
+            var host = Environment.GetEnvironmentVariable("EMAIL_SMTP")
+                ?? configuration["Smtp:Host"];
+            var portStr = Environment.GetEnvironmentVariable("EMAIL_PORT")
+                ?? configuration["Smtp:Port"];
+            var pass = Environment.GetEnvironmentVariable("EMAIL_PASS")
+                ?? configuration["Smtp:Password"]
+                ?? string.Empty;
+
+            if (!string.IsNullOrWhiteSpace(host))
+            {
+                int port = int.TryParse(portStr, out var parsedPort) && parsedPort > 0 ? parsedPort : 587;
+                _client = new SmtpClient
+                {
+                    Host = host,
+                    Port = port,
+                    Credentials = new NetworkCredential(_from, pass),
+                    EnableSsl = true
+                };
+            }
         }
    
         public Task SendEmailAsync(string email, string subject, string htmlMessage)
         {
+            if (_client == null || string.IsNullOrWhiteSpace(_from))
+            {
+                _logger.LogWarning("Configuração SMTP ausente. E-mail para {Email} ({Subject}) não pôde ser enviado.", email, subject);
+                return Task.CompletedTask;
+            }
+
             var mailMessage = new MailMessage
             {
                 From = new MailAddress(_from),
