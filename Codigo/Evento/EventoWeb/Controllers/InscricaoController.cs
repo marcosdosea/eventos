@@ -234,25 +234,25 @@ namespace EventoWeb.Controllers
 
             if (evento.Status != "A")
             {
-                TempData["ParticipanteMessage"] = "Este evento nÃ£o estÃ¡ ativo para inscriÃ§Ãµes.";
+                TempData["ParticipanteMessage"] = "Este evento não está ativo para inscrições.";
                 return RedirectToAction("Index", "Home");
             }
 
             if (evento.DataInicioInscricao.HasValue && evento.DataInicioInscricao.Value > DateTime.Now)
             {
-                TempData["ParticipanteMessage"] = "O perÃ­odo de inscriÃ§Ãµes para este evento ainda nÃ£o comeÃ§ou.";
+                TempData["ParticipanteMessage"] = "O período de inscrições para este evento ainda não começou.";
                 return RedirectToAction("Index", "Home");
             }
 
             if (evento.DataFimInscricao.HasValue && evento.DataFimInscricao.Value < DateTime.Now)
             {
-                TempData["ParticipanteMessage"] = "O perÃ­odo de inscriÃ§Ãµes para este evento jÃ¡ foi encerrado.";
+                TempData["ParticipanteMessage"] = "O período de inscrições para este evento já foi encerrado.";
                 return RedirectToAction("Index", "Home");
             }
 
             if (evento.PossuiCertificado != 0 && _inscricaoService.IsInscrito(pessoa.Id, idEvento))
             {
-                TempData["ParticipanteMessage"] = "VocÃª jÃ¡ estÃ¡ inscrito neste evento!";
+                TempData["ParticipanteMessage"] = "Você já está inscrito neste evento!";
                 return RedirectToAction("minhasInscricoes", new { idEvento = idEvento });
             }
 
@@ -290,7 +290,7 @@ namespace EventoWeb.Controllers
             }
             else if (totalEventTickets > 8)
             {
-                TempData["ParticipanteMessage"] = "Limite mÃ¡ximo de ingressos excedido.";
+                TempData["ParticipanteMessage"] = "Limite máximo de ingressos excedido.";
                 return RedirectToAction("Index", "Home"); 
             }
 
@@ -419,7 +419,7 @@ namespace EventoWeb.Controllers
                 }
             }
 
-            TempData["ParticipanteSuccessMessage"] = "InscriÃ§Ã£o realizada com sucesso!";
+            TempData["ParticipanteSuccessMessage"] = "Inscrição realizada com sucesso!";
             return RedirectToAction("minhasInscricoes", new { idEvento = idEvento });
         }
 
