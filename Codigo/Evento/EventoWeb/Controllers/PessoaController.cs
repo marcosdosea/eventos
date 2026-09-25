@@ -63,8 +63,6 @@ namespace EventoWeb.Controllers
             if (!Methods.ValidarCpf(cpf))
                 return BadRequest("CPF inválido.");
 
-            // Defesa em profundidade: além do filtro de Roles acima,
-            // permite apenas auto-consulta ou ADMINISTRADOR/GESTOR.
             var cpfLogado = User.Identity?.Name ?? string.Empty;
             var isSelf = string.Equals(
                 Methods.RemoveNaoNumericos(cpf),
@@ -78,7 +76,6 @@ namespace EventoWeb.Controllers
             if (pessoa == null)
                 return NotFound();
 
-            // DTO mínimo: nunca expor Pessoa completa (endereço, telefones, email, foto, navigations).
             return Json(new { pessoa.Cpf, pessoa.Nome, pessoa.NomeCracha });
         }
 

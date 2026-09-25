@@ -13,7 +13,6 @@
         type: 'GET',
         data: { cpf: cpf },
         success: function (resposta) {
-            // Endpoint retorna DTO mínimo (cpf, nome, nomeCracha) — sem PII sensível.
             if (resposta && resposta.nome) {
                 document.getElementById('Nome').value = resposta.nome;
             }
