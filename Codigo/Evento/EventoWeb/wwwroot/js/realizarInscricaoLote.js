@@ -94,15 +94,38 @@ function calcularValorTotal() {
         });
     });
 
-    // submit button disabled if sumEvento == 0 or > 8
-    const btnSubmit = document.querySelector('.btn-submit');
+    // submit button disabled if sumEvento == 0 or > 8 or no subevento selected (when subeventos exist)
+    const btnSubmit = document.querySelector('.btn-submit:not(.btn-login)');
     if (btnSubmit) {
-        if (sumEvento === 0 || sumEvento > 8) {
+        let isSubeventoValid = true;
+        const hasSubeventos = document.querySelectorAll('.subevento-checkbox').length > 0;
+        
+        if (hasSubeventos) {
+            isSubeventoValid = false;
+            if (subeventosCheckboxes.length > 0) {
+                let qtySubeventoTotal = 0;
+                subeventosCheckboxes.forEach(checkbox => {
+                    const subId = checkbox.value;
+                    const subInputs = document.querySelectorAll('.subevento-qty-' + subId);
+                    subInputs.forEach(input => {
+                        qtySubeventoTotal += parseInt(input.value, 10) || 0;
+                    });
+                });
+                // Se os subeventos tiverem input de quantidade, pelo menos 1 ingresso de subevento deve ser selecionado
+                if (qtySubeventoTotal > 0) {
+                    isSubeventoValid = true;
+                }
+            }
+        }
+
+        if (sumEvento === 0 || sumEvento > 8 || !isSubeventoValid) {
             btnSubmit.disabled = true;
             btnSubmit.style.opacity = '0.5';
+            btnSubmit.title = "Selecione ao menos 1 quantidade para o evento e 1 subevento (se houver).";
         } else {
             btnSubmit.disabled = false;
             btnSubmit.style.opacity = '1';
+            btnSubmit.title = "";
         }
     }
 
@@ -133,4 +156,8 @@ document.addEventListener('keydown', function(event) {
     if (event.key === "Escape") {
         closeImageModal();
     }
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+    calcularValorTotal();
 });

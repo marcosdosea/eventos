@@ -130,7 +130,7 @@ namespace EventoWeb.Controllers
             return View();
         }
 
-        [Authorize]
+        [AllowAnonymous]
         [HttpGet]
         [Route("RealizarInscricao/{idEvento}/{idSubevento?}")]
         public IActionResult realizarInscricao(uint idEvento, uint? idSubevento)
@@ -141,14 +141,51 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
+            string referer = Request.Headers["Referer"].ToString();
+            if (!string.IsNullOrEmpty(referer) && !referer.Contains("Account/Login", StringComparison.OrdinalIgnoreCase) && !referer.Contains("RealizarInscricao", StringComparison.OrdinalIgnoreCase))
+            {
+                ViewBag.UrlVoltar = referer;
+                TempData["UrlVoltar"] = referer;
+            }
+            else if (TempData.ContainsKey("UrlVoltar"))
+            {
+                ViewBag.UrlVoltar = TempData["UrlVoltar"];
+                TempData.Keep("UrlVoltar");
+            }
+            else
+            {
+                ViewBag.UrlVoltar = Url.Action("Index", "Home");
+            }
+
+            if (evento.Status != "A")
+            {
+                TempData["ParticipanteMessage"] = "Este evento não está ativo para inscrições.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            if (evento.DataInicioInscricao.HasValue && evento.DataInicioInscricao.Value > DateTime.Now)
+            {
+                TempData["ParticipanteMessage"] = "O período de inscrições para este evento ainda não começou.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            if (evento.DataFimInscricao.HasValue && evento.DataFimInscricao.Value < DateTime.Now)
+            {
+                TempData["ParticipanteMessage"] = "O período de inscrições para este evento já foi encerrado.";
+                return RedirectToAction("Index", "Home");
+            }
+
             EventoModel eventoModel = _mapper.Map<EventoModel>(evento);
             var tipoInscricaoModel = _tipoinscricaoService.GetByEvento(idEvento).ToList();
             var subeventos = _subeventoService.GetByIdEvento(idEvento).ToList();
             var subeventosOpcoes = new List<SubeventoOpcao>();
             foreach(var sub in subeventos)
             {
-                var tipos = _tipoinscricaoService.GetTiposInscricaosSubevento(sub.Id);
-                subeventosOpcoes.Add(new SubeventoOpcao { Subevento = sub, TiposInscricao = tipos });
+                if (sub.Status != "C") // Mostra os abertos, em breve e finalizados
+                {
+                    var tipos = _tipoinscricaoService.GetTiposInscricaosSubevento(sub.Id);
+                    subeventosOpcoes.Add(new SubeventoOpcao { Subevento = sub, TiposInscricao = tipos });
+                }
             }
 
             var model = new InscricaoEventoViewModel(){
@@ -160,7 +197,7 @@ namespace EventoWeb.Controllers
             if (User.Identity != null && !string.IsNullOrEmpty(User.Identity.Name))
             {
                 var pessoa = _pessoaService.GetByCpf(User.Identity.Name);
-                if (pessoa != null && _inscricaoService.IsInscrito(pessoa.Id, idEvento))
+                if (pessoa != null && evento.PossuiCertificado != 0 && _inscricaoService.IsInscrito(pessoa.Id, idEvento))
                 {
                     ViewBag.JaInscrito = true;
                 }
@@ -186,13 +223,35 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("Index", "Home");
             }
 
-            if (_inscricaoService.IsInscrito(pessoa.Id, idEvento))
+            var evento = _eventoService.Get(idEvento);
+            if (evento == null)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            if (evento.Status != "A")
+            {
+                TempData["ParticipanteMessage"] = "Este evento não está ativo para inscrições.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            if (evento.DataInicioInscricao.HasValue && evento.DataInicioInscricao.Value > DateTime.Now)
+            {
+                TempData["ParticipanteMessage"] = "O período de inscrições para este evento ainda não começou.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            if (evento.DataFimInscricao.HasValue && evento.DataFimInscricao.Value < DateTime.Now)
+            {
+                TempData["ParticipanteMessage"] = "O período de inscrições para este evento já foi encerrado.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            if (evento.PossuiCertificado != 0 && _inscricaoService.IsInscrito(pessoa.Id, idEvento))
             {
                 TempData["ParticipanteMessage"] = "Você já está inscrito neste evento!";
                 return RedirectToAction("minhasInscricoes", new { idEvento = idEvento });
             }
-
-            var evento = _eventoService.Get(idEvento);
 
             var mainEventQuantities = new Dictionary<uint, int>();
             int totalEventTickets = 0;
@@ -289,6 +348,11 @@ namespace EventoWeb.Controllers
                 foreach (var idSubevento in inscricaoEvento.SelectedSubeventos)
                 {
                     var subevento = _subeventoService.Get(idSubevento);
+                    // Impede de salvar apenas se for finalizado ou cadastro
+                    if (subevento == null || subevento.Status == "C" || subevento.Status == "F" || subevento.DataFimInscricao < DateTime.Now)
+                    {
+                        continue;
+                    }
                     var subEventQuantities = new Dictionary<uint, int>();
                     int totalSubTickets = 0;
 
