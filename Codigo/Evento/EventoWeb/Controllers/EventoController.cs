@@ -528,6 +528,130 @@ namespace EventoWeb.Controllers
             return View(gestaoPapelModel);
         }
 
+        [Authorize(Roles = "GESTOR,COLABORADOR")]
+        [HttpGet]
+        [Route("EditParticipante")]
+        [Route("ManterParticipante")]
+        public ActionResult EditParticipante(uint idEvento, uint idPessoa)
+        {
+            var evento = _eventoService.Get(idEvento);
+            if (evento == null)
+            {
+                TempData.Clear();
+                TempData["Message"] = "Evento não encontrado!";
+                return RedirectToAction("Index", "Home");
+            }
+
+            var username = User.Identity?.Name ?? string.Empty;
+            var cpfLimpo = username.Replace(".", "").Replace("-", "");
+
+            var gestor = _inscricaoService.GetGestorInEvent(username, idEvento) ?? _inscricaoService.GetGestorInEvent(cpfLimpo, idEvento);
+            var colaborador = _inscricaoService.GetColaboradorInEvent(username, idEvento) ?? _inscricaoService.GetColaboradorInEvent(cpfLimpo, idEvento);
+
+            if (gestor == null && colaborador == null)
+            {
+                TempData.Clear();
+                TempData["Message"] = "Você não tem permissão para editar um participante!";
+                return RedirectToAction("GerenciarEvento", new { idEvento });
+            }
+
+            var pessoa = _pessoaService.Get(idPessoa);
+            if (pessoa == null)
+            {
+                TempData.Clear();
+                TempData["Message"] = "Participante não encontrado!";
+                return RedirectToAction("CreateParticipante", new { idEvento });
+            }
+
+            var papel = _inscricaoService.GetPapelPessoaByEvento(idPessoa, idEvento);
+            if (papel != 4)
+            {
+                TempData.Clear();
+                TempData["Message"] = "A pessoa informada não é participante deste evento!";
+                return RedirectToAction("CreateParticipante", new { idEvento });
+            }
+
+            var gestaoPapelModel = new GestaoPapelModel
+            {
+                Evento = _eventoService.GetEventoSimpleDto(idEvento),
+                Pessoa = _mapper.Map<PessoaModel>(pessoa)
+            };
+
+            return View(gestaoPapelModel);
+        }
+
+        [Authorize(Roles = "GESTOR,COLABORADOR")]
+        [HttpPost]
+        [Route("EditParticipante")]
+        [Route("ManterParticipante")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditParticipante(GestaoPapelModel gestaoPapelModel)
+        {
+            var eventoId = gestaoPapelModel?.Evento?.Id ?? 0;
+            var idPessoa = gestaoPapelModel?.Pessoa?.Id ?? 0;
+
+            var username = User.Identity?.Name ?? string.Empty;
+            var cpfLimpo = username.Replace(".", "").Replace("-", "");
+
+            var gestor = _inscricaoService.GetGestorInEvent(username, eventoId) ?? _inscricaoService.GetGestorInEvent(cpfLimpo, eventoId);
+            var colaborador = _inscricaoService.GetColaboradorInEvent(username, eventoId) ?? _inscricaoService.GetColaboradorInEvent(cpfLimpo, eventoId);
+
+            if (gestor == null && colaborador == null)
+            {
+                TempData.Clear();
+                TempData["Message"] = "Você não tem permissão para editar um participante!";
+                return RedirectToAction("GerenciarEvento", new { idEvento = eventoId });
+            }
+
+            var pessoaExistente = _pessoaService.Get(idPessoa);
+            if (pessoaExistente == null)
+            {
+                TempData.Clear();
+                TempData["Message"] = "Participante não encontrado para edição!";
+                return RedirectToAction("CreateParticipante", new { idEvento = eventoId });
+            }
+
+            if (gestaoPapelModel?.Pessoa != null)
+            {
+                gestaoPapelModel.Pessoa.Cpf = pessoaExistente.Cpf;
+                ModelState.Remove("Pessoa.Cpf");
+            }
+
+            if (ModelState.IsValid)
+            {
+                pessoaExistente.Nome = gestaoPapelModel.Pessoa.Nome;
+                pessoaExistente.Email = gestaoPapelModel.Pessoa.Email;
+                pessoaExistente.Telefone1 = gestaoPapelModel.Pessoa.Telefone1;
+                pessoaExistente.Telefone2 = gestaoPapelModel.Pessoa.Telefone2;
+                pessoaExistente.NomeCracha = !string.IsNullOrWhiteSpace(gestaoPapelModel.Pessoa.NomeCracha)
+                    ? gestaoPapelModel.Pessoa.NomeCracha
+                    : (pessoaExistente.Nome.Length > 20 ? pessoaExistente.Nome.Substring(0, 20) : pessoaExistente.Nome);
+                pessoaExistente.Sexo = gestaoPapelModel.Pessoa.Sexo;
+                pessoaExistente.Cep = gestaoPapelModel.Pessoa.Cep;
+                pessoaExistente.Estado = gestaoPapelModel.Pessoa.Estado;
+                pessoaExistente.Cidade = gestaoPapelModel.Pessoa.Cidade;
+                pessoaExistente.Bairro = gestaoPapelModel.Pessoa.Bairro;
+                pessoaExistente.Rua = gestaoPapelModel.Pessoa.Rua;
+                pessoaExistente.Numero = gestaoPapelModel.Pessoa.Numero;
+                pessoaExistente.Complemento = gestaoPapelModel.Pessoa.Complemento;
+
+                try
+                {
+                    await _pessoaService.Edit(pessoaExistente);
+                    TempData["SuccessMessage"] = $"Participante \"{pessoaExistente.Nome}\" atualizado com sucesso!";
+                    return RedirectToAction("CreateParticipante", new { idEvento = eventoId });
+                }
+                catch (Exception ex)
+                {
+                    var msg = ex.InnerException?.Message ?? ex.Message;
+                    ModelState.AddModelError(string.Empty, "Erro ao atualizar participante: " + msg);
+                }
+            }
+
+            gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(eventoId);
+            return View(gestaoPapelModel);
+        }
+
 
         [Authorize(Roles = "GESTOR,COLABORADOR")]
         [HttpGet]

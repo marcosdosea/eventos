@@ -1,0 +1,156 @@
+@model EventoWeb.Models.GestaoPapelModel
+
+<h1 class="blue-normal">Editar Participante</h1>
+<hr />
+
+@if (!ViewData.ModelState.IsValid)
+{
+	<div class="alert alert-danger">
+		@Html.ValidationSummary(false, "", new { @class = "text-danger" })
+	</div>
+}
+
+<div class="row">
+	<div>
+		<form asp-action="EditParticipante" method="post">
+			@Html.AntiForgeryToken()
+			<input type="hidden" asp-for="Evento.Id" />
+			<input type="hidden" asp-for="Evento.Nome" />
+			<input type="hidden" asp-for="Pessoa.Id" />
+			<input type="hidden" asp-for="Pessoa.Cpf" />
+			<input type="hidden" asp-for="Pessoa.Complemento" />
+
+			<div class="row">
+				<div class="col-lg-3">
+					<div class="form-group">
+						<label for="IdEvento" class="control-label">Evento</label>
+						<select id="IdEvento" class="form-control" readonly disabled>
+							<option value="@Model.Evento.Id" selected>@Model.Evento.Nome</option>
+						</select>
+					</div>
+				</div>
+			</div>
+			<br />
+			<h4 class="blue-normal">Dados do participante</h4>
+			<div class="row">
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="Pessoa.Cpf" class="control-label">CPF</label>
+						<input type="text" class="form-control" value="@FormatarCPF(Model.Pessoa?.Cpf)" readonly disabled />
+						<span asp-validation-for="Pessoa.Cpf" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="Pessoa.Nome" class="control-label">Nome</label>
+						<input asp-for="Pessoa.Nome" class="form-control" id="Nome" placeholder="Nome completo" required />
+						<span asp-validation-for="Pessoa.Nome" class="text-danger"></span>
+					</div>
+				</div>
+			</div>
+			<div class="row mt-3">
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="Pessoa.NomeCracha" class="control-label">Nome no Crachá</label>
+						<input asp-for="Pessoa.NomeCracha" class="form-control" id="NomeCracha" placeholder="Nome exibido no crachá" maxlength="20" />
+						<span asp-validation-for="Pessoa.NomeCracha" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="Pessoa.Sexo" class="control-label">Sexo</label>
+						<select asp-for="Pessoa.Sexo" class="form-select">
+							<option value="N">Prefiro não dizer</option>
+							<option value="M">Masculino</option>
+							<option value="F">Feminino</option>
+						</select>
+						<span asp-validation-for="Pessoa.Sexo" class="text-danger"></span>
+					</div>
+				</div>
+			</div>
+			<div class="row mt-3">
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="Pessoa.Telefone1" class="control-label">Celular</label>
+						<input asp-for="Pessoa.Telefone1" type="text" class="form-control" id="Telefone1" placeholder="Com o DDD" />
+						<span asp-validation-for="Pessoa.Telefone1" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="Pessoa.Email" class="control-label">Email</label>
+						<input asp-for="Pessoa.Email" class="form-control" id="Email" placeholder="Seu e-mail" required />
+						<span asp-validation-for="Pessoa.Email" class="text-danger"></span>
+					</div>
+				</div>
+			</div>
+			<br />
+			<h4 class="blue-normal">Localização</h4>
+			<div class="row">
+				<div class="col-md-3">
+					<div class="form-group">
+						<label asp-for="Pessoa.Cep" class="control-label">CEP</label>
+						<input asp-for="Pessoa.Cep" class="form-control" id="Cep" placeholder="00000-000" maxlength="9" />
+						<span asp-validation-for="Pessoa.Cep" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-md-3">
+					<div class="form-group">
+						<label asp-for="Pessoa.Estado" class="control-label">Estado</label>
+						<input asp-for="Pessoa.Estado" class="form-control" id="Estado" placeholder="UF" maxlength="2" />
+						<span asp-validation-for="Pessoa.Estado" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="Pessoa.Cidade" class="control-label">Cidade</label>
+						<input asp-for="Pessoa.Cidade" class="form-control" id="Cidade" placeholder="Nome da Cidade" maxlength="50" />
+						<span asp-validation-for="Pessoa.Cidade" class="text-danger"></span>
+					</div>
+				</div>
+			</div>
+			<div class="row mt-3">
+				<div class="col-md-4">
+					<div class="form-group">
+						<label asp-for="Pessoa.Bairro" class="control-label">Bairro</label>
+						<input asp-for="Pessoa.Bairro" class="form-control" id="Bairro" placeholder="Nome do Bairro" maxlength="50" />
+						<span asp-validation-for="Pessoa.Bairro" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<div class="form-group">
+						<label asp-for="Pessoa.Rua" class="control-label">Rua</label>
+						<input asp-for="Pessoa.Rua" class="form-control" id="Rua" placeholder="Nome da Rua" maxlength="50" />
+						<span asp-validation-for="Pessoa.Rua" class="text-danger"></span>
+					</div>
+				</div>
+				<div class="col-md-2">
+					<div class="form-group">
+						<label asp-for="Pessoa.Numero" class="control-label">Número</label>
+						<input asp-for="Pessoa.Numero" class="form-control" id="Numero" placeholder="00" maxlength="10" />
+						<span asp-validation-for="Pessoa.Numero" class="text-danger"></span>
+					</div>
+				</div>
+			</div>
+			<br />
+			<div class="d-flex justify-content-end gap-2 mt-3">
+				<input type="submit" value="Salvar" class="btn btn-lg btn-blue-normal" />
+				<a asp-controller="Evento" asp-action="CreateParticipante" asp-route-idEvento="@Model.Evento.Id" class="btn btn-lg btn-outline-danger">Voltar</a>
+			</div>
+		</form>
+	</div>
+</div>
+
+@section Scripts {
+	<partial name="_ValidationScriptsPartial" />
+}
+
+@functions {
+	public static string FormatarCPF(string? cpf)
+	{
+		if (string.IsNullOrEmpty(cpf) || cpf.Length != 11)
+			return cpf ?? string.Empty;
+
+		return Convert.ToUInt64(cpf).ToString(@"000\.000\.000\-00");
+	}
+}

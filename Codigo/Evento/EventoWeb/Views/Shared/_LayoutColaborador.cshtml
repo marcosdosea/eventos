@@ -149,6 +149,18 @@
 
     <div class="container conteudo">
         <main role="main" class="pb-3">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show position-relative alert-dismissible-custom" role="alert">
+                    <div class="text-success m-0">
+                        @TempData["SuccessMessage"]
+                    </div>
+
+                    <button type="button" class="btn-close-custom" data-bs-dismiss="alert" aria-label="Close">
+                        &times;
+                    </button>
+                </div>
+            }
             @RenderBody()
         </main>
     </div>
