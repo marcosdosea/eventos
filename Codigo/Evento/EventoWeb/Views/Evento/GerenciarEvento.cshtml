@@ -42,12 +42,11 @@
             if (!isGestorOuAdmin)
             {
                 cardsList.Add(new { Nome = "Frequência", Action = "Frequencia", Controller = "Participacaopessoaevento", Icon = "Inscricoes.png", Parametros = (object)new { idEvento = Model.Evento.Id } });
+                cardsList.Add(new { Nome = "Inscrições", Action = "CreateParticipante", Controller = "Evento", Icon = "Inscricoes.png", Parametros = (object)new { idEvento = Model.Evento.Id } });
             }
-
-            cardsList.Add(new { Nome = "Inscrições", Action = "Index", Controller = "Participacaopessoaevento", Icon = "Inscricoes.png", Parametros = (object)new { idEvento = Model.Evento.Id } });
-
-            if (isGestorOuAdmin)
+            else
             {
+                cardsList.Add(new { Nome = "Inscrições", Action = "Index", Controller = "Participacaopessoaevento", Icon = "Inscricoes.png", Parametros = (object)new { idEvento = Model.Evento.Id } });
                 cardsList.Add(new { Nome = "Colaboradores", Action = "CreateColaborador", Controller = "Evento", Icon = "Colaboradores.png", Parametros = (object)new { idEvento = Model.Evento.Id } });
                 cardsList.Add(new { Nome = "Evento", Action = "GestorEditarEvento", Controller = "Evento", Icon = "Evento.png", Parametros = (object)new { id = Model.Evento.Id } });
             }
