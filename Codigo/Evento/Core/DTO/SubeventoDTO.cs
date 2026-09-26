@@ -1,4 +1,4 @@
-﻿namespace Core.DTO
+namespace Core.DTO
 {
     public class SubeventoDTO
     {
@@ -31,5 +31,15 @@
         public uint VagasDisponiveis { get; set; }
         
         public string NomeTipoEvento { get; set; }
+        
+        public sbyte InscricaoGratuita { get; set; }
+        
+        public decimal ValorInscricao { get; set; }
+        
+        public string Status { get; set; } = null!;
+        
+        public DateTime DataInicioInscricao { get; set; }
+        
+        public DateTime DataFimInscricao { get; set; }
     }
 }

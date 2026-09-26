@@ -31,10 +31,17 @@
 	<link rel="stylesheet" type="text/css" href="~/css/style.css">
 	<link rel="stylesheet" type="text/css" href="~/css/headerAndFooter.css">
     <link rel="stylesheet" type="text/css" href="~/css/headerSearch.css" asp-append-version="true">
+	<link rel="stylesheet" type="text/css" href="~/css/location.css" asp-append-version="true">
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
 </head>
 
 <body>
+    @{
+        var controller = ViewContext.RouteData.Values["controller"]?.ToString()?.ToLower();
+        var action = ViewContext.RouteData.Values["action"]?.ToString()?.ToLower();
+        bool showLocation = (controller == "home" && (action == "index" || action == "buscar")) ||
+                            (controller == "inscricao" && (action == "realizarinscricao" || action == "minhasinscricoes" || action == "realizarinscricaolote"));
+    }
     <header class="p-3 mb-3 border-bottom fixed-top">
         <div class="container">
             <nav class="navbar navbar-light p-0 w-100">
@@ -69,6 +76,15 @@
                                         <li class="nav-item">
                                             <a class="nav-link opcao" asp-controller="ParticipacaoPessoaEvento" asp-action="Frequencia" asp-route-idEvento="@eventoId">Frequência</a>
                                         </li>
+                                        @if (possuiEvento)
+                                        {
+                                            <li class="nav-item">
+                                                <a class="nav-link opcao" asp-controller="ParticipacaoPessoaEvento" asp-action="Frequencia" asp-route-idEvento="@eventoId">Frequência</a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link opcao" asp-controller="Evento" asp-action="CreateParticipante" asp-route-idEvento="@eventoId">Inscrições</a>
+                                            </li>
+                                        }
                                     </ul>
                                 </div>
                             </div>
@@ -93,18 +109,28 @@
                         </div>
                     }
 
-                    <div class="flex-shrink-0 dropdown order-2 order-md-0">
-                        <a href="#" class="d-flex align-items-center link-dark text-decoration-none dropdown-toggle" id="dropdownUser2" data-bs-toggle="dropdown" aria-expanded="false">
-                            <span class="d-none d-md-block">Olá, @ViewBag.NomeUsuario!</span>
-                            <img src="/img/img-user.svg" alt="User" width="32" height="32" class="rounded-circle ms-2">
-                        </a>
+                    <div class="d-flex align-items-center flex-shrink-0 order-2 order-md-0 gap-3">
+                        @if (showLocation)
+                        {
+                            <div class="nav-item">
+                                <button type="button" class="btn-location-header" onclick="openLocationModal()" aria-label="Localização">
+                                    <i class="bi bi-geo-alt-fill"></i>
+                                    <span id="headerLocationText">Carregando...</span>
+                                </button>
+                            </div>
+                        }
+                        <div class="dropdown">
+                            <a href="#" class="d-flex align-items-center link-dark text-decoration-none dropdown-toggle" id="dropdownUser2" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="d-none d-md-block">Olá, @ViewBag.NomeUsuario!</span>
+                                <img src="/img/img-user.svg" alt="User" width="32" height="32" class="rounded-circle ms-2">
+                            </a>
                         <ul class="dropdown-menu dropdown-menu-end text-small shadow" aria-labelledby="dropdownUser2">
                         <li>
                             <a class="dropdown-item" asp-controller="Evento" asp-action="GerenciarEventoListar">Gerenciar Evento</a>
                         </li>
                          
                         <li>
-                            <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Gerenciar Conta</a>
+                                <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Gerenciar Conta</a>
                         </li>
                         @if (User.IsInRole("ADMINISTRADOR") && (User.IsInRole("COLABORADOR") ||User.IsInRole("GESTOR") || User.IsInRole("USUARIO") || User.IsInRole("PARTICIPANTE")))
                         {
@@ -112,15 +138,17 @@
                                     <a class="dropdown-item" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#modalEscolherPerfil">Selecionar Perfil</a>
                                 </li>
                         }
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li>
-                            <form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-                                <button id="logout" type="submit" class="dropdown-item">Sair</button>
-                            </form>
-                        </li>
-                    </ul>
+                            
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                                    <button id="logout" type="submit" class="dropdown-item">Sair</button>
+                                </form>
+                            </li>
+                        </ul>
+                        </div>
                     </div>
                     
                 </div>
@@ -133,6 +161,11 @@
             @RenderBody()
         </main>
     </div>
+
+    @if (showLocation)
+    {
+        <partial name="_LocationModal" />
+    }
 
     @{
         var showFooter = ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && 
@@ -159,6 +192,7 @@
     <script src="~/js/formHelpers.js"></script>
     <script src="~/js/headerSearch.js" asp-append-version="true"></script>
     <script src="~/js/modalSelecionarPerfil.js"></script>
+    <script src="~/js/location.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 

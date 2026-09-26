@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using Core;
 using Core.Service;
@@ -24,8 +24,22 @@ namespace Service
 
         public void Update(Participacaopessoasubevento participacao)
         {
-            _context.Participacaopessoasubeventos.Update(participacao);
-            _context.SaveChanges();
+            var existing = _context.Participacaopessoasubeventos.Find(participacao.Id);
+            if (existing != null)
+            {
+                existing.IdPessoa = participacao.IdPessoa;
+                existing.IdSubEvento = participacao.IdSubEvento;
+                existing.Entrada = participacao.Entrada;
+                existing.Saida = participacao.Saida;
+                _context.SaveChanges();
+            }
+            else
+            {
+                participacao.IdPessoaNavigation = null!;
+                participacao.IdSubEventoNavigation = null!;
+                _context.Participacaopessoasubeventos.Update(participacao);
+                _context.SaveChanges();
+            }
         }
 
         public void Delete(uint id)

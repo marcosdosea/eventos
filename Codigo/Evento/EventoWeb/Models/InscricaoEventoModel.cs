@@ -41,4 +41,6 @@ public class InscricaoEventoModel
     public virtual ICollection<Pagamento> Pagamentos { get; set; } = new List<Pagamento>();
 
     public List<uint> SelectedSubeventos { get; set; } = new List<uint>();
+
+    public int QuantidadeIngressos { get; set; } = 1;
 }

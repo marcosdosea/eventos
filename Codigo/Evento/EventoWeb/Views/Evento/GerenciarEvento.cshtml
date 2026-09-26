@@ -42,12 +42,11 @@
             if (!isGestorOuAdmin)
             {
                 cardsList.Add(new { Nome = "Frequência", Action = "Frequencia", Controller = "Participacaopessoaevento", Icon = "Inscricoes.png", Parametros = (object)new { idEvento = Model.Evento.Id } });
+                cardsList.Add(new { Nome = "Inscrições", Action = "CreateParticipante", Controller = "Evento", Icon = "Inscricoes.png", Parametros = (object)new { idEvento = Model.Evento.Id } });
             }
-
-            cardsList.Add(new { Nome = "Inscrições", Action = "Index", Controller = "Participacaopessoaevento", Icon = "Inscricoes.png", Parametros = (object)new { idEvento = Model.Evento.Id } });
-
-            if (isGestorOuAdmin)
+            else
             {
+                cardsList.Add(new { Nome = "Inscrições", Action = "Index", Controller = "Participacaopessoaevento", Icon = "Inscricoes.png", Parametros = (object)new { idEvento = Model.Evento.Id } });
                 cardsList.Add(new { Nome = "Colaboradores", Action = "CreateColaborador", Controller = "Evento", Icon = "Colaboradores.png", Parametros = (object)new { idEvento = Model.Evento.Id } });
                 cardsList.Add(new { Nome = "Evento", Action = "GestorEditarEvento", Controller = "Evento", Icon = "Evento.png", Parametros = (object)new { id = Model.Evento.Id } });
             }
@@ -86,10 +85,7 @@
                 <th>Nome</th>
                 <th>Vagas Ofertadas</th>
                 <th>Vagas Disponíveis</th>
-                @if (isGestorOuAdmin)
-                {
-                    <th>Ações</th>
-                }
+                <th>Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -100,15 +96,19 @@
                     <td>@subevento.Nome</td>
                     <td>@subevento.VagasOfertadas</td>
                     <td>@subevento.VagasDisponiveis</td>
-                    @if (isGestorOuAdmin)
-                    {
-                        <td>
-                            <div class="d-flex gap-3">
-                                @Html.ActionLink("Editar", "CreateOrEdit", "Subevento",
-                                new { idEvento = Model.Evento.Id, idSubevento = subevento.Id },
-                                                    new { @style = "text-decoration:none;" })
+                    <td>
+                        <div class="d-flex gap-3">
+                            @Html.ActionLink("Frequência", "Frequencia", "ParticipacaoPessoaEvento",
+                                new { idEvento = Model.Evento.Id, idSubEvento = subevento.Id },
+                                new { @style = "text-decoration:none;" })
 
-                            @using (Html.BeginForm("Delete", "Subevento", FormMethod.Post, new { @style = "display:inline;" }))
+                            @if (isGestorOuAdmin)
+                            {
+                                @Html.ActionLink("Editar", "CreateOrEdit", "Subevento",
+                                    new { idEvento = Model.Evento.Id, idSubevento = subevento.Id },
+                                    new { @style = "text-decoration:none;" })
+
+                                @using (Html.BeginForm("Delete", "Subevento", FormMethod.Post, new { @style = "display:inline;" }))
                                 {
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="id" value="@subevento.Id" />
@@ -117,13 +117,13 @@
                                 }
 
                                 @Html.ActionLink("Tipo Inscrição", "CreateTipoInscricaoSubevento", "TipoInscricao",
-                                new { idEvento = Model.Evento.Id, idSubevento = subevento.Id },
-                                                    new { @style = "text-decoration:none;" })
-                            </div>
-                        </td>
-                    }
-            </tr>
-                        }
+                                    new { idEvento = Model.Evento.Id, idSubevento = subevento.Id },
+                                    new { @style = "text-decoration:none;" })
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
         </tbody>
     </table>
     <div class="d-flex justify-content-end mt-2 mb-5 w-100">

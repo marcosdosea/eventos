@@ -33,6 +33,13 @@ namespace Service
             return inscricaopessoaevento.Id;
         }
 
+        public uint CreateInscricaoEventoLote(Inscricaopessoaevento inscricaopessoaevento)
+        {
+            _context.Add(inscricaopessoaevento);
+            _context.SaveChanges();
+            return inscricaopessoaevento.Id;
+        }
+
         public async Task DeletePessoaPapelAsync(uint idPessoa, uint idEvento, uint idPapel, string cpf)
         {
             var pessoa = await _context.Pessoas.FirstOrDefaultAsync(p => p.Id == idPessoa && p.Cpf == cpf);
