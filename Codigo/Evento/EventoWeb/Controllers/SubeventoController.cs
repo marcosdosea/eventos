@@ -130,6 +130,7 @@ namespace EventoWeb.Controllers
 
                 var viewModel = subeventoModel;
 
+                viewModel.IdEvento = idEvento;
                 viewModel.Evento = evento;
                 viewModel.TiposEventos = new SelectList(tipoEventos, "Id", "Nome");
 
@@ -170,6 +171,7 @@ namespace EventoWeb.Controllers
 
                 var tipoEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
                 var evento = _eventoService.GetEventoSimpleDto(idEvento);
+                subeventoModel.IdEvento = idEvento;
                 subeventoModel.Evento = evento;
                 subeventoModel.TiposEventos = new SelectList(tipoEventos, "Id", "Nome");
                 return View(subeventoModel);

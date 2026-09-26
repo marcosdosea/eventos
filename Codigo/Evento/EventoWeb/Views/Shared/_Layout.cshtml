@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
@@ -9,11 +9,18 @@
     <link rel="stylesheet" type="text/css" href="~/css/style.css" asp-append-version="true">
     <link rel="stylesheet" type="text/css" href="~/css/headerAndFooter.css">
     <link rel="stylesheet" type="text/css" href="~/css/headerSearch.css" asp-append-version="true">
+    <link rel="stylesheet" type="text/css" href="~/css/location.css" asp-append-version="true">
     <link rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.10.0/font/bootstrap-icons.min.css">
 </head>
 
 <body>
+    @{
+        var controller = ViewContext.RouteData.Values["controller"]?.ToString()?.ToLower();
+        var action = ViewContext.RouteData.Values["action"]?.ToString()?.ToLower();
+        bool showLocation = (controller == "home" && (action == "index" || action == "buscar")) ||
+                            (controller == "inscricao" && (action == "realizarinscricao" || action == "minhasinscricoes" || action == "realizarinscricaolote"));
+    }
     <header class="p-3 mb-3 border-bottom fixed-top">
         <div class="container">
             <nav class="navbar navbar-expand-lg navbar-light p-0">
@@ -43,9 +50,15 @@
                         }
                         
                         <div class="d-flex flex-column flex-lg-row align-items-lg-center mt-3 mt-lg-0">
-                            <div class="nav-item me-3 mb-2 mb-lg-0 align-content-center">
-                                <a class="nav-link fw-bold text-dark" style="cursor: pointer;">Localização</a>
-                            </div>
+                            @if (showLocation)
+                            {
+                                <div class="nav-item d-flex align-items-center me-3 order-2 order-md-0">
+                                    <button type="button" class="btn-location-header" onclick="openLocationModal()" aria-label="Localização">
+                                        <i class="bi bi-geo-alt-fill"></i>
+                                        <span id="headerLocationText">Carregando...</span>
+                                    </button>
+                                </div>
+                            }
                             <div class="nav-item me-3 mb-2 mb-lg-0 align-content-center">
                                 <a class="nav-link fw-bold text-primary" asp-controller="Evento" asp-action="Create">Seu evento aqui!</a>
                             </div>
@@ -63,6 +76,11 @@
         </main>
     </div>
 
+    @if (showLocation)
+    {
+        <partial name="_LocationModal" />
+    }
+
     <partial name="_Footer" />
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
@@ -70,6 +88,7 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/formHelpers.js"></script>
     <script src="~/js/headerSearch.js" asp-append-version="true"></script>
+    <script src="~/js/location.js" asp-append-version="true"></script>
     
     @await RenderSectionAsync("Scripts", required: false)
 </body>

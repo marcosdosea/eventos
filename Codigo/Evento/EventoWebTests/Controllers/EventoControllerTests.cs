@@ -342,6 +342,16 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
+        public void GerenciarEvento_IdEventoZero_RedirecionaParaGerenciarEventoListar()
+        {
+            var result = controller.GerenciarEvento(0);
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
+            Assert.AreEqual("GerenciarEventoListar", redirectToActionResult.ActionName);
+        }
+
+        [TestMethod()]
         [DataRow("Edit", new Type[] { typeof(uint), typeof(EventoModel) }, "ADMINISTRADOR")]
         [DataRow("Delete", new Type[] { typeof(uint), typeof(EventoModel) }, "ADMINISTRADOR")]
         [DataRow("CreateGestor", new Type[] { typeof(GestaoPapelModel) }, "ADMINISTRADOR")]

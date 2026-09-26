@@ -86,10 +86,7 @@
                 <th>Nome</th>
                 <th>Vagas Ofertadas</th>
                 <th>Vagas Disponíveis</th>
-                @if (isGestorOuAdmin)
-                {
-                    <th>Ações</th>
-                }
+                <th>Ações</th>
             </tr>
         </thead>
         <tbody>
@@ -100,15 +97,19 @@
                     <td>@subevento.Nome</td>
                     <td>@subevento.VagasOfertadas</td>
                     <td>@subevento.VagasDisponiveis</td>
-                    @if (isGestorOuAdmin)
-                    {
-                        <td>
-                            <div class="d-flex gap-3">
-                                @Html.ActionLink("Editar", "CreateOrEdit", "Subevento",
-                                new { idEvento = Model.Evento.Id, idSubevento = subevento.Id },
-                                                    new { @style = "text-decoration:none;" })
+                    <td>
+                        <div class="d-flex gap-3">
+                            @Html.ActionLink("Frequência", "Frequencia", "ParticipacaoPessoaEvento",
+                                new { idEvento = Model.Evento.Id, idSubEvento = subevento.Id },
+                                new { @style = "text-decoration:none;" })
 
-                            @using (Html.BeginForm("Delete", "Subevento", FormMethod.Post, new { @style = "display:inline;" }))
+                            @if (isGestorOuAdmin)
+                            {
+                                @Html.ActionLink("Editar", "CreateOrEdit", "Subevento",
+                                    new { idEvento = Model.Evento.Id, idSubevento = subevento.Id },
+                                    new { @style = "text-decoration:none;" })
+
+                                @using (Html.BeginForm("Delete", "Subevento", FormMethod.Post, new { @style = "display:inline;" }))
                                 {
                                     @Html.AntiForgeryToken()
                                     <input type="hidden" name="id" value="@subevento.Id" />
@@ -117,13 +118,13 @@
                                 }
 
                                 @Html.ActionLink("Tipo Inscrição", "CreateTipoInscricaoSubevento", "TipoInscricao",
-                                new { idEvento = Model.Evento.Id, idSubevento = subevento.Id },
-                                                    new { @style = "text-decoration:none;" })
-                            </div>
-                        </td>
-                    }
-            </tr>
-                        }
+                                    new { idEvento = Model.Evento.Id, idSubevento = subevento.Id },
+                                    new { @style = "text-decoration:none;" })
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
         </tbody>
     </table>
     <div class="d-flex justify-content-end mt-2 mb-5 w-100">
