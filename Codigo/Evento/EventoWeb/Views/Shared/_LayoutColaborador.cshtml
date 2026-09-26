@@ -21,6 +21,7 @@
     {
         eventoId = ViewContext.RouteData.Values["id"]?.ToString();
     }
+    var possuiEvento = uint.TryParse(eventoId, out var eventoIdNumero) && eventoIdNumero > 0;
 }
 
 <head>
