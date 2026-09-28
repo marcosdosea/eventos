@@ -43,7 +43,7 @@ namespace EventoWeb.Controllers
                     var perfilAtivo = HttpContext.Session.GetString("PerfilAtivo");
                     if (string.IsNullOrEmpty(perfilAtivo))
                     {
-                        ViewBag.ExibirModal = "true";
+                       
                         TempData["SelecionarPerfil"] = "true";
                     }
                 }
