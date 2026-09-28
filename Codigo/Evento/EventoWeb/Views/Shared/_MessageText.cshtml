@@ -16,9 +16,14 @@
 }
 ﻿@if (TempData["alertText"] != null && TempData["alertType"] != null)
 {
-   <div class="alert alert-@TempData["alertType"] alert-dismissible fade show d-flex align-items-center" role="alert">
-     <i class="@TempData["alertIcon"] fs-5"></i>
-     <span class="ms-3">@(Html.Raw(TempData["alertText"]?.ToString()))</span>
+    var rawType = TempData["alertType"]?.ToString();
+    var allowedTypes = new HashSet<string> { "success", "danger", "warning", "info", "primary", "secondary", "light", "dark" };
+    var alertTypeSafe = allowedTypes.Contains(rawType ?? string.Empty) ? rawType : "info";
+    var rawIcon = TempData["alertIcon"]?.ToString() ?? "bi bi-info-circle";
+    var alertIconSafe = System.Text.RegularExpressions.Regex.IsMatch(rawIcon, @"^[a-zA-Z0-9\- ]+$") && rawIcon.StartsWith("bi ") ? rawIcon : "bi bi-info-circle";
+   <div class="alert alert-@alertTypeSafe alert-dismissible fade show d-flex align-items-center" role="alert">
+     <i class="@alertIconSafe fs-5"></i>
+     <span class="ms-3">@TempData["alertText"]</span>
      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
    </div>
 }
