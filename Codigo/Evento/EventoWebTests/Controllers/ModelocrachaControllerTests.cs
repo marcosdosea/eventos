@@ -187,6 +187,37 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
         }
 
+        // IDOR (#764): gestor só gerencia o próprio evento.
+        [TestMethod]
+        public void Index_Details_EventoAlheio_Forbid()
+        {
+            var mockCracha = new Mock<IModelocrachaService>();
+            mockCracha.Setup(s => s.GetByEvento(It.IsAny<uint>())).Returns(new List<Modelocracha>());
+            mockCracha.Setup(s => s.Get(10)).Returns(new Modelocracha { Id = 10, IdEvento = 2 });
+            mockCracha.Setup(s => s.Get(11)).Returns(new Modelocracha { Id = 11, IdEvento = 1 });
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), (uint)1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), (uint)2))
+                .Returns((Inscricaopessoaevento)null!);
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            Assert.IsInstanceOfType(ctl.Index(2, null), typeof(ForbidResult));
+            Assert.IsInstanceOfType(ctl.Index(1, null), typeof(ViewResult));
+            Assert.IsInstanceOfType(ctl.Details(10, null), typeof(ForbidResult));
+        }
+
+        private static ClaimsPrincipal GestorPrincipal() => new(new ClaimsIdentity(new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, "12345678900"),
+            new Claim(ClaimTypes.Role, "GESTOR")
+        }, "TestAuthType"));
+
         private ModelocrachaModel GetNewModelocracha()
         {
             var formFileMock = new Mock<IFormFile>();

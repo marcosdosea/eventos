@@ -1,6 +1,7 @@
 using AutoMapper;
 using Core;
 using Core.Service;
+using EventoWeb.Helpers;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -33,12 +34,7 @@ namespace EventoWeb.Controllers
 
         private bool IsAuthorized(uint idEvento)
         {
-            if (User.IsInRole("ADMINISTRADOR"))
-                return true;
-            var username = User.Identity?.Name;
-            if (string.IsNullOrEmpty(username))
-                return false;
-            return _inscricaoService.GetGestorInEvent(username, idEvento) != null;
+            return AutorizacaoEventoHelper.IsAutorizado(User, _inscricaoService, idEvento);
         }
 
         // GET: SubeventoController
