@@ -410,7 +410,7 @@ namespace EventoWeb.Controllers
         }
 
         // POST: api/ParticipacaoPessoaEvento
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
+        [Authorize(Roles = "GESTOR,COLABORADOR")]
         [HttpPost]
         public async Task<ActionResult<ParticipacaoPessoaEventoDTO>> Create([FromBody] ParticipacaoPessoaEventoDTO dto)
         {
@@ -428,7 +428,7 @@ namespace EventoWeb.Controllers
         }
 
         // PUT: api/ParticipacaoPessoaEvento/5
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
+        [Authorize(Roles = "GESTOR,COLABORADOR")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(uint id, [FromBody] ParticipacaoPessoaEventoDTO dto)
         {
@@ -451,7 +451,7 @@ namespace EventoWeb.Controllers
         }
 
         // DELETE: api/ParticipacaoPessoaEvento/5
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
+        [Authorize(Roles = "GESTOR,COLABORADOR")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(uint id)
         {
@@ -471,9 +471,6 @@ namespace EventoWeb.Controllers
 
         private bool TemPermissaoNoEvento(uint idEvento)
         {
-            if (User.IsInRole("ADMINISTRADOR"))
-                return true;
-
             var username = User.Identity?.Name;
             if (string.IsNullOrEmpty(username))
                 return false;
