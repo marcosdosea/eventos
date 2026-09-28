@@ -454,16 +454,7 @@ namespace EventoWeb.Controllers
             }
             return RedirectToAction("Index", "Home");
         }
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
-        [HttpGet]
-        [Route("SelecionarPerfil")]
-        public ActionResult SelecionarPerfil()
-        {
-
-            return View();
-        }
-
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
+        [Authorize(Roles = "ADMINISTRADOR")]
         [HttpPost]
         [Route("SelecionarPerfil")]
         [ValidateAntiForgeryToken]
