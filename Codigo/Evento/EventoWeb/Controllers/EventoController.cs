@@ -683,8 +683,7 @@ namespace EventoWeb.Controllers
         public async Task<IActionResult> GerenciarEventoListar(bool adminRemovido = false)
         {
             string userCpf = null;
-            uint idPapel = 0;
-            bool isAdmin = false;
+            uint idPapel = 0;     
 
             if (adminRemovido)
             {
