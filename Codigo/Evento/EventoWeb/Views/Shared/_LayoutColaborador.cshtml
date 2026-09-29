@@ -29,7 +29,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
 	<link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-	<link rel="stylesheet" type="text/css" href="~/css/style.css">
+	<link rel="stylesheet" type="text/css" href="~/css/style.css" asp-append-version="true">
 	<link rel="stylesheet" type="text/css" href="~/css/headerAndFooter.css">
     <link rel="stylesheet" type="text/css" href="~/css/headerSearch.css" asp-append-version="true">
 	<link rel="stylesheet" type="text/css" href="~/css/location.css" asp-append-version="true">
@@ -69,13 +69,7 @@
                                             <a class="nav-link active titulo blue-normal fw-bold" >Colaborador</a>
                                         </li>
                                         <li class="nav-item">
-                                            <a class="nav-link opcao" href="#">Inscrições</a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a class="nav-link opcao" asp-controller="Evento" asp-action="CreateParticipante" asp-route-idEvento="@eventoId">Participantes</a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a class="nav-link opcao" asp-controller="ParticipacaoPessoaEvento" asp-action="Frequencia" asp-route-idEvento="@eventoId">Frequência</a>
+                                            <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEventoListar">Eventos</a>
                                         </li>
                                         @if (possuiEvento)
                                         {
