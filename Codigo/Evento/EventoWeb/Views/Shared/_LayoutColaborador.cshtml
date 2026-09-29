@@ -69,13 +69,7 @@
                                             <a class="nav-link active titulo blue-normal fw-bold" >Colaborador</a>
                                         </li>
                                         <li class="nav-item">
-                                            <a class="nav-link opcao" href="#">Inscrições</a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a class="nav-link opcao" asp-controller="Evento" asp-action="CreateParticipante" asp-route-idEvento="@eventoId">Participantes</a>
-                                        </li>
-                                        <li class="nav-item">
-                                            <a class="nav-link opcao" asp-controller="ParticipacaoPessoaEvento" asp-action="Frequencia" asp-route-idEvento="@eventoId">Frequência</a>
+                                            <a class="nav-link opcao" asp-controller="Evento" asp-action="GerenciarEventoListar">Eventos</a>
                                         </li>
                                         @if (possuiEvento)
                                         {
