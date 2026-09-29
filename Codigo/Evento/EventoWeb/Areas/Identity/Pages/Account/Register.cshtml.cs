@@ -81,6 +81,7 @@ namespace EventoWeb.Areas.Identity.Pages.Account
             /// </summary>
             [Required(ErrorMessage = "O campo E-mail é obrigatório.")]
             [EmailAddress(ErrorMessage = "O campo E-mail não é um endereço de e-mail válido.")]
+            [StringLength(50, ErrorMessage = "O e-mail não pode ser maior que 50 caracteres")]
             [Display(Name = "E-mail")]
             public string Email { get; set; }
 
@@ -105,12 +106,14 @@ namespace EventoWeb.Areas.Identity.Pages.Account
 
 			[Required(ErrorMessage = "O campo Nome é obrigatório.")]
 			[Display(Name = "Nome")]
-			public string Nome { get; set; }
+            [StringLength(50, ErrorMessage = "O nome não pode ser maior que 50 caracteres")]
+            public string Nome { get; set; }
 
 			[Required(ErrorMessage = "O campo CPF é obrigatório.")]
 			[CPF(ErrorMessage = "CPF inválido")]
 			[Display(Name = "CPF", Prompt = "Digite seu CPF")]
-			public string CPF { get; set; }
+            
+            public string CPF { get; set; }
 		}
 
 
@@ -121,17 +124,21 @@ namespace EventoWeb.Areas.Identity.Pages.Account
 		}
 
 		public async Task<IActionResult> OnPostAsync(string returnUrl = null)
-{
-    returnUrl = returnUrl ?? Url.Content("~/");
-    ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+        {
+        returnUrl = returnUrl ?? Url.Content("~/");
+        ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
-    if (ModelState.IsValid)
-    {
+        if (ModelState.IsValid)
+        {
         
-        string cpfSemFormatacao = Util.Methods.RemoveNaoNumericos(Input.CPF);
-
-        var user = new UsuarioIdentity { UserName = cpfSemFormatacao, Email = Input.Email };
-        var result = await _userManager.CreateAsync(user, Input.Password);
+            string cpfSemFormatacao = Util.Methods.RemoveNaoNumericos(Input.CPF);
+            if(!_pessoaService.ValidaEmail(Input.Email))
+            {
+               ModelState.AddModelError("E-mail", "Por favor, digite um e-mail em um formato válido.");
+               return Page();
+            }
+         var user = new UsuarioIdentity { UserName = cpfSemFormatacao, Email = Input.Email };
+         var result = await _userManager.CreateAsync(user, Input.Password);    
 
         if (result.Succeeded)
         {
