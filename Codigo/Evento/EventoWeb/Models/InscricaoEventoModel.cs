@@ -16,6 +16,7 @@ public class InscricaoEventoModel
 
     public DateTime DataInscricao { get; set; }
 
+    [Display(Name = "Valor")]
     public decimal ValorTotal { get; set; }
 
     /// <summary>
