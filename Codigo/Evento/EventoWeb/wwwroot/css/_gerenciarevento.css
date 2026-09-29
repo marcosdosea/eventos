@@ -1,10 +1,26 @@
+.cards-gerenciar-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: stretch;
+}
+
 .card-gerenciar {
-    min-height: 150px;
+    flex: 0 0 165px;
+    width: 165px;
+    min-height: 140px;
     border-radius: 12px;
     border: 1px solid #dee2e6;
     background-color: #ffffff;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1.25rem 0.75rem;
+    position: relative;
 }
 
 .card-gerenciar:hover {
@@ -22,6 +38,7 @@
 .card-gerenciar .card-link {
     color: #232ed0;
     font-weight: 600;
+    font-size: 0.95rem;
 }
 
 .card-gerenciar:hover .card-link {
