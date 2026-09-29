@@ -16,6 +16,13 @@
                 <li>
                     <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Gerenciar Conta</a>
                 </li>
+                @if (User.IsInRole("ADMINISTRADOR") && (User.IsInRole("GESTOR") || User.IsInRole("PARTICIPANTE") || User.IsInRole("COLABORADOR") || User.IsInRole("USUARIO")))
+                {
+                    <li>
+                        <a class="dropdown-item" style="cursor: pointer;" onclick="exibirModalSelecionarPerfil()" data-bs-toggle="modal" data-bs-target="#modalEscolherPerfil">Selecionar Perfil</a>
+                    </li>
+
+                }
                 <li><hr class="dropdown-divider"></li>
                 <li>
                     <form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
@@ -34,4 +41,8 @@
             <a class="btn btn-outline-blue-normal" id="register" asp-area="Identity" asp-page="/Account/Register">Cadastre-se</a>
         </li>
     }
+    
 </ul>
+
+
+ 

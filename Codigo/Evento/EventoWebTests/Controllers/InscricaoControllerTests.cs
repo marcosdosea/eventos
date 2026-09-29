@@ -91,9 +91,10 @@ namespace EventoWeb.Controllers.Tests
                 { 1, new Tipoinscricao { Id = 1, IdEvento = 1, Nome = "Paga", Valor = 100m } },
                 { 2, new Tipoinscricao { Id = 2, IdEvento = 1, Nome = "VIP Sub", Valor = 25m } }
             };
-            var (postController, criadas) = CreatePostController(tipos, new Dictionary<string, string>
+            var (postController, criadas, criadasSub) = CreatePostController(tipos, new Dictionary<string, string>
             {
-                { "TipoInscricaoSubevento_10", "2" }
+                { "QuantidadeTipoInscricao_1", "1" },
+                { "QuantidadeTipoInscricaoSubevento_10_2", "1" }
             });
 
             var input = new InscricaoEventoModel
@@ -110,8 +111,10 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             Assert.AreEqual(1, criadas.Count);
             Assert.AreEqual((uint)1, criadas[0].IdTipoInscricao);
-            Assert.AreEqual(125m, criadas[0].ValorTotal);
+            Assert.AreEqual(100m, criadas[0].ValorTotal);
             Assert.AreEqual("S", criadas[0].Status);
+            Assert.AreEqual(1, criadasSub.Count);
+            Assert.AreEqual(25m, criadasSub[0].Valor);
         }
 
         [TestMethod()]
@@ -122,7 +125,10 @@ namespace EventoWeb.Controllers.Tests
             {
                 { 3, new Tipoinscricao { Id = 3, IdEvento = 1, Nome = "Gratuita", Valor = 0m } }
             };
-            var (postController, criadas) = CreatePostController(tipos, new Dictionary<string, string>());
+            var (postController, criadas, _) = CreatePostController(tipos, new Dictionary<string, string>
+            {
+                { "QuantidadeTipoInscricao_3", "1" }
+            });
 
             var input = new InscricaoEventoModel
             {
@@ -145,10 +151,10 @@ namespace EventoWeb.Controllers.Tests
         {
             // Arrange: evento pago sem tipos configurados posta IdTipoInscricao = 0;
             // a tela informa que "a inscrição padrão será aplicada".
-            var (postController, criadas) = CreatePostController(
+            var (postController, criadas, _) = CreatePostController(
                 new Dictionary<uint, Tipoinscricao>(),
                 new Dictionary<string, string>(),
-                new Evento { Id = 1, InscricaoGratuita = 0, ValorInscricao = 100m });
+                new Evento { Id = 1, Status = "A", PossuiCertificado = 1, InscricaoGratuita = 0, ValorInscricao = 100m });
 
             var input = new InscricaoEventoModel
             {
@@ -170,10 +176,10 @@ namespace EventoWeb.Controllers.Tests
         public async Task RealizarInscricaoTest_Post_NoTiposConfigured_GratuitousEvent_SavesZero()
         {
             // Arrange
-            var (postController, criadas) = CreatePostController(
+            var (postController, criadas, _) = CreatePostController(
                 new Dictionary<uint, Tipoinscricao>(),
                 new Dictionary<string, string>(),
-                new Evento { Id = 1, InscricaoGratuita = 1, ValorInscricao = 0m });
+                new Evento { Id = 1, Status = "A", PossuiCertificado = 1, InscricaoGratuita = 1, ValorInscricao = 0m });
 
             var input = new InscricaoEventoModel
             {
@@ -191,7 +197,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual(0m, criadas[0].ValorTotal);
         }
 
-        private static (InscricaoController, List<Inscricaopessoaevento>) CreatePostController(
+        private static (InscricaoController, List<Inscricaopessoaevento>, List<Inscricaopessoasubevento>) CreatePostController(
             Dictionary<uint, Tipoinscricao> tipos,
             Dictionary<string, string> formFields,
             Evento? evento = null)
@@ -207,14 +213,22 @@ namespace EventoWeb.Controllers.Tests
             mockInscricaoService.Setup(service => service.CreateInscricaoEvento(It.IsAny<Inscricaopessoaevento>()))
                 .Callback<Inscricaopessoaevento>(i => criadas.Add(i))
                 .Returns((uint)1);
+            var criadasSub = new List<Inscricaopessoasubevento>();
+            mockInscricaoService.Setup(service => service.CreateInscricaoSubEvento(It.IsAny<Inscricaopessoasubevento>()))
+                .Callback<Inscricaopessoasubevento>(i => criadasSub.Add(i));
 
             var mockTipoService = new Mock<ITipoInscricaoService>();
             mockTipoService.Setup(service => service.Get(It.IsAny<uint>()))
                 .Returns<uint>(id => tipos.TryGetValue(id, out var tipo) ? tipo : null);
 
+            evento ??= new Evento { Id = 1, Status = "A", PossuiCertificado = 1 };
             var mockEventoService = new Mock<IEventoService>();
             mockEventoService.Setup(service => service.Get(It.IsAny<uint>()))
                 .Returns(evento);
+
+            var mockSubeventoService = new Mock<ISubeventoService>();
+            mockSubeventoService.Setup(service => service.Get(10))
+                .Returns(new Subevento { Id = 10, IdEvento = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(1), ValorInscricao = 50m });
 
             IMapper mapper = new MapperConfiguration(cfg =>
                 cfg.AddProfile(new InscricaoProfile())).CreateMapper();
@@ -226,7 +240,7 @@ namespace EventoWeb.Controllers.Tests
                 mapper,
                 mockInscricaoService.Object,
                 mockPessoaService.Object,
-                Mock.Of<ISubeventoService>());
+                mockSubeventoService.Object);
 
             var claims = new List<Claim> { new Claim(ClaimTypes.Name, UsernameTeste) };
             var httpContext = new DefaultHttpContext
@@ -238,7 +252,7 @@ namespace EventoWeb.Controllers.Tests
             postController.ControllerContext = new ControllerContext { HttpContext = httpContext };
             postController.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
 
-            return (postController, criadas);
+            return (postController, criadas, criadasSub);
         }
 
         private static IEnumerable<Inscricaopessoaevento> GetTestInscricoes()

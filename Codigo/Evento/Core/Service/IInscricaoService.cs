@@ -7,6 +7,8 @@ namespace Core.Service
     {
         uint CreateInscricaoEvento(Inscricaopessoaevento inscricaopessoaevento);
 
+        uint CreateInscricaoEventoLote(Inscricaopessoaevento inscricaopessoaevento);
+
         void CreateInscricaoSubEvento(Inscricaopessoasubevento inscricaopessoasubevento);
 
         Task DeletePessoaPapelAsync(uint idPessoa, uint idEvento, uint idPapel, string cpf);

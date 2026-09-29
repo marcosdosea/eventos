@@ -44,6 +44,28 @@ function calcularValorTotal() {
         }
     });
 
+    // submit button disabled if no evento type selected or no subevento selected (when subeventos exist)
+    const btnSubmit = document.querySelector('.btn-submit:not(.btn-login)');
+    if (btnSubmit) {
+        let isEventoValid = eventoRadio !== null;
+        let isSubeventoValid = true;
+        const hasSubeventos = document.querySelectorAll('.subevento-checkbox').length > 0;
+        
+        if (hasSubeventos) {
+            isSubeventoValid = subeventosCheckboxes.length > 0;
+        }
+
+        if (!isEventoValid || !isSubeventoValid) {
+            btnSubmit.disabled = true;
+            btnSubmit.style.opacity = '0.5';
+            btnSubmit.title = "Selecione a inscrição no evento e ao menos 1 subevento (se houver).";
+        } else {
+            btnSubmit.disabled = false;
+            btnSubmit.style.opacity = '1';
+            btnSubmit.title = "";
+        }
+    }
+
     // Atualizar HTML
     if (total === 0) {
         priceElement.textContent = "Gratuito";
@@ -71,4 +93,8 @@ document.addEventListener('keydown', function(event) {
     if (event.key === "Escape") {
         closeImageModal();
     }
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+    calcularValorTotal();
 });

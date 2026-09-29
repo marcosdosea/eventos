@@ -7,6 +7,8 @@ using Core.Service;
 using Moq;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 using Service;
 namespace EventoWeb.Controllers.Tests
 {
@@ -42,7 +44,21 @@ namespace EventoWeb.Controllers.Tests
             mockServiceEvento.Setup(service => service.GetNomeById(It.IsAny<uint>()))
                 .Returns((uint id) => GetTestEventos().FirstOrDefault(e => e.Id == id)?.Nome);
 
-            controller = new TipoInscricaoController(mockService.Object, mapper, mockServiceEvento.Object, mockServiceSubevento.Object);
+            var mockServiceInscricao = new Mock<IInscricaoService>();
+            mockServiceInscricao.Setup(service => service.GetGestorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+
+            controller = new TipoInscricaoController(mockService.Object, mapper, mockServiceEvento.Object, mockServiceSubevento.Object, mockServiceInscricao.Object);
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "12345678900"),
+                new Claim(ClaimTypes.Role, "GESTOR")
+            };
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) }
+            };
         }
         
 
@@ -190,6 +206,85 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsNull(redirectToActionResult.ControllerName);
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
         }
+
+        // IDOR (#764): gestor só gerencia o próprio evento.
+        [TestMethod()]
+        public void Index_EventoAlheio_Forbid_Proprio_Ok()
+        {
+            var mockTipo = new Mock<ITipoInscricaoService>();
+            mockTipo.Setup(s => s.GetByEvento(It.IsAny<uint>())).Returns(new List<Tipoinscricao>());
+            var mockEvento = new Mock<IEventoService>();
+            mockEvento.Setup(s => s.GetNomeById(It.IsAny<uint>())).Returns("Ev");
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new TipoInscricaoProfile())).CreateMapper();
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), (uint)1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), (uint)2))
+                .Returns((Inscricaopessoaevento)null!);
+            var ctl = new TipoInscricaoController(mockTipo.Object, mapper, mockEvento.Object, new Mock<ISubeventoService>().Object, mockInsc.Object);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            Assert.IsInstanceOfType(ctl.Index(2), typeof(ForbidResult));
+            Assert.IsInstanceOfType(ctl.Index(1), typeof(ViewResult));
+        }
+
+        // IDOR (#764)
+        [TestMethod()]
+        public void Details_EventoAlheio_Forbid()
+        {
+            var mockTipo = new Mock<ITipoInscricaoService>();
+            mockTipo.Setup(s => s.Get(10)).Returns(new Tipoinscricao { Id = 10, IdEvento = 2, Nome = "X" });
+            mockTipo.Setup(s => s.Get(11)).Returns(new Tipoinscricao { Id = 11, IdEvento = 1, Nome = "Y" });
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new TipoInscricaoProfile())).CreateMapper();
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), (uint)1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), (uint)2))
+                .Returns((Inscricaopessoaevento)null!);
+            var ctl = new TipoInscricaoController(mockTipo.Object, mapper, new Mock<IEventoService>().Object, new Mock<ISubeventoService>().Object, mockInsc.Object);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            Assert.IsInstanceOfType(ctl.Details(10), typeof(ForbidResult));
+            Assert.IsInstanceOfType(ctl.Details(11), typeof(ViewResult));
+        }
+
+        // IDOR (#764): ADMINISTRADOR libera geral.
+        [TestMethod()]
+        public void Administrador_Libera_EventoAlheio()
+        {
+            var mockTipo = new Mock<ITipoInscricaoService>();
+            mockTipo.Setup(s => s.GetByEvento(It.IsAny<uint>())).Returns(new List<Tipoinscricao>());
+            var mockEvento = new Mock<IEventoService>();
+            mockEvento.Setup(s => s.GetNomeById(It.IsAny<uint>())).Returns("Ev");
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
+                .Returns((Inscricaopessoaevento)null!);
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new TipoInscricaoProfile())).CreateMapper();
+            var ctl = new TipoInscricaoController(mockTipo.Object, mapper, mockEvento.Object, new Mock<ISubeventoService>().Object, mockInsc.Object);
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "admin"),
+                new Claim(ClaimTypes.Role, "ADMINISTRADOR")
+            };
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) }
+            };
+
+            Assert.IsInstanceOfType(ctl.Index(2), typeof(ViewResult));
+        }
+
+        private static ClaimsPrincipal GestorPrincipal() => new(new ClaimsIdentity(new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, "12345678900"),
+            new Claim(ClaimTypes.Role, "GESTOR")
+        }, "TestAuthType"));
 
         private TipoInscricaoModel GetNewTipoInscricao()
         {

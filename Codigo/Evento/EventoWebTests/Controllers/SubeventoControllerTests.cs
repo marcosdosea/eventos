@@ -54,7 +54,11 @@ namespace EventoWeb.Controllers.Tests
             mockServiceTipoInscricao.Setup(service => service.GetTiposInscricaosSubevento(1))
                 .Returns(new List<TipoInscricaoDTO>());
 
-            controller = new SubeventoController(mockService.Object, mapper, mockServiceEvento.Object, mockServiceTipoevento.Object, mockServiceTipoInscricao.Object);
+            var mockServiceInscricao = new Mock<IInscricaoService>();
+            mockServiceInscricao.Setup(service => service.GetGestorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+
+            controller = new SubeventoController(mockService.Object, mapper, mockServiceEvento.Object, mockServiceTipoevento.Object, mockServiceTipoInscricao.Object, mockServiceInscricao.Object);
 
             var claims = new List<Claim>
             {
@@ -127,6 +131,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(SubeventoModel));
+            SubeventoModel subeventoModel = (SubeventoModel)viewResult.ViewData.Model;
+            Assert.AreEqual((uint)1, subeventoModel.IdEvento);
         }
 
         [TestMethod()]
@@ -155,6 +161,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(SubeventoModel));
+            SubeventoModel subeventoModel = (SubeventoModel)viewResult.ViewData.Model;
+            Assert.AreEqual((uint)1, subeventoModel.IdEvento);
         }
 
         [TestMethod()]
@@ -259,6 +267,54 @@ namespace EventoWeb.Controllers.Tests
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.IsNull(redirectToActionResult.ControllerName);
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
+        }
+
+        // IDOR (#764): gestor só gerencia o próprio evento.
+        [TestMethod()]
+        public void Details_EventoAlheio_Forbid_Proprio_Ok()
+        {
+            var mockSub = new Mock<ISubeventoService>();
+            mockSub.Setup(s => s.Get(10)).Returns(new Subevento { Id = 10, IdEvento = 2, Nome = "A" });
+            mockSub.Setup(s => s.Get(11)).Returns(new Subevento { Id = 11, IdEvento = 1, Nome = "B" });
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new SubeventoProfile())).CreateMapper();
+            var ctl = new SubeventoController(mockSub.Object, mapper, new Mock<IEventoService>().Object, new Mock<ITipoeventoService>().Object, new Mock<ITipoInscricaoService>().Object, MockInscricaoSozinhoEventoProprio().Object);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            Assert.IsInstanceOfType(ctl.Details(10), typeof(ForbidResult));
+            Assert.IsInstanceOfType(ctl.Details(11), typeof(ViewResult));
+        }
+
+        // IDOR (#764)
+        [TestMethod()]
+        public void CreateOrEdit_EventoAlheio_Forbid()
+        {
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new SubeventoProfile())).CreateMapper();
+            var ctl = new SubeventoController(new Mock<ISubeventoService>().Object, mapper, new Mock<IEventoService>().Object, new Mock<ITipoeventoService>().Object, new Mock<ITipoInscricaoService>().Object, MockInscricaoSozinhoEventoProprio().Object);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            Assert.IsInstanceOfType(ctl.CreateOrEdit(2, (uint?)null), typeof(ForbidResult));
+        }
+
+        private static ClaimsPrincipal GestorPrincipal() => new(new ClaimsIdentity(new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, "12345678900"),
+            new Claim(ClaimTypes.Role, "GESTOR")
+        }, "TestAuthType"));
+
+        private static Mock<IInscricaoService> MockInscricaoSozinhoEventoProprio()
+        {
+            var mock = new Mock<IInscricaoService>();
+            mock.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), (uint)1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+            mock.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), (uint)2))
+                .Returns((Inscricaopessoaevento)null!);
+            return mock;
         }
 
         private SubeventoModel GetNewSubevento()

@@ -29,6 +29,7 @@
                             }
                         </select>
                         @Html.HiddenFor(model => model.Evento.Id)
+                        @Html.HiddenFor(model => model.IdEvento)
                     </div>
                 </div>
             </div>
@@ -184,7 +185,7 @@
                         <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
                     </div>
                     <div class="form-group">
-                        <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Model.IdEvento" class="btn btn-outline-danger">Voltar</a>
+                        <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@(Model.IdEvento != 0 ? Model.IdEvento : (Model.Evento != null ? Model.Evento.Id : 0))" class="btn btn-outline-danger">Voltar</a>
                     </div>
                 </div>
             </div>

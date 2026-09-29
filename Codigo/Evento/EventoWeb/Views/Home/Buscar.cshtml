@@ -9,6 +9,25 @@
 <section class="eventos">
     <h1>Resultados da Busca</h1>
 
+    @{
+        var filtroLocal = ViewBag.FiltroAtual as Core.DTO.EventoFilterDTO;
+        bool hasStateFilter = !string.IsNullOrEmpty(filtroLocal?.Estado);
+        bool hasCityFilter = !string.IsNullOrEmpty(filtroLocal?.Cidade);
+        bool hasLocationFilter = hasStateFilter || hasCityFilter;
+    }
+    @if (hasLocationFilter)
+    {
+        <div class="container-fluid px-3">
+            <div class="badge-location-filter">
+                <i class="bi bi-geo-alt-fill"></i>
+                Resultados filtrados por: @(hasCityFilter ? $"{filtroLocal.Cidade} - {filtroLocal.Estado}" : $"Todo o estado ({filtroLocal.Estado})")
+                <button type="button" class="btn-clear-location" aria-label="Remover filtro de localização" onclick="clearSearchLocationFilter()">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+        </div>
+    }
+
     <div class="container-fluid px-3">
         <div class="search-cards-grid" style="margin-bottom: 2rem;">
             @if (Model != null && Model.Any())

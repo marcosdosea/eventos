@@ -315,6 +315,12 @@
             <script src="~/js/carrossel.js"></script>
 
     </main>
+    @{
+        var modalExibe = TempData["SelecionarPerfil"]?.ToString() ?? "false";
+    }
+
+    <partial name="_SelecionarPerfil" model="modalExibe" />
+    
 </body>
 
 </html>
