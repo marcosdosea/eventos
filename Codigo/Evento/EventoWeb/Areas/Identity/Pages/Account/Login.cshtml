@@ -3,7 +3,7 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";
-    ViewData["Title"] = "Log in";
+    ViewData["Title"] = "Entrar";
 }
 <style>
     /*Desabilita o olho nativo no Microsoft Edge */
@@ -23,7 +23,7 @@
                 <h5>CPF</h5>
                 <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
                 <div class="form-floating mb-3">
-                    <input asp-for="Input.CPF" class="form-control" autocomplete="username" aria-required="true" placeholder="Digite seu CPF" />
+                    <input asp-for="Input.CPF" class="form-control" autocomplete="username" aria-required="true" placeholder="000.000.000-00" oninput="formatarCpfForm(this)" maxlength="14" />
                     <label asp-for="Input.CPF" class="form-label grey-light-active">CPF</label>
                     <span asp-validation-for="Input.CPF" class="text-danger"></span>
                 </div>
@@ -93,6 +93,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/FormatarCpfCadastro.js" asp-append-version="true"></script>
 }
 
 <script>
