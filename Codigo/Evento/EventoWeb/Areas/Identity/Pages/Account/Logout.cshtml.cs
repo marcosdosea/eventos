@@ -28,6 +28,7 @@ namespace EventoWeb.Areas.Identity.Pages.Account
         {
             TempData.Remove("Message");
             await _signInManager.SignOutAsync();
+            HttpContext.Session.Clear();
             _logger.LogInformation("User logged out.");
             if (returnUrl != null)
             {

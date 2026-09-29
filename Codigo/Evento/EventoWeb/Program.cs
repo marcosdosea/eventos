@@ -59,7 +59,6 @@ namespace EventoWeb
             builder.Services.AddTransient<IEmailSender, EmailSender>();
             builder.Services.AddTransient<IParticipacaoPessoaEventoService, ParticipacaoPessoaEventoService>();
             builder.Services.AddTransient<IParticipacaoPessoaSubEventoService, ParticipacaoPessoaSubEventoService>();
-            builder.Services.AddTransient<IParticipanteService, ParticipanteService>();
             builder.Services.AddTransient<IInscricaopessoaeventoService, InscricaopessoaeventoService>();
             builder.Services.AddTransient<IEmailService, EmailSender>();
             builder.Services.AddDbContext<EventoContext>(
@@ -120,8 +119,17 @@ namespace EventoWeb
                 options.SupportedUICultures = supportedCultures;
             });
 
+            builder.Services.AddDistributedMemoryCache();
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(30);
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
+            }); 
+           
             var app = builder.Build();
 
+            
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
@@ -136,7 +144,7 @@ namespace EventoWeb
             app.UseRouting();
 
             app.UseRequestLocalization(app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>().Value);
-
+            app.UseSession();
             app.UseAuthentication();
             app.UseAuthorization();
 

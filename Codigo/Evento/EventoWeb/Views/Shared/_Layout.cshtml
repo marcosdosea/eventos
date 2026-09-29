@@ -63,6 +63,7 @@
                                 <a class="nav-link fw-bold text-primary" asp-controller="Evento" asp-action="Create">Seu evento aqui!</a>
                             </div>
                             <partial name="_LoginPartial" />
+                           
                         </div>
                     </div>
                 </div>
@@ -75,12 +76,13 @@
             @RenderBody()
         </main>
     </div>
+    
 
     @if (showLocation)
     {
         <partial name="_LocationModal" />
     }
-
+    <partial name="_SelecionarPerfil" model="null" />
     <partial name="_Footer" />
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

@@ -1,22 +1,51 @@
 ﻿@{
-    if (Context.User.Identity.IsAuthenticated && Context.User.IsInRole("ADMINISTRADOR"))
+    var perfilAtivo = Context.Session?.GetString("PerfilAtivo");
+    if (Context.User.Identity.IsAuthenticated)
     {
-        Layout = "_LayoutAdministrativo";
-    }
-    else if (Context.User.Identity.IsAuthenticated && Context.User.IsInRole("GESTOR"))
-    {
-        Layout = "_LayoutGestor";
-    }
-    else if (Context.User.Identity.IsAuthenticated && Context.User.IsInRole("COLABORADOR"))
-    {
-        Layout = "_LayoutColaborador";
-    }
-    else if (Context.User.Identity.IsAuthenticated && Context.User.IsInRole("USUARIO"))
-    {
-        Layout = "_LayoutParticipante";
+        if (!string.IsNullOrEmpty(perfilAtivo))
+        {
+
+            if (perfilAtivo == "ADMINISTRADOR")
+            {
+                Layout = "_LayoutAdministrativo";
+            }
+            else if (perfilAtivo == "GESTOR")
+            {
+                Layout = "_LayoutGestor";
+            }
+            else if (perfilAtivo == "COLABORADOR")
+            {
+                Layout = "_LayoutColaborador";
+            }
+            else if (perfilAtivo == "USUARIO" || perfilAtivo == "PARTICIPANTE")
+            {
+                Layout = "_LayoutParticipante";
+            }
+
+
+
+        }
+        else if (Context.User.IsInRole("ADMINISTRADOR"))
+        {
+            Layout = "_LayoutAdministrativo";
+        }
+        else if (Context.User.Identity.IsAuthenticated && Context.User.IsInRole("GESTOR"))
+        {
+            Layout = "_LayoutGestor";
+        }
+        else if (Context.User.Identity.IsAuthenticated && Context.User.IsInRole("COLABORADOR"))
+        {
+            Layout = "_LayoutColaborador";
+        }
+        else if (Context.User.Identity.IsAuthenticated && Context.User.IsInRole("USUARIO"))
+        {
+            Layout = "_LayoutParticipante";
+        }
     }
     else
     {
         Layout = "_Layout";
     }
+    
+    
 }

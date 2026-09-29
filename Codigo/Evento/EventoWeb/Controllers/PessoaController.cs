@@ -454,6 +454,30 @@ namespace EventoWeb.Controllers
             }
             return RedirectToAction("Index", "Home");
         }
+
+        [Authorize(Roles = "ADMINISTRADOR")]
+        [HttpPost]
+        [Route("SelecionarPerfil")]
+        [ValidateAntiForgeryToken]
+        public ActionResult SelecionarPerfil(string perfil)
+        {
+            
+            if (string.IsNullOrEmpty(perfil))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+            HttpContext.Session.SetString("PerfilAtivo", perfil);
+
+            if (perfil == "GESTOR" || perfil == "COLABORADOR")
+            {
+                return RedirectToAction("GerenciarEventoListar", "Evento");
+            }else if (perfil == "PARTICIPANTE" || perfil == "USUARIO")
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            return RedirectToAction("Index", "Evento");
+        }
         // =====================================================================
         // HELPER PRIVADO
         // =====================================================================
