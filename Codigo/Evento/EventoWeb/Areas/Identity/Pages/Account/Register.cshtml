@@ -3,7 +3,7 @@
 
 @{
     Layout = "~/Views/Shared/_Layout.cshtml";  // Certifique-se de que o layout global está correto
-    ViewData["Title"] = "Register";
+    ViewData["Title"] = "Cadastrar";
 }
 
 <style>
@@ -17,7 +17,7 @@
 <div class="row">
     <div class="col-md-6">
         <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
-            <h1 class="grey-dark" style="margin-top: 96px; margin-bottom: 12px; text-align: center;">Já possui uma conta?</h1>
+            <h1 class="grey-dark" style="margin-top: 96px; margin-bottom: 12px; text-align: center;">Crie sua conta</h1>
             <h5 class="grey-light-active" style="margin-bottom: 32px; text-align: center;">Bem vindo! Insira seus dados.</h5>
             
             <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
@@ -31,7 +31,7 @@
             
             <h5>CPF</h5>
             <div class="form-floating mb-3">
-                <input asp-for="Input.CPF" class="form-control" autocomplete="cpf" aria-required="true" placeholder="000.000.000-00" />
+                <input asp-for="Input.CPF" class="form-control" autocomplete="cpf" aria-required="true" placeholder="000.000.000-00" oninput="formatarCpfForm(this)" maxlength="14" />
                 <label asp-for="Input.CPF" class="form-label grey-light-active">CPF</label>
                 <span asp-validation-for="Input.CPF" class="text-danger"></span>
             </div>
@@ -96,6 +96,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/FormatarCpfCadastro.js" asp-append-version="true"></script>
 }
 
 <script>

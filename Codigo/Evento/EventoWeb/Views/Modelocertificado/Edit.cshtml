@@ -7,7 +7,7 @@
 
 <h1>Editar Modelo de Certificado</h1>
 
-<form asp-action="Edit" method="post">
+<form asp-action="Edit" asp-route-id="@Model.Id" method="post">
     <input type="hidden" asp-for="Id" />
 
     <div class="form-group">

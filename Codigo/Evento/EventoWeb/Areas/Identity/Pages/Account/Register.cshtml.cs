@@ -79,30 +79,31 @@ namespace EventoWeb.Areas.Identity.Pages.Account
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
-            [Required]
-            [EmailAddress]
-            [Display(Name = "Email")]
+            [Required(ErrorMessage = "O campo E-mail é obrigatório.")]
+            [EmailAddress(ErrorMessage = "O campo E-mail não é um endereço de e-mail válido.")]
+            [Display(Name = "E-mail")]
             public string Email { get; set; }
 
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
-            [Required]
-            [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]         [DataType(DataType.Password)]
-            [Display(Name = "Password")]
+            [Required(ErrorMessage = "O campo Senha é obrigatório.")]
+            [StringLength(100, ErrorMessage = "A {0} deve ter ao menos {2} e no máximo {1} caracteres.", MinimumLength = 6)]         [DataType(DataType.Password)]
+            [Display(Name = "Senha")]
             public string Password { get; set; }
 
             /// <summary>
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
+            [Required(ErrorMessage = "O campo Confirmar senha é obrigatório.")]
             [DataType(DataType.Password)]
-            [Display(Name = "Confirm password")]
-            [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+            [Display(Name = "Confirmar senha")]
+            [Compare("Password", ErrorMessage = "A senha e a confirmação de senha não coincidem.")]
             public string ConfirmPassword { get; set; }
 
-			[Required]
+			[Required(ErrorMessage = "O campo Nome é obrigatório.")]
 			[Display(Name = "Nome")]
 			public string Nome { get; set; }
 
@@ -164,8 +165,18 @@ namespace EventoWeb.Areas.Identity.Pages.Account
                 values: new { area = "Identity", userId = user.Id, code = code, returnUrl = returnUrl },
                 protocol: Request.Scheme);
 
-            await _emailSender.SendEmailAsync(Input.Email, "Confirme seu email",
-                $"Por favor, confirme sua conta <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicando aqui</a>.");
+            try
+            {
+                await _emailSender.SendEmailAsync(Input.Email, "Confirme seu email",
+                    $"Por favor, confirme sua conta <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicando aqui</a>.");
+            }
+            catch (Exception ex)
+            {
+                // A conta já foi criada (usuário + pessoa + perfil). Se o SMTP
+                // estiver fora do ar, não derruba o cadastro com erro 500: a
+                // página de confirmação exibe o link para confirmar a conta.
+                _logger.LogWarning(ex, "Falha ao enviar e-mail de confirmação para {Email}.", Input.Email);
+            }
 
             if (_userManager.Options.SignIn.RequireConfirmedAccount)
             {

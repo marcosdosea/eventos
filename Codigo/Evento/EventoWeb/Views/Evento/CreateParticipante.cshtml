@@ -76,6 +76,15 @@
 	</div>
 </div>
 
+
+@if (TempData["Message"] != null)
+{
+	<div class="alert alert-info alert-dismissible fade show" role="alert">
+		@TempData["Message"]
+		<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+	</div>
+}
+
 @if (!ViewData.ModelState.IsValid)
 {
 <div class="alert alert-danger">
@@ -101,22 +110,30 @@
 						<td style="vertical-align: middle;">@FormatarCPF(inscricaopessoaevento.IdPessoaNavigation.Cpf)</td>
 						<td style="vertical-align: middle;">@inscricaopessoaevento.IdPessoaNavigation.Nome</td>
 						<td style="vertical-align: middle;">
-							<form id="removeForm-@inscricaopessoaevento.IdPessoa" method="POST" action="/Evento/DeletePessoaPapel">
-								@Html.AntiForgeryToken()
-								<input type="hidden" name="IdPessoa" value="@inscricaopessoaevento.IdPessoa" />
-								<input type="hidden" name="IdEvento" value="@Model.Evento.Id" />
-								<input type="hidden" name="IdPapel" value="@inscricaopessoaevento.IdPapel" />
-								<a href="javascript:void(0);"
-								   class="text-danger link-remover-participante"
-								   style="text-decoration: none; cursor: pointer;"
-								   data-id-pessoa="@inscricaopessoaevento.IdPessoa"
-								   data-nome-pessoa="@inscricaopessoaevento.IdPessoaNavigation.Nome"
-								   data-nome-evento="@Model.Evento.Nome"
-								   data-id-evento="@Model.Evento.Id"
-								   data-id-papel="@inscricaopessoaevento.IdPapel">
-									Remover participante
+							<div class="d-flex align-items-center gap-2">
+								<a asp-action="EditParticipante"
+								   asp-route-idEvento="@Model.Evento.Id"
+								   asp-route-idPessoa="@inscricaopessoaevento.IdPessoa"
+								   class="btn btn-sm btn-primary">
+									Editar
 								</a>
-							</form>
+								<form id="removeForm-@inscricaopessoaevento.IdPessoa" method="POST" action="/Evento/DeletePessoaPapel" class="d-inline m-0">
+									@Html.AntiForgeryToken()
+									<input type="hidden" name="IdPessoa" value="@inscricaopessoaevento.IdPessoa" />
+									<input type="hidden" name="IdEvento" value="@Model.Evento.Id" />
+									<input type="hidden" name="IdPapel" value="@inscricaopessoaevento.IdPapel" />
+									<a href="javascript:void(0);"
+									   class="text-danger link-remover-participante"
+									   style="text-decoration: none; cursor: pointer;"
+									   data-id-pessoa="@inscricaopessoaevento.IdPessoa"
+									   data-nome-pessoa="@inscricaopessoaevento.IdPessoaNavigation.Nome"
+									   data-nome-evento="@Model.Evento.Nome"
+									   data-id-evento="@Model.Evento.Id"
+									   data-id-papel="@inscricaopessoaevento.IdPapel">
+										Remover participante
+									</a>
+								</form>
+							</div>
 						</td>
 					</tr>
 				}

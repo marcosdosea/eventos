@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using Util;
 
 namespace EventoWeb.Controllers
 {
@@ -51,17 +52,31 @@ namespace EventoWeb.Controllers
         // DETAILS
         // =====================================================================
 
-        [Authorize]
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
         [HttpGet]
         [Route("BuscarPessoaPorCpf")]
         public ActionResult BuscarPessoaPorCpf(string cpf)
         {
+            if (string.IsNullOrWhiteSpace(cpf))
+                return BadRequest("CPF é obrigatório.");
+
+            if (!Methods.ValidarCpf(cpf))
+                return BadRequest("CPF inválido.");
+
+            var cpfLogado = User.Identity?.Name ?? string.Empty;
+            var isSelf = string.Equals(
+                Methods.RemoveNaoNumericos(cpf),
+                Methods.RemoveNaoNumericos(cpfLogado),
+                StringComparison.Ordinal);
+            if (!isSelf && !(User.IsInRole("ADMINISTRADOR") || User.IsInRole("GESTOR")))
+                return Forbid();
+
             var pessoa = _pessoaService.GetByCpf(cpf);
 
             if (pessoa == null)
                 return NotFound();
 
-            return Json(pessoa);
+            return Json(new { pessoa.Cpf, pessoa.Nome, pessoa.NomeCracha });
         }
 
         [Authorize(Roles = "ADMINISTRADOR")]
@@ -438,6 +453,30 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("GerenciarEventoListar", "Evento");
             }
             return RedirectToAction("Index", "Home");
+        }
+
+        [Authorize(Roles = "ADMINISTRADOR")]
+        [HttpPost]
+        [Route("SelecionarPerfil")]
+        [ValidateAntiForgeryToken]
+        public ActionResult SelecionarPerfil(string perfil)
+        {
+            
+            if (string.IsNullOrEmpty(perfil))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+            HttpContext.Session.SetString("PerfilAtivo", perfil);
+
+            if (perfil == "GESTOR" || perfil == "COLABORADOR")
+            {
+                return RedirectToAction("GerenciarEventoListar", "Evento");
+            }else if (perfil == "PARTICIPANTE" || perfil == "USUARIO")
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            return RedirectToAction("Index", "Evento");
         }
         // =====================================================================
         // HELPER PRIVADO
