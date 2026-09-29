@@ -548,9 +548,13 @@ namespace EventoWeb.Controllers
         }
 
         // POST: api/ParticipacaoPessoaEvento
+        [Authorize(Roles = "GESTOR,COLABORADOR")]
         [HttpPost]
         public async Task<ActionResult<ParticipacaoPessoaEventoDTO>> Create([FromBody] ParticipacaoPessoaEventoDTO dto)
         {
+            if (!TemPermissaoNoEvento(dto.IdEvento))
+                return Forbid();
+
             // Converte DTO em entidade de domínio
             var entidade = _mapper.Map<Participacaopessoaevento>(dto);
             // Persiste no banco
@@ -562,11 +566,19 @@ namespace EventoWeb.Controllers
         }
 
         // PUT: api/ParticipacaoPessoaEvento/5
+        [Authorize(Roles = "GESTOR,COLABORADOR")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(uint id, [FromBody] ParticipacaoPessoaEventoDTO dto)
         {
             if (id != dto.Id)
                 return BadRequest();
+
+            var existente = await _participacaoService.GetByIdAsync(id);
+            if (existente == null)
+                return NotFound();
+
+            if (!TemPermissaoNoEvento(existente.IdEvento) || !TemPermissaoNoEvento(dto.IdEvento))
+                return Forbid();
 
             var entidade = _mapper.Map<Participacaopessoaevento>(dto);
             var sucesso = await _participacaoService.UpdateAsync(entidade);
@@ -577,14 +589,44 @@ namespace EventoWeb.Controllers
         }
 
         // DELETE: api/ParticipacaoPessoaEvento/5
+        [Authorize(Roles = "GESTOR,COLABORADOR")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(uint id)
         {
+            var existente = await _participacaoService.GetByIdAsync(id);
+            if (existente == null)
+                return NotFound();
+
+            if (!TemPermissaoNoEvento(existente.IdEvento))
+                return Forbid();
+
             var sucesso = await _participacaoService.DeleteAsync(id);
             if (!sucesso)
                 return NotFound();
 
             return NoContent();
+        }
+
+        private bool TemPermissaoNoEvento(uint idEvento)
+        {
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+                return false;
+
+            var gestor = _inscricaoService.GetGestorInEvent(username, idEvento);
+            var colaborador = _inscricaoService.GetColaboradorInEvent(username, idEvento);
+
+            if (gestor == null && colaborador == null)
+            {
+                var cpfLimpo = username.Replace(".", "").Replace("-", "");
+                if (cpfLimpo != username)
+                {
+                    gestor = _inscricaoService.GetGestorInEvent(cpfLimpo, idEvento);
+                    colaborador = _inscricaoService.GetColaboradorInEvent(cpfLimpo, idEvento);
+                }
+            }
+
+            return gestor != null || colaborador != null;
         }
     }
 }

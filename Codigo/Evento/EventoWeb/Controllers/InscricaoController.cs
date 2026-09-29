@@ -429,16 +429,7 @@ namespace EventoWeb.Controllers
         public async Task<IActionResult> minhasInscricoes(uint? idEvento)
         {
             var inscricaoUser = _inscricaoService.GetAllEventsByUserId(User.Identity.Name);
-            var listarEventosModel = inscricaoUser.Select(i => new InscricaoEventoModel
-            {
-                Id = i.Id,
-                IdEvento = i.IdEvento,
-                DataInscricao = (DateTime)i.DataInscricao,
-                NomeCracha = i.NomeCracha,
-                Status = i.Status,
-                FrequenciaFinal = i.FrequenciaFinal,
-                IdEventoNavigation = i.IdEventoNavigation
-            }).ToList();
+            var listarEventosModel = inscricaoUser.Select(i => _mapper.Map<InscricaoEventoModel>(i)).ToList();
 
             ViewBag.EventoId = idEvento ?? listarEventosModel.FirstOrDefault()?.IdEvento;
             return View(listarEventosModel);
