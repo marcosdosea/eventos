@@ -294,6 +294,20 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("Index", "Home"); 
             }
 
+            // Fix #780: nenhum tipo de outro evento pode ser usado neste evento.
+            // 0 = preço padrão do evento e 999999 = meia-entrada padrão são os únicos IDs fora da tabela.
+            foreach (var idTipoCheck in mainEventQuantities.Keys.ToList())
+            {
+                if (idTipoCheck == 0 || idTipoCheck == 999999)
+                    continue;
+                var tipoCheck = _tipoinscricaoService.Get(idTipoCheck);
+                if (tipoCheck == null || tipoCheck.IdEvento != idEvento)
+                {
+                    TempData["ParticipanteMessage"] = "Tipo de inscrição inválido para este evento.";
+                    return RedirectToAction("realizarInscricao", new { idEvento = idEvento });
+                }
+            }
+
             foreach (var kvp in mainEventQuantities)
             {
                 uint idTipo = kvp.Key;
@@ -356,6 +370,11 @@ namespace EventoWeb.Controllers
                     {
                         continue;
                     }
+                    // Fix #780: subevento de outro evento não pode ser usado neste evento.
+                    if (subevento.IdEvento != idEvento)
+                    {
+                        continue;
+                    }
                     var subEventQuantities = new Dictionary<uint, int>();
                     int totalSubTickets = 0;
 
@@ -384,6 +403,16 @@ namespace EventoWeb.Controllers
                     {
                         uint idTipoSub = kvpSub.Key;
                         int quantidadeSub = kvpSub.Value;
+
+                        // Fix #780: tipo do subevento também precisa pertencer a este evento.
+                        if (idTipoSub != 0 && idTipoSub != 999999)
+                        {
+                            var tipoCheckSub = _tipoinscricaoService.Get(idTipoSub);
+                            if (tipoCheckSub == null || tipoCheckSub.IdEvento != idEvento)
+                            {
+                                continue;
+                            }
+                        }
 
                         decimal valorSub = 0m;
                         if (idTipoSub != 0 && idTipoSub != 999999)
