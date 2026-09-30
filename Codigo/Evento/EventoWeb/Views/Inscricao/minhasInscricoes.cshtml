@@ -59,11 +59,19 @@
             </tr>
         </thead>
     <tbody>
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="6" class="text-center text-muted py-4">
+                    Nenhuma inscrição encontrada.
+                </td>
+            </tr>
+        }
         @foreach (var item in Model)
         {
             <tr>
                 <td style="vertical-align: middle;">
-                    <strong>@Html.DisplayFor(modelItem => item.IdEventoNavigation.Nome)</strong>
+                    <strong>@(item.IdEventoNavigation?.Nome ?? "Evento")</strong>
                 </td>
                 <td style="vertical-align: middle;">
                     @{
@@ -83,7 +91,7 @@
                 @status
                 </td>
                 <td style="vertical-align: middle;">
-                    @Html.DisplayFor(modelItem => item.DataInscricao)
+                    @item.DataInscricao.ToString("dd/MM/yyyy HH:mm")
                 </td>
                 <td style="vertical-align: middle;">
                     @item.ValorTotal.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))

@@ -5,8 +5,12 @@
 
 <style>
     @@media print {
-        .no-print, header, footer, .sidebar, nav, .btn, .navbar {
+        .no-print, header, footer, .sidebar, nav, .btn, .navbar, .alert {
             display: none !important;
+        }
+        .conteudo {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
         }
         .card {
             border: 1px solid #dee2e6 !important;
@@ -17,6 +21,39 @@
         }
     }
 </style>
+
+@{
+    var totalSubeventos = Model.Inscricaopessoasubeventos?.Sum(s => s.Valor) ?? 0m;
+    var totalGeral = Model.ValorTotal + totalSubeventos;
+    var hasSubeventos = Model.Inscricaopessoasubeventos != null && Model.Inscricaopessoasubeventos.Any();
+
+    var cpfExibicao = Model.IdPessoaNavigation?.Cpf;
+    if (!string.IsNullOrEmpty(cpfExibicao) && cpfExibicao.Length == 11)
+    {
+        cpfExibicao = Util.Methods.PatternCpf(cpfExibicao);
+    }
+
+    var enderecoPartes = new List<string>();
+    if (Model.IdEventoNavigation != null)
+    {
+        if (!string.IsNullOrWhiteSpace(Model.IdEventoNavigation.Rua))
+        {
+            var logradouro = Model.IdEventoNavigation.Rua;
+            if (!string.IsNullOrWhiteSpace(Model.IdEventoNavigation.Numero))
+                logradouro += ", " + Model.IdEventoNavigation.Numero;
+            enderecoPartes.Add(logradouro);
+        }
+        if (!string.IsNullOrWhiteSpace(Model.IdEventoNavigation.Bairro))
+            enderecoPartes.Add(Model.IdEventoNavigation.Bairro);
+        if (!string.IsNullOrWhiteSpace(Model.IdEventoNavigation.Cidade))
+        {
+            var cidadeUf = Model.IdEventoNavigation.Cidade;
+            if (!string.IsNullOrWhiteSpace(Model.IdEventoNavigation.Estado))
+                cidadeUf += " - " + Model.IdEventoNavigation.Estado;
+            enderecoPartes.Add(cidadeUf);
+        }
+    }
+}
 
 <div class="container my-4">
     <div class="d-flex justify-content-between align-items-center mb-3 no-print">
@@ -41,7 +78,7 @@
 
     <div class="card shadow-sm mb-4">
         <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
-            <h5 class="m-0 text-white">Inscrição #@Model.Id</h5>
+            <h5 class="m-0 text-white">Inscrição @(Model.Id > 0 ? $"#{Model.Id}" : string.Empty)</h5>
             @{
                 var statusBadge = "secondary";
                 var statusText = "Padrão";
@@ -71,11 +108,10 @@
                                 }
                             </p>
                         }
-                        @if (!string.IsNullOrEmpty(Model.IdEventoNavigation.Cidade))
+                        @if (enderecoPartes.Any())
                         {
                             <p class="mb-2">
-                                <strong>Local:</strong> 
-                                @Model.IdEventoNavigation.Rua, @Model.IdEventoNavigation.Numero - @Model.IdEventoNavigation.Bairro, @Model.IdEventoNavigation.Cidade - @Model.IdEventoNavigation.Estado
+                                <strong>Local:</strong> @string.Join(", ", enderecoPartes)
                             </p>
                         }
                     }
@@ -84,7 +120,7 @@
                 <div class="col-md-6 mb-3">
                     <h5 class="text-primary border-bottom pb-2">Informações do Participante</h5>
                     <p class="mb-2"><strong>Nome:</strong> @(Model.IdPessoaNavigation?.Nome ?? Model.NomeCracha ?? "-")</p>
-                    <p class="mb-2"><strong>CPF:</strong> @(Model.IdPessoaNavigation?.Cpf ?? "-")</p>
+                    <p class="mb-2"><strong>CPF:</strong> @(cpfExibicao ?? "-")</p>
                     @if (!string.IsNullOrEmpty(Model.IdPessoaNavigation?.Email))
                     {
                         <p class="mb-2"><strong>E-mail:</strong> @Model.IdPessoaNavigation.Email</p>
@@ -109,9 +145,16 @@
                             <strong>@(Model.IdTipoInscricaoNavigation?.Nome ?? "Padrão")</strong>
                         </div>
                         <div class="col-sm-6 col-md-3 mb-2">
-                            <span class="text-muted d-block">Valor da Inscrição:</span>
+                            <span class="text-muted d-block">@(hasSubeventos ? "Valor Evento Principal:" : "Valor da Inscrição:")</span>
                             <strong class="fs-5 text-success">@Model.ValorTotal.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))</strong>
                         </div>
+                        @if (hasSubeventos)
+                        {
+                            <div class="col-sm-6 col-md-3 mb-2">
+                                <span class="text-muted d-block">Valor Total Geral:</span>
+                                <strong class="fs-5 text-primary">@totalGeral.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))</strong>
+                            </div>
+                        }
                         <div class="col-sm-6 col-md-3 mb-2">
                             <span class="text-muted d-block">Frequência Registrada:</span>
                             <strong>@Model.FrequenciaFinal</strong>
@@ -120,7 +163,7 @@
                 </div>
             </div>
 
-            @if (Model.Inscricaopessoasubeventos != null && Model.Inscricaopessoasubeventos.Any())
+            @if (hasSubeventos)
             {
                 <div class="mt-3">
                     <h5 class="text-primary border-bottom pb-2">Subeventos Contratados</h5>
@@ -136,7 +179,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach (var sub in Model.Inscricaopessoasubeventos)
+                                @foreach (var sub in Model.Inscricaopessoasubeventos!)
                                 {
                                     <tr>
                                         <td>
@@ -161,6 +204,18 @@
                                     </tr>
                                 }
                             </tbody>
+                            <tfoot>
+                                <tr class="table-light fw-bold">
+                                    <td colspan="3" class="text-end">Total dos Subeventos:</td>
+                                    <td class="text-success">@totalSubeventos.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))</td>
+                                    <td></td>
+                                </tr>
+                                <tr class="table-secondary fw-bold">
+                                    <td colspan="3" class="text-end">Total Geral (Evento + Subeventos):</td>
+                                    <td class="text-primary">@totalGeral.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
                         </table>
                     </div>
                 </div>

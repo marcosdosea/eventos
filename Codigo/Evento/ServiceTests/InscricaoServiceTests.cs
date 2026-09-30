@@ -474,5 +474,88 @@ namespace Service.Tests
             Assert.IsNotNull(subeventos);
             Assert.IsTrue(subeventos.Any(s => s.IdSubEvento == 20 && s.Valor == 15m));
         }
+
+        [TestMethod()]
+        public void GetAllEventsByUserIdTest_UnformattedUsernameWithFormattedDbCpf_ReturnsExactMatch()
+        {
+            // Arrange - pessoa salva no banco com CPF formatado (com pontos e traço)
+            var pessoaComCpfFormatado = new Pessoa
+            {
+                Id = 99,
+                Nome = "Usuario CPF Formatado",
+                NomeCracha = "Usuario Formatado",
+                Cpf = "987.654.321-00",
+                Email = "formatado@teste.com"
+            };
+            var inscricaoEvento = new Inscricaopessoaevento
+            {
+                Id = 99,
+                IdPessoa = 99,
+                IdEvento = 1,
+                IdPapel = 4,
+                DataInscricao = new DateTime(2024, 8, 1),
+                ValorTotal = 50m,
+                Status = "A",
+                FrequenciaFinal = 0m,
+                IdPessoaNavigation = pessoaComCpfFormatado,
+                IdEventoNavigation = _context.Eventos.First(e => e.Id == 1)
+            };
+            _context.Pessoas.Add(pessoaComCpfFormatado);
+            _context.Inscricaopessoaeventos.Add(inscricaoEvento);
+            _context.SaveChanges();
+
+            // Act - busca usando apenas dígitos (UserName do Identity padrão)
+            var result = _inscricaoService.GetAllEventsByUserId("98765432100").ToList();
+
+            // Assert
+            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual((uint)99, result[0].Id);
+            Assert.AreEqual("987.654.321-00", result[0].IdPessoaNavigation.Cpf);
+        }
+
+        [TestMethod()]
+        public void GetAllEventsByUserIdTest_SubEventWithNullNavigation_ResolvesFromDatabase()
+        {
+            // Arrange - subevento cadastrado no banco, mas a inscrição tem navegação nula
+            var subevento = new Subevento
+            {
+                Id = 30,
+                IdEvento = 1,
+                Nome = "Workshop de Testes Automatizados",
+                Descricao = "Workshop",
+                DataInicio = new DateTime(2024, 11, 1),
+                DataFim = new DateTime(2024, 11, 2),
+                Status = "A",
+                ValorInscricao = 25m,
+                DataInicioInscricao = new DateTime(2024, 9, 1),
+                DataFimInscricao = new DateTime(2024, 10, 31)
+            };
+            var inscricaoSubSemNav = new Inscricaopessoasubevento
+            {
+                IdPessoa = 1,
+                IdSubEvento = 30,
+                IdPapel = 4,
+                DataInscricao = new DateTime(2024, 7, 10),
+                Status = "A",
+                Valor = 25m,
+                FrequenciaFinal = 100m,
+                IdSubEventoNavigation = null! // Simula navegação não carregada
+            };
+            _context.Subeventos.Add(subevento);
+            _context.Inscricaopessoasubeventos.Add(inscricaoSubSemNav);
+            _context.SaveChanges();
+
+            // Act
+            var result = _inscricaoService.GetAllEventsByUserId("12246232367").ToList();
+
+            // Assert
+            Assert.IsTrue(result.Count > 0);
+            var inscricaoEvento = result.First(i => i.IdEvento == 1);
+            Assert.IsNotNull(inscricaoEvento.Inscricaopessoasubeventos);
+            var subItem = inscricaoEvento.Inscricaopessoasubeventos.FirstOrDefault(s => s.IdSubEvento == 30);
+            Assert.IsNotNull(subItem);
+            Assert.IsNotNull(subItem.IdSubEventoNavigation);
+            Assert.AreEqual("Workshop de Testes Automatizados", subItem.IdSubEventoNavigation.Nome);
+        }
     }
 }

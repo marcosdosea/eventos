@@ -145,14 +145,25 @@ namespace Service
 
             var cpfLimpo = Methods.RemoveNaoNumericos(username);
             var cpfParaBusca = string.IsNullOrEmpty(cpfLimpo) ? username : cpfLimpo;
+            var cpfFormatado = cpfLimpo.Length == 11 ? Methods.PatternCpf(cpfLimpo) : null;
 
-            return _context.Inscricaopessoasubeventos
+            var subeventos = _context.Inscricaopessoasubeventos
                 .Include(s => s.IdSubEventoNavigation)
                 .Include(s => s.IdTipoInscricaoNavigation)
                 .Include(s => s.IdPessoaNavigation)
-                .Where(s => s.IdPessoaNavigation != null && (s.IdPessoaNavigation.Cpf == cpfParaBusca || s.IdPessoaNavigation.Cpf == username))
+                .Where(s => s.IdPessoaNavigation != null && (s.IdPessoaNavigation.Cpf == cpfParaBusca || s.IdPessoaNavigation.Cpf == username || (cpfFormatado != null && s.IdPessoaNavigation.Cpf == cpfFormatado)))
                 .AsNoTracking()
                 .ToList();
+
+            foreach (var sub in subeventos)
+            {
+                if (sub.IdSubEventoNavigation == null)
+                {
+                    sub.IdSubEventoNavigation = _context.Subeventos.FirstOrDefault(s => s.Id == sub.IdSubEvento)!;
+                }
+            }
+
+            return subeventos;
         }
 
         public IEnumerable<Inscricaopessoaevento> GetAllEventsByUserId(string username)
@@ -162,6 +173,7 @@ namespace Service
 
             var cpfLimpo = Methods.RemoveNaoNumericos(username);
             var cpfParaBusca = string.IsNullOrEmpty(cpfLimpo) ? username : cpfLimpo;
+            var cpfFormatado = cpfLimpo.Length == 11 ? Methods.PatternCpf(cpfLimpo) : null;
 
             var subeventosUsuario = GetAllSubEventsByUserId(username).ToList();
 
@@ -169,13 +181,13 @@ namespace Service
                 .Include(i => i.IdEventoNavigation)
                 .Include(i => i.IdPessoaNavigation)
                 .Include(i => i.IdTipoInscricaoNavigation)
-                .Where(i => i.IdPessoaNavigation != null && (i.IdPessoaNavigation.Cpf == cpfParaBusca || i.IdPessoaNavigation.Cpf == username))
+                .Where(i => i.IdPessoaNavigation != null && (i.IdPessoaNavigation.Cpf == cpfParaBusca || i.IdPessoaNavigation.Cpf == username || (cpfFormatado != null && i.IdPessoaNavigation.Cpf == cpfFormatado)))
                 .ToList();
 
             foreach (var inscricao in query)
             {
                 inscricao.Inscricaopessoasubeventos = subeventosUsuario
-                    .Where(s => s.IdSubEventoNavigation != null && s.IdSubEventoNavigation.IdEvento == inscricao.IdEvento)
+                    .Where(s => (s.IdSubEventoNavigation?.IdEvento ?? _context.Subeventos.FirstOrDefault(sub => sub.Id == s.IdSubEvento)?.IdEvento) == inscricao.IdEvento)
                     .ToList();
             }
 
@@ -189,10 +201,11 @@ namespace Service
 
             var cpfLimpo = Methods.RemoveNaoNumericos(username);
             var cpfParaBusca = string.IsNullOrEmpty(cpfLimpo) ? username : cpfLimpo;
+            var cpfFormatado = cpfLimpo.Length == 11 ? Methods.PatternCpf(cpfLimpo) : null;
 
             var query = from i in _context.Inscricaopessoaeventos.Include(i => i.IdPessoaNavigation)
                         where i.IdPessoaNavigation != null
-                              && (i.IdPessoaNavigation.Cpf == cpfParaBusca || i.IdPessoaNavigation.Cpf == username)
+                              && (i.IdPessoaNavigation.Cpf == cpfParaBusca || i.IdPessoaNavigation.Cpf == username || (cpfFormatado != null && i.IdPessoaNavigation.Cpf == cpfFormatado))
                               && i.IdPapel == 2 && i.IdEvento == idEvento
                         select i;
             return query.FirstOrDefault();
@@ -205,10 +218,11 @@ namespace Service
 
             var cpfLimpo = Methods.RemoveNaoNumericos(username);
             var cpfParaBusca = string.IsNullOrEmpty(cpfLimpo) ? username : cpfLimpo;
+            var cpfFormatado = cpfLimpo.Length == 11 ? Methods.PatternCpf(cpfLimpo) : null;
 
             var query = from i in _context.Inscricaopessoaeventos.Include(i => i.IdPessoaNavigation)
                         where i.IdPessoaNavigation != null
-                              && (i.IdPessoaNavigation.Cpf == cpfParaBusca || i.IdPessoaNavigation.Cpf == username)
+                              && (i.IdPessoaNavigation.Cpf == cpfParaBusca || i.IdPessoaNavigation.Cpf == username || (cpfFormatado != null && i.IdPessoaNavigation.Cpf == cpfFormatado))
                               && i.IdPapel == 3 && i.IdEvento == idEvento
                         select i;
             return query.FirstOrDefault();

@@ -373,5 +373,55 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("minhasInscricoes", redirect.ActionName);
             Assert.AreEqual("Inscrição não encontrada.", controller.TempData["ParticipanteMessage"]);
         }
+
+        [TestMethod()]
+        public async Task MinhasInscricoesTest_UnauthenticatedUser_RedirectsToHomeIndex()
+        {
+            // Arrange - contexto com identidade anônima / sem nome
+            var unauthContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity()) };
+            var originalContext = controller.ControllerContext;
+            controller.ControllerContext = new ControllerContext { HttpContext = unauthContext };
+
+            try
+            {
+                // Act
+                var result = await controller.minhasInscricoes(null);
+
+                // Assert
+                Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+                var redirect = (RedirectToActionResult)result;
+                Assert.AreEqual("Index", redirect.ActionName);
+                Assert.AreEqual("Home", redirect.ControllerName);
+            }
+            finally
+            {
+                controller.ControllerContext = originalContext;
+            }
+        }
+
+        [TestMethod()]
+        public async Task DetalhesInscricaoTest_UnauthenticatedUser_RedirectsToHomeIndex()
+        {
+            // Arrange - contexto com identidade anônima / sem nome
+            var unauthContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity()) };
+            var originalContext = controller.ControllerContext;
+            controller.ControllerContext = new ControllerContext { HttpContext = unauthContext };
+
+            try
+            {
+                // Act
+                var result = await controller.DetalhesInscricao(1, null);
+
+                // Assert
+                Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+                var redirect = (RedirectToActionResult)result;
+                Assert.AreEqual("Index", redirect.ActionName);
+                Assert.AreEqual("Home", redirect.ControllerName);
+            }
+            finally
+            {
+                controller.ControllerContext = originalContext;
+            }
+        }
     }
 }

@@ -428,7 +428,13 @@ namespace EventoWeb.Controllers
         [Route("MinhasInscricoes")]
         public async Task<IActionResult> minhasInscricoes(uint? idEvento)
         {
-            var inscricaoUser = _inscricaoService.GetAllEventsByUserId(User.Identity.Name);
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            var inscricaoUser = _inscricaoService.GetAllEventsByUserId(username);
             var listarEventosModel = inscricaoUser.Select(i =>
             {
                 var model = _mapper.Map<InscricaoEventoModel>(i);
