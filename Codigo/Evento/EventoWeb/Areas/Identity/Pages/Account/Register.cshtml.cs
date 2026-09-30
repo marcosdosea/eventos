@@ -2,25 +2,18 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Text.Encodings.Web;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
 using Core;
+using Core.Service;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Logging;
+using System.ComponentModel.DataAnnotations;
+using System.Text;
+using System.Text.Encodings.Web;
 using Util;
-using Core.Service;
 
 namespace EventoWeb.Areas.Identity.Pages.Account
 {
@@ -80,8 +73,9 @@ namespace EventoWeb.Areas.Identity.Pages.Account
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
             [Required(ErrorMessage = "O campo E-mail é obrigatório.")]
-            [EmailAddress(ErrorMessage = "O campo E-mail não é um endereço de e-mail válido.")]
             [StringLength(50, ErrorMessage = "O e-mail não pode ser maior que 50 caracteres")]
+            [EmailAddress(ErrorMessage = "O e-mail informado não é válido.")]
+            [DataType(DataType.EmailAddress)]
             [Display(Name = "E-mail")]
             public string Email { get; set; }
 
@@ -90,7 +84,8 @@ namespace EventoWeb.Areas.Identity.Pages.Account
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
             [Required(ErrorMessage = "O campo Senha é obrigatório.")]
-            [StringLength(100, ErrorMessage = "A {0} deve ter ao menos {2} e no máximo {1} caracteres.", MinimumLength = 6)]         [DataType(DataType.Password)]
+            [DataType(DataType.Password)]
+            [StringLength(100, ErrorMessage = "A {0} deve ter ao menos {2} e no máximo {1} caracteres.", MinimumLength = 6)]         
             [Display(Name = "Senha")]
             public string Password { get; set; }
 
@@ -105,15 +100,14 @@ namespace EventoWeb.Areas.Identity.Pages.Account
             public string ConfirmPassword { get; set; }
 
 			[Required(ErrorMessage = "O campo Nome é obrigatório.")]
-			[Display(Name = "Nome")]
             [StringLength(50, ErrorMessage = "O nome não pode ser maior que 50 caracteres")]
-            public string Nome { get; set; }
+            [Display(Name = "Nome")]
+			public string Nome { get; set; }
 
 			[Required(ErrorMessage = "O campo CPF é obrigatório.")]
 			[CPF(ErrorMessage = "CPF inválido")]
-			[Display(Name = "CPF", Prompt = "Digite seu CPF")]
-            
-            public string CPF { get; set; }
+            [Display(Name = "CPF", Prompt = "Digite seu CPF")]
+			public string CPF { get; set; }
 		}
 
 
@@ -125,85 +119,95 @@ namespace EventoWeb.Areas.Identity.Pages.Account
 
 		public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
-        returnUrl = returnUrl ?? Url.Content("~/");
-        ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            returnUrl = returnUrl ?? Url.Content("~/");
+            ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
-        if (ModelState.IsValid)
-        {
+            if (ModelState.IsValid)
+            {
         
-            string cpfSemFormatacao = Util.Methods.RemoveNaoNumericos(Input.CPF);
-            if(!_pessoaService.ValidaEmail(Input.Email))
-            {
-               ModelState.AddModelError("E-mail", "Por favor, digite um e-mail em um formato válido.");
-               return Page();
-            }
-         var user = new UsuarioIdentity { UserName = cpfSemFormatacao, Email = Input.Email };
-         var result = await _userManager.CreateAsync(user, Input.Password);    
-
-        if (result.Succeeded)
-        {
-            _logger.LogInformation("Usuário criou uma nova conta com senha.");
-
-            var pessoaResult = _pessoaService.Create(new Pessoa
-            {
-                Nome = Input.Nome,
-                NomeCracha = Input.Nome.Length > 20 ? Input.Nome.Substring(0, 20) : Input.Nome,
-                Cpf = cpfSemFormatacao, 
-                Email = Input.Email
-            });
-
-            var roleName = "USUARIO";
-            var roleResult = await _userManager.AddToRoleAsync(user, roleName);
-
-            if (!roleResult.Succeeded)
-            {
-                foreach (var error in roleResult.Errors)
+                string cpfSemFormatacao = Util.Methods.RemoveNaoNumericos(Input.CPF);
+                
+                if (_pessoaService.GetByCpf(cpfSemFormatacao) != null)
                 {
+                    ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.CPF)}", "O CPF informado já está em uso.");
+                    return Page();
+                }
+               if(! _pessoaService.ValidaEmail(Input.Email)){
+                    ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.Email)}", "O e-mail informado não é válido.");
+                    return Page();
+                }
+                if(await _pessoaService.EmailExist(Input.Email, cpfSemFormatacao)){
+                    ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.Email)}", "O e-mail informado já está em uso.");
+                    return Page();
+                }
+                var user = new UsuarioIdentity { UserName = cpfSemFormatacao, Email = Input.Email };
+                var result = await _userManager.CreateAsync(user, Input.Password);
+
+                if (result.Succeeded)
+                {
+                    _logger.LogInformation("Usuário criou uma nova conta com senha.");
+
+                    var pessoaResult = _pessoaService.Create(new Pessoa
+                    {
+                        Nome = Input.Nome,
+                        NomeCracha = Input.Nome.Length > 20 ? Input.Nome.Substring(0, 20) : Input.Nome,
+                        Cpf = cpfSemFormatacao, 
+                        Email = Input.Email
+                    });
+
+                    var roleName = "USUARIO";
+                    var roleResult = await _userManager.AddToRoleAsync(user, roleName);
+
+                    if (!roleResult.Succeeded)
+                    {
+                        foreach (var error in roleResult.Errors)
+                        {
+                            ModelState.AddModelError(string.Empty, error.Description);
+                        }
+                        return Page();
+                    }
+
+                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                    code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+                    var callbackUrl = Url.Page(
+                        "/Account/ConfirmEmail",
+                        pageHandler: null,
+                        values: new { area = "Identity", userId = user.Id, code = code, returnUrl = returnUrl },
+                        protocol: Request.Scheme);
+
+                    try
+                    {
+                        await _emailSender.SendEmailAsync(Input.Email, "Confirme seu email",
+                            $"Por favor, confirme sua conta <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicando aqui</a>.");
+                    }
+                    catch (Exception ex)
+                    {
+                        // A conta já foi criada (usuário + pessoa + perfil). Se o SMTP
+                        // estiver fora do ar, não derruba o cadastro com erro 500: a
+                        // página de confirmação exibe o link para confirmar a conta.
+                        _logger.LogWarning(ex, "Falha ao enviar e-mail de confirmação para {Email}.", Input.Email);
+                    }
+
+                    if (_userManager.Options.SignIn.RequireConfirmedAccount)
+                    {
+                        return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
+                    }
+                    else
+                    {
+                        await _signInManager.SignInAsync(user, isPersistent: false);
+                        return LocalRedirect(returnUrl);
+                    }
+                }
+
+                foreach (var error in result.Errors)
+                {
+                    
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
-                return Page();
             }
-
-            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-            var callbackUrl = Url.Page(
-                "/Account/ConfirmEmail",
-                pageHandler: null,
-                values: new { area = "Identity", userId = user.Id, code = code, returnUrl = returnUrl },
-                protocol: Request.Scheme);
-
-            try
-            {
-                await _emailSender.SendEmailAsync(Input.Email, "Confirme seu email",
-                    $"Por favor, confirme sua conta <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicando aqui</a>.");
-            }
-            catch (Exception ex)
-            {
-                // A conta já foi criada (usuário + pessoa + perfil). Se o SMTP
-                // estiver fora do ar, não derruba o cadastro com erro 500: a
-                // página de confirmação exibe o link para confirmar a conta.
-                _logger.LogWarning(ex, "Falha ao enviar e-mail de confirmação para {Email}.", Input.Email);
-            }
-
-            if (_userManager.Options.SignIn.RequireConfirmedAccount)
-            {
-                return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
-            }
-            else
-            {
-                await _signInManager.SignInAsync(user, isPersistent: false);
-                return LocalRedirect(returnUrl);
-            }
-        }
-
-        foreach (var error in result.Errors)
-        {
-            ModelState.AddModelError(string.Empty, error.Description);
-        }
-    }
     
-    return Page();
-}
+                return Page();
+        }
 
 
 		private UsuarioIdentity CreateUser()
