@@ -21,6 +21,8 @@ namespace Core.Service
 
         IEnumerable<Inscricaopessoasubevento> GetSubByEvento(uint idEvento);
 
+        IEnumerable<Inscricaopessoasubevento> GetAllSubEventsByUserId(string username);
+
         IEnumerable<Inscricaopessoaevento> GetAllEventsByUserId(string username);
 
         Inscricaopessoaevento GetGestorInEvent(string username, uint idEvento);
