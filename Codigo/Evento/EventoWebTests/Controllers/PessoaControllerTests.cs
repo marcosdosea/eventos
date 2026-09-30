@@ -334,7 +334,7 @@ namespace EventoWeb.Controllers.Tests
         public async Task DeleteAdmTest_Post_Success()
         {
             var mockService = new Mock<IPessoaService>();
-            mockService.Setup(service => service.Delete(1)).ReturnsAsync(true);
+            mockService.Setup(service => service.DeleteRole(1)).ReturnsAsync((true, ""));
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
             var IEmailServiceMock = new Mock<IEmailService>();
             var localController = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, mapper, IEmailServiceMock.Object);
@@ -359,7 +359,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("Pessoa", redirectToActionResult.ControllerName);
             Assert.AreEqual("Remoção realizada com sucesso!", localController.TempData["SuccessMessage"]);
             Assert.IsNull(localController.TempData["ErrorMessage"]);
-            mockService.Verify(service => service.Delete(1), Times.Once);
+            mockService.Verify(service => service.DeleteRole(1), Times.Once);
         }
 
         [TestMethod()]

@@ -712,9 +712,10 @@ namespace Service.Tests
             await _userManager.CreateAsync(usuario, "Temp@1234!");
             await _userManager.AddToRoleAsync(usuario, "ADMINISTRADOR");
 
-            var sucesso = await _pessoaService.DeleteRole(1);
+            var (sucesso, mensagem) = await _pessoaService.DeleteRole(1);
 
             Assert.IsFalse(sucesso);
+            Assert.AreEqual(" Não é possível remover o último administrador do sistema.", mensagem);
             Assert.IsNotNull(_pessoaService.Get(1));
             Assert.AreEqual(3, _pessoaService.GetAll().Count());
             Assert.IsTrue(await _userManager.IsInRoleAsync(usuario, "ADMINISTRADOR"));
@@ -737,7 +738,7 @@ namespace Service.Tests
             }
 
             var pessoa = _pessoaService.Get(1);
-            var sucesso = await _pessoaService.DeleteRole(1);
+            var (sucesso, mensagem) = await _pessoaService.DeleteRole(1);
 
             Assert.IsTrue(sucesso);
             var usuario = await _userManager.FindByNameAsync(pessoa.Cpf);

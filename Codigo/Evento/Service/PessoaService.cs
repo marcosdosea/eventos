@@ -121,7 +121,7 @@ public class PessoaService : IPessoaService
             return false;
         }
     }
-    public async Task<bool> DeleteRole(uint id)
+    public async Task<(bool sucesso, string mensagem)> DeleteRole(uint id)
     {
         try
         {
@@ -139,7 +139,7 @@ public class PessoaService : IPessoaService
 
                         if (administradores.Count() == 1 && administradores.Any(a => a.Id == id))
                         {
-                            return false;
+                            return (false, " Não é possível remover o último administrador do sistema.");
 
                         }
 
@@ -147,9 +147,9 @@ public class PessoaService : IPessoaService
                         var roles = await _userManager.GetRolesAsync(existingUser);
                         if (roles.Count == 0)
                         {
-                            return await CreatePessoaIdentityComPapelAsync(pessoa, 0, 4);
+                            return (await CreatePessoaIdentityComPapelAsync(pessoa, 0, 4), "");
                         }
-                        return true;
+                        return (true, "");
                     }
                 }
 
@@ -159,11 +159,11 @@ public class PessoaService : IPessoaService
         {
             Trace.TraceError($"Erro ao deletar pessoa com ID {id}: {ex.Message}");
 
-            return false;
+            return (false, "");
         }
 
 
-        return false;
+        return (false, "");
     }
 
     public async Task<String> DeletePessoaIdentityAsync(UsuarioIdentity user)
