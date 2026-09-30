@@ -98,16 +98,27 @@ namespace EventoWeb.Controllers
         }
 
         // POST: /TipoInscricao/Create
+        // Fix #779 (overposting): whitelist via [Bind] — Id/NomeEvento/Evento nunca vêm do client.
         [HttpPost("Create")]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(TipoInscricaoModel tipoInscricaoModel)
+        public ActionResult Create([Bind("IdEvento,Nome,Descricao,Valor,DataInicio,Datafim,UsadaEvento,UsadaSubevento")] TipoInscricaoModel tipoInscricaoModel)
         {
             if (!IsAuthorized(tipoInscricaoModel.IdEvento))
                 return Forbid();
-            ModelState.Remove("Evento");
             if (ModelState.IsValid)
             {
-                var tipoinscricao = _mapper.Map<Tipoinscricao>(tipoInscricaoModel);
+                // Monta a entidade só com campos permitidos; Id é gerado pelo banco.
+                var tipoinscricao = new Tipoinscricao
+                {
+                    IdEvento = tipoInscricaoModel.IdEvento,
+                    Nome = tipoInscricaoModel.Nome,
+                    Descricao = tipoInscricaoModel.Descricao,
+                    Valor = tipoInscricaoModel.Valor,
+                    DataInicio = tipoInscricaoModel.DataInicio,
+                    Datafim = tipoInscricaoModel.Datafim,
+                    UsadaEvento = tipoInscricaoModel.UsadaEvento ?? 0,
+                    UsadaSubevento = tipoInscricaoModel.UsadaSubevento ?? 0
+                };
                 _tipoInscricaoService.Create(tipoinscricao);
                 return RedirectToAction(nameof(Index), new { idEvento = tipoInscricaoModel.IdEvento });
             }
@@ -139,26 +150,36 @@ namespace EventoWeb.Controllers
         }
 
         // POST: /TipoInscricao/Edit/5
+        // Fix #779 (overposting): Id vem da rota, IdEvento é imutável (não permite mover entre eventos).
         [HttpPost("Edit/{id}")]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(uint id, TipoInscricaoModel tipoInscricaoModel)
+        public ActionResult Edit(uint id, [Bind("IdEvento,Nome,Descricao,Valor,DataInicio,Datafim,UsadaEvento,UsadaSubevento")] TipoInscricaoModel tipoInscricaoModel)
         {
             var existente = _tipoInscricaoService.Get(id);
             if (existente == null)
                 return NotFound();
-            if (!IsAuthorized(existente.IdEvento) || !IsAuthorized(tipoInscricaoModel.IdEvento))
+            if (!IsAuthorized(existente.IdEvento))
                 return Forbid();
-            ModelState.Remove("Evento");
+            // Impede mover o tipo para outro evento via tampering do hidden/dropdown.
+            if (tipoInscricaoModel.IdEvento != existente.IdEvento)
+                return BadRequest("Não é permitido mover o tipo de inscrição para outro evento.");
             if (ModelState.IsValid)
             {
-                var tipoinscricao = _mapper.Map<Tipoinscricao>(tipoInscricaoModel);
-                tipoinscricao.Id = id;
-                _tipoInscricaoService.Edit(tipoinscricao);
+                // Atualiza só campos permitidos sobre a entidade carregada (preserva Id/IdEvento e relacionamentos).
+                existente.Nome = tipoInscricaoModel.Nome;
+                existente.Descricao = tipoInscricaoModel.Descricao;
+                existente.Valor = tipoInscricaoModel.Valor;
+                existente.DataInicio = tipoInscricaoModel.DataInicio;
+                existente.Datafim = tipoInscricaoModel.Datafim;
+                existente.UsadaEvento = tipoInscricaoModel.UsadaEvento ?? existente.UsadaEvento;
+                existente.UsadaSubevento = tipoInscricaoModel.UsadaSubevento ?? existente.UsadaSubevento;
+                _tipoInscricaoService.Edit(existente);
 
-                return RedirectToAction(nameof(Index), new { idEvento = tipoInscricaoModel.IdEvento });
+                return RedirectToAction(nameof(Index), new { idEvento = existente.IdEvento });
             }
 
             var eventos = _eventoService.GetAll().OrderBy(e => e.Nome);
+            tipoInscricaoModel.IdEvento = existente.IdEvento;
             tipoInscricaoModel.Evento = new SelectList(eventos, "Id", "Nome");
             return View(tipoInscricaoModel);
         }
@@ -191,6 +212,8 @@ namespace EventoWeb.Controllers
                 return NotFound();
             if (!IsAuthorized(existente.IdEvento) || !IsAuthorized(idEvento))
                 return Forbid();
+            if (idEvento != existente.IdEvento)
+                return BadRequest("Evento divergente.");
             _tipoInscricaoService.Delete(id);
             return RedirectToAction(nameof(Index), new { idEvento = idEvento });
         }
@@ -251,6 +274,22 @@ namespace EventoWeb.Controllers
 
             try
             {
+                // Fix #779: garante que o tipo pertence ao mesmo evento do subevento.
+                var tipo = _tipoInscricaoService.Get(model.IdTipoInscricao);
+                if (tipo == null || tipo.IdEvento != subeventoM.IdEvento)
+                {
+                    ModelState.AddModelError("", "Tipo de inscrição inválido para este evento.");
+                    var tiposRej = _tipoInscricaoService.GetByEventoUsadaSubevento(subeventoM.IdEvento);
+                    var assocRej = _tipoInscricaoService.GetTiposInscricaosSubevento(model.IdSubevento);
+                    ViewData["EventoId"] = subeventoM.IdEvento;
+                    return View(new TipoInscricaoSubeventoModel()
+                    {
+                        NomeSubevento = subeventoM.Nome,
+                        IdSubevento = subeventoM.Id,
+                        TiposInscricaos = new SelectList(tiposRej, "Id", "Nome"),
+                        TiposInscricaosSubevento = assocRej
+                    });
+                }
                 _tipoInscricaoService.AssociacaoTipoInscricaoSubevento(model.IdSubevento, model.IdTipoInscricao);
                 return RedirectToAction("CreateTipoInscricaoSubevento", new { model.IdSubevento });
             }

@@ -160,24 +160,32 @@ namespace EventoWeb.Controllers
             }
 
             // POST: SubeventoController/CreateOrEdit/{idEvento}/{idSubevento?}
+            // Fix #779 (overposting): whitelist via [Bind], idSubevento vem da rota, IdEvento/Vagas vêm do servidor.
             [HttpPost]
             [Route("CreateOrEdit/{idEvento}/{idSubevento?}")]
             [ValidateAntiForgeryToken]
-            public ActionResult CreateOrEdit(uint idEvento, SubeventoModel subeventoModel)
+            public ActionResult CreateOrEdit(uint idEvento, [Bind("Id,IdEvento,Nome,Descricao,DataInicio,DataFim,InscricaoGratuita,Status,DataInicioInscricao,DataFimInscricao,ValorInscricao,PossuiCertificado,FrequenciaMinimaCertificado,VagasOfertadas,CargaHoraria,IdTipoEvento")] SubeventoModel subeventoModel, uint? idSubevento = null)
             {
                 if (!IsAuthorized(idEvento))
                     return Forbid();
+                // A rota é a fonte da verdade: impede trocar Id pelo corpo para sobrescrever outro registro.
+                if (idSubevento.HasValue && subeventoModel.Id != 0 && idSubevento.Value != subeventoModel.Id)
+                    return BadRequest("Id do subevento divergente.");
+                // Impede mover subevento para outro evento via tampering do hidden.
+                if (subeventoModel.IdEvento != 0 && subeventoModel.IdEvento != idEvento)
+                    return BadRequest("Não é permitido mover o subevento para outro evento.");
+                Subevento? existente = null;
                 // Impede mover subevento de evento alheio para o próprio evento
                 if (subeventoModel.Id != 0)
                 {
-                    var existente = _subeventoService.Get(subeventoModel.Id);
+                    existente = _subeventoService.Get(subeventoModel.Id);
                     if (existente == null)
                         return NotFound();
+                    if (existente.IdEvento != idEvento)
+                        return BadRequest("Não é permitido mover o subevento para outro evento.");
                     if (!IsAuthorized(existente.IdEvento))
                         return Forbid();
                 }
-                ModelState.Remove("TiposEventos");
-                ModelState.Remove("Evento.Nome");
 
                 if (subeventoModel.InscricaoGratuita == 1 && subeventoModel.ValorInscricao > 0)
                 {
@@ -186,16 +194,48 @@ namespace EventoWeb.Controllers
 
                 if (ModelState.IsValid)
                 {
-                    var subevento = _mapper.Map<Subevento>(subeventoModel);
-
-                    if (subevento.Id != 0)
+                    if (existente != null)
                     {
-                        subevento.IdEvento = idEvento;
-                        _subeventoService.Edit(subevento);
+                        // Atualiza só campos editáveis; IdEvento e vagas controladas pelo servidor são preservadas.
+                        existente.Nome = subeventoModel.Nome;
+                        existente.Descricao = subeventoModel.Descricao;
+                        existente.DataInicio = subeventoModel.DataInicio;
+                        existente.DataFim = subeventoModel.DataFim;
+                        existente.InscricaoGratuita = subeventoModel.InscricaoGratuita;
+                        existente.Status = subeventoModel.Status;
+                        existente.DataInicioInscricao = subeventoModel.DataInicioInscricao;
+                        existente.DataFimInscricao = subeventoModel.DataFimInscricao;
+                        existente.ValorInscricao = subeventoModel.ValorInscricao;
+                        existente.PossuiCertificado = subeventoModel.PossuiCertificado;
+                        existente.FrequenciaMinimaCertificado = subeventoModel.FrequenciaMinimaCertificado;
+                        existente.VagasOfertadas = (uint)subeventoModel.VagasOfertadas;
+                        existente.CargaHoraria = (uint)subeventoModel.CargaHoraria;
+                        existente.IdTipoEvento = subeventoModel.IdTipoEvento;
+                        existente.IdEvento = idEvento;
+                        _subeventoService.Edit(existente);
                     }
                     else
                     {
-                        subevento.IdEvento = idEvento;
+                        var subevento = new Subevento
+                        {
+                            IdEvento = idEvento,
+                            Nome = subeventoModel.Nome,
+                            Descricao = subeventoModel.Descricao,
+                            DataInicio = subeventoModel.DataInicio,
+                            DataFim = subeventoModel.DataFim,
+                            InscricaoGratuita = subeventoModel.InscricaoGratuita,
+                            Status = subeventoModel.Status,
+                            DataInicioInscricao = subeventoModel.DataInicioInscricao,
+                            DataFimInscricao = subeventoModel.DataFimInscricao,
+                            ValorInscricao = subeventoModel.ValorInscricao,
+                            PossuiCertificado = subeventoModel.PossuiCertificado,
+                            FrequenciaMinimaCertificado = subeventoModel.FrequenciaMinimaCertificado,
+                            VagasOfertadas = (uint)subeventoModel.VagasOfertadas,
+                            VagasReservadas = 0,
+                            VagasDisponiveis = (uint)Math.Max(0, subeventoModel.VagasOfertadas),
+                            CargaHoraria = (uint)subeventoModel.CargaHoraria,
+                            IdTipoEvento = subeventoModel.IdTipoEvento
+                        };
                         _subeventoService.Create(subevento);
                     }
 

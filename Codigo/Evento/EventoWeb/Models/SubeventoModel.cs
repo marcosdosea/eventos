@@ -1,4 +1,5 @@
 ﻿using Core.DTO;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.ComponentModel.DataAnnotations;
 using Util;
@@ -101,14 +102,18 @@ namespace EventoWeb.Models
         public uint IdTipoEvento { get; set; }
 
         [Display(Name = "Tipo de Subevento")]
+        [ValidateNever]
         public string? NomeTipoEvento { get; set; }
         
         [Display(Name = "Evento")]
+        [ValidateNever]
         public string? NomeEvento { get; set; }
-        
-        public EventoSimpleDTO Evento { get; set; } 
-        
-        public SelectList TiposEventos { get; set; }
+
+        [ValidateNever]
+        public EventoSimpleDTO? Evento { get; set; }
+
+        [ValidateNever]
+        public SelectList? TiposEventos { get; set; }
     }
 
 }
