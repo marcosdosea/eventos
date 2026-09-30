@@ -294,6 +294,12 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("Index", "Home"); 
             }
 
+            if (evento.VagasDisponiveis < totalEventTickets)
+            {
+                TempData["ParticipanteMessage"] = "A quantidade de ingressos solicitada excede o número de vagas disponíveis do evento.";
+                return RedirectToAction("Index", "Home"); 
+            }
+
             foreach (var kvp in mainEventQuantities)
             {
                 uint idTipo = kvp.Key;
@@ -378,6 +384,12 @@ namespace EventoWeb.Controllers
                     if (totalSubTickets > 8)
                     {
                         continue; 
+                    }
+
+                    if (subevento.VagasDisponiveis < totalSubTickets)
+                    {
+                        TempData["ParticipanteMessage"] = $"A quantidade de ingressos solicitada excede o número de vagas disponíveis para o subevento {subevento.Nome}.";
+                        return RedirectToAction("minhasInscricoes", new { idEvento = idEvento }); 
                     }
 
                     foreach (var kvpSub in subEventQuantities)
