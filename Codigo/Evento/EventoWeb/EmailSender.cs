@@ -106,6 +106,7 @@ namespace EventoWeb
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Erro ao enviar e-mail de {assunto} para {Email}", assunto, email);
+                return false;
 
             }
         }
