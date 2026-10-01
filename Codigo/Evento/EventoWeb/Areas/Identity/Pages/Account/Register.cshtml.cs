@@ -31,22 +31,22 @@ namespace EventoWeb.Areas.Identity.Pages.Account
         private readonly IUserStore<UsuarioIdentity> _userStore;
         private readonly IUserEmailStore<UsuarioIdentity> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
-        private readonly IEmailSender _emailSender;
-		private readonly IPessoaService _pessoaService;
+        private readonly IEmailService _emailService;
+        private readonly IPessoaService _pessoaService;
 
 		public RegisterModel(
 			UserManager<UsuarioIdentity> userManager,
 			IUserStore<UsuarioIdentity> userStore,
 			SignInManager<UsuarioIdentity> signInManager,
 			ILogger<RegisterModel> logger,
-			IEmailSender emailSender,
+			IEmailService emailService,
 			IPessoaService pessoaService)
 		{
 			_userManager = userManager;
 			_userStore = userStore;
 			_signInManager = signInManager;
 			_logger = logger;
-			_emailSender = emailSender;
+			_emailService = emailService;
 			_pessoaService = pessoaService;
 		}
 
@@ -167,8 +167,12 @@ namespace EventoWeb.Areas.Identity.Pages.Account
 
             try
             {
-                await _emailSender.SendEmailAsync(Input.Email, "Confirme seu email",
-                    $"Por favor, confirme sua conta <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicando aqui</a>.");
+                var sucesso = await _emailService.ModeloConfirmEmail(code, _pessoaService.Get(pessoaResult),callbackUrl);
+                
+                if(!sucesso){
+                   throw new Exception("Falha ao enviar e-mail de confirmação.");
+                }
+                            
             }
             catch (Exception ex)
             {

@@ -1,8 +1,10 @@
 using Core;
 using Core.Service;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 using System.Net;
 using System.Net.Mail;
+using static QRCoder.PayloadGenerator.SwissQrCode;
 
 namespace EventoWeb
 {
@@ -69,6 +71,21 @@ namespace EventoWeb
             string contato = "https://beacons.ai/itatechjr";
             string assunto = "Redefinição de Senha";
             string caminhoTemplate = Path.Combine(_enviroment.WebRootPath, "templates", "EmailRedefinicaoSenha.html");
+            return await ModeloEmail(token, pessoa, callbackUrl, email, contato, assunto, caminhoTemplate);
+        }
+
+        public async Task<bool> ModeloConfirmEmail(String token, Pessoa pessoa, String callbackUrl)
+        {
+            string email = pessoa.Email;
+            string contato = "https://beacons.ai/itatechjr";
+            string assunto = "Confirmação de E-mail";
+            string caminhoTemplate = Path.Combine(_enviroment.WebRootPath, "templates", "ConfirmaEmail.html");
+
+            return await ModeloEmail(token, pessoa, callbackUrl, email, contato, assunto, caminhoTemplate);
+        }
+
+        public async Task<bool> ModeloEmail(String token, Pessoa pessoa, String callbackUrl, string email, string contato, string assunto, string caminhoTemplate)
+        {
             try
             {
                 string mensagemHtml = await File.ReadAllTextAsync(caminhoTemplate);
@@ -77,15 +94,18 @@ namespace EventoWeb
                 .Replace("{{LinkCallback}}", callbackUrl)
                 .Replace("{{LinkContato}}", contato);
                 await SendEmailAsync(email, assunto, mensagemHtml);
-              
-              _logger.LogInformation("E-mail de redefinição de senha enviado com sucesso para {Email}", email);
-              return true;
+
+                if (_client == null || string.IsNullOrWhiteSpace(_from))
+                {
+                    return false;
+                }
+                _logger.LogInformation("E-mail de {assunto} enviado com sucesso para {Email}", assunto, email);
+                return true;
 
             }
             catch (Exception ex)
             {
-               _logger.LogError(ex, "Erro ao enviar e-mail de redefinição de senha para {Email}", email);
-               return false;
+                _logger.LogError(ex, "Erro ao enviar e-mail de {assunto} para {Email}", assunto, email);
 
             }
         }

@@ -18,19 +18,19 @@ namespace EventoWeb.Controllers
         private readonly IPessoaService _pessoaService;
         private readonly IEstadosbrasilService _estadosbrasilService;
         private readonly IMapper _mapper;
-        private readonly IEmailService _emailSender;
+        private readonly IEmailService _emailService;
         
 
 
         public PessoaController(
             IPessoaService pessoaService,
             IEstadosbrasilService estadosbrasilService,
-            IMapper mapper, IEmailService emailSender)   
+            IMapper mapper, IEmailService emailService)   
         {
             _pessoaService = pessoaService;
             _estadosbrasilService = estadosbrasilService;
             _mapper = mapper;
-           _emailSender = emailSender;
+            _emailService = emailService;
         }
 
         // =====================================================================
@@ -422,7 +422,7 @@ namespace EventoWeb.Controllers
                         values: new { area = "Identity", code = token },
                         protocol: Request.Scheme);
 
-                        var sucesso = await _emailSender.ModeloEmailReset(token, pessoa, callbackUrl);
+                        var sucesso = await _emailService.ModeloEmailReset(token, pessoa, callbackUrl);
                         if (sucesso){
                             TempData["SuccessMessage"] = "E-mail de redefinição enviado com sucesso!";
                         }else{
