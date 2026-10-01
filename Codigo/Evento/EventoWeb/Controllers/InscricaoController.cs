@@ -386,6 +386,8 @@ namespace EventoWeb.Controllers
                         int quantidadeSub = kvpSub.Value;
 
                         decimal valorSub = 0m;
+                        uint? idTipoSubParaSalvar = (idTipoSub != 0 && idTipoSub != 999999) ? (uint?)idTipoSub : null;
+
                         if (idTipoSub != 0 && idTipoSub != 999999)
                         {
                             var tipoObjSub = _tipoinscricaoService.Get(idTipoSub);
@@ -409,6 +411,7 @@ namespace EventoWeb.Controllers
                                 IdPapel = 4,
                                 DataInscricao = DateTime.Now,
                                 Status = "S",
+                                IdTipoInscricao = idTipoSubParaSalvar,
                                 FrequenciaFinal = 0m,
                                 Valor = valorSub,
                             };
