@@ -294,7 +294,9 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("Index", "Home"); 
             }
 
-            foreach (var kvp in mainEventQuantities)
+            using (var transactionScope = new System.Transactions.TransactionScope(System.Transactions.TransactionScopeAsyncFlowOption.Enabled))
+            {
+                foreach (var kvp in mainEventQuantities)
             {
                 uint idTipo = kvp.Key;
                 int quantidade = kvp.Value;
@@ -417,6 +419,8 @@ namespace EventoWeb.Controllers
                         }
                     }
                 }
+
+                transactionScope.Complete();
             }
 
             TempData["ParticipanteSuccessMessage"] = "Inscrição realizada com sucesso!";
