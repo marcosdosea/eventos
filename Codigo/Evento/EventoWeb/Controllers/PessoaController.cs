@@ -3,10 +3,13 @@ using Core;
 using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.WebUtilities;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using System.Text;
 using Util;
 
 namespace EventoWeb.Controllers
@@ -19,8 +22,7 @@ namespace EventoWeb.Controllers
         private readonly IEstadosbrasilService _estadosbrasilService;
         private readonly IMapper _mapper;
         private readonly IEmailService _emailService;
-        
-
+       
 
         public PessoaController(
             IPessoaService pessoaService,
@@ -31,6 +33,7 @@ namespace EventoWeb.Controllers
             _estadosbrasilService = estadosbrasilService;
             _mapper = mapper;
             _emailService = emailService;
+         
         }
 
         // =====================================================================
@@ -477,6 +480,42 @@ namespace EventoWeb.Controllers
             }
 
             return RedirectToAction("Index", "Evento");
+        }
+
+        [AllowAnonymous]
+        [HttpGet]
+        [Route("EnviarConfirmacaoEmail")]
+        public async Task<ActionResult> EnviarConfirmacaoEmail(string email, string cpf, string returnUrl = null)
+        {
+            Pessoa pessoa = _pessoaService.GetByCpf(cpf);
+            var user = new UsuarioIdentity { UserName = cpf, Email = email };
+            var token = await _pessoaService.GerarTokenConfirmacaoEmailAsync(user);
+
+            if (pessoa != null && !string.IsNullOrWhiteSpace(token))
+            {
+                var callbackUrl = Url.Page(
+                    pageName: "/Account/ConfirmEmail",
+                    pageHandler: null,
+                    values: new { area = "Identity", code = token, returnUrl = returnUrl },
+                    protocol: Request.Scheme);
+                var sucesso = await _emailService.ModeloConfirmEmail(token, pessoa, callbackUrl);
+                if (sucesso)
+                {
+                    TempData["SuccessMessage"] = "E-mail de confirmação enviado com sucesso!";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Não foi possível enviar o e-mail. Tente novamente em alguns minutos.";
+                }
+
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Usuário não encontrado ou token inválido.";
+
+            }
+
+            return RedirectToPage("/Account/RegisterConfirmation", new { area = "Identity", email = email, returnUrl = returnUrl });
         }
         // =====================================================================
         // HELPER PRIVADO
