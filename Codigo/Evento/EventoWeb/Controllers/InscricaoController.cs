@@ -200,9 +200,23 @@ namespace EventoWeb.Controllers
             if (User.Identity != null && !string.IsNullOrEmpty(User.Identity.Name))
             {
                 var pessoa = _pessoaService.GetByCpf(User.Identity.Name);
-                if (pessoa != null && evento.PossuiCertificado != 0 && _inscricaoService.IsInscrito(pessoa.Id, idEvento))
+                if (pessoa != null)
                 {
-                    ViewBag.JaInscrito = true;
+                    if (evento.PossuiCertificado != 0 && _inscricaoService.IsInscrito(pessoa.Id, idEvento))
+                    {
+                        ViewBag.JaInscrito = true;
+                    }
+
+                    var nomeSugestao = !string.IsNullOrWhiteSpace(pessoa.NomeCracha) ? pessoa.NomeCracha : pessoa.Nome;
+                    if (!string.IsNullOrEmpty(nomeSugestao) && nomeSugestao.Length > 20)
+                    {
+                        nomeSugestao = nomeSugestao.Substring(0, 20);
+                    }
+
+                    model.inscricaoNavigation = new InscricaoEventoModel
+                    {
+                        NomeCracha = nomeSugestao
+                    };
                 }
             }
             
@@ -294,6 +308,19 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("Index", "Home"); 
             }
 
+            string? nomeCracha = !string.IsNullOrWhiteSpace(inscricaoEvento?.NomeCracha)
+                ? inscricaoEvento.NomeCracha.Trim()
+                : (!string.IsNullOrWhiteSpace(pessoa.NomeCracha) ? pessoa.NomeCracha.Trim() : pessoa.Nome?.Trim());
+
+            if (string.IsNullOrWhiteSpace(nomeCracha))
+            {
+                nomeCracha = "Participante";
+            }
+            else if (nomeCracha.Length > 20)
+            {
+                nomeCracha = nomeCracha.Substring(0, 20);
+            }
+
             foreach (var kvp in mainEventQuantities)
             {
                 uint idTipo = kvp.Key;
@@ -324,7 +351,7 @@ namespace EventoWeb.Controllers
                         IdEvento = idEvento,
                         IdPapel = 4,
                         DataInscricao = DateTime.Now,
-                        NomeCracha = User.Identity.Name,
+                        NomeCracha = nomeCracha,
                         Status = "S",
                         IdTipoInscricao = idTipoToSave,
                         FrequenciaFinal = 0m,
