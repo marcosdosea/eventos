@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Core.Service;
 using Core.DTO;
 using AutoMapper;
@@ -275,7 +275,9 @@ namespace EventoWeb.Controllers
                         ValorTotal = tipo.Valor * lote.Quantidade,
                         Status = "S",
                         FrequenciaFinal = 0,
-                        NomeCracha = pessoa.NomeCracha
+                        NomeCracha = !string.IsNullOrWhiteSpace(pessoa.NomeCracha)
+                            ? pessoa.NomeCracha
+                            : (!string.IsNullOrEmpty(pessoa.Nome) && pessoa.Nome.Length > 20 ? pessoa.Nome.Substring(0, 20) : pessoa.Nome)
                     };
                     _service.Create(inscricao);
                 }

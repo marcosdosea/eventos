@@ -1,5 +1,6 @@
 using AutoMapper;
 using Core;
+using Core.DTO;
 using Core.Service;
 using EventoWeb.Mappers;
 using EventoWeb.Models;
@@ -197,14 +198,200 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual(0m, criadas[0].ValorTotal);
         }
 
+        [TestMethod()]
+        public async Task RealizarInscricaoTest_Post_UsesPessoaNomeOrNomeCracha_NotLoginOrCpf()
+        {
+            // Arrange
+            var tipos = new Dictionary<uint, Tipoinscricao>
+            {
+                { 1, new Tipoinscricao { Id = 1, IdEvento = 1, Nome = "Paga", Valor = 100m } }
+            };
+            var (postController, criadas, _) = CreatePostController(tipos, new Dictionary<string, string>
+            {
+                { "QuantidadeTipoInscricao_1", "1" }
+            });
+
+            var input = new InscricaoEventoModel
+            {
+                IdTipoInscricao = 1,
+                SelectedSubeventos = new List<uint>(),
+                ValorTotal = 100m
+            };
+
+            // Act
+            var result = await postController.realizarInscricao(1, input);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            Assert.AreEqual(1, criadas.Count);
+            Assert.AreEqual("Participante Teste", criadas[0].NomeCracha);
+            Assert.AreNotEqual(UsernameTeste, criadas[0].NomeCracha);
+        }
+
+        [TestMethod()]
+        public async Task RealizarInscricaoTest_Post_PrefersCustomNomeCrachaFromForm()
+        {
+            // Arrange
+            var tipos = new Dictionary<uint, Tipoinscricao>
+            {
+                { 1, new Tipoinscricao { Id = 1, IdEvento = 1, Nome = "Paga", Valor = 100m } }
+            };
+            var (postController, criadas, _) = CreatePostController(tipos, new Dictionary<string, string>
+            {
+                { "QuantidadeTipoInscricao_1", "1" }
+            });
+
+            var input = new InscricaoEventoModel
+            {
+                IdTipoInscricao = 1,
+                SelectedSubeventos = new List<uint>(),
+                ValorTotal = 100m,
+                NomeCracha = "Dr. Teste"
+            };
+
+            // Act
+            var result = await postController.realizarInscricao(1, input);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            Assert.AreEqual(1, criadas.Count);
+            Assert.AreEqual("Dr. Teste", criadas[0].NomeCracha);
+        }
+
+        [TestMethod()]
+        public async Task RealizarInscricaoTest_Post_TruncatesNomeCrachaTo20Characters()
+        {
+            // Arrange
+            var tipos = new Dictionary<uint, Tipoinscricao>
+            {
+                { 1, new Tipoinscricao { Id = 1, IdEvento = 1, Nome = "Paga", Valor = 100m } }
+            };
+            var (postController, criadas, _) = CreatePostController(tipos, new Dictionary<string, string>
+            {
+                { "QuantidadeTipoInscricao_1", "1" }
+            });
+
+            var input = new InscricaoEventoModel
+            {
+                IdTipoInscricao = 1,
+                SelectedSubeventos = new List<uint>(),
+                ValorTotal = 100m,
+                NomeCracha = "Nome Muito Longo Que Ultrapassa Vinte Caracteres"
+            };
+
+            // Act
+            var result = await postController.realizarInscricao(1, input);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            Assert.AreEqual(1, criadas.Count);
+            Assert.AreEqual("Nome Muito Longo Que", criadas[0].NomeCracha);
+            Assert.AreEqual(20, criadas[0].NomeCracha!.Length);
+        }
+
+        [TestMethod()]
+        public async Task RealizarInscricaoTest_Post_UsesPessoaNomeCrachaWhenPresent()
+        {
+            // Arrange
+            var tipos = new Dictionary<uint, Tipoinscricao>
+            {
+                { 1, new Tipoinscricao { Id = 1, IdEvento = 1, Nome = "Paga", Valor = 100m } }
+            };
+            var pessoaComCracha = new Pessoa
+            {
+                Id = 1,
+                Cpf = UsernameTeste,
+                Nome = "Nome Completo do Participante",
+                NomeCracha = "Apelido Crachá"
+            };
+            var (postController, criadas, _) = CreatePostController(tipos, new Dictionary<string, string>
+            {
+                { "QuantidadeTipoInscricao_1", "1" }
+            }, pessoa: pessoaComCracha);
+
+            var input = new InscricaoEventoModel
+            {
+                IdTipoInscricao = 1,
+                SelectedSubeventos = new List<uint>(),
+                ValorTotal = 100m
+            };
+
+            // Act
+            var result = await postController.realizarInscricao(1, input);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            Assert.AreEqual(1, criadas.Count);
+            Assert.AreEqual("Apelido Crachá", criadas[0].NomeCracha);
+        }
+
+        [TestMethod()]
+        public void RealizarInscricaoTest_Get_PrepopulatesNomeCrachaInViewModel()
+        {
+            // Arrange
+            var mockPessoaService = new Mock<IPessoaService>();
+            mockPessoaService.Setup(s => s.GetByCpf(UsernameTeste))
+                .Returns(new Pessoa { Id = 1, Cpf = UsernameTeste, Nome = "Nome Longo Participante", NomeCracha = "Apelido" });
+
+            var mockEventoService = new Mock<IEventoService>();
+            mockEventoService.Setup(s => s.Get(1))
+                .Returns(new Evento { Id = 1, Status = "A", PossuiCertificado = 1, Nome = "Evento Teste" });
+
+            var mockTipoService = new Mock<ITipoInscricaoService>();
+            mockTipoService.Setup(s => s.GetByEvento(1)).Returns(new List<Tipoinscricao>());
+
+            var mockSubeventoService = new Mock<ISubeventoService>();
+            mockSubeventoService.Setup(s => s.GetByIdEvento(1)).Returns(new List<SubeventoEventoDTO>());
+
+            var mockInscricaoService = new Mock<IInscricaoService>();
+            mockInscricaoService.Setup(s => s.GetGestorInEvent(UsernameTeste, 1)).Returns((Inscricaopessoaevento)null!);
+            mockInscricaoService.Setup(s => s.IsInscrito(1, 1)).Returns(false);
+
+            IMapper mapper = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile(new EventoProfile());
+                cfg.AddProfile(new InscricaoProfile());
+            }).CreateMapper();
+
+            var getController = new InscricaoController(
+                null!,
+                mockTipoService.Object,
+                mockEventoService.Object,
+                mapper,
+                mockInscricaoService.Object,
+                mockPessoaService.Object,
+                mockSubeventoService.Object);
+
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, UsernameTeste) };
+            var httpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType"))
+            };
+            getController.ControllerContext = new ControllerContext { HttpContext = httpContext };
+            getController.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
+            getController.Url = Mock.Of<IUrlHelper>();
+
+            // Act
+            var result = getController.realizarInscricao(1, (uint?)null);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var viewResult = (ViewResult)result;
+            Assert.IsInstanceOfType(viewResult.Model, typeof(InscricaoEventoViewModel));
+            var model = (InscricaoEventoViewModel)viewResult.Model;
+            Assert.IsNotNull(model.inscricaoNavigation);
+            Assert.AreEqual("Apelido", model.inscricaoNavigation.NomeCracha);
+        }
+
         private static (InscricaoController, List<Inscricaopessoaevento>, List<Inscricaopessoasubevento>) CreatePostController(
             Dictionary<uint, Tipoinscricao> tipos,
             Dictionary<string, string> formFields,
-            Evento? evento = null)
+            Evento? evento = null,
+            Pessoa? pessoa = null)
         {
             var mockPessoaService = new Mock<IPessoaService>();
             mockPessoaService.Setup(service => service.GetByCpf(UsernameTeste))
-                .Returns(new Pessoa { Id = 1, Cpf = UsernameTeste, Nome = "Participante Teste" });
+                .Returns(pessoa ?? new Pessoa { Id = 1, Cpf = UsernameTeste, Nome = "Participante Teste" });
 
             var mockInscricaoService = new Mock<IInscricaoService>();
             mockInscricaoService.Setup(service => service.IsInscrito(It.IsAny<uint>(), It.IsAny<uint>()))
