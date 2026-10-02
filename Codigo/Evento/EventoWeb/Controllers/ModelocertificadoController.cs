@@ -39,11 +39,11 @@ namespace EventoWeb.Controllers
         private SelectList EventosSelectList(uint? selecionado = null)
         {
             if (User.IsInRole("ADMINISTRADOR"))
-                return new SelectList(_eventoService.GetAll(), "Id", "Nome", selecionado);
+                return new SelectList(_eventoService.GetAllSimpleDto(), "Id", "Nome", selecionado);
             var username = User.Identity?.Name;
             var meusEventos = string.IsNullOrEmpty(username)
-                ? Enumerable.Empty<Evento>()
-                : _eventoService.GetEventByCpf(username, 2) ?? Enumerable.Empty<Evento>();
+                ? Enumerable.Empty<Core.DTO.EventoSimpleDTO>()
+                : _eventoService.GetEventByCpf(username, 2)?.Select(e => new Core.DTO.EventoSimpleDTO { Id = e.Id, Nome = e.Nome }) ?? Enumerable.Empty<Core.DTO.EventoSimpleDTO>();
             return new SelectList(meusEventos, "Id", "Nome", selecionado);
         }
 
