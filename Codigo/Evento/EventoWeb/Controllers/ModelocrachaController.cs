@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Core;
 using Core.Service;
 using EventoWeb.Helpers;
@@ -48,8 +48,7 @@ namespace EventoWeb.Controllers
                 var listaModeloCrachaModel = listaModeloCrachas.Select(m =>
                 {
                     var model = _mapper.Map<ModelocrachaModel>(m);
-                    var evento = _eventoService.Get(m.IdEvento);
-                    model.NomeEvento = evento != null ? evento.Nome : "Evento não encontrado";
+                    model.NomeEvento = _eventoService.GetNomeById(m.IdEvento) ?? "Evento não encontrado";
                     model.IdPessoa = idPessoa;
                     return model;
                 }).ToList();

@@ -1,4 +1,4 @@
-﻿using Core;
+using Core;
 using Core.DTO;
 using Core.Service;
 using Microsoft.EntityFrameworkCore;
@@ -332,8 +332,32 @@ namespace Service.Tests
         public void GetEventoSimpleDtoTest()
         {
             var evento = _eventoService.GetEventoSimpleDto(2);
+            Assert.IsNotNull(evento);
             Assert.AreEqual((uint)2, evento.Id);
             Assert.AreEqual("SEMAC", evento.Nome);
+        }
+
+        [TestMethod()]
+        public void GetEventoSimpleDtoInexistenteTest()
+        {
+            var evento = _eventoService.GetEventoSimpleDto(999);
+            Assert.IsNull(evento);
+        }
+
+        [TestMethod()]
+        public void GetAllSimpleDtoTest()
+        {
+            // Act
+            var listaEvento = _eventoService.GetAllSimpleDto();
+
+            // Assert
+            Assert.IsNotNull(listaEvento);
+            Assert.AreEqual(3, listaEvento.Count());
+            // Deve estar ordenado por Nome ("Balada do DJ Ikaruz", "SEMAC", "SEMINFO")
+            var listaOrdenada = listaEvento.ToList();
+            Assert.AreEqual("Balada do DJ Ikaruz", listaOrdenada[0].Nome);
+            Assert.AreEqual("SEMAC", listaOrdenada[1].Nome);
+            Assert.AreEqual("SEMINFO", listaOrdenada[2].Nome);
         }
 
         [TestMethod()]

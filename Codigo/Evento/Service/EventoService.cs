@@ -163,21 +163,28 @@ namespace Service
         }
         public EventoSimpleDTO GetEventoSimpleDto(uint id)
         {
-            var evento = Get(id);
-            if (evento != null)
-            {
-                var eventoSimpleDto = new EventoSimpleDTO
+            return _context.Eventos
+                .AsNoTracking()
+                .Where(e => e.Id == id)
+                .Select(e => new EventoSimpleDTO
                 {
-                    Id = evento.Id,
-                    Nome = evento.Nome
-                };
+                    Id = e.Id,
+                    Nome = e.Nome
+                })
+                .FirstOrDefault();
+        }
 
-                return eventoSimpleDto;
-            }
-            else
-            {
-                return null;
-            }
+        public IEnumerable<EventoSimpleDTO> GetAllSimpleDto()
+        {
+            return _context.Eventos
+                .AsNoTracking()
+                .OrderBy(e => e.Nome)
+                .Select(e => new EventoSimpleDTO
+                {
+                    Id = e.Id,
+                    Nome = e.Nome
+                })
+                .ToList();
         }
     
         /// <summary>
