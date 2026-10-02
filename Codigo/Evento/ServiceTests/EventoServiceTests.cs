@@ -1,4 +1,4 @@
-﻿using Core;
+using Core;
 using Core.DTO;
 using Core.Service;
 using Microsoft.EntityFrameworkCore;
@@ -364,6 +364,75 @@ namespace Service.Tests
         {
             var evento = _eventoService.GetNomeById(2);
             Assert.AreEqual("SEMAC", evento);
+        }
+
+        [TestMethod()]
+        public void GetEventByCpfTest()
+        {
+            // Arrange
+            var pessoa = new Pessoa
+            {
+                Id = 10,
+                Nome = "Luiz Augusto",
+                NomeCracha = "Luiz",
+                Cpf = "12345678901",
+                Email = "luiz@exemplo.com",
+                Cep = "49500000",
+                Estado = "SE",
+                Cidade = "Itabaiana",
+                Bairro = "Centro",
+                Rua = "Rua A",
+                Numero = "100"
+            };
+            var inscricao = new Inscricaopessoaevento
+            {
+                IdPessoa = 10,
+                IdEvento = 1,
+                IdPapel = 2,
+                DataInscricao = DateTime.Now,
+                Status = "A"
+            };
+            _context.Pessoas.Add(pessoa);
+            _context.Inscricaopessoaeventos.Add(inscricao);
+            _context.SaveChanges();
+            _context.ChangeTracker.Clear();
+
+            // Act
+            var eventos = _eventoService.GetEventByCpf("12345678901", 2);
+
+            // Assert
+            Assert.IsNotNull(eventos);
+            Assert.AreEqual(1, eventos.Count());
+            Assert.AreEqual((uint)1, eventos.First().Id);
+            Assert.AreEqual("SEMINFO", eventos.First().Nome);
+            Assert.AreEqual(EntityState.Detached, _context.Entry(eventos.First()).State);
+        }
+
+        [TestMethod()]
+        [ExpectedException(typeof(ServiceException))]
+        public void GetEventByCpfPessoaNaoEncontradaTest()
+        {
+            _eventoService.GetEventByCpf("00000000000", 2);
+        }
+
+        [TestMethod()]
+        public void GetAreasInteresseByEventoIdTest()
+        {
+            // Arrange: associa area de interesse 1 ao evento 1
+            var evento = _context.Eventos.Include(e => e.IdAreaInteresses).First(e => e.Id == 1);
+            var area = _context.Areainteresses.First(a => a.Id == 1);
+            evento.IdAreaInteresses.Add(area);
+            _context.SaveChanges();
+            _context.ChangeTracker.Clear();
+
+            // Act
+            var areas = _eventoService.GetAreasInteresseByEventoId(1);
+
+            // Assert
+            Assert.IsNotNull(areas);
+            Assert.AreEqual(1, areas.Count());
+            Assert.AreEqual("Curso", areas.First().Nome);
+            Assert.AreEqual(EntityState.Detached, _context.Entry(areas.First()).State);
         }
     }
 }
