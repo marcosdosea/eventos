@@ -4,19 +4,7 @@
     ViewData["Title"] = "Confirmação de cadastro";
 }
 
-<h1>@ViewData["Title"]</h1>
-@{
-    if (@Model.DisplayConfirmAccountLink)
-    {
-<p>
-    Normalmente este link seria enviado por e-mail: <a id="confirm-link" href="@Model.EmailConfirmationUrl">Clique aqui para confirmar sua conta</a>
-</p>
-    }
-    else
-    {
-<p>
-        Por favor, verifique seu e-mail para confirmar sua conta.
-</p>
-    }
-}
+<h1 class="blue-normal">@ViewData["Title"]</h1>
 
+
+<partial name="_RegistraConfirmacao" model="Model.Email" />
