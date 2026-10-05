@@ -260,7 +260,7 @@ namespace EventoWeb.Controllers.Tests
             mockTipoService.Setup(service => service.Get(It.IsAny<uint>()))
                 .Returns<uint>(id => tipos.TryGetValue(id, out var tipo) ? tipo : null);
 
-            var evento = new Evento { Id = 1, Status = "A", PossuiCertificado = 0 };
+            var evento = new Evento { Id = 1, Status = "A", PossuiCertificado = 0, VagasDisponiveis = 100 };
             var mockEventoService = new Mock<IEventoService>();
             mockEventoService.Setup(service => service.Get(It.IsAny<uint>()))
                 .Returns(evento);
