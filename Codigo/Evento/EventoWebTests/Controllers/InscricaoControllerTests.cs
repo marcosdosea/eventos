@@ -210,12 +210,16 @@ namespace EventoWeb.Controllers.Tests
             mockInscricaoService.Setup(service => service.IsInscrito(It.IsAny<uint>(), It.IsAny<uint>()))
                 .Returns(false);
             var criadas = new List<Inscricaopessoaevento>();
-            mockInscricaoService.Setup(service => service.CreateInscricaoEvento(It.IsAny<Inscricaopessoaevento>()))
-                .Callback<Inscricaopessoaevento>(i => criadas.Add(i))
-                .Returns((uint)1);
             var criadasSub = new List<Inscricaopessoasubevento>();
-            mockInscricaoService.Setup(service => service.CreateInscricaoSubEvento(It.IsAny<Inscricaopessoasubevento>()))
-                .Callback<Inscricaopessoasubevento>(i => criadasSub.Add(i));
+            
+            mockInscricaoService.Setup(service => service.CreateInscricoesEmLote(
+                    It.IsAny<IEnumerable<Inscricaopessoaevento>>(), 
+                    It.IsAny<IEnumerable<Inscricaopessoasubevento>>()))
+                .Callback<IEnumerable<Inscricaopessoaevento>, IEnumerable<Inscricaopessoasubevento>>((e, s) => 
+                {
+                    if (e != null) criadas.AddRange(e);
+                    if (s != null) criadasSub.AddRange(s);
+                });
 
             var mockTipoService = new Mock<ITipoInscricaoService>();
             mockTipoService.Setup(service => service.Get(It.IsAny<uint>()))

@@ -294,9 +294,11 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("Index", "Home"); 
             }
 
-            using (var transactionScope = new System.Transactions.TransactionScope(System.Transactions.TransactionScopeAsyncFlowOption.Enabled))
-            {
-                foreach (var kvp in mainEventQuantities)
+            var eventosParaSalvar = new List<Inscricaopessoaevento>();
+            var subeventosParaSalvar = new List<Inscricaopessoasubevento>();
+            var subeventosAtualizarVagas = new HashSet<uint>();
+
+            foreach (var kvp in mainEventQuantities)
             {
                 uint idTipo = kvp.Key;
                 int quantidade = kvp.Value;
@@ -334,17 +336,7 @@ namespace EventoWeb.Controllers
                     };
 
                     var inscricao = _mapper.Map<Inscricaopessoaevento>(novaInscricao);
-                    
-                    if (evento.PossuiCertificado == 0)
-                    {
-                        _inscricaoService.CreateInscricaoEventoLote(inscricao);
-                    }
-                    else
-                    {
-                        _inscricaoService.CreateInscricaoEvento(inscricao);
-                    }
-                    
-                    _eventoService.AtualizarVagasDisponiveis(idEvento);
+                    eventosParaSalvar.Add(inscricao);
                 }
             }
 
@@ -414,13 +406,29 @@ namespace EventoWeb.Controllers
                                 FrequenciaFinal = 0m,
                                 Valor = valorSub,
                             };
-                            _inscricaoService.CreateInscricaoSubEvento(novaInscricaoSub);
-                            _subeventoService.AtualizarVagasDisponiveis(idSubevento);
+                            subeventosParaSalvar.Add(novaInscricaoSub);
                         }
                     }
+                    if (subEventQuantities.Any())
+                    {
+                        subeventosAtualizarVagas.Add(idSubevento);
+                    }
+                }
+            }
+
+            if (eventosParaSalvar.Any() || subeventosParaSalvar.Any())
+            {
+                _inscricaoService.CreateInscricoesEmLote(eventosParaSalvar, subeventosParaSalvar);
+
+                if (eventosParaSalvar.Any())
+                {
+                    _eventoService.AtualizarVagasDisponiveis(idEvento);
                 }
 
-                transactionScope.Complete();
+                foreach (var idSub in subeventosAtualizarVagas)
+                {
+                    _subeventoService.AtualizarVagasDisponiveis(idSub);
+                }
             }
 
             TempData["ParticipanteSuccessMessage"] = "Inscrição realizada com sucesso!";

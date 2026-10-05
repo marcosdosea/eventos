@@ -11,6 +11,8 @@ namespace Core.Service
 
         void CreateInscricaoSubEvento(Inscricaopessoasubevento inscricaopessoasubevento);
 
+        void CreateInscricoesEmLote(IEnumerable<Inscricaopessoaevento> eventos, IEnumerable<Inscricaopessoasubevento> subeventos);
+
         Task DeletePessoaPapelAsync(uint idPessoa, uint idEvento, uint idPapel, string cpf);
 
         IEnumerable<Inscricaopessoaevento> GetByEventoAndPapel(uint idEvento, int idPapel);
