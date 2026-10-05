@@ -300,6 +300,37 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("Index", "Home"); 
             }
 
+            if (inscricaoEvento.SelectedSubeventos != null && inscricaoEvento.SelectedSubeventos.Any())
+            {
+                foreach (var idSubevento in inscricaoEvento.SelectedSubeventos)
+                {
+                    var subevento = _subeventoService.Get(idSubevento);
+                    if (subevento == null || subevento.Status == "C" || subevento.Status == "F" || subevento.DataFimInscricao < DateTime.Now)
+                    {
+                        continue;
+                    }
+
+                    int totalSubTicketsCheck = 0;
+                    string prefix = $"QuantidadeTipoInscricaoSubevento_{idSubevento}_";
+                    foreach (var key in Request.Form.Keys)
+                    {
+                        if (key.StartsWith(prefix))
+                        {
+                            if (int.TryParse(Request.Form[key], out int qtd) && qtd > 0)
+                            {
+                                totalSubTicketsCheck += qtd;
+                            }
+                        }
+                    }
+
+                    if (totalSubTicketsCheck > 8)
+                    {
+                        TempData["ParticipanteMessage"] = "Limite máximo para subeventos excedido.";
+                        return RedirectToAction("Index", "Home");
+                    }
+                }
+            }
+
             foreach (var kvp in mainEventQuantities)
             {
                 uint idTipo = kvp.Key;
@@ -383,7 +414,19 @@ namespace EventoWeb.Controllers
                     
                     if (totalSubTickets > 8)
                     {
-                        continue; 
+                        TempData["ParticipanteMessage"] = "Limite máximo para subeventos excedido.";
+                        return RedirectToAction("Index", "Home"); 
+                    }
+
+                    if (subEventQuantities.Count == 0)
+                    {
+                        var tipoVal = Request.Form[$"TipoInscricaoSubevento_{idSubevento}"];
+                        uint parsedTipo = 0;
+                        if (!string.IsNullOrEmpty(tipoVal) && uint.TryParse(tipoVal, out uint t))
+                        {
+                            parsedTipo = t;
+                        }
+                        subEventQuantities[parsedTipo] = 1;
                     }
 
                     if (subevento.VagasDisponiveis < totalSubTickets)
