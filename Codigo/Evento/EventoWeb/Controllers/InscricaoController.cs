@@ -294,8 +294,6 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("Index", "Home"); 
             }
 
-            // Fix #780: nenhum tipo de outro evento pode ser usado neste evento.
-            // 0 = preço padrão do evento e 999999 = meia-entrada padrão são os únicos IDs fora da tabela.
             foreach (var idTipoCheck in mainEventQuantities.Keys.ToList())
             {
                 if (idTipoCheck == 0 || idTipoCheck == 999999)
@@ -370,7 +368,6 @@ namespace EventoWeb.Controllers
                     {
                         continue;
                     }
-                    // Fix #780: subevento de outro evento não pode ser usado neste evento.
                     if (subevento.IdEvento != idEvento)
                     {
                         continue;
@@ -404,7 +401,6 @@ namespace EventoWeb.Controllers
                         uint idTipoSub = kvpSub.Key;
                         int quantidadeSub = kvpSub.Value;
 
-                        // Fix #780: tipo do subevento também precisa pertencer a este evento.
                         if (idTipoSub != 0 && idTipoSub != 999999)
                         {
                             var tipoCheckSub = _tipoinscricaoService.Get(idTipoSub);
