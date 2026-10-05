@@ -154,7 +154,7 @@ namespace EventoWeb.Controllers.Tests
             var (postController, criadas, _) = CreatePostController(
                 new Dictionary<uint, Tipoinscricao>(),
                 new Dictionary<string, string>(),
-                new Evento { Id = 1, Status = "A", PossuiCertificado = 1, InscricaoGratuita = 0, ValorInscricao = 100m });
+                new Evento { Id = 1, Status = "A", PossuiCertificado = 1, InscricaoGratuita = 0, ValorInscricao = 100m, VagasDisponiveis = 100 });
 
             var input = new InscricaoEventoModel
             {
@@ -179,7 +179,7 @@ namespace EventoWeb.Controllers.Tests
             var (postController, criadas, _) = CreatePostController(
                 new Dictionary<uint, Tipoinscricao>(),
                 new Dictionary<string, string>(),
-                new Evento { Id = 1, Status = "A", PossuiCertificado = 1, InscricaoGratuita = 1, ValorInscricao = 0m });
+                new Evento { Id = 1, Status = "A", PossuiCertificado = 1, InscricaoGratuita = 1, ValorInscricao = 0m, VagasDisponiveis = 100 });
 
             var input = new InscricaoEventoModel
             {
@@ -221,14 +221,14 @@ namespace EventoWeb.Controllers.Tests
             mockTipoService.Setup(service => service.Get(It.IsAny<uint>()))
                 .Returns<uint>(id => tipos.TryGetValue(id, out var tipo) ? tipo : null);
 
-            evento ??= new Evento { Id = 1, Status = "A", PossuiCertificado = 1 };
+            evento ??= new Evento { Id = 1, Status = "A", PossuiCertificado = 1, VagasDisponiveis = 100 };
             var mockEventoService = new Mock<IEventoService>();
             mockEventoService.Setup(service => service.Get(It.IsAny<uint>()))
                 .Returns(evento);
 
             var mockSubeventoService = new Mock<ISubeventoService>();
             mockSubeventoService.Setup(service => service.Get(10))
-                .Returns(new Subevento { Id = 10, IdEvento = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(1), ValorInscricao = 50m });
+                .Returns(new Subevento { Id = 10, IdEvento = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(1), ValorInscricao = 50m, VagasDisponiveis = 100 });
 
             IMapper mapper = new MapperConfiguration(cfg =>
                 cfg.AddProfile(new InscricaoProfile())).CreateMapper();
