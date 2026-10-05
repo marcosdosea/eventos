@@ -14,6 +14,12 @@ namespace EventoWeb.Controllers
     [Authorize]
     public class InscricaoController : Controller
     {
+        // Identificador sentinela para a "Meia Entrada Padrao".
+        // Nao e um ID real da tabela Tipoinscricao: fica fora da faixa de IDs
+        // reais e, ao salvar, a inscricao grava IdTipoInscricao = null.
+        // Definido em um unico lugar e reutilizado no controller e na view.
+        public const uint TIPO_MEIA_ENTRADA = uint.MaxValue;
+
         private readonly IEventoService _eventoService;
         private readonly IPessoaService _pessoaService;
         private readonly IInscricaoService _inscricaoService;
@@ -331,14 +337,21 @@ namespace EventoWeb.Controllers
                 int quantidade = kvp.Value;
 
                 decimal valorMain = 0m;
-                uint? idTipoToSave = (idTipo != 0 && idTipo != 999999) ? (uint?)idTipo : null;
 
-                if (idTipo != 0 && idTipo != 999999)
+                // So e um tipo de inscricao real se nao for o sentinela de meia
+                // entrada, nao for zero e existir de fato na base.
+                var tipoObjMain = (idTipo != 0 && idTipo != TIPO_MEIA_ENTRADA)
+                    ? _tipoinscricaoService.Get(idTipo)
+                    : null;
+                bool tipoRealMain = tipoObjMain != null;
+
+                uint? idTipoToSave = tipoRealMain ? (uint?)idTipo : null;
+
+                if (tipoRealMain)
                 {
-                    var tipoObjMain = _tipoinscricaoService.Get(idTipo);
-                    valorMain = tipoObjMain != null ? tipoObjMain.Valor : 0m;
+                    valorMain = tipoObjMain.Valor;
                 }
-                else if (idTipo == 999999)
+                else if (idTipo == TIPO_MEIA_ENTRADA)
                 {
                     valorMain = evento != null ? (evento.ValorInscricao / 2m) : 0m;
                 }
@@ -429,12 +442,19 @@ namespace EventoWeb.Controllers
                         int quantidadeSub = kvpSub.Value;
 
                         decimal valorSub = 0m;
-                        if (idTipoSub != 0 && idTipoSub != 999999)
+
+                        // So e um tipo de inscricao real se nao for o sentinela de
+                        // meia entrada, nao for zero e existir de fato na base.
+                        var tipoObjSub = (idTipoSub != 0 && idTipoSub != TIPO_MEIA_ENTRADA)
+                            ? _tipoinscricaoService.Get(idTipoSub)
+                            : null;
+                        bool tipoRealSub = tipoObjSub != null;
+
+                        if (tipoRealSub)
                         {
-                            var tipoObjSub = _tipoinscricaoService.Get(idTipoSub);
-                            valorSub = tipoObjSub != null ? tipoObjSub.Valor : 0m;
+                            valorSub = tipoObjSub.Valor;
                         }
-                        else if (idTipoSub == 999999)
+                        else if (idTipoSub == TIPO_MEIA_ENTRADA)
                         {
                             valorSub = subevento != null ? (subevento.ValorInscricao / 2m) : 0m;
                         }
