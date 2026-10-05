@@ -160,7 +160,6 @@ namespace EventoWeb.Controllers
             }
 
             // POST: SubeventoController/CreateOrEdit/{idEvento}/{idSubevento?}
-            // Fix #779 (overposting): whitelist via [Bind], idSubevento vem da rota, IdEvento/Vagas vêm do servidor.
             [HttpPost]
             [Route("CreateOrEdit/{idEvento}/{idSubevento?}")]
             [ValidateAntiForgeryToken]
@@ -168,10 +167,8 @@ namespace EventoWeb.Controllers
             {
                 if (!IsAuthorized(idEvento))
                     return Forbid();
-                // A rota é a fonte da verdade: impede trocar Id pelo corpo para sobrescrever outro registro.
                 if (idSubevento.HasValue && subeventoModel.Id != 0 && idSubevento.Value != subeventoModel.Id)
                     return BadRequest("Id do subevento divergente.");
-                // Impede mover subevento para outro evento via tampering do hidden.
                 if (subeventoModel.IdEvento != 0 && subeventoModel.IdEvento != idEvento)
                     return BadRequest("Não é permitido mover o subevento para outro evento.");
                 Subevento? existente = null;
@@ -196,7 +193,6 @@ namespace EventoWeb.Controllers
                 {
                     if (existente != null)
                     {
-                        // Atualiza só campos editáveis; IdEvento e vagas controladas pelo servidor são preservadas.
                         existente.Nome = subeventoModel.Nome;
                         existente.Descricao = subeventoModel.Descricao;
                         existente.DataInicio = subeventoModel.DataInicio;

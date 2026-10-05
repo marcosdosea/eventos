@@ -98,7 +98,6 @@ namespace EventoWeb.Controllers
         }
 
         // POST: /TipoInscricao/Create
-        // Fix #779 (overposting): whitelist via [Bind] — Id/NomeEvento/Evento nunca vêm do client.
         [HttpPost("Create")]
         [ValidateAntiForgeryToken]
         public ActionResult Create([Bind("IdEvento,Nome,Descricao,Valor,DataInicio,Datafim,UsadaEvento,UsadaSubevento")] TipoInscricaoModel tipoInscricaoModel)
@@ -107,7 +106,6 @@ namespace EventoWeb.Controllers
                 return Forbid();
             if (ModelState.IsValid)
             {
-                // Monta a entidade só com campos permitidos; Id é gerado pelo banco.
                 var tipoinscricao = new Tipoinscricao
                 {
                     IdEvento = tipoInscricaoModel.IdEvento,
@@ -150,7 +148,6 @@ namespace EventoWeb.Controllers
         }
 
         // POST: /TipoInscricao/Edit/5
-        // Fix #779 (overposting): Id vem da rota, IdEvento é imutável (não permite mover entre eventos).
         [HttpPost("Edit/{id}")]
         [ValidateAntiForgeryToken]
         public ActionResult Edit(uint id, [Bind("IdEvento,Nome,Descricao,Valor,DataInicio,Datafim,UsadaEvento,UsadaSubevento")] TipoInscricaoModel tipoInscricaoModel)
@@ -160,12 +157,10 @@ namespace EventoWeb.Controllers
                 return NotFound();
             if (!IsAuthorized(existente.IdEvento))
                 return Forbid();
-            // Impede mover o tipo para outro evento via tampering do hidden/dropdown.
             if (tipoInscricaoModel.IdEvento != existente.IdEvento)
                 return BadRequest("Não é permitido mover o tipo de inscrição para outro evento.");
             if (ModelState.IsValid)
             {
-                // Atualiza só campos permitidos sobre a entidade carregada (preserva Id/IdEvento e relacionamentos).
                 existente.Nome = tipoInscricaoModel.Nome;
                 existente.Descricao = tipoInscricaoModel.Descricao;
                 existente.Valor = tipoInscricaoModel.Valor;
@@ -274,7 +269,6 @@ namespace EventoWeb.Controllers
 
             try
             {
-                // Fix #779: garante que o tipo pertence ao mesmo evento do subevento.
                 var tipo = _tipoInscricaoService.Get(model.IdTipoInscricao);
                 if (tipo == null || tipo.IdEvento != subeventoM.IdEvento)
                 {
