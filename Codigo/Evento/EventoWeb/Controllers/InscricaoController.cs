@@ -460,17 +460,19 @@ namespace EventoWeb.Controllers
 
             if (eventosParaSalvar.Any() || subeventosParaSalvar.Any())
             {
-                _inscricaoService.CreateInscricoesEmLote(eventosParaSalvar, subeventosParaSalvar);
+                _inscricaoService.CreateInscricoesEmLote(eventosParaSalvar, subeventosParaSalvar, saveChanges: false);
 
                 if (eventosParaSalvar.Any())
                 {
-                    _eventoService.AtualizarVagasDisponiveis(idEvento);
+                    _eventoService.AtualizarVagasDisponiveis(idEvento, saveChanges: false);
                 }
 
                 foreach (var idSub in subeventosAtualizarVagas)
                 {
-                    _subeventoService.AtualizarVagasDisponiveis(idSub);
+                    _subeventoService.AtualizarVagasDisponiveis(idSub, saveChanges: false);
                 }
+
+                _inscricaoService.SaveChanges();
             }
 
             TempData["ParticipanteSuccessMessage"] = "Inscrição realizada com sucesso!";

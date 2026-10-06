@@ -69,7 +69,7 @@ namespace EventoWeb.Controllers.Tests
     It.IsAny<Pessoa>(), It.IsAny<uint>(), It.IsAny<int>()))
     .ReturnsAsync(true)
                 .Verifiable();
-            mockService.Setup(service => service.AtualizarVagasDisponiveis(It.IsAny<uint>()))
+            mockService.Setup(service => service.AtualizarVagasDisponiveis(It.IsAny<uint>(), It.IsAny<bool>()))
                 .Verifiable();
             var pessoa = new Pessoa { Id = 1, Cpf = "123.456.789-00", Nome = "Teste" };
             mockServicePessoa.Setup(s => s.Get(1)).Returns(pessoa);

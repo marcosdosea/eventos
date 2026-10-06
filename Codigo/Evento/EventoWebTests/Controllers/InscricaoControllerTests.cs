@@ -335,8 +335,9 @@ namespace EventoWeb.Controllers.Tests
             
             mockInscricaoService.Setup(service => service.CreateInscricoesEmLote(
                     It.IsAny<IEnumerable<Inscricaopessoaevento>>(), 
-                    It.IsAny<IEnumerable<Inscricaopessoasubevento>>()))
-                .Callback<IEnumerable<Inscricaopessoaevento>, IEnumerable<Inscricaopessoasubevento>>((e, s) => 
+                    It.IsAny<IEnumerable<Inscricaopessoasubevento>>(),
+                    It.IsAny<bool>()))
+                .Callback<IEnumerable<Inscricaopessoaevento>, IEnumerable<Inscricaopessoasubevento>, bool>((e, s, _) => 
                 {
                     if (e != null) criadas.AddRange(e);
                     if (s != null) criadasSub.AddRange(s);

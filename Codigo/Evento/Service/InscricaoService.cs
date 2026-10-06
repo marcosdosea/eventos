@@ -40,7 +40,7 @@ namespace Service
             return inscricaopessoaevento.Id;
         }
 
-        public void CreateInscricoesEmLote(IEnumerable<Inscricaopessoaevento> eventos, IEnumerable<Inscricaopessoasubevento> subeventos)
+        public void CreateInscricoesEmLote(IEnumerable<Inscricaopessoaevento> eventos, IEnumerable<Inscricaopessoasubevento> subeventos, bool saveChanges = true)
         {
             if (eventos != null && eventos.Any())
             {
@@ -51,10 +51,15 @@ namespace Service
                 _context.AddRange(subeventos);
             }
             
-            if ((eventos != null && eventos.Any()) || (subeventos != null && subeventos.Any()))
+            if (saveChanges && ((eventos != null && eventos.Any()) || (subeventos != null && subeventos.Any())))
             {
                 _context.SaveChanges();
             }
+        }
+
+        public void SaveChanges()
+        {
+            _context.SaveChanges();
         }
 
         public async Task DeletePessoaPapelAsync(uint idPessoa, uint idEvento, uint idPapel, string cpf)
