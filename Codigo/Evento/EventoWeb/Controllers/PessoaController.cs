@@ -488,15 +488,20 @@ namespace EventoWeb.Controllers
         public async Task<ActionResult> EnviarConfirmacaoEmail(string email, string cpf, string returnUrl = null)
         {
             Pessoa pessoa = _pessoaService.GetByCpf(cpf);
-            var user = new UsuarioIdentity { UserName = cpf, Email = email };
-            var token = await _pessoaService.GerarTokenConfirmacaoEmailAsync(user);
-
-            if (pessoa != null && !string.IsNullOrWhiteSpace(token))
+            
+            var (token,user) = await _pessoaService.GerarTokenConfirmacaoEmailAsync(cpf);
+            token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+            if (pessoa == null || user == null)
+            {
+                TempData["ErrorMessage"] = "Usuário não encontrado.";
+                return RedirectToPage("/Account/RegisterConfirmation", new { area = "Identity", email = email, returnUrl = returnUrl });
+            }
+            if (!string.IsNullOrWhiteSpace(token))
             {
                 var callbackUrl = Url.Page(
                     pageName: "/Account/ConfirmEmail",
                     pageHandler: null,
-                    values: new { area = "Identity", code = token, returnUrl = returnUrl },
+                    values: new { area = "Identity",userId = user.Id, code = token, returnUrl = returnUrl },
                     protocol: Request.Scheme);
                 var sucesso = await _emailService.ModeloConfirmEmail(token, pessoa, callbackUrl);
                 if (sucesso)

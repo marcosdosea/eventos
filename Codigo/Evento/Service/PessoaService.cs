@@ -444,17 +444,19 @@ public class PessoaService : IPessoaService
             .ToListAsync();
     }
 
-    public async Task<string> GerarTokenConfirmacaoEmailAsync(UsuarioIdentity user)
+    public async Task<(string, UsuarioIdentity)> GerarTokenConfirmacaoEmailAsync(String cpf)
     {
+        if(cpf == null) return (null, null);
+        UsuarioIdentity user = await _userManager.FindByNameAsync(cpf);
         if (user == null)
         {
             Trace.TraceError($"User não existe. ");
-            return string.Empty;
+            return (null, null);
         }
             
 
         var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-        return token;
+        return (token, user);
     }
     
 }
