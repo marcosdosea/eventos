@@ -2,6 +2,10 @@
 
 @{
     ViewData["Title"] = "Inscrição - " + Model.eventoNavigation.Nome;
+
+    // Mesmo identificador de "Meia Entrada Padrao" usado no controller,
+    // definido em um unico lugar (InscricaoController.TIPO_MEIA_ENTRADA).
+    var tipoMeiaEntrada = EventoWeb.Controllers.InscricaoController.TIPO_MEIA_ENTRADA;
 }
 
 <link rel="stylesheet" href="~/css/realizarInscricaoLote.css" asp-append-version="true" />
@@ -184,9 +188,9 @@
                                         <span class="badge-custom badge-primary">R$ @((Model.eventoNavigation.ValorInscricao / 2m).ToString("N2"))</span>
                                     </div>
                                     <div class="quantidade-input-container">
-                                        <button type="button" class="btn-qty" onclick="changeQty('evento', 999999, -1)">-</button>
-                                        <input type="number" name="QuantidadeTipoInscricao_999999" id="qty_evento_999999" value="0" min="0" max="8" class="form-control quantidade-input-small evento-qty" data-valor="@((Model.eventoNavigation.ValorInscricao / 2m).ToString(System.Globalization.CultureInfo.InvariantCulture))" readonly />
-                                        <button type="button" class="btn-qty" onclick="changeQty('evento', 999999, 1)">+</button>
+                                        <button type="button" class="btn-qty" onclick="changeQty('evento', @tipoMeiaEntrada, -1)">-</button>
+                                        <input type="number" name="QuantidadeTipoInscricao_@tipoMeiaEntrada" id="qty_evento_@tipoMeiaEntrada" value="0" min="0" max="8" class="form-control quantidade-input-small evento-qty" data-valor="@((Model.eventoNavigation.ValorInscricao / 2m).ToString(System.Globalization.CultureInfo.InvariantCulture))" readonly />
+                                        <button type="button" class="btn-qty" onclick="changeQty('evento', @tipoMeiaEntrada, 1)">+</button>
                                     </div>
                                 </div>
                             }
@@ -284,9 +288,9 @@
                                                             <p style="margin:0; font-weight: 600;">Meia Entrada Padrão - R$ @((sub.ValorInscricao / 2m).ToString("N2"))</p>
                                                         </div>
                                                         <div class="quantidade-input-container">
-                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', 999999, -1)" disabled id="btn_minus_subevento_@(sub.Id)_999999">-</button>
-                                                            <input type="number" name="QuantidadeTipoInscricaoSubevento_@(sub.Id)_999999" id="qty_subevento_@(sub.Id)_999999" value="0" min="0" max="8" class="form-control quantidade-input-small subevento-qty-@sub.Id" data-valor="@((sub.ValorInscricao / 2m).ToString(System.Globalization.CultureInfo.InvariantCulture))" disabled readonly />
-                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', 999999, 1)" disabled id="btn_plus_subevento_@(sub.Id)_999999">+</button>
+                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', @tipoMeiaEntrada, -1)" disabled id="btn_minus_subevento_@(sub.Id)_@tipoMeiaEntrada">-</button>
+                                                            <input type="number" name="QuantidadeTipoInscricaoSubevento_@(sub.Id)_@tipoMeiaEntrada" id="qty_subevento_@(sub.Id)_@tipoMeiaEntrada" value="0" min="0" max="8" class="form-control quantidade-input-small subevento-qty-@sub.Id" data-valor="@((sub.ValorInscricao / 2m).ToString(System.Globalization.CultureInfo.InvariantCulture))" disabled readonly />
+                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', @tipoMeiaEntrada, 1)" disabled id="btn_plus_subevento_@(sub.Id)_@tipoMeiaEntrada">+</button>
                                                         </div>
                                                     </div>
                                                 }
