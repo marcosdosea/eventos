@@ -184,6 +184,30 @@ namespace EventoWeb.Controllers
                         return Forbid();
                 }
 
+                var evento = _eventoService.Get(idEvento);
+                if (evento != null)
+                {
+                    if (evento.DataInicio.HasValue && subeventoModel.DataInicio < evento.DataInicio.Value)
+                    {
+                        ModelState.AddModelError("DataInicio", "A data de início do subevento não pode ser anterior ao início do evento principal.");
+                    }
+
+                    if (evento.DataFim.HasValue && subeventoModel.DataFim > evento.DataFim.Value)
+                    {
+                        ModelState.AddModelError("DataFim", "A data de término do subevento não pode ser posterior ao término do evento principal.");
+                    }
+                }
+
+                if (subeventoModel.DataInicioInscricao > subeventoModel.DataFimInscricao)
+                {
+                    ModelState.AddModelError("DataInicioInscricao", "A data inicial de inscrição não pode ser posterior à data final de inscrição.");
+                }
+
+                if (subeventoModel.DataFimInscricao > subeventoModel.DataInicio)
+                {
+                    ModelState.AddModelError("DataFimInscricao", "O período de inscrições deve encerrar antes ou no início do subevento.");
+                }
+
                 if (subeventoModel.InscricaoGratuita == 1 && subeventoModel.ValorInscricao > 0)
                 {
                     ModelState.AddModelError("ValorInscricao", "Para subeventos gratuitos, o valor de inscrição deve ser 0,00.");
@@ -239,9 +263,9 @@ namespace EventoWeb.Controllers
                 }
 
                 var tipoEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
-                var evento = _eventoService.GetEventoSimpleDto(idEvento);
+                var eventoDto = _eventoService.GetEventoSimpleDto(idEvento);
                 subeventoModel.IdEvento = idEvento;
-                subeventoModel.Evento = evento;
+                subeventoModel.Evento = eventoDto;
                 subeventoModel.TiposEventos = new SelectList(tipoEventos, "Id", "Nome");
                 return View(subeventoModel);
             }

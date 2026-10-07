@@ -106,7 +106,8 @@
                 <h4 class="alert-heading text-info">Atenção!</h4>
                 <p>Você já está inscrito neste evento.</p>
                 <hr>
-                <a asp-action="MinhasInscricoes" asp-controller="Inscricao" class="btn btn-primary mt-2">Ver Minhas Inscrições</a>
+                <a asp-action="DetalhesInscricao" asp-controller="Inscricao" asp-route-idEvento="@Model.eventoNavigation.Id" class="btn btn-success mt-2">Ver Inscrição / Comprovante</a>
+                <a asp-action="MinhasInscricoes" asp-controller="Inscricao" class="btn btn-primary mt-2 ms-2">Ver Minhas Inscrições</a>
                 <a href="@ViewBag.UrlVoltar" class="btn btn-outline-danger mt-2 ms-2">Voltar</a>
             </aside>
         }

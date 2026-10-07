@@ -2,6 +2,7 @@ using Core;
 using Core.Service;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Util;
 
 namespace Service
 {
@@ -68,7 +69,7 @@ namespace Service
 
         public async Task RemoveUserRole(uint idPessoa, uint idPapel, string cpf)
         {
-            string cpfSemFormatacao = cpf.Replace(".", "").Replace("-", "");
+            string cpfSemFormatacao = Methods.RemoveNaoNumericos(cpf);
             var user = await _userManager.FindByNameAsync(cpfSemFormatacao);
 
             if (user == null)
@@ -137,31 +138,94 @@ namespace Service
                 .ToList();
         }
 
+        public IEnumerable<Inscricaopessoasubevento> GetAllSubEventsByUserId(string username)
+        {
+            if (string.IsNullOrEmpty(username))
+                return Enumerable.Empty<Inscricaopessoasubevento>();
+
+            var cpfLimpo = Methods.RemoveNaoNumericos(username);
+            var cpfParaBusca = string.IsNullOrEmpty(cpfLimpo) ? username : cpfLimpo;
+            var cpfFormatado = cpfLimpo.Length == 11 ? Methods.PatternCpf(cpfLimpo) : null;
+
+            var subeventos = _context.Inscricaopessoasubeventos
+                .Include(s => s.IdSubEventoNavigation)
+                .Include(s => s.IdTipoInscricaoNavigation)
+                .Include(s => s.IdPessoaNavigation)
+                .Where(s => s.IdPessoaNavigation != null && (s.IdPessoaNavigation.Cpf == cpfParaBusca || s.IdPessoaNavigation.Cpf == username || (cpfFormatado != null && s.IdPessoaNavigation.Cpf == cpfFormatado)))
+                .AsNoTracking()
+                .ToList();
+
+            foreach (var sub in subeventos)
+            {
+                if (sub.IdSubEventoNavigation == null)
+                {
+                    sub.IdSubEventoNavigation = _context.Subeventos.FirstOrDefault(s => s.Id == sub.IdSubEvento)!;
+                }
+            }
+
+            return subeventos;
+        }
+
         public IEnumerable<Inscricaopessoaevento> GetAllEventsByUserId(string username)
         {
-            var query = from i in _context.Inscricaopessoaeventos.Include(i => i.IdEventoNavigation) where i.IdPessoaNavigation.Cpf.Contains(username) select i;
+            if (string.IsNullOrEmpty(username))
+                return Enumerable.Empty<Inscricaopessoaevento>();
+
+            var cpfLimpo = Methods.RemoveNaoNumericos(username);
+            var cpfParaBusca = string.IsNullOrEmpty(cpfLimpo) ? username : cpfLimpo;
+            var cpfFormatado = cpfLimpo.Length == 11 ? Methods.PatternCpf(cpfLimpo) : null;
+
+            var subeventosUsuario = GetAllSubEventsByUserId(username).ToList();
+
+            var query = _context.Inscricaopessoaeventos
+                .Include(i => i.IdEventoNavigation)
+                .Include(i => i.IdPessoaNavigation)
+                .Include(i => i.IdTipoInscricaoNavigation)
+                .Where(i => i.IdPessoaNavigation != null && (i.IdPessoaNavigation.Cpf == cpfParaBusca || i.IdPessoaNavigation.Cpf == username || (cpfFormatado != null && i.IdPessoaNavigation.Cpf == cpfFormatado)))
+                .ToList();
+
+            foreach (var inscricao in query)
+            {
+                inscricao.Inscricaopessoasubeventos = subeventosUsuario
+                    .Where(s => (s.IdSubEventoNavigation?.IdEvento ?? _context.Subeventos.FirstOrDefault(sub => sub.Id == s.IdSubEvento)?.IdEvento) == inscricao.IdEvento)
+                    .ToList();
+            }
+
             return query;
         }
 
         public Inscricaopessoaevento GetGestorInEvent(string username, uint idEvento)
         {
+            if (string.IsNullOrEmpty(username))
+                return null;
 
-            var query = from i in _context.Inscricaopessoaeventos.Include(i => i.IdPessoaNavigation) where i.IdPessoaNavigation.Cpf.Contains(username) && i.IdPapel == 2 && i.IdEvento == idEvento select i;
-            if (query.FirstOrDefault() != null)
-            {
-                return query.FirstOrDefault();
-            }
-            return null;
+            var cpfLimpo = Methods.RemoveNaoNumericos(username);
+            var cpfParaBusca = string.IsNullOrEmpty(cpfLimpo) ? username : cpfLimpo;
+            var cpfFormatado = cpfLimpo.Length == 11 ? Methods.PatternCpf(cpfLimpo) : null;
+
+            var query = from i in _context.Inscricaopessoaeventos.Include(i => i.IdPessoaNavigation)
+                        where i.IdPessoaNavigation != null
+                              && (i.IdPessoaNavigation.Cpf == cpfParaBusca || i.IdPessoaNavigation.Cpf == username || (cpfFormatado != null && i.IdPessoaNavigation.Cpf == cpfFormatado))
+                              && i.IdPapel == 2 && i.IdEvento == idEvento
+                        select i;
+            return query.FirstOrDefault();
         }
 
         public Inscricaopessoaevento GetColaboradorInEvent(string username, uint idEvento)
         {
-            var query = from i in _context.Inscricaopessoaeventos.Include(i => i.IdPessoaNavigation) where i.IdPessoaNavigation.Cpf.Contains(username) && i.IdPapel == 3 && i.IdEvento == idEvento select i;
-            if (query.FirstOrDefault() != null)
-            {
-                return query.FirstOrDefault();
-            }
-            return null;
+            if (string.IsNullOrEmpty(username))
+                return null;
+
+            var cpfLimpo = Methods.RemoveNaoNumericos(username);
+            var cpfParaBusca = string.IsNullOrEmpty(cpfLimpo) ? username : cpfLimpo;
+            var cpfFormatado = cpfLimpo.Length == 11 ? Methods.PatternCpf(cpfLimpo) : null;
+
+            var query = from i in _context.Inscricaopessoaeventos.Include(i => i.IdPessoaNavigation)
+                        where i.IdPessoaNavigation != null
+                              && (i.IdPessoaNavigation.Cpf == cpfParaBusca || i.IdPessoaNavigation.Cpf == username || (cpfFormatado != null && i.IdPessoaNavigation.Cpf == cpfFormatado))
+                              && i.IdPapel == 3 && i.IdEvento == idEvento
+                        select i;
+            return query.FirstOrDefault();
         }
     }
 }
