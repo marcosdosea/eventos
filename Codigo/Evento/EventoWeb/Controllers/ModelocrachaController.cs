@@ -67,7 +67,6 @@ namespace EventoWeb.Controllers
             return eventos;
         }
 
-        // GET: ModelocrachaController
         [HttpGet]
         [Route("")]
         [Route("Index")]
@@ -125,7 +124,6 @@ namespace EventoWeb.Controllers
             }
         }
 
-        // GET: ModelocrachaController/Details/5
         [HttpGet]
         [Route("Details/{id}")]
         public ActionResult Details(uint id, uint? idPessoa)
@@ -191,7 +189,6 @@ namespace EventoWeb.Controllers
             return View(modelocrachaModel);
         }
 
-        // GET: ModelocrachaController/ObterModeloPorEvento/5
         [HttpGet]
         [Route("ObterModeloPorEvento/{idEvento}")]
         public IActionResult ObterModeloPorEvento(uint idEvento)
@@ -251,7 +248,6 @@ namespace EventoWeb.Controllers
             });
         }
 
-        // GET: ModelocrachaController/Create
         [HttpGet]
         [Route("Create")]
         [Route("Create/{idEvento}")]
@@ -293,7 +289,6 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
 
-        // POST: ModelocrachaController/Create
         [HttpPost]
         [Route("Create")]
         [Route("Create/{idEvento?}")]
@@ -401,7 +396,6 @@ namespace EventoWeb.Controllers
             return View(modelocrachaModel);
         }
 
-        // GET: ModelocrachaController/Edit/5
         [HttpGet]
         [Route("Edit/{id}")]
         public ActionResult Edit(uint id)
@@ -434,7 +428,6 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
 
-        // POST: ModelocrachaController/Edit/5
         [HttpPost]
         [Route("Edit/{id}")]
         [ValidateAntiForgeryToken]
@@ -535,7 +528,6 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
 
-        // GET: ModelocrachaController/Delete/5
         [HttpGet]
         [Route("Delete/{id}")]
         public ActionResult Delete(uint id)
@@ -552,7 +544,6 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
 
-        // POST: ModelocrachaController/Delete/5
         [HttpPost]
         [Route("Delete/{id}")]
         [ValidateAntiForgeryToken]

@@ -5,60 +5,7 @@
     var eventoNome = Model.NomeEvento ?? Model.Evento?.Nome ?? "Evento Vinculado";
 }
 
-<style>
-    .cracha-delete-container {
-        padding: 1.5rem 0 3rem 0;
-        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-    }
-
-    .cracha-delete-card {
-        background: #FFFFFF;
-        border-radius: 16px;
-        border: 1px solid #FEE2E2;
-        box-shadow: 0 4px 20px rgba(239, 68, 68, 0.06);
-        padding: 32px;
-        max-width: 680px;
-        margin: 0 auto;
-    }
-
-    .delete-header-icon {
-        width: 48px;
-        height: 48px;
-        background-color: #FEE2E2;
-        color: #dc3545;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-    }
-
-    .info-summary-box {
-        background-color: #F8FAFC;
-        border: 1px solid #E2E8F0;
-        border-radius: 12px;
-        padding: 20px;
-        margin: 20px 0;
-    }
-
-    .logo-preview-box {
-        width: 80px;
-        height: 80px;
-        background-color: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-    }
-
-    .logo-preview-box img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-    }
-</style>
+<link rel="stylesheet" href="~/css/modelocracha.css" asp-append-version="true" />
 
 <div class="cracha-delete-container">
     <div class="cracha-delete-card">
