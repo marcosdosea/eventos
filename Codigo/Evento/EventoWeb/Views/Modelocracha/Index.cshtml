@@ -260,18 +260,13 @@
 
 <div class="cracha-page-container">
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-2">
-        <h1 class="cracha-title blue-normal">Histórico de Modelos de Crachás Cadastrados</h1>
+        <h1 class="cracha-title blue-normal">Modelos de Crachás</h1>
 
         <div class="d-flex align-items-center gap-2 flex-wrap">
             <div class="cracha-search-box">
                 <i class="bi bi-search text-muted me-2"></i>
                 <input type="text" id="filtroModelos" class="cracha-search-input" placeholder="Filtrar modelos cadastrados..." />
             </div>
-
-            <button type="button" class="cracha-filter-btn" title="Filtro avançado" id="btnToggleFiltro">
-                <i class="bi bi-sliders"></i>
-            </button>
-
             <a asp-action="Create" asp-route-idEvento="@eventoId" class="btn btn-blue-normal color-white px-3 py-2 rounded-3 fw-semibold shadow-sm d-flex align-items-center gap-2">
                 <i class="bi bi-plus-lg"></i>
                 <span>Novo Modelo</span>
