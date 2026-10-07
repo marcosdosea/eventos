@@ -103,10 +103,11 @@
         @if (ViewBag.JaInscrito == true)
         {
             <aside class="alert alert-info mt-3 card-inscricao text-center alert-inscricao" role="alert">
-                <h4 class="alert-heading text-info">AtenÃ§Ã£o!</h4>
-                <p>VocÃª jÃ¡ estÃ¡ inscrito neste evento.</p>
+                <h4 class="alert-heading text-info">Atenção!</h4>
+                <p>Você já está inscrito neste evento.</p>
                 <hr>
-                <a asp-action="MinhasInscricoes" asp-controller="Inscricao" class="btn btn-primary mt-2">Ver Minhas InscriÃ§Ãµes</a>
+                <a asp-action="DetalhesInscricao" asp-controller="Inscricao" asp-route-idEvento="@Model.eventoNavigation.Id" class="btn btn-success mt-2">Ver Inscrição / Comprovante</a>
+                <a asp-action="MinhasInscricoes" asp-controller="Inscricao" class="btn btn-primary mt-2 ms-2">Ver Minhas Inscrições</a>
                 <a href="@ViewBag.UrlVoltar" class="btn btn-outline-danger mt-2 ms-2">Voltar</a>
             </aside>
         }
