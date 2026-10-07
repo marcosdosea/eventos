@@ -193,29 +193,64 @@ namespace EventoWeb.Controllers
 
         // GET: ModelocrachaController/Create
         [HttpGet]
+        [Route("Create")]
         [Route("Create/{idEvento}")]
-        public ActionResult Create(uint idEvento)
+        public ActionResult Create(uint? idEvento)
         {
-            if (!IsAuthorized(idEvento))
-                return Forbid();
-            var evento = _eventoService.GetEventoSimpleDto(idEvento);
-            var viewModel = new ModelocrachaModel();
-            viewModel.Evento = evento;
+            var eventosDisponiveis = ObterEventosDoUsuario();
+            ViewBag.EventosDisponiveis = eventosDisponiveis;
+
+            uint idEventoAlvo = idEvento ?? 0;
+            if (idEventoAlvo > 0)
+            {
+                if (!IsAuthorized(idEventoAlvo))
+                    return Forbid();
+            }
+            else if (eventosDisponiveis.Any())
+            {
+                idEventoAlvo = eventosDisponiveis.First().Id;
+            }
+
+            var evento = idEventoAlvo > 0 ? _eventoService.GetEventoSimpleDto(idEventoAlvo) : null;
+            var viewModel = new ModelocrachaModel
+            {
+                IdEvento = idEventoAlvo,
+                Evento = evento,
+                NomeEvento = evento?.Nome ?? (idEventoAlvo > 0 ? _eventoService.GetNomeById(idEventoAlvo) : "Selecione o Evento"),
+                Texto = "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.",
+                Qrcode = 1,
+                NomeArquivo = "logo_congresso_nacional_vetor.svg",
+                TamanhoArquivo = "Binário BLOB • 142 KB"
+            };
+
             return View(viewModel);
         }
 
         // POST: ModelocrachaController/Create
         [HttpPost]
-        [Route("Create/{idEvento}")]
+        [Route("Create")]
+        [Route("Create/{idEvento?}")]
         [ValidateAntiForgeryToken]
         public ActionResult Create(ModelocrachaModel modelocrachaModel)
         {
             var idEvento = modelocrachaModel.Evento?.Id ?? modelocrachaModel.IdEvento;
-            if (!IsAuthorized(idEvento))
+            if (idEvento == 0)
+            {
+                ModelState.AddModelError("IdEvento", "Informe qual o Evento");
+            }
+            else if (!IsAuthorized(idEvento))
+            {
                 return Forbid();
+            }
+
+            if (modelocrachaModel.Logotipo == null || modelocrachaModel.Logotipo.Length == 0)
+            {
+                ModelState.AddModelError("Logotipo", "Informe a logotipo");
+            }
+
             if (ModelState.IsValid)
             {
-                byte[] logoTipoSource = null;
+                byte[]? logoTipoSource = null;
                 if (modelocrachaModel.Logotipo != null && modelocrachaModel.Logotipo.Length > 0)
                 {
                     using (var memoryStream = new MemoryStream())
@@ -228,29 +263,40 @@ namespace EventoWeb.Controllers
                         }
                         else
                         {
-                            ModelState.AddModelError("Modelocracha.Logotipo", "O arquivo é muito grande. Deve ser menor que 64 KB.");
+                            ModelState.AddModelError("Logotipo", "O arquivo é muito grande. Deve ser menor que 64 KB.");
+                            ViewBag.EventosDisponiveis = ObterEventosDoUsuario();
                             return View(modelocrachaModel);
                         }
                     }
                 }
 
-                modelocrachaModel.IdEvento = modelocrachaModel.Evento.Id;
+                modelocrachaModel.IdEvento = idEvento;
                 var modelocracha = _mapper.Map<Modelocracha>(modelocrachaModel);
-                modelocracha.Logotipo = logoTipoSource;
+                modelocracha.Logotipo = logoTipoSource!;
 
                 try
                 {
                     _modelocrachaService.Create(modelocracha);
+                    if (TempData != null)
+                    {
+                        TempData["SuccessMessage"] = "Modelo salvo com sucesso";
+                    }
                 }
                 catch (Exception)
                 {
                     ModelState.AddModelError("", "Ocorreu um erro ao salvar o modelo de crachá. Tente novamente.");
+                    ViewBag.EventosDisponiveis = ObterEventosDoUsuario();
                     return View(modelocrachaModel);
                 }
 
                 return RedirectToAction(nameof(Index), new { idEvento = modelocrachaModel.IdEvento });
             }
 
+            ViewBag.EventosDisponiveis = ObterEventosDoUsuario();
+            if (idEvento > 0 && modelocrachaModel.Evento == null)
+            {
+                modelocrachaModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
+            }
             return View(modelocrachaModel);
         }
 
