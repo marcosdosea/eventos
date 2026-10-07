@@ -45,11 +45,12 @@ namespace EventoWeb.Controllers.Tests
             };
             var identity = new ClaimsIdentity(claims, "TestAuthType");
 
-            // Injeta o usuário fictício dentro do contexto do Controller
+            var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal(identity) };
             controller.ControllerContext = new ControllerContext
             {
-                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(identity) }
+                HttpContext = httpContext
             };
+            controller.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
         }
 
         [TestMethod()]
@@ -197,6 +198,127 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual(0m, criadas[0].ValorTotal);
         }
 
+        [TestMethod()]
+        public async Task RealizarInscricaoTest_Post_SubEventTicketsExceedsLimit_BlocksRegistrationAndSetsWarning()
+        {
+            // Arrange
+            var tipos = new Dictionary<uint, Tipoinscricao>
+            {
+                { 1, new Tipoinscricao { Id = 1, IdEvento = 1, Nome = "Paga", Valor = 100m } },
+                { 2, new Tipoinscricao { Id = 2, IdEvento = 1, Nome = "VIP Sub", Valor = 25m } }
+            };
+            var (postController, criadas, criadasSub) = CreatePostController(tipos, new Dictionary<string, string>
+            {
+                { "QuantidadeTipoInscricao_1", "1" },
+                { "QuantidadeTipoInscricaoSubevento_10_2", "10" }
+            });
+
+            var input = new InscricaoEventoModel
+            {
+                IdTipoInscricao = 1,
+                SelectedSubeventos = new List<uint> { 10 },
+                ValorTotal = 350m
+            };
+
+            // Act
+            var result = await postController.realizarInscricao(1, input);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirect.ActionName);
+            Assert.AreEqual("Home", redirect.ControllerName);
+            Assert.AreEqual("Limite máximo para subeventos excedido.", postController.TempData["ParticipanteMessage"]);
+            Assert.AreEqual(0, criadas.Count, "Nenhum ingresso de evento principal deve ser criado.");
+            Assert.AreEqual(0, criadasSub.Count, "Nenhum ingresso de subevento deve ser criado.");
+        }
+
+        [TestMethod()]
+        public async Task RealizarInscricaoTest_Post_MultipleSubevents_OneExceedsLimit_BlocksEntireRegistration()
+        {
+            // Arrange
+            var tipos = new Dictionary<uint, Tipoinscricao>
+            {
+                { 1, new Tipoinscricao { Id = 1, IdEvento = 1, Nome = "Paga", Valor = 100m } },
+                { 2, new Tipoinscricao { Id = 2, IdEvento = 1, Nome = "VIP Sub 1", Valor = 25m } },
+                { 3, new Tipoinscricao { Id = 3, IdEvento = 1, Nome = "VIP Sub 2", Valor = 30m } }
+            };
+
+            var mockPessoaService = new Mock<IPessoaService>();
+            mockPessoaService.Setup(service => service.GetByCpf(UsernameTeste))
+                .Returns(new Pessoa { Id = 1, Cpf = UsernameTeste, Nome = "Participante Teste" });
+
+            var mockInscricaoService = new Mock<IInscricaoService>();
+            var criadas = new List<Inscricaopessoaevento>();
+            mockInscricaoService.Setup(service => service.CreateInscricaoEvento(It.IsAny<Inscricaopessoaevento>()))
+                .Callback<Inscricaopessoaevento>(i => criadas.Add(i))
+                .Returns((uint)1);
+            var criadasSub = new List<Inscricaopessoasubevento>();
+            mockInscricaoService.Setup(service => service.CreateInscricaoSubEvento(It.IsAny<Inscricaopessoasubevento>()))
+                .Callback<Inscricaopessoasubevento>(i => criadasSub.Add(i));
+
+            var mockTipoService = new Mock<ITipoInscricaoService>();
+            mockTipoService.Setup(service => service.Get(It.IsAny<uint>()))
+                .Returns<uint>(id => tipos.TryGetValue(id, out var tipo) ? tipo : null);
+
+            var evento = new Evento { Id = 1, Status = "A", PossuiCertificado = 0 };
+            var mockEventoService = new Mock<IEventoService>();
+            mockEventoService.Setup(service => service.Get(It.IsAny<uint>()))
+                .Returns(evento);
+
+            var mockSubeventoService = new Mock<ISubeventoService>();
+            mockSubeventoService.Setup(service => service.Get(10))
+                .Returns(new Subevento { Id = 10, IdEvento = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(1) });
+            mockSubeventoService.Setup(service => service.Get(20))
+                .Returns(new Subevento { Id = 20, IdEvento = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(1) });
+
+            IMapper mapper = new MapperConfiguration(cfg =>
+                cfg.AddProfile(new InscricaoProfile())).CreateMapper();
+
+            var postController = new InscricaoController(
+                null!,
+                mockTipoService.Object,
+                mockEventoService.Object,
+                mapper,
+                mockInscricaoService.Object,
+                mockPessoaService.Object,
+                mockSubeventoService.Object);
+
+            var formFields = new Dictionary<string, string>
+            {
+                { "QuantidadeTipoInscricao_1", "2" },
+                { "QuantidadeTipoInscricaoSubevento_10_2", "3" },
+                { "QuantidadeTipoInscricaoSubevento_20_3", "9" } // Excede 8
+            };
+            var httpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, UsernameTeste) }, "TestAuthType"))
+            };
+            httpContext.Request.Form = new FormCollection(
+                formFields.ToDictionary(kv => kv.Key, kv => new StringValues(kv.Value)));
+            postController.ControllerContext = new ControllerContext { HttpContext = httpContext };
+            postController.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
+
+            var input = new InscricaoEventoModel
+            {
+                IdTipoInscricao = 1,
+                SelectedSubeventos = new List<uint> { 10, 20 },
+                ValorTotal = 500m
+            };
+
+            // Act
+            var result = await postController.realizarInscricao(1, input);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirect.ActionName);
+            Assert.AreEqual("Home", redirect.ControllerName);
+            Assert.AreEqual("Limite máximo para subeventos excedido.", postController.TempData["ParticipanteMessage"]);
+            Assert.AreEqual(0, criadas.Count, "Nenhum ingresso do evento principal deve ser persistido.");
+            Assert.AreEqual(0, criadasSub.Count, "Nenhum ingresso de subevento deve ser persistido.");
+        }
+
         private static (InscricaoController, List<Inscricaopessoaevento>, List<Inscricaopessoasubevento>) CreatePostController(
             Dictionary<uint, Tipoinscricao> tipos,
             Dictionary<string, string> formFields,
@@ -270,7 +392,21 @@ namespace EventoWeb.Controllers.Tests
                     Status = "A",
                     FrequenciaFinal = 0m,
                     NomeCracha = "Participante Teste",
-                    IdEventoNavigation = new Evento { Id = 1, Nome = "SEMINFO" }
+                    IdEventoNavigation = new Evento { Id = 1, Nome = "SEMINFO" },
+                    Inscricaopessoasubeventos = new List<Inscricaopessoasubevento>
+                    {
+                        new Inscricaopessoasubevento
+                        {
+                            IdPessoa = 1,
+                            IdSubEvento = 10,
+                            IdPapel = 4,
+                            DataInscricao = new DateTime(2024, 09, 02, 08, 0, 0),
+                            Valor = 30m,
+                            Status = "A",
+                            FrequenciaFinal = 100m,
+                            IdSubEventoNavigation = new Subevento { Id = 10, Nome = "Minicurso Docker", IdEvento = 1 }
+                        }
+                    }
                 },
                 new Inscricaopessoaevento
                 {
@@ -286,6 +422,127 @@ namespace EventoWeb.Controllers.Tests
                     IdEventoNavigation = new Evento { Id = 3, Nome = "SEMAC" }
                 }
             };
+        }
+
+        [TestMethod()]
+        public async Task MinhasInscricoesTest_LoadsSubEventsForEvent()
+        {
+            // Act
+            var result = await controller.minhasInscricoes(null);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var viewResult = (ViewResult)result;
+            var lista = (List<InscricaoEventoModel>)viewResult.ViewData.Model!;
+            Assert.AreEqual(2, lista.Count);
+
+            var firstEvento = lista[0];
+            Assert.IsNotNull(firstEvento.Inscricaopessoasubeventos);
+            Assert.AreEqual(1, firstEvento.Inscricaopessoasubeventos.Count);
+
+            var subItem = firstEvento.Inscricaopessoasubeventos.First();
+            Assert.AreEqual((uint)10, subItem.IdSubEvento);
+            Assert.AreEqual(30m, subItem.Valor);
+            Assert.AreEqual(100m, subItem.FrequenciaFinal);
+            Assert.AreEqual("Minicurso Docker", subItem.IdSubEventoNavigation?.Nome);
+        }
+
+        [TestMethod()]
+        public async Task DetalhesInscricaoTest_ValidId_ReturnsViewWithInscricaoDetails()
+        {
+            // Act
+            var result = await controller.DetalhesInscricao(1, null);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var viewResult = (ViewResult)result;
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(InscricaoEventoModel));
+
+            var model = (InscricaoEventoModel)viewResult.ViewData.Model!;
+            Assert.AreEqual((uint)1, model.Id);
+            Assert.AreEqual(150m, model.ValorTotal);
+            Assert.AreEqual("A", model.Status);
+            Assert.IsNotNull(model.Inscricaopessoasubeventos);
+            Assert.AreEqual(1, model.Inscricaopessoasubeventos.Count);
+            Assert.AreEqual("Minicurso Docker", model.Inscricaopessoasubeventos.First().IdSubEventoNavigation?.Nome);
+        }
+
+        [TestMethod()]
+        public async Task DetalhesInscricaoTest_ValidEventoId_ReturnsViewWithInscricaoDetails()
+        {
+            // Act - fallback buscando por IdEvento quando id for nulo
+            var result = await controller.DetalhesInscricao(null, 3);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var viewResult = (ViewResult)result;
+            var model = (InscricaoEventoModel)viewResult.ViewData.Model!;
+            Assert.AreEqual((uint)2, model.Id);
+            Assert.AreEqual((uint)3, model.IdEvento);
+            Assert.AreEqual("SEMAC", model.IdEventoNavigation?.Nome);
+        }
+
+        [TestMethod()]
+        public async Task DetalhesInscricaoTest_NotFound_RedirectsToMinhasInscricoes()
+        {
+            // Act - id inexistente
+            var result = await controller.DetalhesInscricao(999, null);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("minhasInscricoes", redirect.ActionName);
+            Assert.AreEqual("Inscrição não encontrada.", controller.TempData["ParticipanteMessage"]);
+        }
+
+        [TestMethod()]
+        public async Task MinhasInscricoesTest_UnauthenticatedUser_RedirectsToHomeIndex()
+        {
+            // Arrange - contexto com identidade anônima / sem nome
+            var unauthContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity()) };
+            var originalContext = controller.ControllerContext;
+            controller.ControllerContext = new ControllerContext { HttpContext = unauthContext };
+
+            try
+            {
+                // Act
+                var result = await controller.minhasInscricoes(null);
+
+                // Assert
+                Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+                var redirect = (RedirectToActionResult)result;
+                Assert.AreEqual("Index", redirect.ActionName);
+                Assert.AreEqual("Home", redirect.ControllerName);
+            }
+            finally
+            {
+                controller.ControllerContext = originalContext;
+            }
+        }
+
+        [TestMethod()]
+        public async Task DetalhesInscricaoTest_UnauthenticatedUser_RedirectsToHomeIndex()
+        {
+            // Arrange - contexto com identidade anônima / sem nome
+            var unauthContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity()) };
+            var originalContext = controller.ControllerContext;
+            controller.ControllerContext = new ControllerContext { HttpContext = unauthContext };
+
+            try
+            {
+                // Act
+                var result = await controller.DetalhesInscricao(1, null);
+
+                // Assert
+                Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+                var redirect = (RedirectToActionResult)result;
+                Assert.AreEqual("Index", redirect.ActionName);
+                Assert.AreEqual("Home", redirect.ControllerName);
+            }
+            finally
+            {
+                controller.ControllerContext = originalContext;
+            }
         }
     }
 }

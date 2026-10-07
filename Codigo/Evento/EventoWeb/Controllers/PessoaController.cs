@@ -79,7 +79,7 @@ namespace EventoWeb.Controllers
             if (pessoa == null)
                 return NotFound();
 
-            return Json(new { pessoa.Cpf, pessoa.Nome, pessoa.NomeCracha });
+            return Json(new { pessoa.Cpf, pessoa.Nome, pessoa.NomeCracha, pessoa.Email,pessoa.Telefone1 });
         }
 
         [Authorize(Roles = "ADMINISTRADOR")]
@@ -305,7 +305,7 @@ namespace EventoWeb.Controllers
             string? cpf = User.Identity?.Name;
             var loginAtivo = await _pessoaService.UserLogado(viewModel.Id, cpf);
             
-            var sucesso = await _pessoaService.Delete(viewModel.Id);
+            var (sucesso, mensagem) = await _pessoaService.DeleteRole(viewModel.Id);
             if (sucesso){
                 if (loginAtivo){
                     await _pessoaService.AtualizarSessao(viewModel.Id);
@@ -317,7 +317,7 @@ namespace EventoWeb.Controllers
             }
             else
             {
-                TempData["ErrorMessage"] = "Erro ao remover pessoa!";
+                TempData["ErrorMessage"] = "Erro ao remover pessoa!"+mensagem;
             }
 
             return RedirecionamentoPessoa();

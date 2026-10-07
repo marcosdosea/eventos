@@ -72,9 +72,14 @@
                         @Html.DisplayFor(modelItem => item.NomeTipoEvento)
                     </td>
                     <td>
-                        @Html.ActionLink("Frequência", "Frequencia", "ParticipacaoPessoaEvento",
-                            new { idEvento = item.IdEvento, idSubEvento = item.Id },
-                            new { @style = "text-decoration:none;" })
+                        <a asp-controller="ParticipacaoPessoaEvento"
+                           asp-action="Frequencia"
+                           asp-route-idEvento="@item.IdEvento"
+                           asp-route-idSubEvento="@item.Id"
+                           class="btn btn-sm btn-blue-normal text-white"
+                           title="Frequência do Subevento">
+                            <i class="bi bi-calendar-check me-1"></i> Frequência
+                        </a>
                         &nbsp;&nbsp;
                         @Html.ActionLink("Editar", "CreateOrEdit",
                         new { idEvento = item.IdEvento, idSubevento = item.Id }, new { @style = "text-decoration:none;" })

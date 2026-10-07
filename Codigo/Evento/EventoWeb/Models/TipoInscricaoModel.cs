@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Util;
 
@@ -43,8 +44,10 @@ namespace EventoWeb.Models
         public sbyte? UsadaSubevento { get; set; } 
 
         [Display(Name = "Evento")]
+        [ValidateNever]
         public string? NomeEvento { get; set; }
-        
-        public SelectList Evento { get; set; }
+
+        [ValidateNever]
+        public SelectList? Evento { get; set; }
     }
 }
