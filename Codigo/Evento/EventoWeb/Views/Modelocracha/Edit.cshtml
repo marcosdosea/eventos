@@ -1,116 +1,804 @@
-﻿@model EventoWeb.Models.ModelocrachaModel
+@model EventoWeb.Models.ModelocrachaModel
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Configuração de Modelo de Crachá";
+    var eventosDisponiveis = ViewBag.EventosDisponiveis as List<Core.DTO.EventoSimpleDTO> ?? new List<Core.DTO.EventoSimpleDTO>();
+    var eventoAtualId = Model.Evento?.Id ?? Model.IdEvento;
+    var eventoAtualNome = Model.Evento?.Nome ?? Model.NomeEvento ?? (eventosDisponiveis.FirstOrDefault(e => e.Id == eventoAtualId)?.Nome ?? "VI Congresso Nacional de Tecnologia, Inovação e Governança 2025");
 }
 
+<style>
+    .cracha-config-container {
+        padding: 1.5rem 0 3rem 0;
+        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
 
-<!DOCTYPE html>
-<html lang="pt-BR">
+    .cracha-title {
+        color: #232ed0;
+        font-weight: 700;
+        font-size: 1.85rem;
+        letter-spacing: -0.3px;
+        margin: 0;
+    }
 
-<h1 class="blue-normal">Editar o modelo do crachá</h1>
+    .badge-versao-ativa {
+        background-color: #EEF2FF;
+        color: #232ed0;
+        border: 1px solid #E0E7FF;
+        border-radius: 50px;
+        padding: 6px 16px;
+        font-weight: 600;
+        font-size: 0.82rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
 
-<div class="row">
-    <div class="col-md-12">
-        <form asp-action="Edit" enctype="multipart/form-data">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="row">
-                <div class="col-lg-3 d-none">
-                    <div class="form-group">
-                        <label for="IdEvento" class="control-label">Nome do evento</label>
-                        <select id="IdEvento" name="IdEvento" class="form-control" readonly>
-                            @if (Model.Evento == null || Model.Evento.Id == 0)
+    .badge-versao-ativa .dot {
+        color: #232ed0;
+        font-size: 0.75rem;
+    }
+
+    .card-parametros {
+        background: #FFFFFF;
+        border-radius: 16px;
+        border: 1px solid #E2E8F0;
+        box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+        padding: 24px;
+    }
+
+    .card-header-icon {
+        width: 36px;
+        height: 36px;
+        background-color: #EFF6FF;
+        color: #232ed0;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .upload-box-custom {
+        background-color: #F8FAFC;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        transition: all 0.2s ease;
+    }
+
+    .upload-thumb-preview {
+        width: 48px;
+        height: 48px;
+        background-color: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    .upload-thumb-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .box-qrcode-custom {
+        background-color: #F0F4FF;
+        border: 1px solid #DBEAFE;
+        border-radius: 12px;
+        padding: 18px;
+    }
+
+    /* Live Preview Container */
+    .preview-card-container {
+        background-color: #EEF2FA;
+        border: 1px solid #E2E8F0;
+        border-radius: 20px;
+        padding: 24px;
+        position: relative;
+        overflow: hidden;
+        min-height: 680px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .preview-header-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        z-index: 2;
+    }
+
+    .preview-status-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: #0F172A;
+    }
+
+    .preview-status-indicator .green-dot {
+        width: 8px;
+        height: 8px;
+        background-color: #10B981;
+        border-radius: 50%;
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+    }
+
+    .preview-actions-bar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .preview-action-icon-btn {
+        background: transparent;
+        border: none;
+        color: #475569;
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+
+    .preview-action-icon-btn:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+        color: #232ed0;
+    }
+
+    .preview-stage {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 2;
+        padding: 10px 0 30px 0;
+    }
+
+    /* Lanyard (Cordão e Presilha) */
+    .lanyard-strap {
+        width: 44px;
+        height: 60px;
+        background: linear-gradient(180deg, #151c7d 0%, #232ed0 100%);
+        border-radius: 4px 4px 0 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        position: relative;
+    }
+
+    .lanyard-strap-text {
+        color: #FFFFFF;
+        font-weight: 800;
+        font-size: 0.65rem;
+        letter-spacing: 1.5px;
+        writing-mode: vertical-rl;
+        transform: rotate(180deg);
+        user-select: none;
+    }
+
+    .lanyard-clip {
+        width: 22px;
+        height: 18px;
+        background: #1E293B;
+        border-radius: 2px;
+        margin-top: -2px;
+        position: relative;
+        box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.2);
+    }
+
+    .lanyard-clip::after {
+        content: '';
+        position: absolute;
+        bottom: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 14px;
+        height: 10px;
+        border: 2px solid #64748B;
+        border-top: none;
+        border-radius: 0 0 6px 6px;
+    }
+
+    /* Crachá Físico */
+    .cracha-physical-card {
+        width: 320px;
+        background: #FFFFFF;
+        border-radius: 18px;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.14);
+        margin-top: 6px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s ease;
+        position: relative;
+    }
+
+    .cracha-hole {
+        width: 38px;
+        height: 10px;
+        background-color: #EEF2FA;
+        border-radius: 10px;
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+        z-index: 5;
+    }
+
+    .cracha-header {
+        background: #232ed0;
+        color: #FFFFFF;
+        padding: 24px 16px 16px 16px;
+        text-align: center;
+        border-radius: 18px 18px 0 0;
+        position: relative;
+    }
+
+    .cracha-header-sub {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+        opacity: 0.95;
+    }
+
+    .cracha-header-sub-icon {
+        width: 14px;
+        height: 14px;
+        background: #FFFFFF;
+        color: #232ed0;
+        border-radius: 3px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.6rem;
+    }
+
+    .cracha-evento-title {
+        font-weight: 800;
+        font-size: 0.86rem;
+        line-height: 1.35;
+        text-transform: uppercase;
+        margin: 0;
+        color: #FFFFFF;
+    }
+
+    .cracha-body {
+        padding: 18px 20px 14px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        background: #FFFFFF;
+    }
+
+    .participant-avatar-wrapper {
+        position: relative;
+        width: 76px;
+        height: 76px;
+        margin-bottom: 10px;
+    }
+
+    .participant-avatar-img {
+        width: 76px;
+        height: 76px;
+        border-radius: 50%;
+        object-fit: cover;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        border: 2px solid #FFFFFF;
+    }
+
+    .participant-verified-badge {
+        position: absolute;
+        bottom: 2px;
+        right: 2px;
+        width: 20px;
+        height: 20px;
+        background-color: #10B981;
+        border: 2px solid #FFFFFF;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #FFFFFF;
+        font-size: 0.65rem;
+    }
+
+    .participant-name {
+        font-weight: 800;
+        color: #0F172A;
+        font-size: 1.05rem;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+    }
+
+    .participant-org {
+        font-size: 0.78rem;
+        color: #64748B;
+        font-weight: 500;
+        margin-bottom: 10px;
+    }
+
+    .badge-role-pill {
+        background-color: #232ed0;
+        color: #FFFFFF;
+        font-weight: 700;
+        font-size: 0.68rem;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        padding: 5px 16px;
+        border-radius: 50px;
+        margin-bottom: 12px;
+    }
+
+    .cracha-qrcode-box {
+        width: 82px;
+        height: 82px;
+        background: #FFFFFF;
+        padding: 4px;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+        border: 1px solid #E2E8F0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .cracha-qrcode-box svg,
+    .cracha-qrcode-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .cracha-footer {
+        background-color: #F8FAFC;
+        border-top: 1px solid #F1F5F9;
+        padding: 12px 18px;
+        text-align: center;
+        border-radius: 0 0 18px 18px;
+    }
+
+    .cracha-footer-text {
+        font-style: italic;
+        font-size: 0.72rem;
+        line-height: 1.35;
+        color: #475569;
+        margin: 0;
+        font-weight: 400;
+    }
+
+    .watermark-scale {
+        position: absolute;
+        bottom: 16px;
+        right: 20px;
+        font-size: 2.4rem;
+        font-weight: 800;
+        color: rgba(148, 163, 184, 0.2);
+        letter-spacing: -0.5px;
+        user-select: none;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    @@media print {
+        body * {
+            visibility: hidden;
+        }
+        .cracha-physical-card, .cracha-physical-card * {
+            visibility: visible;
+        }
+        .cracha-physical-card {
+            position: absolute;
+            left: 0;
+            top: 0;
+            box-shadow: none;
+        }
+    }
+</style>
+
+<div class="cracha-config-container">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <h1 class="cracha-title blue-normal">Configuração de Modelo de Crachá</h1>
+
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span class="badge-versao-ativa">
+                <span class="dot">●</span> Versão 1.0 Ativa
+            </span>
+
+            <button type="button" class="btn btn-outline-blue-normal bg-white rounded-3 px-3 py-2 fw-semibold border shadow-sm" id="btnCarregarPredefinido">
+                <i class="bi bi-box-arrow-in-down-right me-1"></i>
+                <span>Carregar Pré-definido</span>
+            </button>
+
+            <a asp-action="Create" class="btn btn-blue-normal color-white px-3 py-2 rounded-3 fw-semibold shadow-sm d-inline-flex align-items-center gap-2">
+                <i class="bi bi-plus-circle"></i>
+                <span>+ Novo Modelo</span>
+            </a>
+        </div>
+    </div>
+
+    <form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" id="formModeloCracha">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+
+        <div class="row g-4">
+            <!-- Coluna Esquerda: Parâmetros -->
+            <div class="col-lg-6">
+                <div class="card-parametros">
+                    <div class="d-flex align-items-center gap-2 mb-4">
+                        <div class="card-header-icon">
+                            <i class="bi bi-person-badge"></i>
+                        </div>
+                        <h5 class="fw-bold mb-0 text-dark">Parâmetros do Modelo</h5>
+                    </div>
+
+                    <!-- Evento Vinculado -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark small d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-calendar-event blue-normal"></i>
+                            <span>Evento Vinculado</span>
+                        </label>
+                        <select class="form-select rounded-3 py-2" id="selectEventoVinculado" name="IdEvento" style="border-color: #CBD5E1; font-size: 0.92rem;">
+                            @if (eventosDisponiveis.Any())
                             {
-                                <option value="0">Não Informado</option>
+                                foreach (var ev in eventosDisponiveis)
+                                {
+                                    <option value="@ev.Id" selected="@(ev.Id == eventoAtualId ? "selected" : null)">
+                                        @ev.Nome
+                                    </option>
+                                }
                             }
                             else
                             {
-                                <option value="@Model.Evento.Id" selected>@Model.Evento.Nome</option>
+                                <option value="@eventoAtualId" selected>@eventoAtualNome</option>
                             }
                         </select>
-                        @Html.HiddenFor(model => model.Evento.Id)
-                        @Html.HiddenFor(model => model.Evento.Nome)
+                        <span asp-validation-for="IdEvento" class="text-danger small"></span>
                     </div>
-                </div>
-            </div>
-            <br />
-            <div class="form-group">
-                <label asp-for="Texto" class="control-label"></label>
-                <textarea asp-for="Texto" class="form-control" id="exampleFormControlTextarea1" rows="2"></textarea>
-                <span asp-validation-for="Texto" class="text-danger"></span>
-            </div>
-            <br />
-            <div class="form-group row">
-                <div class="col-md-6">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label asp-for="Logotipo" class="control-label"></label>
-                            <input type="file" asp-for="Logotipo" class="form-control" accept=".png,.jpg,.jpeg,.gif,.tif" id="fileInput" />
-                            <span asp-validation-for="Logotipo" class="text-danger"></span>
+
+                    <!-- Logotipo Institucional -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fw-bold text-dark small d-flex align-items-center gap-2 mb-0">
+                                <i class="bi bi-image blue-normal"></i>
+                                <span>Logotipo Institucional</span>
+                            </label>
+                            <span class="text-muted" style="font-size: 0.75rem; font-weight: 500;">PNG, SVG, JPEG (máx. 142 KB)</span>
                         </div>
+
+                        <div class="upload-box-custom">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="upload-thumb-preview" id="thumbBoxContainer">
+                                    @if (!string.IsNullOrEmpty(Model.LogotipoBase64))
+                                    {
+                                        <img id="thumbImageElement" src="data:image/png;base64,@Model.LogotipoBase64" alt="Logotipo Cadastrado" />
+                                        <i class="bi bi-image text-muted fs-4" id="thumbIconPlaceholder" style="display: none;"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-image text-muted fs-4" id="thumbIconPlaceholder"></i>
+                                        <img id="thumbImageElement" src="" alt="Thumbnail" style="display: none;" />
+                                    }
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark small" id="lblNomeArquivoVisual">@(Model.NomeArquivo ?? "logo_congresso_nacional_vetor.svg")</div>
+                                    <div class="text-muted" id="lblInfoArquivoVisual" style="font-size: 0.75rem;">@(Model.TamanhoArquivo ?? "Binário BLOB • 142 KB")</div>
+                                </div>
+                            </div>
+
+                            <button type="button" class="btn btn-outline-blue-normal btn-sm bg-white rounded-3 px-3 py-1 fw-semibold d-inline-flex align-items-center gap-2" id="btnDispararUpload">
+                                <i class="bi bi-cloud-arrow-up"></i>
+                                <span>Carregar Arquivo</span>
+                            </button>
+                            <input type="file" id="inputArquivoLogotipo" name="Logotipo" class="d-none" accept=".png,.jpg,.jpeg,.gif,.svg,.tif" />
+                        </div>
+                        <span asp-validation-for="Logotipo" class="text-danger small"></span>
                     </div>
-                    <br />
-                    <div class="form-group mb-2">
-                        <div class="d-flex align-items-center">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="1" id="Qrcode" name="Modelocracha.Qrcode"
-                                @(Model.Qrcode == 1 ? "checked" : "")>
-                                <label class="form-check-label" for="Qrcode">QrCode</label>
-                                <input type="hidden" name="Modelocracha.Qrcode" value="0">
+
+                    <!-- Texto do Crachá -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fw-bold text-dark small d-flex align-items-center gap-2 mb-0">
+                                <i class="bi bi-card-text blue-normal"></i>
+                                <span>Texto do Crachá</span>
+                            </label>
+                            <span id="lblContadorCaracteres" class="blue-normal small fw-semibold">@(Model.Texto?.Length ?? 0) / 200 caracteres</span>
+                        </div>
+
+                        <textarea asp-for="Texto" id="txtTextoCracha" rows="3" maxlength="200" class="form-control rounded-3" style="border-color: #CBD5E1; font-size: 0.88rem; line-height: 1.45;">@Model.Texto</textarea>
+                        <span asp-validation-for="Texto" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Impressão de QR Code -->
+                    <div class="mb-4">
+                        <div class="box-qrcode-custom">
+                            <div class="d-flex align-items-start gap-3 mb-2">
+                                <i class="bi bi-qr-code blue-normal fs-3"></i>
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-1">Impressão de QR Code</h6>
+                                    <p class="text-muted small mb-0">Define se o crachá receberá o bloco impresso do QR Code</p>
+                                </div>
+                            </div>
+
+                            <div class="form-check mt-3 ms-1">
+                                <input class="form-check-input" type="checkbox" id="chkHabilitarQrcode" name="Qrcode" value="1" @(Model.Qrcode == 1 ? "checked" : "") style="cursor: pointer;">
+                                <input type="hidden" name="Qrcode" value="0">
+                                <label class="form-check-label fw-semibold text-dark small" for="chkHabilitarQrcode" style="cursor: pointer;">
+                                    Habilitar QR Code no crachá
+                                </label>
                             </div>
                         </div>
-                        <span asp-validation-for="Qrcode" class="text-danger"></span>
                     </div>
-                </div>
-                <div class="col-md-6 d-flex justify-content-end">
-                    <div class="form-group mb-2">
-                        <div class="card" id="imagePreview" style="width:200px;height:150px;">
-                            <img id="previewImg" src="" style="width: 100%;height: 100%;object-fit:contain; display: none;" />
-                            <div class="card-img-overlay d-flex align-items-center justify-content-center">
-                                <i id="placeholderIcon" class="bi bi-person" style="font-size: 3rem; color: #aaa;"></i>
-                            </div>
+
+                    <!-- Botões de Ação -->
+                    <div class="d-flex align-items-center justify-content-between pt-2 border-top">
+                        <a asp-action="Index" asp-route-idEvento="@eventoAtualId" class="btn btn-outline-danger px-4 py-2 rounded-3 fw-semibold text-decoration-none">
+                            Cancelar
+                        </a>
+
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="submit" name="btnRascunho" value="true" class="btn btn-outline-blue-normal bg-white rounded-3 px-3 py-2 fw-semibold">
+                                Salvar Rascunho
+                            </button>
+                            <button type="submit" class="btn btn-blue-normal color-white rounded-3 px-4 py-2 fw-semibold shadow-sm d-inline-flex align-items-center gap-2">
+                                <i class="bi bi-save"></i>
+                                <span>Salvar Modelo</span>
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
-            <br />
-            <div class="d-flex justify-content-end">
-                <div class="d-flex flex-row">
-                    <div class="form-group" style="margin-right: 10px;">
-                        <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
+
+            <!-- Coluna Direita: Live Preview -->
+            <div class="col-lg-6">
+                <div class="preview-card-container">
+                    <div class="preview-header-bar">
+                        <div class="preview-status-indicator">
+                            <span class="green-dot"></span>
+                            <span>Live Preview Institucional (Escala Física 90×130mm)</span>
+                        </div>
+
+                        <div class="preview-actions-bar">
+                            <button type="button" class="preview-action-icon-btn" id="btnZoomOut" title="Reduzir Zoom">
+                                <i class="bi bi-zoom-out"></i>
+                            </button>
+                            <button type="button" class="preview-action-icon-btn" id="btnZoomIn" title="Aumentar Zoom">
+                                <i class="bi bi-zoom-in"></i>
+                            </button>
+                            <button type="button" class="preview-action-icon-btn" id="btnImprimirCracha" title="Imprimir Crachá">
+                                <i class="bi bi-printer"></i>
+                            </button>
+                            <button type="button" class="preview-action-icon-btn" id="btnFullscreenPreview" title="Tela Cheia">
+                                <i class="bi bi-arrows-fullscreen"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <a href="@Url.Action("Index", "Modelocracha", new { idEvento = Model.Evento.Id})" class="btn btn-outline-danger">Cancelar</a>
+
+                    <div class="preview-stage">
+                        <!-- Cordão Lanyard -->
+                        <div class="lanyard-strap">
+                            <span class="lanyard-strap-text">BORA LÁ</span>
+                        </div>
+                        <div class="lanyard-clip"></div>
+
+                        <!-- Cartão do Crachá Físico -->
+                        <div class="cracha-physical-card" id="crachaCardElement">
+                            <div class="cracha-hole"></div>
+
+                            <div class="cracha-header">
+                                <div class="cracha-header-sub">
+                                    <span class="cracha-header-sub-icon">
+                                        <i class="bi bi-person-vcard-fill"></i>
+                                    </span>
+                                    <span>BORA LÁ EVENTOS</span>
+                                </div>
+                                <h6 class="cracha-evento-title" id="lblPreviewNomeEvento">@eventoAtualNome</h6>
+                            </div>
+
+                            <div class="cracha-body">
+                                <div class="participant-avatar-wrapper">
+                                    <svg class="participant-avatar-img" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="50" cy="50" r="50" fill="#E2E8F0"/>
+                                        <circle cx="50" cy="38" r="20" fill="#475569"/>
+                                        <path d="M16 88C16 70 30 64 50 64C70 64 84 70 84 88" fill="#1E293B"/>
+                                    </svg>
+                                    <div class="participant-verified-badge">
+                                        <i class="bi bi-check-lg"></i>
+                                    </div>
+                                </div>
+
+                                <div class="participant-name">RICARDO LACERDA</div>
+                                <div class="participant-org">Instituto de Pesquisa & Inovação</div>
+                                <div class="badge-role-pill">PARTICIPANTE</div>
+
+                                <!-- Bloco de QR Code -->
+                                <div class="cracha-qrcode-box" id="blocoQrCodePreview">
+                                    <svg viewBox="0 0 100 100" width="74" height="74">
+                                        <rect width="100" height="100" fill="#FFFFFF"/>
+                                        <rect x="10" y="10" width="30" height="30" fill="#0F172A"/>
+                                        <rect x="16" y="16" width="18" height="18" fill="#FFFFFF"/>
+                                        <rect x="20" y="20" width="10" height="10" fill="#0F172A"/>
+
+                                        <rect x="60" y="10" width="30" height="30" fill="#0F172A"/>
+                                        <rect x="66" y="16" width="18" height="18" fill="#FFFFFF"/>
+                                        <rect x="70" y="20" width="10" height="10" fill="#0F172A"/>
+
+                                        <rect x="10" y="60" width="30" height="30" fill="#0F172A"/>
+                                        <rect x="16" y="66" width="18" height="18" fill="#FFFFFF"/>
+                                        <rect x="20" y="70" width="10" height="10" fill="#0F172A"/>
+
+                                        <rect x="46" y="12" width="8" height="8" fill="#0F172A"/>
+                                        <rect x="46" y="26" width="8" height="16" fill="#0F172A"/>
+                                        <rect x="12" y="46" width="12" height="8" fill="#0F172A"/>
+                                        <rect x="30" y="46" width="14" height="8" fill="#0F172A"/>
+                                        <rect x="50" y="50" width="12" height="12" fill="#0F172A"/>
+                                        <rect x="68" y="48" width="10" height="8" fill="#0F172A"/>
+                                        <rect x="84" y="48" width="8" height="14" fill="#0F172A"/>
+                                        <rect x="48" y="70" width="10" height="18" fill="#0F172A"/>
+                                        <rect x="66" y="66" width="14" height="10" fill="#0F172A"/>
+                                        <rect x="66" y="80" width="22" height="10" fill="#0F172A"/>
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <div class="cracha-footer">
+                                <p class="cracha-footer-text" id="lblPreviewTextoCracha">
+                                    @(Model.Texto ?? "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.")
+                                </p>
+                            </div>
+                        </div>
                     </div>
+
+                    <div class="watermark-scale">90×130 mm</div>
                 </div>
             </div>
-        </form>
-    </div>
+        </div>
+    </form>
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-}
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const selectEvento = document.getElementById("selectEventoVinculado");
+            const lblNomeEvento = document.getElementById("lblPreviewNomeEvento");
 
-<script>
-    function updateImagePreview(src) {
-        var img = document.getElementById('previewImg');
-        var icon = document.getElementById('placeholderIcon');
-        img.src = src;
-        img.style.display = 'block';
-        icon.style.display = 'none';
-    }
+            const txtTexto = document.getElementById("txtTextoCracha");
+            const lblTextoCracha = document.getElementById("lblPreviewTextoCracha");
+            const lblContador = document.getElementById("lblContadorCaracteres");
 
-    document.getElementById('fileInput').addEventListener('change', function () {
-        var file = this.files[0];
-        if (file) {
-            var reader = new FileReader();
-            reader.onload = function (e) {
-                updateImagePreview(e.target.result);
+            const chkQrcode = document.getElementById("chkHabilitarQrcode");
+            const blocoQrcode = document.getElementById("blocoQrCodePreview");
+
+            const btnUpload = document.getElementById("btnDispararUpload");
+            const inputArquivo = document.getElementById("inputArquivoLogotipo");
+            const thumbImg = document.getElementById("thumbImageElement");
+            const thumbIcon = document.getElementById("thumbIconPlaceholder");
+            const lblNomeArquivo = document.getElementById("lblNomeArquivoVisual");
+            const lblInfoArquivo = document.getElementById("lblInfoArquivoVisual");
+
+            const btnPredefinido = document.getElementById("btnCarregarPredefinido");
+
+            const crachaCard = document.getElementById("crachaCardElement");
+            let escalaAtual = 1;
+
+            // 1. Atualizar Nome do Evento
+            selectEvento.addEventListener("change", function () {
+                const selectedText = selectEvento.options[selectEvento.selectedIndex].text;
+                lblNomeEvento.textContent = selectedText.trim();
+            });
+
+            // 2. Atualizar Contador e Texto do Crachá
+            function atualizarTexto() {
+                const len = txtTexto.value.length;
+                lblContador.textContent = `${len} / 200 caracteres`;
+                lblTextoCracha.textContent = txtTexto.value || "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.";
             }
-            reader.readAsDataURL(file);
-        }
-    });
-</script>
+            txtTexto.addEventListener("input", atualizarTexto);
+            atualizarTexto();
+
+            // 3. Toggle QR Code
+            function atualizarQrcode() {
+                if (chkQrcode.checked) {
+                    blocoQrcode.style.display = "flex";
+                } else {
+                    blocoQrcode.style.display = "none";
+                }
+            }
+            chkQrcode.addEventListener("change", atualizarQrcode);
+            atualizarQrcode();
+
+            // 4. Carregar Pré-definido
+            btnPredefinido.addEventListener("click", function () {
+                txtTexto.value = "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.";
+                chkQrcode.checked = true;
+                atualizarTexto();
+                atualizarQrcode();
+            });
+
+            // 5. Upload de Imagem (suporte a até 142 KB)
+            btnUpload.addEventListener("click", function () {
+                inputArquivo.click();
+            });
+
+            inputArquivo.addEventListener("change", function () {
+                const file = this.files[0];
+                if (file) {
+                    const limiteBytes = 142 * 1024;
+                    if (file.size > limiteBytes) {
+                        alert("O arquivo selecionado excede o tamanho máximo suportado de 142 KB. Por favor, selecione uma imagem menor.");
+                        this.value = "";
+                        return;
+                    }
+
+                    lblNomeArquivo.textContent = file.name;
+                    const kb = Math.round(file.size / 1024);
+                    lblInfoArquivo.textContent = `Binário BLOB • ${kb} KB`;
+
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        thumbImg.src = e.target.result;
+                        thumbImg.style.display = "block";
+                        if (thumbIcon) thumbIcon.style.display = "none";
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // 6. Ferramentas do Live Preview
+            document.getElementById("btnZoomIn").addEventListener("click", function () {
+                if (escalaAtual < 1.3) {
+                    escalaAtual += 0.1;
+                    crachaCard.style.transform = `scale(${escalaAtual})`;
+                }
+            });
+
+            document.getElementById("btnZoomOut").addEventListener("click", function () {
+                if (escalaAtual > 0.8) {
+                    escalaAtual -= 0.1;
+                    crachaCard.style.transform = `scale(${escalaAtual})`;
+                }
+            });
+
+            document.getElementById("btnImprimirCracha").addEventListener("click", function () {
+                window.print();
+            });
+
+            document.getElementById("btnFullscreenPreview").addEventListener("click", function () {
+                const container = document.querySelector(".preview-card-container");
+                if (!document.fullscreenElement) {
+                    container.requestFullscreen().catch(err => console.log(err));
+                } else {
+                    document.exitFullscreen();
+                }
+            });
+        });
+    </script>
+}

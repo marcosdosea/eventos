@@ -300,7 +300,6 @@ namespace EventoWeb.Controllers
             return View(modelocrachaModel);
         }
 
-
         // GET: ModelocrachaController/Edit/5
         [HttpGet]
         [Route("Edit/{id}")]
@@ -313,9 +312,24 @@ namespace EventoWeb.Controllers
             }
             if (!IsAuthorized(modelocracha.IdEvento))
                 return Forbid();
+
             var viewModel = _mapper.Map<ModelocrachaModel>(modelocracha);
             viewModel.Evento = _eventoService.GetEventoSimpleDto(modelocracha.IdEvento);
-            
+            if (viewModel.Evento == null)
+            {
+                viewModel.Evento = new EventoSimpleDTO { Id = modelocracha.IdEvento, Nome = _eventoService.GetNomeById(modelocracha.IdEvento) };
+            }
+            viewModel.NomeEvento = viewModel.Evento?.Nome ?? _eventoService.GetNomeById(modelocracha.IdEvento);
+
+            if (modelocracha.Logotipo != null && modelocracha.Logotipo.Length > 0)
+            {
+                viewModel.LogotipoBase64 = Convert.ToBase64String(modelocracha.Logotipo);
+                viewModel.NomeArquivo = "logo_institucional.png";
+                var kb = Math.Round((double)modelocracha.Logotipo.Length / 1024.0, 1);
+                viewModel.TamanhoArquivo = $"Binário BLOB • {kb} KB";
+            }
+
+            ViewBag.EventosDisponiveis = ObterEventosDoUsuario();
             return View(viewModel);
         }
 
@@ -329,14 +343,22 @@ namespace EventoWeb.Controllers
             var existente = _modelocrachaService.Get(id);
             if (existente == null)
                 return NotFound();
+
             var idEventoAlvo = viewModel.Evento?.Id ?? viewModel.IdEvento;
             if (idEventoAlvo == 0)
                 idEventoAlvo = existente.IdEvento;
+
             if (!IsAuthorized(existente.IdEvento) || !IsAuthorized(idEventoAlvo))
                 return Forbid();
+
+            if (viewModel.Logotipo == null && existente.Logotipo != null)
+            {
+                ModelState.Remove("Logotipo");
+            }
+
             if (ModelState.IsValid)
             {
-                byte[] logoTipoSource = null;
+                byte[]? logoTipoSource = null;
                 if (viewModel.Logotipo != null && viewModel.Logotipo.Length > 0)
                 {
                     using (var memoryStream = new MemoryStream())
@@ -349,31 +371,43 @@ namespace EventoWeb.Controllers
                         }
                         else
                         {
-                            ModelState.AddModelError("Modelocracha.Logotipo", "O arquivo é muito grande. Deve ser menor que 64 KB.");
+                            ModelState.AddModelError("Logotipo", "O arquivo é muito grande. Deve ser menor que 64 KB.");
+                            ViewBag.EventosDisponiveis = ObterEventosDoUsuario();
                             return View(viewModel);
                         }
                     }
                 }
 
                 var modelocracha = _mapper.Map<Modelocracha>(viewModel);
+                modelocracha.IdEvento = idEventoAlvo;
                 if (logoTipoSource != null)
                 {
                     modelocracha.Logotipo = logoTipoSource;
+                }
+                else
+                {
+                    modelocracha.Logotipo = existente.Logotipo;
                 }
 
                 try
                 {
                     _modelocrachaService.Edit(modelocracha);
+                    if (TempData != null)
+                    {
+                        TempData["SuccessMessage"] = "Modelo salvo com sucesso";
+                    }
                 }
                 catch (Exception)
                 {
                     ModelState.AddModelError("", "Ocorreu um erro ao atualizar o modelo de crachá. Tente novamente.");
+                    ViewBag.EventosDisponiveis = ObterEventosDoUsuario();
                     return View(viewModel);
                 }
 
                 return RedirectToAction(nameof(Index), new { idEvento = modelocracha.IdEvento });
             }
 
+            ViewBag.EventosDisponiveis = ObterEventosDoUsuario();
             return View(viewModel);
         }
 
