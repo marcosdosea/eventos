@@ -426,6 +426,42 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("Rascunho salvo com sucesso", controller.TempData["SuccessMessage"]);
         }
 
+        [TestMethod]
+        public void CreateTest_Post_PermiteMultiplosModelosPorEvento_ChamaCreate()
+        {
+            // Arrange
+            var mockCracha = new Mock<IModelocrachaService>();
+            // Evento 1 já possui 3 modelos cadastrados
+            mockCracha.Setup(s => s.GetByEvento(1)).Returns(GetTestModelocracha());
+            mockCracha.Setup(s => s.Create(It.IsAny<Modelocracha>())).Returns(99);
+
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+            ctl.TempData = new TempDataDictionary(ctl.ControllerContext.HttpContext, Mock.Of<ITempDataProvider>());
+
+            var novoModelo = GetNewModelocracha();
+            novoModelo.IdEvento = 1;
+            novoModelo.Texto = "Segundo Modelo para o Evento 1";
+
+            // Act
+            var result = ctl.Create(novoModelo);
+
+            // Assert: deve criar um novo modelo chamando Create, e nunca sobrescrever chamando Edit
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirect.ActionName);
+            mockCracha.Verify(s => s.Create(It.Is<Modelocracha>(m => m.IdEvento == 1 && m.Texto == "Segundo Modelo para o Evento 1")), Times.Once);
+            mockCracha.Verify(s => s.Edit(It.IsAny<Modelocracha>()), Times.Never);
+        }
+
         private static ClaimsPrincipal GestorPrincipal() => new(new ClaimsIdentity(new List<Claim>
         {
             new Claim(ClaimTypes.Name, "12345678900"),

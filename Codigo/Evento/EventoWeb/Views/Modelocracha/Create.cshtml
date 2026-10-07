@@ -736,7 +736,7 @@
                             chkQrcode.checked = (data.qrcode === 1);
 
                             const inputId = document.getElementById("inputModeloId");
-                            if (inputId) inputId.value = data.id;
+                            if (inputId) inputId.value = "0";
 
                             const hiddenLogo = document.getElementById("hiddenLogotipoBase64");
                             if (hiddenLogo) hiddenLogo.value = data.logotipoBase64 || "";

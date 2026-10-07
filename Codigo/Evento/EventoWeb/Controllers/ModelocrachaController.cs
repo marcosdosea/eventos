@@ -272,35 +272,23 @@ namespace EventoWeb.Controllers
             }
 
             var evento = idEventoAlvo > 0 ? _eventoService.GetEventoSimpleDto(idEventoAlvo) : null;
-            var modeloExistente = idEventoAlvo > 0 ? _modelocrachaService.GetByEvento(idEventoAlvo).FirstOrDefault() : null;
+            var modelosDoEvento = idEventoAlvo > 0 ? _modelocrachaService.GetByEvento(idEventoAlvo).ToList() : new List<Modelocracha>();
+            var modeloComLogotipo = modelosDoEvento.FirstOrDefault(m => m.Logotipo != null && m.Logotipo.Length > 0);
 
-            ModelocrachaModel viewModel;
-            if (modeloExistente != null)
+            var viewModel = new ModelocrachaModel
             {
-                viewModel = _mapper.Map<ModelocrachaModel>(modeloExistente);
-                viewModel.Evento = evento ?? _eventoService.GetEventoSimpleDto(idEventoAlvo);
-                viewModel.NomeEvento = viewModel.Evento?.Nome ?? _eventoService.GetNomeById(idEventoAlvo);
-                if (modeloExistente.Logotipo != null && modeloExistente.Logotipo.Length > 0)
-                {
-                    viewModel.LogotipoBase64 = Convert.ToBase64String(modeloExistente.Logotipo);
-                    viewModel.NomeArquivo = "logo_institucional.png";
-                    var kb = Math.Round((double)modeloExistente.Logotipo.Length / 1024.0, 1);
-                    viewModel.TamanhoArquivo = $"Binário BLOB • {kb} KB";
-                }
-            }
-            else
-            {
-                viewModel = new ModelocrachaModel
-                {
-                    IdEvento = idEventoAlvo,
-                    Evento = evento,
-                    NomeEvento = evento?.Nome ?? (idEventoAlvo > 0 ? _eventoService.GetNomeById(idEventoAlvo) : "Selecione o Evento"),
-                    Texto = "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.",
-                    Qrcode = 1,
-                    NomeArquivo = "logo_congresso_nacional_vetor.svg",
-                    TamanhoArquivo = "Binário BLOB • 64 KB"
-                };
-            }
+                Id = 0,
+                IdEvento = idEventoAlvo,
+                Evento = evento ?? (idEventoAlvo > 0 ? _eventoService.GetEventoSimpleDto(idEventoAlvo) : null),
+                NomeEvento = evento?.Nome ?? (idEventoAlvo > 0 ? _eventoService.GetNomeById(idEventoAlvo) : "Selecione o Evento"),
+                Texto = "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.",
+                Qrcode = 1,
+                NomeArquivo = modeloComLogotipo != null ? "logo_institucional.png" : "logo_congresso_nacional_vetor.svg",
+                TamanhoArquivo = "Binário BLOB • 64 KB",
+                LogotipoBase64 = modeloComLogotipo?.Logotipo != null && modeloComLogotipo.Logotipo.Length > 0
+                    ? Convert.ToBase64String(modeloComLogotipo.Logotipo)
+                    : null
+            };
 
             return View(viewModel);
         }
@@ -323,15 +311,16 @@ namespace EventoWeb.Controllers
                 return Forbid();
             }
 
-            var modeloExistente = idEvento > 0 ? _modelocrachaService.GetByEvento(idEvento).FirstOrDefault() : null;
+            var modelosExistentes = idEvento > 0 ? _modelocrachaService.GetByEvento(idEvento).ToList() : new List<Modelocracha>();
+            var modeloComLogotipo = modelosExistentes.FirstOrDefault(m => m.Logotipo != null && m.Logotipo.Length > 0);
 
-            if (isRascunho || (modelocrachaModel.Logotipo == null && (modeloExistente?.Logotipo != null || !string.IsNullOrEmpty(modelocrachaModel.LogotipoBase64))))
+            if (isRascunho || (modelocrachaModel.Logotipo == null && (modeloComLogotipo?.Logotipo != null || !string.IsNullOrEmpty(modelocrachaModel.LogotipoBase64))))
             {
                 ModelState.Remove("Logotipo");
             }
             else if (modelocrachaModel.Logotipo == null || modelocrachaModel.Logotipo.Length == 0)
             {
-                if (modeloExistente == null || modeloExistente.Logotipo == null)
+                if (modeloComLogotipo == null || modeloComLogotipo.Logotipo == null)
                 {
                     ModelState.AddModelError("Logotipo", "Informe a logotipo");
                 }
@@ -358,10 +347,6 @@ namespace EventoWeb.Controllers
                         }
                     }
                 }
-                else if (modeloExistente?.Logotipo != null)
-                {
-                    logoTipoSource = modeloExistente.Logotipo;
-                }
                 else if (!string.IsNullOrEmpty(modelocrachaModel.LogotipoBase64))
                 {
                     try
@@ -372,6 +357,10 @@ namespace EventoWeb.Controllers
                     {
                     }
                 }
+                else if (modeloComLogotipo?.Logotipo != null)
+                {
+                    logoTipoSource = modeloComLogotipo.Logotipo;
+                }
                 else if (isRascunho)
                 {
                     logoTipoSource = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
@@ -381,22 +370,12 @@ namespace EventoWeb.Controllers
 
                 try
                 {
-                    if (modeloExistente != null)
-                    {
-                        modeloExistente.Texto = modelocrachaModel.Texto;
-                        modeloExistente.Qrcode = (sbyte)modelocrachaModel.Qrcode;
-                        if (logoTipoSource != null)
-                        {
-                            modeloExistente.Logotipo = logoTipoSource;
-                        }
-                        _modelocrachaService.Edit(modeloExistente);
-                    }
-                    else
-                    {
-                        var modelocracha = _mapper.Map<Modelocracha>(modelocrachaModel);
-                        modelocracha.Logotipo = logoTipoSource ?? new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
-                        _modelocrachaService.Create(modelocracha);
-                    }
+                    // Regra de negócio: permite múltiplos modelos por evento, sempre criando nova entidade
+                    var modelocracha = _mapper.Map<Modelocracha>(modelocrachaModel);
+                    modelocracha.Id = 0;
+                    modelocracha.IdEvento = idEvento;
+                    modelocracha.Logotipo = logoTipoSource ?? new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+                    _modelocrachaService.Create(modelocracha);
 
                     if (TempData != null)
                     {
@@ -527,30 +506,14 @@ namespace EventoWeb.Controllers
 
                 try
                 {
-                    if (modeloEventoAlvo != null)
+                    existente.IdEvento = idEventoAlvo;
+                    existente.Texto = viewModel.Texto;
+                    existente.Qrcode = (sbyte)viewModel.Qrcode;
+                    if (logoTipoSource != null)
                     {
-                        modeloEventoAlvo.Texto = viewModel.Texto;
-                        modeloEventoAlvo.Qrcode = (sbyte)viewModel.Qrcode;
-                        if (logoTipoSource != null)
-                        {
-                            modeloEventoAlvo.Logotipo = logoTipoSource;
-                        }
-                        _modelocrachaService.Edit(modeloEventoAlvo);
+                        existente.Logotipo = logoTipoSource;
                     }
-                    else
-                    {
-                        var modelocracha = _mapper.Map<Modelocracha>(viewModel);
-                        modelocracha.IdEvento = idEventoAlvo;
-                        if (logoTipoSource != null)
-                        {
-                            modelocracha.Logotipo = logoTipoSource;
-                        }
-                        else
-                        {
-                            modelocracha.Logotipo = existente.Logotipo;
-                        }
-                        _modelocrachaService.Edit(modelocracha);
-                    }
+                    _modelocrachaService.Edit(existente);
 
                     if (TempData != null)
                     {
