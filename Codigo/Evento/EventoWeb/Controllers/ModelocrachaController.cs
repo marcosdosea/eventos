@@ -296,22 +296,23 @@ namespace EventoWeb.Controllers
         // POST: ModelocrachaController/Create
         [HttpPost]
         [Route("Create")]
+        [Route("Create/{idEvento?}")]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(ModelocrachaModel modelocrachaModel, string? btnRascunho = null)
+        public ActionResult Create(ModelocrachaModel modelocrachaModel, string? btnRascunho = null, uint? idEvento = null)
         {
             var isRascunho = string.Equals(btnRascunho, "true", StringComparison.OrdinalIgnoreCase);
 
-            var idEvento = modelocrachaModel.Evento?.Id ?? modelocrachaModel.IdEvento;
-            if (idEvento == 0)
+            var idEventoAlvo = modelocrachaModel.Evento?.Id ?? (modelocrachaModel.IdEvento > 0 ? modelocrachaModel.IdEvento : idEvento ?? 0);
+            if (idEventoAlvo == 0)
             {
                 ModelState.AddModelError("IdEvento", "Informe qual o Evento");
             }
-            else if (!IsAuthorized(idEvento))
+            else if (!IsAuthorized(idEventoAlvo))
             {
                 return Forbid();
             }
 
-            var modelosExistentes = idEvento > 0 ? _modelocrachaService.GetByEvento(idEvento).ToList() : new List<Modelocracha>();
+            var modelosExistentes = idEventoAlvo > 0 ? _modelocrachaService.GetByEvento(idEventoAlvo).ToList() : new List<Modelocracha>();
             var modeloComLogotipo = modelosExistentes.FirstOrDefault(m => m.Logotipo != null && m.Logotipo.Length > 0);
 
             if (isRascunho || (modelocrachaModel.Logotipo == null && (modeloComLogotipo?.Logotipo != null || !string.IsNullOrEmpty(modelocrachaModel.LogotipoBase64))))
@@ -366,14 +367,14 @@ namespace EventoWeb.Controllers
                     logoTipoSource = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
                 }
 
-                modelocrachaModel.IdEvento = idEvento;
+                modelocrachaModel.IdEvento = idEventoAlvo;
 
                 try
                 {
                     // Regra de negócio: permite múltiplos modelos por evento, sempre criando nova entidade
                     var modelocracha = _mapper.Map<Modelocracha>(modelocrachaModel);
                     modelocracha.Id = 0;
-                    modelocracha.IdEvento = idEvento;
+                    modelocracha.IdEvento = idEventoAlvo;
                     modelocracha.Logotipo = logoTipoSource ?? new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
                     _modelocrachaService.Create(modelocracha);
 
@@ -393,9 +394,9 @@ namespace EventoWeb.Controllers
             }
 
             ViewBag.EventosDisponiveis = ObterEventosDoUsuario();
-            if (idEvento > 0 && modelocrachaModel.Evento == null)
+            if (idEventoAlvo > 0 && modelocrachaModel.Evento == null)
             {
-                modelocrachaModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
+                modelocrachaModel.Evento = _eventoService.GetEventoSimpleDto(idEventoAlvo);
             }
             return View(modelocrachaModel);
         }

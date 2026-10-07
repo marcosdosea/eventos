@@ -444,7 +444,7 @@
         </div>
     </div>
 
-    <form asp-action="Create" method="post" enctype="multipart/form-data" id="formModeloCracha">
+    <form asp-action="Create" asp-route-idEvento="" method="post" enctype="multipart/form-data" id="formModeloCracha">
         @Html.AntiForgeryToken()
         <input type="hidden" id="inputModeloId" name="Id" value="@Model.Id" />
         <input type="hidden" id="hiddenLogotipoBase64" name="LogotipoBase64" value="@Model.LogotipoBase64" />
