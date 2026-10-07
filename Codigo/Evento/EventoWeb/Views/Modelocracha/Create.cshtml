@@ -446,6 +446,8 @@
 
     <form asp-action="Create" method="post" enctype="multipart/form-data" id="formModeloCracha">
         @Html.AntiForgeryToken()
+        <input type="hidden" id="inputModeloId" name="Id" value="@Model.Id" />
+        <input type="hidden" id="hiddenLogotipoBase64" name="LogotipoBase64" value="@Model.LogotipoBase64" />
 
         <div class="row g-4">
             <!-- Coluna Esquerda: Parâmetros -->
@@ -489,18 +491,26 @@
                                 <i class="bi bi-image blue-normal"></i>
                                 <span>Logotipo Institucional</span>
                             </label>
-                            <span class="text-muted" style="font-size: 0.75rem; font-weight: 500;">PNG, SVG, JPEG (máx. 142 KB)</span>
+                            <span class="text-muted" style="font-size: 0.75rem; font-weight: 500;">PNG, SVG, JPEG (máx. 64 KB)</span>
                         </div>
 
                         <div class="upload-box-custom">
                             <div class="d-flex align-items-center gap-3">
                                 <div class="upload-thumb-preview" id="thumbBoxContainer">
-                                    <i class="bi bi-image text-muted fs-4" id="thumbIconPlaceholder"></i>
-                                    <img id="thumbImageElement" src="" alt="Thumbnail" style="display: none;" />
+                                    @if (!string.IsNullOrEmpty(Model.LogotipoBase64))
+                                    {
+                                        <img id="thumbImageElement" src="data:image/png;base64,@Model.LogotipoBase64" alt="Logotipo Cadastrado" />
+                                        <i class="bi bi-image text-muted fs-4" id="thumbIconPlaceholder" style="display: none;"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-image text-muted fs-4" id="thumbIconPlaceholder"></i>
+                                        <img id="thumbImageElement" src="" alt="Thumbnail" style="display: none;" />
+                                    }
                                 </div>
                                 <div>
                                     <div class="fw-bold text-dark small" id="lblNomeArquivoVisual">@(Model.NomeArquivo ?? "logo_congresso_nacional_vetor.svg")</div>
-                                    <div class="text-muted" id="lblInfoArquivoVisual" style="font-size: 0.75rem;">@(Model.TamanhoArquivo ?? "Binário BLOB • 142 KB")</div>
+                                    <div class="text-muted" id="lblInfoArquivoVisual" style="font-size: 0.75rem;">@(Model.TamanhoArquivo ?? "Binário BLOB • 64 KB")</div>
                                 </div>
                             </div>
 
@@ -550,7 +560,7 @@
 
                     <!-- Botões de Ação -->
                     <div class="d-flex align-items-center justify-content-between pt-2 border-top">
-                        <a asp-action="Index" asp-route-idEvento="@eventoAtualId" class="btn btn-outline-danger px-4 py-2 rounded-3 fw-semibold text-decoration-none">
+                        <a asp-action="Index" asp-route-idEvento="@eventoAtualId" id="btnCancelarAcao" class="btn btn-outline-danger px-4 py-2 rounded-3 fw-semibold text-decoration-none">
                             Cancelar
                         </a>
 
@@ -700,10 +710,74 @@
             const crachaCard = document.getElementById("crachaCardElement");
             let escalaAtual = 1;
 
-            // 1. Atualizar Nome do Evento
-            selectEvento.addEventListener("change", function () {
-                const selectedText = selectEvento.options[selectEvento.selectedIndex].text;
-                lblNomeEvento.textContent = selectedText.trim();
+            // 1. Atualizar Nome do Evento e refletir campos salvos
+            selectEvento.addEventListener("change", async function () {
+                const idEvento = this.value;
+                const selectedText = this.options[this.selectedIndex] ? this.options[this.selectedIndex].text : "";
+                if (lblNomeEvento) {
+                    lblNomeEvento.textContent = selectedText.trim();
+                }
+
+                if (!idEvento || idEvento === "0") return;
+
+                // Atualiza o link do botão Cancelar
+                const btnCancelar = document.getElementById("btnCancelarAcao");
+                if (btnCancelar) {
+                    btnCancelar.href = `@Url.Content("~/Modelocracha/Index")?idEvento=${idEvento}`;
+                }
+
+                try {
+                    const urlBase = '@Url.Content("~/Modelocracha/ObterModeloPorEvento")';
+                    const response = await fetch(`${urlBase}/${idEvento}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.existe) {
+                            txtTexto.value = data.texto || "";
+                            chkQrcode.checked = (data.qrcode === 1);
+
+                            const inputId = document.getElementById("inputModeloId");
+                            if (inputId) inputId.value = data.id;
+
+                            const hiddenLogo = document.getElementById("hiddenLogotipoBase64");
+                            if (hiddenLogo) hiddenLogo.value = data.logotipoBase64 || "";
+
+                            if (data.temLogotipo && data.logotipoBase64) {
+                                thumbImg.src = "data:image/png;base64," + data.logotipoBase64;
+                                thumbImg.style.display = "block";
+                                if (thumbIcon) thumbIcon.style.display = "none";
+                                lblNomeArquivo.textContent = data.nomeArquivo || "logo_institucional.png";
+                                lblInfoArquivo.textContent = data.tamanhoArquivo || "Binário BLOB • 64 KB";
+                            } else {
+                                thumbImg.src = "";
+                                thumbImg.style.display = "none";
+                                if (thumbIcon) thumbIcon.style.display = "block";
+                                lblNomeArquivo.textContent = "Nenhum arquivo selecionado";
+                                lblInfoArquivo.textContent = "PNG, SVG, JPEG (máx. 64 KB)";
+                            }
+                        } else {
+                            txtTexto.value = data.texto || "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.";
+                            chkQrcode.checked = (data.qrcode === 1);
+
+                            const inputId = document.getElementById("inputModeloId");
+                            if (inputId) inputId.value = "0";
+
+                            const hiddenLogo = document.getElementById("hiddenLogotipoBase64");
+                            if (hiddenLogo) hiddenLogo.value = "";
+
+                            thumbImg.src = "";
+                            thumbImg.style.display = "none";
+                            if (thumbIcon) thumbIcon.style.display = "block";
+                            lblNomeArquivo.textContent = "Nenhum arquivo selecionado";
+                            lblInfoArquivo.textContent = "PNG, SVG, JPEG (máx. 64 KB)";
+                        }
+
+                        inputArquivo.value = "";
+                        atualizarTexto();
+                        atualizarQrcode();
+                    }
+                } catch (error) {
+                    console.error("Erro ao carregar modelo do evento:", error);
+                }
             });
 
             // 2. Atualizar Contador e Texto do Crachá
@@ -734,7 +808,7 @@
                 atualizarQrcode();
             });
 
-            // 5. Upload de Imagem (suporte a até 142 KB)
+            // 5. Upload de Imagem (suporte a até 64 KB)
             btnUpload.addEventListener("click", function () {
                 inputArquivo.click();
             });
@@ -742,9 +816,9 @@
             inputArquivo.addEventListener("change", function () {
                 const file = this.files[0];
                 if (file) {
-                    const limiteBytes = 142 * 1024;
+                    const limiteBytes = 64 * 1024;
                     if (file.size > limiteBytes) {
-                        alert("O arquivo selecionado excede o tamanho máximo suportado de 142 KB. Por favor, selecione uma imagem menor.");
+                        alert("O arquivo selecionado excede o tamanho máximo suportado de 64 KB. Por favor, selecione uma imagem menor.");
                         this.value = "";
                         return;
                     }
@@ -757,7 +831,7 @@
                     reader.onload = function (e) {
                         thumbImg.src = e.target.result;
                         thumbImg.style.display = "block";
-                        thumbIcon.style.display = "none";
+                        if (thumbIcon) thumbIcon.style.display = "none";
                     };
                     reader.readAsDataURL(file);
                 }

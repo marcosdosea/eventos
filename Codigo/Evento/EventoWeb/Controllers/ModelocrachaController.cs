@@ -191,6 +191,66 @@ namespace EventoWeb.Controllers
             return View(modelocrachaModel);
         }
 
+        // GET: ModelocrachaController/ObterModeloPorEvento/5
+        [HttpGet]
+        [Route("ObterModeloPorEvento/{idEvento}")]
+        public IActionResult ObterModeloPorEvento(uint idEvento)
+        {
+            if (idEvento == 0)
+            {
+                return Json(new { existe = false });
+            }
+
+            if (!IsAuthorized(idEvento))
+            {
+                return Forbid();
+            }
+
+            var modelo = _modelocrachaService.GetByEvento(idEvento).FirstOrDefault();
+            if (modelo == null)
+            {
+                return Json(new
+                {
+                    existe = false,
+                    id = 0,
+                    idEvento = idEvento,
+                    nomeEvento = _eventoService.GetNomeById(idEvento),
+                    texto = "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.",
+                    qrcode = 1,
+                    temLogotipo = false,
+                    logotipoBase64 = (string?)null,
+                    nomeArquivo = (string?)null,
+                    tamanhoArquivo = (string?)null
+                });
+            }
+
+            string? logotipoBase64 = null;
+            string? tamanhoArquivo = null;
+            string? nomeArquivo = null;
+
+            if (modelo.Logotipo != null && modelo.Logotipo.Length > 0)
+            {
+                logotipoBase64 = Convert.ToBase64String(modelo.Logotipo);
+                nomeArquivo = "logo_institucional.png";
+                var kb = Math.Round((double)modelo.Logotipo.Length / 1024.0, 1);
+                tamanhoArquivo = $"Binário BLOB • {kb} KB";
+            }
+
+            return Json(new
+            {
+                existe = true,
+                id = modelo.Id,
+                idEvento = modelo.IdEvento,
+                nomeEvento = _eventoService.GetNomeById(modelo.IdEvento),
+                texto = modelo.Texto,
+                qrcode = (int)modelo.Qrcode,
+                temLogotipo = !string.IsNullOrEmpty(logotipoBase64),
+                logotipoBase64,
+                nomeArquivo,
+                tamanhoArquivo
+            });
+        }
+
         // GET: ModelocrachaController/Create
         [HttpGet]
         [Route("Create")]
@@ -212,16 +272,35 @@ namespace EventoWeb.Controllers
             }
 
             var evento = idEventoAlvo > 0 ? _eventoService.GetEventoSimpleDto(idEventoAlvo) : null;
-            var viewModel = new ModelocrachaModel
+            var modeloExistente = idEventoAlvo > 0 ? _modelocrachaService.GetByEvento(idEventoAlvo).FirstOrDefault() : null;
+
+            ModelocrachaModel viewModel;
+            if (modeloExistente != null)
             {
-                IdEvento = idEventoAlvo,
-                Evento = evento,
-                NomeEvento = evento?.Nome ?? (idEventoAlvo > 0 ? _eventoService.GetNomeById(idEventoAlvo) : "Selecione o Evento"),
-                Texto = "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.",
-                Qrcode = 1,
-                NomeArquivo = "logo_congresso_nacional_vetor.svg",
-                TamanhoArquivo = "Binário BLOB • 142 KB"
-            };
+                viewModel = _mapper.Map<ModelocrachaModel>(modeloExistente);
+                viewModel.Evento = evento ?? _eventoService.GetEventoSimpleDto(idEventoAlvo);
+                viewModel.NomeEvento = viewModel.Evento?.Nome ?? _eventoService.GetNomeById(idEventoAlvo);
+                if (modeloExistente.Logotipo != null && modeloExistente.Logotipo.Length > 0)
+                {
+                    viewModel.LogotipoBase64 = Convert.ToBase64String(modeloExistente.Logotipo);
+                    viewModel.NomeArquivo = "logo_institucional.png";
+                    var kb = Math.Round((double)modeloExistente.Logotipo.Length / 1024.0, 1);
+                    viewModel.TamanhoArquivo = $"Binário BLOB • {kb} KB";
+                }
+            }
+            else
+            {
+                viewModel = new ModelocrachaModel
+                {
+                    IdEvento = idEventoAlvo,
+                    Evento = evento,
+                    NomeEvento = evento?.Nome ?? (idEventoAlvo > 0 ? _eventoService.GetNomeById(idEventoAlvo) : "Selecione o Evento"),
+                    Texto = "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.",
+                    Qrcode = 1,
+                    NomeArquivo = "logo_congresso_nacional_vetor.svg",
+                    TamanhoArquivo = "Binário BLOB • 64 KB"
+                };
+            }
 
             return View(viewModel);
         }
@@ -243,9 +322,18 @@ namespace EventoWeb.Controllers
                 return Forbid();
             }
 
-            if (modelocrachaModel.Logotipo == null || modelocrachaModel.Logotipo.Length == 0)
+            var modeloExistente = idEvento > 0 ? _modelocrachaService.GetByEvento(idEvento).FirstOrDefault() : null;
+
+            if (modelocrachaModel.Logotipo == null && (modeloExistente?.Logotipo != null || !string.IsNullOrEmpty(modelocrachaModel.LogotipoBase64)))
             {
-                ModelState.AddModelError("Logotipo", "Informe a logotipo");
+                ModelState.Remove("Logotipo");
+            }
+            else if (modelocrachaModel.Logotipo == null || modelocrachaModel.Logotipo.Length == 0)
+            {
+                if (modeloExistente == null || modeloExistente.Logotipo == null)
+                {
+                    ModelState.AddModelError("Logotipo", "Informe a logotipo");
+                }
             }
 
             if (ModelState.IsValid)
@@ -269,14 +357,42 @@ namespace EventoWeb.Controllers
                         }
                     }
                 }
+                else if (modeloExistente?.Logotipo != null)
+                {
+                    logoTipoSource = modeloExistente.Logotipo;
+                }
+                else if (!string.IsNullOrEmpty(modelocrachaModel.LogotipoBase64))
+                {
+                    try
+                    {
+                        logoTipoSource = Convert.FromBase64String(modelocrachaModel.LogotipoBase64);
+                    }
+                    catch
+                    {
+                    }
+                }
 
                 modelocrachaModel.IdEvento = idEvento;
-                var modelocracha = _mapper.Map<Modelocracha>(modelocrachaModel);
-                modelocracha.Logotipo = logoTipoSource!;
 
                 try
                 {
-                    _modelocrachaService.Create(modelocracha);
+                    if (modeloExistente != null)
+                    {
+                        modeloExistente.Texto = modelocrachaModel.Texto;
+                        modeloExistente.Qrcode = (sbyte)modelocrachaModel.Qrcode;
+                        if (logoTipoSource != null)
+                        {
+                            modeloExistente.Logotipo = logoTipoSource;
+                        }
+                        _modelocrachaService.Edit(modeloExistente);
+                    }
+                    else
+                    {
+                        var modelocracha = _mapper.Map<Modelocracha>(modelocrachaModel);
+                        modelocracha.Logotipo = logoTipoSource!;
+                        _modelocrachaService.Create(modelocracha);
+                    }
+
                     if (TempData != null)
                     {
                         TempData["SuccessMessage"] = "Modelo salvo com sucesso";
@@ -351,7 +467,13 @@ namespace EventoWeb.Controllers
             if (!IsAuthorized(existente.IdEvento) || !IsAuthorized(idEventoAlvo))
                 return Forbid();
 
-            if (viewModel.Logotipo == null && existente.Logotipo != null)
+            var modeloEventoAlvo = idEventoAlvo != existente.IdEvento
+                ? _modelocrachaService.GetByEvento(idEventoAlvo).FirstOrDefault()
+                : existente;
+
+            var modeloBaseParaLogotipo = modeloEventoAlvo ?? existente;
+
+            if (viewModel.Logotipo == null && (modeloBaseParaLogotipo.Logotipo != null || !string.IsNullOrEmpty(viewModel.LogotipoBase64)))
             {
                 ModelState.Remove("Logotipo");
             }
@@ -377,21 +499,48 @@ namespace EventoWeb.Controllers
                         }
                     }
                 }
-
-                var modelocracha = _mapper.Map<Modelocracha>(viewModel);
-                modelocracha.IdEvento = idEventoAlvo;
-                if (logoTipoSource != null)
+                else if (modeloBaseParaLogotipo.Logotipo != null)
                 {
-                    modelocracha.Logotipo = logoTipoSource;
+                    logoTipoSource = modeloBaseParaLogotipo.Logotipo;
                 }
-                else
+                else if (!string.IsNullOrEmpty(viewModel.LogotipoBase64))
                 {
-                    modelocracha.Logotipo = existente.Logotipo;
+                    try
+                    {
+                        logoTipoSource = Convert.FromBase64String(viewModel.LogotipoBase64);
+                    }
+                    catch
+                    {
+                    }
                 }
 
                 try
                 {
-                    _modelocrachaService.Edit(modelocracha);
+                    if (modeloEventoAlvo != null)
+                    {
+                        modeloEventoAlvo.Texto = viewModel.Texto;
+                        modeloEventoAlvo.Qrcode = (sbyte)viewModel.Qrcode;
+                        if (logoTipoSource != null)
+                        {
+                            modeloEventoAlvo.Logotipo = logoTipoSource;
+                        }
+                        _modelocrachaService.Edit(modeloEventoAlvo);
+                    }
+                    else
+                    {
+                        var modelocracha = _mapper.Map<Modelocracha>(viewModel);
+                        modelocracha.IdEvento = idEventoAlvo;
+                        if (logoTipoSource != null)
+                        {
+                            modelocracha.Logotipo = logoTipoSource;
+                        }
+                        else
+                        {
+                            modelocracha.Logotipo = existente.Logotipo;
+                        }
+                        _modelocrachaService.Edit(modelocracha);
+                    }
+
                     if (TempData != null)
                     {
                         TempData["SuccessMessage"] = "Modelo salvo com sucesso";
@@ -404,7 +553,7 @@ namespace EventoWeb.Controllers
                     return View(viewModel);
                 }
 
-                return RedirectToAction(nameof(Index), new { idEvento = modelocracha.IdEvento });
+                return RedirectToAction(nameof(Index), new { idEvento = idEventoAlvo });
             }
 
             ViewBag.EventosDisponiveis = ObterEventosDoUsuario();

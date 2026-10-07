@@ -259,6 +259,137 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(List<ModelocrachaModel>));
         }
 
+        [TestMethod]
+        public void ObterModeloPorEventoTest_ComModeloExistente_RetornaJson()
+        {
+            // Act
+            var result = controller.ObterModeloPorEvento(1);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(JsonResult));
+            var jsonResult = (JsonResult)result;
+            Assert.IsNotNull(jsonResult.Value);
+        }
+
+        [TestMethod]
+        public void ObterModeloPorEventoTest_IdZero_RetornaNaoExiste()
+        {
+            // Act
+            var resultZero = controller.ObterModeloPorEvento(0);
+
+            // Assert
+            Assert.IsInstanceOfType(resultZero, typeof(JsonResult));
+        }
+
+        [TestMethod]
+        public void ObterModeloPorEventoTest_SemModelo_RetornaJsonPadrao()
+        {
+            // Arrange
+            var mockCracha = new Mock<IModelocrachaService>();
+            mockCracha.Setup(s => s.GetByEvento(99)).Returns(new List<Modelocracha>());
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 99))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 99, IdPapel = 2 });
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            // Act
+            var result = ctl.ObterModeloPorEvento(99);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(JsonResult));
+        }
+
+        [TestMethod]
+        public void ObterModeloPorEventoTest_NaoAutorizado_RetornaForbid()
+        {
+            // Arrange
+            var mockCracha = new Mock<IModelocrachaService>();
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 99))
+                .Returns((Inscricaopessoaevento)null!);
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            // Act
+            var result = ctl.ObterModeloPorEvento(99);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(ForbidResult));
+        }
+
+        [TestMethod]
+        public void CreateTest_Post_QuandoModeloJaExisteParaEvento_Atualiza()
+        {
+            // Arrange
+            var model = GetNewModelocracha();
+            model.IdEvento = 1; // Evento 1 já possui modelo na mock setup
+
+            // Act
+            var result = controller.Create(model);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirect.ActionName);
+        }
+
+        [TestMethod]
+        public void EditTest_Post_TrocaEventoAlvoSemModelo_EditaParaNovoEvento()
+        {
+            // Arrange
+            var mockCracha = new Mock<IModelocrachaService>();
+            var modeloExistente = new Modelocracha { Id = 1, IdEvento = 1, Texto = "Original", Qrcode = 1 };
+            mockCracha.Setup(s => s.Get((uint)1)).Returns(modeloExistente);
+            mockCracha.Setup(s => s.GetByEvento((uint)2)).Returns(new List<Modelocracha>());
+            mockCracha.Setup(s => s.Edit(It.IsAny<Modelocracha>())).Verifiable();
+
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), (uint)1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), (uint)2))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 2, IdPapel = 2 });
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            var formFileMock = new Mock<IFormFile>();
+            var ms = new MemoryStream(new byte[] { 0x1, 0x2 });
+            formFileMock.Setup(f => f.OpenReadStream()).Returns(ms);
+            formFileMock.Setup(f => f.Length).Returns(ms.Length);
+            formFileMock.Setup(f => f.CopyTo(It.IsAny<Stream>())).Callback<Stream>(s => ms.CopyTo(s));
+
+            var viewModel = new ModelocrachaModel
+            {
+                Id = 1,
+                IdEvento = 2, // Trocou para o Evento 2
+                Texto = "Novo Texto para Evento 2",
+                Qrcode = 1,
+                Logotipo = formFileMock.Object
+            };
+
+            // Act
+            var result = ctl.Edit(1, viewModel);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirect.ActionName);
+            mockCracha.Verify(s => s.Edit(It.Is<Modelocracha>(m => m.IdEvento == 2)), Times.Once);
+        }
+
         private static ClaimsPrincipal GestorPrincipal() => new(new ClaimsIdentity(new List<Claim>
         {
             new Claim(ClaimTypes.Name, "12345678900"),
