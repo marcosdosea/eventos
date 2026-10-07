@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AutoMapper;
 using Core.Service;
 using Core;
@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using System;
 using System.Security.Claims;
 using Core.DTO;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using MySqlX.XDevAPI.Common;
 
 namespace EventoWeb.Controllers.Tests
@@ -56,6 +57,7 @@ namespace EventoWeb.Controllers.Tests
             {
                 HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) }
             };
+            controller.TempData = new TempDataDictionary(controller.ControllerContext.HttpContext, Mock.Of<ITempDataProvider>());
         }
 
         [TestMethod]
@@ -111,6 +113,7 @@ namespace EventoWeb.Controllers.Tests
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.IsNull(redirectToActionResult.ControllerName);
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
+            Assert.AreEqual("Modelo salvo com sucesso", controller.TempData["SuccessMessage"]);
         }
 
         [TestMethod]
@@ -157,6 +160,7 @@ namespace EventoWeb.Controllers.Tests
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.IsNull(redirectToActionResult.ControllerName);
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
+            Assert.AreEqual("Modelo salvo com sucesso", controller.TempData["SuccessMessage"]);
         }
 
         [TestMethod]
@@ -210,6 +214,49 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(ctl.Index(2, null), typeof(ForbidResult));
             Assert.IsInstanceOfType(ctl.Index(1, null), typeof(ViewResult));
             Assert.IsInstanceOfType(ctl.Details(10, null), typeof(ForbidResult));
+        }
+
+        [TestMethod]
+        public void CreateTest_Get_SemIdEvento()
+        {
+            // Act
+            var result = controller.Create((uint?)null);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            ViewResult viewResult = (ViewResult)result;
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ModelocrachaModel));
+            var model = (ModelocrachaModel)viewResult.ViewData.Model;
+            Assert.IsNotNull(model);
+            Assert.AreEqual("Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.", model.Texto);
+        }
+
+        [TestMethod]
+        public void EditTest_Post_SemNovoLogotipo_PreservaExistente()
+        {
+            // Arrange
+            var modelEdit = GetTargetEditModelocrachaModel();
+            modelEdit.Logotipo = null; // Sem subir nova imagem
+
+            // Act
+            var result = controller.Edit(modelEdit.Id, modelEdit);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirectToActionResult.ActionName);
+        }
+
+        [TestMethod]
+        public void IndexTest_SemIdEvento_RetornaLista()
+        {
+            // Act
+            var result = controller.Index(null, null);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            ViewResult viewResult = (ViewResult)result;
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(List<ModelocrachaModel>));
         }
 
         private static ClaimsPrincipal GestorPrincipal() => new(new ClaimsIdentity(new List<Claim>
