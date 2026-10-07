@@ -1,5 +1,6 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Core;
+using Core.DTO;
 using Core.Service;
 using EventoWeb.Helpers;
 using EventoWeb.Models;
@@ -33,11 +34,43 @@ namespace EventoWeb.Controllers
             return AutorizacaoEventoHelper.IsAutorizado(User, _inscricaoService, idEvento);
         }
 
+        private List<EventoSimpleDTO> ObterEventosDoUsuario()
+        {
+            var eventos = new List<EventoSimpleDTO>();
+            if (User.IsInRole("ADMINISTRADOR"))
+            {
+                var todos = _eventoService.GetAll();
+                if (todos != null)
+                {
+                    eventos = todos.Select(e => new EventoSimpleDTO { Id = e.Id, Nome = e.Nome }).ToList();
+                }
+            }
+            else
+            {
+                var cpf = User.Identity?.Name;
+                if (!string.IsNullOrEmpty(cpf))
+                {
+                    try
+                    {
+                        var eventosGestor = _eventoService.GetEventByCpf(cpf, 2);
+                        if (eventosGestor != null)
+                        {
+                            eventos = eventosGestor.Select(e => new EventoSimpleDTO { Id = e.Id, Nome = e.Nome }).ToList();
+                        }
+                    }
+                    catch
+                    {
+                        // Degradação graciosa
+                    }
+                }
+            }
+            return eventos;
+        }
+
         // GET: ModelocrachaController
         [HttpGet]
         [Route("")]
         [Route("Index")]
-
         public ActionResult Index(uint? idEvento, uint? idPessoa)
         {
             if (idEvento.HasValue)
@@ -51,13 +84,20 @@ namespace EventoWeb.Controllers
                     var evento = _eventoService.Get(m.IdEvento);
                     model.NomeEvento = evento != null ? evento.Nome : "Evento não encontrado";
                     model.IdPessoa = idPessoa;
+                    if (m.Logotipo != null && m.Logotipo.Length > 0)
+                    {
+                        model.LogotipoBase64 = Convert.ToBase64String(m.Logotipo);
+                        model.NomeArquivo = "logo_institucional.png";
+                        var kb = Math.Round((double)m.Logotipo.Length / 1024.0, 1);
+                        model.TamanhoArquivo = $"Binário BLOB • {kb} KB";
+                    }
                     return model;
                 }).ToList();
                 if (idPessoa.HasValue)
                 {
-					ViewData["PessoaId"] = idPessoa.Value;
-				}
-				ViewData["EventoId"] = idEvento.Value;
+                    ViewData["PessoaId"] = idPessoa.Value;
+                }
+                ViewData["EventoId"] = idEvento.Value;
                 ViewData["EventoNome"] = _eventoService.GetNomeById(idEvento.Value);
                 return View(listaModeloCrachaModel);
             }
@@ -68,10 +108,21 @@ namespace EventoWeb.Controllers
                 {
                     items = items.Where(x => IsAuthorized(x.IdEvento)).ToList();
                 }
-                var model = items.Select(x => _mapper.Map<ModelocrachaModel>(x)).ToList();
+                var model = items.Select(x =>
+                {
+                    var m = _mapper.Map<ModelocrachaModel>(x);
+                    m.NomeEvento = _eventoService.GetNomeById(x.IdEvento);
+                    if (x.Logotipo != null && x.Logotipo.Length > 0)
+                    {
+                        m.LogotipoBase64 = Convert.ToBase64String(x.Logotipo);
+                        m.NomeArquivo = "logo_institucional.png";
+                        var kb = Math.Round((double)x.Logotipo.Length / 1024.0, 1);
+                        m.TamanhoArquivo = $"Binário BLOB • {kb} KB";
+                    }
+                    return m;
+                }).ToList();
                 return View(model);
             }
-
         }
 
         // GET: ModelocrachaController/Details/5
@@ -98,43 +149,43 @@ namespace EventoWeb.Controllers
                     {
                         modelocrachaModel.IdPessoa = idPessoa.Value;
                         modelocrachaModel.QrCodes = inscricoesev
-							.Where(inscricao => inscricao.IdPapel == 4 && inscricao.IdPessoa == idPessoa)
-							.Select(inscricao =>
-							{
-								var subeventosIdsPessoa = inscricoessub
-									.Where(sub => sub.IdPessoa == inscricao.IdPessoa)
-									.Select(sub => sub.IdSubEvento)
-									.Distinct()
-									.ToList();
-								var conteudoQrCode = $"[{inscricao.IdPessoa}] [{modelocracha.IdEvento}]";
-								if (subeventosIdsPessoa.Any())
-								{
-									conteudoQrCode += $" {string.Join(" ", subeventosIdsPessoa.Select(idSubEvento => $"[{idSubEvento}]"))}";
-								}
-								var qrCodeBytes = QrCodeGenerator.GenerateQr(conteudoQrCode);
-								return Convert.ToBase64String(qrCodeBytes);
-							}).ToList();
-					}
+                            .Where(inscricao => inscricao.IdPapel == 4 && inscricao.IdPessoa == idPessoa)
+                            .Select(inscricao =>
+                            {
+                                var subeventosIdsPessoa = inscricoessub
+                                    .Where(sub => sub.IdPessoa == inscricao.IdPessoa)
+                                    .Select(sub => sub.IdSubEvento)
+                                    .Distinct()
+                                    .ToList();
+                                var conteudoQrCode = $"[{inscricao.IdPessoa}] [{modelocracha.IdEvento}]";
+                                if (subeventosIdsPessoa.Any())
+                                {
+                                    conteudoQrCode += $" {string.Join(" ", subeventosIdsPessoa.Select(idSubEvento => $"[{idSubEvento}]"))}";
+                                }
+                                var qrCodeBytes = QrCodeGenerator.GenerateQr(conteudoQrCode);
+                                return Convert.ToBase64String(qrCodeBytes);
+                            }).ToList();
+                    }
                     else
                     {
-						modelocrachaModel.QrCodes = inscricoesev
-							.Where(inscricao => inscricao.IdPapel == 4)
-							.Select(inscricao =>
-							{
-								var subeventosIdsPessoa = inscricoessub
-									.Where(sub => sub.IdPessoa == inscricao.IdPessoa)
-									.Select(sub => sub.IdSubEvento)
-									.Distinct()
-									.ToList();
-								var conteudoQrCode = $"[{inscricao.IdPessoa}] [{inscricao.NomeCracha}] [{modelocracha.IdEvento}]";
-								if (subeventosIdsPessoa.Any())
-								{
-									conteudoQrCode += $" {string.Join(" ", subeventosIdsPessoa.Select(idSubEvento => $"[{idSubEvento}]"))}";
-								}
-								var qrCodeBytes = QrCodeGenerator.GenerateQr(conteudoQrCode);
-								return Convert.ToBase64String(qrCodeBytes);
-							}).ToList();
-					}
+                        modelocrachaModel.QrCodes = inscricoesev
+                            .Where(inscricao => inscricao.IdPapel == 4)
+                            .Select(inscricao =>
+                            {
+                                var subeventosIdsPessoa = inscricoessub
+                                    .Where(sub => sub.IdPessoa == inscricao.IdPessoa)
+                                    .Select(sub => sub.IdSubEvento)
+                                    .Distinct()
+                                    .ToList();
+                                var conteudoQrCode = $"[{inscricao.IdPessoa}] [{inscricao.NomeCracha}] [{modelocracha.IdEvento}]";
+                                if (subeventosIdsPessoa.Any())
+                                {
+                                    conteudoQrCode += $" {string.Join(" ", subeventosIdsPessoa.Select(idSubEvento => $"[{idSubEvento}]"))}";
+                                }
+                                var qrCodeBytes = QrCodeGenerator.GenerateQr(conteudoQrCode);
+                                return Convert.ToBase64String(qrCodeBytes);
+                            }).ToList();
+                    }
                 }
             }
             return View(modelocrachaModel);
