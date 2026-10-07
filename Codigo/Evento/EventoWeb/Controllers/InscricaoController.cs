@@ -294,6 +294,18 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("Index", "Home"); 
             }
 
+            foreach (var idTipoCheck in mainEventQuantities.Keys.ToList())
+            {
+                if (idTipoCheck == 0 || idTipoCheck == 999999)
+                    continue;
+                var tipoCheck = _tipoinscricaoService.Get(idTipoCheck);
+                if (tipoCheck == null || tipoCheck.IdEvento != idEvento)
+                {
+                    TempData["ParticipanteMessage"] = "Tipo de inscrição inválido para este evento.";
+                    return RedirectToAction("realizarInscricao", new { idEvento = idEvento });
+                }
+            }
+
             if (inscricaoEvento.SelectedSubeventos != null && inscricaoEvento.SelectedSubeventos.Any())
             {
                 foreach (var idSubevento in inscricaoEvento.SelectedSubeventos)
@@ -387,6 +399,10 @@ namespace EventoWeb.Controllers
                     {
                         continue;
                     }
+                    if (subevento.IdEvento != idEvento)
+                    {
+                        continue;
+                    }
                     var subEventQuantities = new Dictionary<uint, int>();
                     int totalSubTickets = 0;
 
@@ -427,6 +443,15 @@ namespace EventoWeb.Controllers
                     {
                         uint idTipoSub = kvpSub.Key;
                         int quantidadeSub = kvpSub.Value;
+
+                        if (idTipoSub != 0 && idTipoSub != 999999)
+                        {
+                            var tipoCheckSub = _tipoinscricaoService.Get(idTipoSub);
+                            if (tipoCheckSub == null || tipoCheckSub.IdEvento != idEvento)
+                            {
+                                continue;
+                            }
+                        }
 
                         decimal valorSub = 0m;
                         if (idTipoSub != 0 && idTipoSub != 999999)
