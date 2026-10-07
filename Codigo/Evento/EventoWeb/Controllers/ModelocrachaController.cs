@@ -308,10 +308,11 @@ namespace EventoWeb.Controllers
         // POST: ModelocrachaController/Create
         [HttpPost]
         [Route("Create")]
-        [Route("Create/{idEvento?}")]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(ModelocrachaModel modelocrachaModel)
+        public ActionResult Create(ModelocrachaModel modelocrachaModel, string? btnRascunho = null)
         {
+            var isRascunho = string.Equals(btnRascunho, "true", StringComparison.OrdinalIgnoreCase);
+
             var idEvento = modelocrachaModel.Evento?.Id ?? modelocrachaModel.IdEvento;
             if (idEvento == 0)
             {
@@ -324,7 +325,7 @@ namespace EventoWeb.Controllers
 
             var modeloExistente = idEvento > 0 ? _modelocrachaService.GetByEvento(idEvento).FirstOrDefault() : null;
 
-            if (modelocrachaModel.Logotipo == null && (modeloExistente?.Logotipo != null || !string.IsNullOrEmpty(modelocrachaModel.LogotipoBase64)))
+            if (isRascunho || (modelocrachaModel.Logotipo == null && (modeloExistente?.Logotipo != null || !string.IsNullOrEmpty(modelocrachaModel.LogotipoBase64))))
             {
                 ModelState.Remove("Logotipo");
             }
@@ -371,6 +372,10 @@ namespace EventoWeb.Controllers
                     {
                     }
                 }
+                else if (isRascunho)
+                {
+                    logoTipoSource = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+                }
 
                 modelocrachaModel.IdEvento = idEvento;
 
@@ -389,13 +394,13 @@ namespace EventoWeb.Controllers
                     else
                     {
                         var modelocracha = _mapper.Map<Modelocracha>(modelocrachaModel);
-                        modelocracha.Logotipo = logoTipoSource!;
+                        modelocracha.Logotipo = logoTipoSource ?? new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
                         _modelocrachaService.Create(modelocracha);
                     }
 
                     if (TempData != null)
                     {
-                        TempData["SuccessMessage"] = "Modelo salvo com sucesso";
+                        TempData["SuccessMessage"] = isRascunho ? "Rascunho salvo com sucesso" : "Modelo salvo com sucesso";
                     }
                 }
                 catch (Exception)
@@ -453,8 +458,10 @@ namespace EventoWeb.Controllers
         [HttpPost]
         [Route("Edit/{id}")]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(uint id, ModelocrachaModel viewModel)
+        public ActionResult Edit(uint id, ModelocrachaModel viewModel, string? btnRascunho = null)
         {
+            var isRascunho = string.Equals(btnRascunho, "true", StringComparison.OrdinalIgnoreCase);
+
             viewModel.Id = id;
             var existente = _modelocrachaService.Get(id);
             if (existente == null)
@@ -473,7 +480,7 @@ namespace EventoWeb.Controllers
 
             var modeloBaseParaLogotipo = modeloEventoAlvo ?? existente;
 
-            if (viewModel.Logotipo == null && (modeloBaseParaLogotipo.Logotipo != null || !string.IsNullOrEmpty(viewModel.LogotipoBase64)))
+            if (isRascunho || (viewModel.Logotipo == null && (modeloBaseParaLogotipo.Logotipo != null || !string.IsNullOrEmpty(viewModel.LogotipoBase64))))
             {
                 ModelState.Remove("Logotipo");
             }
@@ -513,6 +520,10 @@ namespace EventoWeb.Controllers
                     {
                     }
                 }
+                else if (isRascunho)
+                {
+                    logoTipoSource = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+                }
 
                 try
                 {
@@ -543,7 +554,7 @@ namespace EventoWeb.Controllers
 
                     if (TempData != null)
                     {
-                        TempData["SuccessMessage"] = "Modelo salvo com sucesso";
+                        TempData["SuccessMessage"] = isRascunho ? "Rascunho salvo com sucesso" : "Modelo salvo com sucesso";
                     }
                 }
                 catch (Exception)

@@ -390,6 +390,42 @@ namespace EventoWeb.Controllers.Tests
             mockCracha.Verify(s => s.Edit(It.Is<Modelocracha>(m => m.IdEvento == 2)), Times.Once);
         }
 
+        [TestMethod]
+        public void CreateTest_Post_SalvarRascunho_SemLogotipo_Sucesso()
+        {
+            // Arrange
+            var model = GetNewModelocracha();
+            model.IdEvento = 1;
+            model.Logotipo = null; // Sem logotipo no rascunho
+            model.LogotipoBase64 = null;
+
+            // Act
+            var result = controller.Create(model, "true");
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirect.ActionName);
+            Assert.AreEqual("Rascunho salvo com sucesso", controller.TempData["SuccessMessage"]);
+        }
+
+        [TestMethod]
+        public void EditTest_Post_SalvarRascunho_Sucesso()
+        {
+            // Arrange
+            var modelEdit = GetTargetEditModelocrachaModel();
+            modelEdit.Logotipo = null;
+
+            // Act
+            var result = controller.Edit(modelEdit.Id, modelEdit, "true");
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirect.ActionName);
+            Assert.AreEqual("Rascunho salvo com sucesso", controller.TempData["SuccessMessage"]);
+        }
+
         private static ClaimsPrincipal GestorPrincipal() => new(new ClaimsIdentity(new List<Claim>
         {
             new Claim(ClaimTypes.Name, "12345678900"),
