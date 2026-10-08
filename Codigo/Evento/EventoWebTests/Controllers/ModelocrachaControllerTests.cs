@@ -91,7 +91,7 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod]
-        public void DetailsTest_WithQrcodeAndInscricoes_PopulatesCrachasWithParticipantNames()
+        public void DetailsTest_ComQrcodeEInscricoes_PreencheCrachasComNomesDosParticipantes()
         {
             // Arrange
             var mockService = new Mock<IModelocrachaService>();

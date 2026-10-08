@@ -200,7 +200,7 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public async Task RealizarInscricaoTest_Post_UsesPessoaNomeOrNomeCracha_NotLoginOrCpf()
+        public async Task RealizarInscricaoTest_Post_UtilizaNomeOuNomeCrachaDaPessoa_NaoLoginOuCpf()
         {
             // Arrange
             var tipos = new Dictionary<uint, Tipoinscricao>
@@ -230,7 +230,7 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public async Task RealizarInscricaoTest_Post_PrefersCustomNomeCrachaFromForm()
+        public async Task RealizarInscricaoTest_Post_PriorizaNomeCrachaPersonalizadoDoFormulario()
         {
             // Arrange
             var tipos = new Dictionary<uint, Tipoinscricao>
@@ -260,7 +260,7 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public async Task RealizarInscricaoTest_Post_TruncatesNomeCrachaTo20Characters()
+        public async Task RealizarInscricaoTest_Post_TruncaNomeCrachaEm20Caracteres()
         {
             // Arrange
             var tipos = new Dictionary<uint, Tipoinscricao>
@@ -291,7 +291,7 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public async Task RealizarInscricaoTest_Post_UsesPessoaNomeCrachaWhenPresent()
+        public async Task RealizarInscricaoTest_Post_UtilizaNomeCrachaDaPessoaQuandoPresente()
         {
             // Arrange
             var tipos = new Dictionary<uint, Tipoinscricao>
@@ -327,7 +327,7 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public void RealizarInscricaoTest_Get_PrepopulatesNomeCrachaInViewModel()
+        public void RealizarInscricaoTest_Get_PreencheNomeCrachaNoViewModel()
         {
             // Arrange
             var mockPessoaService = new Mock<IPessoaService>();
@@ -385,7 +385,7 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public void RealizarInscricaoTest_Get_PrepopulatesNomeCrachaFromExistingInscricaoWhenAlreadyInscribed()
+        public void RealizarInscricaoTest_Get_PreencheNomeCrachaDaInscricaoExistenteQuandoJaInscrito()
         {
             // Arrange
             var mockPessoaService = new Mock<IPessoaService>();
@@ -454,7 +454,7 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public async Task RealizarInscricaoTest_Post_UpdatesPessoaNomeCrachaWhenChanged()
+        public async Task RealizarInscricaoTest_Post_AtualizaNomeCrachaDaPessoaQuandoAlterado()
         {
             // Arrange
             var tipos = new Dictionary<uint, Tipoinscricao>

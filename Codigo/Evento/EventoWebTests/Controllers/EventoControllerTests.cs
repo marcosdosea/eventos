@@ -319,7 +319,7 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public void EditParticipante_Get_LoadsNomeCrachaFromInscricao()
+        public void EditParticipante_Get_CarregaNomeCrachaDaInscricao()
         {
             mockServiceInscricao.Setup(s => s.GetPapelPessoaByEvento(1, 1)).Returns(4);
             mockServiceInscricao.Setup(s => s.GetByEvento(1)).Returns(new List<Inscricaopessoaevento>

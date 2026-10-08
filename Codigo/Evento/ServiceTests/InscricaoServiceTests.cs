@@ -362,7 +362,7 @@ namespace Service.Tests
         }
 
         [TestMethod()]
-        public void UpdateNomeCrachaTest()
+        public void UpdateNomeCracha_AtualizaNomeCrachaComSucesso()
         {
             // Act
             _inscricaoService.UpdateNomeCracha(1, 1, "Novo Nome Cracha");
