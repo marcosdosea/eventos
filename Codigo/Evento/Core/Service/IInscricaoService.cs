@@ -28,6 +28,8 @@ namespace Core.Service
         Inscricaopessoaevento GetColaboradorInEvent(string username, uint idEvento);
 
         bool IsInscrito(uint idPessoa, uint idEvento);
+
+        void UpdateNomeCracha(uint idPessoa, uint idEvento, string nomeCracha);
     }
 }
 

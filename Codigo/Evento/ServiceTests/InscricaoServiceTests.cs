@@ -360,5 +360,16 @@ namespace Service.Tests
             Assert.AreEqual("A", firstInscricao.Status);
             Assert.AreEqual((decimal)1, firstInscricao.FrequenciaFinal);
         }
+
+        [TestMethod()]
+        public void UpdateNomeCrachaTest()
+        {
+            // Act
+            _inscricaoService.UpdateNomeCracha(1, 1, "Novo Nome Cracha");
+
+            // Assert
+            var inscricao = _context.Inscricaopessoaeventos.First(i => i.IdPessoa == 1 && i.IdEvento == 1);
+            Assert.AreEqual("Novo Nome Cracha", inscricao.NomeCracha);
+        }
     }
 }

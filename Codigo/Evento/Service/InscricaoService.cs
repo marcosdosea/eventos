@@ -163,5 +163,22 @@ namespace Service
             }
             return null;
         }
+
+        public void UpdateNomeCracha(uint idPessoa, uint idEvento, string nomeCracha)
+        {
+            var inscricoes = _context.Inscricaopessoaeventos
+                .Where(i => i.IdPessoa == idPessoa && i.IdEvento == idEvento)
+                .ToList();
+
+            foreach (var inscricao in inscricoes)
+            {
+                inscricao.NomeCracha = nomeCracha;
+            }
+
+            if (inscricoes.Any())
+            {
+                _context.SaveChanges();
+            }
+        }
     }
 }

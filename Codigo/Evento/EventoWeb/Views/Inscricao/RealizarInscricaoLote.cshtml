@@ -105,6 +105,10 @@
             <aside class="alert alert-info mt-3 card-inscricao text-center alert-inscricao" role="alert">
                 <h4 class="alert-heading text-info">Atenção!</h4>
                 <p>Você já está inscrito neste evento.</p>
+                @if (!string.IsNullOrWhiteSpace(Model.inscricaoNavigation?.NomeCracha))
+                {
+                    <p class="mb-2"><strong>Nome no crachá:</strong> @Model.inscricaoNavigation.NomeCracha</p>
+                }
                 <hr>
                 <a asp-action="MinhasInscricoes" asp-controller="Inscricao" class="btn btn-primary mt-2">Ver Minhas Inscrições</a>
                 <a href="@ViewBag.UrlVoltar" class="btn btn-outline-danger mt-2 ms-2">Voltar</a>

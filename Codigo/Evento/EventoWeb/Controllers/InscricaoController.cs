@@ -202,12 +202,18 @@ namespace EventoWeb.Controllers
                 var pessoa = _pessoaService.GetByCpf(User.Identity.Name);
                 if (pessoa != null)
                 {
-                    if (evento.PossuiCertificado != 0 && _inscricaoService.IsInscrito(pessoa.Id, idEvento))
+                    var inscricaoExistente = _inscricaoService.GetByEvento(idEvento)
+                        .FirstOrDefault(i => i.IdPessoa == pessoa.Id && i.IdPapel == 4);
+
+                    if (evento.PossuiCertificado != 0 && (inscricaoExistente != null || _inscricaoService.IsInscrito(pessoa.Id, idEvento)))
                     {
                         ViewBag.JaInscrito = true;
                     }
 
-                    var nomeSugestao = !string.IsNullOrWhiteSpace(pessoa.NomeCracha) ? pessoa.NomeCracha : pessoa.Nome;
+                    var nomeSugestao = !string.IsNullOrWhiteSpace(inscricaoExistente?.NomeCracha)
+                        ? inscricaoExistente.NomeCracha
+                        : (!string.IsNullOrWhiteSpace(pessoa.NomeCracha) ? pessoa.NomeCracha : pessoa.Nome);
+
                     if (!string.IsNullOrEmpty(nomeSugestao) && nomeSugestao.Length > 20)
                     {
                         nomeSugestao = nomeSugestao.Substring(0, 20);
@@ -350,6 +356,12 @@ namespace EventoWeb.Controllers
             else if (nomeCracha.Length > 20)
             {
                 nomeCracha = nomeCracha.Substring(0, 20);
+            }
+
+            if (pessoa.NomeCracha != nomeCracha)
+            {
+                pessoa.NomeCracha = nomeCracha;
+                await _pessoaService.Edit(pessoa);
             }
 
             foreach (var kvp in mainEventQuantities)
