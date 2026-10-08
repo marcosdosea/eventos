@@ -22,13 +22,12 @@
 <body>
 
     <main>
-        @if (TempData["Message"] != null || TempData["ParticipanteMessage"] != null)
+        @if (TempData["Message"] != null)
         {
             <div class="alert alert-danger" role="alert" id="alerterror">
-                @(TempData["Message"] ?? TempData["ParticipanteMessage"])
+                @TempData["Message"]
             </div>
             TempData.Remove("Message");
-            TempData.Remove("ParticipanteMessage");
         }
         @if (TempData["ParticipanteMessage"] != null)
         {

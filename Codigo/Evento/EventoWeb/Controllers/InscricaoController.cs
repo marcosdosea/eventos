@@ -298,16 +298,6 @@ namespace EventoWeb.Controllers
             {
                 TempData["ParticipanteMessage"] = "A quantidade de ingressos solicitada excede o número de vagas disponíveis do evento.";
                 return RedirectToAction("Index", "Home"); 
-            foreach (var idTipoCheck in mainEventQuantities.Keys.ToList())
-            {
-                if (idTipoCheck == 0 || idTipoCheck == 999999)
-                    continue;
-                var tipoCheck = _tipoinscricaoService.Get(idTipoCheck);
-                if (tipoCheck == null || tipoCheck.IdEvento != idEvento)
-                {
-                    TempData["ParticipanteMessage"] = "Tipo de inscrição inválido para este evento.";
-                    return RedirectToAction("realizarInscricao", new { idEvento = idEvento });
-                }
             }
 
             if (inscricaoEvento.SelectedSubeventos != null && inscricaoEvento.SelectedSubeventos.Any())
@@ -341,17 +331,6 @@ namespace EventoWeb.Controllers
                 }
             }
 
-            foreach (var idTipoCheck in mainEventQuantities.Keys.ToList())
-            {
-                if (idTipoCheck == 0 || idTipoCheck == 999999)
-                    continue;
-                var tipoCheck = _tipoinscricaoService.Get(idTipoCheck);
-                if (tipoCheck == null || tipoCheck.IdEvento != idEvento)
-                {
-                    TempData["ParticipanteMessage"] = "Tipo de inscrição inválido para este evento.";
-                    return RedirectToAction("realizarInscricao", new { idEvento = idEvento });
-                }
-            }
 
             foreach (var kvp in mainEventQuantities)
             {
