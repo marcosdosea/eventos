@@ -15,6 +15,15 @@
         success: function (resposta) {
             if (resposta && resposta.nome) {
                 document.getElementById('Nome').value = resposta.nome;
+                if (resposta.email) {
+                    document.getElementById('Email').value = resposta.email;
+                }
+
+                if (resposta.telefone1) {
+                    var campoTelefone = document.getElementById('Telefone1');
+                    campoTelefone.value = resposta.telefone1;
+                    formatarTelefoneForm(campoTelefone);
+                }
             }
         }
     });

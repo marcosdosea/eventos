@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace Core;
@@ -40,4 +40,7 @@ public partial class Inscricaopessoaevento
     public virtual Tipoinscricao? IdTipoInscricaoNavigation { get; set; }
 
     public virtual ICollection<Pagamento> Pagamentos { get; set; } = new List<Pagamento>();
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public virtual ICollection<Inscricaopessoasubevento> Inscricaopessoasubeventos { get; set; } = new List<Inscricaopessoasubevento>();
 }

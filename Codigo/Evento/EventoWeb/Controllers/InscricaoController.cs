@@ -314,6 +314,18 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("Index", "Home"); 
             }
 
+            foreach (var idTipoCheck in mainEventQuantities.Keys.ToList())
+            {
+                if (idTipoCheck == 0 || idTipoCheck == 999999)
+                    continue;
+                var tipoCheck = _tipoinscricaoService.Get(idTipoCheck);
+                if (tipoCheck == null || tipoCheck.IdEvento != idEvento)
+                {
+                    TempData["ParticipanteMessage"] = "Tipo de inscrição inválido para este evento.";
+                    return RedirectToAction("realizarInscricao", new { idEvento = idEvento });
+                }
+            }
+
             if (inscricaoEvento.SelectedSubeventos != null && inscricaoEvento.SelectedSubeventos.Any())
             {
                 foreach (var idSubevento in inscricaoEvento.SelectedSubeventos)
@@ -426,6 +438,10 @@ namespace EventoWeb.Controllers
                     {
                         continue;
                     }
+                    if (subevento.IdEvento != idEvento)
+                    {
+                        continue;
+                    }
                     var subEventQuantities = new Dictionary<uint, int>();
                     int totalSubTickets = 0;
 
@@ -467,7 +483,18 @@ namespace EventoWeb.Controllers
                         uint idTipoSub = kvpSub.Key;
                         int quantidadeSub = kvpSub.Value;
 
+                        if (idTipoSub != 0 && idTipoSub != 999999)
+                        {
+                            var tipoCheckSub = _tipoinscricaoService.Get(idTipoSub);
+                            if (tipoCheckSub == null || tipoCheckSub.IdEvento != idEvento)
+                            {
+                                continue;
+                            }
+                        }
+
                         decimal valorSub = 0m;
+                        uint? idTipoSubParaSalvar = (idTipoSub != 0 && idTipoSub != 999999) ? (uint?)idTipoSub : null;
+
                         if (idTipoSub != 0 && idTipoSub != 999999)
                         {
                             var tipoObjSub = _tipoinscricaoService.Get(idTipoSub);
@@ -491,6 +518,7 @@ namespace EventoWeb.Controllers
                                 IdPapel = 4,
                                 DataInscricao = DateTime.Now,
                                 Status = "S",
+                                IdTipoInscricao = idTipoSubParaSalvar,
                                 FrequenciaFinal = 0m,
                                 Valor = valorSub,
                             };
@@ -510,11 +538,64 @@ namespace EventoWeb.Controllers
         [Route("MinhasInscricoes")]
         public async Task<IActionResult> minhasInscricoes(uint? idEvento)
         {
-            var inscricaoUser = _inscricaoService.GetAllEventsByUserId(User.Identity.Name);
-            var listarEventosModel = inscricaoUser.Select(i => _mapper.Map<InscricaoEventoModel>(i)).ToList();
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            var inscricaoUser = _inscricaoService.GetAllEventsByUserId(username);
+            var listarEventosModel = inscricaoUser.Select(i =>
+            {
+                var model = _mapper.Map<InscricaoEventoModel>(i);
+                if (i.Inscricaopessoasubeventos != null && i.Inscricaopessoasubeventos.Any())
+                {
+                    model.Inscricaopessoasubeventos = i.Inscricaopessoasubeventos.ToList();
+                }
+                return model;
+            }).ToList();
 
             ViewBag.EventoId = idEvento ?? listarEventosModel.FirstOrDefault()?.IdEvento;
             return View(listarEventosModel);
+        }
+
+        [Authorize]
+        [HttpGet]
+        [Route("DetalhesInscricao/{id?}")]
+        public async Task<IActionResult> DetalhesInscricao(uint? id, uint? idEvento)
+        {
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            var inscricoesUser = _inscricaoService.GetAllEventsByUserId(username);
+            Inscricaopessoaevento? inscricao = null;
+
+            if (id.HasValue && id.Value > 0)
+            {
+                inscricao = inscricoesUser.FirstOrDefault(i => i.Id == id.Value);
+            }
+
+            if (inscricao == null && idEvento.HasValue && idEvento.Value > 0)
+            {
+                inscricao = inscricoesUser.FirstOrDefault(i => i.IdEvento == idEvento.Value);
+            }
+
+            if (inscricao == null)
+            {
+                TempData["ParticipanteMessage"] = "Inscrição não encontrada.";
+                return RedirectToAction(nameof(minhasInscricoes));
+            }
+
+            var model = _mapper.Map<InscricaoEventoModel>(inscricao);
+            if (inscricao.Inscricaopessoasubeventos != null && inscricao.Inscricaopessoasubeventos.Any())
+            {
+                model.Inscricaopessoasubeventos = inscricao.Inscricaopessoasubeventos.ToList();
+            }
+
+            return View(model);
         }
 
     }

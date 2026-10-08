@@ -40,7 +40,8 @@
                         <div class="col-md-10">
                             <div class="form-group mb-2">
                                 <label asp-for="IdEvento" class="control-label"></label>
-                                <select asp-for="IdEvento" class="form-control" asp-items="Model.Evento"></select>
+                                <select asp-for="IdEvento" class="form-control" asp-items="Model.Evento" disabled></select>
+                                <input type="hidden" asp-for="IdEvento" />
                                 <span asp-validation-for="IdEvento" class="text-danger"></span>
                             </div>
                         </div>

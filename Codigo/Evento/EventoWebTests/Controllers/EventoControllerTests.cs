@@ -370,6 +370,20 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
+        public void GerenciarEvento_ComIdEventoValido_RetornaViewComModel()
+        {
+            var result = controller.GerenciarEvento(1);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            ViewResult viewResult = (ViewResult)result;
+            Assert.IsNotNull(viewResult.Model);
+            Assert.IsInstanceOfType(viewResult.Model, typeof(GerenciarEventoModel));
+            var model = (GerenciarEventoModel)viewResult.Model;
+            Assert.IsNotNull(model.Evento);
+            Assert.AreEqual("SEMINFO", model.Evento.Nome);
+        }
+
+        [TestMethod()]
         [DataRow("Edit", new Type[] { typeof(uint), typeof(EventoModel) }, "ADMINISTRADOR")]
         [DataRow("Delete", new Type[] { typeof(uint), typeof(EventoModel) }, "ADMINISTRADOR")]
         [DataRow("CreateGestor", new Type[] { typeof(GestaoPapelModel) }, "ADMINISTRADOR")]

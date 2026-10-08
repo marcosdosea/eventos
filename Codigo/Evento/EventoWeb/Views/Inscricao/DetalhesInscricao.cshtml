@@ -1,0 +1,228 @@
+@model EventoWeb.Models.InscricaoEventoModel
+@{
+    ViewData["Title"] = "Comprovante de Inscrição";
+}
+
+<style>
+    @@media print {
+        .no-print, header, footer, .sidebar, nav, .btn, .navbar, .alert {
+            display: none !important;
+        }
+        .conteudo {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+        }
+        .card {
+            border: 1px solid #dee2e6 !important;
+            box-shadow: none !important;
+        }
+        body {
+            background-color: #fff !important;
+        }
+    }
+</style>
+
+@{
+    var totalSubeventos = Model.Inscricaopessoasubeventos?.Sum(s => s.Valor) ?? 0m;
+    var totalGeral = Model.ValorTotal + totalSubeventos;
+    var hasSubeventos = Model.Inscricaopessoasubeventos != null && Model.Inscricaopessoasubeventos.Any();
+
+    var cpfExibicao = Model.IdPessoaNavigation?.Cpf;
+    if (!string.IsNullOrEmpty(cpfExibicao) && cpfExibicao.Length == 11)
+    {
+        cpfExibicao = Util.Methods.PatternCpf(cpfExibicao);
+    }
+
+    var enderecoPartes = new List<string>();
+    if (Model.IdEventoNavigation != null)
+    {
+        if (!string.IsNullOrWhiteSpace(Model.IdEventoNavigation.Rua))
+        {
+            var logradouro = Model.IdEventoNavigation.Rua;
+            if (!string.IsNullOrWhiteSpace(Model.IdEventoNavigation.Numero))
+                logradouro += ", " + Model.IdEventoNavigation.Numero;
+            enderecoPartes.Add(logradouro);
+        }
+        if (!string.IsNullOrWhiteSpace(Model.IdEventoNavigation.Bairro))
+            enderecoPartes.Add(Model.IdEventoNavigation.Bairro);
+        if (!string.IsNullOrWhiteSpace(Model.IdEventoNavigation.Cidade))
+        {
+            var cidadeUf = Model.IdEventoNavigation.Cidade;
+            if (!string.IsNullOrWhiteSpace(Model.IdEventoNavigation.Estado))
+                cidadeUf += " - " + Model.IdEventoNavigation.Estado;
+            enderecoPartes.Add(cidadeUf);
+        }
+    }
+}
+
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+        <h1 class="blue-normal m-0">@ViewData["Title"]</h1>
+        <div class="d-flex gap-2">
+            <button type="button" onclick="window.print()" class="btn btn-primary">
+                <i class="bi bi-printer"></i> Imprimir Comprovante
+            </button>
+            <a asp-action="minhasInscricoes" asp-controller="Inscricao" class="btn btn-outline-secondary">
+                &larr; Voltar para Minhas Inscrições
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["ParticipanteMessage"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show no-print" role="alert">
+            @TempData["ParticipanteMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
+            <h5 class="m-0 text-white">Inscrição @(Model.Id > 0 ? $"#{Model.Id}" : string.Empty)</h5>
+            @{
+                var statusBadge = "secondary";
+                var statusText = "Padrão";
+                switch(Model.Status) {
+                    case "A": statusBadge = "success"; statusText = "Ativo"; break;
+                    case "S": statusBadge = "warning text-dark"; statusText = "Solicitado"; break;
+                    case "C": statusBadge = "danger"; statusText = "Cancelado"; break;
+                }
+            }
+            <span class="badge bg-@statusBadge fs-6">@statusText</span>
+        </div>
+        <div class="card-body p-4">
+            <div class="row mb-4">
+                <div class="col-md-6 mb-3">
+                    <h5 class="text-primary border-bottom pb-2">Informações do Evento</h5>
+                    <p class="mb-2"><strong>Evento:</strong> @(Model.IdEventoNavigation?.Nome ?? "-")</p>
+                    @if (Model.IdEventoNavigation != null)
+                    {
+                        @if (Model.IdEventoNavigation.DataInicio.HasValue)
+                        {
+                            <p class="mb-2">
+                                <strong>Período:</strong> 
+                                @Model.IdEventoNavigation.DataInicio.Value.ToString("dd/MM/yyyy HH:mm")
+                                @if (Model.IdEventoNavigation.DataFim.HasValue)
+                                {
+                                    <span> até @Model.IdEventoNavigation.DataFim.Value.ToString("dd/MM/yyyy HH:mm")</span>
+                                }
+                            </p>
+                        }
+                        @if (enderecoPartes.Any())
+                        {
+                            <p class="mb-2">
+                                <strong>Local:</strong> @string.Join(", ", enderecoPartes)
+                            </p>
+                        }
+                    }
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <h5 class="text-primary border-bottom pb-2">Informações do Participante</h5>
+                    <p class="mb-2"><strong>Nome:</strong> @(Model.IdPessoaNavigation?.Nome ?? Model.NomeCracha ?? "-")</p>
+                    <p class="mb-2"><strong>CPF:</strong> @(cpfExibicao ?? "-")</p>
+                    @if (!string.IsNullOrEmpty(Model.IdPessoaNavigation?.Email))
+                    {
+                        <p class="mb-2"><strong>E-mail:</strong> @Model.IdPessoaNavigation.Email</p>
+                    }
+                    @if (!string.IsNullOrEmpty(Model.NomeCracha))
+                    {
+                        <p class="mb-2"><strong>Nome no Crachá:</strong> @Model.NomeCracha</p>
+                    }
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-12">
+                    <h5 class="text-primary border-bottom pb-2">Dados da Inscrição</h5>
+                    <div class="row">
+                        <div class="col-sm-6 col-md-3 mb-2">
+                            <span class="text-muted d-block">Data da Inscrição:</span>
+                            <strong>@Model.DataInscricao.ToString("dd/MM/yyyy HH:mm")</strong>
+                        </div>
+                        <div class="col-sm-6 col-md-3 mb-2">
+                            <span class="text-muted d-block">Tipo de Inscrição:</span>
+                            <strong>@(Model.IdTipoInscricaoNavigation?.Nome ?? "Padrão")</strong>
+                        </div>
+                        <div class="col-sm-6 col-md-3 mb-2">
+                            <span class="text-muted d-block">@(hasSubeventos ? "Valor Evento Principal:" : "Valor da Inscrição:")</span>
+                            <strong class="fs-5 text-success">@Model.ValorTotal.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))</strong>
+                        </div>
+                        @if (hasSubeventos)
+                        {
+                            <div class="col-sm-6 col-md-3 mb-2">
+                                <span class="text-muted d-block">Valor Total Geral:</span>
+                                <strong class="fs-5 text-primary">@totalGeral.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))</strong>
+                            </div>
+                        }
+                        <div class="col-sm-6 col-md-3 mb-2">
+                            <span class="text-muted d-block">Frequência Registrada:</span>
+                            <strong>@Model.FrequenciaFinal</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (hasSubeventos)
+            {
+                <div class="mt-3">
+                    <h5 class="text-primary border-bottom pb-2">Subeventos Contratados</h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped table-bordered align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Subevento</th>
+                                    <th>Status</th>
+                                    <th>Data da Inscrição</th>
+                                    <th>Valor</th>
+                                    <th>Frequência</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var sub in Model.Inscricaopessoasubeventos!)
+                                {
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-secondary me-1">Subevento</span>
+                                            <strong>@(sub.IdSubEventoNavigation?.Nome ?? "Subevento")</strong>
+                                        </td>
+                                        <td>
+                                            @{
+                                                var subBadge = "secondary";
+                                                var subStatus = "Padrão";
+                                                switch(sub.Status) {
+                                                    case "A": subBadge = "success"; subStatus = "Ativo"; break;
+                                                    case "S": subBadge = "warning text-dark"; subStatus = "Solicitado"; break;
+                                                    case "C": subBadge = "danger"; subStatus = "Cancelado"; break;
+                                                }
+                                            }
+                                            <span class="badge bg-@subBadge">@subStatus</span>
+                                        </td>
+                                        <td>@sub.DataInscricao.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>@sub.Valor.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))</td>
+                                        <td>@sub.FrequenciaFinal</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-light fw-bold">
+                                    <td colspan="3" class="text-end">Total dos Subeventos:</td>
+                                    <td class="text-success">@totalSubeventos.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))</td>
+                                    <td></td>
+                                </tr>
+                                <tr class="table-secondary fw-bold">
+                                    <td colspan="3" class="text-end">Total Geral (Evento + Subeventos):</td>
+                                    <td class="text-primary">@totalGeral.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="card-footer text-muted text-center py-3">
+            Comprovante emitido pelo sistema Boralá Eventos.
+        </div>
+    </div>
+</div>
