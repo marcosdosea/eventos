@@ -163,7 +163,7 @@
                                 bool isEncerrado = sub.Status == "F" || sub.DataFimInscricao < DateTime.Now;
                                 bool isEmCadastro = sub.Status == "C";
                                 bool isEmBreve = sub.DataInicioInscricao > DateTime.Now;
-                                bool isDisabled = isEncerrado || isEmCadastro;
+                                bool isDisabled = isEncerrado || isEmCadastro || isEmBreve;
                                 
                                 <label class="subevento-container @(isDisabled ? "opacity-50" : "")">
                                     <div class="subevento-header">
