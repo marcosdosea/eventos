@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 
@@ -277,6 +277,8 @@ public partial class EventoContext : DbContext
                 .HasForeignKey(d => d.IdTipoInscricao)
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_PessoaEvento_TipoInscricao1");
+
+            entity.Ignore(e => e.Inscricaopessoasubeventos);
         });
 
         modelBuilder.Entity<Inscricaopessoasubevento>(entity =>

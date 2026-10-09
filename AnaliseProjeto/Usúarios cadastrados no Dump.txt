@@ -3,15 +3,23 @@ Deverá rodar todo o SQL - dump-evento-database - para cadastrar os usuários es
 
 Usuários Administradores 
 Dosea - Login = 65535216038 - Senha = 123456
-Icaro - Login = 27382886000 - Senha =123456
+Icaro - Login = 27382886000 - Senha = 123456
 
 Usuários Gestores
-Sodre - Login = 92023338077 - Senha =123456
+Sodre - Login = 92023338077 - Senha = 123456
 
 
 Usuários Colaboradores
-Valdir - Login = 63499583062 - Senha =123456
+Valdir - Login = 63499583062 - Senha = 123456
 
 
 Usuários Normais
-Jordan - Login = 40201971054 - Senha =123456
+Jordan - Login = 40201971054 - Senha = 123456
+Cassiano Menezes - Login = 09839622510 - Senha = 123456
+Luiz Augusto Hora - Login = 07068093868 - Senha = 123456
+Arthur Conceição de Assis - Login = 07894854514 - Senha = 123456
+Lorena Pereira Nascimento - Login = 08607884581 - Senha = 123456
+Beatriz de Souza Carvalho - Login = 21994539011 - Senha = 123456
+Nadson Teles Mendonça - Login = 04266689527 - Senha = 123456
+José Venicius Bispo - Login = 06929978574 - Senha = 123456
+Luiz Guilherme Andrade Ferreira - Login = 86204930516 - Senha = 123456

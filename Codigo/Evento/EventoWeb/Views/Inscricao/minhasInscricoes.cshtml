@@ -39,7 +39,10 @@
         <thead>
             <tr class="blue-normal blue-normal-bg-table">
                 <th>
-                    @Html.DisplayNameFor(model => model.IdEventoNavigation.Nome)
+                    Evento
+                </th>
+                <th>
+                    Nome no Crachá
                 </th>
                 <th>
                     @Html.DisplayNameFor(model => model.Status)
@@ -59,11 +62,22 @@
             </tr>
         </thead>
     <tbody>
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="6" class="text-center text-muted py-4">
+                    Nenhuma inscrição encontrada.
+                </td>
+            </tr>
+        }
         @foreach (var item in Model)
         {
             <tr>
                 <td style="vertical-align: middle;">
-                    @Html.DisplayFor(modelItem => item.IdEventoNavigation.Nome)
+                    <strong>@(item.IdEventoNavigation?.Nome ?? "Evento")</strong>
+                </td>
+                <td style="vertical-align: middle;">
+                    @(!string.IsNullOrWhiteSpace(item.NomeCracha) ? item.NomeCracha : "-")
                 </td>
                 <td style="vertical-align: middle;">
                     @{
@@ -83,7 +97,7 @@
                 @status
                 </td>
                 <td style="vertical-align: middle;">
-                    @Html.DisplayFor(modelItem => item.DataInscricao)
+                    @item.DataInscricao.ToString("dd/MM/yyyy HH:mm")
                 </td>
                 <td style="vertical-align: middle;">
                     @item.ValorTotal.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))
@@ -92,15 +106,56 @@
                     @Html.DisplayFor(modelItem => item.FrequenciaFinal)
                 </td>
                 <td style="vertical-align: middle;">
-                    @if (item.IdEvento > 0)
+                    @if (item.Id > 0)
                     {
-                        <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@item.IdEvento" class="btn btn-sm btn-outline-primary me-2">
+                        <a asp-action="DetalhesInscricao" asp-controller="Inscricao" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary me-2">
+                            Ver Inscrição
+                        </a>
+                    }
+                    else if (item.IdEvento > 0)
+                    {
+                        <a asp-action="DetalhesInscricao" asp-controller="Inscricao" asp-route-idEvento="@item.IdEvento" class="btn btn-sm btn-outline-primary me-2">
                             Ver Inscrição
                         </a>
                     }
                     <span class="text-muted">Gerar Certificado</span>
                 </td>
             </tr>
+            @if (item.Inscricaopessoasubeventos != null && item.Inscricaopessoasubeventos.Any())
+            {
+                foreach (var sub in item.Inscricaopessoasubeventos)
+                {
+                    <tr class="table-light">
+                        <td style="vertical-align: middle; padding-left: 2rem;">
+                            <span class="badge bg-secondary me-1">Subevento</span>
+                            @(sub.IdSubEventoNavigation?.Nome ?? "Subevento")
+                        </td>
+                        <td style="vertical-align: middle;">
+                            @{
+                                var statusSub = "Padrão";
+                                switch(sub.Status) {
+                                    case "A": statusSub = "Ativo"; break;
+                                    case "S": statusSub = "Solicitado"; break;
+                                    case "C": statusSub = "Cancelado"; break;
+                                }
+                            }
+                            @statusSub
+                        </td>
+                        <td style="vertical-align: middle;">
+                            @sub.DataInscricao.ToString("dd/MM/yyyy HH:mm")
+                        </td>
+                        <td style="vertical-align: middle;">
+                            @sub.Valor.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))
+                        </td>
+                        <td style="vertical-align: middle;">
+                            @sub.FrequenciaFinal
+                        </td>
+                        <td style="vertical-align: middle; text-align: center;">
+                            <span class="text-muted">-</span>
+                        </td>
+                    </tr>
+                }
+            }
         }
     </tbody>
     </table>
