@@ -332,6 +332,26 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
+        public async Task EditParticipante_Post_SemCamposLocalizacao_PreservaLocalizacaoExistente()
+        {
+            var model = GetNewGestaoPapel();
+            model.Pessoa.Id = 1;
+            model.Pessoa.Cep = null;
+            model.Pessoa.Estado = null;
+            model.Pessoa.Cidade = null;
+            model.Pessoa.Bairro = null;
+            model.Pessoa.Rua = null;
+            model.Pessoa.Numero = null;
+            model.Pessoa.Complemento = null;
+
+            var result = await controller.EditParticipante(model);
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
+            Assert.AreEqual("CreateParticipante", redirectToActionResult.ActionName);
+        }
+
+        [TestMethod()]
         public async Task DeletePessoaPapel_Post_Valid()
         {
             var result = await controller.DeletePessoaPapel(1, 1, 1);
