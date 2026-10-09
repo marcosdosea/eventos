@@ -627,13 +627,20 @@ namespace EventoWeb.Controllers
                     ? gestaoPapelModel.Pessoa.NomeCracha
                     : (pessoaExistente.Nome.Length > 20 ? pessoaExistente.Nome.Substring(0, 20) : pessoaExistente.Nome);
                 pessoaExistente.Sexo = gestaoPapelModel.Pessoa.Sexo;
-                pessoaExistente.Cep = gestaoPapelModel.Pessoa.Cep;
-                pessoaExistente.Estado = gestaoPapelModel.Pessoa.Estado;
-                pessoaExistente.Cidade = gestaoPapelModel.Pessoa.Cidade;
-                pessoaExistente.Bairro = gestaoPapelModel.Pessoa.Bairro;
-                pessoaExistente.Rua = gestaoPapelModel.Pessoa.Rua;
-                pessoaExistente.Numero = gestaoPapelModel.Pessoa.Numero;
-                pessoaExistente.Complemento = gestaoPapelModel.Pessoa.Complemento;
+                if (!string.IsNullOrWhiteSpace(gestaoPapelModel.Pessoa.Cep))
+                    pessoaExistente.Cep = gestaoPapelModel.Pessoa.Cep;
+                if (!string.IsNullOrWhiteSpace(gestaoPapelModel.Pessoa.Estado))
+                    pessoaExistente.Estado = gestaoPapelModel.Pessoa.Estado;
+                if (!string.IsNullOrWhiteSpace(gestaoPapelModel.Pessoa.Cidade))
+                    pessoaExistente.Cidade = gestaoPapelModel.Pessoa.Cidade;
+                if (!string.IsNullOrWhiteSpace(gestaoPapelModel.Pessoa.Bairro))
+                    pessoaExistente.Bairro = gestaoPapelModel.Pessoa.Bairro;
+                if (!string.IsNullOrWhiteSpace(gestaoPapelModel.Pessoa.Rua))
+                    pessoaExistente.Rua = gestaoPapelModel.Pessoa.Rua;
+                if (!string.IsNullOrWhiteSpace(gestaoPapelModel.Pessoa.Numero))
+                    pessoaExistente.Numero = gestaoPapelModel.Pessoa.Numero;
+                if (!string.IsNullOrWhiteSpace(gestaoPapelModel.Pessoa.Complemento))
+                    pessoaExistente.Complemento = gestaoPapelModel.Pessoa.Complemento;
 
                 try
                 {
