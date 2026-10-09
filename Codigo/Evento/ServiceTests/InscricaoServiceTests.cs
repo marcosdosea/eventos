@@ -362,6 +362,17 @@ namespace Service.Tests
         }
 
         [TestMethod()]
+        public void UpdateNomeCracha_AtualizaNomeCrachaComSucesso()
+        {
+            // Act
+            _inscricaoService.UpdateNomeCracha(1, 1, "Novo Nome Cracha");
+
+            // Assert
+            var inscricao = _context.Inscricaopessoaeventos.First(i => i.IdPessoa == 1 && i.IdEvento == 1);
+            Assert.AreEqual("Novo Nome Cracha", inscricao.NomeCracha);
+        }
+
+        [TestMethod()]
         public void GetAllEventsByUserIdTest_WithFormattedCpf_ReturnsExactMatch()
         {
             // Act - busca usando CPF com pontuação/formatação

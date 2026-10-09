@@ -42,6 +42,9 @@
                     Evento
                 </th>
                 <th>
+                    Nome no Crachá
+                </th>
+                <th>
                     @Html.DisplayNameFor(model => model.Status)
                 </th>
                 <th>
@@ -72,6 +75,9 @@
             <tr>
                 <td style="vertical-align: middle;">
                     <strong>@(item.IdEventoNavigation?.Nome ?? "Evento")</strong>
+                </td>
+                <td style="vertical-align: middle;">
+                    @(!string.IsNullOrWhiteSpace(item.NomeCracha) ? item.NomeCracha : "-")
                 </td>
                 <td style="vertical-align: middle;">
                     @{

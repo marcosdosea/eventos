@@ -105,6 +105,10 @@
             <aside class="alert alert-info mt-3 card-inscricao text-center alert-inscricao" role="alert">
                 <h4 class="alert-heading text-info">Atenção!</h4>
                 <p>Você já está inscrito neste evento.</p>
+                @if (!string.IsNullOrWhiteSpace(Model.inscricaoNavigation?.NomeCracha))
+                {
+                    <p class="mb-2"><strong>Nome no crachá:</strong> @Model.inscricaoNavigation.NomeCracha</p>
+                }
                 <hr>
                 <a asp-action="DetalhesInscricao" asp-controller="Inscricao" asp-route-idEvento="@Model.eventoNavigation.Id" class="btn btn-success mt-2">Ver Inscrição / Comprovante</a>
                 <a asp-action="MinhasInscricoes" asp-controller="Inscricao" class="btn btn-primary mt-2 ms-2">Ver Minhas Inscrições</a>
@@ -299,7 +303,11 @@
                         </div>
                     }
 
-
+                    <div class="mt-4 mb-3">
+                        <label for="NomeCracha" class="form-label fw-bold">Nome no Crachá</label>
+                        <input type="text" id="NomeCracha" name="NomeCracha" value="@Model.inscricaoNavigation?.NomeCracha" class="form-control" maxlength="20" placeholder="Como deseja ser chamado no crachá" />
+                        <small class="form-text text-muted">Informe o nome a ser impresso no crachá do participante (máximo de 20 caracteres).</small>
+                    </div>
 
                     <footer class="summary">
                         <div>

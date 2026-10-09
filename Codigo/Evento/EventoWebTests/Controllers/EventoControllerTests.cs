@@ -319,6 +319,23 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
+        public void EditParticipante_Get_CarregaNomeCrachaDaInscricao()
+        {
+            mockServiceInscricao.Setup(s => s.GetPapelPessoaByEvento(1, 1)).Returns(4);
+            mockServiceInscricao.Setup(s => s.GetByEvento(1)).Returns(new List<Inscricaopessoaevento>
+            {
+                new Inscricaopessoaevento { Id = 1, IdPessoa = 1, IdEvento = 1, IdPapel = 4, NomeCracha = "Cracha Personalizado" }
+            });
+
+            var result = controller.EditParticipante(1, 1);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            ViewResult viewResult = (ViewResult)result;
+            var model = (GestaoPapelModel)viewResult.ViewData.Model;
+            Assert.AreEqual("Cracha Personalizado", model.Pessoa.NomeCracha);
+        }
+
+        [TestMethod()]
         public async Task EditParticipante_Post_Valid()
         {
             var model = GetNewGestaoPapel();
@@ -329,6 +346,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.AreEqual("CreateParticipante", redirectToActionResult.ActionName);
+            mockServiceInscricao.Verify(s => s.UpdateNomeCracha(1, model.Evento.Id, It.IsAny<string>()), Times.Once);
         }
 
         [TestMethod()]
