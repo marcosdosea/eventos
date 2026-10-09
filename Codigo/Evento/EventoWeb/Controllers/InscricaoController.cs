@@ -2,7 +2,6 @@ using AutoMapper;
 using Core.Service;
 using Core;
 using Core.DTO;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using EventoWeb.Models;
@@ -31,103 +30,6 @@ namespace EventoWeb.Controllers
             _pessoaService = pessoaService;
             _subeventoService = subeventoService;
             _userManager = userManager;
-        }
-
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
-        [HttpGet]
-        [Route("")]
-        [Route("Index")]
-        public ActionResult Index()
-        {
-            return View();
-        }
-
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
-        [HttpGet]
-        [Route("Details/{id}")]
-        public ActionResult Details(int id)
-        {
-            return View();
-        }
-
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
-        [HttpGet]
-        [Route("Create")]
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
-        [HttpPost]
-        [Route("Create")]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
-        [HttpGet]
-        [Route("Edit/{id}")]
-        public ActionResult Edit(int id)
-        {
-            return View();
-        }
-
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
-        [HttpPost]
-        [Route("Edit/{id}")]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
-        [HttpGet]
-        [Route("Delete/{id}")]
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
-
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
-        [HttpPost]
-        [Route("Delete/{id}")]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        [Authorize]
-        [HttpGet]
-        [Route("PessoaAllInscricao")]
-        public IActionResult pessoaAllInscricao()
-        {
-            return View();
         }
 
         [AllowAnonymous]
