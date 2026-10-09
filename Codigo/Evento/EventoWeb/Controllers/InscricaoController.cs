@@ -316,6 +316,12 @@ namespace EventoWeb.Controllers
                         continue;
                     }
 
+                    if (subevento.DataInicioInscricao > DateTime.Now)
+                    {
+                        TempData["ParticipanteMessage"] = "Um dos subeventos selecionados ainda não abriu inscrições.";
+                        return RedirectToAction("realizarInscricao", new { idEvento = idEvento });
+                    }
+
                     int totalSubTicketsCheck = 0;
                     string prefix = $"QuantidadeTipoInscricaoSubevento_{idSubevento}_";
                     foreach (var key in Request.Form.Keys)
@@ -395,7 +401,7 @@ namespace EventoWeb.Controllers
                 {
                     var subevento = _subeventoService.Get(idSubevento);
                     // Impede de salvar apenas se for finalizado ou cadastro
-                    if (subevento == null || subevento.Status == "C" || subevento.Status == "F" || subevento.DataFimInscricao < DateTime.Now)
+                    if (subevento == null || subevento.Status == "C" || subevento.Status == "F" || subevento.DataFimInscricao < DateTime.Now || subevento.DataInicioInscricao > DateTime.Now)
                     {
                         continue;
                     }
