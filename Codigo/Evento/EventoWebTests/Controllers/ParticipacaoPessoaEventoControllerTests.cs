@@ -81,7 +81,7 @@ namespace EventoWeb.Controllers.Tests
 
             _mockInscricao.Setup(s => s.CreateInscricaoEvento(It.IsAny<Inscricaopessoaevento>()))
                 .Returns((uint)99);
-            _mockEvento.Setup(s => s.AtualizarVagasDisponiveis(It.IsAny<uint>()));
+            _mockEvento.Setup(s => s.AtualizarVagasDisponiveis(It.IsAny<uint>(), It.IsAny<bool>()));
 
             var controller = new ParticipacaoPessoaEventoController(
                 _mockParticipacao.Object, _mockParticipacaoSubEvento.Object, _mockEvento.Object, _mockSubevento.Object,

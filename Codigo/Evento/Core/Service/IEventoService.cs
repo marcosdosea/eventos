@@ -22,7 +22,7 @@ namespace Core.Service
 
 		string GetNomeById(uint id);
 
-        void AtualizarVagasDisponiveis(uint idEvento);
+        void AtualizarVagasDisponiveis(uint idEvento, bool saveChanges = true);
 
         IEnumerable<Evento> Search(EventoFilterDTO filter, int pagina, int tamanhoPagina, out int totalRegistros);
         
