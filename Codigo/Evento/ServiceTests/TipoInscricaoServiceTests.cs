@@ -171,5 +171,36 @@ namespace Service.Tests
             Assert.AreEqual((sbyte)1, firstTipoinscricao.UsadaEvento);
             Assert.AreEqual((sbyte)1, firstTipoinscricao.UsadaEvento);
         }
+
+        [TestMethod()]
+        public void GetTiposAgrupadosPorSubeventoTest()
+        {
+            // Arrange: dois subeventos do evento 1; tipo 1 vinculado a ambos, tipo 2 só ao sub 10, tipo 3 de outro evento sem vínculo
+            var sub10 = new Subevento { Id = 10, IdEvento = 1, Nome = "Sub 10", Descricao = "Sub 10", Status = "A" };
+            var sub11 = new Subevento { Id = 11, IdEvento = 1, Nome = "Sub 11", Descricao = "Sub 11", Status = "A" };
+            var tipo1 = _context.Tipoinscricaos.Find((uint)1)!;
+            var tipo2 = _context.Tipoinscricaos.Find((uint)2)!;
+            tipo1.IdEvento = 1;
+            tipo1.IdSubEventos.Add(sub10);
+            tipo1.IdSubEventos.Add(sub11);
+            tipo2.IdEvento = 1;
+            tipo2.IdSubEventos.Add(sub10);
+            _context.Subeventos.AddRange(sub10, sub11);
+            _context.SaveChanges();
+
+            // Act
+            var agrupados = _tipoInscricaoService.GetTiposAgrupadosPorSubevento(1);
+
+            // Assert: mesmos conjuntos que o método por subevento retornaria
+            Assert.AreEqual(2, agrupados.Count);
+            CollectionAssert.AreEquivalent(
+                _tipoInscricaoService.GetTiposInscricaosSubevento(10).Select(t => t.Id).ToList(),
+                agrupados[10].Select(t => t.Id).ToList());
+            CollectionAssert.AreEquivalent(
+                _tipoInscricaoService.GetTiposInscricaosSubevento(11).Select(t => t.Id).ToList(),
+                agrupados[11].Select(t => t.Id).ToList());
+            Assert.AreEqual(2, agrupados[10].Count);
+            Assert.AreEqual(1, agrupados[11].Count);
+        }
     }
 }
