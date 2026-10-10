@@ -24,22 +24,22 @@ namespace EventoWeb.Areas.Identity.Pages.Account
         private readonly IUserStore<UsuarioIdentity> _userStore;
         private readonly IUserEmailStore<UsuarioIdentity> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
-        private readonly IEmailSender _emailSender;
-		private readonly IPessoaService _pessoaService;
+        private readonly IEmailService _emailService;
+        private readonly IPessoaService _pessoaService;
 
 		public RegisterModel(
 			UserManager<UsuarioIdentity> userManager,
 			IUserStore<UsuarioIdentity> userStore,
 			SignInManager<UsuarioIdentity> signInManager,
 			ILogger<RegisterModel> logger,
-			IEmailSender emailSender,
+			IEmailService emailService,
 			IPessoaService pessoaService)
 		{
 			_userManager = userManager;
 			_userStore = userStore;
 			_signInManager = signInManager;
 			_logger = logger;
-			_emailSender = emailSender;
+			_emailService = emailService;
 			_pessoaService = pessoaService;
 		}
 
@@ -167,41 +167,43 @@ namespace EventoWeb.Areas.Identity.Pages.Account
                         return Page();
                     }
 
-                    var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-                    code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-                    var callbackUrl = Url.Page(
-                        "/Account/ConfirmEmail",
-                        pageHandler: null,
-                        values: new { area = "Identity", userId = user.Id, code = code, returnUrl = returnUrl },
-                        protocol: Request.Scheme);
+                var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+                code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+                var callbackUrl = Url.Page(
+                "/Account/ConfirmEmail",
+                pageHandler: null,
+                values: new { area = "Identity", userId = user.Id, code = code, returnUrl = returnUrl },
+                protocol: Request.Scheme);
 
-                    try
-                    {
-                        await _emailSender.SendEmailAsync(Input.Email, "Confirme seu email",
-                            $"Por favor, confirme sua conta <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicando aqui</a>.");
+                try
+                {
+                    var sucesso = await _emailService.ModeloConfirmEmail(code, _pessoaService.Get(pessoaResult),callbackUrl);
+                
+                    if(!sucesso){
+                       throw new Exception("Falha ao enviar e-mail de confirmação.");
                     }
-                    catch (Exception ex)
-                    {
-                        // A conta já foi criada (usuário + pessoa + perfil). Se o SMTP
-                        // estiver fora do ar, não derruba o cadastro com erro 500: a
-                        // página de confirmação exibe o link para confirmar a conta.
-                        _logger.LogWarning(ex, "Falha ao enviar e-mail de confirmação para {Email}.", Input.Email);
-                    }
-
-                    if (_userManager.Options.SignIn.RequireConfirmedAccount)
-                    {
-                        return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
-                    }
-                    else
-                    {
-                        await _signInManager.SignInAsync(user, isPersistent: false);
-                        return LocalRedirect(returnUrl);
-                    }
+                            
+                }
+                catch (Exception ex)
+                {
+               
+                    _logger.LogWarning(ex, "Falha ao enviar e-mail de confirmação para {Email}.", Input.Email);
                 }
 
+                if (_userManager.Options.SignIn.RequireConfirmedAccount)
+                {
+                    TempData["Cpf"] = cpfSemFormatacao;
+                    return RedirectToPage("RegisterConfirmation", new {email = Input.Email, returnUrl = returnUrl });
+                }
+                else
+                {
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    return LocalRedirect(returnUrl);
+                    }
+            }
+            
                 foreach (var error in result.Errors)
                 {
-                    
                     ModelState.AddModelError(string.Empty, error.Description);
                 }
             }

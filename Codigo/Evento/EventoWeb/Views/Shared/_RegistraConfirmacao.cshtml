@@ -1,0 +1,25 @@
+﻿@model string
+
+@{
+    var cpf = TempData["Cpf"]?.ToString();
+}
+    <p>
+        Uma mensagem de confirmação de cadastro foi enviada para <strong>@Model</strong>.
+    </p>
+    <p>
+        Por favor, verifique seu e-mail para confirmar sua conta.
+        Se não recebeu a mensagem, verifique sua caixa de spam ou solicite um novo e-mail de confirmação.
+    </p>
+
+    
+    <a id="btnReenviar"
+       class="btn btn-primary"
+       asp-action="EnviarConfirmacaoEmail"
+       asp-controller="Pessoa"
+       asp-route-email="@Model"
+       asp-route-cpf="@cpf">Reenviar E-mail</a>
+
+    
+    <span id="tempoRestante" class="text-muted ms-2" style="display:none;"></span>
+
+<script src="~/js/Countdown.js"></script>
