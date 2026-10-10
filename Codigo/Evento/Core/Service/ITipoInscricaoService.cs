@@ -15,6 +15,8 @@ namespace Core
 
         IEnumerable<TipoInscricaoDTO> GetTiposInscricaosSubevento(uint idSubevento);
 
+        IDictionary<uint, List<TipoInscricaoDTO>> GetTiposAgrupadosPorSubevento(uint idEvento);
+
         void AssociacaoTipoInscricaoSubevento(uint Idsubevento, uint IdtipoInscricao);
         void DeleteTipoInscricaoSubevento(uint Idsubevento, uint IdtipoInscricao);
 

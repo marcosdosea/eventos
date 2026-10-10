@@ -184,11 +184,12 @@ namespace EventoWeb.Controllers
             EventoModel eventoModel = _mapper.Map<EventoModel>(evento);
             var tipoInscricaoModel = _tipoinscricaoService.GetByEvento(idEvento).ToList();
             var subeventos = _subeventoService.GetByIdEvento(idEvento).ToList();
+            var tiposPorSubevento = _tipoinscricaoService.GetTiposAgrupadosPorSubevento(idEvento);
             var subeventosOpcoes = new List<SubeventoOpcao>();
             foreach(var sub in subeventos)
             {
-                var tipos = _tipoinscricaoService.GetTiposInscricaosSubevento(sub.Id);
-                subeventosOpcoes.Add(new SubeventoOpcao { Subevento = sub, TiposInscricao = tipos });
+                tiposPorSubevento.TryGetValue(sub.Id, out var tipos);
+                subeventosOpcoes.Add(new SubeventoOpcao { Subevento = sub, TiposInscricao = tipos ?? Enumerable.Empty<TipoInscricaoDTO>() });
             }
 
             var model = new InscricaoEventoViewModel(){
