@@ -490,12 +490,13 @@ namespace EventoWeb.Controllers
             Pessoa pessoa = _pessoaService.GetByCpf(cpf);
             
             var (token,user) = await _pessoaService.GerarTokenConfirmacaoEmailAsync(cpf);
-            token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+           
             if (pessoa == null || user == null)
             {
                 TempData["ErrorMessage"] = "Usuário não encontrado.";
                 return RedirectToPage("/Account/RegisterConfirmation", new { area = "Identity", email = email, returnUrl = returnUrl });
             }
+            token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
             if (!string.IsNullOrWhiteSpace(token))
             {
                 var callbackUrl = Url.Page(
