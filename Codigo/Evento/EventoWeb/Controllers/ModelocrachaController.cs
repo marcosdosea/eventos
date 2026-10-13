@@ -88,7 +88,7 @@ namespace EventoWeb.Controllers
                         model.LogotipoBase64 = Convert.ToBase64String(m.Logotipo);
                         model.NomeArquivo = "logo_institucional.png";
                         var kb = Math.Round((double)m.Logotipo.Length / 1024.0, 1);
-                        model.TamanhoArquivo = $"Binário BLOB • {kb} KB";
+                        model.TamanhoArquivo = $"{kb} KB";
                     }
                     return model;
                 }).ToList();
@@ -116,7 +116,7 @@ namespace EventoWeb.Controllers
                         m.LogotipoBase64 = Convert.ToBase64String(x.Logotipo);
                         m.NomeArquivo = "logo_institucional.png";
                         var kb = Math.Round((double)x.Logotipo.Length / 1024.0, 1);
-                        m.TamanhoArquivo = $"Binário BLOB • {kb} KB";
+                        m.TamanhoArquivo = $"{kb} KB";
                     }
                     return m;
                 }).ToList();
@@ -230,7 +230,7 @@ namespace EventoWeb.Controllers
                 logotipoBase64 = Convert.ToBase64String(modelo.Logotipo);
                 nomeArquivo = "logo_institucional.png";
                 var kb = Math.Round((double)modelo.Logotipo.Length / 1024.0, 1);
-                tamanhoArquivo = $"Binário BLOB • {kb} KB";
+                tamanhoArquivo = $"{kb} KB";
             }
 
             return Json(new
@@ -280,7 +280,7 @@ namespace EventoWeb.Controllers
                 Texto = "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.",
                 Qrcode = 1,
                 NomeArquivo = modeloComLogotipo != null ? "logo_institucional.png" : "logo_congresso_nacional_vetor.svg",
-                TamanhoArquivo = "Binário BLOB • 64 KB",
+                TamanhoArquivo = "64 KB",
                 LogotipoBase64 = modeloComLogotipo?.Logotipo != null && modeloComLogotipo.Logotipo.Length > 0
                     ? Convert.ToBase64String(modeloComLogotipo.Logotipo)
                     : null
@@ -421,7 +421,7 @@ namespace EventoWeb.Controllers
                 viewModel.LogotipoBase64 = Convert.ToBase64String(modelocracha.Logotipo);
                 viewModel.NomeArquivo = "logo_institucional.png";
                 var kb = Math.Round((double)modelocracha.Logotipo.Length / 1024.0, 1);
-                viewModel.TamanhoArquivo = $"Binário BLOB • {kb} KB";
+                viewModel.TamanhoArquivo = $"{kb} KB";
             }
 
             ViewBag.EventosDisponiveis = ObterEventosDoUsuario();

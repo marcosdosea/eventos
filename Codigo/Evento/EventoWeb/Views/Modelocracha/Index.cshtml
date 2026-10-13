@@ -130,37 +130,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const filtroInput = document.getElementById("filtroModelos");
-            const tabelaBody = document.getElementById("tabelaModelosBody");
-            const linhas = Array.from(tabelaBody.querySelectorAll(".linha-modelo"));
-            const lblExibidos = document.getElementById("lblContagemExibidos");
-
-            filtroInput.addEventListener("input", function () {
-                const termo = filtroInput.value.toLowerCase().trim();
-                let exibidos = 0;
-
-                linhas.forEach(linha => {
-                    const evento = (linha.getAttribute("data-evento") || "").toLowerCase();
-                    const texto = (linha.getAttribute("data-texto") || "").toLowerCase();
-
-                    if (!termo || evento.includes(termo) || texto.includes(termo)) {
-                        linha.style.display = "";
-                        exibidos++;
-                    } else {
-                        linha.style.display = "none";
-                    }
-                });
-
-                if (lblExibidos) {
-                    if (exibidos === 0) {
-                        lblExibidos.textContent = "0";
-                    } else {
-                        lblExibidos.textContent = `1-${exibidos}`;
-                    }
-                }
-            });
-        });
-    </script>
+    <script src="~/js/modelocracha.js" asp-append-version="true"></script>
 }

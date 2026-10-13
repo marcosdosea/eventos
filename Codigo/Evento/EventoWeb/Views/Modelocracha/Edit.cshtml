@@ -21,7 +21,11 @@
         </div>
     </div>
 
-    <form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" id="formModeloCracha">
+    <form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" id="formModeloCracha"
+          data-obter-modelo-url="@Url.Content("~/Modelocracha/ObterModeloPorEvento")"
+          data-index-url="@Url.Content("~/Modelocracha/Index")"
+          data-create-url="@Url.Content("~/Modelocracha/Create")"
+          data-edit-url="@Url.Content("~/Modelocracha/Edit")">
         @Html.AntiForgeryToken()
         <input type="hidden" asp-for="Id" id="inputModeloId" />
         <input type="hidden" id="hiddenLogotipoBase64" name="LogotipoBase64" value="@Model.LogotipoBase64" />
@@ -84,7 +88,7 @@
                                 </div>
                                 <div>
                                     <div class="fw-bold text-dark small" id="lblNomeArquivoVisual">@(Model.NomeArquivo ?? "logo_congresso_nacional_vetor.svg")</div>
-                                    <div class="text-muted" id="lblInfoArquivoVisual" style="font-size: 0.75rem;">@(Model.TamanhoArquivo ?? "Binário BLOB • 64 KB")</div>
+                                    <div class="text-muted" id="lblInfoArquivoVisual" style="font-size: 0.75rem;">@(Model.TamanhoArquivo ?? "64 KB")</div>
                                 </div>
                             </div>
 
@@ -188,6 +192,9 @@
                                     </span>
                                     <span>BORA LÁ EVENTOS</span>
                                 </div>
+                                <div class="cracha-logo-institucional-container" id="crachaLogoContainer" style="@(string.IsNullOrEmpty(Model.LogotipoBase64) ? "display: none;" : "")">
+                                    <img id="crachaLogoElement" src="@(!string.IsNullOrEmpty(Model.LogotipoBase64) ? "data:image/png;base64," + Model.LogotipoBase64 : "")" alt="Logotipo Institucional" class="cracha-logo-institucional-img" />
+                                </div>
                                 <h6 class="cracha-evento-title" id="lblPreviewNomeEvento">@eventoAtualNome</h6>
                             </div>
 
@@ -253,194 +260,5 @@
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const selectEvento = document.getElementById("selectEventoVinculado");
-            const lblNomeEvento = document.getElementById("lblPreviewNomeEvento");
-
-            const txtTexto = document.getElementById("txtTextoCracha");
-            const lblTextoCracha = document.getElementById("lblPreviewTextoCracha");
-            const lblContador = document.getElementById("lblContadorCaracteres");
-
-            const chkQrcode = document.getElementById("chkHabilitarQrcode");
-            const blocoQrcode = document.getElementById("blocoQrCodePreview");
-
-            const btnUpload = document.getElementById("btnDispararUpload");
-            const inputArquivo = document.getElementById("inputArquivoLogotipo");
-            const thumbImg = document.getElementById("thumbImageElement");
-            const thumbIcon = document.getElementById("thumbIconPlaceholder");
-            const lblNomeArquivo = document.getElementById("lblNomeArquivoVisual");
-            const lblInfoArquivo = document.getElementById("lblInfoArquivoVisual");
-
-            const crachaCard = document.getElementById("crachaCardElement");
-            let escalaAtual = 1;
-
-            selectEvento.addEventListener("change", async function () {
-                const idEvento = this.value;
-                const selectedText = this.options[this.selectedIndex] ? this.options[this.selectedIndex].text : "";
-                if (lblNomeEvento) {
-                    lblNomeEvento.textContent = selectedText.trim();
-                }
-
-                if (!idEvento || idEvento === "0") return;
-
-                const btnCancelar = document.getElementById("btnCancelarAcao");
-                if (btnCancelar) {
-                    btnCancelar.href = `@Url.Content("~/Modelocracha/Index")?idEvento=${idEvento}`;
-                }
-
-                try {
-                    const urlBase = '@Url.Content("~/Modelocracha/ObterModeloPorEvento")';
-                    const response = await fetch(`${urlBase}/${idEvento}`);
-                    if (response.ok) {
-                        const data = await response.json();
-                        const form = document.getElementById("formModeloCracha");
-
-                        if (data.existe) {
-                            txtTexto.value = data.texto || "";
-                            chkQrcode.checked = (data.qrcode === 1);
-
-                            const inputId = document.getElementById("inputModeloId");
-                            if (inputId) inputId.value = data.id;
-
-                            if (form && data.id > 0) {
-                                form.action = `@Url.Content("~/Modelocracha/Edit")/${data.id}`;
-                            }
-
-                            const hiddenLogo = document.getElementById("hiddenLogotipoBase64");
-                            if (hiddenLogo) hiddenLogo.value = data.logotipoBase64 || "";
-
-                            if (data.temLogotipo && data.logotipoBase64) {
-                                thumbImg.src = "data:image/png;base64," + data.logotipoBase64;
-                                thumbImg.style.display = "block";
-                                if (thumbIcon) thumbIcon.style.display = "none";
-                                lblNomeArquivo.textContent = data.nomeArquivo || "logo_institucional.png";
-                                lblInfoArquivo.textContent = data.tamanhoArquivo || "Binário BLOB • 64 KB";
-                            } else {
-                                thumbImg.src = "";
-                                thumbImg.style.display = "none";
-                                if (thumbIcon) thumbIcon.style.display = "block";
-                                lblNomeArquivo.textContent = "Nenhum arquivo selecionado";
-                                lblInfoArquivo.textContent = "PNG, SVG, JPEG (máx. 64 KB)";
-                            }
-                        } else {
-                            txtTexto.value = data.texto || "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.";
-                            chkQrcode.checked = (data.qrcode === 1);
-
-                            const inputId = document.getElementById("inputModeloId");
-                            if (inputId) inputId.value = "0";
-
-                            if (form) {
-                                form.action = `@Url.Content("~/Modelocracha/Create")`;
-                            }
-
-                            const hiddenLogo = document.getElementById("hiddenLogotipoBase64");
-                            if (hiddenLogo) hiddenLogo.value = "";
-
-                            thumbImg.src = "";
-                            thumbImg.style.display = "none";
-                            if (thumbIcon) thumbIcon.style.display = "block";
-                            lblNomeArquivo.textContent = "Nenhum arquivo selecionado";
-                            lblInfoArquivo.textContent = "PNG, SVG, JPEG (máx. 64 KB)";
-                        }
-
-                        inputArquivo.value = "";
-                        atualizarTexto();
-                        atualizarQrcode();
-                    }
-                } catch (error) {
-                    console.error("Erro ao carregar modelo do evento:", error);
-                }
-            });
-
-            function atualizarTexto() {
-                const len = txtTexto.value.length;
-                lblContador.textContent = `${len} / 200 caracteres`;
-                lblTextoCracha.textContent = txtTexto.value || "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.";
-            }
-            txtTexto.addEventListener("input", atualizarTexto);
-            atualizarTexto();
-
-            function atualizarQrcode() {
-                if (chkQrcode.checked) {
-                    blocoQrcode.style.display = "flex";
-                } else {
-                    blocoQrcode.style.display = "none";
-                }
-            }
-            chkQrcode.addEventListener("change", atualizarQrcode);
-            atualizarQrcode();
-
-            if (btnUpload && inputArquivo) {
-                btnUpload.addEventListener("click", function () {
-                    inputArquivo.click();
-                });
-
-                inputArquivo.addEventListener("change", function () {
-                    const file = this.files[0];
-                    if (file) {
-                        const limiteBytes = 64 * 1024;
-                        if (file.size > limiteBytes) {
-                            alert("O arquivo selecionado excede o tamanho máximo suportado de 64 KB. Por favor, selecione uma imagem menor.");
-                            this.value = "";
-                            return;
-                        }
-
-                        lblNomeArquivo.textContent = file.name;
-                        const kb = Math.round(file.size / 1024);
-                        lblInfoArquivo.textContent = `Binário BLOB • ${kb} KB`;
-
-                        const reader = new FileReader();
-                        reader.onload = function (e) {
-                            thumbImg.src = e.target.result;
-                            thumbImg.style.display = "block";
-                            if (thumbIcon) thumbIcon.style.display = "none";
-                        };
-                        reader.readAsDataURL(file);
-                    }
-                });
-            }
-
-            const btnZoomIn = document.getElementById("btnZoomIn");
-            if (btnZoomIn && crachaCard) {
-                btnZoomIn.addEventListener("click", function () {
-                    if (escalaAtual < 1.4) {
-                        escalaAtual = Math.round((escalaAtual + 0.1) * 10) / 10;
-                        crachaCard.style.transformOrigin = "top center";
-                        crachaCard.style.transform = `scale(${escalaAtual})`;
-                    }
-                });
-            }
-
-            const btnZoomOut = document.getElementById("btnZoomOut");
-            if (btnZoomOut && crachaCard) {
-                btnZoomOut.addEventListener("click", function () {
-                    if (escalaAtual > 0.6) {
-                        escalaAtual = Math.round((escalaAtual - 0.1) * 10) / 10;
-                        crachaCard.style.transformOrigin = "top center";
-                        crachaCard.style.transform = `scale(${escalaAtual})`;
-                    }
-                });
-            }
-
-            const btnImprimir = document.getElementById("btnImprimirCracha");
-            if (btnImprimir) {
-                btnImprimir.addEventListener("click", function () {
-                    window.print();
-                });
-            }
-
-            const btnFullscreen = document.getElementById("btnFullscreenPreview");
-            if (btnFullscreen) {
-                btnFullscreen.addEventListener("click", function () {
-                    const container = document.querySelector(".preview-card-container");
-                    if (!document.fullscreenElement) {
-                        container?.requestFullscreen().catch(err => console.log(err));
-                    } else {
-                        document.exitFullscreen();
-                    }
-                });
-            }
-        });
-    </script>
+    <script src="~/js/modelocracha.js" asp-append-version="true"></script>
 }

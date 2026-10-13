@@ -100,6 +100,12 @@
                             </span>
                             <span>BORA LÁ EVENTOS</span>
                         </div>
+                        @if (!string.IsNullOrEmpty(Model.LogotipoBase64))
+                        {
+                            <div class="cracha-logo-institucional-container">
+                                <img src="data:image/png;base64,@Model.LogotipoBase64" alt="Logotipo Institucional" class="cracha-logo-institucional-img" />
+                            </div>
+                        }
                         <h6 class="cracha-evento-title">@eventoNome</h6>
                     </div>
 

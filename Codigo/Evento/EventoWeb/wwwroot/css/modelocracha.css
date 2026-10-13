@@ -524,6 +524,30 @@
     font-size: 0.6rem;
 }
 
+.cracha-logo-institucional-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 8px auto 10px auto;
+    max-width: 180px;
+    height: 48px;
+    background: #FFFFFF;
+    border-radius: 8px;
+    padding: 4px 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.cracha-logo-institucional-img {
+    max-height: 100%;
+    max-width: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+}
+
 .cracha-evento-title {
     font-weight: 800;
     font-size: 0.86rem;
@@ -716,11 +740,14 @@
     .cracha-physical-card,
     .cracha-physical-card * {
         visibility: visible;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
     }
     .cracha-physical-card {
         position: absolute;
         left: 0;
         top: 0;
         box-shadow: none;
+        margin: 0;
     }
 }
