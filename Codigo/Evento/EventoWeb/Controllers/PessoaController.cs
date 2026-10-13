@@ -494,7 +494,7 @@ namespace EventoWeb.Controllers
             if (pessoa == null || user == null)
             {
                 TempData["ErrorMessage"] = "Usuário não encontrado.";
-                return RedirectToPage("/Account/RegisterConfirmation", new { area = "Identity", email = email, returnUrl = returnUrl });
+                return RedirectToPage("/Account/RegisterConfirmation", new { area = "Identity", email = email, cpf = cpf, returnUrl = returnUrl });
             }
             token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
             if (!string.IsNullOrWhiteSpace(token))
@@ -521,7 +521,7 @@ namespace EventoWeb.Controllers
 
             }
 
-            return RedirectToPage("/Account/RegisterConfirmation", new { area = "Identity", email = email, returnUrl = returnUrl });
+            return RedirectToPage("/Account/RegisterConfirmation", new { area = "Identity", email = email, cpf = cpf, returnUrl = returnUrl });
         }
         // =====================================================================
         // HELPER PRIVADO

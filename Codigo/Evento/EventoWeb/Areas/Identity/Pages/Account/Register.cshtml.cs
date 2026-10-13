@@ -193,14 +193,14 @@ namespace EventoWeb.Areas.Identity.Pages.Account
                 if (_userManager.Options.SignIn.RequireConfirmedAccount)
                 {
                     TempData["Cpf"] = cpfSemFormatacao;
-                    return RedirectToPage("RegisterConfirmation", new {email = Input.Email, returnUrl = returnUrl });
+                    return RedirectToPage("RegisterConfirmation", new {email = Input.Email, cpf = cpfSemFormatacao, returnUrl = returnUrl });
                 }
                 else
                 {
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     return LocalRedirect(returnUrl);
-                    }
-            }
+                }
+              }
             
                 foreach (var error in result.Errors)
                 {

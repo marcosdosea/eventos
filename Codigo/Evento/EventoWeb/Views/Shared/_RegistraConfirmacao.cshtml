@@ -1,10 +1,7 @@
-﻿@model string
+﻿@model ConfirmaUserModel
 
-@{
-    var cpf = TempData["Cpf"]?.ToString();
-}
     <p>
-        Uma mensagem de confirmação de cadastro foi enviada para <strong>@Model</strong>.
+        Uma mensagem de confirmação de cadastro foi enviada para <strong>@Model.Email</strong>.
     </p>
     <p>
         Por favor, verifique seu e-mail para confirmar sua conta.
@@ -16,8 +13,8 @@
        class="btn btn-primary"
        asp-action="EnviarConfirmacaoEmail"
        asp-controller="Pessoa"
-       asp-route-email="@Model"
-       asp-route-cpf="@cpf">Reenviar E-mail</a>
+       asp-route-email="@Model.Email"
+       asp-route-cpf="@Model.Cpf">Reenviar E-mail</a>
 
     
     <span id="tempoRestante" class="text-muted ms-2" style="display:none;"></span>
