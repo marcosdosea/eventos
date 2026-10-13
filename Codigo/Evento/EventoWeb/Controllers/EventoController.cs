@@ -577,6 +577,13 @@ namespace EventoWeb.Controllers
                 Pessoa = _mapper.Map<PessoaModel>(pessoa)
             };
 
+            var inscricaoDoEvento = _inscricaoService.GetByEvento(idEvento)
+                .FirstOrDefault(i => i.IdPessoa == idPessoa);
+            if (!string.IsNullOrWhiteSpace(inscricaoDoEvento?.NomeCracha))
+            {
+                gestaoPapelModel.Pessoa.NomeCracha = inscricaoDoEvento.NomeCracha;
+            }
+
             return View(gestaoPapelModel);
         }
 
@@ -638,6 +645,7 @@ namespace EventoWeb.Controllers
                 try
                 {
                     await _pessoaService.Edit(pessoaExistente);
+                    _inscricaoService.UpdateNomeCracha(idPessoa, eventoId, pessoaExistente.NomeCracha);
                     TempData["SuccessMessage"] = $"Participante \"{pessoaExistente.Nome}\" atualizado com sucesso!";
                     return RedirectToAction("CreateParticipante", new { idEvento = eventoId });
                 }

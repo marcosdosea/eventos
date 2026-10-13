@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AutoMapper;
 using Core.Service;
 using Core;
@@ -88,6 +88,67 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual((uint)1, modelocrachaModel.IdEvento);
             Assert.AreEqual("Texto 1", modelocrachaModel.Texto);
             Assert.AreEqual(1, modelocrachaModel.Qrcode);
+        }
+
+        [TestMethod]
+        public void DetailsTest_ComQrcodeEInscricoes_PreencheCrachasComNomesDosParticipantes()
+        {
+            // Arrange
+            var mockService = new Mock<IModelocrachaService>();
+            var mockServiceEvento = new Mock<IEventoService>();
+            var mockServicePessoa = new Mock<IPessoaService>();
+            var mockServiceInscricao = new Mock<IInscricaoService>();
+
+            IMapper mapper = new MapperConfiguration(cfg =>
+                cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+
+            mockService.Setup(s => s.Get(1)).Returns(GetTargetModelocracha());
+            mockServiceEvento.Setup(s => s.GetNomeById(1)).Returns("Evento Teste");
+
+            mockServiceInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+
+            mockServiceInscricao.Setup(s => s.GetSubByEvento(1))
+                .Returns(new List<Inscricaopessoasubevento>());
+
+            mockServiceInscricao.Setup(s => s.GetByEvento(1))
+                .Returns(new List<Inscricaopessoaevento>
+                {
+                    new Inscricaopessoaevento
+                    {
+                        Id = 10,
+                        IdPessoa = 5,
+                        IdEvento = 1,
+                        IdPapel = 4,
+                        NomeCracha = "Jordan Sunset",
+                        IdPessoaNavigation = new Pessoa { Id = 5, Nome = "Jordan Participante", NomeCracha = "Jordan" }
+                    }
+                });
+
+            var ctl = new ModelocrachaController(mockService.Object, mockServiceEvento.Object, mockServicePessoa.Object, mockServiceInscricao.Object, mapper);
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "12345678900"),
+                new Claim(ClaimTypes.Role, "GESTOR")
+            };
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) }
+            };
+
+            // Act
+            var result = ctl.Details(1, null);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var viewResult = (ViewResult)result;
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ModelocrachaModel));
+            var model = (ModelocrachaModel)viewResult.ViewData.Model;
+            Assert.IsNotNull(model.Crachas);
+            Assert.AreEqual(1, model.Crachas.Count);
+            Assert.AreEqual("Jordan Sunset", model.Crachas[0].NomeCracha);
+            Assert.AreEqual("Jordan Participante", model.Crachas[0].Nome);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(model.Crachas[0].QrCodeBase64));
         }
 
         [TestMethod]

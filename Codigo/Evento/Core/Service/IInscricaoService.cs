@@ -25,6 +25,8 @@ namespace Core.Service
 
         IEnumerable<Inscricaopessoasubevento> GetSubByEvento(uint idEvento);
 
+        IEnumerable<Inscricaopessoasubevento> GetAllSubEventsByUserId(string username);
+
         IEnumerable<Inscricaopessoaevento> GetAllEventsByUserId(string username);
 
         Inscricaopessoaevento GetGestorInEvent(string username, uint idEvento);
@@ -32,6 +34,8 @@ namespace Core.Service
         Inscricaopessoaevento GetColaboradorInEvent(string username, uint idEvento);
 
         bool IsInscrito(uint idPessoa, uint idEvento);
+
+        void UpdateNomeCracha(uint idPessoa, uint idEvento, string nomeCracha);
     }
 }
 

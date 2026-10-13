@@ -100,6 +100,7 @@
 				<tr>
 					<th>CPF</th>
 					<th>Nome</th>
+					<th>Nome no Crachá</th>
 					<th>Ações</th>
 				</tr>
 			</thead>
@@ -109,6 +110,7 @@
 					<tr>
 						<td style="vertical-align: middle;">@FormatarCPF(inscricaopessoaevento.IdPessoaNavigation.Cpf)</td>
 						<td style="vertical-align: middle;">@inscricaopessoaevento.IdPessoaNavigation.Nome</td>
+						<td style="vertical-align: middle;">@(!string.IsNullOrWhiteSpace(inscricaopessoaevento.NomeCracha) ? inscricaopessoaevento.NomeCracha : (inscricaopessoaevento.IdPessoaNavigation.NomeCracha ?? inscricaopessoaevento.IdPessoaNavigation.Nome))</td>
 						<td style="vertical-align: middle;">
 							<div class="d-flex align-items-center gap-2">
 								<a asp-action="EditParticipante"

@@ -14,6 +14,7 @@ public class InscricaoEventoModel
 
     public uint? IdTipoInscricao { get; set; }
 
+    [Display(Name = "Data da Inscrição")]
     public DateTime DataInscricao { get; set; }
 
     [Display(Name = "Valor")]
@@ -25,8 +26,10 @@ public class InscricaoEventoModel
     /// S - SOLICITADA
     /// 
     /// </summary>
+    [Display(Name = "Status")]
     public string Status { get; set; } = null!;
 
+    [Display(Name = "Frequência")]
     public decimal FrequenciaFinal { get; set; }
 
     public string? NomeCracha { get; set; }
@@ -44,4 +47,6 @@ public class InscricaoEventoModel
     public List<uint> SelectedSubeventos { get; set; } = new List<uint>();
 
     public int QuantidadeIngressos { get; set; } = 1;
+
+    public virtual ICollection<Inscricaopessoasubevento> Inscricaopessoasubeventos { get; set; } = new List<Inscricaopessoasubevento>();
 }

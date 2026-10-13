@@ -9,7 +9,7 @@ namespace Core.Service
         uint Create(Pessoa pessoa);
         Task Edit(Pessoa pessoa);
         Task<bool> Delete(uint id);
-        Task<bool> DeleteRole(uint id);
+        Task<(bool sucesso, string mensagem)> DeleteRole(uint id);
         Task<bool> DeleteAllRoles(String id);
         Pessoa Get(uint id);
         IEnumerable<Pessoa> GetAll();
