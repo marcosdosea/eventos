@@ -167,10 +167,6 @@ namespace Service
                 .AsNoTracking()
                 .Where(e => e.Id == id)
                 .Select(e => new EventoSimpleDTO
-            var evento = _context.Eventos.AsNoTracking().FirstOrDefault(e => e.Id == id);
-            if (evento != null)
-            {
-                var eventoSimpleDto = new EventoSimpleDTO
                 {
                     Id = e.Id,
                     Nome = e.Nome
