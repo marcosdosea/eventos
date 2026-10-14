@@ -29,5 +29,7 @@ namespace Core.Service
         IEnumerable<Evento> Search(EventoFilterDTO filter, int pagina, int tamanhoPagina, out int totalRegistros);
         
         public uint VerificarPerfilAtual(IList<string> roles, String perfilAtivo, uint idPapel);
+
+        DashboardFinanceiroDTO GetDashboardFinanceiro(uint idEvento, DashboardFiltrosDTO filtros);
     }
 }
