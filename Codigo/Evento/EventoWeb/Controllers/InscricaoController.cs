@@ -200,9 +200,29 @@ namespace EventoWeb.Controllers
             if (User.Identity != null && !string.IsNullOrEmpty(User.Identity.Name))
             {
                 var pessoa = _pessoaService.GetByCpf(User.Identity.Name);
-                if (pessoa != null && evento.PossuiCertificado != 0 && _inscricaoService.IsInscrito(pessoa.Id, idEvento))
+                if (pessoa != null)
                 {
-                    ViewBag.JaInscrito = true;
+                    var inscricaoExistente = _inscricaoService.GetByEvento(idEvento)
+                        .FirstOrDefault(i => i.IdPessoa == pessoa.Id && i.IdPapel == 4);
+
+                    if (evento.PossuiCertificado != 0 && (inscricaoExistente != null || _inscricaoService.IsInscrito(pessoa.Id, idEvento)))
+                    {
+                        ViewBag.JaInscrito = true;
+                    }
+
+                    var nomeSugestao = !string.IsNullOrWhiteSpace(inscricaoExistente?.NomeCracha)
+                        ? inscricaoExistente.NomeCracha
+                        : (!string.IsNullOrWhiteSpace(pessoa.NomeCracha) ? pessoa.NomeCracha : pessoa.Nome);
+
+                    if (!string.IsNullOrEmpty(nomeSugestao) && nomeSugestao.Length > 20)
+                    {
+                        nomeSugestao = nomeSugestao.Substring(0, 20);
+                    }
+
+                    model.inscricaoNavigation = new InscricaoEventoModel
+                    {
+                        NomeCracha = nomeSugestao
+                    };
                 }
             }
             
@@ -294,16 +314,10 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("Index", "Home"); 
             }
 
-            foreach (var idTipoCheck in mainEventQuantities.Keys.ToList())
+            if (evento.VagasDisponiveis < totalEventTickets)
             {
-                if (idTipoCheck == 0 || idTipoCheck == 999999)
-                    continue;
-                var tipoCheck = _tipoinscricaoService.Get(idTipoCheck);
-                if (tipoCheck == null || tipoCheck.IdEvento != idEvento)
-                {
-                    TempData["ParticipanteMessage"] = "Tipo de inscrição inválido para este evento.";
-                    return RedirectToAction("realizarInscricao", new { idEvento = idEvento });
-                }
+                TempData["ParticipanteMessage"] = "A quantidade de ingressos solicitada excede o número de vagas disponíveis do evento.";
+                return RedirectToAction("Index", "Home"); 
             }
 
             if (inscricaoEvento.SelectedSubeventos != null && inscricaoEvento.SelectedSubeventos.Any())
@@ -314,6 +328,12 @@ namespace EventoWeb.Controllers
                     if (subevento == null || subevento.Status == "C" || subevento.Status == "F" || subevento.DataFimInscricao < DateTime.Now)
                     {
                         continue;
+                    }
+
+                    if (subevento.DataInicioInscricao > DateTime.Now)
+                    {
+                        TempData["ParticipanteMessage"] = "Um dos subeventos selecionados ainda não abriu inscrições.";
+                        return RedirectToAction("realizarInscricao", new { idEvento = idEvento });
                     }
 
                     int totalSubTicketsCheck = 0;
@@ -335,6 +355,25 @@ namespace EventoWeb.Controllers
                         return RedirectToAction("Index", "Home");
                     }
                 }
+            }
+
+            string? nomeCracha = !string.IsNullOrWhiteSpace(inscricaoEvento?.NomeCracha)
+                ? inscricaoEvento.NomeCracha.Trim()
+                : (!string.IsNullOrWhiteSpace(pessoa.NomeCracha) ? pessoa.NomeCracha.Trim() : pessoa.Nome?.Trim());
+
+            if (string.IsNullOrWhiteSpace(nomeCracha))
+            {
+                nomeCracha = "Participante";
+            }
+            else if (nomeCracha.Length > 20)
+            {
+                nomeCracha = nomeCracha.Substring(0, 20);
+            }
+
+            if (pessoa.NomeCracha != nomeCracha)
+            {
+                pessoa.NomeCracha = nomeCracha;
+                await _pessoaService.Edit(pessoa);
             }
 
             foreach (var kvp in mainEventQuantities)
@@ -367,7 +406,7 @@ namespace EventoWeb.Controllers
                         IdEvento = idEvento,
                         IdPapel = 4,
                         DataInscricao = DateTime.Now,
-                        NomeCracha = User.Identity.Name,
+                        NomeCracha = nomeCracha,
                         Status = "S",
                         IdTipoInscricao = idTipoToSave,
                         FrequenciaFinal = 0m,
@@ -395,7 +434,7 @@ namespace EventoWeb.Controllers
                 {
                     var subevento = _subeventoService.Get(idSubevento);
                     // Impede de salvar apenas se for finalizado ou cadastro
-                    if (subevento == null || subevento.Status == "C" || subevento.Status == "F" || subevento.DataFimInscricao < DateTime.Now)
+                    if (subevento == null || subevento.Status == "C" || subevento.Status == "F" || subevento.DataFimInscricao < DateTime.Now || subevento.DataInicioInscricao > DateTime.Now)
                     {
                         continue;
                     }
@@ -437,6 +476,12 @@ namespace EventoWeb.Controllers
                             parsedTipo = t;
                         }
                         subEventQuantities[parsedTipo] = 1;
+                    }
+
+                    if (subevento.VagasDisponiveis < totalSubTickets)
+                    {
+                        TempData["ParticipanteMessage"] = $"A quantidade de ingressos solicitada excede o número de vagas disponíveis para o subevento {subevento.Nome}.";
+                        return RedirectToAction("minhasInscricoes", new { idEvento = idEvento }); 
                     }
 
                     foreach (var kvpSub in subEventQuantities)
