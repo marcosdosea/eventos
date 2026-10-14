@@ -18,8 +18,15 @@
     @{
         var controller = ViewContext.RouteData.Values["controller"]?.ToString()?.ToLower();
         var action = ViewContext.RouteData.Values["action"]?.ToString()?.ToLower();
+        var area = ViewContext.RouteData.Values["area"]?.ToString()?.ToLower();
+        var page = ViewContext.RouteData.Values["page"]?.ToString()?.ToLower();
+
+        bool isIdentityLoginOrRegister = (area == "identity" || controller == "account") &&
+                                         (page?.Contains("login") == true || page?.Contains("register") == true || action == "login" || action == "register");
+
         bool showLocation = (controller == "home" && (action == "index" || action == "buscar")) ||
-                            (controller == "inscricao" && (action == "realizarinscricao" || action == "minhasinscricoes" || action == "realizarinscricaolote"));
+                            (controller == "inscricao" && (action == "realizarinscricao" || action == "minhasinscricoes" || action == "realizarinscricaolote")) ||
+                            isIdentityLoginOrRegister; 
     }
     <header class="p-3 mb-3 border-bottom fixed-top">
         <div class="container">
@@ -36,11 +43,12 @@
                     <div class="collapse navbar-collapse justify-content-between" id="navbarSupportedContent">
                         @{
                             var showSearch = ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && 
-                                             (ViewContext.RouteData.Values["action"]?.ToString() == "Index" || ViewContext.RouteData.Values["action"]?.ToString() == "Buscar");
+                                             (ViewContext.RouteData.Values["action"]?.ToString() == "Index" || ViewContext.RouteData.Values["action"]?.ToString() == "Buscar") ||
+                                              isIdentityLoginOrRegister; 
                         }
                         @if (showSearch)
                         {
-                            <div class="d-flex align-items-center my-2 my-lg-0 me-lg-auto ms-lg-3">
+                            <div class="d-flex align-items-center flex-grow-1 my-2 my-lg-0 mx-lg-3 ms-lg-3">
                                 <partial name="_HeaderSearch" />
                             </div>
                         }
