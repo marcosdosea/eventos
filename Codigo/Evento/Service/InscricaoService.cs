@@ -10,6 +10,8 @@ namespace Service
     {
         private readonly EventoContext _context;
         private readonly UserManager<UsuarioIdentity> _userManager;
+
+        private const int PapelParticipante = 4;
         public InscricaoService(EventoContext context, UserManager<UsuarioIdentity> userManager)
         {
             _userManager = userManager;
@@ -148,6 +150,40 @@ namespace Service
         {
             _context.Add(inscricaopessoasubevento);
             _context.SaveChanges();
+        }
+
+        /// <summary>
+        /// Cancela as inscrições de participante (papel 4) de uma pessoa em um evento,
+        /// incluindo as inscrições nos subeventos do evento, em um único SaveChanges.
+        /// Retorna a quantidade de inscrições do evento removidas e os ids dos
+        /// subeventos afetados (para atualização de vagas).
+        /// </summary>
+        public (int Removidas, List<uint> SubeventosAfetados) CancelarInscricaoParticipante(uint idPessoa, uint idEvento)
+        {
+            var inscricoesEvento = _context.Inscricaopessoaeventos
+                .Where(i => i.IdPessoa == idPessoa && i.IdEvento == idEvento && i.IdPapel == PapelParticipante)
+                .ToList();
+
+            if (!inscricoesEvento.Any())
+            {
+                return (0, new List<uint>());
+            }
+
+            var idsSubeventosDoEvento = _context.Subeventos
+                .Where(s => s.IdEvento == idEvento)
+                .Select(s => s.Id)
+                .ToList();
+
+            var inscricoesSub = _context.Inscricaopessoasubeventos
+                .Where(s => s.IdPessoa == idPessoa && s.IdPapel == PapelParticipante && idsSubeventosDoEvento.Contains(s.IdSubEvento))
+                .ToList();
+            var idsSubAfetados = inscricoesSub.Select(s => s.IdSubEvento).Distinct().ToList();
+
+            _context.Inscricaopessoasubeventos.RemoveRange(inscricoesSub);
+            _context.Inscricaopessoaeventos.RemoveRange(inscricoesEvento);
+            _context.SaveChanges();
+
+            return (inscricoesEvento.Count, idsSubAfetados);
         }
 
         public IEnumerable<Inscricaopessoasubevento> GetSubByEvento(uint idEvento)
