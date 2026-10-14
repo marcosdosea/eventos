@@ -28,6 +28,7 @@ namespace Core.Service
         Task<String> DeletePessoaIdentityAsync(UsuarioIdentity user);
         Task <bool> CreatePessoaIdentityComPapelAsync(Pessoa pessoa, uint idEvento, int idPapel);
         Task<List<Pessoa>> GetPessoasPorPapelNoEventoAsync(uint idEvento, int idPapel);
+        Task<(string, UsuarioIdentity)> GerarTokenConfirmacaoEmailAsync(String user);
 
     }
 }

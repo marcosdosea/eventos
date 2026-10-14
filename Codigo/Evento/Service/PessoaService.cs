@@ -443,4 +443,20 @@ public class PessoaService : IPessoaService
             .AsNoTracking()
             .ToListAsync();
     }
+
+    public async Task<(string, UsuarioIdentity)> GerarTokenConfirmacaoEmailAsync(String cpf)
+    {
+        if(cpf == null) return (null, null);
+        UsuarioIdentity user = await _userManager.FindByNameAsync(cpf);
+        if (user == null)
+        {
+            Trace.TraceError($"User não existe. ");
+            return (null, null);
+        }
+            
+
+        var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+        return (token, user);
+    }
+    
 }

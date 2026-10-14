@@ -1,0 +1,76 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="author" content="Itatech Jr">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Confirmação de E-mail</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            margin: auto;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: #007bff;
+            color: #ffffff;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .btn-white {
+            background-color: #FFFFFF;
+            color: #007bff;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        footer {
+            font-size: 12px;
+            color: #777777;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <header style="font-family: 'Arial Black', Gadget, sans-serif; font-size: 24px; line-height: 1;">
+            <span style="font-size: 22px; font-weight: 900; color: #0A2FE2; letter-spacing: -1px;">
+                BORA<span style="font-size: 16px; font-weight: bold; text-transform: lowercase;">Lá</span>
+            </span>
+            <span style="display: block; font-size: 10px; color: #1132D9; font-family: Arial, sans-serif; text-transform: lowercase; margin-top: -2px;">eventos</span>
+        </header>
+
+        <main>
+            <h2>Seja bem-vindo(a), {{Nome}}!</h2>
+            <p>Bora lá confirmar seu e-mail?</p>
+            <p>Clique no botão abaixo:</p>
+            <a href="{{LinkCallback}}" class="btn" style="color: #ffffff !important">Confirmar E-mail</a>
+        </main>
+
+        <footer style="background: #007bff; color: aliceblue; padding: 60px;">
+            <p>Se você não solicitou essa mensagem, por favor, ignore este e-mail.</p>
+            <a href="{{LinkContato}}" class="btn btn-white">Fale com o Bora lá!</a>           
+        </footer>
+    </div>
+
+</body>
+
+</html>
