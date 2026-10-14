@@ -117,6 +117,15 @@
                 <a href="@ViewBag.UrlVoltar" class="btn btn-outline-danger mt-2 ms-2">Voltar</a>
             </aside>
         }
+        else if (Model.eventoNavigation.VagasDisponiveis <= 0)
+        {
+            <aside class="alert alert-warning mt-3 card-inscricao text-center alert-inscricao" role="alert">
+                <h4 class="alert-heading text-warning"><i class="bi bi-exclamation-triangle-fill me-2"></i>Lotação Esgotada</h4>
+                <p>As inscrições para este evento estão com lotação esgotada.</p>
+                <hr>
+                <a href="@ViewBag.UrlVoltar" class="btn btn-outline-danger mt-2">Voltar</a>
+            </aside>
+        }
         else
         {
             <form method="post" asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@Model.eventoNavigation.Id">
@@ -211,7 +220,8 @@
                                 bool isEncerrado = sub.Status == "F" || sub.DataFimInscricao < DateTime.Now;
                                 bool isEmCadastro = sub.Status == "C";
                                 bool isEmBreve = sub.DataInicioInscricao > DateTime.Now;
-                                bool isDisabled = isEncerrado || isEmCadastro || isEmBreve;
+                                bool isEsgotado = sub.VagasDisponiveis <= 0;
+                                bool isDisabled = isEncerrado || isEmCadastro || isEmBreve || isEsgotado;
                                 
                                 <label class="subevento-container @(isDisabled ? "opacity-50" : "")">
                                     <div class="subevento-header">
@@ -229,6 +239,10 @@
                                                 else if (isEmBreve)
                                                 {
                                                     <span class="badge bg-warning text-dark ms-2" style="font-size: 0.6em; vertical-align: middle;">Em Breve</span>
+                                                }
+                                                else if (isEsgotado)
+                                                {
+                                                    <span class="badge bg-danger ms-2" style="font-size: 0.6em; vertical-align: middle;">Esgotado</span>
                                                 }
                                             </h4>
                                             <p>

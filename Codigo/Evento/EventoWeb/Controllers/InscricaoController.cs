@@ -220,6 +220,12 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("Index", "Home"); 
             }
 
+            if (evento.VagasDisponiveis <= 0)
+            {
+                TempData["ParticipanteMessage"] = "Lotação esgotada.";
+                return RedirectToAction("Index", "Home"); 
+            }
+
             if (evento.VagasDisponiveis < totalEventTickets)
             {
                 TempData["ParticipanteMessage"] = "A quantidade de ingressos solicitada excede o número de vagas disponíveis do evento.";
@@ -380,6 +386,12 @@ namespace EventoWeb.Controllers
                             parsedTipo = t;
                         }
                         subEventQuantities[parsedTipo] = 1;
+                    }
+
+                    if (subevento.VagasDisponiveis <= 0)
+                    {
+                        TempData["ParticipanteMessage"] = $"As vagas para o subevento {subevento.Nome} estão esgotadas.";
+                        return RedirectToAction("realizarInscricao", new { idEvento = idEvento }); 
                     }
 
                     if (subevento.VagasDisponiveis < totalSubTickets)

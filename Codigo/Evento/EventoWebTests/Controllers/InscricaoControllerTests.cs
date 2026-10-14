@@ -650,11 +650,233 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual(0, criadasSub.Count, "Nenhum ingresso de subevento deve ser persistido.");
         }
 
+        [TestMethod()]
+        public void RealizarInscricaoTest_Get_PeriodoInscricaoNaoIniciado_RedirecionaParaHomeComMensagem()
+        {
+            // Arrange
+            var evento = new Evento
+            {
+                Id = 1,
+                Status = "A",
+                PossuiCertificado = 1,
+                DataInicioInscricao = DateTime.Now.AddDays(2)
+            };
+            var controller = CreateGetController(evento);
+
+            // Act
+            var result = controller.realizarInscricao(1, (uint?)null);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirect.ActionName);
+            Assert.AreEqual("Home", redirect.ControllerName);
+            Assert.AreEqual("O período de inscrições para este evento ainda não começou.", controller.TempData["ParticipanteMessage"]);
+        }
+
+        [TestMethod()]
+        public void RealizarInscricaoTest_Get_PeriodoInscricaoEncerrado_RedirecionaParaHomeComMensagem()
+        {
+            // Arrange
+            var evento = new Evento
+            {
+                Id = 1,
+                Status = "A",
+                PossuiCertificado = 1,
+                DataFimInscricao = DateTime.Now.AddDays(-1)
+            };
+            var controller = CreateGetController(evento);
+
+            // Act
+            var result = controller.realizarInscricao(1, (uint?)null);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirect.ActionName);
+            Assert.AreEqual("Home", redirect.ControllerName);
+            Assert.AreEqual("O período de inscrições para este evento já foi encerrado.", controller.TempData["ParticipanteMessage"]);
+        }
+
+        [TestMethod()]
+        public async Task RealizarInscricaoTest_Post_LotacaoEsgotada_BloqueiaERedireciona()
+        {
+            // Arrange
+            var tipos = new Dictionary<uint, Tipoinscricao>
+            {
+                { 1, new Tipoinscricao { Id = 1, IdEvento = 1, Nome = "Geral", Valor = 10m } }
+            };
+            var evento = new Evento { Id = 1, Status = "A", PossuiCertificado = 1, VagasDisponiveis = 0 };
+            var (postController, criadas, _) = CreatePostController(tipos, new Dictionary<string, string>
+            {
+                { "QuantidadeTipoInscricao_1", "1" }
+            }, evento);
+
+            var input = new InscricaoEventoModel { IdTipoInscricao = 1 };
+
+            // Act
+            var result = await postController.realizarInscricao(1, input);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirect.ActionName);
+            Assert.AreEqual("Home", redirect.ControllerName);
+            Assert.AreEqual("Lotação esgotada.", postController.TempData["ParticipanteMessage"]);
+            Assert.AreEqual(0, criadas.Count);
+        }
+
+        [TestMethod()]
+        public async Task RealizarInscricaoTest_Post_PeriodoInscricaoNaoIniciado_BloqueiaERedireciona()
+        {
+            // Arrange
+            var tipos = new Dictionary<uint, Tipoinscricao>
+            {
+                { 1, new Tipoinscricao { Id = 1, IdEvento = 1, Nome = "Geral", Valor = 10m } }
+            };
+            var evento = new Evento { Id = 1, Status = "A", PossuiCertificado = 1, VagasDisponiveis = 100, DataInicioInscricao = DateTime.Now.AddDays(2) };
+            var (postController, criadas, _) = CreatePostController(tipos, new Dictionary<string, string>
+            {
+                { "QuantidadeTipoInscricao_1", "1" }
+            }, evento);
+
+            var input = new InscricaoEventoModel { IdTipoInscricao = 1 };
+
+            // Act
+            var result = await postController.realizarInscricao(1, input);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirect.ActionName);
+            Assert.AreEqual("Home", redirect.ControllerName);
+            Assert.AreEqual("O período de inscrições para este evento ainda não começou.", postController.TempData["ParticipanteMessage"]);
+            Assert.AreEqual(0, criadas.Count);
+        }
+
+        [TestMethod()]
+        public async Task RealizarInscricaoTest_Post_PeriodoInscricaoEncerrado_BloqueiaERedireciona()
+        {
+            // Arrange
+            var tipos = new Dictionary<uint, Tipoinscricao>
+            {
+                { 1, new Tipoinscricao { Id = 1, IdEvento = 1, Nome = "Geral", Valor = 10m } }
+            };
+            var evento = new Evento { Id = 1, Status = "A", PossuiCertificado = 1, VagasDisponiveis = 100, DataFimInscricao = DateTime.Now.AddDays(-1) };
+            var (postController, criadas, _) = CreatePostController(tipos, new Dictionary<string, string>
+            {
+                { "QuantidadeTipoInscricao_1", "1" }
+            }, evento);
+
+            var input = new InscricaoEventoModel { IdTipoInscricao = 1 };
+
+            // Act
+            var result = await postController.realizarInscricao(1, input);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirect.ActionName);
+            Assert.AreEqual("Home", redirect.ControllerName);
+            Assert.AreEqual("O período de inscrições para este evento já foi encerrado.", postController.TempData["ParticipanteMessage"]);
+            Assert.AreEqual(0, criadas.Count);
+        }
+
+        [TestMethod()]
+        public async Task RealizarInscricaoTest_Post_SubeventoEsgotado_BloqueiaERedireciona()
+        {
+            // Arrange
+            var tipos = new Dictionary<uint, Tipoinscricao>
+            {
+                { 1, new Tipoinscricao { Id = 1, IdEvento = 1, Nome = "Geral", Valor = 10m } }
+            };
+            var mockSubeventoService = new Mock<ISubeventoService>();
+            mockSubeventoService.Setup(s => s.Get(10))
+                .Returns(new Subevento
+                {
+                    Id = 10,
+                    IdEvento = 1,
+                    Nome = "Minicurso Esgotado",
+                    Status = "A",
+                    DataFimInscricao = DateTime.Now.AddDays(1),
+                    VagasDisponiveis = 0
+                });
+
+            var (postController, criadas, criadasSub) = CreatePostController(
+                tipos,
+                new Dictionary<string, string> { { "QuantidadeTipoInscricao_1", "1" } },
+                customSubeventoService: mockSubeventoService);
+
+            var input = new InscricaoEventoModel
+            {
+                IdTipoInscricao = 1,
+                SelectedSubeventos = new List<uint> { 10 }
+            };
+
+            // Act
+            var result = await postController.realizarInscricao(1, input);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("realizarInscricao", redirect.ActionName);
+            Assert.AreEqual("As vagas para o subevento Minicurso Esgotado estão esgotadas.", postController.TempData["ParticipanteMessage"]);
+            Assert.AreEqual(0, criadas.Count);
+            Assert.AreEqual(0, criadasSub.Count);
+        }
+
+        private static InscricaoController CreateGetController(Evento evento)
+        {
+            var mockPessoaService = new Mock<IPessoaService>();
+            mockPessoaService.Setup(s => s.GetByCpf(UsernameTeste))
+                .Returns(new Pessoa { Id = 1, Cpf = UsernameTeste, Nome = "Nome Participante", NomeCracha = "Apelido" });
+
+            var mockEventoService = new Mock<IEventoService>();
+            mockEventoService.Setup(s => s.Get(evento.Id)).Returns(evento);
+
+            var mockTipoService = new Mock<ITipoInscricaoService>();
+            mockTipoService.Setup(s => s.GetByEvento(evento.Id)).Returns(new List<Tipoinscricao>());
+
+            var mockSubeventoService = new Mock<ISubeventoService>();
+            mockSubeventoService.Setup(s => s.GetByIdEvento(evento.Id)).Returns(new List<SubeventoEventoDTO>());
+
+            var mockInscricaoService = new Mock<IInscricaoService>();
+            mockInscricaoService.Setup(s => s.GetGestorInEvent(UsernameTeste, evento.Id)).Returns((Inscricaopessoaevento)null!);
+            mockInscricaoService.Setup(s => s.IsInscrito(1, evento.Id)).Returns(false);
+
+            IMapper mapper = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile(new EventoProfile());
+                cfg.AddProfile(new InscricaoProfile());
+            }).CreateMapper();
+
+            var getController = new InscricaoController(
+                null!,
+                mockTipoService.Object,
+                mockEventoService.Object,
+                mapper,
+                mockInscricaoService.Object,
+                mockPessoaService.Object,
+                mockSubeventoService.Object);
+
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, UsernameTeste) };
+            var httpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType"))
+            };
+            getController.ControllerContext = new ControllerContext { HttpContext = httpContext };
+            getController.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
+            getController.Url = Mock.Of<IUrlHelper>();
+
+            return getController;
+        }
+
         private static (InscricaoController, List<Inscricaopessoaevento>, List<Inscricaopessoasubevento>) CreatePostController(
             Dictionary<uint, Tipoinscricao> tipos,
             Dictionary<string, string> formFields,
             Evento? evento = null,
-            Pessoa? pessoa = null)
+            Pessoa? pessoa = null,
+            Mock<ISubeventoService>? customSubeventoService = null)
         {
             var mockPessoaService = new Mock<IPessoaService>();
             mockPessoaService.Setup(service => service.GetByCpf(UsernameTeste))
@@ -685,9 +907,12 @@ namespace EventoWeb.Controllers.Tests
             mockEventoService.Setup(service => service.Get(It.IsAny<uint>()))
                 .Returns(evento);
 
-            var mockSubeventoService = new Mock<ISubeventoService>();
-            mockSubeventoService.Setup(service => service.Get(10))
-                .Returns(new Subevento { Id = 10, IdEvento = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(1), ValorInscricao = 50m, VagasDisponiveis = 100 });
+            var mockSubeventoService = customSubeventoService ?? new Mock<ISubeventoService>();
+            if (customSubeventoService == null)
+            {
+                mockSubeventoService.Setup(service => service.Get(10))
+                    .Returns(new Subevento { Id = 10, IdEvento = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(1), ValorInscricao = 50m, VagasDisponiveis = 100 });
+            }
 
             IMapper mapper = new MapperConfiguration(cfg =>
                 cfg.AddProfile(new InscricaoProfile())).CreateMapper();
