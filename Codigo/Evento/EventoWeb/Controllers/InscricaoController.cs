@@ -5,6 +5,7 @@ using Core.DTO;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
 
@@ -638,23 +639,45 @@ namespace EventoWeb.Controllers
                 return RedirectToAction(nameof(minhasInscricoes));
             }
 
-            if (evento.DataFimInscricao.HasValue && evento.DataFimInscricao.Value < DateTime.Now)
+            // A desistência vale até o início do evento, não até o fim do prazo
+            // de inscrição: após DataFimInscricao o participante ainda pode
+            // liberar a vaga, desde que o evento não tenha começado.
+            if (evento.DataInicio.HasValue && evento.DataInicio.Value <= DateTime.Now)
             {
-                TempData["ParticipanteMessage"] = "O período de inscrições deste evento já foi encerrado.";
+                TempData["ParticipanteMessage"] = "Este evento já foi iniciado e não permite mais desistência.";
                 return RedirectToAction(nameof(minhasInscricoes));
             }
 
-            var (removidas, subeventosAfetados) = _inscricaoService.CancelarInscricaoParticipante(pessoa.Id, idEvento);
-            if (removidas == 0)
+            if (evento.DataFim.HasValue && evento.DataFim.Value < DateTime.Now)
             {
-                TempData["ParticipanteMessage"] = "Nenhuma inscrição de participante encontrada para este evento.";
+                TempData["ParticipanteMessage"] = "Este evento já foi encerrado e não permite mais desistência.";
                 return RedirectToAction(nameof(minhasInscricoes));
             }
 
-            _eventoService.AtualizarVagasDisponiveis(idEvento);
-            foreach (var idSub in subeventosAfetados)
+            try
             {
-                _subeventoService.AtualizarVagasDisponiveis(idSub);
+                var (removidas, subeventosAfetados) = _inscricaoService.CancelarInscricaoParticipante(pessoa.Id, idEvento);
+                if (removidas == 0)
+                {
+                    TempData["ParticipanteMessage"] = "Nenhuma inscrição de participante encontrada para este evento.";
+                    return RedirectToAction(nameof(minhasInscricoes));
+                }
+
+                _eventoService.AtualizarVagasDisponiveis(idEvento);
+                foreach (var idSub in subeventosAfetados)
+                {
+                    _subeventoService.AtualizarVagasDisponiveis(idSub);
+                }
+            }
+            catch (DbUpdateException)
+            {
+                TempData["ParticipanteMessage"] = "Não foi possível concluir a desistência. Tente novamente.";
+                return RedirectToAction(nameof(minhasInscricoes));
+            }
+            catch (Exception)
+            {
+                TempData["ParticipanteMessage"] = "Não foi possível concluir a desistência. Tente novamente.";
+                return RedirectToAction(nameof(minhasInscricoes));
             }
 
             TempData["ParticipanteSuccessMessage"] = "Desistência realizada com sucesso! Sua vaga foi liberada.";

@@ -65,7 +65,7 @@
         @if (!Model.Any())
         {
             <tr>
-                <td colspan="6" class="text-center text-muted py-4">
+                <td colspan="7" class="text-center text-muted py-4">
                     Nenhuma inscrição encontrada.
                 </td>
             </tr>
@@ -118,8 +118,9 @@
                             Ver Inscrição
                         </a>
                     }
-                    @if (item.IdEventoNavigation != null && item.IdEventoNavigation.Status == "A"
-                        && (!item.IdEventoNavigation.DataFimInscricao.HasValue || item.IdEventoNavigation.DataFimInscricao.Value >= DateTime.Now))
+                    @if (item.IdPapel == 4 && item.IdEventoNavigation != null && item.IdEventoNavigation.Status == "A"
+                        && (!item.IdEventoNavigation.DataInicio.HasValue || item.IdEventoNavigation.DataInicio.Value > DateTime.Now)
+                        && (!item.IdEventoNavigation.DataFim.HasValue || item.IdEventoNavigation.DataFim.Value >= DateTime.Now))
                     {
                         <form asp-action="CancelarInscricao" asp-controller="Inscricao" method="post" class="d-inline"
                               onsubmit="return confirm('Deseja desistir da inscrição neste evento? Sua vaga será liberada.');">

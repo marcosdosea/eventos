@@ -7,6 +7,7 @@ using EventoWeb.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Primitives;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -883,12 +884,32 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public void CancelarInscricaoTest_PeriodoEncerrado_BloqueiaSemChamarService()
+        public void CancelarInscricaoTest_PrazoInscricaoEncerrado_PermiteDesistencia()
+        {
+            // Arrange: prazo de inscricao fechado NAO bloqueia (regra M1);
+            // so o inicio/encerramento do evento bloqueia.
+            var (cancelarController, mockInscricao, mockEvento, _) = CreateCancelarController(
+                pessoa: new Pessoa { Id = 7, Cpf = UsernameTeste },
+                evento: new Evento { Id = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(-1), DataInicio = DateTime.Now.AddDays(5) },
+                cancelamento: (1, new List<uint>()));
+
+            // Act
+            var result = cancelarController.CancelarInscricao(1);
+
+            // Assert
+            mockInscricao.Verify(s => s.CancelarInscricaoParticipante((uint)7, (uint)1), Times.Once);
+            mockEvento.Verify(e => e.AtualizarVagasDisponiveis((uint)1), Times.Once);
+            Assert.AreEqual("Desistência realizada com sucesso! Sua vaga foi liberada.", cancelarController.TempData["ParticipanteSuccessMessage"]);
+            Assert.AreEqual("minhasInscricoes", ((RedirectToActionResult)result).ActionName);
+        }
+
+        [TestMethod()]
+        public void CancelarInscricaoTest_EventoIniciado_BloqueiaSemChamarService()
         {
             // Arrange
             var (cancelarController, mockInscricao, _, _) = CreateCancelarController(
                 pessoa: new Pessoa { Id = 7, Cpf = UsernameTeste },
-                evento: new Evento { Id = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(-1) },
+                evento: new Evento { Id = 1, Status = "A", DataInicio = DateTime.Now.AddHours(-1) },
                 cancelamento: (0, new List<uint>()));
 
             // Act
@@ -896,8 +917,95 @@ namespace EventoWeb.Controllers.Tests
 
             // Assert
             mockInscricao.Verify(s => s.CancelarInscricaoParticipante(It.IsAny<uint>(), It.IsAny<uint>()), Times.Never);
-            Assert.AreEqual("O período de inscrições deste evento já foi encerrado.", cancelarController.TempData["ParticipanteMessage"]);
+            Assert.AreEqual("Este evento já foi iniciado e não permite mais desistência.", cancelarController.TempData["ParticipanteMessage"]);
             Assert.AreEqual("minhasInscricoes", ((RedirectToActionResult)result).ActionName);
+        }
+
+        [TestMethod()]
+        public void CancelarInscricaoTest_EventoEncerrado_BloqueiaSemChamarService()
+        {
+            // Arrange: sem DataInicio, mas com DataFim passada
+            var (cancelarController, mockInscricao, _, _) = CreateCancelarController(
+                pessoa: new Pessoa { Id = 7, Cpf = UsernameTeste },
+                evento: new Evento { Id = 1, Status = "A", DataFim = DateTime.Now.AddDays(-1) },
+                cancelamento: (0, new List<uint>()));
+
+            // Act
+            var result = cancelarController.CancelarInscricao(1);
+
+            // Assert
+            mockInscricao.Verify(s => s.CancelarInscricaoParticipante(It.IsAny<uint>(), It.IsAny<uint>()), Times.Never);
+            Assert.AreEqual("Este evento já foi encerrado e não permite mais desistência.", cancelarController.TempData["ParticipanteMessage"]);
+            Assert.AreEqual("minhasInscricoes", ((RedirectToActionResult)result).ActionName);
+        }
+
+        [TestMethod()]
+        public void CancelarInscricaoTest_FalhaNoService_RetornaMensagemAmigavel()
+        {
+            // Arrange: service lanca DbUpdateException (ex: duplo-clique concorrente)
+            var mockPessoaService = new Mock<IPessoaService>();
+            mockPessoaService.Setup(s => s.GetByCpf(UsernameTeste))
+                .Returns(new Pessoa { Id = 7, Cpf = UsernameTeste });
+            var mockEventoService = new Mock<IEventoService>();
+            mockEventoService.Setup(s => s.Get(It.IsAny<uint>()))
+                .Returns(new Evento { Id = 1, Status = "A", DataInicio = DateTime.Now.AddDays(5) });
+            var mockInscricaoService = new Mock<IInscricaoService>();
+            mockInscricaoService.Setup(s => s.CancelarInscricaoParticipante(It.IsAny<uint>(), It.IsAny<uint>()))
+                .Throws(new DbUpdateException("concorrencia simulada"));
+            IMapper mapper = new MapperConfiguration(cfg =>
+                cfg.AddProfile(new InscricaoProfile())).CreateMapper();
+            var ctrl = new InscricaoController(
+                null!,
+                Mock.Of<ITipoInscricaoService>(),
+                mockEventoService.Object,
+                mapper,
+                mockInscricaoService.Object,
+                mockPessoaService.Object,
+                Mock.Of<ISubeventoService>());
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, UsernameTeste) };
+            var httpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType"))
+            };
+            ctrl.ControllerContext = new ControllerContext { HttpContext = httpContext };
+            ctrl.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
+
+            // Act
+            var result = ctrl.CancelarInscricao(1);
+
+            // Assert: sem 500, mensagem amigavel
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            Assert.AreEqual("minhasInscricoes", ((RedirectToActionResult)result).ActionName);
+            Assert.AreEqual("Não foi possível concluir a desistência. Tente novamente.", ctrl.TempData["ParticipanteMessage"]);
+        }
+
+        [TestMethod()]
+        public void CancelarInscricaoTest_Anonimo_RedirecionaHome()
+        {
+            // Arrange: identidade sem nome
+            var (cancelarController, mockInscricao, _, _) = CreateCancelarController(
+                pessoa: new Pessoa { Id = 7, Cpf = UsernameTeste },
+                evento: new Evento { Id = 1, Status = "A" },
+                cancelamento: (0, new List<uint>()));
+            var anonContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity()) };
+            var original = cancelarController.ControllerContext;
+            cancelarController.ControllerContext = new ControllerContext { HttpContext = anonContext };
+            try
+            {
+                // Act
+                var result = cancelarController.CancelarInscricao(1);
+
+                // Assert
+                mockInscricao.Verify(s => s.CancelarInscricaoParticipante(It.IsAny<uint>(), It.IsAny<uint>()), Times.Never);
+                Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+                var redirect = (RedirectToActionResult)result;
+                Assert.AreEqual("Index", redirect.ActionName);
+                Assert.AreEqual("Home", redirect.ControllerName);
+            }
+            finally
+            {
+                cancelarController.ControllerContext = original;
+            }
         }
 
         [TestMethod()]

@@ -10,6 +10,8 @@ namespace Service
     {
         private readonly EventoContext _context;
         private readonly UserManager<UsuarioIdentity> _userManager;
+
+        private const int PapelParticipante = 4;
         public InscricaoService(EventoContext context, UserManager<UsuarioIdentity> userManager)
         {
             _userManager = userManager;
@@ -137,7 +139,7 @@ namespace Service
         public (int Removidas, List<uint> SubeventosAfetados) CancelarInscricaoParticipante(uint idPessoa, uint idEvento)
         {
             var inscricoesEvento = _context.Inscricaopessoaeventos
-                .Where(i => i.IdPessoa == idPessoa && i.IdEvento == idEvento && i.IdPapel == 4)
+                .Where(i => i.IdPessoa == idPessoa && i.IdEvento == idEvento && i.IdPapel == PapelParticipante)
                 .ToList();
 
             if (!inscricoesEvento.Any())
@@ -151,7 +153,7 @@ namespace Service
                 .ToList();
 
             var inscricoesSub = _context.Inscricaopessoasubeventos
-                .Where(s => s.IdPessoa == idPessoa && s.IdPapel == 4 && idsSubeventosDoEvento.Contains(s.IdSubEvento))
+                .Where(s => s.IdPessoa == idPessoa && s.IdPapel == PapelParticipante && idsSubeventosDoEvento.Contains(s.IdSubEvento))
                 .ToList();
             var idsSubAfetados = inscricoesSub.Select(s => s.IdSubEvento).Distinct().ToList();
 
