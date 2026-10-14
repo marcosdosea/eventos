@@ -2,6 +2,8 @@
 
 @{
     ViewData["Title"] = "Inscrição - " + Model.eventoNavigation.Nome;
+
+    var tipoMeiaEntrada = EventoWeb.Controllers.InscricaoController.TIPO_MEIA_ENTRADA;
 }
 
 <link rel="stylesheet" href="~/css/realizarInscricaoLote.css" asp-append-version="true" />
@@ -105,8 +107,13 @@
             <aside class="alert alert-info mt-3 card-inscricao text-center alert-inscricao" role="alert">
                 <h4 class="alert-heading text-info">Atenção!</h4>
                 <p>Você já está inscrito neste evento.</p>
+                @if (!string.IsNullOrWhiteSpace(Model.inscricaoNavigation?.NomeCracha))
+                {
+                    <p class="mb-2"><strong>Nome no crachá:</strong> @Model.inscricaoNavigation.NomeCracha</p>
+                }
                 <hr>
-                <a asp-action="MinhasInscricoes" asp-controller="Inscricao" class="btn btn-primary mt-2">Ver Minhas Inscrições</a>
+                <a asp-action="DetalhesInscricao" asp-controller="Inscricao" asp-route-idEvento="@Model.eventoNavigation.Id" class="btn btn-success mt-2">Ver Inscrição / Comprovante</a>
+                <a asp-action="MinhasInscricoes" asp-controller="Inscricao" class="btn btn-primary mt-2 ms-2">Ver Minhas Inscrições</a>
                 <a href="@ViewBag.UrlVoltar" class="btn btn-outline-danger mt-2 ms-2">Voltar</a>
             </aside>
         }
@@ -184,9 +191,9 @@
                                         <span class="badge-custom badge-primary">R$ @((Model.eventoNavigation.ValorInscricao / 2m).ToString("N2"))</span>
                                     </div>
                                     <div class="quantidade-input-container">
-                                        <button type="button" class="btn-qty" onclick="changeQty('evento', 999999, -1)">-</button>
-                                        <input type="number" name="QuantidadeTipoInscricao_999999" id="qty_evento_999999" value="0" min="0" max="8" class="form-control quantidade-input-small evento-qty" data-valor="@((Model.eventoNavigation.ValorInscricao / 2m).ToString(System.Globalization.CultureInfo.InvariantCulture))" readonly />
-                                        <button type="button" class="btn-qty" onclick="changeQty('evento', 999999, 1)">+</button>
+                                        <button type="button" class="btn-qty" onclick="changeQty('evento', @tipoMeiaEntrada, -1)">-</button>
+                                        <input type="number" name="QuantidadeTipoInscricao_@tipoMeiaEntrada" id="qty_evento_@tipoMeiaEntrada" value="0" min="0" max="8" class="form-control quantidade-input-small evento-qty" data-valor="@((Model.eventoNavigation.ValorInscricao / 2m).ToString(System.Globalization.CultureInfo.InvariantCulture))" readonly />
+                                        <button type="button" class="btn-qty" onclick="changeQty('evento', @tipoMeiaEntrada, 1)">+</button>
                                     </div>
                                 </div>
                             }
@@ -204,7 +211,7 @@
                                 bool isEncerrado = sub.Status == "F" || sub.DataFimInscricao < DateTime.Now;
                                 bool isEmCadastro = sub.Status == "C";
                                 bool isEmBreve = sub.DataInicioInscricao > DateTime.Now;
-                                bool isDisabled = isEncerrado || isEmCadastro;
+                                bool isDisabled = isEncerrado || isEmCadastro || isEmBreve;
                                 
                                 <label class="subevento-container @(isDisabled ? "opacity-50" : "")">
                                     <div class="subevento-header">
@@ -284,9 +291,9 @@
                                                             <p style="margin:0; font-weight: 600;">Meia Entrada Padrão - R$ @((sub.ValorInscricao / 2m).ToString("N2"))</p>
                                                         </div>
                                                         <div class="quantidade-input-container">
-                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', 999999, -1)" disabled id="btn_minus_subevento_@(sub.Id)_999999">-</button>
-                                                            <input type="number" name="QuantidadeTipoInscricaoSubevento_@(sub.Id)_999999" id="qty_subevento_@(sub.Id)_999999" value="0" min="0" max="8" class="form-control quantidade-input-small subevento-qty-@sub.Id" data-valor="@((sub.ValorInscricao / 2m).ToString(System.Globalization.CultureInfo.InvariantCulture))" disabled readonly />
-                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', 999999, 1)" disabled id="btn_plus_subevento_@(sub.Id)_999999">+</button>
+                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', @tipoMeiaEntrada, -1)" disabled id="btn_minus_subevento_@(sub.Id)_@tipoMeiaEntrada">-</button>
+                                                            <input type="number" name="QuantidadeTipoInscricaoSubevento_@(sub.Id)_@tipoMeiaEntrada" id="qty_subevento_@(sub.Id)_@tipoMeiaEntrada" value="0" min="0" max="8" class="form-control quantidade-input-small subevento-qty-@sub.Id" data-valor="@((sub.ValorInscricao / 2m).ToString(System.Globalization.CultureInfo.InvariantCulture))" disabled readonly />
+                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', @tipoMeiaEntrada, 1)" disabled id="btn_plus_subevento_@(sub.Id)_@tipoMeiaEntrada">+</button>
                                                         </div>
                                                     </div>
                                                 }
@@ -298,7 +305,11 @@
                         </div>
                     }
 
-
+                    <div class="mt-4 mb-3">
+                        <label for="NomeCracha" class="form-label fw-bold">Nome no Crachá</label>
+                        <input type="text" id="NomeCracha" name="NomeCracha" value="@Model.inscricaoNavigation?.NomeCracha" class="form-control" maxlength="20" placeholder="Como deseja ser chamado no crachá" />
+                        <small class="form-text text-muted">Informe o nome a ser impresso no crachá do participante (máximo de 20 caracteres).</small>
+                    </div>
 
                     <footer class="summary">
                         <div>

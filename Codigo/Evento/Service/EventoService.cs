@@ -163,21 +163,28 @@ namespace Service
         }
         public EventoSimpleDTO GetEventoSimpleDto(uint id)
         {
-            var evento = Get(id);
-            if (evento != null)
-            {
-                var eventoSimpleDto = new EventoSimpleDTO
+            return _context.Eventos
+                .AsNoTracking()
+                .Where(e => e.Id == id)
+                .Select(e => new EventoSimpleDTO
                 {
-                    Id = evento.Id,
-                    Nome = evento.Nome
-                };
+                    Id = e.Id,
+                    Nome = e.Nome
+                })
+                .FirstOrDefault();
+        }
 
-                return eventoSimpleDto;
-            }
-            else
-            {
-                return null;
-            }
+        public IEnumerable<EventoSimpleDTO> GetAllSimpleDto()
+        {
+            return _context.Eventos
+                .AsNoTracking()
+                .OrderBy(e => e.Nome)
+                .Select(e => new EventoSimpleDTO
+                {
+                    Id = e.Id,
+                    Nome = e.Nome
+                })
+                .ToList();
         }
     
         /// <summary>
@@ -191,13 +198,13 @@ namespace Service
 
         public IEnumerable<Evento> GetEventByCpf(string userCpf, uint idPapel)
         {
-            var pessoa = _context.Pessoas.FirstOrDefault(p => p.Cpf == userCpf);
+            var pessoa = _context.Pessoas.AsNoTracking().FirstOrDefault(p => p.Cpf == userCpf);
             if (pessoa == null)
             {
                 throw new ServiceException("Pessoa não encontrada para o CPF fornecido.");
             }
-            var eventos = from evento in _context.Eventos
-                join inscricao in _context.Inscricaopessoaeventos
+            var eventos = from evento in _context.Eventos.AsNoTracking()
+                join inscricao in _context.Inscricaopessoaeventos.AsNoTracking()
                     on evento.Id equals inscricao.IdEvento
                 where inscricao.IdPessoa == pessoa.Id && inscricao.IdPapel == idPapel
                 select evento;
@@ -225,6 +232,7 @@ namespace Service
         public string GetNomeById(uint id)
         {
             return _context.Eventos
+                   .AsNoTracking()
                    .Where(t => t.Id == id)
                    .Select(t => t.Nome)
                    .FirstOrDefault();
@@ -232,12 +240,13 @@ namespace Service
 		public IEnumerable<Areainteresse> GetAreasInteresseByEventoId(uint eventoId)
 		{
 			var evento = _context.Eventos
+								 .AsNoTracking()
 								 .Include(e => e.IdAreaInteresses)
 								 .FirstOrDefault(e => e.Id == eventoId);
 
 			return evento?.IdAreaInteresses ?? Enumerable.Empty<Areainteresse>();
 		}
-		public void AtualizarVagasDisponiveis(uint idEvento)
+		public void AtualizarVagasDisponiveis(uint idEvento, bool saveChanges = true)
         {
             
             var evento = _context.Eventos
@@ -252,13 +261,17 @@ namespace Service
 
                 evento.VagasDisponiveis = evento.VagasOfertadas - quantidadeParticipantes;
 
-                _context.SaveChanges();
+                if (saveChanges)
+                {
+                    _context.SaveChanges();
+                }
             }
         }
 
         public IEnumerable<Evento> Search(EventoFilterDTO filter, int pagina, int tamanhoPagina, out int totalRegistros)
         {
             var query = _context.Eventos
+                .AsNoTracking()
                 .Include(e => e.IdTipoEventoNavigation)
                 .Include(e => e.IdAreaInteresses)
                 .AsQueryable();

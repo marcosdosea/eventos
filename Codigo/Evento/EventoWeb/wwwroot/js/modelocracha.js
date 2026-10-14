@@ -1,19 +1,10 @@
-/**
- * Gerenciamento e Interatividade dos Modelos de Crachá
- * Boralá Eventos
- */
-
 (function () {
     "use strict";
 
-    /**
-     * Inicializa a lógica interativa da tela de formulário (Create / Edit) do Modelo de Crachá
-     */
     function inicializarModeloCrachaForm() {
         const form = document.getElementById("formModeloCracha");
         if (!form) return;
 
-        // Elementos do formulário e parâmetros
         const selectEvento = document.getElementById("selectEventoVinculado");
         const txtTexto = document.getElementById("txtTextoCracha");
         const lblContador = document.getElementById("lblContadorCaracteres");
@@ -22,7 +13,6 @@
         const hiddenLogo = document.getElementById("hiddenLogotipoBase64");
         const btnCancelar = document.getElementById("btnCancelarAcao");
 
-        // Elementos de Upload e Thumbnail
         const btnUpload = document.getElementById("btnDispararUpload");
         const inputArquivo = document.getElementById("inputArquivoLogotipo");
         const thumbImg = document.getElementById("thumbImageElement");
@@ -30,7 +20,6 @@
         const lblNomeArquivo = document.getElementById("lblNomeArquivoVisual");
         const lblInfoArquivo = document.getElementById("lblInfoArquivoVisual");
 
-        // Elementos do Live Preview do Crachá Físico
         const crachaCard = document.getElementById("crachaCardElement");
         const lblNomeEvento = document.getElementById("lblPreviewNomeEvento");
         const lblTextoCracha = document.getElementById("lblPreviewTextoCracha");
@@ -38,13 +27,11 @@
         const crachaLogoContainer = document.getElementById("crachaLogoContainer");
         const crachaLogoImg = document.getElementById("crachaLogoElement");
 
-        // Botões de ação do preview
         const btnZoomIn = document.getElementById("btnZoomIn");
         const btnZoomOut = document.getElementById("btnZoomOut");
         const btnImprimir = document.getElementById("btnImprimirCracha");
         const btnFullscreen = document.getElementById("btnFullscreenPreview");
 
-        // Rotas base obtidas dos data-attributes do formulário
         const urlObterModeloBase = form.dataset.obterModeloUrl || "/Modelocracha/ObterModeloPorEvento";
         const urlIndexBase = form.dataset.indexUrl || "/Modelocracha/Index";
         const urlCreateBase = form.dataset.createUrl || "/Modelocracha/Create";
@@ -52,9 +39,6 @@
 
         let escalaAtual = 1;
 
-        /**
-         * Atualiza o contador de caracteres e o rodapé do crachá físico
-         */
         function atualizarTexto() {
             if (!txtTexto) return;
             const len = txtTexto.value.length;
@@ -66,24 +50,13 @@
             }
         }
 
-        /**
-         * Controla a exibição do QR Code no crachá físico
-         */
         function atualizarQrcode() {
             if (!blocoQrcode || !chkQrcode) return;
             blocoQrcode.style.display = chkQrcode.checked ? "flex" : "none";
         }
 
-        /**
-         * Atualiza a exibição da imagem do logotipo institucional tanto no thumbnail
-         * do formulário quanto no cartão físico do crachá (Live Preview e Impressão).
-         * @param {string|null} srcDataUrl - URL ou Base64 da imagem
-         * @param {string|null} nomeArquivo - Nome do arquivo para exibição
-         * @param {string|null} infoTamanho - Informações de tamanho do arquivo
-         */
         function aplicarLogotipo(srcDataUrl, nomeArquivo, infoTamanho) {
             if (srcDataUrl && srcDataUrl.trim() !== "") {
-                // Atualiza thumbnail do formulário
                 if (thumbImg) {
                     thumbImg.src = srcDataUrl;
                     thumbImg.style.display = "block";
@@ -98,7 +71,6 @@
                     lblInfoArquivo.textContent = infoTamanho;
                 }
 
-                // Atualiza imagem no crachá físico (Live Preview e Impressão)
                 if (crachaLogoImg) {
                     crachaLogoImg.src = srcDataUrl;
                 }
@@ -106,7 +78,6 @@
                     crachaLogoContainer.style.display = "flex";
                 }
             } else {
-                // Limpa thumbnail do formulário
                 if (thumbImg) {
                     thumbImg.src = "";
                     thumbImg.style.display = "none";
@@ -121,7 +92,6 @@
                     lblInfoArquivo.textContent = "PNG, SVG, JPEG (máx. 64 KB)";
                 }
 
-                // Oculta imagem no crachá físico
                 if (crachaLogoImg) {
                     crachaLogoImg.src = "";
                 }
@@ -131,19 +101,16 @@
             }
         }
 
-        // Listener: digitação do texto
         if (txtTexto) {
             txtTexto.addEventListener("input", atualizarTexto);
             atualizarTexto();
         }
 
-        // Listener: alternância do QR Code
         if (chkQrcode) {
             chkQrcode.addEventListener("change", atualizarQrcode);
             atualizarQrcode();
         }
 
-        // Listener: gatilho de upload de arquivo
         if (btnUpload && inputArquivo) {
             btnUpload.addEventListener("click", function () {
                 inputArquivo.click();
@@ -152,7 +119,7 @@
             inputArquivo.addEventListener("change", function () {
                 const file = this.files && this.files[0];
                 if (file) {
-                    const limiteBytes = 64 * 1024; // 64 KB
+                    const limiteBytes = 64 * 1024;
                     if (file.size > limiteBytes) {
                         alert("O arquivo selecionado excede o tamanho máximo suportado de 64 KB. Por favor, selecione uma imagem menor.");
                         this.value = "";
@@ -168,7 +135,6 @@
                         aplicarLogotipo(resultUrl, file.name, tamanhoTexto);
 
                         if (hiddenLogo) {
-                            // Salva a string base64 sem o cabeçalho data:image/...;base64,
                             const partes = resultUrl.split(",");
                             hiddenLogo.value = partes.length > 1 ? partes[1] : partes[0];
                         }
@@ -178,7 +144,6 @@
             });
         }
 
-        // Listener: mudança do evento vinculado
         if (selectEvento) {
             selectEvento.addEventListener("change", async function () {
                 const idEvento = this.value;
@@ -241,7 +206,6 @@
             });
         }
 
-        // Listener: Zoom In no crachá
         if (btnZoomIn && crachaCard) {
             btnZoomIn.addEventListener("click", function () {
                 if (escalaAtual < 1.4) {
@@ -252,7 +216,6 @@
             });
         }
 
-        // Listener: Zoom Out no crachá
         if (btnZoomOut && crachaCard) {
             btnZoomOut.addEventListener("click", function () {
                 if (escalaAtual > 0.6) {
@@ -263,14 +226,12 @@
             });
         }
 
-        // Listener: Impressão do crachá físico
         if (btnImprimir) {
             btnImprimir.addEventListener("click", function () {
                 window.print();
             });
         }
 
-        // Listener: Tela cheia para o preview
         if (btnFullscreen) {
             btnFullscreen.addEventListener("click", function () {
                 const container = document.querySelector(".preview-card-container");
@@ -283,9 +244,6 @@
         }
     }
 
-    /**
-     * Inicializa a lógica de busca/filtro da tela Index de Modelos de Crachá
-     */
     function inicializarModeloCrachaIndex() {
         const filtroInput = document.getElementById("filtroModelos");
         const tabelaBody = document.getElementById("tabelaModelosBody");
@@ -320,7 +278,6 @@
         });
     }
 
-    // Auto-inicialização quando o DOM estiver pronto
     document.addEventListener("DOMContentLoaded", function () {
         if (document.getElementById("formModeloCracha")) {
             inicializarModeloCrachaForm();
@@ -330,7 +287,6 @@
         }
     });
 
-    // Exportação para o escopo global caso seja necessária invocação manual
     window.ModeloCracha = {
         initForm: inicializarModeloCrachaForm,
         initIndex: inicializarModeloCrachaIndex

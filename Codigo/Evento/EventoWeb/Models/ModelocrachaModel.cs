@@ -43,11 +43,22 @@ namespace EventoWeb.Models
         public List<string>? QrCodes { get; set; } = new List<string>();
 
         public List<string>? Inscricoes { get; set; } = new List<string>();
+
+        [Display(Name = "Crachás")]
+        public List<CrachaParticipanteModel> Crachas { get; set; } = new List<CrachaParticipanteModel>();
         
         public EventoSimpleDTO? Evento { get; set; }
 
         public string? NomeArquivo { get; set; }
 
         public string? TamanhoArquivo { get; set; }
+    }
+
+    public class CrachaParticipanteModel
+    {
+        public uint IdPessoa { get; set; }
+        public string Nome { get; set; } = string.Empty;
+        public string NomeCracha { get; set; } = string.Empty;
+        public string QrCodeBase64 { get; set; } = string.Empty;
     }
 }

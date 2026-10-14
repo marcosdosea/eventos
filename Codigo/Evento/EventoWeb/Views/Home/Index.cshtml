@@ -22,18 +22,25 @@
 <body>
 
     <main>
-        @if (TempData["Message"] != null || TempData["ParticipanteMessage"] != null)
+        @if (TempData["Message"] != null)
         {
             <div class="alert alert-danger" role="alert" id="alerterror">
-                @(TempData["Message"] ?? TempData["ParticipanteMessage"])
+                @TempData["Message"]
             </div>
             TempData.Remove("Message");
+        }
+        @if (TempData["ParticipanteMessage"] != null)
+        {
+            <div class="alert alert-info" role="alert" id="alertinfo">
+                @TempData["ParticipanteMessage"]
+            </div>
             TempData.Remove("ParticipanteMessage");
         }
         <script>
-                    setTimeout(function () {
-                        $("#alerterror").fadeOut("slow");
-                    }, 3000);
+            setTimeout(function () {
+                $("#alerterror").fadeOut("slow");
+                $("#alertinfo").fadeOut("slow");
+            }, 3000);
         </script>
             <section class="categorias">
                 <h1>Encontre o evento ideal!</h1>

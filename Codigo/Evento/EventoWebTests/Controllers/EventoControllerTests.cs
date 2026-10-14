@@ -69,7 +69,7 @@ namespace EventoWeb.Controllers.Tests
     It.IsAny<Pessoa>(), It.IsAny<uint>(), It.IsAny<int>()))
     .ReturnsAsync(true)
                 .Verifiable();
-            mockService.Setup(service => service.AtualizarVagasDisponiveis(It.IsAny<uint>()))
+            mockService.Setup(service => service.AtualizarVagasDisponiveis(It.IsAny<uint>(), It.IsAny<bool>()))
                 .Verifiable();
             var pessoa = new Pessoa { Id = 1, Cpf = "123.456.789-00", Nome = "Teste" };
             mockServicePessoa.Setup(s => s.Get(1)).Returns(pessoa);
@@ -319,10 +319,48 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
+        public void EditParticipante_Get_CarregaNomeCrachaDaInscricao()
+        {
+            mockServiceInscricao.Setup(s => s.GetPapelPessoaByEvento(1, 1)).Returns(4);
+            mockServiceInscricao.Setup(s => s.GetByEvento(1)).Returns(new List<Inscricaopessoaevento>
+            {
+                new Inscricaopessoaevento { Id = 1, IdPessoa = 1, IdEvento = 1, IdPapel = 4, NomeCracha = "Cracha Personalizado" }
+            });
+
+            var result = controller.EditParticipante(1, 1);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            ViewResult viewResult = (ViewResult)result;
+            var model = (GestaoPapelModel)viewResult.ViewData.Model;
+            Assert.AreEqual("Cracha Personalizado", model.Pessoa.NomeCracha);
+        }
+
+        [TestMethod()]
         public async Task EditParticipante_Post_Valid()
         {
             var model = GetNewGestaoPapel();
             model.Pessoa.Id = 1;
+
+            var result = await controller.EditParticipante(model);
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
+            Assert.AreEqual("CreateParticipante", redirectToActionResult.ActionName);
+            mockServiceInscricao.Verify(s => s.UpdateNomeCracha(1, model.Evento.Id, It.IsAny<string>()), Times.Once);
+        }
+
+        [TestMethod()]
+        public async Task EditParticipante_Post_SemCamposLocalizacao_PreservaLocalizacaoExistente()
+        {
+            var model = GetNewGestaoPapel();
+            model.Pessoa.Id = 1;
+            model.Pessoa.Cep = null;
+            model.Pessoa.Estado = null;
+            model.Pessoa.Cidade = null;
+            model.Pessoa.Bairro = null;
+            model.Pessoa.Rua = null;
+            model.Pessoa.Numero = null;
+            model.Pessoa.Complemento = null;
 
             var result = await controller.EditParticipante(model);
 

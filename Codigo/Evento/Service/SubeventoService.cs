@@ -142,7 +142,7 @@ namespace Service
             return query.ToList();
         }
 
-        public void AtualizarVagasDisponiveis(uint idSubevento)
+        public void AtualizarVagasDisponiveis(uint idSubevento, bool saveChanges = true)
         {
             var subevento = _context.Subeventos
                 .Include(s => s.Inscricaopessoasubeventos)
@@ -157,7 +157,10 @@ namespace Service
                 subevento.VagasDisponiveis = (uint)(vagasRestantes < 0 ? 0 : vagasRestantes);
 
                 _context.Update(subevento);
-                _context.SaveChanges();
+                if (saveChanges)
+                {
+                    _context.SaveChanges();
+                }
             }
         }
     }

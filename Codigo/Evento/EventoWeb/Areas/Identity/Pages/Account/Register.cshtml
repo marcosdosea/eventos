@@ -24,7 +24,7 @@
             
             <h5>Nome</h5>
             <div class="form-floating mb-3">
-                <input asp-for="Input.Nome" class="form-control" autocomplete="name" aria-required="true" placeholder="Seu nome completo" />
+                <input asp-for="Input.Nome" class="form-control" autocomplete="name" aria-required="true" placeholder="Seu nome completo" maxlength="50" />
                 <label asp-for="Input.Nome" class="form-label grey-light-active">Nome</label>
                 <span asp-validation-for="Input.Nome" class="text-danger"></span>
             </div>
@@ -38,7 +38,7 @@
             
             <h5>Email</h5>
             <div class="form-floating mb-3">
-                <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" />
+                <input asp-for="Input.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com" maxlength="50" />
                 <label asp-for="Input.Email" class="form-label grey-light-active">Email</label>
                 <span asp-validation-for="Input.Email" class="text-danger"></span>
             </div>
@@ -96,7 +96,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script src="~/js/FormatarCpfCadastro.js" asp-append-version="true"></script>
+   
 }
 
 <script>
