@@ -604,5 +604,62 @@ namespace EventoWeb.Controllers
             return View(model);
         }
 
+        [Authorize]
+        [HttpPost]
+        [Route("CancelarInscricao")]
+        [ValidateAntiForgeryToken]
+        public IActionResult CancelarInscricao(uint idEvento)
+        {
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            // Só o dono cancela as próprias inscrições de participante:
+            // a pessoa é sempre resolvida a partir do usuário logado.
+            var pessoa = _pessoaService.GetByCpf(username);
+            if (pessoa == null)
+            {
+                TempData["ParticipanteMessage"] = "Usuário não encontrado.";
+                return RedirectToAction(nameof(minhasInscricoes));
+            }
+
+            var evento = _eventoService.Get(idEvento);
+            if (evento == null)
+            {
+                TempData["ParticipanteMessage"] = "Evento não encontrado.";
+                return RedirectToAction(nameof(minhasInscricoes));
+            }
+
+            if (evento.Status != "A")
+            {
+                TempData["ParticipanteMessage"] = "Este evento não está ativo para desistência.";
+                return RedirectToAction(nameof(minhasInscricoes));
+            }
+
+            if (evento.DataFimInscricao.HasValue && evento.DataFimInscricao.Value < DateTime.Now)
+            {
+                TempData["ParticipanteMessage"] = "O período de inscrições deste evento já foi encerrado.";
+                return RedirectToAction(nameof(minhasInscricoes));
+            }
+
+            var (removidas, subeventosAfetados) = _inscricaoService.CancelarInscricaoParticipante(pessoa.Id, idEvento);
+            if (removidas == 0)
+            {
+                TempData["ParticipanteMessage"] = "Nenhuma inscrição de participante encontrada para este evento.";
+                return RedirectToAction(nameof(minhasInscricoes));
+            }
+
+            _eventoService.AtualizarVagasDisponiveis(idEvento);
+            foreach (var idSub in subeventosAfetados)
+            {
+                _subeventoService.AtualizarVagasDisponiveis(idSub);
+            }
+
+            TempData["ParticipanteSuccessMessage"] = "Desistência realizada com sucesso! Sua vaga foi liberada.";
+            return RedirectToAction(nameof(minhasInscricoes));
+        }
+
     }
 }

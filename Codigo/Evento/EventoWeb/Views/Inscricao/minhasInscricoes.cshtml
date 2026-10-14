@@ -118,6 +118,16 @@
                             Ver Inscrição
                         </a>
                     }
+                    @if (item.IdEventoNavigation != null && item.IdEventoNavigation.Status == "A"
+                        && (!item.IdEventoNavigation.DataFimInscricao.HasValue || item.IdEventoNavigation.DataFimInscricao.Value >= DateTime.Now))
+                    {
+                        <form asp-action="CancelarInscricao" asp-controller="Inscricao" method="post" class="d-inline"
+                              onsubmit="return confirm('Deseja desistir da inscrição neste evento? Sua vaga será liberada.');">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="idEvento" value="@item.IdEvento" />
+                            <button type="submit" class="btn btn-sm btn-outline-danger me-2">Desistir</button>
+                        </form>
+                    }
                     <span class="text-muted">Gerar Certificado</span>
                 </td>
             </tr>
