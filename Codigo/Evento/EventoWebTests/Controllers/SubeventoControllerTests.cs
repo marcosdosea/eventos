@@ -584,8 +584,8 @@ namespace EventoWeb.Controllers.Tests
             // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
-            Assert.IsNull(redirectToActionResult.ControllerName);
-            Assert.AreEqual("Index", redirectToActionResult.ActionName);
+            Assert.AreEqual("Evento", redirectToActionResult.ControllerName);
+            Assert.AreEqual("GerenciarEventoListar", redirectToActionResult.ActionName);
         }
 
         // IDOR (#764): gestor só gerencia o próprio evento.
