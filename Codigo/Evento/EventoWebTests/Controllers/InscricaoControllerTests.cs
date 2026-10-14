@@ -120,6 +120,44 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
+        public async Task RealizarInscricaoTest_Post_MeiaEntrada_PersisteTipoNuloEMetadeDoValor()
+        {
+            // Arrange: posta o sentinela de meia entrada tanto para o evento
+            // principal (valor 100 -> 50) quanto para o subevento 10 (valor 50 -> 25).
+            // Deve persistir IdTipoInscricao = null em ambos.
+            var evento = new Evento { Id = 1, Status = "A", PossuiCertificado = 1, ValorInscricao = 100m, VagasDisponiveis = 100 };
+            var meia = InscricaoController.TIPO_MEIA_ENTRADA;
+            var (postController, criadas, criadasSub) = CreatePostController(
+                new Dictionary<uint, Tipoinscricao>(),
+                new Dictionary<string, string>
+                {
+                    { $"QuantidadeTipoInscricao_{meia}", "1" },
+                    { $"QuantidadeTipoInscricaoSubevento_10_{meia}", "1" }
+                },
+                evento);
+
+            var input = new InscricaoEventoModel
+            {
+                IdTipoInscricao = meia,
+                SelectedSubeventos = new List<uint> { 10 },
+                ValorTotal = 999m
+            };
+
+            // Act
+            var result = await postController.realizarInscricao(1, input);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            Assert.AreEqual(1, criadas.Count);
+            Assert.IsNull(criadas[0].IdTipoInscricao, "Meia entrada nao e um tipo real: deve gravar IdTipoInscricao = null.");
+            Assert.AreEqual(50m, criadas[0].ValorTotal, "Evento com meia entrada deve custar 50% do valor.");
+
+            Assert.AreEqual(1, criadasSub.Count);
+            Assert.IsNull(criadasSub[0].IdTipoInscricao, "Meia entrada no subevento tambem deve gravar IdTipoInscricao = null.");
+            Assert.AreEqual(25m, criadasSub[0].Valor, "Subevento com meia entrada deve custar 50% do valor.");
+        }
+
+        [TestMethod()]
         public async Task RealizarInscricaoTest_Post_GratuitousTipo_SavesZero()
         {
             // Arrange

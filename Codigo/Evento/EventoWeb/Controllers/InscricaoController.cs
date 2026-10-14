@@ -14,10 +14,6 @@ namespace EventoWeb.Controllers
     [Authorize]
     public class InscricaoController : Controller
     {
-        // Identificador sentinela para a "Meia Entrada Padrao".
-        // Nao e um ID real da tabela Tipoinscricao: fica fora da faixa de IDs
-        // reais e, ao salvar, a inscricao grava IdTipoInscricao = null.
-        // Definido em um unico lugar e reutilizado no controller e na view.
         public const uint TIPO_MEIA_ENTRADA = uint.MaxValue;
 
         private readonly IEventoService _eventoService;
@@ -392,8 +388,6 @@ namespace EventoWeb.Controllers
 
                 decimal valorMain = 0m;
 
-                // So e um tipo de inscricao real se nao for o sentinela de meia
-                // entrada, nao for zero e existir de fato na base.
                 var tipoObjMain = (idTipo != 0 && idTipo != TIPO_MEIA_ENTRADA)
                     ? _tipoinscricaoService.Get(idTipo)
                     : null;
@@ -506,8 +500,6 @@ namespace EventoWeb.Controllers
 
                         decimal valorSub = 0m;
 
-                        // So e um tipo de inscricao real se nao for o sentinela de
-                        // meia entrada, nao for zero e existir de fato na base.
                         var tipoObjSub = (idTipoSub != 0 && idTipoSub != TIPO_MEIA_ENTRADA)
                             ? _tipoinscricaoService.Get(idTipoSub)
                             : null;
