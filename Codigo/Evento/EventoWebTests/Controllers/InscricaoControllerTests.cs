@@ -825,6 +825,288 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual(0, criadasSub.Count);
         }
 
+        [TestMethod()]
+        public void RealizarInscricaoTest_Get_UsuarioJaInscritoNoEventoPrincipal_MasComSubeventosDisponiveis_PermiteAcessoETrazFlags()
+        {
+            // Arrange
+            var mockPessoaService = new Mock<IPessoaService>();
+            mockPessoaService.Setup(s => s.GetByCpf(UsernameTeste))
+                .Returns(new Pessoa { Id = 1, Cpf = UsernameTeste, Nome = "Nome Completo", NomeCracha = "Apelido" });
+
+            var mockEventoService = new Mock<IEventoService>();
+            mockEventoService.Setup(s => s.Get(1))
+                .Returns(new Evento { Id = 1, Status = "A", PossuiCertificado = 1, Nome = "Evento Teste" });
+
+            var mockTipoService = new Mock<ITipoInscricaoService>();
+            mockTipoService.Setup(s => s.GetByEvento(1)).Returns(new List<Tipoinscricao>());
+            mockTipoService.Setup(s => s.GetTiposAgrupadosPorSubevento(1)).Returns(new Dictionary<uint, List<TipoInscricaoDTO>>());
+
+            var mockSubeventoService = new Mock<ISubeventoService>();
+            mockSubeventoService.Setup(s => s.GetByIdEvento(1)).Returns(new List<SubeventoEventoDTO>
+            {
+                new SubeventoEventoDTO { Id = 10, Nome = "Subevento 1", Status = "A" },
+                new SubeventoEventoDTO { Id = 20, Nome = "Subevento 2", Status = "A" }
+            });
+
+            var mockInscricaoService = new Mock<IInscricaoService>();
+            mockInscricaoService.Setup(s => s.GetGestorInEvent(UsernameTeste, 1)).Returns((Inscricaopessoaevento)null!);
+            mockInscricaoService.Setup(s => s.IsInscrito(1, 1)).Returns(true);
+            mockInscricaoService.Setup(s => s.GetByEvento(1)).Returns(new List<Inscricaopessoaevento>
+            {
+                new Inscricaopessoaevento { Id = 1, IdPessoa = 1, IdEvento = 1, IdPapel = 4 }
+            });
+            mockInscricaoService.Setup(s => s.GetSubByEvento(1)).Returns(new List<Inscricaopessoasubevento>
+            {
+                new Inscricaopessoasubevento { IdPessoa = 1, IdSubEvento = 10, Status = "A" }
+            });
+
+            IMapper mapper = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile(new EventoProfile());
+                cfg.AddProfile(new InscricaoProfile());
+            }).CreateMapper();
+
+            var getController = new InscricaoController(
+                null!,
+                mockTipoService.Object,
+                mockEventoService.Object,
+                mapper,
+                mockInscricaoService.Object,
+                mockPessoaService.Object,
+                mockSubeventoService.Object);
+
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, UsernameTeste) };
+            var httpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType"))
+            };
+            getController.ControllerContext = new ControllerContext { HttpContext = httpContext };
+            getController.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
+            getController.Url = Mock.Of<IUrlHelper>();
+
+            // Act
+            var result = getController.realizarInscricao(1, (uint?)null);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            Assert.AreEqual(true, getController.ViewBag.JaInscritoEventoPrincipal);
+            Assert.IsNull(getController.ViewBag.JaInscrito);
+            var subInscritos = getController.ViewBag.SubeventosInscritos as HashSet<uint>;
+            Assert.IsNotNull(subInscritos);
+            Assert.IsTrue(subInscritos.Contains(10));
+            Assert.IsFalse(subInscritos.Contains(20));
+        }
+
+        [TestMethod()]
+        public void RealizarInscricaoTest_Get_UsuarioJaInscritoNoEventoPrincipalETodosSubeventos_BloqueiaComJaInscrito()
+        {
+            // Arrange
+            var mockPessoaService = new Mock<IPessoaService>();
+            mockPessoaService.Setup(s => s.GetByCpf(UsernameTeste))
+                .Returns(new Pessoa { Id = 1, Cpf = UsernameTeste, Nome = "Nome Completo", NomeCracha = "Apelido" });
+
+            var mockEventoService = new Mock<IEventoService>();
+            mockEventoService.Setup(s => s.Get(1))
+                .Returns(new Evento { Id = 1, Status = "A", PossuiCertificado = 1, Nome = "Evento Teste" });
+
+            var mockTipoService = new Mock<ITipoInscricaoService>();
+            mockTipoService.Setup(s => s.GetByEvento(1)).Returns(new List<Tipoinscricao>());
+            mockTipoService.Setup(s => s.GetTiposAgrupadosPorSubevento(1)).Returns(new Dictionary<uint, List<TipoInscricaoDTO>>());
+
+            var mockSubeventoService = new Mock<ISubeventoService>();
+            mockSubeventoService.Setup(s => s.GetByIdEvento(1)).Returns(new List<SubeventoEventoDTO>
+            {
+                new SubeventoEventoDTO { Id = 10, Nome = "Subevento 1", Status = "A" }
+            });
+
+            var mockInscricaoService = new Mock<IInscricaoService>();
+            mockInscricaoService.Setup(s => s.GetGestorInEvent(UsernameTeste, 1)).Returns((Inscricaopessoaevento)null!);
+            mockInscricaoService.Setup(s => s.IsInscrito(1, 1)).Returns(true);
+            mockInscricaoService.Setup(s => s.GetByEvento(1)).Returns(new List<Inscricaopessoaevento>
+            {
+                new Inscricaopessoaevento { Id = 1, IdPessoa = 1, IdEvento = 1, IdPapel = 4 }
+            });
+            mockInscricaoService.Setup(s => s.GetSubByEvento(1)).Returns(new List<Inscricaopessoasubevento>
+            {
+                new Inscricaopessoasubevento { IdPessoa = 1, IdSubEvento = 10, Status = "A" }
+            });
+
+            IMapper mapper = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile(new EventoProfile());
+                cfg.AddProfile(new InscricaoProfile());
+            }).CreateMapper();
+
+            var getController = new InscricaoController(
+                null!,
+                mockTipoService.Object,
+                mockEventoService.Object,
+                mapper,
+                mockInscricaoService.Object,
+                mockPessoaService.Object,
+                mockSubeventoService.Object);
+
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, UsernameTeste) };
+            var httpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType"))
+            };
+            getController.ControllerContext = new ControllerContext { HttpContext = httpContext };
+            getController.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
+            getController.Url = Mock.Of<IUrlHelper>();
+
+            // Act
+            var result = getController.realizarInscricao(1, (uint?)null);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            Assert.AreEqual(true, getController.ViewBag.JaInscritoEventoPrincipal);
+            Assert.AreEqual(true, getController.ViewBag.JaInscrito);
+        }
+
+        [TestMethod()]
+        public async Task RealizarInscricaoTest_Post_UsuarioJaInscritoNoEventoPrincipal_InscreveApenasEmNovosSubeventos()
+        {
+            // Arrange
+            var tipos = new Dictionary<uint, Tipoinscricao>
+            {
+                { 1, new Tipoinscricao { Id = 1, IdEvento = 1, Nome = "Geral", Valor = 10m } },
+                { 2, new Tipoinscricao { Id = 2, IdEvento = 1, Nome = "Sub Tipo", Valor = 20m } }
+            };
+
+            var mockPessoaService = new Mock<IPessoaService>();
+            mockPessoaService.Setup(s => s.GetByCpf(UsernameTeste))
+                .Returns(new Pessoa { Id = 1, Cpf = UsernameTeste, Nome = "Participante Teste" });
+
+            var mockEventoService = new Mock<IEventoService>();
+            mockEventoService.Setup(s => s.Get(1))
+                .Returns(new Evento { Id = 1, Status = "A", PossuiCertificado = 1, VagasDisponiveis = 100 });
+
+            var mockTipoService = new Mock<ITipoInscricaoService>();
+            mockTipoService.Setup(s => s.Get(It.IsAny<uint>()))
+                .Returns<uint>(id => tipos.TryGetValue(id, out var t) ? t : null);
+
+            var mockSubeventoService = new Mock<ISubeventoService>();
+            mockSubeventoService.Setup(s => s.Get(10))
+                .Returns(new Subevento { Id = 10, IdEvento = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(1), VagasDisponiveis = 100 });
+            mockSubeventoService.Setup(s => s.Get(20))
+                .Returns(new Subevento { Id = 20, IdEvento = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(1), VagasDisponiveis = 100 });
+
+            var mockInscricaoService = new Mock<IInscricaoService>();
+            mockInscricaoService.Setup(s => s.IsInscrito(1, 1)).Returns(true);
+            mockInscricaoService.Setup(s => s.GetSubByEvento(1)).Returns(new List<Inscricaopessoasubevento>
+            {
+                new Inscricaopessoasubevento { IdPessoa = 1, IdSubEvento = 10, Status = "A" }
+            });
+
+            var criadasEvento = new List<Inscricaopessoaevento>();
+            var criadasSub = new List<Inscricaopessoasubevento>();
+            mockInscricaoService.Setup(s => s.CreateInscricoesEmLote(
+                    It.IsAny<IEnumerable<Inscricaopessoaevento>>(),
+                    It.IsAny<IEnumerable<Inscricaopessoasubevento>>(),
+                    It.IsAny<bool>()))
+                .Callback<IEnumerable<Inscricaopessoaevento>, IEnumerable<Inscricaopessoasubevento>, bool>((e, s, _) =>
+                {
+                    if (e != null) criadasEvento.AddRange(e);
+                    if (s != null) criadasSub.AddRange(s);
+                });
+
+            IMapper mapper = new MapperConfiguration(cfg =>
+                cfg.AddProfile(new InscricaoProfile())).CreateMapper();
+
+            var controller = new InscricaoController(
+                null!,
+                mockTipoService.Object,
+                mockEventoService.Object,
+                mapper,
+                mockInscricaoService.Object,
+                mockPessoaService.Object,
+                mockSubeventoService.Object);
+
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, UsernameTeste) };
+            var httpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType"))
+            };
+            var formCollection = new FormCollection(new Dictionary<string, Microsoft.Extensions.Primitives.StringValues>
+            {
+                { "QuantidadeTipoInscricaoSubevento_20_2", "1" }
+            });
+            httpContext.Request.Form = formCollection;
+
+            controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
+            controller.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
+
+            var input = new InscricaoEventoModel
+            {
+                SelectedSubeventos = new List<uint> { 10, 20 }
+            };
+
+            // Act
+            var result = await controller.realizarInscricao(1, input);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("minhasInscricoes", redirect.ActionName);
+            Assert.AreEqual("Inscrição no(s) subevento(s) realizada com sucesso!", controller.TempData["ParticipanteSuccessMessage"]);
+            Assert.AreEqual(0, criadasEvento.Count, "Não deve duplicar a inscrição no evento principal.");
+            Assert.AreEqual(1, criadasSub.Count, "Deve inscrever apenas no novo subevento.");
+            Assert.AreEqual((uint)20, criadasSub[0].IdSubEvento);
+        }
+
+        [TestMethod()]
+        public async Task RealizarInscricaoTest_Post_UsuarioJaInscritoNoEventoPrincipal_SemNovosSubeventos_RedirecionaComMensagemJaInscrito()
+        {
+            // Arrange
+            var mockPessoaService = new Mock<IPessoaService>();
+            mockPessoaService.Setup(s => s.GetByCpf(UsernameTeste))
+                .Returns(new Pessoa { Id = 1, Cpf = UsernameTeste, Nome = "Participante Teste" });
+
+            var mockEventoService = new Mock<IEventoService>();
+            mockEventoService.Setup(s => s.Get(1))
+                .Returns(new Evento { Id = 1, Status = "A", PossuiCertificado = 1, VagasDisponiveis = 100 });
+
+            var mockInscricaoService = new Mock<IInscricaoService>();
+            mockInscricaoService.Setup(s => s.IsInscrito(1, 1)).Returns(true);
+            mockInscricaoService.Setup(s => s.GetSubByEvento(1)).Returns(new List<Inscricaopessoasubevento>
+            {
+                new Inscricaopessoasubevento { IdPessoa = 1, IdSubEvento = 10, Status = "A" }
+            });
+
+            var controller = new InscricaoController(
+                null!,
+                Mock.Of<ITipoInscricaoService>(),
+                mockEventoService.Object,
+                Mock.Of<IMapper>(),
+                mockInscricaoService.Object,
+                mockPessoaService.Object,
+                Mock.Of<ISubeventoService>());
+
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, UsernameTeste) };
+            var httpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType"))
+            };
+            httpContext.Request.Form = new FormCollection(new Dictionary<string, Microsoft.Extensions.Primitives.StringValues>());
+            controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
+            controller.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
+
+            var input = new InscricaoEventoModel
+            {
+                SelectedSubeventos = new List<uint> { 10 }
+            };
+
+            // Act
+            var result = await controller.realizarInscricao(1, input);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("minhasInscricoes", redirect.ActionName);
+            Assert.AreEqual("Você já está inscrito neste evento!", controller.TempData["ParticipanteMessage"]);
+        }
+
         private static InscricaoController CreateGetController(Evento evento)
         {
             var mockPessoaService = new Mock<IPessoaService>();

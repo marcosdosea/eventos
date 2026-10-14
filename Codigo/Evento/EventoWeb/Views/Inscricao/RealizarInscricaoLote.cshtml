@@ -212,23 +212,29 @@
                     @if (Model.SubeventosOpcoes != null && Model.SubeventosOpcoes.Any())
                     {
                         <h2 class="section-title mt-40">Programação / Subeventos</h2>
-                        <p class="section-description mb-20">Selecione os subeventos dos quais deseja participar e escolha o tipo de inscrição para cada um:</p>
+                        <p class="section-description mb-20">Caso deseje, selecione os subeventos dos quais deseja participar (opcional):</p>
                         <div class="subeventos-wrapper">
                             @foreach (var subOpcao in Model.SubeventosOpcoes)
                             {
                                 var sub = subOpcao.Subevento;
+                                var subInscritos = ViewBag.SubeventosInscritos as HashSet<uint>;
+                                bool isJaInscrito = subInscritos != null && subInscritos.Contains(sub.Id);
                                 bool isEncerrado = sub.Status == "F" || sub.DataFimInscricao < DateTime.Now;
                                 bool isEmCadastro = sub.Status == "C";
                                 bool isEmBreve = sub.DataInicioInscricao > DateTime.Now;
                                 bool isEsgotado = sub.VagasDisponiveis <= 0;
-                                bool isDisabled = isEncerrado || isEmCadastro || isEmBreve || isEsgotado;
+                                bool isDisabled = isJaInscrito || isEncerrado || isEmCadastro || isEmBreve || isEsgotado;
                                 
                                 <label class="subevento-container @(isDisabled ? "opacity-50" : "")">
                                     <div class="subevento-header">
                                         <div>
                                             <h4>
                                                 @sub.Nome
-                                                @if (isEncerrado)
+                                                @if (isJaInscrito)
+                                                {
+                                                    <span class="badge bg-success ms-2" style="font-size: 0.6em; vertical-align: middle;"><i class="bi bi-check-circle me-1"></i>Inscrito</span>
+                                                }
+                                                else if (isEncerrado)
                                                 {
                                                     <span class="badge bg-secondary ms-2" style="font-size: 0.6em; vertical-align: middle;">Encerrado</span>
                                                 }
@@ -251,7 +257,7 @@
                                             </p>
                                         </div>
                                         <div class="subevento-checkbox-wrapper">
-                                            <input type="checkbox" name="SelectedSubeventos" value="@sub.Id" class="subevento-checkbox" onchange="toggleSubeventoSelect(this, @sub.Id)" @(isDisabled ? "disabled" : "") />
+                                            <input type="checkbox" name="SelectedSubeventos" value="@sub.Id" class="subevento-checkbox" onchange="toggleSubeventoSelect(this, @sub.Id)" @(isJaInscrito ? "checked disabled" : (isDisabled ? "disabled" : "")) />
                                         </div>
                                     </div>
                                     <div class="subevento-tipo-wrapper" id="wrapper-tipo-@sub.Id">
