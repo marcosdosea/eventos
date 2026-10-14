@@ -117,6 +117,34 @@ namespace Service
         }
 
         /// <summary>
+        /// Obtém os tipos de inscrição de todos os subeventos de um evento em consulta única,
+        /// agrupados por id do subevento (evita N+1 na montagem da tela de inscrição)
+        /// </summary>
+        public IDictionary<uint, List<TipoInscricaoDTO>> GetTiposAgrupadosPorSubevento(uint idEvento)
+        {
+            return _context.Tipoinscricaos
+                .Where(ti => ti.IdEvento == idEvento)
+                .SelectMany(ti => ti.IdSubEventos.Select(se => new
+                {
+                    IdSubevento = se.Id,
+                    Tipo = new TipoInscricaoDTO
+                    {
+                        Id = ti.Id,
+                        Nome = ti.Nome,
+                        IdEvento = ti.IdEvento,
+                        Descricao = ti.Descricao,
+                        Valor = ti.Valor,
+                        DataInicio = ti.DataInicio,
+                        Datafim = ti.Datafim
+                    }
+                }))
+                .AsNoTracking()
+                .ToList()
+                .GroupBy(x => x.IdSubevento)
+                .ToDictionary(g => g.Key, g => g.Select(x => x.Tipo).ToList());
+        }
+
+        /// <summary>
         /// Associa um tipo de inscrição a um subevento
         /// </summary>
         /// <summary>
