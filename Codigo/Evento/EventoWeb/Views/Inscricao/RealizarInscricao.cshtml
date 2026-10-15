@@ -160,62 +160,149 @@
                     {
                         <h2 class="section-title mt-40">Programação / Subeventos</h2>
                         <p class="section-description mb-20">Selecione os subeventos dos quais deseja participar e escolha o tipo de inscrição para cada um:</p>
-                        <div class="subeventos-wrapper">
-                            @foreach (var subOpcao in Model.SubeventosOpcoes)
-                            {
-                                var sub = subOpcao.Subevento;
-                                bool isEncerrado = sub.Status == "F" || sub.DataFimInscricao < DateTime.Now;
-                                bool isEmCadastro = sub.Status == "C";
-                                bool isEmBreve = sub.DataInicioInscricao > DateTime.Now;
-                                bool isDisabled = isEncerrado || isEmCadastro || isEmBreve;
-                                
-                                <label class="subevento-container @(isDisabled ? "opacity-50" : "")">
-                                    <div class="subevento-header">
-                                        <div>
-                                            <h4>
-                                                @sub.Nome
-                                                @if (isEncerrado)
-                                                {
-                                                    <span class="badge bg-secondary ms-2" style="font-size: 0.6em; vertical-align: middle;">Encerrado</span>
-                                                }
-                                                else if (isEmCadastro)
-                                                {
-                                                    <span class="badge bg-info text-dark ms-2" style="font-size: 0.6em; vertical-align: middle;">Em Cadastro</span>
-                                                }
-                                                else if (isEmBreve)
-                                                {
-                                                    <span class="badge bg-warning text-dark ms-2" style="font-size: 0.6em; vertical-align: middle;">Em Breve</span>
-                                                }
-                                            </h4>
-                                            <p>
-                                                <i class="bi bi-tag-fill me-1"></i> @sub.NomeTipoEvento | 
-                                                <i class="bi bi-person-check-fill me-1"></i> Disponíveis: @sub.VagasDisponiveis de @sub.VagasOfertadas
-                                            </p>
-                                        </div>
-                                        <div class="subevento-checkbox-wrapper">
-                                            <input type="checkbox" name="SelectedSubeventos" value="@sub.Id" class="subevento-checkbox" onchange="toggleSubeventoSelect(this, @sub.Id)" @(isDisabled ? "disabled" : "") />
-                                        </div>
-                                    </div>
-                                    <div class="subevento-tipo-wrapper" id="wrapper-tipo-@sub.Id">
-                                        <label>Selecione o Tipo de Inscrição:</label>
-                                        <select name="TipoInscricaoSubevento_@sub.Id" id="select-tipo-@sub.Id" class="form-select subevento-tipo-select" onchange="calcularValorTotal()" disabled>
-                                            @if (subOpcao.TiposInscricao != null && subOpcao.TiposInscricao.Any())
-                                            {
-                                                @foreach(var tipo in subOpcao.TiposInscricao)
-                                                {
-                                                    <option value="@tipo.Id" data-valor="@tipo.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture)">
-                                                        @tipo.Nome - @(tipo.Valor == 0 ? "Gratuito" : $"R$ {tipo.Valor.ToString("N2")}")
-                                                    </option>
-                                                }
-                                            }
-                                            else
-                                            {
-                                                <option value="" data-valor="0">Nenhum tipo disponível (Gratuito)</option>
-                                            }
-                                        </select>
-                                    </div>
-                                </label>
-                            }
+
+                        <div class="subeventos-table-card">
+                            <div class="table-responsive">
+                                <table class="subeventos-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="col-sel">SEL.</th>
+                                            <th style="width: 85px;">CÓDIGO</th>
+                                            <th style="min-width: 220px;">SUBEVENTO / ATIVIDADE</th>
+                                            <th style="min-width: 140px;">DATA & CARGA</th>
+                                            <th style="width: 120px; text-align: center;">VAGAS</th>
+                                            <th style="min-width: 170px;">TIPO & VALOR</th>
+                                            <th style="width: 110px; text-align: right;">AÇÕES</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var subOpcao in Model.SubeventosOpcoes)
+                                        {
+                                            var sub = subOpcao.Subevento;
+                                            bool isEncerrado = sub.Status == "F" || sub.DataFimInscricao < DateTime.Now;
+                                            bool isEmCadastro = sub.Status == "C";
+                                            bool isEmBreve = sub.DataInicioInscricao > DateTime.Now;
+                                            bool isDisabled = isEncerrado || isEmCadastro || isEmBreve;
+                                            var tipos = subOpcao.TiposInscricao?.ToList() ?? new List<Core.DTO.TipoInscricaoDTO>();
+
+                                            <tr id="row-subevento-@sub.Id" class="@(isDisabled ? "opacity-50" : "")">
+                                                <td class="col-sel">
+                                                    <input type="checkbox" name="SelectedSubeventos" value="@sub.Id" class="subevento-checkbox" onchange="toggleSubeventoSelect(this, @sub.Id)" @(isDisabled ? "disabled" : "") aria-label="Selecionar @sub.Nome" />
+                                                </td>
+                                                <td>
+                                                    <span class="badge-subevento-cod">SUB-@sub.Id</span>
+                                                </td>
+                                                <td>
+                                                    <div class="subevento-titulo">@sub.Nome</div>
+                                                    <div class="subevento-subtitulo">
+                                                        <i class="bi bi-tag-fill text-muted"></i>
+                                                        <span>@sub.NomeTipoEvento</span>
+                                                        @if (isEncerrado)
+                                                        {
+                                                            <span class="badge bg-secondary ms-1">Encerrado</span>
+                                                        }
+                                                        else if (isEmCadastro)
+                                                        {
+                                                            <span class="badge bg-info text-dark ms-1">Em Cadastro</span>
+                                                        }
+                                                        else if (isEmBreve)
+                                                        {
+                                                            <span class="badge bg-warning text-dark ms-1">Em Breve</span>
+                                                        }
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="fw-semibold text-dark" style="font-size: 0.84rem;">
+                                                        @(sub.DataInicio.HasValue ? sub.DataInicio.Value.ToString("dd/MM/yyyy • HH:mm") : "A definir")
+                                                    </div>
+                                                    <div class="text-muted small">
+                                                        Carga: @(sub.CargaHoraria > 0 ? $"{sub.CargaHoraria}h" : "Livre")
+                                                    </div>
+                                                </td>
+                                                <td style="text-align: center;">
+                                                    @if (sub.VagasDisponiveis > 10)
+                                                    {
+                                                        <span class="badge-vagas badge-vagas-alta">
+                                                            <i class="bi bi-check-circle-fill"></i> @sub.VagasDisponiveis vagas
+                                                        </span>
+                                                    }
+                                                    else if (sub.VagasDisponiveis > 0)
+                                                    {
+                                                        <span class="badge-vagas badge-vagas-baixa">
+                                                            <i class="bi bi-exclamation-triangle-fill"></i> @sub.VagasDisponiveis vagas
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge-vagas badge-vagas-esgotado">
+                                                            <i class="bi bi-x-circle-fill"></i> Esgotado
+                                                        </span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    @if (tipos.Count > 1)
+                                                    {
+                                                        <div id="wrapper-tipo-@sub.Id">
+                                                            <select name="TipoInscricaoSubevento_@sub.Id" id="select-tipo-@sub.Id" class="form-select form-select-sm subevento-select-tipo subevento-tipo-select" onchange="calcularValorTotal()" disabled>
+                                                                @foreach (var tipo in tipos)
+                                                                {
+                                                                    <option value="@tipo.Id" data-valor="@tipo.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+                                                                        @tipo.Nome - @(tipo.Valor == 0 ? "Gratuito" : $"R$ {tipo.Valor:N2}")
+                                                                    </option>
+                                                                }
+                                                            </select>
+                                                        </div>
+                                                    }
+                                                    else if (tipos.Count == 1)
+                                                    {
+                                                        var unicoTipo = tipos.First();
+                                                        <div id="wrapper-tipo-@sub.Id">
+                                                            @if (unicoTipo.Valor == 0)
+                                                            {
+                                                                <span class="badge-valor-gratuito">Gratuito</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="badge-valor-pago">+ R$ @unicoTipo.Valor.ToString("N2")</span>
+                                                            }
+                                                            <select name="TipoInscricaoSubevento_@sub.Id" id="select-tipo-@sub.Id" class="d-none subevento-tipo-select" disabled>
+                                                                <option value="@unicoTipo.Id" data-valor="@unicoTipo.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture)" selected>
+                                                                    @unicoTipo.Nome
+                                                                </option>
+                                                            </select>
+                                                        </div>
+                                                    }
+                                                    else
+                                                    {
+                                                        var valorPadrao = (sub.InscricaoGratuita == 1 || sub.ValorInscricao == 0) ? 0m : sub.ValorInscricao;
+                                                        <div id="wrapper-tipo-@sub.Id">
+                                                            @if (valorPadrao == 0)
+                                                            {
+                                                                <span class="badge-valor-gratuito">Gratuito</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span class="badge-valor-pago">+ R$ @valorPadrao.ToString("N2")</span>
+                                                            }
+                                                            <select name="TipoInscricaoSubevento_@sub.Id" id="select-tipo-@sub.Id" class="d-none subevento-tipo-select" disabled>
+                                                                <option value="" data-valor="@valorPadrao.ToString(System.Globalization.CultureInfo.InvariantCulture)" selected>
+                                                                    Padrão
+                                                                </option>
+                                                            </select>
+                                                        </div>
+                                                    }
+                                                </td>
+                                                <td style="text-align: right;">
+                                                    <button type="button" class="btn-ver-ementa" onclick="abrirEmentaModal('@sub.Nome', '@(string.IsNullOrWhiteSpace(sub.Descricao) ? "Nenhuma ementa detalhada cadastrada para este subevento." : sub.Descricao.Replace("'", "\\'"))', '@sub.NomeTipoEvento', '@(sub.CargaHoraria > 0 ? $"{sub.CargaHoraria} Horas" : "Não informada")')">
+                                                        <i class="bi bi-eye"></i>
+                                                        <span>Ementa</span>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     }
 
@@ -262,6 +349,32 @@
     <div id="imageModal" class="image-modal" onclick="closeImageModal()">
         <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
         <img class="image-modal-content" id="expandedImg">
+    </div>
+
+    <!-- Modal de Ementa do Subevento -->
+    <div id="ementaModalOverlay" class="modal-ementa-overlay" onclick="fecharEmentaModal(event)">
+        <div class="modal-ementa-card" onclick="event.stopPropagation()">
+            <div class="modal-ementa-header">
+                <h5 class="modal-ementa-title" id="ementaModalTitulo">Ementa do Subevento</h5>
+                <button type="button" class="modal-ementa-close" onclick="fecharEmentaModal()">&times;</button>
+            </div>
+            <div class="modal-ementa-body">
+                <div class="modal-ementa-meta">
+                    <span class="modal-ementa-meta-item">
+                        <i class="bi bi-tag-fill blue-normal"></i>
+                        <span id="ementaModalTipo"></span>
+                    </span>
+                    <span class="modal-ementa-meta-item">
+                        <i class="bi bi-clock-fill blue-normal"></i>
+                        <span id="ementaModalCarga"></span>
+                    </span>
+                </div>
+                <div id="ementaModalDescricao" style="white-space: pre-line;"></div>
+            </div>
+            <div class="modal-ementa-footer">
+                <button type="button" class="btn btn-sm btn-outline-secondary px-3 rounded-pill" onclick="fecharEmentaModal()">Fechar</button>
+            </div>
+        </div>
     </div>
 </main>
 

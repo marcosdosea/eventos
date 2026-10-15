@@ -7,16 +7,45 @@ function toggleSelect(radio) {
 }
 
 function toggleSubeventoSelect(checkbox, id) {
-    const wrapper = document.getElementById('wrapper-tipo-' + id);
+    const row = document.getElementById('row-subevento-' + id);
     const select = document.getElementById('select-tipo-' + id);
     if (checkbox.checked) {
-        wrapper.style.display = 'block';
-        select.disabled = false;
+        if (row) row.classList.add('row-selected');
+        if (select) select.disabled = false;
     } else {
-        wrapper.style.display = 'none';
-        select.disabled = true;
+        if (row) row.classList.remove('row-selected');
+        if (select) select.disabled = true;
     }
     calcularValorTotal();
+}
+
+function abrirEmentaModal(nome, descricao, tipo, carga) {
+    const overlay = document.getElementById('ementaModalOverlay');
+    const lblTitulo = document.getElementById('ementaModalTitulo');
+    const lblTipo = document.getElementById('ementaModalTipo');
+    const lblCarga = document.getElementById('ementaModalCarga');
+    const lblDesc = document.getElementById('ementaModalDescricao');
+
+    if (lblTitulo) lblTitulo.textContent = nome || "Ementa do Subevento";
+    if (lblTipo) lblTipo.textContent = tipo || "Atividade";
+    if (lblCarga) lblCarga.textContent = "Carga: " + (carga || "Livre");
+    if (lblDesc) lblDesc.textContent = descricao || "Nenhuma ementa detalhada informada.";
+
+    if (overlay) {
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function fecharEmentaModal(event) {
+    if (event && event.target && event.target.id !== 'ementaModalOverlay' && !event.target.classList.contains('modal-ementa-close') && event.target.tagName !== 'BUTTON') {
+        return;
+    }
+    const overlay = document.getElementById('ementaModalOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
 }
 
 function calcularValorTotal() {
@@ -92,6 +121,7 @@ function closeImageModal() {
 document.addEventListener('keydown', function(event) {
     if (event.key === "Escape") {
         closeImageModal();
+        fecharEmentaModal();
     }
 });
 

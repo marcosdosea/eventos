@@ -1,8 +1,10 @@
 function toggleSubeventoSelect(checkbox, id) {
+    const row = document.getElementById('row-subevento-' + id);
     const wrapper = document.getElementById('wrapper-tipo-' + id);
     const qtyInputs = document.querySelectorAll('.subevento-qty-' + id);
     if (checkbox.checked) {
-        wrapper.style.display = 'block';
+        if (row) row.classList.add('row-selected');
+        if (wrapper) wrapper.style.display = 'block';
         qtyInputs.forEach(input => {
             input.disabled = false;
             const parts = input.id.split('_'); // qty_subevento_id_tipo
@@ -15,7 +17,8 @@ function toggleSubeventoSelect(checkbox, id) {
             }
         });
     } else {
-        wrapper.style.display = 'none';
+        if (row) row.classList.remove('row-selected');
+        if (wrapper) wrapper.style.display = 'none';
         qtyInputs.forEach(input => {
             input.disabled = true;
             input.value = 0;
@@ -30,6 +33,35 @@ function toggleSubeventoSelect(checkbox, id) {
         });
     }
     calcularValorTotal();
+}
+
+function abrirEmentaModal(nome, descricao, tipo, carga) {
+    const overlay = document.getElementById('ementaModalOverlay');
+    const lblTitulo = document.getElementById('ementaModalTitulo');
+    const lblTipo = document.getElementById('ementaModalTipo');
+    const lblCarga = document.getElementById('ementaModalCarga');
+    const lblDesc = document.getElementById('ementaModalDescricao');
+
+    if (lblTitulo) lblTitulo.textContent = nome || "Ementa do Subevento";
+    if (lblTipo) lblTipo.textContent = tipo || "Atividade";
+    if (lblCarga) lblCarga.textContent = "Carga: " + (carga || "Livre");
+    if (lblDesc) lblDesc.textContent = descricao || "Nenhuma ementa detalhada informada.";
+
+    if (overlay) {
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function fecharEmentaModal(event) {
+    if (event && event.target && event.target.id !== 'ementaModalOverlay' && !event.target.classList.contains('modal-ementa-close') && event.target.tagName !== 'BUTTON') {
+        return;
+    }
+    const overlay = document.getElementById('ementaModalOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
 }
 
 let lastValidState = {}; // para reverter em caso de passar de 8
@@ -155,6 +187,7 @@ function closeImageModal() {
 document.addEventListener('keydown', function(event) {
     if (event.key === "Escape") {
         closeImageModal();
+        fecharEmentaModal();
     }
 });
 

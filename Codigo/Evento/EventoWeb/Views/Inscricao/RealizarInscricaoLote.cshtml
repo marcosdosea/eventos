@@ -204,104 +204,149 @@
                     {
                         <h2 class="section-title mt-40">Programação / Subeventos</h2>
                         <p class="section-description mb-20">Selecione os subeventos dos quais deseja participar e escolha o tipo de inscrição para cada um:</p>
-                        <div class="subeventos-wrapper">
-                            @foreach (var subOpcao in Model.SubeventosOpcoes)
-                            {
-                                var sub = subOpcao.Subevento;
-                                bool isEncerrado = sub.Status == "F" || sub.DataFimInscricao < DateTime.Now;
-                                bool isEmCadastro = sub.Status == "C";
-                                bool isEmBreve = sub.DataInicioInscricao > DateTime.Now;
-                                bool isDisabled = isEncerrado || isEmCadastro || isEmBreve;
-                                
-                                <label class="subevento-container @(isDisabled ? "opacity-50" : "")">
-                                    <div class="subevento-header">
-                                        <div>
-                                            <h4>
-                                                @sub.Nome
-                                                @if (isEncerrado)
-                                                {
-                                                    <span class="badge bg-secondary ms-2" style="font-size: 0.6em; vertical-align: middle;">Encerrado</span>
-                                                }
-                                                else if (isEmCadastro)
-                                                {
-                                                    <span class="badge bg-info text-dark ms-2" style="font-size: 0.6em; vertical-align: middle;">Em Cadastro</span>
-                                                }
-                                                else if (isEmBreve)
-                                                {
-                                                    <span class="badge bg-warning text-dark ms-2" style="font-size: 0.6em; vertical-align: middle;">Em Breve</span>
-                                                }
-                                            </h4>
-                                            <p>
-                                                <i class="bi bi-tag-fill me-1"></i> @sub.NomeTipoEvento | 
-                                                <i class="bi bi-person-check-fill me-1"></i> Disponíveis: @sub.VagasDisponiveis de @sub.VagasOfertadas
-                                            </p>
-                                        </div>
-                                        <div class="subevento-checkbox-wrapper">
-                                            <input type="checkbox" name="SelectedSubeventos" value="@sub.Id" class="subevento-checkbox" onchange="toggleSubeventoSelect(this, @sub.Id)" @(isDisabled ? "disabled" : "") />
-                                        </div>
-                                    </div>
-                                    <div class="subevento-tipo-wrapper" id="wrapper-tipo-@sub.Id">
-                                        <label>Selecione as Quantidades para este Subevento:</label>
-                                        <div class="subevent-list mt-2">
-                                            @if (subOpcao.TiposInscricao != null && subOpcao.TiposInscricao.Any())
-                                            {
-                                                @foreach(var tipo in subOpcao.TiposInscricao)
-                                                {
-                                                    <div class="subevent-item" style="padding: 10px;">
-                                                        <div class="subevent-info">
-                                                            <p style="margin:0; font-weight: 600;">@tipo.Nome - @(tipo.Valor == 0 ? "Gratuito" : $"R$ {tipo.Valor.ToString("N2")}")</p>
-                                                        </div>
-                                                        <div class="quantidade-input-container">
-                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', @tipo.Id, -1)" disabled id="btn_minus_subevento_@(sub.Id)_@tipo.Id">-</button>
-                                                            <input type="number" name="QuantidadeTipoInscricaoSubevento_@(sub.Id)_@tipo.Id" id="qty_subevento_@(sub.Id)_@tipo.Id" value="0" min="0" max="8" class="form-control quantidade-input-small subevento-qty-@sub.Id" data-valor="@tipo.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture)" disabled readonly />
-                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', @tipo.Id, 1)" disabled id="btn_plus_subevento_@(sub.Id)_@tipo.Id">+</button>
-                                                        </div>
+
+                        <div class="subeventos-table-card">
+                            <div class="table-responsive">
+                                <table class="subeventos-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="col-sel">SEL.</th>
+                                            <th style="width: 85px;">CÓDIGO</th>
+                                            <th style="min-width: 220px;">SUBEVENTO / ATIVIDADE</th>
+                                            <th style="min-width: 140px;">DATA & CARGA</th>
+                                            <th style="width: 120px; text-align: center;">VAGAS</th>
+                                            <th style="min-width: 240px;">TIPO & QUANTIDADE</th>
+                                            <th style="width: 110px; text-align: right;">AÇÕES</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var subOpcao in Model.SubeventosOpcoes)
+                                        {
+                                            var sub = subOpcao.Subevento;
+                                            bool isEncerrado = sub.Status == "F" || sub.DataFimInscricao < DateTime.Now;
+                                            bool isEmCadastro = sub.Status == "C";
+                                            bool isEmBreve = sub.DataInicioInscricao > DateTime.Now;
+                                            bool isDisabled = isEncerrado || isEmCadastro || isEmBreve;
+                                            var tipos = subOpcao.TiposInscricao?.ToList() ?? new List<Core.DTO.TipoInscricaoDTO>();
+
+                                            <tr id="row-subevento-@sub.Id" class="@(isDisabled ? "opacity-50" : "")">
+                                                <td class="col-sel">
+                                                    <input type="checkbox" name="SelectedSubeventos" value="@sub.Id" class="subevento-checkbox" onchange="toggleSubeventoSelect(this, @sub.Id)" @(isDisabled ? "disabled" : "") aria-label="Selecionar @sub.Nome" />
+                                                </td>
+                                                <td>
+                                                    <span class="badge-subevento-cod">SUB-@sub.Id</span>
+                                                </td>
+                                                <td>
+                                                    <div class="subevento-titulo">@sub.Nome</div>
+                                                    <div class="subevento-subtitulo">
+                                                        <i class="bi bi-tag-fill text-muted"></i>
+                                                        <span>@sub.NomeTipoEvento</span>
+                                                        @if (isEncerrado)
+                                                        {
+                                                            <span class="badge bg-secondary ms-1">Encerrado</span>
+                                                        }
+                                                        else if (isEmCadastro)
+                                                        {
+                                                            <span class="badge bg-info text-dark ms-1">Em Cadastro</span>
+                                                        }
+                                                        else if (isEmBreve)
+                                                        {
+                                                            <span class="badge bg-warning text-dark ms-1">Em Breve</span>
+                                                        }
                                                     </div>
-                                                }
-                                            }
-                                            else
-                                            {
-                                                if (sub.InscricaoGratuita == 1 || sub.ValorInscricao == 0)
-                                                {
-                                                    <div class="subevent-item" style="padding: 10px;">
-                                                        <div class="subevent-info">
-                                                            <p style="margin:0; font-weight: 600;">Inscrição Padrão (Gratuito)</p>
-                                                        </div>
-                                                        <div class="quantidade-input-container">
-                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', 0, -1)" disabled id="btn_minus_subevento_@(sub.Id)_0">-</button>
-                                                            <input type="number" name="QuantidadeTipoInscricaoSubevento_@(sub.Id)_0" id="qty_subevento_@(sub.Id)_0" value="0" min="0" max="8" class="form-control quantidade-input-small subevento-qty-@sub.Id" data-valor="0" disabled readonly />
-                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', 0, 1)" disabled id="btn_plus_subevento_@(sub.Id)_0">+</button>
-                                                        </div>
+                                                </td>
+                                                <td>
+                                                    <div class="fw-semibold text-dark" style="font-size: 0.84rem;">
+                                                        @(sub.DataInicio.HasValue ? sub.DataInicio.Value.ToString("dd/MM/yyyy • HH:mm") : "A definir")
                                                     </div>
-                                                }
-                                                else
-                                                {
-                                                    <div class="subevent-item mb-2" style="padding: 10px;">
-                                                        <div class="subevent-info">
-                                                            <p style="margin:0; font-weight: 600;">Inscrição Padrão (Inteira) - R$ @sub.ValorInscricao.ToString("N2")</p>
-                                                        </div>
-                                                        <div class="quantidade-input-container">
-                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', 0, -1)" disabled id="btn_minus_subevento_@(sub.Id)_0">-</button>
-                                                            <input type="number" name="QuantidadeTipoInscricaoSubevento_@(sub.Id)_0" id="qty_subevento_@(sub.Id)_0" value="0" min="0" max="8" class="form-control quantidade-input-small subevento-qty-@sub.Id" data-valor="@sub.ValorInscricao.ToString(System.Globalization.CultureInfo.InvariantCulture)" disabled readonly />
-                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', 0, 1)" disabled id="btn_plus_subevento_@(sub.Id)_0">+</button>
-                                                        </div>
+                                                    <div class="text-muted small">
+                                                        Carga: @(sub.CargaHoraria > 0 ? $"{sub.CargaHoraria}h" : "Livre")
                                                     </div>
-                                                    <div class="subevent-item" style="padding: 10px;">
-                                                        <div class="subevent-info">
-                                                            <p style="margin:0; font-weight: 600;">Meia Entrada Padrão - R$ @((sub.ValorInscricao / 2m).ToString("N2"))</p>
-                                                        </div>
-                                                        <div class="quantidade-input-container">
-                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', @tipoMeiaEntrada, -1)" disabled id="btn_minus_subevento_@(sub.Id)_@tipoMeiaEntrada">-</button>
-                                                            <input type="number" name="QuantidadeTipoInscricaoSubevento_@(sub.Id)_@tipoMeiaEntrada" id="qty_subevento_@(sub.Id)_@tipoMeiaEntrada" value="0" min="0" max="8" class="form-control quantidade-input-small subevento-qty-@sub.Id" data-valor="@((sub.ValorInscricao / 2m).ToString(System.Globalization.CultureInfo.InvariantCulture))" disabled readonly />
-                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', @tipoMeiaEntrada, 1)" disabled id="btn_plus_subevento_@(sub.Id)_@tipoMeiaEntrada">+</button>
-                                                        </div>
+                                                </td>
+                                                <td style="text-align: center;">
+                                                    @if (sub.VagasDisponiveis > 10)
+                                                    {
+                                                        <span class="badge-vagas badge-vagas-alta">
+                                                            <i class="bi bi-check-circle-fill"></i> @sub.VagasDisponiveis vagas
+                                                        </span>
+                                                    }
+                                                    else if (sub.VagasDisponiveis > 0)
+                                                    {
+                                                        <span class="badge-vagas badge-vagas-baixa">
+                                                            <i class="bi bi-exclamation-triangle-fill"></i> @sub.VagasDisponiveis vagas
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge-vagas badge-vagas-esgotado">
+                                                            <i class="bi bi-x-circle-fill"></i> Esgotado
+                                                        </span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <div id="wrapper-tipo-@sub.Id" style="display: none;">
+                                                        @if (tipos.Any())
+                                                        {
+                                                            @foreach (var tipo in tipos)
+                                                            {
+                                                                <div class="lote-tipo-row">
+                                                                    <div class="lote-tipo-nome">
+                                                                        @tipo.Nome <small class="text-muted">(@(tipo.Valor == 0 ? "Gratuito" : $"R$ {tipo.Valor:N2}"))</small>
+                                                                    </div>
+                                                                    <div class="lote-qty-container">
+                                                                        <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', @tipo.Id, -1)" disabled id="btn_minus_subevento_@(sub.Id)_@tipo.Id">-</button>
+                                                                        <input type="number" name="QuantidadeTipoInscricaoSubevento_@(sub.Id)_@tipo.Id" id="qty_subevento_@(sub.Id)_@tipo.Id" value="0" min="0" max="8" class="form-control quantidade-input-small subevento-qty-@sub.Id" data-valor="@tipo.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture)" disabled readonly />
+                                                                        <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', @tipo.Id, 1)" disabled id="btn_plus_subevento_@(sub.Id)_@tipo.Id">+</button>
+                                                                    </div>
+                                                                </div>
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            if (sub.InscricaoGratuita == 1 || sub.ValorInscricao == 0)
+                                                            {
+                                                                <div class="lote-tipo-row">
+                                                                    <div class="lote-tipo-nome">Gratuito</div>
+                                                                    <div class="lote-qty-container">
+                                                                        <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', 0, -1)" disabled id="btn_minus_subevento_@(sub.Id)_0">-</button>
+                                                                        <input type="number" name="QuantidadeTipoInscricaoSubevento_@(sub.Id)_0" id="qty_subevento_@(sub.Id)_0" value="0" min="0" max="8" class="form-control quantidade-input-small subevento-qty-@sub.Id" data-valor="0" disabled readonly />
+                                                                        <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', 0, 1)" disabled id="btn_plus_subevento_@(sub.Id)_0">+</button>
+                                                                    </div>
+                                                                </div>
+                                                            }
+                                                            else
+                                                            {
+                                                                <div class="lote-tipo-row">
+                                                                    <div class="lote-tipo-nome">Inteira <small class="text-muted">(R$ @sub.ValorInscricao.ToString("N2"))</small></div>
+                                                                    <div class="lote-qty-container">
+                                                                        <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', 0, -1)" disabled id="btn_minus_subevento_@(sub.Id)_0">-</button>
+                                                                        <input type="number" name="QuantidadeTipoInscricaoSubevento_@(sub.Id)_0" id="qty_subevento_@(sub.Id)_0" value="0" min="0" max="8" class="form-control quantidade-input-small subevento-qty-@sub.Id" data-valor="@sub.ValorInscricao.ToString(System.Globalization.CultureInfo.InvariantCulture)" disabled readonly />
+                                                                        <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', 0, 1)" disabled id="btn_plus_subevento_@(sub.Id)_0">+</button>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="lote-tipo-row">
+                                                                    <div class="lote-tipo-nome">Meia <small class="text-muted">(R$ @((sub.ValorInscricao / 2m).ToString("N2")))</small></div>
+                                                                    <div class="lote-qty-container">
+                                                                        <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', @tipoMeiaEntrada, -1)" disabled id="btn_minus_subevento_@(sub.Id)_@tipoMeiaEntrada">-</button>
+                                                                        <input type="number" name="QuantidadeTipoInscricaoSubevento_@(sub.Id)_@tipoMeiaEntrada" id="qty_subevento_@(sub.Id)_@tipoMeiaEntrada" value="0" min="0" max="8" class="form-control quantidade-input-small subevento-qty-@sub.Id" data-valor="@((sub.ValorInscricao / 2m).ToString(System.Globalization.CultureInfo.InvariantCulture))" disabled readonly />
+                                                                        <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', @tipoMeiaEntrada, 1)" disabled id="btn_plus_subevento_@(sub.Id)_@tipoMeiaEntrada">+</button>
+                                                                    </div>
+                                                                </div>
+                                                            }
+                                                        }
                                                     </div>
-                                                }
-                                            }
-                                        </div>
-                                    </div>
-                                </label>
-                            }
+                                                </td>
+                                                <td style="text-align: right;">
+                                                    <button type="button" class="btn-ver-ementa" onclick="abrirEmentaModal('@sub.Nome', '@(string.IsNullOrWhiteSpace(sub.Descricao) ? "Nenhuma ementa detalhada cadastrada para este subevento." : sub.Descricao.Replace("'", "\\'"))', '@sub.NomeTipoEvento', '@(sub.CargaHoraria > 0 ? $"{sub.CargaHoraria} Horas" : "Não informada")')">
+                                                        <i class="bi bi-eye"></i>
+                                                        <span>Ementa</span>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     }
 
@@ -348,6 +393,32 @@
     <div id="imageModal" class="image-modal" onclick="closeImageModal()">
         <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
         <img class="image-modal-content" id="expandedImg">
+    </div>
+
+    <!-- Modal de Ementa do Subevento -->
+    <div id="ementaModalOverlay" class="modal-ementa-overlay" onclick="fecharEmentaModal(event)">
+        <div class="modal-ementa-card" onclick="event.stopPropagation()">
+            <div class="modal-ementa-header">
+                <h5 class="modal-ementa-title" id="ementaModalTitulo">Ementa do Subevento</h5>
+                <button type="button" class="modal-ementa-close" onclick="fecharEmentaModal()">&times;</button>
+            </div>
+            <div class="modal-ementa-body">
+                <div class="modal-ementa-meta">
+                    <span class="modal-ementa-meta-item">
+                        <i class="bi bi-tag-fill blue-normal"></i>
+                        <span id="ementaModalTipo"></span>
+                    </span>
+                    <span class="modal-ementa-meta-item">
+                        <i class="bi bi-clock-fill blue-normal"></i>
+                        <span id="ementaModalCarga"></span>
+                    </span>
+                </div>
+                <div id="ementaModalDescricao" style="white-space: pre-line;"></div>
+            </div>
+            <div class="modal-ementa-footer">
+                <button type="button" class="btn btn-sm btn-outline-secondary px-3 rounded-pill" onclick="fecharEmentaModal()">Fechar</button>
+            </div>
+        </div>
     </div>
 </main>
 
