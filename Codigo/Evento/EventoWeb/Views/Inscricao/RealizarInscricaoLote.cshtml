@@ -344,12 +344,12 @@
                                 <table class="subeventos-table">
                                     <thead>
                                         <tr>
-                                            <th class="col-sel" style="width: 48px; text-align: center;">SEL.</th>
-                                            <th style="width: auto;">SUBEVENTO / ATIVIDADE</th>
-                                            <th style="width: 170px;">DATA & CARGA</th>
-                                            <th style="width: 130px; text-align: center;">VAGAS</th>
-                                            <th style="width: 290px; text-align: left;">TIPO & QUANTIDADE</th>
-                                            <th style="width: 105px; text-align: right;">AÇÕES</th>
+                                            <th class="col-sel" style="width: 5%; text-align: center;">SEL.</th>
+                                            <th style="width: 28%; text-align: left;">SUBEVENTO / ATIVIDADE</th>
+                                            <th style="width: 16%; text-align: center;">DATA & CARGA</th>
+                                            <th style="width: 12%; text-align: center;">VAGAS</th>
+                                            <th style="width: 29%; text-align: center;">TIPO & QUANTIDADE</th>
+                                            <th style="width: 10%; text-align: center;">AÇÕES</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -396,7 +396,7 @@
                                                         }
                                                     </div>
                                                 </td>
-                                                <td>
+                                                <td style="text-align: center;">
                                                     <div class="fw-semibold text-dark" style="font-size: 0.84rem;">
                                                         @(sub.DataInicio.HasValue ? sub.DataInicio.Value.ToString("dd/MM/yyyy • HH:mm") : "A definir")
                                                     </div>
@@ -442,18 +442,18 @@
                                                         </span>
                                                     }
                                                 </td>
-                                                <td style="text-align: left;">
+                                                <td style="text-align: center;">
                                                     @if (!isInscricaoAberta)
                                                     {
                                                         <span class="text-muted small">Inscrições indisponíveis</span>
                                                     }
                                                     else
                                                     {
-                                                        <div id="preview-tipo-@sub.Id" class="subevento-tipo-preview">
+                                                        <div id="preview-tipo-@sub.Id" class="subevento-tipo-preview text-center">
                                                             @if (tipos.Any())
                                                             {
                                                                 if (tipos.Count > 1)
-                                                                {
+                                                                 {
                                                                     <span class="badge bg-light text-dark border">
                                                                         <i class="bi bi-tags me-1 text-primary"></i>@(tipos.Count) tipos a partir de @(tipos.Min(t => t.Valor) == 0 ? "Gratuito" : $"R$ {tipos.Min(t => t.Valor):N2}")
                                                                     </span>
@@ -475,7 +475,7 @@
                                                             }
                                                         </div>
 
-                                                        <div id="wrapper-tipo-@sub.Id" class="subevento-tipo-wrapper" style="display: none;">
+                                                        <div id="wrapper-tipo-@sub.Id" class="subevento-tipo-wrapper text-center" style="display: none;">
                                                         @if (tipos.Any())
                                                         {
                                                             @foreach (var tipo in tipos)
@@ -528,8 +528,8 @@
                                                     </div>
                                                     }
                                                 </td>
-                                                <td style="text-align: right;">
-                                                    <button type="button" class="btn-ver-ementa" onclick="abrirEmentaModal('@sub.Nome', '@(string.IsNullOrWhiteSpace(sub.Descricao) ? "Nenhuma ementa detalhada cadastrada para este subevento." : sub.Descricao.Replace("'", "\\'"))', '@sub.NomeTipoEvento', '@(sub.CargaHoraria > 0 ? $"{sub.CargaHoraria} Horas" : "Não informada")')">
+                                                <td style="text-align: center;">
+                                                    <button type="button" class="btn-ver-ementa mx-auto" onclick="abrirEmentaModal('@sub.Nome', '@(string.IsNullOrWhiteSpace(sub.Descricao) ? "Nenhuma ementa detalhada cadastrada para este subevento." : sub.Descricao.Replace("'", "\\'"))', '@sub.NomeTipoEvento', '@(sub.CargaHoraria > 0 ? $"{sub.CargaHoraria} Horas" : "Não informada")')">
                                                         <i class="bi bi-eye"></i>
                                                         <span>Ementa</span>
                                                     </button>

@@ -398,13 +398,13 @@ body {
     display: none;
     margin: 0;
     padding: 0;
-    text-align: left;
+    text-align: center;
 }
 
 .subevento-tipo-preview {
     margin: 0;
     padding: 0;
-    text-align: left;
+    text-align: center;
 }
 
 .subevento-tipo-wrapper label {
@@ -545,6 +545,7 @@ body {
 
 .subeventos-table {
     width: 100%;
+    min-width: 780px;
     margin-bottom: 0;
     border-collapse: separate;
     border-spacing: 0;
@@ -680,9 +681,10 @@ body {
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    padding: 3px 0;
+    padding: 4px 0;
     width: 100%;
-    margin: 0;
+    max-width: 280px;
+    margin: 0 auto;
 }
 
 .lote-tipo-nome {
@@ -723,11 +725,13 @@ body {
     font-weight: 600;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 5px;
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
     text-decoration: none;
+    margin: 0 auto;
 }
 
 .btn-ver-ementa:hover {

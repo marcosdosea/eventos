@@ -398,13 +398,13 @@ body {
     display: none;
     margin: 0;
     padding: 0;
-    text-align: left;
+    text-align: center;
 }
 
 .subevento-tipo-preview {
     margin: 0;
     padding: 0;
-    text-align: left;
+    text-align: center;
 }
 
 .subevento-tipo-wrapper label {
@@ -490,6 +490,7 @@ body {
 
 .subeventos-table {
     width: 100%;
+    min-width: 780px;
     margin-bottom: 0;
     border-collapse: separate;
     border-spacing: 0;
@@ -622,12 +623,13 @@ body {
 
 .subevento-select-tipo {
     width: 100%;
-    max-width: 100%;
+    max-width: 320px;
     border-color: #CBD5E1;
     font-size: 0.82rem;
     border-radius: 8px;
-    padding: 4px 8px;
-    margin: 0;
+    padding: 5px 8px;
+    margin: 0 auto;
+    display: inline-block;
 }
 
 .subevento-select-tipo:focus {
@@ -645,11 +647,13 @@ body {
     font-weight: 600;
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 5px;
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
     text-decoration: none;
+    margin: 0 auto;
 }
 
 .btn-ver-ementa:hover {
