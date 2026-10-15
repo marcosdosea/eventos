@@ -112,10 +112,12 @@ namespace EventoWeb.Controllers
                     var inscricaoExistente = _inscricaoService.GetByEvento(idEvento)
                         .FirstOrDefault(i => i.IdPessoa == pessoa.Id && i.IdPapel == 4);
 
-                    var subeventosInscritos = _inscricaoService.GetSubByEvento(idEvento)
-                        .Where(s => s.IdPessoa == pessoa.Id && s.Status != "C")
-                        .Select(s => s.IdSubEvento)
-                        .ToHashSet();
+                    var subeventosInscritos = (evento.PossuiCertificado != 0)
+                        ? _inscricaoService.GetSubByEvento(idEvento)
+                            .Where(s => s.IdPessoa == pessoa.Id && s.Status != "C")
+                            .Select(s => s.IdSubEvento)
+                            .ToHashSet()
+                        : new HashSet<uint>();
 
                     ViewBag.SubeventosInscritos = subeventosInscritos;
 
@@ -190,10 +192,12 @@ namespace EventoWeb.Controllers
             }
 
             bool jaInscritoEventoPrincipal = evento.PossuiCertificado != 0 && _inscricaoService.IsInscrito(pessoa.Id, idEvento);
-            var subeventosJaInscritos = _inscricaoService.GetSubByEvento(idEvento)
-                .Where(s => s.IdPessoa == pessoa.Id && s.Status != "C")
-                .Select(s => s.IdSubEvento)
-                .ToHashSet();
+            var subeventosJaInscritos = (evento.PossuiCertificado != 0)
+                ? _inscricaoService.GetSubByEvento(idEvento)
+                    .Where(s => s.IdPessoa == pessoa.Id && s.Status != "C")
+                    .Select(s => s.IdSubEvento)
+                    .ToHashSet()
+                : new HashSet<uint>();
 
             if (jaInscritoEventoPrincipal)
             {
@@ -371,7 +375,7 @@ namespace EventoWeb.Controllers
             {
                 foreach (var idSubevento in inscricaoEvento.SelectedSubeventos)
                 {
-                    if (subeventosJaInscritos.Contains(idSubevento))
+                    if (evento.PossuiCertificado != 0 && subeventosJaInscritos.Contains(idSubevento))
                     {
                         continue;
                     }
