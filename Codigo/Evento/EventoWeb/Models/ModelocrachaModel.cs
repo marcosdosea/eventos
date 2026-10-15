@@ -13,10 +13,8 @@ namespace EventoWeb.Models
         public uint Id { get; set; }
 
         [Display(Name = "Logotipo")]
-        [Required(ErrorMessage = "Informe a logotipo")]
         [ImagemUpload(ErrorMessage = "A imagem deve estar nos formatos PNG, JPG, JPEG, TIF ou GIF e ter menos de 1 MB.")]
-
-        public IFormFile Logotipo { get; set; } = null!;
+        public IFormFile? Logotipo { get; set; }
 
         [Display(Name = "Logotipo")]
         [BindNever]
@@ -24,6 +22,7 @@ namespace EventoWeb.Models
 
         [Display(Name = "Texto")]
         [Required(ErrorMessage = "Informe o texto do crachá")]
+        [StringLength(200, ErrorMessage = "O texto do crachá deve ter no máximo 200 caracteres")]
         public string Texto { get; set; } = null!;
 
         [Display(Name = "Qrcode")]
@@ -48,7 +47,11 @@ namespace EventoWeb.Models
         [Display(Name = "Crachás")]
         public List<CrachaParticipanteModel> Crachas { get; set; } = new List<CrachaParticipanteModel>();
         
-        public EventoSimpleDTO Evento { get; set; }
+        public EventoSimpleDTO? Evento { get; set; }
+
+        public string? NomeArquivo { get; set; }
+
+        public string? TamanhoArquivo { get; set; }
     }
 
     public class CrachaParticipanteModel
