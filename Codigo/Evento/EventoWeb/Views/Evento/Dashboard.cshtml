@@ -1,0 +1,202 @@
+@model DashboardEventoViewModel
+
+@{
+    ViewData["Title"] = "Dashboard do Evento";
+    ViewData["ExibirMenuSanduiche"] = true;
+    var ehFinancas = Model.Aba != "operacao";
+    string UrlAba(string aba) => Url.Action("Dashboard", "Evento", new { idEvento = Model.IdEvento, idSubevento = Model.IdSubevento, idTipoInscricao = Model.IdTipoInscricao, dataInicio = Model.DataInicio?.ToString("yyyy-MM-dd"), dataFim = Model.DataFim?.ToString("yyyy-MM-dd"), aba });
+    string UrlCsv() => Url.Action("Dashboard", "Evento", new { idEvento = Model.IdEvento, idSubevento = Model.IdSubevento, idTipoInscricao = Model.IdTipoInscricao, dataInicio = Model.DataInicio?.ToString("yyyy-MM-dd"), dataFim = Model.DataFim?.ToString("yyyy-MM-dd"), aba = Model.Aba, formato = "csv" });
+}
+<link rel="stylesheet" type="text/css" href="~/css/_gerenciarevento.css" asp-append-version="true">
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-danger" role="alert">@TempData["Message"]</div>
+    TempData.Remove("Message");
+}
+
+<div class="mt-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+        <div>
+            <h1 class="blue-normal mb-1">Dashboard do evento</h1>
+            <div class="text-muted">
+                <strong class="text-dark">@Model.NomeEvento</strong>
+                <span class="badge bg-secondary ms-2">@Model.Status</span>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="@UrlCsv()" class="btn btn-outline-primary">Exportar CSV</a>
+            <button type="button" class="btn btn-outline-secondary" onclick="window.print()">Imprimir relatório</button>
+            <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Model.IdEvento" class="btn btn-blue-normal text-white">Voltar</a>
+        </div>
+    </div>
+
+    <form method="get" asp-controller="Evento" asp-action="Dashboard" class="row g-2 align-items-end mb-3">
+        <input type="hidden" name="idEvento" value="@Model.IdEvento" />
+        <input type="hidden" name="aba" value="@Model.Aba" />
+        <div class="col-md-3">
+            <label class="form-label" for="idSubevento">Subevento</label>
+            <select class="form-select" id="idSubevento" name="idSubevento" asp-items="Model.Subeventos">
+                <option value="">Todos os subeventos (geral)</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="idTipoInscricao">Tipo</label>
+            <select class="form-select" id="idTipoInscricao" name="idTipoInscricao" asp-items="Model.TiposInscricao">
+                <option value="">Todos os tipos</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="dataInicio">De</label>
+            <input class="form-control" type="date" id="dataInicio" name="dataInicio" value="@Model.DataInicio?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="dataFim">Até</label>
+            <input class="form-control" type="date" id="dataFim" name="dataFim" value="@Model.DataFim?.ToString("yyyy-MM-dd")" />
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-blue-normal text-white w-100">Filtrar</button>
+        </div>
+    </form>
+
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link @(ehFinancas ? "active" : "")" href="@UrlAba("financas")">Visão geral &amp; Finanças</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(!ehFinancas ? "active" : "")" href="@UrlAba("operacao")">Operação &amp; Presença</a>
+        </li>
+    </ul>
+
+    @if (ehFinancas)
+    {
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card h-100"><div class="card-body">
+                    <small class="text-muted">TOTAL DE INSCRITOS</small>
+                    <h3>@Model.Financeiro.TotalInscritos<small class="text-muted fs-6"> / @Model.Financeiro.VagasOfertadas</small></h3>
+                    <div class="progress"><div class="progress-bar" style="width:@Model.Financeiro.PercentualOcupacao.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%"></div></div>
+                    <small class="text-muted">@Model.Financeiro.PercentualOcupacao% de ocupação</small>
+                </div></div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100"><div class="card-body">
+                    <small class="text-muted">RECEITA CONFIRMADA</small>
+                    <h3>@Model.Financeiro.ReceitaConfirmada.ToString("C2")</h3>
+                </div></div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100"><div class="card-body">
+                    <small class="text-muted">TICKET MÉDIO</small>
+                    <h3>@Model.Financeiro.TicketMedio.ToString("C2")</h3>
+                </div></div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100"><div class="card-body">
+                    <small class="text-muted">VALOR EM ABERTO</small>
+                    <h3>@Model.Financeiro.ValorEmAberto.ToString("C2")</h3>
+                    <small class="text-muted">@Model.Financeiro.PagamentosEmAberto pagamento(s) em aberto</small>
+                </div></div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="card h-100"><div class="card-body">
+                    <h5>Distribuição por forma de pagamento</h5>
+                    @if (!Model.Financeiro.PorForma.Any())
+                    {
+                        <p class="text-muted">Sem pagamentos confirmados no filtro.</p>
+                    }
+                    @foreach (var f in Model.Financeiro.PorForma)
+                    {
+                        <div class="d-flex justify-content-between"><span>@f.NomeExibicao (@f.Percentual%)</span><strong>@f.ValorTotal.ToString("C2")</strong></div>
+                        <div class="progress mb-2"><div class="progress-bar" style="width:@f.Percentual.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%"></div></div>
+                    }
+                </div></div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100"><div class="card-body">
+                    <h5>Inscritos por categoria</h5>
+                    @if (!Model.Financeiro.PorCategoria.Any())
+                    {
+                        <p class="text-muted">Sem inscritos no filtro.</p>
+                    }
+                    @foreach (var c in Model.Financeiro.PorCategoria)
+                    {
+                        <div class="d-flex justify-content-between"><span>@c.Nome (@c.Percentual%)</span><strong>@c.Quantidade</strong></div>
+                        <small class="text-muted">@c.ValorTotal.ToString("C2")</small>
+                        <hr class="my-1" />
+                    }
+                </div></div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100"><div class="card-body">
+                    <h5>Funil (A / C / S)</h5>
+                    <div>Ativas: <strong>@Model.Financeiro.Funil.Ativas</strong> <small>(@Model.Financeiro.Funil.AtivasPercentual%)</small></div>
+                    <div>Solicitadas: <strong>@Model.Financeiro.Funil.Solicitadas</strong> <small>(@Model.Financeiro.Funil.SolicitadasPercentual%)</small></div>
+                    <div>Canceladas: <strong>@Model.Financeiro.Funil.Canceladas</strong> <small>(@Model.Financeiro.Funil.CanceladasPercentual%)</small></div>
+                </div></div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card h-100"><div class="card-body">
+                    <small class="text-muted">PRESENTES NO LOCAL</small>
+                    <h3>@Model.Operacao.Presentes<small class="text-muted fs-6"> / @Model.Operacao.Total</small></h3>
+                </div></div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100"><div class="card-body">
+                    <small class="text-muted">AUSENTES (SEM CHECK-IN)</small>
+                    <h3>@Model.Operacao.Ausentes <small class="text-muted fs-6">inscritos</small></h3>
+                </div></div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100"><div class="card-body">
+                    <small class="text-muted">APTOS A CERTIFICADO</small>
+                    <h3>@Model.Operacao.AptosCertificado <small class="text-muted fs-6">homologados</small></h3>
+                </div></div>
+            </div>
+            <div class="col-md-3">
+                <div class="card h-100"><div class="card-body">
+                    <small class="text-muted">FREQUÊNCIA MÉDIA</small>
+                    <h3>@Model.Operacao.FrequenciaMedia% <small class="text-muted fs-6">acumulada</small></h3>
+                </div></div>
+            </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="card h-100"><div class="card-body">
+                    <h5>Ocupação por subevento</h5>
+                    @if (!Model.Operacao.OcupacaoSubeventos.Any())
+                    {
+                        <p class="text-muted">Nenhum subevento.</p>
+                    }
+                    @foreach (var s in Model.Operacao.OcupacaoSubeventos)
+                    {
+                        <div class="d-flex justify-content-between"><span>@s.Nome</span><strong>@s.Ocupados / @s.VagasOfertadas</strong></div>
+                        <div class="progress mb-2"><div class="progress-bar" style="width:@s.Percentual.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)%"></div></div>
+                    }
+                </div></div>
+            </div>
+            <div class="col-md-6">
+                <div class="card h-100"><div class="card-body">
+                    <h5>Demografia &amp; interesses</h5>
+                    <div>Feminino: <strong>@Model.Operacao.PorSexo.Feminino</strong> (@Model.Operacao.PorSexo.FemininoPercentual%)</div>
+                    <div>Masculino: <strong>@Model.Operacao.PorSexo.Masculino</strong> (@Model.Operacao.PorSexo.MasculinoPercentual%)</div>
+                    <div>Não informado: <strong>@Model.Operacao.PorSexo.NaoInformado</strong></div>
+                    <hr />
+                    @foreach (var o in Model.Operacao.PorOrigem)
+                    {
+                        <div>@o.Estado: <strong>@o.Quantidade</strong> (@o.Percentual%)</div>
+                    }
+                </div></div>
+            </div>
+        </div>
+    }
+</div>
