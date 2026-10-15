@@ -901,8 +901,8 @@ namespace EventoWeb.Controllers.Tests
             // Assert: usa o Id da pessoa logada (dono), nunca um id arbitrario
             Assert.AreEqual((uint)7, pessoaIdChamada);
             Assert.AreEqual((uint)1, eventoIdChamado);
-            mockEvento.Verify(e => e.AtualizarVagasDisponiveis((uint)1), Times.Once);
-            mockSubevento.Verify(s => s.AtualizarVagasDisponiveis((uint)10), Times.Once);
+            mockEvento.Verify(e => e.AtualizarVagasDisponiveis((uint)1, true), Times.Once);
+            mockSubevento.Verify(s => s.AtualizarVagasDisponiveis((uint)10, true), Times.Once);
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             Assert.AreEqual("minhasInscricoes", ((RedirectToActionResult)result).ActionName);
             Assert.AreEqual("Desistência realizada com sucesso! Sua vaga foi liberada.", cancelarController.TempData["ParticipanteSuccessMessage"]);
@@ -941,7 +941,7 @@ namespace EventoWeb.Controllers.Tests
 
             // Assert
             mockInscricao.Verify(s => s.CancelarInscricaoParticipante((uint)7, (uint)1), Times.Once);
-            mockEvento.Verify(e => e.AtualizarVagasDisponiveis((uint)1), Times.Once);
+            mockEvento.Verify(e => e.AtualizarVagasDisponiveis((uint)1, true), Times.Once);
             Assert.AreEqual("Desistência realizada com sucesso! Sua vaga foi liberada.", cancelarController.TempData["ParticipanteSuccessMessage"]);
             Assert.AreEqual("minhasInscricoes", ((RedirectToActionResult)result).ActionName);
         }
@@ -1065,8 +1065,8 @@ namespace EventoWeb.Controllers.Tests
 
             // Assert
             Assert.AreEqual("Nenhuma inscrição de participante encontrada para este evento.", cancelarController.TempData["ParticipanteMessage"]);
-            mockEvento.Verify(e => e.AtualizarVagasDisponiveis(It.IsAny<uint>()), Times.Never);
-            mockSubevento.Verify(s => s.AtualizarVagasDisponiveis(It.IsAny<uint>()), Times.Never);
+            mockEvento.Verify(e => e.AtualizarVagasDisponiveis(It.IsAny<uint>(), It.IsAny<bool>()), Times.Never);
+            mockSubevento.Verify(s => s.AtualizarVagasDisponiveis(It.IsAny<uint>(), It.IsAny<bool>()), Times.Never);
             Assert.AreEqual("minhasInscricoes", ((RedirectToActionResult)result).ActionName);
         }
 

@@ -31,5 +31,7 @@ namespace Core.Service
         public uint VerificarPerfilAtual(IList<string> roles, String perfilAtivo, uint idPapel);
 
         DashboardFinanceiroDTO GetDashboardFinanceiro(uint idEvento, DashboardFiltrosDTO filtros);
+
+        DashboardOperacaoDTO GetDashboardOperacao(uint idEvento, DashboardFiltrosDTO filtros);
     }
 }
