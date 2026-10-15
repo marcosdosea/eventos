@@ -381,12 +381,8 @@ namespace EventoWeb.Controllers
                     }
 
                     var subevento = _subeventoService.Get(idSubevento);
-                    // Impede de salvar apenas se for finalizado ou cadastro
-                    if (subevento == null || subevento.Status == "C" || subevento.Status == "F" || subevento.DataFimInscricao < DateTime.Now || subevento.DataInicioInscricao > DateTime.Now)
-                    {
-                        continue;
-                    }
-                    if (subevento.IdEvento != idEvento)
+                    bool subeventoPassou = subevento != null && (subevento.DataFim < DateTime.Now || (subevento.DataInicio < DateTime.Now && subevento.DataFim <= subevento.DataInicio));
+                    if (subevento == null || subevento.Status != "A" || subevento.DataInicioInscricao > DateTime.Now || subevento.DataFimInscricao < DateTime.Now || subeventoPassou || subevento.IdEvento != idEvento)
                     {
                         continue;
                     }
