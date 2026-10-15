@@ -1,17 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using Core;
+using Core.Service;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using Util;
 
 namespace EventoWeb.Areas.Identity.Pages.Account
@@ -21,7 +15,7 @@ namespace EventoWeb.Areas.Identity.Pages.Account
         private readonly SignInManager<UsuarioIdentity> _signInManager;
         private readonly UserManager<UsuarioIdentity> _userManager;
         private readonly ILogger<LoginModel> _logger;
-
+   
         public LoginModel(SignInManager<UsuarioIdentity> signInManager, UserManager<UsuarioIdentity> userManager, ILogger<LoginModel> logger)
         {
             _signInManager = signInManager;
@@ -65,10 +59,9 @@ namespace EventoWeb.Areas.Identity.Pages.Account
             ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
-            [Required(ErrorMessage = "O campo CPF é obrigatório.")]
-            [CPF(ErrorMessage = "CPF inválido")]
-            [Display(Name = "CPF", Prompt = "Digite seu CPF")]
-			public string CPF { get; set; }
+            [Required(ErrorMessage = "O campo E-mail ou CPF é obrigatório.")]
+            [Display(Name = "E-mail ou CPF", Prompt = "Digite seu CPF ou E-mail")]
+			public string EmailOrCpf { get; set; }
 
 			/// <summary>
 			///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -111,11 +104,42 @@ namespace EventoWeb.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
-                string cpfSemFormatacao = Util.Methods.RemoveNaoNumericos(Input.CPF);
+                List<UsuarioIdentity> usuariosEncontrados = new List<UsuarioIdentity>();
+                UsuarioIdentity user = null;
                 
-                var user = await _userManager.Users.SingleOrDefaultAsync(u => u.UserName == cpfSemFormatacao);
-                if (user != null)
+                string emailParaLogin = Input.EmailOrCpf.Trim(); 
+               
+                string cpfSemFormatacao = Util.Methods.RemoveNaoNumericos(Input.EmailOrCpf);
+                if (cpfSemFormatacao.All(char.IsDigit) && cpfSemFormatacao.Length == 11)
                 {
+                    user = await _userManager.Users.SingleOrDefaultAsync(u => u.UserName == cpfSemFormatacao);  
+                    if (user == null)
+                    {
+                        ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.EmailOrCpf)}", "CPF ou senha inválidos.");
+                        return Page();
+                    }
+                }
+                else
+                {
+
+                    var usuariosComMesmoEmail = await _userManager.Users
+                    .Where(u => u.Email.ToLower() == emailParaLogin)
+                    .ToListAsync();
+
+                    if (usuariosComMesmoEmail.Count > 1)
+                    {
+                        ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.EmailOrCpf)}", "Houve um problema ao acessar com este e-mail. Por favor, faça login utilizando o seu CPF.");
+                        return Page();
+                    }
+
+                    user = usuariosComMesmoEmail.FirstOrDefault();
+                    if (user == null)
+                    {
+                        ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.EmailOrCpf)}", "E-mail ou senha inválidos.");
+                        return Page();
+                    }
+                }
+
                     var result = await _signInManager.PasswordSignInAsync(user.UserName, Input.Password, Input.RememberMe, lockoutOnFailure: false);
                     if (result.Succeeded)
                     {
@@ -133,18 +157,18 @@ namespace EventoWeb.Areas.Identity.Pages.Account
                     }
                     else
                     {
-                        ModelState.AddModelError(string.Empty, "Tentativa de login inválida.");
+
+                        ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.EmailOrCpf)}", "O cpf ou email estão inválidos.");
                         return Page();
                     }
-                }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Tentativa de login inválida.");
-                    return Page();
-                }
+
+            }
+            else{
+                ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.EmailOrCpf)}", "O cpf ou email estão inválidos.");
+                return Page();
             }
 
-            return Page();
+            
         }
 
     }
