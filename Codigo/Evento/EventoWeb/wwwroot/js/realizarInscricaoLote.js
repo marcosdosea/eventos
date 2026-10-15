@@ -127,34 +127,32 @@ function calcularValorTotal() {
         });
     });
 
-    // submit button disabled if sumEvento == 0 or > 8 or no subevento selected (when active subeventos exist)
+    // submit button disabled if sumEvento == 0 or > 8, or if a checked subevento has 0 tickets
     const btnSubmit = document.querySelector('.btn-submit:not(.btn-login)');
     if (btnSubmit) {
         let isSubeventoValid = true;
-        const hasSubeventos = document.querySelectorAll('.subevento-checkbox:not(:disabled)').length > 0;
-        
-        if (hasSubeventos) {
-            isSubeventoValid = false;
-            if (subeventosCheckboxes.length > 0) {
-                let qtySubeventoTotal = 0;
-                subeventosCheckboxes.forEach(checkbox => {
-                    const subId = checkbox.value;
-                    const subInputs = document.querySelectorAll('.subevento-qty-' + subId);
-                    subInputs.forEach(input => {
-                        qtySubeventoTotal += parseInt(input.value, 10) || 0;
-                    });
+        if (subeventosCheckboxes.length > 0) {
+            subeventosCheckboxes.forEach(checkbox => {
+                const subId = checkbox.value;
+                const subInputs = document.querySelectorAll('.subevento-qty-' + subId);
+                let qtyEsteSub = 0;
+                subInputs.forEach(input => {
+                    qtyEsteSub += parseInt(input.value, 10) || 0;
                 });
-                // Se os subeventos tiverem input de quantidade, pelo menos 1 ingresso de subevento deve ser selecionado
-                if (qtySubeventoTotal > 0) {
-                    isSubeventoValid = true;
+                if (subInputs.length > 0 && qtyEsteSub === 0) {
+                    isSubeventoValid = false;
                 }
-            }
+            });
         }
 
         if (sumEvento === 0 || sumEvento > 8 || !isSubeventoValid) {
             btnSubmit.disabled = true;
             btnSubmit.style.opacity = '0.5';
-            btnSubmit.title = "Selecione ao menos 1 quantidade para o evento e 1 subevento (se houver).";
+            if (sumEvento === 0 || sumEvento > 8) {
+                btnSubmit.title = "Selecione ao menos 1 quantidade para o evento.";
+            } else {
+                btnSubmit.title = "Informe a quantidade de ingressos para os subeventos selecionados.";
+            }
         } else {
             btnSubmit.disabled = false;
             btnSubmit.style.opacity = '1';

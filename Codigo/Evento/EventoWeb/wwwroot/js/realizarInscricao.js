@@ -53,15 +53,18 @@ function calcularValorTotal() {
     const priceElement = document.querySelector('.price-total');
     if (!priceElement) return;
 
+    const jaInscritoNoPrincipal = document.getElementById('JaInscritoNoPrincipal') !== null;
     let total = 0;
 
     // Valor do evento principal
-    const eventoRadio = document.querySelector('input[name="IdTipoInscricao"]:checked');
-    if (eventoRadio && eventoRadio.dataset.valor) {
-        total += parseFloat(eventoRadio.dataset.valor);
+    if (!jaInscritoNoPrincipal) {
+        const eventoRadio = document.querySelector('input[name="IdTipoInscricao"]:checked');
+        if (eventoRadio && eventoRadio.dataset.valor) {
+            total += parseFloat(eventoRadio.dataset.valor);
+        }
     }
 
-    // Valor dos subeventos selecionados
+    // Valor dos subeventos selecionados (apenas novos subeventos a serem inscritos)
     const subeventosCheckboxes = document.querySelectorAll('.subevento-checkbox:checked:not(:disabled)');
     subeventosCheckboxes.forEach(checkbox => {
         const id = checkbox.value;
@@ -74,25 +77,33 @@ function calcularValorTotal() {
         }
     });
 
-    // submit button disabled if no evento type selected or no subevento selected (when active subeventos exist)
+    // submit button disabled if no evento type selected or if already enrolled in main event and no new subevent selected
     const btnSubmit = document.querySelector('.btn-submit:not(.btn-login)');
     if (btnSubmit) {
-        let isEventoValid = eventoRadio !== null;
-        let isSubeventoValid = true;
-        const hasSubeventos = document.querySelectorAll('.subevento-checkbox:not(:disabled)').length > 0;
-        
-        if (hasSubeventos) {
-            isSubeventoValid = subeventosCheckboxes.length > 0;
-        }
-
-        if (!isEventoValid || !isSubeventoValid) {
-            btnSubmit.disabled = true;
-            btnSubmit.style.opacity = '0.5';
-            btnSubmit.title = "Selecione a inscrição no evento e ao menos 1 subevento (se houver).";
+        if (jaInscritoNoPrincipal) {
+            if (subeventosCheckboxes.length === 0) {
+                btnSubmit.disabled = true;
+                btnSubmit.style.opacity = '0.5';
+                btnSubmit.title = "Selecione ao menos 1 subevento.";
+            } else {
+                btnSubmit.disabled = false;
+                btnSubmit.style.opacity = '1';
+                btnSubmit.title = "";
+            }
         } else {
-            btnSubmit.disabled = false;
-            btnSubmit.style.opacity = '1';
-            btnSubmit.title = "";
+            const eventoRadio = document.querySelector('input[name="IdTipoInscricao"]:checked');
+            const hiddenEvento = document.querySelector('input[name="IdTipoInscricao"][type="hidden"]');
+            const isEventoValid = (eventoRadio !== null || hiddenEvento !== null);
+
+            if (!isEventoValid) {
+                btnSubmit.disabled = true;
+                btnSubmit.style.opacity = '0.5';
+                btnSubmit.title = "Selecione a inscrição no evento.";
+            } else {
+                btnSubmit.disabled = false;
+                btnSubmit.style.opacity = '1';
+                btnSubmit.title = "";
+            }
         }
     }
 
