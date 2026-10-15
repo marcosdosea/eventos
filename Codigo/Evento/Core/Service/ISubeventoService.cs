@@ -11,7 +11,7 @@ namespace Core.Service
         IEnumerable<Subevento> GetAll();
         IEnumerable<SubeventoDTO> GetByNome(string nome);
         IEnumerable<SubeventoEventoDTO> GetByIdEvento(uint idEvento);
-        void AtualizarVagasDisponiveis(uint idSubevento);
+        void AtualizarVagasDisponiveis(uint idSubevento, bool saveChanges = true);
     }
 }
 

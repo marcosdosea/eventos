@@ -568,5 +568,45 @@ namespace Service.Tests
             Assert.IsNotNull(subItem.IdSubEventoNavigation);
             Assert.AreEqual("Workshop de Testes Automatizados", subItem.IdSubEventoNavigation.Nome);
         }
+
+        [TestMethod()]
+        public void CancelarInscricaoParticipanteTest_RemoveEventoESubDoUsuario()
+        {
+            // Arrange: pessoa 1 com 2 ingressos papel 4 no evento 1 + subs 10 e 11 do evento 1.
+            // Sub 20 (outro evento), inscrição de outra pessoa e papel de gestor devem sobreviver.
+            _context.Subeventos.AddRange(
+                new Subevento { Id = 10, IdEvento = 1, Nome = "Sub 10", Descricao = "Sub 10", Status = "A" },
+                new Subevento { Id = 11, IdEvento = 1, Nome = "Sub 11", Descricao = "Sub 11", Status = "A" },
+                new Subevento { Id = 20, IdEvento = 2, Nome = "Sub 20", Descricao = "Sub 20", Status = "A" });
+            _context.Inscricaopessoaeventos.AddRange(
+                new Inscricaopessoaevento { Id = 10, IdPessoa = 1, IdEvento = 1, IdPapel = 4, DataInscricao = new DateTime(2024, 7, 3), Status = "S", ValorTotal = 50m, FrequenciaFinal = 0m },
+                new Inscricaopessoaevento { Id = 11, IdPessoa = 1, IdEvento = 1, IdPapel = 4, DataInscricao = new DateTime(2024, 7, 3), Status = "S", ValorTotal = 50m, FrequenciaFinal = 0m },
+                new Inscricaopessoaevento { Id = 12, IdPessoa = 2, IdEvento = 1, IdPapel = 4, DataInscricao = new DateTime(2024, 7, 3), Status = "S", ValorTotal = 50m, FrequenciaFinal = 0m },
+                new Inscricaopessoaevento { Id = 13, IdPessoa = 1, IdEvento = 1, IdPapel = 2, DataInscricao = new DateTime(2024, 7, 3), Status = "A", ValorTotal = 0m, FrequenciaFinal = 0m });
+            _context.Inscricaopessoasubeventos.AddRange(
+                new Inscricaopessoasubevento { IdPessoa = 1, IdSubEvento = 10, IdPapel = 4, DataInscricao = new DateTime(2024, 7, 3), Status = "S", Valor = 25m, FrequenciaFinal = 0m },
+                new Inscricaopessoasubevento { IdPessoa = 1, IdSubEvento = 11, IdPapel = 4, DataInscricao = new DateTime(2024, 7, 3), Status = "S", Valor = 25m, FrequenciaFinal = 0m },
+                new Inscricaopessoasubevento { IdPessoa = 1, IdSubEvento = 20, IdPapel = 4, DataInscricao = new DateTime(2024, 7, 3), Status = "S", Valor = 25m, FrequenciaFinal = 0m },
+                new Inscricaopessoasubevento { IdPessoa = 2, IdSubEvento = 10, IdPapel = 4, DataInscricao = new DateTime(2024, 7, 3), Status = "S", Valor = 25m, FrequenciaFinal = 0m });
+            _context.SaveChanges();
+
+            // Act
+            var (removidas, afetados) = _inscricaoService.CancelarInscricaoParticipante(1, 1);
+
+            // Assert
+            Assert.AreEqual(2, removidas);
+            CollectionAssert.AreEquivalent(new List<uint> { 10, 11 }, afetados);
+            Assert.AreEqual(0, _context.Inscricaopessoaeventos.Count(i => i.IdPessoa == 1 && i.IdEvento == 1 && i.IdPapel == 4));
+            Assert.AreEqual(1, _context.Inscricaopessoaeventos.Count(i => i.IdPessoa == 2 && i.IdEvento == 1 && i.IdPapel == 4));
+            Assert.AreEqual(1, _context.Inscricaopessoaeventos.Count(i => i.IdPessoa == 1 && i.IdEvento == 1 && i.IdPapel == 2));
+            Assert.AreEqual(0, _context.Inscricaopessoasubeventos.Count(s => s.IdPessoa == 1 && (s.IdSubEvento == 10 || s.IdSubEvento == 11)));
+            Assert.AreEqual(1, _context.Inscricaopessoasubeventos.Count(s => s.IdPessoa == 1 && s.IdSubEvento == 20));
+            Assert.AreEqual(1, _context.Inscricaopessoasubeventos.Count(s => s.IdPessoa == 2 && s.IdSubEvento == 10));
+
+            // Act 2: sem nada para remover
+            var (removidas2, afetados2) = _inscricaoService.CancelarInscricaoParticipante(1, 1);
+            Assert.AreEqual(0, removidas2);
+            Assert.AreEqual(0, afetados2.Count);
+        }
     }
 }

@@ -310,7 +310,7 @@ namespace EventoWeb.Controllers
                     }
                 }
                 _subeventoService.Delete(id);
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("GerenciarEventoListar", "Evento");
             }
 
         }

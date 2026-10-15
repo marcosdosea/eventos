@@ -246,7 +246,7 @@ namespace Service
 
 			return evento?.IdAreaInteresses ?? Enumerable.Empty<Areainteresse>();
 		}
-		public void AtualizarVagasDisponiveis(uint idEvento)
+		public void AtualizarVagasDisponiveis(uint idEvento, bool saveChanges = true)
         {
             
             var evento = _context.Eventos
@@ -261,7 +261,10 @@ namespace Service
 
                 evento.VagasDisponiveis = evento.VagasOfertadas - quantidadeParticipantes;
 
-                _context.SaveChanges();
+                if (saveChanges)
+                {
+                    _context.SaveChanges();
+                }
             }
         }
 
