@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using System;
 using System.Security.Claims;
 using Core.DTO;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using MySqlX.XDevAPI.Common;
 
 namespace EventoWeb.Controllers.Tests
@@ -56,6 +57,7 @@ namespace EventoWeb.Controllers.Tests
             {
                 HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) }
             };
+            controller.TempData = new TempDataDictionary(controller.ControllerContext.HttpContext, Mock.Of<ITempDataProvider>());
         }
 
         [TestMethod]
@@ -172,6 +174,7 @@ namespace EventoWeb.Controllers.Tests
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.IsNull(redirectToActionResult.ControllerName);
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
+            Assert.AreEqual("Modelo salvo com sucesso", controller.TempData["SuccessMessage"]);
         }
 
         [TestMethod]
@@ -218,6 +221,7 @@ namespace EventoWeb.Controllers.Tests
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.IsNull(redirectToActionResult.ControllerName);
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
+            Assert.AreEqual("Modelo salvo com sucesso", controller.TempData["SuccessMessage"]);
         }
 
         [TestMethod]
@@ -271,6 +275,252 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(ctl.Index(2, null), typeof(ForbidResult));
             Assert.IsInstanceOfType(ctl.Index(1, null), typeof(ViewResult));
             Assert.IsInstanceOfType(ctl.Details(10, null), typeof(ForbidResult));
+        }
+
+        [TestMethod]
+        public void CreateTest_Get_SemIdEvento()
+        {
+            // Act
+            var result = controller.Create((uint?)null);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            ViewResult viewResult = (ViewResult)result;
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ModelocrachaModel));
+            var model = (ModelocrachaModel)viewResult.ViewData.Model;
+            Assert.IsNotNull(model);
+            Assert.AreEqual("Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.", model.Texto);
+        }
+
+        [TestMethod]
+        public void EditTest_Post_SemNovoLogotipo_PreservaExistente()
+        {
+            // Arrange
+            var modelEdit = GetTargetEditModelocrachaModel();
+            modelEdit.Logotipo = null; // Sem subir nova imagem
+
+            // Act
+            var result = controller.Edit(modelEdit.Id, modelEdit);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirectToActionResult.ActionName);
+        }
+
+        [TestMethod]
+        public void IndexTest_SemIdEvento_RetornaLista()
+        {
+            // Act
+            var result = controller.Index(null, null);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            ViewResult viewResult = (ViewResult)result;
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(List<ModelocrachaModel>));
+        }
+
+        [TestMethod]
+        public void ObterModeloPorEventoTest_ComModeloExistente_RetornaJson()
+        {
+            // Act
+            var result = controller.ObterModeloPorEvento(1);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(JsonResult));
+            var jsonResult = (JsonResult)result;
+            Assert.IsNotNull(jsonResult.Value);
+        }
+
+        [TestMethod]
+        public void ObterModeloPorEventoTest_IdZero_RetornaNaoExiste()
+        {
+            // Act
+            var resultZero = controller.ObterModeloPorEvento(0);
+
+            // Assert
+            Assert.IsInstanceOfType(resultZero, typeof(JsonResult));
+        }
+
+        [TestMethod]
+        public void ObterModeloPorEventoTest_SemModelo_RetornaJsonPadrao()
+        {
+            // Arrange
+            var mockCracha = new Mock<IModelocrachaService>();
+            mockCracha.Setup(s => s.GetByEvento(99)).Returns(new List<Modelocracha>());
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 99))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 99, IdPapel = 2 });
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            // Act
+            var result = ctl.ObterModeloPorEvento(99);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(JsonResult));
+        }
+
+        [TestMethod]
+        public void ObterModeloPorEventoTest_NaoAutorizado_RetornaForbid()
+        {
+            // Arrange
+            var mockCracha = new Mock<IModelocrachaService>();
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 99))
+                .Returns((Inscricaopessoaevento)null!);
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            // Act
+            var result = ctl.ObterModeloPorEvento(99);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(ForbidResult));
+        }
+
+        [TestMethod]
+        public void CreateTest_Post_QuandoModeloJaExisteParaEvento_Atualiza()
+        {
+            // Arrange
+            var model = GetNewModelocracha();
+            model.IdEvento = 1; // Evento 1 já possui modelo na mock setup
+
+            // Act
+            var result = controller.Create(model);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirect.ActionName);
+        }
+
+        [TestMethod]
+        public void EditTest_Post_TrocaEventoAlvoSemModelo_EditaParaNovoEvento()
+        {
+            // Arrange
+            var mockCracha = new Mock<IModelocrachaService>();
+            var modeloExistente = new Modelocracha { Id = 1, IdEvento = 1, Texto = "Original", Qrcode = 1 };
+            mockCracha.Setup(s => s.Get((uint)1)).Returns(modeloExistente);
+            mockCracha.Setup(s => s.GetByEvento((uint)2)).Returns(new List<Modelocracha>());
+            mockCracha.Setup(s => s.Edit(It.IsAny<Modelocracha>())).Verifiable();
+
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), (uint)1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), (uint)2))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 2, IdPapel = 2 });
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            var formFileMock = new Mock<IFormFile>();
+            var ms = new MemoryStream(new byte[] { 0x1, 0x2 });
+            formFileMock.Setup(f => f.OpenReadStream()).Returns(ms);
+            formFileMock.Setup(f => f.Length).Returns(ms.Length);
+            formFileMock.Setup(f => f.CopyTo(It.IsAny<Stream>())).Callback<Stream>(s => ms.CopyTo(s));
+
+            var viewModel = new ModelocrachaModel
+            {
+                Id = 1,
+                IdEvento = 2, // Trocou para o Evento 2
+                Texto = "Novo Texto para Evento 2",
+                Qrcode = 1,
+                Logotipo = formFileMock.Object
+            };
+
+            // Act
+            var result = ctl.Edit(1, viewModel);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirect.ActionName);
+            mockCracha.Verify(s => s.Edit(It.Is<Modelocracha>(m => m.IdEvento == 2)), Times.Once);
+        }
+
+        [TestMethod]
+        public void CreateTest_Post_SalvarRascunho_SemLogotipo_Sucesso()
+        {
+            // Arrange
+            var model = GetNewModelocracha();
+            model.IdEvento = 1;
+            model.Logotipo = null; // Sem logotipo no rascunho
+            model.LogotipoBase64 = null;
+
+            // Act
+            var result = controller.Create(model, "true");
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirect.ActionName);
+            Assert.AreEqual("Rascunho salvo com sucesso", controller.TempData["SuccessMessage"]);
+        }
+
+        [TestMethod]
+        public void EditTest_Post_SalvarRascunho_Sucesso()
+        {
+            // Arrange
+            var modelEdit = GetTargetEditModelocrachaModel();
+            modelEdit.Logotipo = null;
+
+            // Act
+            var result = controller.Edit(modelEdit.Id, modelEdit, "true");
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirect.ActionName);
+            Assert.AreEqual("Rascunho salvo com sucesso", controller.TempData["SuccessMessage"]);
+        }
+
+        [TestMethod]
+        public void CreateTest_Post_PermiteMultiplosModelosPorEvento_ChamaCreate()
+        {
+            // Arrange
+            var mockCracha = new Mock<IModelocrachaService>();
+            // Evento 1 já possui 3 modelos cadastrados
+            mockCracha.Setup(s => s.GetByEvento(1)).Returns(GetTestModelocracha());
+            mockCracha.Setup(s => s.Create(It.IsAny<Modelocracha>())).Returns(99);
+
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+            ctl.TempData = new TempDataDictionary(ctl.ControllerContext.HttpContext, Mock.Of<ITempDataProvider>());
+
+            var novoModelo = GetNewModelocracha();
+            novoModelo.IdEvento = 1;
+            novoModelo.Texto = "Segundo Modelo para o Evento 1";
+
+            // Act
+            var result = ctl.Create(novoModelo);
+
+            // Assert: deve criar um novo modelo chamando Create, e nunca sobrescrever chamando Edit
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirect.ActionName);
+            mockCracha.Verify(s => s.Create(It.Is<Modelocracha>(m => m.IdEvento == 1 && m.Texto == "Segundo Modelo para o Evento 1")), Times.Once);
+            mockCracha.Verify(s => s.Edit(It.IsAny<Modelocracha>()), Times.Never);
         }
 
         private static ClaimsPrincipal GestorPrincipal() => new(new ClaimsIdentity(new List<Claim>
