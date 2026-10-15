@@ -7,146 +7,146 @@
 <hr />
 
 <div class="row">
-	<div>
-		<form asp-action="CreateParticipante" method="post" onsubmit="return validarFormulario()">
-			<div class="row">
-				<div class="col-lg-3">
-					<div class="form-group">
-						<label for="IdEvento" class="control-label">Evento</label>
-						<select id="IdEvento" name="IdEvento" class="form-control" readonly>
-							@if (Model.Evento == null || Model.Evento.Id == 0)
-							{
-								<option value="0">Não Informado</option>
-							}
-							else
-							{
-								<option value="@Model.Evento.Id" selected>@Model.Evento.Nome</option>
-							}
-						</select>
-						@Html.HiddenFor(model => model.Evento.Id)
-						@Html.HiddenFor(model => model.Evento.Nome)
-					</div>
-				</div>
-			</div>
-			<br />
-			<h4 class="blue-normal">
-				Dados do participante
-			</h4>
-			<div class="row">
-				<div class="col-md-6">
-					<div class="form-group">
-						<label asp-for="Pessoa.Cpf" class="control-label">CPF</label>
-						<input asp-for="Pessoa.Cpf" class="form-control" id="Cpf" placeholder="000.000.000-00" oninput="formatarCPF()" maxlength="14" />
-						<span asp-validation-for="Pessoa.Cpf" class="text-danger"></span>
-					</div>
-				</div>
-				<div class="col-md-6">
-					<div class="form-group">
-						<label asp-for="Pessoa.Nome" class="control-label">Nome</label>
-						<input asp-for="Pessoa.Nome" class="form-control" id="Nome" placeholder="Nome completo" />
-						<span asp-validation-for="Pessoa.Nome" class="text-danger"></span>
-					</div>
-				</div>
-			</div>
-			<div class="row">
-				<div class="col-md-6">
-					<div class="form-group">
-						<label asp-for="Pessoa.Telefone1" class="control-label">Celular</label>
-						<input asp-for="Pessoa.Telefone1" type="text" class="form-control" id="Telefone1" placeholder="Com o DDD" />
-						<span asp-validation-for="Pessoa.Telefone1" class="text-danger"></span>
-					</div>
-				</div>
-				<div class="col-md-6">
-					<div class="form-group">
-						<label asp-for="Pessoa.Email" class="control-label">Email</label>
-						<input asp-for="Pessoa.Email" class="form-control" id="Email" placeholder="Seu e-mail" />
-						<span asp-validation-for="Pessoa.Email" class="text-danger"></span>
-					</div>
-				</div>
-			</div>
-			<br />
+    <div>
+        <form asp-action="CreateParticipante" method="post" onsubmit="return validarFormulario()">
+            <div class="row">
+                <div class="col-lg-3">
+                    <div class="form-group">
+                        <label for="IdEvento" class="control-label">Evento</label>
+                        <select id="IdEvento" name="IdEvento" class="form-control" readonly>
+                            @if (Model.Evento == null || Model.Evento.Id == 0)
+                            {
+                                <option value="0">Não Informado</option>
+                            }
+                            else
+                            {
+                                <option value="@Model.Evento.Id" selected>@Model.Evento.Nome</option>
+                            }
+                        </select>
+                        @Html.HiddenFor(model => model.Evento.Id)
+                        @Html.HiddenFor(model => model.Evento.Nome)
+                    </div>
+                </div>
+            </div>
+            <br />
+            <h4 class="blue-normal">
+                Dados do participante
+            </h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="Pessoa.Cpf" class="control-label">CPF</label>
+                        <input asp-for="Pessoa.Cpf" class="form-control" id="Cpf" placeholder="000.000.000-00" onblur="autoCompletarCPF(true)" oninput="formatarCPF()" maxlength="14" />
+                        <span asp-validation-for="Pessoa.Cpf" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="Pessoa.Nome" class="control-label">Nome</label>
+                        <input asp-for="Pessoa.Nome" class="form-control" id="Nome" placeholder="Nome completo" />
+                        <span asp-validation-for="Pessoa.Nome" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="Pessoa.Telefone1" class="control-label">Celular</label>
+                        <input asp-for="Pessoa.Telefone1" type="text" class="form-control" id="Telefone1" placeholder="Com o DDD" />
+                        <span asp-validation-for="Pessoa.Telefone1" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label asp-for="Pessoa.Email" class="control-label">Email</label>
+                        <input asp-for="Pessoa.Email" class="form-control" id="Email" placeholder="Seu e-mail" />
+                        <span asp-validation-for="Pessoa.Email" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+            <br />
 
-			<div class="d-flex flex-row-reverse">
-				<div class="form-group">
-					<input type="submit" value="Adicionar" class="btn btn-lg btn-blue-normal" />
-				</div>
-			</div>
-			<br />
-		</form>
-	</div>
+            <div class="d-flex flex-row-reverse">
+                <div class="form-group">
+                    <input type="submit" value="Adicionar" class="btn btn-lg btn-blue-normal" />
+                </div>
+            </div>
+            <br />
+        </form>
+    </div>
 </div>
 
 
 @if (TempData["Message"] != null)
 {
-	<div class="alert alert-info alert-dismissible fade show" role="alert">
-		@TempData["Message"]
-		<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-	</div>
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        @TempData["Message"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 }
 
 @if (!ViewData.ModelState.IsValid)
 {
-<div class="alert alert-danger">
-	@Html.ValidationSummary(false, "", new { @class = "text-danger" })
-</div>
+    <div class="alert alert-danger">
+        @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+    </div>
 }
 
 <div class="row">
-	<div class="col-md-12">
-		<h2 class="blue-normal">Lista de Participantes do Evento</h2>
-		<table id="tablePessoa" class="table table-striped">
-			<thead class="blue-normal blue-normal-bg-table">
-				<tr>
-					<th>CPF</th>
-					<th>Nome</th>
-					<th>Nome no Crachá</th>
-					<th>Ações</th>
-				</tr>
-			</thead>
-			<tbody>
-				@foreach (var inscricaopessoaevento in Model.Inscricoes)
-				{
-					<tr>
-						<td style="vertical-align: middle;">@FormatarCPF(inscricaopessoaevento.IdPessoaNavigation.Cpf)</td>
-						<td style="vertical-align: middle;">@inscricaopessoaevento.IdPessoaNavigation.Nome</td>
-						<td style="vertical-align: middle;">@(!string.IsNullOrWhiteSpace(inscricaopessoaevento.NomeCracha) ? inscricaopessoaevento.NomeCracha : (inscricaopessoaevento.IdPessoaNavigation.NomeCracha ?? inscricaopessoaevento.IdPessoaNavigation.Nome))</td>
-						<td style="vertical-align: middle;">
-							<div class="d-flex align-items-center gap-2">
-								<a asp-action="EditParticipante"
-								   asp-route-idEvento="@Model.Evento.Id"
-								   asp-route-idPessoa="@inscricaopessoaevento.IdPessoa"
-								   class="btn btn-sm btn-primary">
-									Editar
-								</a>
-								<form id="removeForm-@inscricaopessoaevento.IdPessoa" method="POST" action="/Evento/DeletePessoaPapel" class="d-inline m-0">
-									@Html.AntiForgeryToken()
-									<input type="hidden" name="IdPessoa" value="@inscricaopessoaevento.IdPessoa" />
-									<input type="hidden" name="IdEvento" value="@Model.Evento.Id" />
-									<input type="hidden" name="IdPapel" value="@inscricaopessoaevento.IdPapel" />
-									<a href="javascript:void(0);"
-									   class="text-danger link-remover-participante"
-									   style="text-decoration: none; cursor: pointer;"
-									   data-id-pessoa="@inscricaopessoaevento.IdPessoa"
-									   data-nome-pessoa="@inscricaopessoaevento.IdPessoaNavigation.Nome"
-									   data-nome-evento="@Model.Evento.Nome"
-									   data-id-evento="@Model.Evento.Id"
-									   data-id-papel="@inscricaopessoaevento.IdPapel">
-										Remover participante
-									</a>
-								</form>
-							</div>
-						</td>
-					</tr>
-				}
-			</tbody>
-		</table>
-	</div>
+    <div class="col-md-12">
+        <h2 class="blue-normal">Lista de Participantes do Evento</h2>
+        <table id="tablePessoa" class="table table-striped">
+            <thead class="blue-normal blue-normal-bg-table">
+                <tr>
+                    <th>CPF</th>
+                    <th>Nome</th>
+                    <th>Nome no Crachá</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var inscricaopessoaevento in Model.Inscricoes)
+                {
+                    <tr>
+                        <td style="vertical-align: middle;">@FormatarCPF(inscricaopessoaevento.IdPessoaNavigation.Cpf)</td>
+                        <td style="vertical-align: middle;">@inscricaopessoaevento.IdPessoaNavigation.Nome</td>
+                        <td style="vertical-align: middle;">@(!string.IsNullOrWhiteSpace(inscricaopessoaevento.NomeCracha) ? inscricaopessoaevento.NomeCracha : (inscricaopessoaevento.IdPessoaNavigation.NomeCracha ?? inscricaopessoaevento.IdPessoaNavigation.Nome))</td>
+                        <td style="vertical-align: middle;">
+                            <div class="d-flex align-items-center gap-2">
+                                <a asp-action="EditParticipante"
+                                   asp-route-idEvento="@Model.Evento.Id"
+                                   asp-route-idPessoa="@inscricaopessoaevento.IdPessoa"
+                                   class="btn btn-sm btn-primary">
+                                    Editar
+                                </a>
+                                <form id="removeForm-@inscricaopessoaevento.IdPessoa" method="POST" action="/Evento/DeletePessoaPapel" class="d-inline m-0">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="IdPessoa" value="@inscricaopessoaevento.IdPessoa" />
+                                    <input type="hidden" name="IdEvento" value="@Model.Evento.Id" />
+                                    <input type="hidden" name="IdPapel" value="@inscricaopessoaevento.IdPapel" />
+                                    <a href="javascript:void(0);"
+                                       class="text-danger link-remover-participante"
+                                       style="text-decoration: none; cursor: pointer;"
+                                       data-id-pessoa="@inscricaopessoaevento.IdPessoa"
+                                       data-nome-pessoa="@inscricaopessoaevento.IdPessoaNavigation.Nome"
+                                       data-nome-evento="@Model.Evento.Nome"
+                                       data-id-evento="@Model.Evento.Id"
+                                       data-id-papel="@inscricaopessoaevento.IdPapel">
+                                        Remover participante
+                                    </a>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
 <div class="d-flex flex-row-reverse mt-4">
-	<div class="form-group" style="margin-right: 10px;">
-		<a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Model.Evento.Id" class="btn btn-lg btn-blue-normal">Voltar</a>
-	</div>
+    <div class="form-group" style="margin-right: 10px;">
+        <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Model.Evento.Id" class="btn btn-lg btn-blue-normal">Voltar</a>
+    </div>
 </div>
 
 
@@ -154,67 +154,68 @@
 
 @await Html.PartialAsync("_DeleteModal", new EventoWeb.Models.DeleteModel
 {
-	ModalId = "modalExcluir",
+    ModalId = "modalExcluir",
 	ActionName = "DeletePessoaPapel",
 	ControllerName = "Evento",
 	ConfirmMessage = "Tem certeza que deseja excluir?"
 })
 
 @section Scripts {
-	
-	<script src="~/lib/datatable/js/datatables.min.js"></script>
 
-	<script>
-		$(document).ready(function () {
-			
-			$('#tablePessoa').DataTable({
-				language: {
-					url: '@Url.Content("~/lib/datatable/js/pt-BR.json")'
-				}
-			});
-		});
+    <script src="~/lib/datatable/js/datatables.min.js"></script>
+    <script src="~/js/autoCompletarDadosCPF.js"></script>
 
-		(function () {
-			var modalElement = document.getElementById('modalExcluir');
-			var modalForm = modalElement.querySelector('form');
-			var modalMessage = modalElement.querySelector('.modal-body h5');
+    <script>
+        $(document).ready(function () {
 
-			document.querySelectorAll('.link-remover-participante').forEach(function (link) {
-				link.addEventListener('click', function () {
-					var dados = this.dataset;
+            $('#tablePessoa').DataTable({
+                language: {
+                    url: '@Url.Content("~/lib/datatable/js/pt-BR.json")'
+                }
+            });
+        });
 
-					modalMessage.innerHTML = 'Tem certeza que deseja excluir "<strong>' +
-						dados.nomePessoa + '</strong>" como participante do evento "<strong>' +
-						dados.nomeEvento + '</strong>"?';
+        (function () {
+            var modalElement = document.getElementById('modalExcluir');
+            var modalForm = modalElement.querySelector('form');
+            var modalMessage = modalElement.querySelector('.modal-body h5');
 
-					modalForm.querySelectorAll('input[data-remocao]').forEach(function (input) { input.remove(); });
+            document.querySelectorAll('.link-remover-participante').forEach(function (link) {
+                link.addEventListener('click', function () {
+                    var dados = this.dataset;
 
-					[['IdPessoa', dados.idPessoa], ['IdEvento', dados.idEvento], ['IdPapel', dados.idPapel]]
-						.forEach(function (campo) {
-							var input = document.createElement('input');
-							input.type = 'hidden';
-							input.name = campo[0];
-							input.value = campo[1];
-							input.setAttribute('data-remocao', '');
-							modalForm.appendChild(input);
-						});
+                    modalMessage.innerHTML = 'Tem certeza que deseja excluir "<strong>' +
+                        dados.nomePessoa + '</strong>" como participante do evento "<strong>' +
+                        dados.nomeEvento + '</strong>"?';
 
-					new bootstrap.Modal(modalElement).show();
-				});
-			});
-		})();
-	</script>
+                    modalForm.querySelectorAll('input[data-remocao]').forEach(function (input) { input.remove(); });
+
+                    [['IdPessoa', dados.idPessoa], ['IdEvento', dados.idEvento], ['IdPapel', dados.idPapel]]
+                        .forEach(function (campo) {
+                            var input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = campo[0];
+                            input.value = campo[1];
+                            input.setAttribute('data-remocao', '');
+                            modalForm.appendChild(input);
+                        });
+
+                    new bootstrap.Modal(modalElement).show();
+                });
+            });
+        })();
+    </script>
 }
 
 
 @functions {
-	public static string FormatarCPF(string cpf)
-	{
-		if (string.IsNullOrEmpty(cpf) || cpf.Length != 11)
-			return cpf;
+    public static string FormatarCPF(string cpf)
+    {
+        if (string.IsNullOrEmpty(cpf) || cpf.Length != 11)
+            return cpf;
 
-		return Convert.ToUInt64(cpf).ToString(@"000\.000\.000\-00");
-	}
+        return Convert.ToUInt64(cpf).ToString(@"000\.000\.000\-00");
+    }
 }
 
 
