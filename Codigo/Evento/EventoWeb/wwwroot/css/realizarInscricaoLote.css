@@ -396,7 +396,15 @@ body {
 
 .subevento-tipo-wrapper {
     display: none;
-    margin-top: 10px;
+    margin: 0;
+    padding: 0;
+    text-align: left;
+}
+
+.subevento-tipo-preview {
+    margin: 0;
+    padding: 0;
+    text-align: left;
 }
 
 .subevento-tipo-wrapper label {
@@ -540,6 +548,7 @@ body {
     margin-bottom: 0;
     border-collapse: separate;
     border-spacing: 0;
+    table-layout: fixed;
 }
 
 .subeventos-table thead tr {
@@ -670,8 +679,10 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    padding: 4px 0;
+    gap: 8px;
+    padding: 3px 0;
+    width: 100%;
+    margin: 0;
 }
 
 .lote-tipo-nome {

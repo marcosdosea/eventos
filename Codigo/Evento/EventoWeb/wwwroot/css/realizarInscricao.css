@@ -396,7 +396,15 @@ body {
 
 .subevento-tipo-wrapper {
     display: none;
-    margin-top: 10px;
+    margin: 0;
+    padding: 0;
+    text-align: left;
+}
+
+.subevento-tipo-preview {
+    margin: 0;
+    padding: 0;
+    text-align: left;
 }
 
 .subevento-tipo-wrapper label {
@@ -485,6 +493,7 @@ body {
     margin-bottom: 0;
     border-collapse: separate;
     border-spacing: 0;
+    table-layout: fixed;
 }
 
 .subeventos-table thead tr {
@@ -612,12 +621,13 @@ body {
 }
 
 .subevento-select-tipo {
-    min-width: 150px;
-    max-width: 220px;
+    width: 100%;
+    max-width: 100%;
     border-color: #CBD5E1;
     font-size: 0.82rem;
     border-radius: 8px;
     padding: 4px 8px;
+    margin: 0;
 }
 
 .subevento-select-tipo:focus {
