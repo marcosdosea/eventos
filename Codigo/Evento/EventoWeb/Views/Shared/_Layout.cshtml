@@ -28,9 +28,9 @@
                             (controller == "inscricao" && (action == "realizarinscricao" || action == "minhasinscricoes" || action == "realizarinscricaolote")) ||
                             isIdentityLoginOrRegister; 
     }
-    <header class="p-3 mb-3 border-bottom fixed-top">
+    <header class="p-3 mb-3 border-bottom sticky-top bg-white">
         <div class="container">
-            <nav class="navbar navbar-expand-lg navbar-light p-0">
+            <nav class="navbar navbar-expand-xl navbar-light p-0">
                 <div class="w-100 d-flex flex-wrap align-items-center justify-content-between">
                     <div class="logo me-3">
                         <a href="/" title="Ir para a página inicial">
@@ -42,13 +42,13 @@
                     </button>
                     <div class="collapse navbar-collapse justify-content-between" id="navbarSupportedContent">
                         @{
-                            var showSearch = ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && 
+                            var showSearch = ViewContext.RouteData.Values["controller"]?.ToString() == "Home" &&
                                              (ViewContext.RouteData.Values["action"]?.ToString() == "Index" || ViewContext.RouteData.Values["action"]?.ToString() == "Buscar") ||
-                                              isIdentityLoginOrRegister; 
+                                              isIdentityLoginOrRegister;
                         }
                         @if (showSearch)
                         {
-                            <div class="d-flex align-items-center flex-grow-1 my-2 my-lg-0 mx-lg-3 ms-lg-3">
+                            <div class="d-flex align-items-center justify-content-center justify-content-xl-start flex-grow-1 my-2 my-xl-0 mx-xl-3">
                                 <partial name="_HeaderSearch" />
                             </div>
                         }
@@ -56,22 +56,24 @@
                         {
                             <div></div>
                         }
-                        
-                        <div class="d-flex flex-column flex-lg-row align-items-lg-center mt-3 mt-lg-0">
+
+                        <div class="d-flex flex-row flex-wrap align-items-center justify-content-center justify-content-xl-end gap-2 mt-2 mt-xl-0">
                             @if (showLocation)
                             {
-                                <div class="nav-item d-flex align-items-center me-3 order-2 order-md-0">
+                                <div class="nav-item">
                                     <button type="button" class="btn-location-header" onclick="openLocationModal()" aria-label="Localização">
                                         <i class="bi bi-geo-alt-fill"></i>
                                         <span id="headerLocationText">Carregando...</span>
                                     </button>
                                 </div>
                             }
-                            <div class="nav-item me-3 mb-2 mb-lg-0 align-content-center">
-                                <a class="nav-link fw-bold text-primary" asp-controller="Evento" asp-action="Create">Seu evento aqui!</a>
+                            <div class="nav-item">
+                                <a class="nav-link fw-bold text-primary" asp-controller="Evento" asp-action="Create">
+                                    <span class="d-inline d-sm-none">Seu evento</span>
+                                    <span class="d-none d-sm-inline">Seu evento aqui!</span>
+                                </a>
                             </div>
                             <partial name="_LoginPartial" />
-                           
                         </div>
                     </div>
                 </div>
