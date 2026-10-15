@@ -1,4 +1,5 @@
 function toggleSubeventoSelect(checkbox, id) {
+    if (checkbox.disabled) return;
     const row = document.getElementById('row-subevento-' + id);
     const wrapper = document.getElementById('wrapper-tipo-' + id);
     const qtyInputs = document.querySelectorAll('.subevento-qty-' + id);
@@ -115,7 +116,7 @@ function calcularValorTotal() {
     });
     
     // Valor dos subeventos selecionados
-    const subeventosCheckboxes = document.querySelectorAll('.subevento-checkbox:checked');
+    const subeventosCheckboxes = document.querySelectorAll('.subevento-checkbox:checked:not(:disabled)');
     subeventosCheckboxes.forEach(checkbox => {
         const subId = checkbox.value;
         const subInputs = document.querySelectorAll('.subevento-qty-' + subId);
@@ -126,11 +127,11 @@ function calcularValorTotal() {
         });
     });
 
-    // submit button disabled if sumEvento == 0 or > 8 or no subevento selected (when subeventos exist)
+    // submit button disabled if sumEvento == 0 or > 8 or no subevento selected (when active subeventos exist)
     const btnSubmit = document.querySelector('.btn-submit:not(.btn-login)');
     if (btnSubmit) {
         let isSubeventoValid = true;
-        const hasSubeventos = document.querySelectorAll('.subevento-checkbox').length > 0;
+        const hasSubeventos = document.querySelectorAll('.subevento-checkbox:not(:disabled)').length > 0;
         
         if (hasSubeventos) {
             isSubeventoValid = false;

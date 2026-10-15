@@ -825,3 +825,25 @@ body {
     justify-content: flex-end;
 }
 
+.badge-vagas-em-breve {
+    background-color: #FEF3C7;
+    color: #92400E;
+}
+
+.subeventos-table tr.subevento-disabled {
+    opacity: 0.55;
+    background-color: #F8FAFC !important;
+}
+
+.subeventos-table tr.subevento-disabled td:not(:last-child) {
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.subeventos-table tr.subevento-disabled input,
+.subeventos-table tr.subevento-disabled select,
+.subeventos-table tr.subevento-disabled button:not(.btn-ver-ementa) {
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+}
+
