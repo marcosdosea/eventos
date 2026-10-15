@@ -333,7 +333,7 @@
                                             var sub = subOpcao.Subevento;
                                             var subInscritos = ViewBag.SubeventosInscritos as HashSet<uint>;
                                             bool isJaInscrito = subInscritos != null && subInscritos.Contains(sub.Id);
-                                            bool isEncerrado = sub.Status == "F" || sub.Status == "I" || (sub.DataFimInscricao != DateTime.MinValue && sub.DataFimInscricao < DateTime.Now);
+                                            bool isEncerrado = sub.Status == "F" || sub.Status == "I" || (sub.DataFimInscricao != DateTime.MinValue && sub.DataFimInscricao < DateTime.Now) || (sub.DataFim.HasValue && sub.DataFim.Value < DateTime.Now);
                                             bool isEmCadastro = sub.Status == "C";
                                             bool isEmBreve = (sub.DataInicioInscricao != DateTime.MinValue && sub.DataInicioInscricao > DateTime.Now);
                                             bool isEsgotado = sub.VagasDisponiveis <= 0;
