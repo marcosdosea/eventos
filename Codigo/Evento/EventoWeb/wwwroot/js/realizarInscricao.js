@@ -9,12 +9,19 @@ function toggleSelect(radio) {
 function toggleSubeventoSelect(checkbox, id) {
     if (checkbox.disabled) return;
     const row = document.getElementById('row-subevento-' + id);
+    const wrapper = document.getElementById('wrapper-tipo-' + id);
+    const preview = document.getElementById('preview-tipo-' + id);
     const select = document.getElementById('select-tipo-' + id);
+
     if (checkbox.checked) {
         if (row) row.classList.add('row-selected');
+        if (preview) preview.style.display = 'none';
+        if (wrapper) wrapper.style.display = 'block';
         if (select) select.disabled = false;
     } else {
         if (row) row.classList.remove('row-selected');
+        if (wrapper) wrapper.style.display = 'none';
+        if (preview) preview.style.display = 'block';
         if (select) select.disabled = true;
     }
     calcularValorTotal();
@@ -138,5 +145,18 @@ document.addEventListener('keydown', function(event) {
 });
 
 document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('.subevento-checkbox').forEach(cb => {
+        if (cb.checked && !cb.disabled) {
+            const id = cb.value;
+            const row = document.getElementById('row-subevento-' + id);
+            const wrapper = document.getElementById('wrapper-tipo-' + id);
+            const preview = document.getElementById('preview-tipo-' + id);
+            const select = document.getElementById('select-tipo-' + id);
+            if (row) row.classList.add('row-selected');
+            if (preview) preview.style.display = 'none';
+            if (wrapper) wrapper.style.display = 'block';
+            if (select) select.disabled = false;
+        }
+    });
     calcularValorTotal();
 });

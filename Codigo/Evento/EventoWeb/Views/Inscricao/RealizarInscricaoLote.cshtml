@@ -362,19 +362,28 @@
                                             bool isEmCadastro = sub.Status == "C";
                                             bool isEmBreve = (sub.DataInicioInscricao != DateTime.MinValue && sub.DataInicioInscricao > DateTime.Now);
                                             bool isEsgotado = sub.VagasDisponiveis <= 0;
-                                            bool isDisabled = isJaInscrito || isEncerrado || isEmCadastro || isEmBreve || isEsgotado;
+                                            bool isInscricaoAberta = (sub.Status == "A")
+                                                && (sub.DataInicioInscricao <= DateTime.Now)
+                                                && (sub.DataFimInscricao >= DateTime.Now)
+                                                && (!sub.DataFim.HasValue || sub.DataFim.Value >= DateTime.Now)
+                                                && (sub.VagasDisponiveis > 0);
+                                            bool isDisabled = isJaInscrito || !isInscricaoAberta;
                                             var tipos = subOpcao.TiposInscricao?.ToList() ?? new List<Core.DTO.TipoInscricaoDTO>();
 
                                             <tr id="row-subevento-@sub.Id" class="@(isDisabled ? "subevento-disabled opacity-50" : "")">
                                                 <td class="col-sel">
-                                                    <input type="checkbox" name="SelectedSubeventos" value="@sub.Id" class="subevento-checkbox" onchange="toggleSubeventoSelect(this, @sub.Id)" @(isDisabled ? "disabled" : "") aria-label="Selecionar @sub.Nome" />
+                                                    <input type="checkbox" name="SelectedSubeventos" value="@sub.Id" class="subevento-checkbox" onchange="toggleSubeventoSelect(this, @sub.Id)" @(isJaInscrito ? "checked disabled" : (isDisabled ? "disabled" : "")) aria-label="Selecionar @sub.Nome" />
                                                 </td>
                                                 <td>
                                                     <div class="subevento-titulo">@sub.Nome</div>
                                                     <div class="subevento-subtitulo">
                                                         <i class="bi bi-tag-fill text-muted"></i>
                                                         <span>@sub.NomeTipoEvento</span>
-                                                        @if (isEncerrado)
+                                                        @if (isJaInscrito)
+                                                        {
+                                                            <span class="badge bg-success ms-1"><i class="bi bi-check-circle me-1"></i>Inscrito</span>
+                                                        }
+                                                        else if (isEncerrado)
                                                         {
                                                             <span class="badge bg-secondary ms-1">Encerrado</span>
                                                         }
@@ -385,6 +394,10 @@
                                                         else if (isEsgotado)
                                                         {
                                                             <span class="badge bg-danger ms-1">Esgotado</span>
+                                                        }
+                                                        else if (!isInscricaoAberta)
+                                                        {
+                                                            <span class="badge bg-secondary ms-1">Indisponível</span>
                                                         }
                                                     </div>
                                                 </td>
@@ -397,7 +410,13 @@
                                                     </div>
                                                 </td>
                                                 <td style="text-align: center;">
-                                                    @if (isEncerrado)
+                                                    @if (isJaInscrito)
+                                                    {
+                                                        <span class="badge-vagas badge-vagas-aberto" style="background: rgba(46, 125, 50, 0.12); color: #2e7d32; border-color: rgba(46, 125, 50, 0.25);">
+                                                            <i class="bi bi-check-circle-fill"></i> Inscrito
+                                                        </span>
+                                                    }
+                                                    else if (isEncerrado)
                                                     {
                                                         <span class="badge-vagas badge-vagas-esgotado">
                                                             <i class="bi bi-x-circle-fill"></i> Encerrado
@@ -415,6 +434,12 @@
                                                             <i class="bi bi-x-circle-fill"></i> Esgotado
                                                         </span>
                                                     }
+                                                    else if (!isInscricaoAberta)
+                                                    {
+                                                        <span class="badge-vagas badge-vagas-esgotado">
+                                                            <i class="bi bi-slash-circle"></i> Indisponível
+                                                        </span>
+                                                    }
                                                     else if (sub.VagasDisponiveis > 10)
                                                     {
                                                         <span class="badge-vagas badge-vagas-alta">
@@ -429,7 +454,43 @@
                                                     }
                                                 </td>
                                                 <td>
-                                                    <div id="wrapper-tipo-@sub.Id" style="display: none;">
+                                                    @if (isJaInscrito)
+                                                    {
+                                                        <span class="text-muted small"><i class="bi bi-check2 text-success me-1"></i>Já cadastrado</span>
+                                                    }
+                                                    else if (!isInscricaoAberta)
+                                                    {
+                                                        <span class="text-muted small">Inscrições indisponíveis</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div id="preview-tipo-@sub.Id" class="subevento-tipo-preview">
+                                                            @if (tipos.Any())
+                                                            {
+                                                                if (tipos.Count > 1)
+                                                                {
+                                                                    <span class="badge bg-light text-dark border">
+                                                                        <i class="bi bi-tags me-1 text-primary"></i>@(tipos.Count) tipos a partir de @(tipos.Min(t => t.Valor) == 0 ? "Gratuito" : $"R$ {tipos.Min(t => t.Valor):N2}")
+                                                                    </span>
+                                                                }
+                                                                else
+                                                                {
+                                                                    var unico = tipos.First();
+                                                                    <span class="badge bg-light text-dark border">
+                                                                        @unico.Nome • @(unico.Valor == 0 ? "Gratuito" : $"R$ {unico.Valor:N2}")
+                                                                    </span>
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                var val = (sub.InscricaoGratuita == 1 || sub.ValorInscricao == 0) ? 0m : sub.ValorInscricao;
+                                                                <span class="badge bg-light text-dark border">
+                                                                    @(val == 0 ? "Gratuito" : $"R$ {val:N2}")
+                                                                </span>
+                                                            }
+                                                        </div>
+
+                                                        <div id="wrapper-tipo-@sub.Id" class="subevento-tipo-wrapper" style="display: none;">
                                                         @if (tipos.Any())
                                                         {
                                                             @foreach (var tipo in tipos)
@@ -480,6 +541,7 @@
                                                             }
                                                         }
                                                     </div>
+                                                    }
                                                 </td>
                                                 <td style="text-align: right;">
                                                     <button type="button" class="btn-ver-ementa" onclick="abrirEmentaModal('@sub.Nome', '@(string.IsNullOrWhiteSpace(sub.Descricao) ? "Nenhuma ementa detalhada cadastrada para este subevento." : sub.Descricao.Replace("'", "\\'"))', '@sub.NomeTipoEvento', '@(sub.CargaHoraria > 0 ? $"{sub.CargaHoraria} Horas" : "Não informada")')">

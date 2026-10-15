@@ -337,7 +337,12 @@
                                             bool isEmCadastro = sub.Status == "C";
                                             bool isEmBreve = (sub.DataInicioInscricao != DateTime.MinValue && sub.DataInicioInscricao > DateTime.Now);
                                             bool isEsgotado = sub.VagasDisponiveis <= 0;
-                                            bool isDisabled = isJaInscrito || isEncerrado || isEmCadastro || isEmBreve || isEsgotado;
+                                            bool isInscricaoAberta = (sub.Status == "A")
+                                                && (sub.DataInicioInscricao <= DateTime.Now)
+                                                && (sub.DataFimInscricao >= DateTime.Now)
+                                                && (!sub.DataFim.HasValue || sub.DataFim.Value >= DateTime.Now)
+                                                && (sub.VagasDisponiveis > 0);
+                                            bool isDisabled = isJaInscrito || !isInscricaoAberta;
                                             var tipos = subOpcao.TiposInscricao?.ToList() ?? new List<Core.DTO.TipoInscricaoDTO>();
 
                                             <tr id="row-subevento-@sub.Id" class="@(isDisabled ? "subevento-disabled opacity-50" : "")">
@@ -364,6 +369,10 @@
                                                         else if (isEsgotado)
                                                         {
                                                             <span class="badge bg-danger ms-1">Esgotado</span>
+                                                        }
+                                                        else if (!isInscricaoAberta)
+                                                        {
+                                                            <span class="badge bg-secondary ms-1">Indisponível</span>
                                                         }
                                                     </div>
                                                 </td>
@@ -400,6 +409,12 @@
                                                             <i class="bi bi-x-circle-fill"></i> Esgotado
                                                         </span>
                                                     }
+                                                    else if (!isInscricaoAberta)
+                                                    {
+                                                        <span class="badge-vagas badge-vagas-esgotado">
+                                                            <i class="bi bi-slash-circle"></i> Indisponível
+                                                        </span>
+                                                    }
                                                     else if (sub.VagasDisponiveis > 10)
                                                     {
                                                         <span class="badge-vagas badge-vagas-alta">
@@ -418,54 +433,56 @@
                                                     {
                                                         <span class="text-muted small"><i class="bi bi-check2 text-success me-1"></i>Já cadastrado</span>
                                                     }
-                                                    else if (tipos.Count > 1)
+                                                    else if (!isInscricaoAberta)
                                                     {
-                                                        <div id="wrapper-tipo-@sub.Id">
-                                                            <select name="TipoInscricaoSubevento_@sub.Id" id="select-tipo-@sub.Id" class="form-select form-select-sm subevento-select-tipo subevento-tipo-select" onchange="calcularValorTotal()" disabled>
-                                                                @foreach (var tipo in tipos)
-                                                                {
-                                                                    <option value="@tipo.Id" data-valor="@tipo.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture)">
-                                                                        @tipo.Nome - @(tipo.Valor == 0 ? "Gratuito" : $"R$ {tipo.Valor:N2}")
-                                                                    </option>
-                                                                }
-                                                            </select>
-                                                        </div>
-                                                    }
-                                                    else if (tipos.Count == 1)
-                                                    {
-                                                        var unicoTipo = tipos.First();
-                                                        <div id="wrapper-tipo-@sub.Id">
-                                                            @if (unicoTipo.Valor == 0)
-                                                            {
-                                                                <span class="badge-valor-gratuito">Gratuito</span>
-                                                            }
-                                                            else
-                                                            {
-                                                                <span class="badge-valor-pago">+ R$ @unicoTipo.Valor.ToString("N2")</span>
-                                                            }
-                                                            <select name="TipoInscricaoSubevento_@sub.Id" id="select-tipo-@sub.Id" class="d-none subevento-tipo-select" disabled>
-                                                                <option value="@unicoTipo.Id" data-valor="@unicoTipo.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture)" selected>
-                                                                    @unicoTipo.Nome
-                                                                </option>
-                                                            </select>
-                                                        </div>
+                                                        <span class="text-muted small">Inscrições indisponíveis</span>
                                                     }
                                                     else
                                                     {
-                                                        var valorPadrao = (sub.InscricaoGratuita == 1 || sub.ValorInscricao == 0) ? 0m : sub.ValorInscricao;
-                                                        <div id="wrapper-tipo-@sub.Id">
-                                                            @if (valorPadrao == 0)
+                                                        <div id="preview-tipo-@sub.Id" class="subevento-tipo-preview">
+                                                            @if (tipos.Any())
                                                             {
-                                                                <span class="badge-valor-gratuito">Gratuito</span>
+                                                                if (tipos.Count > 1)
+                                                                {
+                                                                    <span class="badge bg-light text-dark border">
+                                                                        <i class="bi bi-tags me-1 text-primary"></i>@(tipos.Count) tipos a partir de @(tipos.Min(t => t.Valor) == 0 ? "Gratuito" : $"R$ {tipos.Min(t => t.Valor):N2}")
+                                                                    </span>
+                                                                }
+                                                                else
+                                                                {
+                                                                    var unico = tipos.First();
+                                                                    <span class="badge bg-light text-dark border">
+                                                                        @unico.Nome • @(unico.Valor == 0 ? "Gratuito" : $"R$ {unico.Valor:N2}")
+                                                                    </span>
+                                                                }
                                                             }
                                                             else
                                                             {
-                                                                <span class="badge-valor-pago">+ R$ @valorPadrao.ToString("N2")</span>
+                                                                var val = (sub.InscricaoGratuita == 1 || sub.ValorInscricao == 0) ? 0m : sub.ValorInscricao;
+                                                                <span class="badge bg-light text-dark border">
+                                                                    @(val == 0 ? "Gratuito" : $"R$ {val:N2}")
+                                                                </span>
                                                             }
-                                                            <select name="TipoInscricaoSubevento_@sub.Id" id="select-tipo-@sub.Id" class="d-none subevento-tipo-select" disabled>
-                                                                <option value="" data-valor="@valorPadrao.ToString(System.Globalization.CultureInfo.InvariantCulture)" selected>
-                                                                    Padrão
-                                                                </option>
+                                                        </div>
+
+                                                        <div id="wrapper-tipo-@sub.Id" class="subevento-tipo-wrapper" style="display: none;">
+                                                            <select name="TipoInscricaoSubevento_@sub.Id" id="select-tipo-@sub.Id" class="form-select form-select-sm subevento-select-tipo subevento-tipo-select" onchange="calcularValorTotal()" disabled>
+                                                                @if (tipos.Any())
+                                                                {
+                                                                    @foreach (var tipo in tipos)
+                                                                    {
+                                                                        <option value="@tipo.Id" data-valor="@tipo.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+                                                                            @tipo.Nome - @(tipo.Valor == 0 ? "Gratuito" : $"R$ {tipo.Valor:N2}")
+                                                                        </option>
+                                                                    }
+                                                                }
+                                                                else
+                                                                {
+                                                                    var valorPadrao = (sub.InscricaoGratuita == 1 || sub.ValorInscricao == 0) ? 0m : sub.ValorInscricao;
+                                                                    <option value="" data-valor="@valorPadrao.ToString(System.Globalization.CultureInfo.InvariantCulture)" selected>
+                                                                        Inscrição Padrão - @(valorPadrao == 0 ? "Gratuito" : $"R$ {valorPadrao:N2}")
+                                                                    </option>
+                                                                }
                                                             </select>
                                                         </div>
                                                     }

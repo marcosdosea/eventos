@@ -2,9 +2,11 @@ function toggleSubeventoSelect(checkbox, id) {
     if (checkbox.disabled) return;
     const row = document.getElementById('row-subevento-' + id);
     const wrapper = document.getElementById('wrapper-tipo-' + id);
+    const preview = document.getElementById('preview-tipo-' + id);
     const qtyInputs = document.querySelectorAll('.subevento-qty-' + id);
     if (checkbox.checked) {
         if (row) row.classList.add('row-selected');
+        if (preview) preview.style.display = 'none';
         if (wrapper) wrapper.style.display = 'block';
         qtyInputs.forEach(input => {
             input.disabled = false;
@@ -20,6 +22,7 @@ function toggleSubeventoSelect(checkbox, id) {
     } else {
         if (row) row.classList.remove('row-selected');
         if (wrapper) wrapper.style.display = 'none';
+        if (preview) preview.style.display = 'block';
         qtyInputs.forEach(input => {
             input.disabled = true;
             input.value = 0;
@@ -191,5 +194,16 @@ document.addEventListener('keydown', function(event) {
 });
 
 document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('.subevento-checkbox').forEach(cb => {
+        if (cb.checked && !cb.disabled) {
+            const id = cb.value;
+            const row = document.getElementById('row-subevento-' + id);
+            const wrapper = document.getElementById('wrapper-tipo-' + id);
+            const preview = document.getElementById('preview-tipo-' + id);
+            if (row) row.classList.add('row-selected');
+            if (preview) preview.style.display = 'none';
+            if (wrapper) wrapper.style.display = 'block';
+        }
+    });
     calcularValorTotal();
 });
