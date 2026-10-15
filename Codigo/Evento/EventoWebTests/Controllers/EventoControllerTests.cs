@@ -340,6 +340,7 @@ namespace EventoWeb.Controllers.Tests
         {
             var model = GetNewGestaoPapel();
             model.Pessoa.Id = 1;
+            mockServiceInscricao.Setup(s => s.GetPapelPessoaByEvento(1, 1)).Returns(4);
 
             var result = await controller.EditParticipante(model);
 
@@ -362,11 +363,29 @@ namespace EventoWeb.Controllers.Tests
             model.Pessoa.Numero = null;
             model.Pessoa.Complemento = null;
 
+            mockServiceInscricao.Setup(s => s.GetPapelPessoaByEvento(1, 1)).Returns(4);
             var result = await controller.EditParticipante(model);
 
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.AreEqual("CreateParticipante", redirectToActionResult.ActionName);
+        }
+
+        [TestMethod()]
+        public async Task EditParticipante_Post_PessoaNaoParticipanteDoEvento_BloqueiaSemSalvar()
+        {
+            // Arrange: pessoa existe (Id 1), mas não é participante deste evento
+            // (papel 1, mock padrão do Initialize). Simula Pessoa.Id forjado no form.
+            var model = GetNewGestaoPapel();
+            model.Pessoa.Id = 1;
+
+            var result = await controller.EditParticipante(model);
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
+            Assert.AreEqual("CreateParticipante", redirectToActionResult.ActionName);
+            Assert.AreEqual("A pessoa informada não é participante deste evento!", controller.TempData["Message"]);
+            mockServiceInscricao.Verify(s => s.UpdateNomeCracha(It.IsAny<uint>(), It.IsAny<uint>(), It.IsAny<string>()), Times.Never);
         }
 
         [TestMethod()]

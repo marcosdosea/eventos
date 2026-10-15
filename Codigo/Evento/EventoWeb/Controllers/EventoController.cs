@@ -618,6 +618,17 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("CreateParticipante", new { idEvento = eventoId });
             }
 
+            // A vítima precisa ser participante DESTE evento (mesma regra do GET):
+            // sem isso, um gestor/colaborador do evento conseguiria sobrescrever
+            // os dados globais de qualquer pessoa do banco via Pessoa.Id forjado.
+            var papelVitima = _inscricaoService.GetPapelPessoaByEvento(idPessoa, eventoId);
+            if (papelVitima != 4)
+            {
+                TempData.Clear();
+                TempData["Message"] = "A pessoa informada não é participante deste evento!";
+                return RedirectToAction("CreateParticipante", new { idEvento = eventoId });
+            }
+
             if (gestaoPapelModel?.Pessoa != null)
             {
                 gestaoPapelModel.Pessoa.Cpf = pessoaExistente.Cpf;
