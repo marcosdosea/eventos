@@ -20,12 +20,12 @@
                 <h1 class="grey-dark" style="margin-top: 96px; margin-bottom: 12px; text-align: center;">Já possui uma conta?</h1>
                 <h5 class="grey-light-active" style="margin-bottom: 32px; text-align: center;">Bem vindo de Volta! Insira seus dados.</h5>
                 
-                <h5>CPF</h5>
+                <h5>Usuário ou email</h5>
                 <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
                 <div class="form-floating mb-3">
-                    <input asp-for="Input.CPF" class="form-control" autocomplete="username" aria-required="true" placeholder="000.000.000-00" oninput="formatarCpfForm(this)" maxlength="14" />
-                    <label asp-for="Input.CPF" class="form-label grey-light-active">CPF</label>
-                    <span asp-validation-for="Input.CPF" class="text-danger"></span>
+                    <input asp-for="Input.EmailOrCpf" class="form-control" autocomplete="username" aria-required="true" placeholder="E-mail ou CPF" oninput="formatarEntradaLogin(this)" maxlength="50" />
+                    <label asp-for="Input.EmailOrCpf" class="form-label grey-light-active">E-mail ou CPF</label>
+                    <span asp-validation-for="Input.EmailOrCpf" class="text-danger"></span>
                 </div>
                 
                 <h5>Senha</h5>
@@ -46,7 +46,7 @@
                     <a id="forgot-password" class="ms-auto" asp-page="./ForgotPassword">Esqueci minha senha</a>
                 </div>
                 
-                <div>
+                <div class="form-floating mb-3">
                     <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-blue-normal">Bora lá</button>
                 </div>
                 
@@ -93,7 +93,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
-    <script src="~/js/FormatarCpfCadastro.js" asp-append-version="true"></script>
+    <script src="~/js/FormatarEntradaDoLogin.js" asp-append-version="true"></script>
 }
 
 <script>
