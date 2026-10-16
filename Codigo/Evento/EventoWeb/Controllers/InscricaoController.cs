@@ -248,9 +248,6 @@ namespace EventoWeb.Controllers
                     return RedirectToAction("Index", "Home"); 
                 }
 
-                // #780: o tipo precisa pertencer a ESTE evento. Sem isso, um
-                // QuantidadeTipoInscricao_<idDeOutroEvento> forjado no form
-                // gerava inscrição com vínculo errado.
                 foreach (var idTipoCheck in mainEventQuantities.Keys.ToList())
                 {
                     if (idTipoCheck == 0 || idTipoCheck == TIPO_MEIA_ENTRADA)
