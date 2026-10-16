@@ -41,5 +41,13 @@ namespace Core.DTO
         public DateTime DataInicioInscricao { get; set; }
         
         public DateTime DataFimInscricao { get; set; }
+
+        public DateTime? DataInicio { get; set; }
+
+        public DateTime? DataFim { get; set; }
+
+        public uint CargaHoraria { get; set; }
+
+        public string? Descricao { get; set; }
     }
 }
