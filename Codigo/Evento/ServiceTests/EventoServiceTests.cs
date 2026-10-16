@@ -458,5 +458,168 @@ namespace Service.Tests
             Assert.AreEqual("Curso", areas.First().Nome);
             Assert.AreEqual(EntityState.Detached, _context.Entry(areas.First()).State);
         }
+
+        [TestMethod()]
+        public void SearchComFiltroPossuiSubeventosAtivoRetornaApenasEventosComSubeventosTest()
+        {
+            // Arrange
+            var eventoComSub = new Evento
+            {
+                Id = 100,
+                Nome = "Congresso de Tecnologia",
+                Descricao = "Grande congresso com varias atividades",
+                Status = "A",
+                DataInicioInscricao = DateTime.Now.AddDays(-5),
+                DataFimInscricao = DateTime.Now.AddDays(10),
+                DataInicio = DateTime.Now.AddDays(15),
+                DataFim = DateTime.Now.AddDays(20),
+                IdTipoEvento = 1,
+                VagasOfertadas = 100,
+                VagasDisponiveis = 100,
+                CargaHoraria = 20,
+                TempoMinutosReserva = 15,
+                PossuiCertificado = 1,
+                InscricaoGratuita = 1
+            };
+
+            var eventoSemSub = new Evento
+            {
+                Id = 101,
+                Nome = "Palestra Unica",
+                Descricao = "Palestra simples sem subeventos",
+                Status = "A",
+                DataInicioInscricao = DateTime.Now.AddDays(-5),
+                DataFimInscricao = DateTime.Now.AddDays(10),
+                DataInicio = DateTime.Now.AddDays(15),
+                DataFim = DateTime.Now.AddDays(20),
+                IdTipoEvento = 1,
+                VagasOfertadas = 50,
+                VagasDisponiveis = 50,
+                CargaHoraria = 2,
+                TempoMinutosReserva = 15,
+                PossuiCertificado = 1,
+                InscricaoGratuita = 1
+            };
+
+            var subevento = new Subevento
+            {
+                Id = 50,
+                IdEvento = 100,
+                Nome = "Minicurso de IA",
+                Descricao = "Minicurso pratico",
+                Status = "A",
+                DataInicioInscricao = DateTime.Now.AddDays(-5),
+                DataFimInscricao = DateTime.Now.AddDays(10),
+                DataInicio = DateTime.Now.AddDays(15),
+                DataFim = DateTime.Now.AddDays(16),
+                IdTipoEvento = 1,
+                VagasOfertadas = 30,
+                VagasDisponiveis = 30,
+                CargaHoraria = 4,
+                PossuiCertificado = 1,
+                InscricaoGratuita = 1
+            };
+
+            _context.Eventos.AddRange(eventoComSub, eventoSemSub);
+            _context.Subeventos.Add(subevento);
+            _context.SaveChanges();
+            _context.ChangeTracker.Clear();
+
+            var filtro = new EventoFilterDTO
+            {
+                PossuiSubeventos = true
+            };
+
+            // Act
+            int totalRegistros;
+            var resultados = _eventoService.Search(filtro, 1, 10, out totalRegistros).ToList();
+
+            // Assert
+            Assert.AreEqual(1, totalRegistros);
+            Assert.AreEqual(1, resultados.Count);
+            Assert.AreEqual((uint)100, resultados.First().Id);
+            Assert.AreEqual("Congresso de Tecnologia", resultados.First().Nome);
+        }
+
+        [TestMethod()]
+        public void SearchSemFiltroPossuiSubeventosRetornaTodosEventosAtivosTest()
+        {
+            // Arrange
+            var eventoComSub = new Evento
+            {
+                Id = 200,
+                Nome = "Congresso de Saude",
+                Descricao = "Congresso com minicursos",
+                Status = "A",
+                DataInicioInscricao = DateTime.Now.AddDays(-5),
+                DataFimInscricao = DateTime.Now.AddDays(10),
+                DataInicio = DateTime.Now.AddDays(15),
+                DataFim = DateTime.Now.AddDays(20),
+                IdTipoEvento = 1,
+                VagasOfertadas = 100,
+                VagasDisponiveis = 100,
+                CargaHoraria = 20,
+                TempoMinutosReserva = 15,
+                PossuiCertificado = 1,
+                InscricaoGratuita = 1
+            };
+
+            var eventoSemSub = new Evento
+            {
+                Id = 201,
+                Nome = "Palestra de Nutricao",
+                Descricao = "Palestra sem subatividades",
+                Status = "A",
+                DataInicioInscricao = DateTime.Now.AddDays(-5),
+                DataFimInscricao = DateTime.Now.AddDays(10),
+                DataInicio = DateTime.Now.AddDays(15),
+                DataFim = DateTime.Now.AddDays(20),
+                IdTipoEvento = 1,
+                VagasOfertadas = 50,
+                VagasDisponiveis = 50,
+                CargaHoraria = 2,
+                TempoMinutosReserva = 15,
+                PossuiCertificado = 1,
+                InscricaoGratuita = 1
+            };
+
+            var subevento = new Subevento
+            {
+                Id = 60,
+                IdEvento = 200,
+                Nome = "Workshop Pratico",
+                Descricao = "Workshop",
+                Status = "A",
+                DataInicioInscricao = DateTime.Now.AddDays(-5),
+                DataFimInscricao = DateTime.Now.AddDays(10),
+                DataInicio = DateTime.Now.AddDays(15),
+                DataFim = DateTime.Now.AddDays(16),
+                IdTipoEvento = 1,
+                VagasOfertadas = 30,
+                VagasDisponiveis = 30,
+                CargaHoraria = 4,
+                PossuiCertificado = 1,
+                InscricaoGratuita = 1
+            };
+
+            _context.Eventos.AddRange(eventoComSub, eventoSemSub);
+            _context.Subeventos.Add(subevento);
+            _context.SaveChanges();
+            _context.ChangeTracker.Clear();
+
+            var filtro = new EventoFilterDTO
+            {
+                PossuiSubeventos = false
+            };
+
+            // Act
+            int totalRegistros;
+            var resultados = _eventoService.Search(filtro, 1, 10, out totalRegistros).ToList();
+
+            // Assert: deve incluir ambos os eventos ativos
+            Assert.IsTrue(totalRegistros >= 2);
+            Assert.IsTrue(resultados.Any(e => e.Id == 200));
+            Assert.IsTrue(resultados.Any(e => e.Id == 201));
+        }
     }
 }
