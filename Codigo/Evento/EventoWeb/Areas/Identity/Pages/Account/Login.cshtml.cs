@@ -115,12 +115,12 @@ namespace EventoWeb.Areas.Identity.Pages.Account
                 List<UsuarioIdentity> usuariosEncontrados = new List<UsuarioIdentity>();
                 UsuarioIdentity user = null;
                 
-                string emailParaLogin = Input.EmailOrCpf.Trim();
+                string emailParaLogin = Input.EmailOrCpf.ToLower().Trim();
                 bool contemLetra = emailParaLogin.Any(char.IsLetter);
                 String msmPadrao = mensagemPadrao(contemLetra);
 
                 string cpfSemFormatacao = Util.Methods.RemoveNaoNumericos(Input.EmailOrCpf);
-                if (!String.IsNullOrEmpty(cpfSemFormatacao) && cpfSemFormatacao.All(char.IsDigit)&!contemLetra)
+                if (!String.IsNullOrEmpty(cpfSemFormatacao) && cpfSemFormatacao.All(char.IsDigit)&&!contemLetra)
                 {
                     user = await _userManager.Users.SingleOrDefaultAsync(u => u.UserName == cpfSemFormatacao);  
                     if (user == null)
