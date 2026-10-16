@@ -13,7 +13,10 @@ function toggleClearButton() {
 }
 
 function syncFilter(hiddenId, value) {
-    document.getElementById('hidden_' + hiddenId).value = value;
+    var elem = document.getElementById('hidden_' + hiddenId);
+    if (elem) {
+        elem.value = value;
+    }
 }
 
 function applyFilters() {
@@ -30,14 +33,23 @@ function applyFilters() {
 }
 
 function clearAllFilters() {
-    document.getElementById('drop_AreaInteresse').value = '';
-    document.getElementById('drop_TipoEvento').value = '';
-    document.getElementById('drop_Data').value = '';
-    
+    var dropArea = document.getElementById('drop_AreaInteresse');
+    if (dropArea) dropArea.value = '';
+
+    var dropTipo = document.getElementById('drop_TipoEvento');
+    if (dropTipo) dropTipo.value = '';
+
+    var dropData = document.getElementById('drop_Data');
+    if (dropData) dropData.value = '';
+
+    var dropSub = document.getElementById('drop_PossuiSubeventos');
+    if (dropSub) dropSub.checked = false;
+
     syncFilter('IdAreaInteresse', '');
     syncFilter('IdTipoEvento', '');
     syncFilter('Data', '');
-    
+    syncFilter('PossuiSubeventos', '');
+
     applyFilters();
 }
 
