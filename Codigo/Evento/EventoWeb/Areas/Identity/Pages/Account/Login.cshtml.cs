@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using Util;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace EventoWeb.Areas.Identity.Pages.Account
 {
@@ -96,6 +97,13 @@ namespace EventoWeb.Areas.Identity.Pages.Account
             ReturnUrl = returnUrl;
         }
 
+        public string mensagemPadrao(bool isEmail)
+        {
+            if (isEmail)
+                return "E-mail ou senha inválidos.";
+            else
+                return "CPF ou senha inválidos.";
+        }
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
@@ -107,15 +115,18 @@ namespace EventoWeb.Areas.Identity.Pages.Account
                 List<UsuarioIdentity> usuariosEncontrados = new List<UsuarioIdentity>();
                 UsuarioIdentity user = null;
                 
-                string emailParaLogin = Input.EmailOrCpf.Trim(); 
-               
+                string emailParaLogin = Input.EmailOrCpf.Trim();
+                bool contemLetra = emailParaLogin.Any(char.IsLetter);
+                String msmPadrao = mensagemPadrao(contemLetra);
+
                 string cpfSemFormatacao = Util.Methods.RemoveNaoNumericos(Input.EmailOrCpf);
-                if (cpfSemFormatacao.All(char.IsDigit) && cpfSemFormatacao.Length == 11)
+                if (!String.IsNullOrEmpty(cpfSemFormatacao) && cpfSemFormatacao.All(char.IsDigit)&!contemLetra)
                 {
                     user = await _userManager.Users.SingleOrDefaultAsync(u => u.UserName == cpfSemFormatacao);  
                     if (user == null)
                     {
                         ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.EmailOrCpf)}", "CPF ou senha inválidos.");
+                        ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.Password)}", "CPF ou senha inválidos.");
                         return Page();
                     }
                 }
@@ -136,6 +147,8 @@ namespace EventoWeb.Areas.Identity.Pages.Account
                     if (user == null)
                     {
                         ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.EmailOrCpf)}", "E-mail ou senha inválidos.");
+                        ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.Password)}", "E-mail ou senha inválidos.");
+
                         return Page();
                     }
                 }
@@ -157,14 +170,16 @@ namespace EventoWeb.Areas.Identity.Pages.Account
                     }
                     else
                     {
-
-                        ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.EmailOrCpf)}", "O cpf ou email estão inválidos.");
+                        ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.EmailOrCpf)}", msmPadrao);
+                        ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.Password)}", msmPadrao);
                         return Page();
                     }
 
             }
             else{
-                ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.EmailOrCpf)}", "O cpf ou email estão inválidos.");
+                var x = ModelState.GetType();
+                ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.EmailOrCpf)}", "Os dados estão inválidos");
+                ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.Password)}", "Os dados estão inválidos");
                 return Page();
             }
 
