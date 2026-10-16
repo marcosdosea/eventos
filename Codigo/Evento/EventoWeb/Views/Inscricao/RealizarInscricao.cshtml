@@ -489,7 +489,12 @@
                                                     }
                                                 </td>
                                                 <td style="text-align: center;">
-                                                    <button type="button" class="btn-ver-ementa mx-auto" onclick="abrirEmentaModal('@sub.Nome', '@(string.IsNullOrWhiteSpace(sub.Descricao) ? "Nenhuma ementa detalhada cadastrada para este subevento." : sub.Descricao.Replace("'", "\\'"))', '@sub.NomeTipoEvento', '@(sub.CargaHoraria > 0 ? $"{sub.CargaHoraria} Horas" : "Não informada")')">
+                                                    <button type="button" class="btn-ver-ementa mx-auto"
+                                                            data-nome="@sub.Nome"
+                                                            data-descricao="@(string.IsNullOrWhiteSpace(sub.Descricao) ? "Nenhuma ementa detalhada cadastrada para este subevento." : sub.Descricao)"
+                                                            data-tipo="@sub.NomeTipoEvento"
+                                                            data-carga="@(sub.CargaHoraria > 0 ? $"{sub.CargaHoraria} Horas" : "Não informada")"
+                                                            onclick="abrirEmentaModalFromButton(this)">
                                                         <i class="bi bi-eye"></i>
                                                         <span>Ementa</span>
                                                     </button>

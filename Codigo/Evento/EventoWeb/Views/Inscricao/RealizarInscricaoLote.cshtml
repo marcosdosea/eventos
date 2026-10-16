@@ -10,111 +10,7 @@
 
 <main class="inscricao-page">
     <div class="inscricao-container inscricao-container-top">
-        @if (ViewBag.JaInscrito == true)
-        {
-            <div class="inscricao-grid-layout">
-                <!-- Coluna da Esquerda: Informações do Evento -->
-                <div class="inscricao-left-col">
-                    <article class="card-inscricao">
-                        <div class="inscricao-header">
-                            @if (!string.IsNullOrEmpty(Model.eventoNavigation.ImagemPortalBase64) && Model.eventoNavigation.ImagemPortalBase64.Length > 100)
-                            {
-                                <img src="data:image/jpeg;base64,@Model.eventoNavigation.ImagemPortalBase64" alt="Imagem do Evento" class="inscricao-header-img" onclick="openImageModal(this.src)" style="cursor: zoom-in;" title="Clique para ampliar" />
-                            }
-                            else
-                            {
-                                <img src="@Url.Content("~/Imagens_Eventos/Evento-BoraLa.png")" alt="Imagem Padrão do Evento" class="inscricao-header-img" onclick="openImageModal(this.src)" style="cursor: zoom-in;" title="Clique para ampliar" />
-                            }
-                            <div>
-                                <h1 class="inscricao-header-title">@Model.eventoNavigation.Nome</h1>
-                                <p class="inscricao-header-subtitle">Detalhes e Inscrição</p>
-                            </div>
-                        </div>
-                        <h2 class="section-title">Informações do Evento</h2>
-                        
-                        <section class="info-grid">
-                            <div class="info-item">
-                                <div class="info-icon" aria-hidden="true"><i class="bi bi-calendar3"></i></div>
-                                <div class="info-text">
-                                    <h3>Data</h3>
-                                    <p>@(Model.eventoNavigation.DataInicio?.ToString("dd/MM/yyyy") ?? "A definir") a @(Model.eventoNavigation.DataFim?.ToString("dd/MM/yyyy") ?? "A definir")</p>
-                                </div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-icon" aria-hidden="true"><i class="bi bi-geo-alt-fill"></i></div>
-                                <div class="info-text">
-                                    <h3>Local</h3>
-                                    @{
-                                        string local = "Local não informado";
-                                        if (!string.IsNullOrEmpty(Model.eventoNavigation.Cidade) && !string.IsNullOrEmpty(Model.eventoNavigation.Estado))
-                                        {
-                                            local = $"{Model.eventoNavigation.Cidade}, {Model.eventoNavigation.Estado}";
-                                        }
-                                        else if (!string.IsNullOrEmpty(Model.eventoNavigation.Estado))
-                                        {
-                                            local = Model.eventoNavigation.Estado;
-                                        }
-                                    }
-                                    <p>@local</p>
-                                </div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-icon" aria-hidden="true"><i class="bi bi-clock-fill"></i></div>
-                                <div class="info-text">
-                                    <h3>Carga Horária</h3>
-                                    <p>@Model.eventoNavigation.CargaHoraria Horas @(Model.eventoNavigation.PossuiCertificado == 1 ? "(Com Certificado)" : "")</p>
-                                </div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-icon" aria-hidden="true"><i class="bi bi-ticket-perforated-fill"></i></div>
-                                <div class="info-text">
-                                    <h3>Entrada</h3>
-                                    @if (Model.eventoNavigation.InscricaoGratuita == 1 || Model.eventoNavigation.ValorInscricao == 0)
-                                    {
-                                        <p class="entry-free">Gratuita</p>
-                                    }
-                                    else
-                                    {
-                                        <p>R$ @Model.eventoNavigation.ValorInscricao.ToString("N2")</p>
-                                    }
-                                </div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-icon" aria-hidden="true"><i class="bi bi-people-fill"></i></div>
-                                <div class="info-text">
-                                    <h3>Vagas Disponíveis</h3>
-                                    <p>@Model.eventoNavigation.VagasDisponiveis de @Model.eventoNavigation.VagasOfertadas</p>
-                                </div>
-                            </div>
-                        </section>
-
-                        <section class="evento-sobre">
-                            <h2 class="section-title mt-20">Sobre o Evento</h2>
-                            <p class="evento-sobre-text">
-                                @(string.IsNullOrWhiteSpace(Model.eventoNavigation.Descricao) ? "Nenhuma descrição disponível para este evento." : Model.eventoNavigation.Descricao)
-                            </p>
-                        </section>
-                    </article>
-                </div>
-
-                <!-- Coluna da Direita: Já Inscrito -->
-                <div class="inscricao-right-col">
-                    <aside class="alert alert-info mt-3 card-inscricao text-center alert-inscricao" role="alert">
-                        <h4 class="alert-heading text-info">Atenção!</h4>
-                        <p>Você já está inscrito neste evento.</p>
-                        @if (!string.IsNullOrWhiteSpace(Model.inscricaoNavigation?.NomeCracha))
-                        {
-                            <p class="mb-2"><strong>Nome no crachá:</strong> @Model.inscricaoNavigation.NomeCracha</p>
-                        }
-                        <hr>
-                        <a asp-action="DetalhesInscricao" asp-controller="Inscricao" asp-route-idEvento="@Model.eventoNavigation.Id" class="btn btn-success mt-2">Ver Inscrição / Comprovante</a>
-                        <a asp-action="MinhasInscricoes" asp-controller="Inscricao" class="btn btn-primary mt-2 ms-2">Ver Minhas Inscrições</a>
-                        <a href="@ViewBag.UrlVoltar" class="btn btn-outline-danger mt-2 ms-2">Voltar</a>
-                    </aside>
-                </div>
-            </div>
-        }
-        else if (Model.eventoNavigation.VagasDisponiveis <= 0)
+        @if (Model.eventoNavigation.VagasDisponiveis <= 0)
         {
             <aside class="alert alert-warning mt-3 card-inscricao text-center alert-inscricao" role="alert">
                 <h4 class="alert-heading text-warning"><i class="bi bi-exclamation-triangle-fill me-2"></i>Lotação Esgotada</h4>
@@ -214,9 +110,21 @@
                     <!-- Coluna da Direita: Opções e Formulário -->
                     <div class="inscricao-right-col">
                         <section class="card-inscricao">
+                            @if (ViewBag.JaInscritoEventoPrincipal == true)
+                            {
+                                <div class="alert alert-info d-flex align-items-center mb-3" role="alert">
+                                    <i class="bi bi-info-circle-fill fs-4 me-3 text-primary"></i>
+                                    <div>
+                                        <strong>Você já possui inscrição no Evento Principal!</strong>
+                                        <p class="mb-0">Caso deseje mais ingressos para o evento principal ou para os subeventos, selecione a quantidade desejada abaixo.</p>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="JaInscritoNoPrincipal" id="JaInscritoNoPrincipal" value="true" />
+                            }
+
                             <h2 class="section-title">Opções de Inscrição</h2>
                             <p class="section-description">
-                                Selecione o tipo de inscrição desejado:
+                                @(ViewBag.JaInscritoEventoPrincipal == true ? "Selecione ingressos adicionais para o evento principal ou deixe em 0 se desejar apenas subeventos:" : "Selecione o tipo de inscrição desejado:")
                             </p>
                             
                             <fieldset class="subevent-list">
@@ -317,7 +225,9 @@
                                     <a href="@ViewBag.UrlVoltar" class="btn-voltar">Voltar</a>
                                     @if (User.Identity != null && User.Identity.IsAuthenticated)
                                     {
-                                        <button type="submit" class="btn-submit">Confirmar Inscrição</button>
+                                        <button type="submit" class="btn-submit">
+                                            @(ViewBag.JaInscritoEventoPrincipal == true ? "Confirmar Inscrição / Adicionar Ingressos" : "Confirmar Inscrição")
+                                        </button>
                                     }
                                     else
                                     {
@@ -356,6 +266,8 @@
                                         @foreach (var subOpcao in Model.SubeventosOpcoes)
                                         {
                                             var sub = subOpcao.Subevento;
+                                            var subInscritos = ViewBag.SubeventosInscritos as HashSet<uint>;
+                                            bool isJaInscrito = subInscritos != null && subInscritos.Contains(sub.Id);
                                             bool subeventoJaPassou = (sub.DataFim.HasValue && sub.DataFim.Value < DateTime.Now) || (!sub.DataFim.HasValue && sub.DataInicio.HasValue && sub.DataInicio.Value < DateTime.Now);
                                             bool isEncerrado = sub.Status == "F" || sub.Status == "I" || (sub.DataFimInscricao != DateTime.MinValue && sub.DataFimInscricao < DateTime.Now) || subeventoJaPassou;
                                             bool isEmCadastro = sub.Status == "C";
@@ -378,7 +290,11 @@
                                                     <div class="subevento-subtitulo">
                                                         <i class="bi bi-tag-fill text-muted"></i>
                                                         <span>@sub.NomeTipoEvento</span>
-                                                        @if (isEncerrado)
+                                                        @if (isJaInscrito)
+                                                        {
+                                                            <span class="badge bg-success ms-1"><i class="bi bi-check-circle me-1"></i>Inscrito</span>
+                                                        }
+                                                        else if (isEncerrado)
                                                         {
                                                             <span class="badge bg-secondary ms-1">Encerrado</span>
                                                         }
@@ -440,6 +356,14 @@
                                                         <span class="badge-vagas badge-vagas-baixa">
                                                             <i class="bi bi-exclamation-triangle-fill"></i> @sub.VagasDisponiveis vagas
                                                         </span>
+                                                    }
+                                                    @if (isJaInscrito)
+                                                    {
+                                                        <div class="mt-1">
+                                                            <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.72rem;">
+                                                                <i class="bi bi-check-circle-fill me-1"></i>Já possui ingresso
+                                                            </span>
+                                                        </div>
                                                     }
                                                 </td>
                                                 <td style="text-align: center;">
@@ -529,7 +453,12 @@
                                                     }
                                                 </td>
                                                 <td style="text-align: center;">
-                                                    <button type="button" class="btn-ver-ementa mx-auto" onclick="abrirEmentaModal('@sub.Nome', '@(string.IsNullOrWhiteSpace(sub.Descricao) ? "Nenhuma ementa detalhada cadastrada para este subevento." : sub.Descricao.Replace("'", "\\'"))', '@sub.NomeTipoEvento', '@(sub.CargaHoraria > 0 ? $"{sub.CargaHoraria} Horas" : "Não informada")')">
+                                                    <button type="button" class="btn-ver-ementa mx-auto"
+                                                            data-nome="@sub.Nome"
+                                                            data-descricao="@(string.IsNullOrWhiteSpace(sub.Descricao) ? "Nenhuma ementa detalhada cadastrada para este subevento." : sub.Descricao)"
+                                                            data-tipo="@sub.NomeTipoEvento"
+                                                            data-carga="@(sub.CargaHoraria > 0 ? $"{sub.CargaHoraria} Horas" : "Não informada")"
+                                                            onclick="abrirEmentaModalFromButton(this)">
                                                         <i class="bi bi-eye"></i>
                                                         <span>Ementa</span>
                                                     </button>

@@ -27,6 +27,15 @@ function toggleSubeventoSelect(checkbox, id) {
     calcularValorTotal();
 }
 
+function abrirEmentaModalFromButton(btn) {
+    if (!btn) return;
+    const nome = btn.getAttribute('data-nome') || '';
+    const desc = btn.getAttribute('data-descricao') || '';
+    const tipo = btn.getAttribute('data-tipo') || '';
+    const carga = btn.getAttribute('data-carga') || '';
+    abrirEmentaModal(nome, desc, tipo, carga);
+}
+
 function abrirEmentaModal(nome, descricao, tipo, carga) {
     const overlay = document.getElementById('ementaModalOverlay');
     const lblTitulo = document.getElementById('ementaModalTitulo');
