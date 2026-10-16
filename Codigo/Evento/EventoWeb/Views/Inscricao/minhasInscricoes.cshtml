@@ -129,7 +129,27 @@
                             <button type="submit" class="btn btn-sm btn-outline-danger me-2">Desistir</button>
                         </form>
                     }
-                    <span class="text-muted">Gerar Certificado</span>
+                    @switch (item.StatusCertificado)
+                    {
+                        case StatusCertificadoInscricao.SemCertificado:
+                            <span class="badge bg-secondary" title="Este evento não emite certificado">Sem certificado</span>
+                            break;
+                        case StatusCertificadoInscricao.EmAndamento:
+                            <span class="badge bg-info text-dark" title="Disponível após o encerramento do evento">Em andamento</span>
+                            break;
+                        case StatusCertificadoInscricao.FrequenciaInsuficiente:
+                            <span class="badge bg-warning text-dark" title="Frequência mínima exigida: @(item.IdEventoNavigation?.FrequenciaMinimaCertificado.ToString("F1"))%">Frequência insuficiente (@(item.FrequenciaFinal.ToString("F1"))%)</span>
+                            break;
+                        case StatusCertificadoInscricao.Elegivel:
+                            <span class="badge bg-success" title="Requisitos atendidos para certificação">Elegível</span>
+                            break;
+                        case StatusCertificadoInscricao.Cancelada:
+                            <span class="badge bg-secondary">Inscrição cancelada</span>
+                            break;
+                        default:
+                            <span class="text-muted">-</span>
+                            break;
+                    }
                 </td>
             </tr>
             @if (item.Inscricaopessoasubeventos != null && item.Inscricaopessoasubeventos.Any())
