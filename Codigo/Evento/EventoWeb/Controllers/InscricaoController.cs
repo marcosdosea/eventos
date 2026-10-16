@@ -248,6 +248,18 @@ namespace EventoWeb.Controllers
                     return RedirectToAction("Index", "Home"); 
                 }
 
+                foreach (var idTipoCheck in mainEventQuantities.Keys.ToList())
+                {
+                    if (idTipoCheck == 0 || idTipoCheck == TIPO_MEIA_ENTRADA)
+                        continue;
+                    var tipoCheck = _tipoinscricaoService.Get(idTipoCheck);
+                    if (tipoCheck == null || tipoCheck.IdEvento != idEvento)
+                    {
+                        TempData["ParticipanteMessage"] = "Tipo de inscrição inválido para este evento.";
+                        return RedirectToAction("realizarInscricao", new { idEvento = idEvento });
+                    }
+                }
+
                 if (evento.VagasDisponiveis <= 0)
                 {
                     TempData["ParticipanteMessage"] = "Lotação esgotada.";
