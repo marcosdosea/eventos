@@ -116,13 +116,14 @@
                                         new { idEvento = Model.Evento.Id, idSubevento = subevento.Id },
                                         new { @style = "text-decoration:none;" })
 
-                                    @using (Html.BeginForm("Delete", "Subevento", FormMethod.Post, new { @style = "display:inline;" }))
-                                    {
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@subevento.Id" />
-                                        <a href="#" onclick="if (confirm('Tem certeza que deseja excluir?')) { this.closest('form').submit(); } return false;"
-                                           style="color: #dc3545; text-decoration: none; cursor: pointer;">Excluir</a>
-                                    }
+                                    <a href="#" style="color: #dc3545; text-decoration: none; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#modalExcluirSubevento-@subevento.Id">Excluir</a>
+                                    <partial name="_DeleteModal" model="@(new EventoWeb.Models.DeleteModel {
+                                        ModalId = $"modalExcluirSubevento-{subevento.Id}",
+                                        ActionName = "Delete",
+                                        ControllerName = "Subevento",
+                                        RouteValues = subevento.Id,
+                                        ItemName = subevento.Nome
+                                    })" />
 
                                     @Html.ActionLink("Tipo Inscrição", "CreateTipoInscricaoSubevento", "TipoInscricao",
                                         new { idEvento = Model.Evento.Id, idSubevento = subevento.Id },
