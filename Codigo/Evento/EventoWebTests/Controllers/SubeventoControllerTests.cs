@@ -6,6 +6,7 @@ using EventoWeb.Mappers;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using System.Security.Claims;
@@ -589,6 +590,44 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("Evento", redirectToActionResult.ControllerName);
             Assert.AreEqual("GerenciarEvento", redirectToActionResult.ActionName);
             Assert.IsNotNull(controller.TempData["SuccessMessage"]);
+        }
+
+        [TestMethod()]
+        public void DeleteTest_Post_ServiceException_SetsErrorMessage()
+        {
+            var mockSub = new Mock<ISubeventoService>();
+            mockSub.Setup(s => s.Get(1)).Returns(GetTargetSubevento());
+            mockSub.Setup(s => s.Delete(1)).Throws(new ServiceException("Não foi possível excluir o subevento. Verifique se existem dependências ativas."));
+
+            var mockTipoInsc = new Mock<ITipoInscricaoService>();
+            mockTipoInsc.Setup(s => s.GetTiposInscricaosSubevento(1)).Returns(new List<TipoInscricaoDTO>());
+
+            var mockInscricao = new Mock<IInscricaoService>();
+            mockInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+
+            var ctrl = new SubeventoController(
+                mockSub.Object,
+                new MapperConfiguration(cfg => cfg.AddProfile(new SubeventoProfile())).CreateMapper(),
+                new Mock<IEventoService>().Object,
+                new Mock<ITipoeventoService>().Object,
+                mockTipoInsc.Object,
+                mockInscricao.Object);
+
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, "12345678900"), new Claim(ClaimTypes.Role, "GESTOR") };
+            var identity = new ClaimsIdentity(claims, "TestAuthType");
+            var claimsPrincipal = new ClaimsPrincipal(identity);
+
+            ctrl.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = claimsPrincipal } };
+            ctrl.TempData = new TempDataDictionary(ctrl.ControllerContext.HttpContext, Mock.Of<ITempDataProvider>());
+
+            var result = ctrl.Delete(1, GetTargetSubeventoModel());
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("GerenciarEvento", redirect.ActionName);
+            Assert.AreEqual("Evento", redirect.ControllerName);
+            Assert.AreEqual("Não foi possível excluir o subevento. Verifique se existem dependências ativas.", ctrl.TempData["ErrorMessage"]);
         }
 
         // IDOR (#764): gestor só gerencia o próprio evento.

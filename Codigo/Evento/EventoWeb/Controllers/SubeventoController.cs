@@ -277,7 +277,6 @@ namespace EventoWeb.Controllers
             [Route("Delete/{id}")]
             public ActionResult Delete(uint id)
             {
-
                 var subevento = _subeventoService.Get(id);
                 if (subevento == null) return NotFound();
                 if (!IsAuthorized(subevento.IdEvento))
@@ -288,31 +287,49 @@ namespace EventoWeb.Controllers
                 subeventoModel.NomeEvento = nomeEvento;
 
                 string nomeTipoEvento = _tipoEventoService.GetNomeById(subevento.IdTipoEvento);
-                subeventoModel.NomeTipoEvento = nomeTipoEvento; ;
+                subeventoModel.NomeTipoEvento = nomeTipoEvento;
 
                 return View(subeventoModel);
             }
+
             // POST: SubeventoController/Delete/5
             [HttpPost]
+            [Route("Delete/{id}")]
             [Route("Delete")]
             [ValidateAntiForgeryToken]
             public ActionResult Delete(uint id, SubeventoModel subeventoModel)
             {
+                if (id == 0 && subeventoModel != null && subeventoModel.Id > 0)
+                    id = subeventoModel.Id;
+
                 var existente = _subeventoService.Get(id);
                 if (existente == null) return NotFound();
                 if (!IsAuthorized(existente.IdEvento))
                     return Forbid();
-                var tiposInscricao = _tipoInscricaoService.GetTiposInscricaosSubevento(id);
 
-                if (tiposInscricao.Any())
+                try
                 {
-                    foreach (var tipoInscricao in tiposInscricao)
+                    var tiposInscricao = _tipoInscricaoService.GetTiposInscricaosSubevento(id);
+
+                    if (tiposInscricao.Any())
                     {
-                        _tipoInscricaoService.DeleteTipoInscricaoSubevento(id, tipoInscricao.Id);
+                        foreach (var tipoInscricao in tiposInscricao)
+                        {
+                            _tipoInscricaoService.DeleteTipoInscricaoSubevento(id, tipoInscricao.Id);
+                        }
                     }
+                    _subeventoService.Delete(id);
+                    TempData["SuccessMessage"] = $"Subevento \"{existente.Nome}\" excluído com sucesso!";
                 }
-                _subeventoService.Delete(id);
-                TempData["SuccessMessage"] = $"Subevento \"{existente.Nome}\" excluído com sucesso!";
+                catch (ServiceException ex)
+                {
+                    TempData["ErrorMessage"] = ex.Message;
+                }
+                catch (Exception)
+                {
+                    TempData["ErrorMessage"] = "Não foi possível excluir o subevento. Verifique se existem dependências ativas.";
+                }
+
                 return RedirectToAction("GerenciarEvento", "Evento", new { idEvento = existente.IdEvento });
             }
 

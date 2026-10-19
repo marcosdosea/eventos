@@ -227,6 +227,65 @@ namespace Service.Tests
         }
 
         [TestMethod()]
+        public void DeleteTest_WithDependencies_DeletesSuccessfully()
+        {
+            // Arrange: criar subevento, tipo de inscricao, inscricao e pagamento para o evento 2
+            var subevento = new Subevento
+            {
+                Id = 10,
+                IdEvento = 2,
+                Nome = "Workshop C#",
+                Descricao = "Workshop",
+                Status = "A",
+                DataInicio = DateTime.Now,
+                DataFim = DateTime.Now.AddDays(1),
+                DataInicioInscricao = DateTime.Now,
+                DataFimInscricao = DateTime.Now.AddDays(1),
+                IdTipoEvento = 1
+            };
+            var tipoInscricao = new Tipoinscricao
+            {
+                Id = 10,
+                IdEvento = 2,
+                Nome = "Geral",
+                Descricao = "Geral",
+                DataInicio = DateTime.Now,
+                Datafim = DateTime.Now.AddDays(1)
+            };
+            var inscricao = new Inscricaopessoaevento
+            {
+                Id = 10,
+                IdEvento = 2,
+                IdPessoa = 1,
+                IdPapel = 4,
+                Status = "A"
+            };
+            var pagamento = new Pagamento
+            {
+                Id = 10,
+                IdInscricaoPessoaEvento = 10,
+                Status = "C",
+                Forma = "P"
+            };
+
+            _context.Subeventos.Add(subevento);
+            _context.Tipoinscricaos.Add(tipoInscricao);
+            _context.Inscricaopessoaeventos.Add(inscricao);
+            _context.Pagamentos.Add(pagamento);
+            _context.SaveChanges();
+
+            // Act
+            _eventoService.Delete(2);
+
+            // Assert
+            Assert.IsNull(_eventoService.Get(2));
+            Assert.IsFalse(_context.Subeventos.Any(s => s.Id == 10));
+            Assert.IsFalse(_context.Tipoinscricaos.Any(t => t.Id == 10));
+            Assert.IsFalse(_context.Inscricaopessoaeventos.Any(i => i.Id == 10));
+            Assert.IsFalse(_context.Pagamentos.Any(p => p.Id == 10));
+        }
+
+        [TestMethod()]
         public void EditTest()
         {
             //Act 

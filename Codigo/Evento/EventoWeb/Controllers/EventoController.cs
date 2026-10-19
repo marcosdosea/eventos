@@ -200,6 +200,7 @@ namespace EventoWeb.Controllers
         public ActionResult Delete(uint id)
         {
             var evento = _eventoService.Get(id);
+            if (evento == null) return NotFound();
             var eventoModel = _mapper.Map<EventoModel>(evento);
 
             string nomeTipoEvento = _tipoEventoService.GetNomeById(evento.IdTipoEvento);
@@ -212,11 +213,36 @@ namespace EventoWeb.Controllers
         [Authorize(Roles = "ADMINISTRADOR")]
         [HttpPost]
         [Route("Delete/{id}")]
+        [Route("Delete")]
         [ValidateAntiForgeryToken]
         public ActionResult Delete(uint id, EventoModel eventoModel)
         {
-            _eventoService.Delete(id);
-            return RedirectToAction(nameof(Index));
+            if (id == 0 && eventoModel != null && eventoModel.Id > 0)
+                id = eventoModel.Id;
+
+            try
+            {
+                var evento = _eventoService.Get(id);
+                if (evento == null)
+                {
+                    TempData["ErrorMessage"] = "Evento não encontrado.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                _eventoService.Delete(id);
+                TempData["SuccessMessage"] = $"Evento \"{evento.Nome}\" excluído com sucesso!";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (ServiceException ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception)
+            {
+                TempData["ErrorMessage"] = "Não foi possível excluir o evento. Verifique se existem dependências ativas.";
+                return RedirectToAction(nameof(Index));
+            }
         }
 
         [Authorize(Roles = "ADMINISTRADOR")]
