@@ -89,6 +89,7 @@ namespace EventoWeb.Controllers.Tests
             {
                 HttpContext = new DefaultHttpContext { User = claimsPrincipal }
             };
+            controller.TempData = new Microsoft.AspNetCore.Mvc.ViewFeatures.TempDataDictionary(controller.HttpContext, new Mock<Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataProvider>().Object);
         }
 
         [TestMethod()]
@@ -532,6 +533,7 @@ namespace EventoWeb.Controllers.Tests
             {
                 HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth")) }
             };
+            ctl.TempData = new Microsoft.AspNetCore.Mvc.ViewFeatures.TempDataDictionary(ctl.HttpContext, new Mock<Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataProvider>().Object);
 
             var subevento = GetNewSubevento();
 
@@ -585,7 +587,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.AreEqual("Evento", redirectToActionResult.ControllerName);
-            Assert.AreEqual("GerenciarEventoListar", redirectToActionResult.ActionName);
+            Assert.AreEqual("GerenciarEvento", redirectToActionResult.ActionName);
+            Assert.IsNotNull(controller.TempData["SuccessMessage"]);
         }
 
         // IDOR (#764): gestor só gerencia o próprio evento.

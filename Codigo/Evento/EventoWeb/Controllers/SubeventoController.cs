@@ -233,6 +233,7 @@ namespace EventoWeb.Controllers
                         existente.IdTipoEvento = subeventoModel.IdTipoEvento;
                         existente.IdEvento = idEvento;
                         _subeventoService.Edit(existente);
+                        TempData["SuccessMessage"] = $"Subevento \"{existente.Nome}\" alterado com sucesso!";
                     }
                     else
                     {
@@ -257,6 +258,7 @@ namespace EventoWeb.Controllers
                             IdTipoEvento = subeventoModel.IdTipoEvento
                         };
                         _subeventoService.Create(subevento);
+                        TempData["SuccessMessage"] = $"Subevento \"{subevento.Nome}\" adicionado com sucesso!";
                     }
 
                     return RedirectToAction("GerenciarEvento", "Evento", new { idEvento = idEvento });
@@ -310,7 +312,8 @@ namespace EventoWeb.Controllers
                     }
                 }
                 _subeventoService.Delete(id);
-                return RedirectToAction("GerenciarEventoListar", "Evento");
+                TempData["SuccessMessage"] = $"Subevento \"{existente.Nome}\" excluído com sucesso!";
+                return RedirectToAction("GerenciarEvento", "Evento", new { idEvento = existente.IdEvento });
             }
 
         }
