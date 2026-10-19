@@ -98,3 +98,19 @@
     font-size: 0.9rem;
     margin-top: 0.5rem;
 }
+
+#btnDetectCurrentLocation {
+    font-weight: 600;
+    font-size: 0.95rem;
+    border-radius: 8px;
+    transition: all 0.2s ease-in-out;
+}
+
+#btnDetectCurrentLocation i {
+    font-size: 1.1rem;
+}
+
+#locationDetectFeedback {
+    font-size: 0.85rem;
+    border-radius: 8px;
+}

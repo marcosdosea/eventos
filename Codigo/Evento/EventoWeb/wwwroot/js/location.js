@@ -52,11 +52,80 @@ function updateHeaderLocationText(locationObj) {
     }
 }
 
+const ESTADOS_BRASIL_MAP = {
+    'acre': 'AC', 'alagoas': 'AL', 'amapá': 'AP', 'amapa': 'AP',
+    'amazonas': 'AM', 'bahia': 'BA', 'ceará': 'CE', 'ceara': 'CE',
+    'distrito federal': 'DF', 'espírito santo': 'ES', 'espirito santo': 'ES',
+    'goiás': 'GO', 'goias': 'GO', 'maranhão': 'MA', 'maranhao': 'MA',
+    'mato grosso': 'MT', 'mato grosso do sul': 'MS', 'minas gerais': 'MG',
+    'pará': 'PA', 'para': 'PA', 'paraíba': 'PB', 'paraiba': 'PB',
+    'paraná': 'PR', 'parana': 'PR', 'pernambuco': 'PE', 'piauí': 'PI', 'piaui': 'PI',
+    'rio de janeiro': 'RJ', 'rio grande do norte': 'RN', 'rio grande do sul': 'RS',
+    'rondônia': 'RO', 'rondonia': 'RO', 'roraima': 'RR', 'santa catarina': 'SC',
+    'são paulo': 'SP', 'sao paulo': 'SP', 'sergipe': 'SE', 'tocantins': 'TO'
+};
+
+function extractLocationFromBigData(data) {
+    if (!data) return null;
+
+    let cidade = data.city || data.locality || "";
+
+    // Se a cidade não veio nos campos padrão, tentar achar em localityInfo.administrative
+    if (!cidade && data.localityInfo && Array.isArray(data.localityInfo.administrative)) {
+        const adminCity = data.localityInfo.administrative.find(a => 
+            a.adminLevel === 8 || (a.description && a.description.toLowerCase().includes('munic'))
+        );
+        if (adminCity && adminCity.name) {
+            cidade = adminCity.name;
+        }
+    }
+
+    const isoCode = data.principalSubdivisionCode || "";
+    let estado = "";
+
+    if (isoCode && isoCode.includes('-')) {
+        estado = isoCode.split('-')[1].toUpperCase();
+    } else if (data.principalSubdivision) {
+        const subLower = data.principalSubdivision.trim().toLowerCase();
+        estado = ESTADOS_BRASIL_MAP[subLower] || (subLower.length === 2 ? subLower.toUpperCase() : "");
+    }
+
+    if (cidade && estado) {
+        return { cidade: cidade.trim(), estado: estado.trim() };
+    }
+
+    return null;
+}
+
+async function reverseGeocodeCoords(lat, lon) {
+    try {
+        const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=pt-BR`);
+        if (!response.ok) return null;
+        const data = await response.json();
+        return extractLocationFromBigData(data);
+    } catch (e) {
+        console.error("Erro na requisição de geolocalização por coordenadas:", e);
+        return null;
+    }
+}
+
+async function reverseGeocodeByIp() {
+    try {
+        const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?localityLanguage=pt-BR`);
+        if (!response.ok) return null;
+        const data = await response.json();
+        return extractLocationFromBigData(data);
+    } catch (e) {
+        console.error("Erro no fallback de geolocalização por IP:", e);
+        return null;
+    }
+}
+
 function initializeLocation() {
     const location = parseLocationCookie();
     
-    if (!location) {
-        // Automatically try to get location
+    // Se não há cookie, ou se o cookie está vazio sem ter sido escolha manual explícita
+    if (!location || (!location.estado && !location.manual)) {
         requestGeolocation();
     } else {
         updateHeaderLocationText(location);
@@ -70,67 +139,211 @@ function requestGeolocation() {
                 console.log("Coordenadas obtidas:", position.coords.latitude, position.coords.longitude);
                 reverseGeocode(position.coords.latitude, position.coords.longitude);
             },
-            (error) => {
-                console.warn("Falha na geolocalização:", error.message);
-                setDefaultLocation();
+            async (error) => {
+                console.warn("Falha na geolocalização do navegador:", error.message);
+                const ipLoc = await reverseGeocodeByIp();
+                if (ipLoc) {
+                    ipLoc.manual = false;
+                    setCookie(LOCATION_COOKIE_NAME, JSON.stringify(ipLoc));
+                    updateHeaderLocationText(ipLoc);
+                } else {
+                    setDefaultLocation(false);
+                }
             },
             { timeout: 10000, enableHighAccuracy: false, maximumAge: 60000 }
         );
     } else {
         console.warn("Navegador não suporta geolocalização");
-        setDefaultLocation();
+        reverseGeocodeByIp().then(ipLoc => {
+            if (ipLoc) {
+                ipLoc.manual = false;
+                setCookie(LOCATION_COOKIE_NAME, JSON.stringify(ipLoc));
+                updateHeaderLocationText(ipLoc);
+            } else {
+                setDefaultLocation(false);
+            }
+        });
     }
 }
 
 async function reverseGeocode(lat, lon) {
     try {
-        const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=pt-BR`);
-        const data = await response.json();
-        
-        console.log("Resposta da API de Localização:", data);
-        
-        // Em BigDataCloud, a cidade pode vir em city ou locality
-        const cidade = data.city || data.locality || data.principalSubdivision || "";
-        const isoCode = data.principalSubdivisionCode || "";
-        
-        if (cidade && isoCode) {
-            let estado = "";
-            
-            if (isoCode.includes('-')) {
-                estado = isoCode.split('-')[1]; // SE
-            } else {
-                estado = data.principalSubdivision || ""; 
-            }
-            
-            // Garantir que a cidade não seja exatamente igual ao estado se houver outra opção, 
-            // mas como fallback final, aceitamos
-            
-            const locObj = { cidade: cidade, estado: estado };
+        const locObj = await reverseGeocodeCoords(lat, lon);
+        if (locObj) {
+            locObj.manual = false;
             console.log("Localização detectada:", locObj);
-            
             setCookie(LOCATION_COOKIE_NAME, JSON.stringify(locObj));
             updateHeaderLocationText(locObj);
             return;
         }
         
-        console.warn("API não retornou dados suficientes de cidade/estado.");
-        setDefaultLocation();
+        console.warn("Coordenadas não retornaram cidade/estado, tentando IP...");
+        const ipLoc = await reverseGeocodeByIp();
+        if (ipLoc) {
+            ipLoc.manual = false;
+            setCookie(LOCATION_COOKIE_NAME, JSON.stringify(ipLoc));
+            updateHeaderLocationText(ipLoc);
+            return;
+        }
+        
+        setDefaultLocation(false);
     } catch (e) {
-        console.error("Erro na requisição de geolocalização (reverse geocoding):", e);
-        setDefaultLocation();
+        console.error("Erro na requisição de geolocalização:", e);
+        setDefaultLocation(false);
     }
 }
 
-function setDefaultLocation() {
-    const locObj = { cidade: "", estado: "" };
+function setDefaultLocation(persist = true) {
+    const locObj = { cidade: "", estado: "", manual: persist };
+    if (persist) {
+        setCookie(LOCATION_COOKIE_NAME, JSON.stringify(locObj));
+    }
+    updateHeaderLocationText(locObj);
+}
+
+// Detecção sob demanda acionada pelo botão do modal
+async function detectCurrentLocation() {
+    const btn = document.getElementById('btnDetectCurrentLocation');
+    const btnText = document.getElementById('btnDetectCurrentLocationText');
+    const feedback = document.getElementById('locationDetectFeedback');
+
+    if (feedback) {
+        feedback.textContent = '';
+        feedback.classList.add('d-none');
+    }
+
+    if (!("geolocation" in navigator)) {
+        if (feedback) {
+            feedback.textContent = 'Seu navegador não suporta geolocalização. Selecione manualmente.';
+            feedback.classList.remove('d-none');
+        }
+        return;
+    }
+
+    if (btn) btn.disabled = true;
+    if (btnText) {
+        btnText.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Detectando localização...';
+    }
+
+    const restoreBtn = () => {
+        if (btn) btn.disabled = false;
+        if (btnText) {
+            btnText.innerHTML = 'Usar minha localização atual';
+        }
+    };
+
+    navigator.geolocation.getCurrentPosition(
+        async (position) => {
+            try {
+                const locObj = await reverseGeocodeCoords(position.coords.latitude, position.coords.longitude);
+                if (locObj) {
+                    applyDetectedLocation(locObj);
+                } else {
+                    const ipLoc = await reverseGeocodeByIp();
+                    if (ipLoc) {
+                        applyDetectedLocation(ipLoc);
+                    } else {
+                        restoreBtn();
+                        if (feedback) {
+                            feedback.textContent = 'Não foi possível identificar a cidade para suas coordenadas. Selecione manualmente.';
+                            feedback.classList.remove('d-none');
+                        }
+                    }
+                }
+            } catch (err) {
+                restoreBtn();
+                if (feedback) {
+                    feedback.textContent = 'Erro ao processar localização. Selecione manualmente.';
+                    feedback.classList.remove('d-none');
+                }
+            }
+        },
+        async (error) => {
+            console.warn("Falha no getCurrentPosition ao clicar no botão:", error.message);
+            // Tenta fallback por IP antes de desistir
+            const ipLoc = await reverseGeocodeByIp();
+            if (ipLoc) {
+                applyDetectedLocation(ipLoc);
+                return;
+            }
+
+            restoreBtn();
+            if (feedback) {
+                if (error.code === 1) {
+                    feedback.textContent = 'Permissão de localização negada no navegador. Permita o acesso ou selecione abaixo.';
+                } else if (error.code === 2) {
+                    feedback.textContent = 'Sinal de localização indisponível na sua rede/dispositivo. Selecione abaixo.';
+                } else if (error.code === 3) {
+                    feedback.textContent = 'Tempo limite esgotado ao buscar localização. Tente novamente ou selecione abaixo.';
+                } else {
+                    feedback.textContent = 'Não foi possível obter sua localização atual. Selecione abaixo.';
+                }
+                feedback.classList.remove('d-none');
+            }
+        },
+        { timeout: 12000, enableHighAccuracy: true, maximumAge: 0 }
+    );
+}
+
+function applyDetectedLocation(locObj) {
+    locObj.manual = false;
     setCookie(LOCATION_COOKIE_NAME, JSON.stringify(locObj));
     updateHeaderLocationText(locObj);
+
+    // Atualizar selects do modal se estiver aberto
+    const estadoSelect = document.getElementById('modalEstado');
+    if (estadoSelect && locObj.estado) {
+        estadoSelect.value = locObj.estado;
+        loadCitiesForState(locObj.estado, locObj.cidade);
+    }
+
+    // Restaurar botão
+    const btn = document.getElementById('btnDetectCurrentLocation');
+    const btnText = document.getElementById('btnDetectCurrentLocationText');
+    if (btn) btn.disabled = false;
+    if (btnText) {
+        btnText.innerHTML = 'Usar minha localização atual';
+    }
+
+    // Fechar modal
+    const modalEl = document.getElementById('locationModal');
+    if (modalEl) {
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+    }
+
+    // Se estivermos na tela de busca, recarregar a busca com o novo filtro
+    if (window.location.pathname.toLowerCase().includes('/home/buscar') || window.location.pathname.toLowerCase() === '/buscar') {
+        const searchForm = document.getElementById('headerSearchForm');
+        if (searchForm) {
+            searchForm.requestSubmit();
+        } else {
+            window.location.reload();
+        }
+    }
 }
 
 // Modal functions
 function openLocationModal() {
-    const modal = new bootstrap.Modal(document.getElementById('locationModal'));
-    
+    const modalEl = document.getElementById('locationModal');
+    if (!modalEl) return;
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+    // Limpar mensagens de feedback de erro anteriores
+    const feedback = document.getElementById('locationDetectFeedback');
+    if (feedback) {
+        feedback.textContent = '';
+        feedback.classList.add('d-none');
+    }
+
+    // Resetar estado do botão
+    const btn = document.getElementById('btnDetectCurrentLocation');
+    const btnText = document.getElementById('btnDetectCurrentLocationText');
+    if (btn) btn.disabled = false;
+    if (btnText) {
+        btnText.innerHTML = 'Usar minha localização atual';
+    }
+
     // Populate form with current cookie if exists
     const location = parseLocationCookie();
     if (location && location.estado) {
@@ -144,30 +357,30 @@ function openLocationModal() {
             cidadeSelect.disabled = true;
         }
     }
-    
+
     modal.show();
 }
 
 async function loadCitiesForState(uf, selectedCity = "") {
     const cidadeSelect = document.getElementById('modalCidade');
     if (!cidadeSelect) return;
-    
+
     cidadeSelect.innerHTML = '<option value="">Carregando...</option>';
     cidadeSelect.disabled = true;
-    
+
     if (!uf) {
         cidadeSelect.innerHTML = '<option value="">Selecione um Estado primeiro</option>';
         return;
     }
-    
+
     try {
         const response = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${uf}/municipios`);
         const cidades = await response.json();
-        
+
         cidadeSelect.innerHTML = '<option value="">Selecione uma Cidade</option>';
-        
+
         cidades.sort((a, b) => a.nome.localeCompare(b.nome));
-        
+
         cidades.forEach(c => {
             const option = document.createElement('option');
             option.value = c.nome;
@@ -177,7 +390,7 @@ async function loadCitiesForState(uf, selectedCity = "") {
             }
             cidadeSelect.appendChild(option);
         });
-        
+
         cidadeSelect.disabled = false;
     } catch (e) {
         console.error("Erro ao carregar cidades do IBGE", e);
@@ -188,20 +401,20 @@ async function loadCitiesForState(uf, selectedCity = "") {
 function saveManualLocation() {
     const estado = document.getElementById('modalEstado').value.trim();
     const cidade = document.getElementById('modalCidade').value.trim();
-    
+
     if (estado) {
-        const locObj = { cidade: cidade, estado: estado };
+        const locObj = { cidade: cidade, estado: estado, manual: true };
         setCookie(LOCATION_COOKIE_NAME, JSON.stringify(locObj));
         updateHeaderLocationText(locObj);
     } else {
         // Se o estado estiver vazio, assumir Todo o Brasil
-        setDefaultLocation();
+        setDefaultLocation(true);
     }
-    
+
     const modalEl = document.getElementById('locationModal');
     const modal = bootstrap.Modal.getInstance(modalEl);
     if (modal) modal.hide();
-    
+
     // Se estivermos na tela de busca, podemos querer recarregar a busca com o novo filtro
     if (window.location.pathname.toLowerCase().includes('/home/buscar') || window.location.pathname.toLowerCase() === '/buscar') {
         const searchForm = document.getElementById('headerSearchForm');
@@ -216,12 +429,12 @@ function saveManualLocation() {
 function clearManualLocation() {
     document.getElementById('modalEstado').value = "";
     document.getElementById('modalCidade').value = "";
-    setDefaultLocation();
-    
+    setDefaultLocation(true);
+
     const modalEl = document.getElementById('locationModal');
     const modal = bootstrap.Modal.getInstance(modalEl);
     if (modal) modal.hide();
-    
+
     if (window.location.pathname.toLowerCase().includes('/home/buscar')) {
          const searchForm = document.getElementById('headerSearchForm');
          if (searchForm) {
