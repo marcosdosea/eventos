@@ -57,6 +57,13 @@ namespace Service
 
             if (evento != null)
             {
+                var isRelational = _context.Database.IsRelational();
+                Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? transaction = null;
+                if (isRelational)
+                {
+                    transaction = _context.Database.BeginTransaction();
+                }
+
                 try
                 {
                     evento.IdAreaInteresses.Clear();
@@ -71,10 +78,16 @@ namespace Service
                     _context.Eventos.Remove(evento);
 
                     _context.SaveChanges();
+                    transaction?.Commit();
                 }
-                catch (ServiceException ex)
+                catch (Exception ex)
                 {
+                    transaction?.Rollback();
                     throw new ServiceException("Não foi possível excluir o evento. Verifique se existem dependências ativas.", ex);
+                }
+                finally
+                {
+                    transaction?.Dispose();
                 }
             }
         }

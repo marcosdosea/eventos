@@ -45,18 +45,38 @@ namespace Service
 
         public void CreateInscricoesEmLote(IEnumerable<Inscricaopessoaevento> eventos, IEnumerable<Inscricaopessoasubevento> subeventos, bool saveChanges = true)
         {
-            if (eventos != null && eventos.Any())
+            var isRelational = _context.Database.IsRelational();
+            Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? transaction = null;
+            if (isRelational)
             {
-                _context.AddRange(eventos);
+                transaction = _context.Database.BeginTransaction();
             }
-            if (subeventos != null && subeventos.Any())
+
+            try
             {
-                _context.AddRange(subeventos);
+                if (eventos != null && eventos.Any())
+                {
+                    _context.AddRange(eventos);
+                }
+                if (subeventos != null && subeventos.Any())
+                {
+                    _context.AddRange(subeventos);
+                }
+                
+                if (saveChanges && ((eventos != null && eventos.Any()) || (subeventos != null && subeventos.Any())))
+                {
+                    _context.SaveChanges();
+                }
+                transaction?.Commit();
             }
-            
-            if (saveChanges && ((eventos != null && eventos.Any()) || (subeventos != null && subeventos.Any())))
+            catch (Exception)
             {
-                _context.SaveChanges();
+                transaction?.Rollback();
+                throw;
+            }
+            finally
+            {
+                transaction?.Dispose();
             }
         }
 
@@ -160,30 +180,51 @@ namespace Service
         /// </summary>
         public (int Removidas, List<uint> SubeventosAfetados) CancelarInscricaoParticipante(uint idPessoa, uint idEvento)
         {
-            var inscricoesEvento = _context.Inscricaopessoaeventos
-                .Where(i => i.IdPessoa == idPessoa && i.IdEvento == idEvento && i.IdPapel == PapelParticipante)
-                .ToList();
-
-            if (!inscricoesEvento.Any())
+            var isRelational = _context.Database.IsRelational();
+            Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? transaction = null;
+            if (isRelational)
             {
-                return (0, new List<uint>());
+                transaction = _context.Database.BeginTransaction();
             }
 
-            var idsSubeventosDoEvento = _context.Subeventos
-                .Where(s => s.IdEvento == idEvento)
-                .Select(s => s.Id)
-                .ToList();
+            try
+            {
+                var inscricoesEvento = _context.Inscricaopessoaeventos
+                    .Where(i => i.IdPessoa == idPessoa && i.IdEvento == idEvento && i.IdPapel == PapelParticipante)
+                    .ToList();
 
-            var inscricoesSub = _context.Inscricaopessoasubeventos
-                .Where(s => s.IdPessoa == idPessoa && s.IdPapel == PapelParticipante && idsSubeventosDoEvento.Contains(s.IdSubEvento))
-                .ToList();
-            var idsSubAfetados = inscricoesSub.Select(s => s.IdSubEvento).Distinct().ToList();
+                if (!inscricoesEvento.Any())
+                {
+                    transaction?.Dispose();
+                    return (0, new List<uint>());
+                }
 
-            _context.Inscricaopessoasubeventos.RemoveRange(inscricoesSub);
-            _context.Inscricaopessoaeventos.RemoveRange(inscricoesEvento);
-            _context.SaveChanges();
+                var idsSubeventosDoEvento = _context.Subeventos
+                    .Where(s => s.IdEvento == idEvento)
+                    .Select(s => s.Id)
+                    .ToList();
 
-            return (inscricoesEvento.Count, idsSubAfetados);
+                var inscricoesSub = _context.Inscricaopessoasubeventos
+                    .Where(s => s.IdPessoa == idPessoa && s.IdPapel == PapelParticipante && idsSubeventosDoEvento.Contains(s.IdSubEvento))
+                    .ToList();
+                var idsSubAfetados = inscricoesSub.Select(s => s.IdSubEvento).Distinct().ToList();
+
+                _context.Inscricaopessoasubeventos.RemoveRange(inscricoesSub);
+                _context.Inscricaopessoaeventos.RemoveRange(inscricoesEvento);
+                _context.SaveChanges();
+
+                transaction?.Commit();
+                return (inscricoesEvento.Count, idsSubAfetados);
+            }
+            catch (Exception)
+            {
+                transaction?.Rollback();
+                throw;
+            }
+            finally
+            {
+                transaction?.Dispose();
+            }
         }
 
         public IEnumerable<Inscricaopessoasubevento> GetSubByEvento(uint idEvento)
