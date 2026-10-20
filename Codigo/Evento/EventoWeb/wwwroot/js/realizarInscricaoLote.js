@@ -1,10 +1,17 @@
 function toggleSubeventoSelect(checkbox, id) {
+    if (checkbox.disabled) return;
+    const row = document.getElementById('row-subevento-' + id);
     const wrapper = document.getElementById('wrapper-tipo-' + id);
+    const preview = document.getElementById('preview-tipo-' + id);
     const qtyInputs = document.querySelectorAll('.subevento-qty-' + id);
     if (checkbox.checked) {
-        wrapper.style.display = 'block';
+        if (row) row.classList.add('row-selected');
+        if (preview) preview.style.display = 'none';
+        if (wrapper) wrapper.style.display = 'block';
+        let currentSubTotal = 0;
         qtyInputs.forEach(input => {
             input.disabled = false;
+            currentSubTotal += (parseInt(input.value, 10) || 0);
             const parts = input.id.split('_'); // qty_subevento_id_tipo
             if(parts.length >= 4) {
                 const typeId = parts[3];
@@ -14,8 +21,13 @@ function toggleSubeventoSelect(checkbox, id) {
                 if(btnPlus) btnPlus.disabled = false;
             }
         });
+        if (currentSubTotal === 0 && qtyInputs.length > 0) {
+            qtyInputs[0].value = 1;
+        }
     } else {
-        wrapper.style.display = 'none';
+        if (row) row.classList.remove('row-selected');
+        if (wrapper) wrapper.style.display = 'none';
+        if (preview) preview.style.display = 'block';
         qtyInputs.forEach(input => {
             input.disabled = true;
             input.value = 0;
@@ -30,6 +42,44 @@ function toggleSubeventoSelect(checkbox, id) {
         });
     }
     calcularValorTotal();
+}
+
+function abrirEmentaModalFromButton(btn) {
+    if (!btn) return;
+    const nome = btn.getAttribute('data-nome') || '';
+    const desc = btn.getAttribute('data-descricao') || '';
+    const tipo = btn.getAttribute('data-tipo') || '';
+    const carga = btn.getAttribute('data-carga') || '';
+    abrirEmentaModal(nome, desc, tipo, carga);
+}
+
+function abrirEmentaModal(nome, descricao, tipo, carga) {
+    const overlay = document.getElementById('ementaModalOverlay');
+    const lblTitulo = document.getElementById('ementaModalTitulo');
+    const lblTipo = document.getElementById('ementaModalTipo');
+    const lblCarga = document.getElementById('ementaModalCarga');
+    const lblDesc = document.getElementById('ementaModalDescricao');
+
+    if (lblTitulo) lblTitulo.textContent = nome || "Ementa do Subevento";
+    if (lblTipo) lblTipo.textContent = tipo || "Atividade";
+    if (lblCarga) lblCarga.textContent = "Carga: " + (carga || "Livre");
+    if (lblDesc) lblDesc.textContent = descricao || "Nenhuma ementa detalhada informada.";
+
+    if (overlay) {
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function fecharEmentaModal(event) {
+    if (event && event.target && event.target.id !== 'ementaModalOverlay' && !event.target.classList.contains('modal-ementa-close') && event.target.tagName !== 'BUTTON') {
+        return;
+    }
+    const overlay = document.getElementById('ementaModalOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
 }
 
 let lastValidState = {}; // para reverter em caso de passar de 8
@@ -70,6 +120,7 @@ function calcularValorTotal() {
     const priceElement = document.querySelector('.price-total');
     if (!priceElement) return;
 
+    const jaInscritoNoPrincipal = document.getElementById('JaInscritoNoPrincipal') !== null;
     let total = 0;
     let sumEvento = 0;
     
@@ -83,7 +134,7 @@ function calcularValorTotal() {
     });
     
     // Valor dos subeventos selecionados
-    const subeventosCheckboxes = document.querySelectorAll('.subevento-checkbox:checked');
+    const subeventosCheckboxes = document.querySelectorAll('.subevento-checkbox:checked:not(:disabled)');
     subeventosCheckboxes.forEach(checkbox => {
         const subId = checkbox.value;
         const subInputs = document.querySelectorAll('.subevento-qty-' + subId);
@@ -94,7 +145,6 @@ function calcularValorTotal() {
         });
     });
 
-    // submit button disabled if sumEvento == 0 or > 8, or if a checked subevento has 0 tickets
     const btnSubmit = document.querySelector('.btn-submit:not(.btn-login)');
     if (btnSubmit) {
         let isSubeventoValid = true;
@@ -112,18 +162,35 @@ function calcularValorTotal() {
             });
         }
 
-        if (sumEvento === 0 || sumEvento > 8 || !isSubeventoValid) {
-            btnSubmit.disabled = true;
-            btnSubmit.style.opacity = '0.5';
-            if (sumEvento === 0 || sumEvento > 8) {
-                btnSubmit.title = "Selecione ao menos 1 quantidade para o evento.";
+        if (jaInscritoNoPrincipal) {
+            const hasSelectedSomething = (sumEvento > 0) || (subeventosCheckboxes.length > 0);
+            if (!hasSelectedSomething || sumEvento > 8 || !isSubeventoValid) {
+                btnSubmit.disabled = true;
+                btnSubmit.style.opacity = '0.5';
+                if (!hasSelectedSomething) {
+                    btnSubmit.title = "Selecione ingressos para o evento ou para ao menos 1 subevento.";
+                } else if (!isSubeventoValid) {
+                    btnSubmit.title = "Informe a quantidade de ingressos para os subeventos selecionados.";
+                }
             } else {
-                btnSubmit.title = "Informe a quantidade de ingressos para os subeventos selecionados.";
+                btnSubmit.disabled = false;
+                btnSubmit.style.opacity = '1';
+                btnSubmit.title = "";
             }
         } else {
-            btnSubmit.disabled = false;
-            btnSubmit.style.opacity = '1';
-            btnSubmit.title = "";
+            if (sumEvento === 0 || sumEvento > 8 || !isSubeventoValid) {
+                btnSubmit.disabled = true;
+                btnSubmit.style.opacity = '0.5';
+                if (sumEvento === 0 || sumEvento > 8) {
+                    btnSubmit.title = "Selecione ao menos 1 quantidade para o evento.";
+                } else {
+                    btnSubmit.title = "Informe a quantidade de ingressos para os subeventos selecionados.";
+                }
+            } else {
+                btnSubmit.disabled = false;
+                btnSubmit.style.opacity = '1';
+                btnSubmit.title = "";
+            }
         }
     }
 
@@ -153,9 +220,21 @@ function closeImageModal() {
 document.addEventListener('keydown', function(event) {
     if (event.key === "Escape") {
         closeImageModal();
+        fecharEmentaModal();
     }
 });
 
 document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('.subevento-checkbox').forEach(cb => {
+        if (cb.checked && !cb.disabled) {
+            const id = cb.value;
+            const row = document.getElementById('row-subevento-' + id);
+            const wrapper = document.getElementById('wrapper-tipo-' + id);
+            const preview = document.getElementById('preview-tipo-' + id);
+            if (row) row.classList.add('row-selected');
+            if (preview) preview.style.display = 'none';
+            if (wrapper) wrapper.style.display = 'block';
+        }
+    });
     calcularValorTotal();
 });
