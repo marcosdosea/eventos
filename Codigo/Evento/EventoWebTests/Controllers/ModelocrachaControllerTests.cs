@@ -523,6 +523,54 @@ namespace EventoWeb.Controllers.Tests
             mockCracha.Verify(s => s.Edit(It.IsAny<Modelocracha>()), Times.Never);
         }
 
+        [TestMethod]
+        public void ModelocrachaModel_Texto_NormalizaCRLF_ParaNaoExcederLimite()
+        {
+            // Arrange: 198 caracteres visíveis + 2 quebras de linha CRLF (\r\n) = 202 caracteres com CRLF
+            var baseTexto = new string('a', 198);
+            var textoComCRLF = $"{baseTexto.Substring(0, 100)}\r\n{baseTexto.Substring(100, 50)}\r\n{baseTexto.Substring(150)}";
+
+            var model = new ModelocrachaModel();
+
+            // Act
+            model.Texto = textoComCRLF;
+
+            // Assert: deve normalizar \r\n para \n, resultando em exatamente 200 caracteres (198 letras + 2 quebras \n)
+            Assert.AreEqual(200, model.Texto.Length);
+            Assert.IsFalse(model.Texto.Contains("\r"));
+            Assert.IsTrue(model.Texto.Contains("\n"));
+        }
+
+        [TestMethod]
+        public void CreateTest_ComTextoComQuebrasDeLinha_SalvaCorretamente()
+        {
+            // Arrange
+            var mockCracha = new Mock<IModelocrachaService>();
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+            ctl.TempData = new TempDataDictionary(ctl.ControllerContext.HttpContext, Mock.Of<ITempDataProvider>());
+
+            var novoModelo = GetNewModelocracha();
+            novoModelo.IdEvento = 1;
+            // 195 caracteres + quebras CRLF que equivaleriam a > 200 caracteres se mantivessem \r
+            novoModelo.Texto = new string('x', 100) + "\r\n" + new string('y', 95);
+
+            // Act
+            var result = ctl.Create(novoModelo);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            mockCracha.Verify(s => s.Create(It.Is<Modelocracha>(m => m.IdEvento == 1 && m.Texto.Length <= 200)), Times.Once);
+        }
+
         private static ClaimsPrincipal GestorPrincipal() => new(new ClaimsIdentity(new List<Claim>
         {
             new Claim(ClaimTypes.Name, "12345678900"),

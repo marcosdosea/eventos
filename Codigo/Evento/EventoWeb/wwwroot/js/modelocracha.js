@@ -39,9 +39,39 @@
 
         let escalaAtual = 1;
 
+        function calcularTamanhoTexto(texto) {
+            if (!texto) return 0;
+            // Normaliza quebras de linha para CRLF (\r\n), que é o formato em que
+            // navegadores enviam campos de texto no POST, contabilizando os caracteres
+            // invisíveis de retorno de carro (\r).
+            return texto.replace(/\r?\n/g, "\r\n").length;
+        }
+
+        function limitarTextoAosCaracteres(texto, maxCaracteres) {
+            if (!texto) return "";
+            let tamanho = 0;
+            let resultado = "";
+            for (let i = 0; i < texto.length; i++) {
+                const char = texto[i];
+                const incremento = (char === "\n") ? 2 : 1;
+                if (tamanho + incremento > maxCaracteres) {
+                    break;
+                }
+                resultado += char;
+                tamanho += incremento;
+            }
+            return resultado;
+        }
+
         function atualizarTexto() {
             if (!txtTexto) return;
-            const len = txtTexto.value.length;
+
+            const textoLimitado = limitarTextoAosCaracteres(txtTexto.value, 200);
+            if (txtTexto.value !== textoLimitado) {
+                txtTexto.value = textoLimitado;
+            }
+
+            const len = calcularTamanhoTexto(txtTexto.value);
             if (lblContador) {
                 lblContador.textContent = `${len} / 200 caracteres`;
             }
@@ -103,6 +133,10 @@
 
         if (txtTexto) {
             txtTexto.addEventListener("input", atualizarTexto);
+            txtTexto.addEventListener("change", atualizarTexto);
+            txtTexto.addEventListener("paste", function () {
+                setTimeout(atualizarTexto, 0);
+            });
             atualizarTexto();
         }
 
@@ -231,6 +265,26 @@
                 window.print();
             });
         }
+
+        window.addEventListener("beforeprint", function () {
+            if (crachaCard) {
+                crachaCard.dataset.escalaPreImpressao = escalaAtual.toString();
+                crachaCard.style.transform = "none";
+            }
+        });
+
+        window.addEventListener("afterprint", function () {
+            if (crachaCard && crachaCard.dataset.escalaPreImpressao !== undefined) {
+                const escalaRestaurada = parseFloat(crachaCard.dataset.escalaPreImpressao);
+                if (!isNaN(escalaRestaurada) && escalaRestaurada !== 1) {
+                    crachaCard.style.transformOrigin = "top center";
+                    crachaCard.style.transform = `scale(${escalaRestaurada})`;
+                } else {
+                    crachaCard.style.transform = "";
+                }
+                delete crachaCard.dataset.escalaPreImpressao;
+            }
+        });
 
         if (btnFullscreen) {
             btnFullscreen.addEventListener("click", function () {
