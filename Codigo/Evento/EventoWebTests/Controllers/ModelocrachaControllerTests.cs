@@ -1,18 +1,20 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using AutoMapper;
-using Core.Service;
-using Core;
-using EventoWeb.Models;
-using Microsoft.AspNetCore.Mvc;
-using Moq;
-using EventoWeb.Mappers;
-using System.Collections.Generic;
-using System.IO;
-using Microsoft.AspNetCore.Http;
 using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.IO;
+using System.Linq;
 using System.Security.Claims;
+using AutoMapper;
+using Core;
 using Core.DTO;
+using Core.Service;
+using EventoWeb.Mappers;
+using EventoWeb.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 
 namespace EventoWeb.Controllers.Tests
 {
@@ -504,6 +506,42 @@ namespace EventoWeb.Controllers.Tests
 
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             mockCracha.Verify(s => s.Create(It.Is<Modelocracha>(m => m.IdEvento == 1 && m.Texto.Length <= 200)), Times.Once);
+        }
+
+        [TestMethod]
+        public void ModelocrachaModel_Texto_ComMaisDeCincoQuebras_Invalido()
+        {
+            var model = new ModelocrachaModel
+            {
+                Id = 1,
+                IdEvento = 1,
+                Texto = "1\n2\n3\n4\n5\n6\n7"
+            };
+
+            var context = new ValidationContext(model) { MemberName = nameof(ModelocrachaModel.Texto) };
+            var results = new List<ValidationResult>();
+            var isValid = Validator.TryValidateProperty(model.Texto, context, results);
+
+            Assert.IsFalse(isValid);
+            Assert.IsTrue(results.Any(r => r.ErrorMessage == "O texto do crachá deve ter no máximo 5 quebras de linha"));
+        }
+
+        [TestMethod]
+        public void ModelocrachaModel_Texto_ComAteCincoQuebras_Valido()
+        {
+            var model = new ModelocrachaModel
+            {
+                Id = 1,
+                IdEvento = 1,
+                Texto = "1\n2\n3\n4\n5\n6"
+            };
+
+            var context = new ValidationContext(model) { MemberName = nameof(ModelocrachaModel.Texto) };
+            var results = new List<ValidationResult>();
+            var isValid = Validator.TryValidateProperty(model.Texto, context, results);
+
+            Assert.IsTrue(isValid);
+            Assert.AreEqual(0, results.Count);
         }
 
         private static ClaimsPrincipal GestorPrincipal() => new(new ClaimsIdentity(new List<Claim>

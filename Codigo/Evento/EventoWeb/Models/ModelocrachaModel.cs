@@ -25,6 +25,7 @@ namespace EventoWeb.Models
         [Display(Name = "Texto")]
         [Required(ErrorMessage = "Informe o texto do crachá")]
         [StringLength(200, ErrorMessage = "O texto do crachá deve ter no máximo 200 caracteres")]
+        [MaxQuebrasLinha(5, ErrorMessage = "O texto do crachá deve ter no máximo 5 quebras de linha")]
         public string Texto
         {
             get => _texto;

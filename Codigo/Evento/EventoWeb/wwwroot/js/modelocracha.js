@@ -44,12 +44,19 @@
             return texto.replace(/\r?\n/g, "\r\n").length;
         }
 
-        function limitarTextoAosCaracteres(texto, maxCaracteres) {
+        function limitarTextoAosCaracteres(texto, maxCaracteres, maxQuebras = 5) {
             if (!texto) return "";
             let tamanho = 0;
+            let quebras = 0;
             let resultado = "";
             for (let i = 0; i < texto.length; i++) {
                 const char = texto[i];
+                if (char === "\n") {
+                    if (quebras >= maxQuebras) {
+                        continue;
+                    }
+                    quebras++;
+                }
                 const incremento = (char === "\n") ? 2 : 1;
                 if (tamanho + incremento > maxCaracteres) {
                     break;
@@ -63,7 +70,7 @@
         function atualizarTexto() {
             if (!txtTexto) return;
 
-            const textoLimitado = limitarTextoAosCaracteres(txtTexto.value, 200);
+            const textoLimitado = limitarTextoAosCaracteres(txtTexto.value, 200, 5);
             if (txtTexto.value !== textoLimitado) {
                 txtTexto.value = textoLimitado;
             }
@@ -129,6 +136,18 @@
         }
 
         if (txtTexto) {
+            txtTexto.addEventListener("keydown", function (e) {
+                if (e.key === "Enter") {
+                    const start = this.selectionStart;
+                    const end = this.selectionEnd;
+                    const selecionado = this.value.substring(start, end);
+                    const quebrasNoSelecionado = (selecionado.match(/\n/g) || []).length;
+                    const totalQuebrasAtuais = (this.value.match(/\n/g) || []).length;
+                    if ((totalQuebrasAtuais - quebrasNoSelecionado + 1) > 5) {
+                        e.preventDefault();
+                    }
+                }
+            });
             txtTexto.addEventListener("input", atualizarTexto);
             txtTexto.addEventListener("change", atualizarTexto);
             txtTexto.addEventListener("paste", function () {
