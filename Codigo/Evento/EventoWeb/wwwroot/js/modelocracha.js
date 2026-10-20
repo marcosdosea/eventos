@@ -41,9 +41,6 @@
 
         function calcularTamanhoTexto(texto) {
             if (!texto) return 0;
-            // Normaliza quebras de linha para CRLF (\r\n), que é o formato em que
-            // navegadores enviam campos de texto no POST, contabilizando os caracteres
-            // invisíveis de retorno de carro (\r).
             return texto.replace(/\r?\n/g, "\r\n").length;
         }
 
