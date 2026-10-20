@@ -121,6 +121,38 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
+        public async Task RealizarInscricaoTest_Post_TipoDeOutroEvento_RejeitaSemSalvar()
+        {
+            // Arrange (#780): tipo 9 pertence ao evento 2, mas o form forja
+            // QuantidadeTipoInscricao_9 na inscrição do evento 1.
+            var tipos = new Dictionary<uint, Tipoinscricao>
+            {
+                { 9, new Tipoinscricao { Id = 9, IdEvento = 2, Nome = "Barato Outro Evento", Valor = 0m } }
+            };
+            var (postController, criadas, criadasSub) = CreatePostController(tipos, new Dictionary<string, string>
+            {
+                { "QuantidadeTipoInscricao_9", "1" }
+            });
+
+            var input = new InscricaoEventoModel
+            {
+                SelectedSubeventos = new List<uint>(),
+                ValorTotal = 0m
+            };
+
+            // Act
+            var result = await postController.realizarInscricao(1, input);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("realizarInscricao", redirect.ActionName);
+            Assert.AreEqual("Tipo de inscrição inválido para este evento.", postController.TempData["ParticipanteMessage"]);
+            Assert.AreEqual(0, criadas.Count);
+            Assert.AreEqual(0, criadasSub.Count);
+        }
+
+        [TestMethod()]
         public async Task RealizarInscricaoTest_Post_MeiaEntrada_PersisteTipoNuloEMetadeDoValor()
         {
             // Arrange: posta o sentinela de meia entrada tanto para o evento
