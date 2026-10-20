@@ -43,40 +43,25 @@ namespace Service
             return inscricaopessoaevento.Id;
         }
 
+        /// <summary>
+        /// Adiciona as inscrições do lote ao contexto. A transação é responsabilidade
+        /// do caso de uso (ver ITransacaoService), que envolve também a atualização
+        /// de vagas e o SaveChanges final.
+        /// </summary>
         public void CreateInscricoesEmLote(IEnumerable<Inscricaopessoaevento> eventos, IEnumerable<Inscricaopessoasubevento> subeventos, bool saveChanges = true)
         {
-            var isRelational = _context.Database.IsRelational();
-            Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? transaction = null;
-            if (isRelational)
+            if (eventos != null && eventos.Any())
             {
-                transaction = _context.Database.BeginTransaction();
+                _context.AddRange(eventos);
+            }
+            if (subeventos != null && subeventos.Any())
+            {
+                _context.AddRange(subeventos);
             }
 
-            try
+            if (saveChanges && ((eventos != null && eventos.Any()) || (subeventos != null && subeventos.Any())))
             {
-                if (eventos != null && eventos.Any())
-                {
-                    _context.AddRange(eventos);
-                }
-                if (subeventos != null && subeventos.Any())
-                {
-                    _context.AddRange(subeventos);
-                }
-                
-                if (saveChanges && ((eventos != null && eventos.Any()) || (subeventos != null && subeventos.Any())))
-                {
-                    _context.SaveChanges();
-                }
-                transaction?.Commit();
-            }
-            catch (Exception)
-            {
-                transaction?.Rollback();
-                throw;
-            }
-            finally
-            {
-                transaction?.Dispose();
+                _context.SaveChanges();
             }
         }
 
@@ -177,54 +162,46 @@ namespace Service
         /// incluindo as inscrições nos subeventos do evento, em um único SaveChanges.
         /// Retorna a quantidade de inscrições do evento removidas e os ids dos
         /// subeventos afetados (para atualização de vagas).
+        /// <summary>
+        /// Remove as inscrições de participante do evento e dos subeventos.
+        /// O SaveChanges é enlistado na transação aberta pelo caso de uso
+        /// (ver ITransacaoService), que também cobre a atualização de vagas.
+        /// </summary>
         /// </summary>
         public (int Removidas, List<uint> SubeventosAfetados) CancelarInscricaoParticipante(uint idPessoa, uint idEvento)
         {
-            var isRelational = _context.Database.IsRelational();
-            Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? transaction = null;
-            if (isRelational)
+            var inscricoesEvento = _context.Inscricaopessoaeventos
+                .Where(i => i.IdPessoa == idPessoa && i.IdEvento == idEvento && i.IdPapel == PapelParticipante)
+                .ToList();
+
+            if (!inscricoesEvento.Any())
             {
-                transaction = _context.Database.BeginTransaction();
+                return (0, new List<uint>());
             }
 
-            try
-            {
-                var inscricoesEvento = _context.Inscricaopessoaeventos
-                    .Where(i => i.IdPessoa == idPessoa && i.IdEvento == idEvento && i.IdPapel == PapelParticipante)
-                    .ToList();
+            var idsSubeventosDoEvento = _context.Subeventos
+                .Where(s => s.IdEvento == idEvento)
+                .Select(s => s.Id)
+                .ToList();
 
-                if (!inscricoesEvento.Any())
-                {
-                    transaction?.Dispose();
-                    return (0, new List<uint>());
-                }
+            var inscricoesSub = _context.Inscricaopessoasubeventos
+                .Where(s => s.IdPessoa == idPessoa && s.IdPapel == PapelParticipante && idsSubeventosDoEvento.Contains(s.IdSubEvento))
+                .ToList();
+            var idsSubAfetados = inscricoesSub.Select(s => s.IdSubEvento).Distinct().ToList();
 
-                var idsSubeventosDoEvento = _context.Subeventos
-                    .Where(s => s.IdEvento == idEvento)
-                    .Select(s => s.Id)
-                    .ToList();
+            // Pagamentos referenciam a inscrição (FK RESTRICT): sem remover,
+            // a exclusão da inscrição falha por integridade referencial.
+            var idsInscricoes = inscricoesEvento.Select(i => i.Id).ToList();
+            var pagamentos = idsInscricoes.Count > 0
+                ? _context.Pagamentos.Where(p => idsInscricoes.Contains(p.IdInscricaoPessoaEvento)).ToList()
+                : new List<Pagamento>();
 
-                var inscricoesSub = _context.Inscricaopessoasubeventos
-                    .Where(s => s.IdPessoa == idPessoa && s.IdPapel == PapelParticipante && idsSubeventosDoEvento.Contains(s.IdSubEvento))
-                    .ToList();
-                var idsSubAfetados = inscricoesSub.Select(s => s.IdSubEvento).Distinct().ToList();
+            _context.Pagamentos.RemoveRange(pagamentos);
+            _context.Inscricaopessoasubeventos.RemoveRange(inscricoesSub);
+            _context.Inscricaopessoaeventos.RemoveRange(inscricoesEvento);
+            _context.SaveChanges();
 
-                _context.Inscricaopessoasubeventos.RemoveRange(inscricoesSub);
-                _context.Inscricaopessoaeventos.RemoveRange(inscricoesEvento);
-                _context.SaveChanges();
-
-                transaction?.Commit();
-                return (inscricoesEvento.Count, idsSubAfetados);
-            }
-            catch (Exception)
-            {
-                transaction?.Rollback();
-                throw;
-            }
-            finally
-            {
-                transaction?.Dispose();
-            }
+            return (inscricoesEvento.Count, idsSubAfetados);
         }
 
         public IEnumerable<Inscricaopessoasubevento> GetSubByEvento(uint idEvento)

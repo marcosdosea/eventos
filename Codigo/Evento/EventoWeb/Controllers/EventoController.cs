@@ -215,7 +215,16 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Delete(uint id, EventoModel eventoModel)
         {
-            _eventoService.Delete(id);
+            try
+            {
+                _eventoService.Delete(id);
+                TempData["SuccessMessage"] = "Evento excluído com sucesso!";
+            }
+            catch (ServiceException ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+
             return RedirectToAction(nameof(Index));
         }
 
