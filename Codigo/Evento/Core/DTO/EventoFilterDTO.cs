@@ -10,5 +10,6 @@ namespace Core.DTO
         public DateTime? Data { get; set; }
         public string? Estado { get; set; }
         public string? Cidade { get; set; }
+        public bool? PossuiSubeventos { get; set; }
     }
 }

@@ -317,6 +317,11 @@ namespace Service
                 query = query.Where(e => e.Cidade == filter.Cidade);
             }
 
+            if (filter.PossuiSubeventos.HasValue && filter.PossuiSubeventos.Value)
+            {
+                query = query.Where(e => e.Subeventos.Any());
+            }
+
             query = query.Where(e => e.Status == "A" && e.DataFimInscricao >= DateTime.Now);
 
             totalRegistros = query.Count();

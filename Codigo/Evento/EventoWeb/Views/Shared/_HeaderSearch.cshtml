@@ -18,6 +18,7 @@
             <input type="hidden" name="IdTipoEvento" id="hidden_IdTipoEvento" value="@Context.Request.Query["IdTipoEvento"]" />
             <input type="hidden" name="IdAreaInteresse" id="hidden_IdAreaInteresse" value="@Context.Request.Query["IdAreaInteresse"]" />
             <input type="hidden" name="Data" id="hidden_Data" value="@Context.Request.Query["Data"]" />
+            <input type="hidden" name="PossuiSubeventos" id="hidden_PossuiSubeventos" value="@Context.Request.Query["PossuiSubeventos"]" />
         </form>
     </div>
 
@@ -69,6 +70,15 @@
                 <div class="mb-3">
                     <label for="drop_Data" class="form-label small mb-1 fw-bold text-secondary">A partir de (Data)</label>
                     <input type="date" id="drop_Data" class="form-control form-control-sm" value="@Context.Request.Query["Data"]" onchange="syncFilter('Data', this.value); applyFilters();" aria-label="Selecione a data a partir de qual o evento ocorre" />
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="drop_PossuiSubeventos"
+                           @(Context.Request.Query["PossuiSubeventos"].ToString().Equals("true", StringComparison.OrdinalIgnoreCase) ? "checked" : "")
+                           onchange="syncFilter('PossuiSubeventos', this.checked ? 'true' : ''); applyFilters();" />
+                    <label class="form-check-label small fw-bold text-secondary" for="drop_PossuiSubeventos">
+                        Apenas eventos com subeventos
+                    </label>
                 </div>
 
                 <div class="d-flex justify-content-center mt-4">
