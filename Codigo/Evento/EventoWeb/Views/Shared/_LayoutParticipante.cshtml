@@ -21,10 +21,10 @@
         bool showLocation = (controller == "home" && (action == "index" || action == "buscar")) ||
                             (controller == "inscricao" && (action == "realizarinscricao" || action == "minhasinscricoes" || action == "realizarinscricaolote"));
     }
-    <header class="p-3 mb-3 border-bottom fixed-top">
+    <header class="p-3 mb-3 border-bottom sticky-top bg-white">
         <div class="container">
             <nav class="navbar navbar-light p-0 w-100">
-                <div class="w-100 d-flex justify-content-between align-items-center flex-wrap flex-md-nowrap">
+                <div class="w-100 d-flex justify-content-between align-items-center flex-wrap flex-lg-nowrap">
                     
                     <div class="d-flex align-items-center">
                         <button class="navbar-toggler navbar-light custom-toggler me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar" aria-label="Toggle navigation">
@@ -62,12 +62,12 @@
                     
                     @if (showSearch)
                     {
-                        <div class="d-flex align-items-center ms-md-3 me-md-auto order-3 order-md-0 w-100 w-md-auto mt-2 mt-md-0 justify-content-center flex-grow-1 flex-md-grow-0">
+                        <div class="d-flex align-items-center ms-lg-3 me-lg-auto order-3 order-lg-0 w-100 w-lg-auto mt-2 mt-lg-0 justify-content-center flex-grow-1 flex-lg-grow-0">
                             <partial name="_HeaderSearch" />
                         </div>
                     }
 
-                    <div class="d-flex align-items-center flex-shrink-0 order-2 order-md-0 gap-3">
+                    <div class="d-flex align-items-center flex-shrink-0 order-2 order-lg-0 gap-3">
                         @if (showLocation)
                         {
                             <div class="nav-item">
