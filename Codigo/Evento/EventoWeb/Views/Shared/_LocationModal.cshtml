@@ -7,6 +7,19 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
             <div class="modal-body">
+                <div class="mb-3">
+                    <button type="button" class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2 py-2" id="btnDetectCurrentLocation" onclick="detectCurrentLocation()">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        <span id="btnDetectCurrentLocationText">Usar minha localização atual</span>
+                    </button>
+                    <div id="locationDetectFeedback" class="alert alert-warning py-2 px-3 small mt-2 d-none" role="alert"></div>
+                </div>
+
+                <div class="position-relative text-center my-3">
+                    <hr class="text-muted opacity-25 m-0">
+                    <span class="position-absolute top-50 start-50 translate-middle bg-white px-2 text-muted small">ou selecione manualmente</span>
+                </div>
+
                 <div class="location-options">
                     <div class="location-form-group">
                         <label for="modalEstado">Estado (UF)</label>
