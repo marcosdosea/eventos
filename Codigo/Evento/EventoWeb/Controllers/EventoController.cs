@@ -1,5 +1,6 @@
 using AutoMapper;
 using Core;
+using Core.DTO;
 using Core.Service;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Diagnostics;
 using System.Security.Claims;
+using System.Text;
 
 namespace EventoWeb.Controllers
 {
@@ -22,10 +24,11 @@ namespace EventoWeb.Controllers
         private readonly IInscricaoService _inscricaoService;
         private readonly IAreaInteresseService _areaInteresseService;
         private readonly ISubeventoService _subeventoService;
+        private readonly ITipoInscricaoService? _tipoInscricaoService;
         private readonly IMapper _mapper;
         private readonly UserManager<UsuarioIdentity> _userManager;
 
-        public EventoController(UserManager<UsuarioIdentity> userManager, IEventoService eventoService, IMapper mapper, IEstadosbrasilService estadosbrasilService, IInscricaoService inscricaoService, ITipoeventoService tipoeventoService, IAreaInteresseService areaInteresseService, IPessoaService pessoaService, ISubeventoService subeventoService)
+        public EventoController(UserManager<UsuarioIdentity> userManager, IEventoService eventoService, IMapper mapper, IEstadosbrasilService estadosbrasilService, IInscricaoService inscricaoService, ITipoeventoService tipoeventoService, IAreaInteresseService areaInteresseService, IPessoaService pessoaService, ISubeventoService subeventoService, ITipoInscricaoService? tipoInscricaoService = null)
         {
             _userManager = userManager;
             _tipoEventoService = tipoeventoService;
@@ -36,6 +39,7 @@ namespace EventoWeb.Controllers
             _areaInteresseService = areaInteresseService;
             _pessoaService = pessoaService;
             _subeventoService = subeventoService;
+            _tipoInscricaoService = tipoInscricaoService;
         }
 
 
@@ -922,6 +926,108 @@ namespace EventoWeb.Controllers
                 };
                 return View(viewModel);
             }
+        }
+
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
+        [HttpGet]
+        [Route("Dashboard")]
+        public IActionResult Dashboard([FromQuery] uint idEvento, [FromQuery] uint? idSubevento, [FromQuery] uint? idTipoInscricao, [FromQuery] DateTime? dataInicio, [FromQuery] DateTime? dataFim, [FromQuery] string aba = "financas", [FromQuery] string formato = "")
+        {
+            if (idEvento == 0)
+                return RedirectToAction("GerenciarEventoListar");
+
+            var evento = _eventoService.Get(idEvento);
+            if (evento == null)
+            {
+                TempData["Message"] = "Evento não encontrado!";
+                return RedirectToAction("Index", "Home");
+            }
+
+            var isAdmin = User.IsInRole("ADMINISTRADOR");
+            var gestor = _inscricaoService.GetGestorInEvent(User.Identity?.Name ?? string.Empty, idEvento);
+            if (!isAdmin && gestor == null)
+            {
+                TempData["Message"] = "Você não tem permissão para ver o dashboard deste evento!";
+                return RedirectToAction("GerenciarEvento", new { idEvento });
+            }
+
+            aba = aba == "operacao" ? "operacao" : "financas";
+            if (dataInicio.HasValue && dataFim.HasValue && dataInicio.Value.Date > dataFim.Value.Date)
+            {
+                TempData["Message"] = "Período inválido: a data inicial é posterior à data final. Filtros de data ignorados.";
+                dataInicio = null;
+                dataFim = null;
+            }
+            var filtros = new DashboardFiltrosDTO
+            {
+                IdSubevento = idSubevento,
+                IdTipoInscricao = idTipoInscricao,
+                DataInicio = dataInicio,
+                DataFim = dataFim
+            };
+
+            var financeiro = _eventoService.GetDashboardFinanceiro(idEvento, filtros);
+            var operacao = _eventoService.GetDashboardOperacao(idEvento, filtros);
+
+            if (formato == "csv")
+                return File(GerarCsvDashboard(evento.Nome, financeiro, operacao), "text/csv", $"dashboard-evento-{idEvento}.csv");
+
+            var subeventos = _subeventoService.GetByIdEvento(idEvento).OrderBy(s => s.Nome).ToList();
+            var tipos = _tipoInscricaoService?.GetByEvento(idEvento).OrderBy(t => t.Nome).ToList()
+                ?? new List<Tipoinscricao>();
+
+            return View(new DashboardEventoViewModel
+            {
+                IdEvento = idEvento,
+                NomeEvento = evento.Nome,
+                Status = evento.Status,
+                IdSubevento = idSubevento,
+                IdTipoInscricao = idTipoInscricao,
+                DataInicio = dataInicio,
+                DataFim = dataFim,
+                Aba = aba,
+                Financeiro = financeiro,
+                Operacao = operacao,
+                Subeventos = new SelectList(subeventos, "Id", "Nome", idSubevento),
+                TiposInscricao = new SelectList(tipos, "Id", "Nome", idTipoInscricao)
+            });
+        }
+
+        private static string CampoCsv(string valor)
+        {
+            valor ??= string.Empty;
+            if (valor.Contains(';') || valor.Contains('"') || valor.Contains('\n') || valor.Contains('\r'))
+                return "\"" + valor.Replace("\"", "\"\"") + "\"";
+            return valor;
+        }
+
+        private static string NumCsv(decimal valor) =>
+            valor.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
+
+        private static byte[] GerarCsvDashboard(string nomeEvento, DashboardFinanceiroDTO fin, DashboardOperacaoDTO op)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("secao;indicador;valor");
+            sb.AppendLine($"evento;nome;{CampoCsv(nomeEvento)}");
+            sb.AppendLine($"financas;total_inscritos;{fin.TotalInscritos}");
+            sb.AppendLine($"financas;vagas_ofertadas;{fin.VagasOfertadas}");
+            sb.AppendLine($"financas;receita_confirmada;{NumCsv(fin.ReceitaConfirmada)}");
+            sb.AppendLine($"financas;valor_em_aberto;{NumCsv(fin.ValorEmAberto)}");
+            sb.AppendLine($"financas;ticket_medio;{NumCsv(fin.TicketMedio)}");
+            sb.AppendLine($"financas;ativas;{fin.Funil.Ativas}");
+            sb.AppendLine($"financas;solicitadas;{fin.Funil.Solicitadas}");
+            sb.AppendLine($"financas;canceladas;{fin.Funil.Canceladas}");
+            foreach (var f in fin.PorForma)
+                sb.AppendLine($"financas;forma_{CampoCsv(f.Forma)};{f.Quantidade};{NumCsv(f.ValorTotal)}");
+            foreach (var c in fin.PorCategoria)
+                sb.AppendLine($"financas;categoria_{CampoCsv(c.Nome)};{c.Quantidade};{NumCsv(c.ValorTotal)}");
+            sb.AppendLine($"operacao;presentes;{op.Presentes}");
+            sb.AppendLine($"operacao;ausentes;{op.Ausentes}");
+            sb.AppendLine($"operacao;aptos_certificado;{op.AptosCertificado}");
+            sb.AppendLine($"operacao;frequencia_media;{NumCsv(op.FrequenciaMedia)}");
+            foreach (var s in op.OcupacaoSubeventos)
+                sb.AppendLine($"operacao;subevento_{CampoCsv(s.Nome)};{s.Ocupados}/{s.VagasOfertadas}");
+            return Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
         }
 
         [Authorize(Roles = "GESTOR")]
