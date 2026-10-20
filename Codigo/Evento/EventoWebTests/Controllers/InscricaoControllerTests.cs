@@ -1709,6 +1709,90 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
+        public void StatusCertificado_SemCertificado_WhenPossuiCertificadoZero()
+        {
+            var model = new InscricaoEventoModel
+            {
+                Status = "A",
+                IdEventoNavigation = new Evento { PossuiCertificado = 0 }
+            };
+
+            Assert.AreEqual(StatusCertificadoInscricao.SemCertificado, model.StatusCertificado);
+        }
+
+        [TestMethod()]
+        public void StatusCertificado_EmAndamento_WhenEventoAindaNaoEncerrou()
+        {
+            var model = new InscricaoEventoModel
+            {
+                Status = "A",
+                FrequenciaFinal = 100m,
+                IdEventoNavigation = new Evento
+                {
+                    PossuiCertificado = 1,
+                    DataFim = DateTime.Now.AddDays(2),
+                    FrequenciaMinimaCertificado = 75m
+                }
+            };
+
+            Assert.AreEqual(StatusCertificadoInscricao.EmAndamento, model.StatusCertificado);
+        }
+
+        [TestMethod()]
+        public void StatusCertificado_FrequenciaInsuficiente_WhenEventoEncerrouEFrequenciaBaixa()
+        {
+            var model = new InscricaoEventoModel
+            {
+                Status = "A",
+                FrequenciaFinal = 50m,
+                IdEventoNavigation = new Evento
+                {
+                    PossuiCertificado = 1,
+                    DataFim = DateTime.Now.AddDays(-1),
+                    FrequenciaMinimaCertificado = 75m
+                }
+            };
+
+            Assert.AreEqual(StatusCertificadoInscricao.FrequenciaInsuficiente, model.StatusCertificado);
+        }
+
+        [TestMethod()]
+        public void StatusCertificado_Elegivel_WhenEventoEncerrouEFrequenciaAtingida()
+        {
+            var model = new InscricaoEventoModel
+            {
+                Status = "A",
+                FrequenciaFinal = 80m,
+                IdEventoNavigation = new Evento
+                {
+                    PossuiCertificado = 1,
+                    DataFim = DateTime.Now.AddDays(-1),
+                    FrequenciaMinimaCertificado = 75m
+                }
+            };
+
+            Assert.AreEqual(StatusCertificadoInscricao.Elegivel, model.StatusCertificado);
+        }
+
+        [TestMethod()]
+        public void StatusCertificado_Cancelada_WhenInscricaoCancelada()
+        {
+            var model = new InscricaoEventoModel
+            {
+                Status = "C",
+                FrequenciaFinal = 100m,
+                IdEventoNavigation = new Evento
+                {
+                    PossuiCertificado = 1,
+                    DataFim = DateTime.Now.AddDays(-1),
+                    FrequenciaMinimaCertificado = 75m
+                }
+            };
+
+            Assert.AreEqual(StatusCertificadoInscricao.Cancelada, model.StatusCertificado);
+        }
+
+        [TestMethod()]
         public async Task DetalhesInscricaoTest_ValidId_ReturnsViewWithInscricaoDetails()
         {
             // Act
