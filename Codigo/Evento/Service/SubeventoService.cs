@@ -45,23 +45,27 @@ namespace Service
             {
                 try
                 {
-                    if (subevento.Inscricaopessoasubeventos.Any())
+                    if (subevento.Inscricaopessoasubeventos != null && subevento.Inscricaopessoasubeventos.Any())
                     {
                         _context.Inscricaopessoasubeventos.RemoveRange(subevento.Inscricaopessoasubeventos);
                     }
 
-                    if (subevento.Participacaopessoasubeventos.Any())
+                    if (subevento.Participacaopessoasubeventos != null && subevento.Participacaopessoasubeventos.Any())
                     {
                         _context.Participacaopessoasubeventos.RemoveRange(subevento.Participacaopessoasubeventos);
                     }
 
-                    subevento.IdTipoInscricaos.Clear();
+                    subevento.IdTipoInscricaos?.Clear();
                     _context.Subeventos.Remove(subevento);
                     _context.SaveChanges();
                 }
+                catch (ServiceException)
+                {
+                    throw;
+                }
                 catch (Exception ex)
                 {
-                    throw new Exception($"Erro ao excluir o subevento: {ex.Message}", ex);
+                    throw new ServiceException("Não foi possível excluir o subevento. Verifique se existem dependências ativas.", ex);
                 }
             }
         }

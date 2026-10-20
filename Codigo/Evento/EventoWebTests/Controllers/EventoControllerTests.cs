@@ -235,6 +235,35 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
+        public void DeleteTest_Post_ServiceException_SetsErrorMessage()
+        {
+            var mockService = new Mock<IEventoService>();
+            mockService.Setup(s => s.Get(1)).Returns(GetTargetEvento());
+            mockService.Setup(s => s.Delete(1)).Throws(new ServiceException("Não foi possível excluir o evento. Verifique se existem dependências ativas."));
+
+            var ctrl = new EventoController(
+                new Mock<UserManager<UsuarioIdentity>>(new Mock<IUserStore<UsuarioIdentity>>().Object, null, null, null, null, null, null, null, null).Object,
+                mockService.Object,
+                new MapperConfiguration(cfg => { cfg.AddProfile(new EventoProfile()); cfg.AddProfile(new PessoaProfile()); }).CreateMapper(),
+                new Mock<IEstadosbrasilService>().Object,
+                new Mock<IInscricaoService>().Object,
+                new Mock<ITipoeventoService>().Object,
+                new Mock<IAreaInteresseService>().Object,
+                new Mock<IPessoaService>().Object,
+                new Mock<ISubeventoService>().Object);
+
+            ctrl.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
+            ctrl.TempData = new TempDataDictionary(ctrl.ControllerContext.HttpContext, Mock.Of<ITempDataProvider>());
+
+            var result = ctrl.Delete(1, GetTargetEventoModel());
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirect.ActionName);
+            Assert.AreEqual("Não foi possível excluir o evento. Verifique se existem dependências ativas.", ctrl.TempData["ErrorMessage"]);
+        }
+
+        [TestMethod()]
         public void DeleteTest_Get_Valid()
         {
             var result = controller.Delete(1);

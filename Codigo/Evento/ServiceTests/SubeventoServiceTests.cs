@@ -1,4 +1,4 @@
-﻿using Core;
+using Core;
 using Core.Service;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -152,6 +152,37 @@ namespace Service.Tests
             Assert.AreEqual(2, _subeventoService.GetAll().Count());
             var subevento = _subeventoService.Get(7);
             Assert.AreEqual(null, subevento);
+        }
+
+        [TestMethod()]
+        public void DeleteTest_WithDependencies_DeletesSuccessfully()
+        {
+            // Arrange: adicionar inscricao e participacao no subevento 3
+            var inscricaoSub = new Inscricaopessoasubevento
+            {
+                IdSubEvento = 3,
+                IdPessoa = 1,
+                IdPapel = 4,
+                Status = "A"
+            };
+            var participacaoSub = new Participacaopessoasubevento
+            {
+                IdSubEvento = 3,
+                IdPessoa = 1,
+                Entrada = DateTime.Now
+            };
+
+            _context.Inscricaopessoasubeventos.Add(inscricaoSub);
+            _context.Participacaopessoasubeventos.Add(participacaoSub);
+            _context.SaveChanges();
+
+            // Act
+            _subeventoService.Delete(3);
+
+            // Assert
+            Assert.IsNull(_subeventoService.Get(3));
+            Assert.IsFalse(_context.Inscricaopessoasubeventos.Any(i => i.IdSubEvento == 3));
+            Assert.IsFalse(_context.Participacaopessoasubeventos.Any(p => p.IdSubEvento == 3));
         }
 
         [TestMethod()]

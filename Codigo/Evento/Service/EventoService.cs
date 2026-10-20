@@ -46,13 +46,20 @@ namespace Service
         public void Delete(uint Id)
         {
             var evento = _context.Eventos
-                .Include(e => e.IdAreaInteresses)         
-                .Include(e => e.Inscricaopessoaeventos)   
+                .Include(e => e.IdAreaInteresses)
+                .Include(e => e.Inscricaopessoaeventos)
+                    .ThenInclude(i => i.Pagamentos)
                 .Include(e => e.Subeventos)
+                    .ThenInclude(s => s.Inscricaopessoasubeventos)
+                .Include(e => e.Subeventos)
+                    .ThenInclude(s => s.Participacaopessoasubeventos)
+                .Include(e => e.Subeventos)
+                    .ThenInclude(s => s.IdTipoInscricaos)
                 .Include(e => e.Modelocertificados)
                 .Include(e => e.Modelocrachas)
                 .Include(e => e.Participacaopessoaeventos)
                 .Include(e => e.Tipoinscricaos)
+                    .ThenInclude(t => t.IdSubEventos)
                 .FirstOrDefault(e => e.Id == Id);
 
             if (evento != null)
@@ -61,18 +68,78 @@ namespace Service
                 {
                     evento.IdAreaInteresses.Clear();
 
-                    _context.Subeventos.RemoveRange(evento.Subeventos);
-                    _context.Inscricaopessoaeventos.RemoveRange(evento.Inscricaopessoaeventos);
-                    _context.Modelocertificados.RemoveRange(evento.Modelocertificados);
-                    _context.Modelocrachas.RemoveRange(evento.Modelocrachas);
-                    _context.Participacaopessoaeventos.RemoveRange(evento.Participacaopessoaeventos);
-                    _context.Tipoinscricaos.RemoveRange(evento.Tipoinscricaos);
+                    if (evento.Subeventos != null)
+                    {
+                        foreach (var sub in evento.Subeventos)
+                        {
+                            if (sub.Inscricaopessoasubeventos != null && sub.Inscricaopessoasubeventos.Any())
+                            {
+                                _context.Inscricaopessoasubeventos.RemoveRange(sub.Inscricaopessoasubeventos);
+                            }
+
+                            if (sub.Participacaopessoasubeventos != null && sub.Participacaopessoasubeventos.Any())
+                            {
+                                _context.Participacaopessoasubeventos.RemoveRange(sub.Participacaopessoasubeventos);
+                            }
+
+                            sub.IdTipoInscricaos?.Clear();
+                        }
+                    }
+
+                    if (evento.Tipoinscricaos != null)
+                    {
+                        foreach (var tipo in evento.Tipoinscricaos)
+                        {
+                            tipo.IdSubEventos?.Clear();
+                        }
+                    }
+
+                    if (evento.Inscricaopessoaeventos != null)
+                    {
+                        foreach (var inscricao in evento.Inscricaopessoaeventos)
+                        {
+                            if (inscricao.Pagamentos != null && inscricao.Pagamentos.Any())
+                            {
+                                _context.Pagamentos.RemoveRange(inscricao.Pagamentos);
+                            }
+                        }
+                        _context.Inscricaopessoaeventos.RemoveRange(evento.Inscricaopessoaeventos);
+                    }
+
+                    if (evento.Subeventos != null && evento.Subeventos.Any())
+                    {
+                        _context.Subeventos.RemoveRange(evento.Subeventos);
+                    }
+
+                    if (evento.Tipoinscricaos != null && evento.Tipoinscricaos.Any())
+                    {
+                        _context.Tipoinscricaos.RemoveRange(evento.Tipoinscricaos);
+                    }
+
+                    if (evento.Modelocertificados != null && evento.Modelocertificados.Any())
+                    {
+                        _context.Modelocertificados.RemoveRange(evento.Modelocertificados);
+                    }
+
+                    if (evento.Modelocrachas != null && evento.Modelocrachas.Any())
+                    {
+                        _context.Modelocrachas.RemoveRange(evento.Modelocrachas);
+                    }
+
+                    if (evento.Participacaopessoaeventos != null && evento.Participacaopessoaeventos.Any())
+                    {
+                        _context.Participacaopessoaeventos.RemoveRange(evento.Participacaopessoaeventos);
+                    }
 
                     _context.Eventos.Remove(evento);
 
                     _context.SaveChanges();
                 }
-                catch (ServiceException ex)
+                catch (ServiceException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
                 {
                     throw new ServiceException("Não foi possível excluir o evento. Verifique se existem dependências ativas.", ex);
                 }
