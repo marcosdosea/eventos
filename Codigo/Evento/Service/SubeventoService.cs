@@ -136,7 +136,11 @@ namespace Service
                     ValorInscricao = subevento.ValorInscricao,
                     Status = subevento.Status,
                     DataInicioInscricao = subevento.DataInicioInscricao,
-                    DataFimInscricao = subevento.DataFimInscricao
+                    DataFimInscricao = subevento.DataFimInscricao,
+                    DataInicio = subevento.DataInicio,
+                    DataFim = subevento.DataFim,
+                    CargaHoraria = subevento.CargaHoraria,
+                    Descricao = subevento.Descricao
                 };
 
             return query.ToList();
