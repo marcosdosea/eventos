@@ -995,18 +995,19 @@ namespace EventoWeb.Controllers
             var financeiro = _eventoService.GetDashboardFinanceiro(idEvento, filtros);
             var operacao = _eventoService.GetDashboardOperacao(idEvento, filtros);
 
+            var contexto = new DashboardCsvContext
+            {
+                IdEvento = idEvento,
+                NomeEvento = evento.Nome,
+                Status = evento.Status,
+                IdSubevento = idSubevento,
+                IdTipoInscricao = idTipoInscricao,
+                DataInicio = dataInicio,
+                DataFim = dataFim
+            };
+
             if (formato == "csv")
             {
-                var contexto = new DashboardCsvContext
-                {
-                    IdEvento = idEvento,
-                    NomeEvento = evento.Nome,
-                    Status = evento.Status,
-                    IdSubevento = idSubevento,
-                    IdTipoInscricao = idTipoInscricao,
-                    DataInicio = dataInicio,
-                    DataFim = dataFim
-                };
                 var csv = DashboardCsvExporter.Gerar(contexto, financeiro, operacao);
                 var nomeArquivo = DashboardCsvExporter.NomeArquivo(evento.Nome, idEvento, contexto.GeradoEm);
                 return File(csv, "text/csv; charset=utf-8", nomeArquivo);
@@ -1028,6 +1029,7 @@ namespace EventoWeb.Controllers
                 Aba = aba,
                 Financeiro = financeiro,
                 Operacao = operacao,
+                CsvPreview = DashboardCsvExporter.GerarLinhas(contexto, financeiro, operacao),
                 Subeventos = new SelectList(subeventos, "Id", "Nome", idSubevento),
                 TiposInscricao = new SelectList(tipos, "Id", "Nome", idTipoInscricao)
             });

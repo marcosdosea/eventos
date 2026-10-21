@@ -93,6 +93,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual((uint)1, model.IdEvento);
             Assert.AreEqual(4, model.Financeiro.TotalInscritos);
             Assert.AreEqual(2, model.Operacao.Presentes);
+            Assert.IsTrue(model.CsvPreview.Count > 1);
+            Assert.AreEqual(DashboardCsvExporter.Cabecalho, string.Join(";", model.CsvPreview[0]));
         }
 
         [TestMethod()]

@@ -134,6 +134,23 @@ namespace EventoWeb.Helpers.Tests
         }
 
         [TestMethod()]
+        public void GerarLinhas_DeveRefletirAsMesmasLinhasDoCsvParaPreVisualizacao()
+        {
+            var contexto = CriarContexto();
+            var financeiro = CriarFinanceiro();
+            var operacao = CriarOperacao();
+
+            var linhas = DashboardCsvExporter.GerarLinhas(contexto, financeiro, operacao);
+            var csv = Linhas(DashboardCsvExporter.Gerar(contexto, financeiro, operacao));
+
+            Assert.AreEqual(csv.Length, linhas.Count);
+            Assert.AreEqual(DashboardCsvExporter.Cabecalho, string.Join(";", linhas[0]));
+
+            var workshop = linhas.Single(l => l[0] == "operacao" && l[1] == "subevento" && l[2] == "Workshop");
+            CollectionAssert.AreEqual(new[] { "operacao", "subevento", "Workshop", "5", "10", "", "50" }, workshop);
+        }
+
+        [TestMethod()]
         public void Gerar_DeveExportarIndicadoresCompletos()
         {
             var linhas = Linhas(DashboardCsvExporter.Gerar(CriarContexto(), CriarFinanceiro(), CriarOperacao()));
