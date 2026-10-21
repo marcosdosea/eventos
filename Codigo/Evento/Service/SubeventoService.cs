@@ -7,6 +7,8 @@ namespace Service
 {
     public class SubeventoService : ISubeventoService
     {
+        private const int PapelParticipante = 4;
+
         private readonly EventoContext _context;
 
         public SubeventoService(EventoContext context)
@@ -152,14 +154,30 @@ namespace Service
 
         public void AtualizarVagasDisponiveis(uint idSubevento, bool saveChanges = true)
         {
-            var subevento = _context.Subeventos
-                .Include(s => s.Inscricaopessoasubeventos)
-                .FirstOrDefault(s => s.Id == idSubevento);
+            var subevento = _context.Subeventos.FirstOrDefault(s => s.Id == idSubevento);
 
             if (subevento != null)
             {
-                var quantidadeParticipantes = subevento.Inscricaopessoasubeventos
-                    .Count(i => i.IdPapel == 4);
+                // Mesma regra do evento: vagas disponíveis = vagas ofertadas - participantes.
+                // A contagem soma o que já está gravado com o que está pendente no
+                // ChangeTracker, para funcionar tanto na inscrição (lote) quanto no
+                // cancelamento, que rodam dentro da mesma transação.
+                var participantesNoBanco = _context.Inscricaopessoasubeventos
+                    .Count(i => i.IdSubEvento == idSubevento && i.IdPapel == PapelParticipante);
+
+                var inscricoesPendentes = _context.ChangeTracker
+                    .Entries<Inscricaopessoasubevento>()
+                    .Count(e => e.State == EntityState.Added
+                             && e.Entity.IdSubEvento == idSubevento
+                             && e.Entity.IdPapel == PapelParticipante);
+
+                var inscricoesRemovidas = _context.ChangeTracker
+                    .Entries<Inscricaopessoasubevento>()
+                    .Count(e => e.State == EntityState.Deleted
+                             && e.Entity.IdSubEvento == idSubevento
+                             && e.Entity.IdPapel == PapelParticipante);
+
+                var quantidadeParticipantes = participantesNoBanco + inscricoesPendentes - inscricoesRemovidas;
 
                 int vagasRestantes = (int)subevento.VagasOfertadas - quantidadeParticipantes;
                 subevento.VagasDisponiveis = (uint)(vagasRestantes < 0 ? 0 : vagasRestantes);

@@ -43,6 +43,11 @@ namespace Service
             return inscricaopessoaevento.Id;
         }
 
+        /// <summary>
+        /// Adiciona as inscrições do lote ao contexto. A transação é responsabilidade
+        /// do caso de uso (ver ITransacaoService), que envolve também a atualização
+        /// de vagas e o SaveChanges final.
+        /// </summary>
         public void CreateInscricoesEmLote(IEnumerable<Inscricaopessoaevento> eventos, IEnumerable<Inscricaopessoasubevento> subeventos, bool saveChanges = true)
         {
             if (eventos != null && eventos.Any())
@@ -53,7 +58,7 @@ namespace Service
             {
                 _context.AddRange(subeventos);
             }
-            
+
             if (saveChanges && ((eventos != null && eventos.Any()) || (subeventos != null && subeventos.Any())))
             {
                 _context.SaveChanges();
@@ -155,6 +160,8 @@ namespace Service
         /// <summary>
         /// Cancela as inscrições de participante (papel 4) de uma pessoa em um evento,
         /// incluindo as inscrições nos subeventos do evento, em um único SaveChanges.
+        /// O SaveChanges é enlistado na transação aberta pelo caso de uso
+        /// (ver ITransacaoService), que também cobre a atualização de vagas.
         /// Retorna a quantidade de inscrições do evento removidas e os ids dos
         /// subeventos afetados (para atualização de vagas).
         /// </summary>
@@ -179,6 +186,14 @@ namespace Service
                 .ToList();
             var idsSubAfetados = inscricoesSub.Select(s => s.IdSubEvento).Distinct().ToList();
 
+            // Pagamentos referenciam a inscrição (FK RESTRICT): sem remover,
+            // a exclusão da inscrição falha por integridade referencial.
+            var idsInscricoes = inscricoesEvento.Select(i => i.Id).ToList();
+            var pagamentos = idsInscricoes.Count > 0
+                ? _context.Pagamentos.Where(p => idsInscricoes.Contains(p.IdInscricaoPessoaEvento)).ToList()
+                : new List<Pagamento>();
+
+            _context.Pagamentos.RemoveRange(pagamentos);
             _context.Inscricaopessoasubeventos.RemoveRange(inscricoesSub);
             _context.Inscricaopessoaeventos.RemoveRange(inscricoesEvento);
             _context.SaveChanges();
