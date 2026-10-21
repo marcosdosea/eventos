@@ -2,8 +2,18 @@ using Core;
 using System.ComponentModel.DataAnnotations;
 namespace EventoWeb.Models;
 
+public enum StatusCertificadoInscricao
+{
+    Nenhum,
+    SemCertificado,
+    EmAndamento,
+    FrequenciaInsuficiente,
+    Elegivel,
+    Cancelada
+}
+
 public class InscricaoEventoModel
-  {
+{
     public uint Id { get; set; }
 
     public uint IdPessoa { get; set; }
@@ -49,4 +59,20 @@ public class InscricaoEventoModel
     public int QuantidadeIngressos { get; set; } = 1;
 
     public virtual ICollection<Inscricaopessoasubevento> Inscricaopessoasubeventos { get; set; } = new List<Inscricaopessoasubevento>();
+
+    public StatusCertificadoInscricao StatusCertificado
+    {
+        get
+        {
+            if (Status == "C")
+                return StatusCertificadoInscricao.Cancelada;
+            if (IdEventoNavigation == null || IdEventoNavigation.PossuiCertificado == 0)
+                return StatusCertificadoInscricao.SemCertificado;
+            if ((IdEventoNavigation.DataFim.HasValue && IdEventoNavigation.DataFim.Value > DateTime.Now) || (!IdEventoNavigation.DataFim.HasValue && IdEventoNavigation.Status == "A"))
+                return StatusCertificadoInscricao.EmAndamento;
+            if (FrequenciaFinal < IdEventoNavigation.FrequenciaMinimaCertificado)
+                return StatusCertificadoInscricao.FrequenciaInsuficiente;
+            return StatusCertificadoInscricao.Elegivel;
+        }
+    }
 }

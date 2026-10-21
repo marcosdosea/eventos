@@ -2,13 +2,13 @@
 @inject ITipoeventoService TipoEventoService
 @inject IAreaInteresseService AreaInteresseService
 
-<div class="d-flex align-items-center header-search-container justify-content-center justify-content-md-start">
-    <div class="position-relative me-md-2 search-input-wrapper px-3 px-md-0">
+<div class="d-flex align-items-center header-search-container justify-content-center justify-content-md-start flex-grow-1">
+    <div class="position-relative me-md-2 search-input-wrapper px-3 px-md-0 flex-grow-1 w-100">
         <form id="headerSearchForm" action="/Home/Buscar" method="get" class="input-group w-100 mx-auto" role="search">
             <span class="input-group-text search-icon-bg" id="search-addon">
                 <i class="bi bi-search" aria-hidden="true"></i>
             </span>
-            <input id="headerSearchInput" type="search" name="TermoBusca" class="form-control custom-input search-input" placeholder="Pesquisar eventos..." aria-label="Pesquisar eventos" aria-describedby="search-addon"
+            <input id="headerSearchInput" type="search" name="TermoBusca" class="form-control custom-input search-input" placeholder="Pesquisar eventos, shows, teatros, cursos..." aria-label="Pesquisar eventos, shows, teatros, cursos entre outros" aria-describedby="search-addon"
                    value="@Context.Request.Query["TermoBusca"]" oninput="toggleClearButton()" onkeyup="toggleClearButton()" onchange="toggleClearButton()">
             
             <button type="button" class="btn position-absolute clear-search-btn" id="btnClearSearch" aria-label="Limpar pesquisa" onclick="clearSearch()">
@@ -18,6 +18,7 @@
             <input type="hidden" name="IdTipoEvento" id="hidden_IdTipoEvento" value="@Context.Request.Query["IdTipoEvento"]" />
             <input type="hidden" name="IdAreaInteresse" id="hidden_IdAreaInteresse" value="@Context.Request.Query["IdAreaInteresse"]" />
             <input type="hidden" name="Data" id="hidden_Data" value="@Context.Request.Query["Data"]" />
+            <input type="hidden" name="PossuiSubeventos" id="hidden_PossuiSubeventos" value="@Context.Request.Query["PossuiSubeventos"]" />
         </form>
     </div>
 
@@ -69,6 +70,15 @@
                 <div class="mb-3">
                     <label for="drop_Data" class="form-label small mb-1 fw-bold text-secondary">A partir de (Data)</label>
                     <input type="date" id="drop_Data" class="form-control form-control-sm" value="@Context.Request.Query["Data"]" onchange="syncFilter('Data', this.value); applyFilters();" aria-label="Selecione a data a partir de qual o evento ocorre" />
+                </div>
+
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="drop_PossuiSubeventos"
+                           @(Context.Request.Query["PossuiSubeventos"].ToString().Equals("true", StringComparison.OrdinalIgnoreCase) ? "checked" : "")
+                           onchange="syncFilter('PossuiSubeventos', this.checked ? 'true' : ''); applyFilters();" />
+                    <label class="form-check-label small fw-bold text-secondary" for="drop_PossuiSubeventos">
+                        Apenas eventos com subeventos
+                    </label>
                 </div>
 
                 <div class="d-flex justify-content-center mt-4">

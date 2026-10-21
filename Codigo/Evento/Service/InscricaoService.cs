@@ -92,7 +92,7 @@ namespace Service
 
             if (!existePapelUsuario && idPapel != 4)
             {
-                RemoveUserRole(idPessoa, idPapel, cpf).GetAwaiter().GetResult();
+                await RemoveUserRole(idPessoa, idPapel, cpf);
             }
         }
 

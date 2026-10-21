@@ -9,115 +9,22 @@
 <link rel="stylesheet" href="~/css/realizarInscricaoLote.css" asp-append-version="true" />
 
 <main class="inscricao-page">
+    @if (TempData["ParticipanteSuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["ParticipanteSuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ParticipanteMessage"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            @TempData["ParticipanteMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
     <div class="inscricao-container inscricao-container-top">
-        <div class="inscricao-grid-layout">
-            
-            <!-- Coluna da Esquerda: Informações do Evento -->
-            <div class="inscricao-left-col">
-                <article class="card-inscricao">
-                    
-            <div class="inscricao-header">
-                @if (!string.IsNullOrEmpty(Model.eventoNavigation.ImagemPortalBase64) && Model.eventoNavigation.ImagemPortalBase64.Length > 100)
-                {
-                    <img src="data:image/jpeg;base64,@Model.eventoNavigation.ImagemPortalBase64" alt="Imagem do Evento" class="inscricao-header-img" onclick="openImageModal(this.src)" style="cursor: zoom-in;" title="Clique para ampliar" />
-                }
-                else
-                {
-                    <!-- Fallback para caso o evento não tenha uma imagem salva no banco -->
-                    <img src="@Url.Content("~/Imagens_Eventos/Evento-BoraLa.png")" alt="Imagem Padrão do Evento" class="inscricao-header-img" onclick="openImageModal(this.src)" style="cursor: zoom-in;" title="Clique para ampliar" />
-                }
-                <div>
-                    <h1 class="inscricao-header-title">@Model.eventoNavigation.Nome</h1>
-                    <p class="inscricao-header-subtitle">Detalhes e Inscrição</p>
-                </div>
-            </div>
-            <h2 class="section-title">Informações do Evento</h2>
-            
-            <section class="info-grid">
-                <div class="info-item">
-                    <div class="info-icon" aria-hidden="true"><i class="bi bi-calendar3"></i></div>
-                    <div class="info-text">
-                        <h3>Data</h3>
-                        <p>@(Model.eventoNavigation.DataInicio?.ToString("dd/MM/yyyy") ?? "A definir") a @(Model.eventoNavigation.DataFim?.ToString("dd/MM/yyyy") ?? "A definir")</p>
-                    </div>
-                </div>
-                <div class="info-item">
-                    <div class="info-icon" aria-hidden="true"><i class="bi bi-geo-alt-fill"></i></div>
-                    <div class="info-text">
-                        <h3>Local</h3>
-                        @{
-                            string local = "Local não informado";
-                            if (!string.IsNullOrEmpty(Model.eventoNavigation.Cidade) && !string.IsNullOrEmpty(Model.eventoNavigation.Estado))
-                            {
-                                local = $"{Model.eventoNavigation.Cidade}, {Model.eventoNavigation.Estado}";
-                            }
-                            else if (!string.IsNullOrEmpty(Model.eventoNavigation.Estado))
-                            {
-                                local = Model.eventoNavigation.Estado;
-                            }
-                        }
-                        <p>@local</p>
-                    </div>
-                </div>
-                <div class="info-item">
-                    <div class="info-icon" aria-hidden="true"><i class="bi bi-clock-fill"></i></div>
-                    <div class="info-text">
-                        <h3>Carga Horária</h3>
-                        <p>@Model.eventoNavigation.CargaHoraria Horas @(Model.eventoNavigation.PossuiCertificado == 1 ? "(Com Certificado)" : "")</p>
-                    </div>
-                </div>
-                <div class="info-item">
-                    <div class="info-icon" aria-hidden="true"><i class="bi bi-ticket-perforated-fill"></i></div>
-                    <div class="info-text">
-                        <h3>Entrada</h3>
-                        @if (Model.eventoNavigation.InscricaoGratuita == 1 || Model.eventoNavigation.ValorInscricao == 0)
-                        {
-                            <p class="entry-free">Gratuita</p>
-                        }
-                        else
-                        {
-                            <p>R$ @Model.eventoNavigation.ValorInscricao.ToString("N2")</p>
-                        }
-                    </div>
-                </div>
-                <div class="info-item">
-                    <div class="info-icon" aria-hidden="true"><i class="bi bi-people-fill"></i></div>
-                    <div class="info-text">
-                        <h3>Vagas Disponíveis</h3>
-                        <p>@Model.eventoNavigation.VagasDisponiveis de @Model.eventoNavigation.VagasOfertadas</p>
-                    </div>
-                </div>
-            </section>
-
-            <section class="evento-sobre">
-                <h2 class="section-title mt-20">Sobre o Evento</h2>
-                <p class="evento-sobre-text">
-                    @(string.IsNullOrWhiteSpace(Model.eventoNavigation.Descricao) ? "Nenhuma descrição disponível para este evento." : Model.eventoNavigation.Descricao)
-                </p>
-            </section>
-
-
-        </article>
-            </div>
-
-            <!-- Coluna da Direita: Opções e Formulário -->
-            <div class="inscricao-right-col">
-        @if (ViewBag.JaInscrito == true)
-        {
-            <aside class="alert alert-info mt-3 card-inscricao text-center alert-inscricao" role="alert">
-                <h4 class="alert-heading text-info">Atenção!</h4>
-                <p>Você já está inscrito neste evento.</p>
-                @if (!string.IsNullOrWhiteSpace(Model.inscricaoNavigation?.NomeCracha))
-                {
-                    <p class="mb-2"><strong>Nome no crachá:</strong> @Model.inscricaoNavigation.NomeCracha</p>
-                }
-                <hr>
-                <a asp-action="DetalhesInscricao" asp-controller="Inscricao" asp-route-idEvento="@Model.eventoNavigation.Id" class="btn btn-success mt-2">Ver Inscrição / Comprovante</a>
-                <a asp-action="MinhasInscricoes" asp-controller="Inscricao" class="btn btn-primary mt-2 ms-2">Ver Minhas Inscrições</a>
-                <a href="@ViewBag.UrlVoltar" class="btn btn-outline-danger mt-2 ms-2">Voltar</a>
-            </aside>
-        }
-        else if (Model.eventoNavigation.VagasDisponiveis <= 0)
+        @if (Model.eventoNavigation.VagasDisponiveis <= 0)
         {
             <aside class="alert alert-warning mt-3 card-inscricao text-center alert-inscricao" role="alert">
                 <h4 class="alert-heading text-warning"><i class="bi bi-exclamation-triangle-fill me-2"></i>Lotação Esgotada</h4>
@@ -129,245 +36,489 @@
         else
         {
             <form method="post" asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@Model.eventoNavigation.Id">
-                <section class="card-inscricao">
-                    <h2 class="section-title">Opções de Inscrição</h2>
-                    <p class="section-description">
-                        Selecione o tipo de inscrição desejado:
-                    </p>
-                    
-                    <fieldset class="subevent-list">
-                        <legend class="visually-hidden">Escolha seu tipo de inscrição</legend>
-                        @if (Model.tipoInscricao != null && Model.tipoInscricao.Any())
-                        {
-                            foreach (var item in Model.tipoInscricao)
-                            {
-                                <div class="subevent-item">
-                                    <div class="subevent-info">
-                                        <h4>@item.Nome</h4>
-                                        <p>@item.Descricao</p>
-                                        @if(item.Valor == 0)
-                                        {
-                                            <span class="badge-custom badge-success">Gratuito</span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge-custom badge-primary">R$ @item.Valor.ToString("N2")</span>
-                                        }
-                                    </div>
-                                    <div class="quantidade-input-container">
-                                        <button type="button" class="btn-qty" onclick="changeQty('evento', @item.Id, -1)">-</button>
-                                        <input type="number" name="QuantidadeTipoInscricao_@item.Id" id="qty_evento_@item.Id" value="0" min="0" max="8" class="form-control quantidade-input-small evento-qty" data-valor="@item.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture)" readonly />
-                                        <button type="button" class="btn-qty" onclick="changeQty('evento', @item.Id, 1)">+</button>
-                                    </div>
-                                </div>
-                            }
-                        }
-                        else
-                        {
-                            if (Model.eventoNavigation.InscricaoGratuita == 1 || Model.eventoNavigation.ValorInscricao == 0)
-                            {
-                                <div class="subevent-item">
-                                    <div class="subevent-info">
-                                        <h4>Inscrição Padrão</h4>
-                                        <p>Nenhum tipo de inscrição específico configurado.</p>
-                                        <span class="badge-custom badge-success">Gratuito</span>
-                                    </div>
-                                    <div class="quantidade-input-container">
-                                        <button type="button" class="btn-qty" onclick="changeQty('evento', 0, -1)">-</button>
-                                        <input type="number" name="QuantidadeTipoInscricao_0" id="qty_evento_0" value="0" min="0" max="8" class="form-control quantidade-input-small evento-qty" data-valor="0" readonly />
-                                        <button type="button" class="btn-qty" onclick="changeQty('evento', 0, 1)">+</button>
-                                    </div>
-                                </div>
-                            }
-                            else
-                            {
-                                <div class="subevent-item mb-3">
-                                    <div class="subevent-info">
-                                        <h4>Inscrição Padrão (Inteira)</h4>
-                                        <p>Ingresso de valor integral.</p>
-                                        <span class="badge-custom badge-primary">R$ @Model.eventoNavigation.ValorInscricao.ToString("N2")</span>
-                                    </div>
-                                    <div class="quantidade-input-container">
-                                        <button type="button" class="btn-qty" onclick="changeQty('evento', 0, -1)">-</button>
-                                        <input type="number" name="QuantidadeTipoInscricao_0" id="qty_evento_0" value="0" min="0" max="8" class="form-control quantidade-input-small evento-qty" data-valor="@Model.eventoNavigation.ValorInscricao.ToString(System.Globalization.CultureInfo.InvariantCulture)" readonly />
-                                        <button type="button" class="btn-qty" onclick="changeQty('evento', 0, 1)">+</button>
-                                    </div>
-                                </div>
-                                <div class="subevent-item">
-                                    <div class="subevent-info">
-                                        <h4>Meia Entrada Padrão</h4>
-                                        <p>Ingresso com 50% de desconto.</p>
-                                        <span class="badge-custom badge-primary">R$ @((Model.eventoNavigation.ValorInscricao / 2m).ToString("N2"))</span>
-                                    </div>
-                                    <div class="quantidade-input-container">
-                                        <button type="button" class="btn-qty" onclick="changeQty('evento', @tipoMeiaEntrada, -1)">-</button>
-                                        <input type="number" name="QuantidadeTipoInscricao_@tipoMeiaEntrada" id="qty_evento_@tipoMeiaEntrada" value="0" min="0" max="8" class="form-control quantidade-input-small evento-qty" data-valor="@((Model.eventoNavigation.ValorInscricao / 2m).ToString(System.Globalization.CultureInfo.InvariantCulture))" readonly />
-                                        <button type="button" class="btn-qty" onclick="changeQty('evento', @tipoMeiaEntrada, 1)">+</button>
-                                    </div>
-                                </div>
-                            }
-                        }
-                    </fieldset>
-
-                    @if (Model.SubeventosOpcoes != null && Model.SubeventosOpcoes.Any())
-                    {
-                        <h2 class="section-title mt-40">Programação / Subeventos</h2>
-                        <p class="section-description mb-20">Caso deseje, selecione os subeventos dos quais deseja participar (opcional):</p>
-                        <div class="subeventos-wrapper">
-                            @foreach (var subOpcao in Model.SubeventosOpcoes)
-                            {
-                                var sub = subOpcao.Subevento;
-                                var subInscritos = ViewBag.SubeventosInscritos as HashSet<uint>;
-                                bool isJaInscrito = subInscritos != null && subInscritos.Contains(sub.Id);
-                                bool isEncerrado = sub.Status == "F" || sub.DataFimInscricao < DateTime.Now;
-                                bool isEmCadastro = sub.Status == "C";
-                                bool isEmBreve = sub.DataInicioInscricao > DateTime.Now;
-                                bool isEsgotado = sub.VagasDisponiveis <= 0;
-                                bool isDisabled = isJaInscrito || isEncerrado || isEmCadastro || isEmBreve || isEsgotado;
-                                
-                                <label class="subevento-container @(isDisabled ? "opacity-50" : "")">
-                                    <div class="subevento-header">
-                                        <div>
-                                            <h4>
-                                                @sub.Nome
-                                                @if (isJaInscrito)
-                                                {
-                                                    <span class="badge bg-success ms-2" style="font-size: 0.6em; vertical-align: middle;"><i class="bi bi-check-circle me-1"></i>Inscrito</span>
-                                                }
-                                                else if (isEncerrado)
-                                                {
-                                                    <span class="badge bg-secondary ms-2" style="font-size: 0.6em; vertical-align: middle;">Encerrado</span>
-                                                }
-                                                else if (isEmCadastro)
-                                                {
-                                                    <span class="badge bg-info text-dark ms-2" style="font-size: 0.6em; vertical-align: middle;">Em Cadastro</span>
-                                                }
-                                                else if (isEmBreve)
-                                                {
-                                                    <span class="badge bg-warning text-dark ms-2" style="font-size: 0.6em; vertical-align: middle;">Em Breve</span>
-                                                }
-                                                else if (isEsgotado)
-                                                {
-                                                    <span class="badge bg-danger ms-2" style="font-size: 0.6em; vertical-align: middle;">Esgotado</span>
-                                                }
-                                            </h4>
-                                            <p>
-                                                <i class="bi bi-tag-fill me-1"></i> @sub.NomeTipoEvento | 
-                                                <i class="bi bi-person-check-fill me-1"></i> Disponíveis: @sub.VagasDisponiveis de @sub.VagasOfertadas
-                                            </p>
-                                        </div>
-                                        <div class="subevento-checkbox-wrapper">
-                                            <input type="checkbox" name="SelectedSubeventos" value="@sub.Id" class="subevento-checkbox" onchange="toggleSubeventoSelect(this, @sub.Id)" @(isJaInscrito ? "checked disabled" : (isDisabled ? "disabled" : "")) />
-                                        </div>
-                                    </div>
-                                    <div class="subevento-tipo-wrapper" id="wrapper-tipo-@sub.Id">
-                                        <label>Selecione as Quantidades para este Subevento:</label>
-                                        <div class="subevent-list mt-2">
-                                            @if (subOpcao.TiposInscricao != null && subOpcao.TiposInscricao.Any())
-                                            {
-                                                @foreach(var tipo in subOpcao.TiposInscricao)
-                                                {
-                                                    <div class="subevent-item" style="padding: 10px;">
-                                                        <div class="subevent-info">
-                                                            <p style="margin:0; font-weight: 600;">@tipo.Nome - @(tipo.Valor == 0 ? "Gratuito" : $"R$ {tipo.Valor.ToString("N2")}")</p>
-                                                        </div>
-                                                        <div class="quantidade-input-container">
-                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', @tipo.Id, -1)" disabled id="btn_minus_subevento_@(sub.Id)_@tipo.Id">-</button>
-                                                            <input type="number" name="QuantidadeTipoInscricaoSubevento_@(sub.Id)_@tipo.Id" id="qty_subevento_@(sub.Id)_@tipo.Id" value="0" min="0" max="8" class="form-control quantidade-input-small subevento-qty-@sub.Id" data-valor="@tipo.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture)" disabled readonly />
-                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', @tipo.Id, 1)" disabled id="btn_plus_subevento_@(sub.Id)_@tipo.Id">+</button>
-                                                        </div>
-                                                    </div>
-                                                }
-                                            }
-                                            else
-                                            {
-                                                if (sub.InscricaoGratuita == 1 || sub.ValorInscricao == 0)
-                                                {
-                                                    <div class="subevent-item" style="padding: 10px;">
-                                                        <div class="subevent-info">
-                                                            <p style="margin:0; font-weight: 600;">Inscrição Padrão (Gratuito)</p>
-                                                        </div>
-                                                        <div class="quantidade-input-container">
-                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', 0, -1)" disabled id="btn_minus_subevento_@(sub.Id)_0">-</button>
-                                                            <input type="number" name="QuantidadeTipoInscricaoSubevento_@(sub.Id)_0" id="qty_subevento_@(sub.Id)_0" value="0" min="0" max="8" class="form-control quantidade-input-small subevento-qty-@sub.Id" data-valor="0" disabled readonly />
-                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', 0, 1)" disabled id="btn_plus_subevento_@(sub.Id)_0">+</button>
-                                                        </div>
-                                                    </div>
-                                                }
-                                                else
-                                                {
-                                                    <div class="subevent-item mb-2" style="padding: 10px;">
-                                                        <div class="subevent-info">
-                                                            <p style="margin:0; font-weight: 600;">Inscrição Padrão (Inteira) - R$ @sub.ValorInscricao.ToString("N2")</p>
-                                                        </div>
-                                                        <div class="quantidade-input-container">
-                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', 0, -1)" disabled id="btn_minus_subevento_@(sub.Id)_0">-</button>
-                                                            <input type="number" name="QuantidadeTipoInscricaoSubevento_@(sub.Id)_0" id="qty_subevento_@(sub.Id)_0" value="0" min="0" max="8" class="form-control quantidade-input-small subevento-qty-@sub.Id" data-valor="@sub.ValorInscricao.ToString(System.Globalization.CultureInfo.InvariantCulture)" disabled readonly />
-                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', 0, 1)" disabled id="btn_plus_subevento_@(sub.Id)_0">+</button>
-                                                        </div>
-                                                    </div>
-                                                    <div class="subevent-item" style="padding: 10px;">
-                                                        <div class="subevent-info">
-                                                            <p style="margin:0; font-weight: 600;">Meia Entrada Padrão - R$ @((sub.ValorInscricao / 2m).ToString("N2"))</p>
-                                                        </div>
-                                                        <div class="quantidade-input-container">
-                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', @tipoMeiaEntrada, -1)" disabled id="btn_minus_subevento_@(sub.Id)_@tipoMeiaEntrada">-</button>
-                                                            <input type="number" name="QuantidadeTipoInscricaoSubevento_@(sub.Id)_@tipoMeiaEntrada" id="qty_subevento_@(sub.Id)_@tipoMeiaEntrada" value="0" min="0" max="8" class="form-control quantidade-input-small subevento-qty-@sub.Id" data-valor="@((sub.ValorInscricao / 2m).ToString(System.Globalization.CultureInfo.InvariantCulture))" disabled readonly />
-                                                            <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', @tipoMeiaEntrada, 1)" disabled id="btn_plus_subevento_@(sub.Id)_@tipoMeiaEntrada">+</button>
-                                                        </div>
-                                                    </div>
-                                                }
-                                            }
-                                        </div>
-                                    </div>
-                                </label>
-                            }
-                        </div>
-                    }
-
-                    <div class="mt-4 mb-3">
-                        <label for="NomeCracha" class="form-label fw-bold">Nome no Crachá</label>
-                        <input type="text" id="NomeCracha" name="NomeCracha" value="@Model.inscricaoNavigation?.NomeCracha" class="form-control" maxlength="20" placeholder="Como deseja ser chamado no crachá" />
-                        <small class="form-text text-muted">Informe o nome a ser impresso no crachá do participante (máximo de 20 caracteres).</small>
-                    </div>
-
-                    <footer class="summary">
-                        <div>
-                            <p class="summary-title">Valor Total Estimado</p>
-                            <div class="price-total" aria-live="polite">
-                                @if (Model.eventoNavigation.InscricaoGratuita == 1 || Model.eventoNavigation.ValorInscricao == 0)
+                <div class="inscricao-grid-layout">
+                    <!-- Coluna da Esquerda: Informações do Evento -->
+                    <div class="inscricao-left-col">
+                        <article class="card-inscricao">
+                            <div class="inscricao-header">
+                                @if (!string.IsNullOrEmpty(Model.eventoNavigation.ImagemPortalBase64) && Model.eventoNavigation.ImagemPortalBase64.Length > 100)
                                 {
-                                    @:Gratuito
+                                    <img src="data:image/jpeg;base64,@Model.eventoNavigation.ImagemPortalBase64" alt="Imagem do Evento" class="inscricao-header-img" onclick="openImageModal(this.src)" style="cursor: zoom-in;" title="Clique para ampliar" />
                                 }
                                 else
                                 {
-                                    @:R$ @Model.eventoNavigation.ValorInscricao.ToString("N2")
+                                    <img src="@Url.Content("~/Imagens_Eventos/Evento-BoraLa.png")" alt="Imagem Padrão do Evento" class="inscricao-header-img" onclick="openImageModal(this.src)" style="cursor: zoom-in;" title="Clique para ampliar" />
                                 }
+                                <div>
+                                    <h1 class="inscricao-header-title">@Model.eventoNavigation.Nome</h1>
+                                    <p class="inscricao-header-subtitle">Detalhes e Inscrição</p>
+                                </div>
+                            </div>
+                            <h2 class="section-title">Informações do Evento</h2>
+                            
+                            <section class="info-grid">
+                                <div class="info-item">
+                                    <div class="info-icon" aria-hidden="true"><i class="bi bi-calendar3"></i></div>
+                                    <div class="info-text">
+                                        <h3>Data</h3>
+                                        <p>@(Model.eventoNavigation.DataInicio?.ToString("dd/MM/yyyy") ?? "A definir") a @(Model.eventoNavigation.DataFim?.ToString("dd/MM/yyyy") ?? "A definir")</p>
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-icon" aria-hidden="true"><i class="bi bi-geo-alt-fill"></i></div>
+                                    <div class="info-text">
+                                        <h3>Local</h3>
+                                        @{
+                                            string local = "Local não informado";
+                                            if (!string.IsNullOrEmpty(Model.eventoNavigation.Cidade) && !string.IsNullOrEmpty(Model.eventoNavigation.Estado))
+                                            {
+                                                local = $"{Model.eventoNavigation.Cidade}, {Model.eventoNavigation.Estado}";
+                                            }
+                                            else if (!string.IsNullOrEmpty(Model.eventoNavigation.Estado))
+                                            {
+                                                local = Model.eventoNavigation.Estado;
+                                            }
+                                        }
+                                        <p>@local</p>
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-icon" aria-hidden="true"><i class="bi bi-clock-fill"></i></div>
+                                    <div class="info-text">
+                                        <h3>Carga Horária</h3>
+                                        <p>@Model.eventoNavigation.CargaHoraria Horas @(Model.eventoNavigation.PossuiCertificado == 1 ? "(Com Certificado)" : "")</p>
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-icon" aria-hidden="true"><i class="bi bi-ticket-perforated-fill"></i></div>
+                                    <div class="info-text">
+                                        <h3>Entrada</h3>
+                                        @if (Model.eventoNavigation.InscricaoGratuita == 1 || Model.eventoNavigation.ValorInscricao == 0)
+                                        {
+                                            <p class="entry-free">Gratuita</p>
+                                        }
+                                        else
+                                        {
+                                            <p>R$ @Model.eventoNavigation.ValorInscricao.ToString("N2")</p>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-icon" aria-hidden="true"><i class="bi bi-people-fill"></i></div>
+                                    <div class="info-text">
+                                        <h3>Vagas Disponíveis</h3>
+                                        <p>@Model.eventoNavigation.VagasDisponiveis de @Model.eventoNavigation.VagasOfertadas</p>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <section class="evento-sobre">
+                                <h2 class="section-title mt-20">Sobre o Evento</h2>
+                                <p class="evento-sobre-text">
+                                    @(string.IsNullOrWhiteSpace(Model.eventoNavigation.Descricao) ? "Nenhuma descrição disponível para este evento." : Model.eventoNavigation.Descricao)
+                                </p>
+                            </section>
+                        </article>
+                    </div>
+
+                    <!-- Coluna da Direita: Opções e Formulário -->
+                    <div class="inscricao-right-col">
+                        <section class="card-inscricao">
+                            @if (ViewBag.JaInscritoEventoPrincipal == true)
+                            {
+                                <div class="alert alert-info d-flex align-items-center mb-3" role="alert">
+                                    <i class="bi bi-info-circle-fill fs-4 me-3 text-primary"></i>
+                                    <div>
+                                        <strong>Você já possui inscrição no Evento Principal!</strong>
+                                        <p class="mb-0">Caso deseje mais ingressos para o evento principal ou para os subeventos, selecione a quantidade desejada abaixo.</p>
+                                    </div>
+                                </div>
+                                <input type="hidden" name="JaInscritoNoPrincipal" id="JaInscritoNoPrincipal" value="true" />
+                            }
+
+                            <h2 class="section-title">Opções de Inscrição</h2>
+                            <p class="section-description">
+                                @(ViewBag.JaInscritoEventoPrincipal == true ? "Selecione ingressos adicionais para o evento principal ou deixe em 0 se desejar apenas subeventos:" : "Selecione o tipo de inscrição desejado:")
+                            </p>
+                            
+                            <fieldset class="subevent-list">
+                                <legend class="visually-hidden">Escolha seu tipo de inscrição</legend>
+                                @if (Model.tipoInscricao != null && Model.tipoInscricao.Any())
+                                {
+                                    foreach (var item in Model.tipoInscricao)
+                                    {
+                                        <div class="subevent-item">
+                                            <div class="subevent-info">
+                                                <h4>@item.Nome</h4>
+                                                <p>@item.Descricao</p>
+                                                @if(item.Valor == 0)
+                                                {
+                                                    <span class="badge-custom badge-success">Gratuito</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge-custom badge-primary">R$ @item.Valor.ToString("N2")</span>
+                                                }
+                                            </div>
+                                            <div class="quantidade-input-container">
+                                                <button type="button" class="btn-qty" onclick="changeQty('evento', @item.Id, -1)">-</button>
+                                                <input type="number" name="QuantidadeTipoInscricao_@item.Id" id="qty_evento_@item.Id" value="0" min="0" max="8" class="form-control quantidade-input-small evento-qty" data-valor="@item.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture)" readonly />
+                                                <button type="button" class="btn-qty" onclick="changeQty('evento', @item.Id, 1)">+</button>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    if (Model.eventoNavigation.InscricaoGratuita == 1 || Model.eventoNavigation.ValorInscricao == 0)
+                                    {
+                                        <div class="subevent-item">
+                                            <div class="subevent-info">
+                                                <h4>Inscrição Padrão</h4>
+                                                <p>Nenhum tipo de inscrição específico configurado.</p>
+                                                <span class="badge-custom badge-success">Gratuito</span>
+                                            </div>
+                                            <div class="quantidade-input-container">
+                                                <button type="button" class="btn-qty" onclick="changeQty('evento', 0, -1)">-</button>
+                                                <input type="number" name="QuantidadeTipoInscricao_0" id="qty_evento_0" value="0" min="0" max="8" class="form-control quantidade-input-small evento-qty" data-valor="0" readonly />
+                                                <button type="button" class="btn-qty" onclick="changeQty('evento', 0, 1)">+</button>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="subevent-item mb-3">
+                                            <div class="subevent-info">
+                                                <h4>Inscrição Padrão (Inteira)</h4>
+                                                <p>Ingresso de valor integral.</p>
+                                                <span class="badge-custom badge-primary">R$ @Model.eventoNavigation.ValorInscricao.ToString("N2")</span>
+                                            </div>
+                                            <div class="quantidade-input-container">
+                                                <button type="button" class="btn-qty" onclick="changeQty('evento', 0, -1)">-</button>
+                                                <input type="number" name="QuantidadeTipoInscricao_0" id="qty_evento_0" value="0" min="0" max="8" class="form-control quantidade-input-small evento-qty" data-valor="@Model.eventoNavigation.ValorInscricao.ToString(System.Globalization.CultureInfo.InvariantCulture)" readonly />
+                                                <button type="button" class="btn-qty" onclick="changeQty('evento', 0, 1)">+</button>
+                                            </div>
+                                        </div>
+                                        <div class="subevent-item">
+                                            <div class="subevent-info">
+                                                <h4>Meia Entrada Padrão</h4>
+                                                <p>Ingresso com 50% de desconto.</p>
+                                                <span class="badge-custom badge-primary">R$ @((Model.eventoNavigation.ValorInscricao / 2m).ToString("N2"))</span>
+                                            </div>
+                                            <div class="quantidade-input-container">
+                                                <button type="button" class="btn-qty" onclick="changeQty('evento', @tipoMeiaEntrada, -1)">-</button>
+                                                <input type="number" name="QuantidadeTipoInscricao_@tipoMeiaEntrada" id="qty_evento_@tipoMeiaEntrada" value="0" min="0" max="8" class="form-control quantidade-input-small evento-qty" data-valor="@((Model.eventoNavigation.ValorInscricao / 2m).ToString(System.Globalization.CultureInfo.InvariantCulture))" readonly />
+                                                <button type="button" class="btn-qty" onclick="changeQty('evento', @tipoMeiaEntrada, 1)">+</button>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </fieldset>
+
+                            <div class="mt-4 mb-3">
+                                <label for="NomeCracha" class="form-label fw-bold">Nome no Crachá</label>
+                                <input type="text" id="NomeCracha" name="NomeCracha" value="@Model.inscricaoNavigation?.NomeCracha" class="form-control" maxlength="20" placeholder="Como deseja ser chamado no crachá" />
+                                <small class="form-text text-muted">Informe o nome a ser impresso no crachá do participante (máximo de 20 caracteres).</small>
+                            </div>
+
+                            <footer class="summary">
+                                <div>
+                                    <p class="summary-title">Valor Total Estimado</p>
+                                    <div class="price-total" aria-live="polite">
+                                        @if (Model.eventoNavigation.InscricaoGratuita == 1 || Model.eventoNavigation.ValorInscricao == 0)
+                                        {
+                                            @:Gratuito
+                                        }
+                                        else
+                                        {
+                                            @:R$ @Model.eventoNavigation.ValorInscricao.ToString("N2")
+                                        }
+                                    </div>
+                                </div>
+                                <div class="actions-wrapper">
+                                    <a href="@ViewBag.UrlVoltar" class="btn-voltar">Voltar</a>
+                                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                                    {
+                                        <button type="submit" class="btn-submit">
+                                            @(ViewBag.JaInscritoEventoPrincipal == true ? "Confirmar Inscrição / Adicionar Ingressos" : "Confirmar Inscrição")
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn-submit btn-login" onclick="window.location.href='/Identity/Account/Login?ReturnUrl=@Url.Action("RealizarInscricao", "Inscricao", new { idEvento = Model.eventoNavigation.Id })'">Faça Login para Confirmar</button>
+                                    }
+                                </div>
+                            </footer>
+                        </section>
+                    </div>
+                </div>
+
+                <!-- Seção de Subeventos em Largura Total Abaixo das Colunas -->
+                @if (Model.SubeventosOpcoes != null && Model.SubeventosOpcoes.Any())
+                {
+                    <section class="card-inscricao mt-4">
+                        <div class="subeventos-header-wrapper mb-3">
+                            <span class="text-uppercase fw-bold text-muted small" style="letter-spacing: 0.5px;">Subevento • Atividades Opcionais</span>
+                            <h2 class="section-title mb-1" style="display: block; width: fit-content;">Programação & Atividades Científicas</h2>
+                            <p class="section-description mb-0">Selecione os subeventos dos quais deseja participar e escolha a quantidade de ingressos para cada um:</p>
+                        </div>
+
+                        <div class="subeventos-table-card">
+                            <div class="table-responsive">
+                                <table class="subeventos-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="col-sel" style="width: 5%; text-align: center;">SEL.</th>
+                                            <th style="width: 28%; text-align: left;">SUBEVENTO / ATIVIDADE</th>
+                                            <th style="width: 16%; text-align: center;">DATA & CARGA</th>
+                                            <th style="width: 12%; text-align: center;">VAGAS</th>
+                                            <th style="width: 29%; text-align: center;">TIPO & QUANTIDADE</th>
+                                            <th style="width: 10%; text-align: center;">AÇÕES</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var subOpcao in Model.SubeventosOpcoes)
+                                        {
+                                            var sub = subOpcao.Subevento;
+                                            var subInscritos = ViewBag.SubeventosInscritos as HashSet<uint>;
+                                            bool isJaInscrito = subInscritos != null && subInscritos.Contains(sub.Id);
+                                            bool subeventoJaPassou = (sub.DataFim.HasValue && sub.DataFim.Value < DateTime.Now) || (!sub.DataFim.HasValue && sub.DataInicio.HasValue && sub.DataInicio.Value < DateTime.Now);
+                                            bool isEncerrado = sub.Status == "F" || sub.Status == "I" || (sub.DataFimInscricao != DateTime.MinValue && sub.DataFimInscricao < DateTime.Now) || subeventoJaPassou;
+                                            bool isEmCadastro = sub.Status == "C";
+                                            bool isEmBreve = (sub.DataInicioInscricao != DateTime.MinValue && sub.DataInicioInscricao > DateTime.Now);
+                                            bool isEsgotado = sub.VagasDisponiveis <= 0;
+                                            bool isInscricaoAberta = (sub.Status == "A")
+                                                && (sub.DataInicioInscricao <= DateTime.Now)
+                                                && (sub.DataFimInscricao >= DateTime.Now)
+                                                && !subeventoJaPassou
+                                                && (sub.VagasDisponiveis > 0);
+                                            bool isDisabled = !isInscricaoAberta;
+                                            var tipos = subOpcao.TiposInscricao?.ToList() ?? new List<Core.DTO.TipoInscricaoDTO>();
+
+                                            <tr id="row-subevento-@sub.Id" class="@(isDisabled ? "subevento-disabled opacity-50" : "")">
+                                                <td class="col-sel">
+                                                    <input type="checkbox" name="SelectedSubeventos" value="@sub.Id" class="subevento-checkbox" onchange="toggleSubeventoSelect(this, @sub.Id)" @(isDisabled ? "disabled" : "") aria-label="Selecionar @sub.Nome" />
+                                                </td>
+                                                <td>
+                                                    <div class="subevento-titulo">@sub.Nome</div>
+                                                    <div class="subevento-subtitulo">
+                                                        <i class="bi bi-tag-fill text-muted"></i>
+                                                        <span>@sub.NomeTipoEvento</span>
+                                                        @if (isJaInscrito)
+                                                        {
+                                                            <span class="badge bg-success ms-1"><i class="bi bi-check-circle me-1"></i>Inscrito</span>
+                                                        }
+                                                        else if (isEncerrado)
+                                                        {
+                                                            <span class="badge bg-secondary ms-1">Encerrado</span>
+                                                        }
+                                                        else if (isEmBreve || isEmCadastro)
+                                                        {
+                                                            <span class="badge bg-warning text-dark ms-1">Em Breve</span>
+                                                        }
+                                                        else if (isEsgotado)
+                                                        {
+                                                            <span class="badge bg-danger ms-1">Esgotado</span>
+                                                        }
+                                                        else if (!isInscricaoAberta)
+                                                        {
+                                                            <span class="badge bg-secondary ms-1">Indisponível</span>
+                                                        }
+                                                    </div>
+                                                </td>
+                                                <td style="text-align: center;">
+                                                    <div class="fw-semibold text-dark" style="font-size: 0.84rem;">
+                                                        @(sub.DataInicio.HasValue ? sub.DataInicio.Value.ToString("dd/MM/yyyy • HH:mm") : "A definir")
+                                                    </div>
+                                                    <div class="text-muted small">
+                                                        Carga: @(sub.CargaHoraria > 0 ? $"{sub.CargaHoraria}h" : "Livre")
+                                                    </div>
+                                                </td>
+                                                <td style="text-align: center;">
+                                                    @if (isEncerrado)
+                                                    {
+                                                        <span class="badge-vagas badge-vagas-esgotado">
+                                                            <i class="bi bi-x-circle-fill"></i> Encerrado
+                                                        </span>
+                                                    }
+                                                    else if (isEmBreve || isEmCadastro)
+                                                    {
+                                                        <span class="badge-vagas badge-vagas-em-breve">
+                                                            <i class="bi bi-clock-history"></i> Em Breve
+                                                        </span>
+                                                    }
+                                                    else if (isEsgotado)
+                                                    {
+                                                        <span class="badge-vagas badge-vagas-esgotado">
+                                                            <i class="bi bi-x-circle-fill"></i> Esgotado
+                                                        </span>
+                                                    }
+                                                    else if (!isInscricaoAberta)
+                                                    {
+                                                        <span class="badge-vagas badge-vagas-esgotado">
+                                                            <i class="bi bi-slash-circle"></i> Indisponível
+                                                        </span>
+                                                    }
+                                                    else if (sub.VagasDisponiveis > 10)
+                                                    {
+                                                        <span class="badge-vagas badge-vagas-alta">
+                                                            <i class="bi bi-check-circle-fill"></i> @sub.VagasDisponiveis vagas
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge-vagas badge-vagas-baixa">
+                                                            <i class="bi bi-exclamation-triangle-fill"></i> @sub.VagasDisponiveis vagas
+                                                        </span>
+                                                    }
+                                                    @if (isJaInscrito)
+                                                    {
+                                                        <div class="mt-1">
+                                                            <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.72rem;">
+                                                                <i class="bi bi-check-circle-fill me-1"></i>Já possui ingresso
+                                                            </span>
+                                                        </div>
+                                                    }
+                                                </td>
+                                                <td style="text-align: center;">
+                                                    @if (!isInscricaoAberta)
+                                                    {
+                                                        <span class="text-muted small">Inscrições indisponíveis</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <div id="preview-tipo-@sub.Id" class="subevento-tipo-preview text-center">
+                                                            @if (tipos.Any())
+                                                            {
+                                                                if (tipos.Count > 1)
+                                                                 {
+                                                                    <span class="badge bg-light text-dark border">
+                                                                        <i class="bi bi-tags me-1 text-primary"></i>@(tipos.Count) tipos a partir de @(tipos.Min(t => t.Valor) == 0 ? "Gratuito" : $"R$ {tipos.Min(t => t.Valor):N2}")
+                                                                    </span>
+                                                                }
+                                                                else
+                                                                {
+                                                                    var unico = tipos.First();
+                                                                    <span class="badge bg-light text-dark border">
+                                                                        @unico.Nome • @(unico.Valor == 0 ? "Gratuito" : $"R$ {unico.Valor:N2}")
+                                                                    </span>
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                var val = (sub.InscricaoGratuita == 1 || sub.ValorInscricao == 0) ? 0m : sub.ValorInscricao;
+                                                                <span class="badge bg-light text-dark border">
+                                                                    @(val == 0 ? "Gratuito" : $"R$ {val:N2}")
+                                                                </span>
+                                                            }
+                                                        </div>
+
+                                                        <div id="wrapper-tipo-@sub.Id" class="subevento-tipo-wrapper text-center" style="display: none;">
+                                                        @if (tipos.Any())
+                                                        {
+                                                            @foreach (var tipo in tipos)
+                                                            {
+                                                                <div class="lote-tipo-row">
+                                                                    <div class="lote-tipo-nome">
+                                                                        @tipo.Nome <small class="text-muted">(@(tipo.Valor == 0 ? "Gratuito" : $"R$ {tipo.Valor:N2}"))</small>
+                                                                    </div>
+                                                                    <div class="lote-qty-container">
+                                                                        <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', @tipo.Id, -1)" disabled id="btn_minus_subevento_@(sub.Id)_@tipo.Id">-</button>
+                                                                        <input type="number" name="QuantidadeTipoInscricaoSubevento_@(sub.Id)_@tipo.Id" id="qty_subevento_@(sub.Id)_@tipo.Id" value="0" min="0" max="8" class="form-control quantidade-input-small subevento-qty-@sub.Id" data-valor="@tipo.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture)" disabled readonly />
+                                                                        <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', @tipo.Id, 1)" disabled id="btn_plus_subevento_@(sub.Id)_@tipo.Id">+</button>
+                                                                    </div>
+                                                                </div>
+                                                            }
+                                                        }
+                                                        else
+                                                        {
+                                                            if (sub.InscricaoGratuita == 1 || sub.ValorInscricao == 0)
+                                                            {
+                                                                <div class="lote-tipo-row">
+                                                                    <div class="lote-tipo-nome">Gratuito</div>
+                                                                    <div class="lote-qty-container">
+                                                                        <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', 0, -1)" disabled id="btn_minus_subevento_@(sub.Id)_0">-</button>
+                                                                        <input type="number" name="QuantidadeTipoInscricaoSubevento_@(sub.Id)_0" id="qty_subevento_@(sub.Id)_0" value="0" min="0" max="8" class="form-control quantidade-input-small subevento-qty-@sub.Id" data-valor="0" disabled readonly />
+                                                                        <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', 0, 1)" disabled id="btn_plus_subevento_@(sub.Id)_0">+</button>
+                                                                    </div>
+                                                                </div>
+                                                            }
+                                                            else
+                                                            {
+                                                                <div class="lote-tipo-row">
+                                                                    <div class="lote-tipo-nome">Inteira <small class="text-muted">(R$ @sub.ValorInscricao.ToString("N2"))</small></div>
+                                                                    <div class="lote-qty-container">
+                                                                        <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', 0, -1)" disabled id="btn_minus_subevento_@(sub.Id)_0">-</button>
+                                                                        <input type="number" name="QuantidadeTipoInscricaoSubevento_@(sub.Id)_0" id="qty_subevento_@(sub.Id)_0" value="0" min="0" max="8" class="form-control quantidade-input-small subevento-qty-@sub.Id" data-valor="@sub.ValorInscricao.ToString(System.Globalization.CultureInfo.InvariantCulture)" disabled readonly />
+                                                                        <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', 0, 1)" disabled id="btn_plus_subevento_@(sub.Id)_0">+</button>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="lote-tipo-row">
+                                                                    <div class="lote-tipo-nome">Meia <small class="text-muted">(R$ @((sub.ValorInscricao / 2m).ToString("N2")))</small></div>
+                                                                    <div class="lote-qty-container">
+                                                                        <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', @tipoMeiaEntrada, -1)" disabled id="btn_minus_subevento_@(sub.Id)_@tipoMeiaEntrada">-</button>
+                                                                        <input type="number" name="QuantidadeTipoInscricaoSubevento_@(sub.Id)_@tipoMeiaEntrada" id="qty_subevento_@(sub.Id)_@tipoMeiaEntrada" value="0" min="0" max="8" class="form-control quantidade-input-small subevento-qty-@sub.Id" data-valor="@((sub.ValorInscricao / 2m).ToString(System.Globalization.CultureInfo.InvariantCulture))" disabled readonly />
+                                                                        <button type="button" class="btn-qty" onclick="changeQty('subevento_@sub.Id', @tipoMeiaEntrada, 1)" disabled id="btn_plus_subevento_@(sub.Id)_@tipoMeiaEntrada">+</button>
+                                                                    </div>
+                                                                </div>
+                                                            }
+                                                        }
+                                                    </div>
+                                                    }
+                                                </td>
+                                                <td style="text-align: center;">
+                                                    <button type="button" class="btn-ver-ementa mx-auto"
+                                                            data-nome="@sub.Nome"
+                                                            data-descricao="@(string.IsNullOrWhiteSpace(sub.Descricao) ? "Nenhuma ementa detalhada cadastrada para este subevento." : sub.Descricao)"
+                                                            data-tipo="@sub.NomeTipoEvento"
+                                                            data-carga="@(sub.CargaHoraria > 0 ? $"{sub.CargaHoraria} Horas" : "Não informada")"
+                                                            onclick="abrirEmentaModalFromButton(this)">
+                                                        <i class="bi bi-eye"></i>
+                                                        <span>Ementa</span>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-                        <div class="actions-wrapper">
-                            <a href="@ViewBag.UrlVoltar" class="btn-voltar">Voltar</a>
-                            @if (User.Identity != null && User.Identity.IsAuthenticated)
-                            {
-                                <button type="submit" class="btn-submit">Confirmar Inscrição</button>
-                            }
-                            else
-                            {
-                                <button type="button" class="btn-submit btn-login" onclick="window.location.href='/Identity/Account/Login?ReturnUrl=@Url.Action("RealizarInscricao", "Inscricao", new { idEvento = Model.eventoNavigation.Id })'">Faça Login para Confirmar</button>
-                            }
-                        </div>
-                    </footer>
-                </section>
+                    </section>
+                }
             </form>
         }
-            </div>
-        </div>
     </div>
 
     <!-- Modal de Imagem -->
     <div id="imageModal" class="image-modal" onclick="closeImageModal()">
         <span class="image-modal-close" onclick="closeImageModal()">&times;</span>
         <img class="image-modal-content" id="expandedImg">
+    </div>
+
+    <!-- Modal de Ementa do Subevento -->
+    <div id="ementaModalOverlay" class="modal-ementa-overlay" onclick="fecharEmentaModal(event)">
+        <div class="modal-ementa-card" onclick="event.stopPropagation()">
+            <div class="modal-ementa-header">
+                <h5 class="modal-ementa-title" id="ementaModalTitulo">Ementa do Subevento</h5>
+                <button type="button" class="modal-ementa-close" onclick="fecharEmentaModal()">&times;</button>
+            </div>
+            <div class="modal-ementa-body">
+                <div class="modal-ementa-meta">
+                    <span class="modal-ementa-meta-item">
+                        <i class="bi bi-tag-fill blue-normal"></i>
+                        <span id="ementaModalTipo"></span>
+                    </span>
+                    <span class="modal-ementa-meta-item">
+                        <i class="bi bi-clock-fill blue-normal"></i>
+                        <span id="ementaModalCarga"></span>
+                    </span>
+                </div>
+                <div id="ementaModalDescricao" style="white-space: pre-line;"></div>
+            </div>
+            <div class="modal-ementa-footer">
+                <button type="button" class="btn btn-sm btn-outline-secondary px-3 rounded-pill" onclick="fecharEmentaModal()">Fechar</button>
+            </div>
+        </div>
     </div>
 </main>
 

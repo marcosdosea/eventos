@@ -205,7 +205,7 @@ body {
 }
 
 .no-padding {
-    padding: 0 !important;
+    padding: 0;
 }
 /* Custom styles for LayoutGestor Alert */
 .alert-dismissible-custom {

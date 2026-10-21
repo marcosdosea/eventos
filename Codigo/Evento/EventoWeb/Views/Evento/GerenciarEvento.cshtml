@@ -52,6 +52,7 @@
                 cardsList.Add(new { Nome = "Frequência", Action = "Frequencia", Controller = "Participacaopessoaevento", Icon = "Inscricoes.png", Parametros = (object)new { idEvento = Model.Evento.Id } });
                 cardsList.Add(new { Nome = "Inscrições", Action = "CreateParticipante", Controller = "Evento", Icon = "Inscricoes.png", Parametros = (object)new { idEvento = Model.Evento.Id } });
                 cardsList.Add(new { Nome = "Colaboradores", Action = "CreateColaborador", Controller = "Evento", Icon = "Colaboradores.png", Parametros = (object)new { idEvento = Model.Evento.Id } });
+                cardsList.Add(new { Nome = "Dashboard", Action = "Dashboard", Controller = "Evento", Icon = "Evento.png", Parametros = (object)new { idEvento = Model.Evento.Id } });
                 cardsList.Add(new { Nome = "Evento", Action = "GestorEditarEvento", Controller = "Evento", Icon = "Evento.png", Parametros = (object)new { id = Model.Evento.Id } });
             }
 
@@ -116,13 +117,14 @@
                                         new { idEvento = Model.Evento.Id, idSubevento = subevento.Id },
                                         new { @style = "text-decoration:none;" })
 
-                                    @using (Html.BeginForm("Delete", "Subevento", FormMethod.Post, new { @style = "display:inline;" }))
-                                    {
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@subevento.Id" />
-                                        <a href="#" onclick="if (confirm('Tem certeza que deseja excluir?')) { this.closest('form').submit(); } return false;"
-                                           style="color: #dc3545; text-decoration: none; cursor: pointer;">Excluir</a>
-                                    }
+                                    <a href="#" style="color: #dc3545; text-decoration: none; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#modalExcluirSubevento-@subevento.Id">Excluir</a>
+                                    <partial name="_DeleteModal" model="@(new EventoWeb.Models.DeleteModel {
+                                        ModalId = $"modalExcluirSubevento-{subevento.Id}",
+                                        ActionName = "Delete",
+                                        ControllerName = "Subevento",
+                                        RouteValues = subevento.Id,
+                                        ItemName = subevento.Nome
+                                    })" />
 
                                     @Html.ActionLink("Tipo Inscrição", "CreateTipoInscricaoSubevento", "TipoInscricao",
                                         new { idEvento = Model.Evento.Id, idSubevento = subevento.Id },
