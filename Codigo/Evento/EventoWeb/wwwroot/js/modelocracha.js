@@ -261,7 +261,44 @@
 
                 atualizarTexto();
                 atualizarQrcode();
+                exibirMensagemFeedback("Modelo pré-definido carregado com sucesso!");
             });
+        }
+
+        function exibirMensagemFeedback(mensagem, tipo) {
+            tipo = tipo || "success";
+            const icone = tipo === "success" ? "bi-check-circle-fill text-success" : "bi-exclamation-triangle-fill text-danger";
+            let container = document.getElementById("alertaPredefinidoContainer");
+            if (!container) {
+                container = document.createElement("div");
+                container.id = "alertaPredefinidoContainer";
+                if (form && form.parentNode) {
+                    form.parentNode.insertBefore(container, form);
+                }
+            }
+
+            const alertDiv = document.createElement("div");
+            alertDiv.className = `alert alert-${tipo} alert-dismissible fade show d-flex align-items-center shadow-sm rounded-3 py-2 px-3 mb-3`;
+            alertDiv.setAttribute("role", "alert");
+            alertDiv.innerHTML = `
+                <i class="bi ${icone} fs-5 me-2"></i>
+                <span class="fw-semibold small">${mensagem}</span>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Fechar"></button>
+            `;
+
+            container.innerHTML = "";
+            container.appendChild(alertDiv);
+
+            setTimeout(function () {
+                if (alertDiv && alertDiv.parentNode) {
+                    alertDiv.classList.remove("show");
+                    setTimeout(function () {
+                        if (alertDiv.parentNode) {
+                            alertDiv.remove();
+                        }
+                    }, 300);
+                }
+            }, 4000);
         }
 
         if (btnZoomIn && crachaCard) {

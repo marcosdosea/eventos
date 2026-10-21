@@ -25,6 +25,8 @@
         </div>
     </div>
 
+    <div id="alertaPredefinidoContainer"></div>
+
     <form asp-action="Edit" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" id="formModeloCracha"
           data-obter-modelo-url="@Url.Content("~/Modelocracha/ObterModeloPorEvento")"
           data-obter-predefinido-url="@Url.Content("~/Modelocracha/ObterPredefinido")"
