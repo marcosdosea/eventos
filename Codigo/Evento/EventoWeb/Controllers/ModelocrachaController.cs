@@ -254,6 +254,45 @@ namespace EventoWeb.Controllers
         }
 
         [HttpGet]
+        [Route("ObterPredefinido")]
+        [Route("ObterPredefinido/{idEvento?}")]
+        public IActionResult ObterPredefinido(uint? idEvento)
+        {
+            var textoPadrao = "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.";
+            var qrcodePadrao = 1;
+            string? logotipoBase64 = null;
+            string nomeArquivo = "logo_congresso_nacional_vetor.svg";
+            string tamanhoArquivo = "64 KB";
+
+            if (idEvento.HasValue && idEvento.Value > 0)
+            {
+                if (!IsAuthorized(idEvento.Value))
+                    return Forbid();
+
+                var modelos = _modelocrachaService.GetByEvento(idEvento.Value);
+                var modeloComLogo = modelos.FirstOrDefault(m => m.Logotipo != null && m.Logotipo.Length > 0);
+                if (modeloComLogo?.Logotipo != null && modeloComLogo.Logotipo.Length > 0)
+                {
+                    logotipoBase64 = Convert.ToBase64String(modeloComLogo.Logotipo);
+                    nomeArquivo = "logo_institucional.png";
+                    var kb = Math.Round((double)modeloComLogo.Logotipo.Length / 1024.0, 1);
+                    tamanhoArquivo = $"{kb} KB";
+                }
+            }
+
+            return Json(new
+            {
+                sucesso = true,
+                texto = textoPadrao,
+                qrcode = qrcodePadrao,
+                temLogotipo = !string.IsNullOrEmpty(logotipoBase64),
+                logotipoBase64,
+                nomeArquivo,
+                tamanhoArquivo
+            });
+        }
+
+        [HttpGet]
         [Route("Create")]
         [Route("Create/{idEvento}")]
         public ActionResult Create(uint? idEvento)

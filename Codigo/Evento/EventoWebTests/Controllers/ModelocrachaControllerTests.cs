@@ -388,6 +388,52 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod]
+        public void ObterPredefinidoTest_SemEvento_RetornaJsonPadrao()
+        {
+            // Act
+            var result = controller.ObterPredefinido(null);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(JsonResult));
+            var json = (JsonResult)result;
+            Assert.IsNotNull(json.Value);
+        }
+
+        [TestMethod]
+        public void ObterPredefinidoTest_ComEventoValido_RetornaJsonComLogotipo()
+        {
+            // Act
+            var result = controller.ObterPredefinido(1);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(JsonResult));
+            var json = (JsonResult)result;
+            Assert.IsNotNull(json.Value);
+        }
+
+        [TestMethod]
+        public void ObterPredefinidoTest_NaoAutorizado_RetornaForbid()
+        {
+            // Arrange
+            var mockCracha = new Mock<IModelocrachaService>();
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 99))
+                .Returns((Inscricaopessoaevento)null!);
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            // Act
+            var result = ctl.ObterPredefinido(99);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(ForbidResult));
+        }
+
+        [TestMethod]
         public void CreateTest_Post_QuandoModeloJaExisteParaEvento_Atualiza()
         {
             // Arrange

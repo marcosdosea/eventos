@@ -12,6 +12,7 @@
         const inputId = document.getElementById("inputModeloId");
         const hiddenLogo = document.getElementById("hiddenLogotipoBase64");
         const btnCancelar = document.getElementById("btnCancelarAcao");
+        const btnCarregarPredefinido = document.getElementById("btnCarregarPredefinido");
 
         const btnUpload = document.getElementById("btnDispararUpload");
         const inputArquivo = document.getElementById("inputArquivoLogotipo");
@@ -36,6 +37,7 @@
         const urlIndexBase = form.dataset.indexUrl || "/Modelocracha/Index";
         const urlCreateBase = form.dataset.createUrl || "/Modelocracha/Create";
         const urlEditBase = form.dataset.editUrl || "/Modelocracha/Edit";
+        const urlObterPredefinidoBase = form.dataset.obterPredefinidoUrl || "/Modelocracha/ObterPredefinido";
 
         let escalaAtual = 1;
 
@@ -86,10 +88,10 @@
                     thumbIcon.style.display = "block";
                 }
                 if (lblNomeArquivo) {
-                    lblNomeArquivo.textContent = "Nenhum arquivo selecionado";
+                    lblNomeArquivo.textContent = nomeArquivo || "Nenhum arquivo selecionado";
                 }
                 if (lblInfoArquivo) {
-                    lblInfoArquivo.textContent = "PNG, SVG, JPEG (máx. 64 KB)";
+                    lblInfoArquivo.textContent = infoTamanho || "PNG, SVG, JPEG (máx. 64 KB)";
                 }
 
                 if (crachaLogoImg) {
@@ -203,6 +205,62 @@
                 } catch (error) {
                     console.error("Erro ao carregar modelo do evento:", error);
                 }
+            });
+        }
+
+        if (btnCarregarPredefinido) {
+            btnCarregarPredefinido.addEventListener("click", async function () {
+                const idEvento = selectEvento ? selectEvento.value : 0;
+                const textoPadrao = "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.";
+                const qrcodePadrao = true;
+
+                let texto = textoPadrao;
+                let qrcode = qrcodePadrao;
+                let logotipoBase64 = null;
+                let nomeArquivo = "logo_congresso_nacional_vetor.svg";
+                let infoTamanho = "64 KB";
+
+                try {
+                    const endpoint = idEvento && idEvento !== "0"
+                        ? `${urlObterPredefinidoBase}/${idEvento}`
+                        : urlObterPredefinidoBase;
+
+                    const response = await fetch(endpoint);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.texto) texto = data.texto;
+                        qrcode = (data.qrcode === 1);
+                        if (data.temLogotipo && data.logotipoBase64) {
+                            logotipoBase64 = data.logotipoBase64;
+                            nomeArquivo = data.nomeArquivo || "logo_institucional.png";
+                            infoTamanho = data.tamanhoArquivo || "64 KB";
+                        }
+                    }
+                } catch (err) {
+                    console.warn("Falha ao buscar pré-definido do servidor, aplicando padrão local:", err);
+                }
+
+                if (txtTexto) {
+                    txtTexto.value = texto;
+                }
+                if (chkQrcode) {
+                    chkQrcode.checked = qrcode;
+                }
+                if (inputArquivo) {
+                    inputArquivo.value = "";
+                }
+
+                if (logotipoBase64) {
+                    if (hiddenLogo) hiddenLogo.value = logotipoBase64;
+                    const srcImg = "data:image/png;base64," + logotipoBase64;
+                    aplicarLogotipo(srcImg, nomeArquivo, infoTamanho);
+                } else {
+                    if (hiddenLogo) hiddenLogo.value = "";
+                    aplicarLogotipo(null, nomeArquivo, infoTamanho);
+                }
+
+                atualizarTexto();
+                atualizarQrcode();
             });
         }
 
