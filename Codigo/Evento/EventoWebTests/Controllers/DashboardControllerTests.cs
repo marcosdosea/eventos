@@ -2,6 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Core;
 using Core.DTO;
 using Core.Service;
+using EventoWeb.Helpers;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Moq;
 using System.Security.Claims;
+using System.Text;
 
 namespace EventoWeb.Controllers.Tests
 {
@@ -91,6 +93,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual((uint)1, model.IdEvento);
             Assert.AreEqual(4, model.Financeiro.TotalInscritos);
             Assert.AreEqual(2, model.Operacao.Presentes);
+            Assert.IsTrue(model.CsvPreview.Count > 1);
+            Assert.AreEqual(DashboardCsvExporter.Cabecalho, string.Join(";", model.CsvPreview[0]));
         }
 
         [TestMethod()]
@@ -108,7 +112,12 @@ namespace EventoWeb.Controllers.Tests
             var result = controller.Dashboard(1, null, null, null, null, "financas", "csv") as FileContentResult;
 
             Assert.IsNotNull(result);
-            Assert.AreEqual("text/csv", result.ContentType);
+            Assert.AreEqual("text/csv; charset=utf-8", result.ContentType);
+            StringAssert.StartsWith(result.FileDownloadName, "dashboard-seminfo-1-");
+            StringAssert.EndsWith(result.FileDownloadName, ".csv");
+
+            var conteudo = Encoding.UTF8.GetString(result.FileContents).TrimStart('\uFEFF');
+            StringAssert.StartsWith(conteudo, DashboardCsvExporter.Cabecalho);
         }
     }
 }

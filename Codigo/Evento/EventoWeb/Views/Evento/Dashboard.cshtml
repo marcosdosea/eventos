@@ -6,6 +6,7 @@
     var ehFinancas = Model.Aba != "operacao";
     string UrlAba(string aba) => Url.Action("Dashboard", "Evento", new { idEvento = Model.IdEvento, idSubevento = Model.IdSubevento, idTipoInscricao = Model.IdTipoInscricao, dataInicio = Model.DataInicio?.ToString("yyyy-MM-dd"), dataFim = Model.DataFim?.ToString("yyyy-MM-dd"), aba });
     string UrlCsv() => Url.Action("Dashboard", "Evento", new { idEvento = Model.IdEvento, idSubevento = Model.IdSubevento, idTipoInscricao = Model.IdTipoInscricao, dataInicio = Model.DataInicio?.ToString("yyyy-MM-dd"), dataFim = Model.DataFim?.ToString("yyyy-MM-dd"), aba = Model.Aba, formato = "csv" });
+    var totalLinhasCsv = Math.Max(Model.CsvPreview.Count - 1, 0);
 }
 <link rel="stylesheet" type="text/css" href="~/css/_gerenciarevento.css" asp-append-version="true">
 
@@ -25,7 +26,7 @@
             </div>
         </div>
         <div class="d-flex gap-2">
-            <a href="@UrlCsv()" class="btn btn-outline-primary">Exportar CSV</a>
+            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalPreviewCsv">Exportar CSV</button>
             <button type="button" class="btn btn-outline-secondary" onclick="window.print()">Imprimir relatório</button>
             <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Model.IdEvento" class="btn btn-blue-normal text-white">Voltar</a>
         </div>
@@ -199,4 +200,48 @@
             </div>
         </div>
     }
+</div>
+
+<div class="modal fade" id="modalPreviewCsv" tabindex="-1" aria-labelledby="modalPreviewCsvLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalPreviewCsvLabel">Pré-visualização do CSV</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-2">
+                    Confira os dados antes de baixar. O arquivo inclui as linhas de metadados com o evento e os filtros aplicados.
+                </p>
+                <div class="table-responsive border rounded" style="max-height: 60vh;">
+                    <table class="table table-sm table-striped table-bordered align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                @foreach (var coluna in Model.CsvPreview.FirstOrDefault() ?? Array.Empty<string>())
+                                {
+                                    <th scope="col" class="text-nowrap" style="position: sticky; top: 0; z-index: 1;">@coluna</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var linha in Model.CsvPreview.Skip(1))
+                            {
+                                <tr>
+                                    @foreach (var campo in linha)
+                                    {
+                                        <td>@campo</td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <small class="text-muted d-block mt-2">@totalLinhasCsv linha(s) de dados.</small>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <a href="@UrlCsv()" class="btn btn-blue-normal text-white">Baixar CSV</a>
+            </div>
+        </div>
+    </div>
 </div>

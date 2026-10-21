@@ -2,6 +2,7 @@ using AutoMapper;
 using Core;
 using Core.DTO;
 using Core.Service;
+using EventoWeb.Helpers;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -9,7 +10,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Diagnostics;
 using System.Security.Claims;
-using System.Text;
 
 namespace EventoWeb.Controllers
 {
@@ -995,8 +995,23 @@ namespace EventoWeb.Controllers
             var financeiro = _eventoService.GetDashboardFinanceiro(idEvento, filtros);
             var operacao = _eventoService.GetDashboardOperacao(idEvento, filtros);
 
+            var contexto = new DashboardCsvContext
+            {
+                IdEvento = idEvento,
+                NomeEvento = evento.Nome,
+                Status = evento.Status,
+                IdSubevento = idSubevento,
+                IdTipoInscricao = idTipoInscricao,
+                DataInicio = dataInicio,
+                DataFim = dataFim
+            };
+
             if (formato == "csv")
-                return File(GerarCsvDashboard(evento.Nome, financeiro, operacao), "text/csv", $"dashboard-evento-{idEvento}.csv");
+            {
+                var csv = DashboardCsvExporter.Gerar(contexto, financeiro, operacao);
+                var nomeArquivo = DashboardCsvExporter.NomeArquivo(evento.Nome, idEvento, contexto.GeradoEm);
+                return File(csv, "text/csv; charset=utf-8", nomeArquivo);
+            }
 
             var subeventos = _subeventoService.GetByIdEvento(idEvento).OrderBy(s => s.Nome).ToList();
             var tipos = _tipoInscricaoService?.GetByEvento(idEvento).OrderBy(t => t.Nome).ToList()
@@ -1014,46 +1029,10 @@ namespace EventoWeb.Controllers
                 Aba = aba,
                 Financeiro = financeiro,
                 Operacao = operacao,
+                CsvPreview = DashboardCsvExporter.GerarLinhas(contexto, financeiro, operacao),
                 Subeventos = new SelectList(subeventos, "Id", "Nome", idSubevento),
                 TiposInscricao = new SelectList(tipos, "Id", "Nome", idTipoInscricao)
             });
-        }
-
-        private static string CampoCsv(string valor)
-        {
-            valor ??= string.Empty;
-            if (valor.Contains(';') || valor.Contains('"') || valor.Contains('\n') || valor.Contains('\r'))
-                return "\"" + valor.Replace("\"", "\"\"") + "\"";
-            return valor;
-        }
-
-        private static string NumCsv(decimal valor) =>
-            valor.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
-
-        private static byte[] GerarCsvDashboard(string nomeEvento, DashboardFinanceiroDTO fin, DashboardOperacaoDTO op)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine("secao;indicador;valor");
-            sb.AppendLine($"evento;nome;{CampoCsv(nomeEvento)}");
-            sb.AppendLine($"financas;total_inscritos;{fin.TotalInscritos}");
-            sb.AppendLine($"financas;vagas_ofertadas;{fin.VagasOfertadas}");
-            sb.AppendLine($"financas;receita_confirmada;{NumCsv(fin.ReceitaConfirmada)}");
-            sb.AppendLine($"financas;valor_em_aberto;{NumCsv(fin.ValorEmAberto)}");
-            sb.AppendLine($"financas;ticket_medio;{NumCsv(fin.TicketMedio)}");
-            sb.AppendLine($"financas;ativas;{fin.Funil.Ativas}");
-            sb.AppendLine($"financas;solicitadas;{fin.Funil.Solicitadas}");
-            sb.AppendLine($"financas;canceladas;{fin.Funil.Canceladas}");
-            foreach (var f in fin.PorForma)
-                sb.AppendLine($"financas;forma_{CampoCsv(f.Forma)};{f.Quantidade};{NumCsv(f.ValorTotal)}");
-            foreach (var c in fin.PorCategoria)
-                sb.AppendLine($"financas;categoria_{CampoCsv(c.Nome)};{c.Quantidade};{NumCsv(c.ValorTotal)}");
-            sb.AppendLine($"operacao;presentes;{op.Presentes}");
-            sb.AppendLine($"operacao;ausentes;{op.Ausentes}");
-            sb.AppendLine($"operacao;aptos_certificado;{op.AptosCertificado}");
-            sb.AppendLine($"operacao;frequencia_media;{NumCsv(op.FrequenciaMedia)}");
-            foreach (var s in op.OcupacaoSubeventos)
-                sb.AppendLine($"operacao;subevento_{CampoCsv(s.Nome)};{s.Ocupados}/{s.VagasOfertadas}");
-            return Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
         }
 
         [Authorize(Roles = "GESTOR")]

@@ -25,6 +25,9 @@ public class DashboardEventoViewModel
     public DashboardFinanceiroDTO Financeiro { get; set; } = new();
     public DashboardOperacaoDTO Operacao { get; set; } = new();
 
+    /// <summary>Linhas do CSV (cabeçalho + dados) exibidas na pré-visualização antes do download.</summary>
+    public List<string[]> CsvPreview { get; set; } = new();
+
     [ValidateNever]
     public SelectList Subeventos { get; set; } = new SelectList(Enumerable.Empty<SelectListItem>());
 
