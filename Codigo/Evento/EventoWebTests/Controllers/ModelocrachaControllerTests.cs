@@ -1,19 +1,20 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using AutoMapper;
-using Core.Service;
-using Core;
-using EventoWeb.Models;
-using Microsoft.AspNetCore.Mvc;
-using Moq;
-using EventoWeb.Mappers;
-using System.Collections.Generic;
-using System.IO;
-using Microsoft.AspNetCore.Http;
 using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.IO;
+using System.Linq;
 using System.Security.Claims;
+using AutoMapper;
+using Core;
 using Core.DTO;
+using Core.Service;
+using EventoWeb.Mappers;
+using EventoWeb.Models;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using MySqlX.XDevAPI.Common;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 
 namespace EventoWeb.Controllers.Tests
 {
@@ -25,7 +26,6 @@ namespace EventoWeb.Controllers.Tests
         [TestInitialize]
         public void Initialize()
         {
-            // Arrange
             var mockService = new Mock<IModelocrachaService>();
             var mockServiceEvento = new Mock<IEventoService>();
             var mockServicePessoa = new Mock<IPessoaService>();
@@ -63,10 +63,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void IndexTest()
         {
-            // Act
             var result = controller.Index(GetTargetEvento().Id, null);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(List<ModelocrachaModel>));
@@ -78,10 +76,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void DetailsTest()
         {
-            // Act
             var result = controller.Details(1, null);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ModelocrachaModel));
@@ -95,7 +91,6 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void DetailsTest_ComQrcodeEInscricoes_PreencheCrachasComNomesDosParticipantes()
         {
-            // Arrange
             var mockService = new Mock<IModelocrachaService>();
             var mockServiceEvento = new Mock<IEventoService>();
             var mockServicePessoa = new Mock<IPessoaService>();
@@ -138,10 +133,8 @@ namespace EventoWeb.Controllers.Tests
                 HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) }
             };
 
-            // Act
             var result = ctl.Details(1, null);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             var viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ModelocrachaModel));
@@ -156,20 +149,16 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void CreateTest()
         {
-            // Act
             var result = controller.Create(GetTargetEvento().Id);
 
-            // Assert 
             Assert.IsInstanceOfType(result, typeof(ViewResult));
         }
 
         [TestMethod]
         public void CreateTest_Valid()
         {
-            // Act
             var result = controller.Create(GetNewModelocracha());
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.IsNull(redirectToActionResult.ControllerName);
@@ -180,13 +169,10 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void CreateTest_Invalid()
         {
-            // Arrange
             controller.ModelState.AddModelError("Texto", "Informe o texto do crachá");
 
-            // Act
             var result = controller.Create(GetNewModelocracha());
 
-            // Assert
             Assert.AreEqual(1, controller.ModelState.ErrorCount);
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
@@ -196,10 +182,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void EditTest_Get_Valid()
         {
-            // Act
             var result = controller.Edit(1);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ModelocrachaModel));
@@ -213,10 +197,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void EditTest_Post_Valid()
         {
-            // Act
             var result = controller.Edit(GetTargetEditModelocrachaModel().Id, GetTargetEditModelocrachaModel());
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.IsNull(redirectToActionResult.ControllerName);
@@ -227,10 +209,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void DeleteTest_Post_Valid()
         {
-            // Act
             var result = controller.Delete(1);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ModelocrachaModel));
@@ -242,17 +222,14 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void DeleteTest_Get_Valid()
         {
-            // Act
             var result = controller.Delete(GetTargetDeleteModelocrachaModel().Id, GetTargetDeleteModelocrachaModel().IdEvento);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.IsNull(redirectToActionResult.ControllerName);
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
         }
 
-        // IDOR (#764): gestor só gerencia o próprio evento.
         [TestMethod]
         public void Index_Details_EventoAlheio_Forbid()
         {
@@ -280,10 +257,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void CreateTest_Get_SemIdEvento()
         {
-            // Act
             var result = controller.Create((uint?)null);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(ModelocrachaModel));
@@ -295,14 +270,11 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void EditTest_Post_SemNovoLogotipo_PreservaExistente()
         {
-            // Arrange
             var modelEdit = GetTargetEditModelocrachaModel();
-            modelEdit.Logotipo = null; // Sem subir nova imagem
+            modelEdit.Logotipo = null;
 
-            // Act
             var result = controller.Edit(modelEdit.Id, modelEdit);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
@@ -311,10 +283,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void IndexTest_SemIdEvento_RetornaLista()
         {
-            // Act
             var result = controller.Index(null, null);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(List<ModelocrachaModel>));
@@ -323,10 +293,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void ObterModeloPorEventoTest_ComModeloExistente_RetornaJson()
         {
-            // Act
             var result = controller.ObterModeloPorEvento(1);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(JsonResult));
             var jsonResult = (JsonResult)result;
             Assert.IsNotNull(jsonResult.Value);
@@ -335,17 +303,14 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void ObterModeloPorEventoTest_IdZero_RetornaNaoExiste()
         {
-            // Act
             var resultZero = controller.ObterModeloPorEvento(0);
 
-            // Assert
             Assert.IsInstanceOfType(resultZero, typeof(JsonResult));
         }
 
         [TestMethod]
         public void ObterModeloPorEventoTest_SemModelo_RetornaJsonPadrao()
         {
-            // Arrange
             var mockCracha = new Mock<IModelocrachaService>();
             mockCracha.Setup(s => s.GetByEvento(99)).Returns(new List<Modelocracha>());
             var mockInsc = new Mock<IInscricaoService>();
@@ -358,17 +323,14 @@ namespace EventoWeb.Controllers.Tests
                 HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
             };
 
-            // Act
             var result = ctl.ObterModeloPorEvento(99);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(JsonResult));
         }
 
         [TestMethod]
         public void ObterModeloPorEventoTest_NaoAutorizado_RetornaForbid()
         {
-            // Arrange
             var mockCracha = new Mock<IModelocrachaService>();
             var mockInsc = new Mock<IInscricaoService>();
             mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 99))
@@ -380,24 +342,19 @@ namespace EventoWeb.Controllers.Tests
                 HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
             };
 
-            // Act
             var result = ctl.ObterModeloPorEvento(99);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ForbidResult));
         }
 
         [TestMethod]
         public void CreateTest_Post_QuandoModeloJaExisteParaEvento_Atualiza()
         {
-            // Arrange
             var model = GetNewModelocracha();
-            model.IdEvento = 1; // Evento 1 já possui modelo na mock setup
+            model.IdEvento = 1;
 
-            // Act
             var result = controller.Create(model);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             var redirect = (RedirectToActionResult)result;
             Assert.AreEqual("Index", redirect.ActionName);
@@ -406,7 +363,6 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void EditTest_Post_TrocaEventoAlvoSemModelo_EditaParaNovoEvento()
         {
-            // Arrange
             var mockCracha = new Mock<IModelocrachaService>();
             var modeloExistente = new Modelocracha { Id = 1, IdEvento = 1, Texto = "Original", Qrcode = 1 };
             mockCracha.Setup(s => s.Get((uint)1)).Returns(modeloExistente);
@@ -435,16 +391,14 @@ namespace EventoWeb.Controllers.Tests
             var viewModel = new ModelocrachaModel
             {
                 Id = 1,
-                IdEvento = 2, // Trocou para o Evento 2
+                IdEvento = 2,
                 Texto = "Novo Texto para Evento 2",
                 Qrcode = 1,
                 Logotipo = formFileMock.Object
             };
 
-            // Act
             var result = ctl.Edit(1, viewModel);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             var redirect = (RedirectToActionResult)result;
             Assert.AreEqual("Index", redirect.ActionName);
@@ -454,16 +408,13 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void CreateTest_Post_SalvarRascunho_SemLogotipo_Sucesso()
         {
-            // Arrange
             var model = GetNewModelocracha();
             model.IdEvento = 1;
-            model.Logotipo = null; // Sem logotipo no rascunho
+            model.Logotipo = null;
             model.LogotipoBase64 = null;
 
-            // Act
             var result = controller.Create(model, "true");
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             var redirect = (RedirectToActionResult)result;
             Assert.AreEqual("Index", redirect.ActionName);
@@ -473,14 +424,11 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void EditTest_Post_SalvarRascunho_Sucesso()
         {
-            // Arrange
             var modelEdit = GetTargetEditModelocrachaModel();
             modelEdit.Logotipo = null;
 
-            // Act
             var result = controller.Edit(modelEdit.Id, modelEdit, "true");
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             var redirect = (RedirectToActionResult)result;
             Assert.AreEqual("Index", redirect.ActionName);
@@ -490,9 +438,7 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void CreateTest_Post_PermiteMultiplosModelosPorEvento_ChamaCreate()
         {
-            // Arrange
             var mockCracha = new Mock<IModelocrachaService>();
-            // Evento 1 já possui 3 modelos cadastrados
             mockCracha.Setup(s => s.GetByEvento(1)).Returns(GetTestModelocracha());
             mockCracha.Setup(s => s.Create(It.IsAny<Modelocracha>())).Returns(99);
 
@@ -512,15 +458,90 @@ namespace EventoWeb.Controllers.Tests
             novoModelo.IdEvento = 1;
             novoModelo.Texto = "Segundo Modelo para o Evento 1";
 
-            // Act
             var result = ctl.Create(novoModelo);
 
-            // Assert: deve criar um novo modelo chamando Create, e nunca sobrescrever chamando Edit
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             var redirect = (RedirectToActionResult)result;
             Assert.AreEqual("Index", redirect.ActionName);
             mockCracha.Verify(s => s.Create(It.Is<Modelocracha>(m => m.IdEvento == 1 && m.Texto == "Segundo Modelo para o Evento 1")), Times.Once);
             mockCracha.Verify(s => s.Edit(It.IsAny<Modelocracha>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void ModelocrachaModel_Texto_NormalizaCRLF_ParaNaoExcederLimite()
+        {
+            var baseTexto = new string('a', 198);
+            var textoComCRLF = $"{baseTexto.Substring(0, 100)}\r\n{baseTexto.Substring(100, 50)}\r\n{baseTexto.Substring(150)}";
+
+            var model = new ModelocrachaModel();
+
+            model.Texto = textoComCRLF;
+
+            Assert.AreEqual(200, model.Texto.Length);
+            Assert.IsFalse(model.Texto.Contains("\r"));
+            Assert.IsTrue(model.Texto.Contains("\n"));
+        }
+
+        [TestMethod]
+        public void CreateTest_ComTextoComQuebrasDeLinha_SalvaCorretamente()
+        {
+            var mockCracha = new Mock<IModelocrachaService>();
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+            ctl.TempData = new TempDataDictionary(ctl.ControllerContext.HttpContext, Mock.Of<ITempDataProvider>());
+
+            var novoModelo = GetNewModelocracha();
+            novoModelo.IdEvento = 1;
+            novoModelo.Texto = new string('x', 100) + "\r\n" + new string('y', 95);
+
+            var result = ctl.Create(novoModelo);
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            mockCracha.Verify(s => s.Create(It.Is<Modelocracha>(m => m.IdEvento == 1 && m.Texto.Length <= 200)), Times.Once);
+        }
+
+        [TestMethod]
+        public void ModelocrachaModel_Texto_ComMaisDeCincoQuebras_Invalido()
+        {
+            var model = new ModelocrachaModel
+            {
+                Id = 1,
+                IdEvento = 1,
+                Texto = "1\n2\n3\n4\n5\n6\n7"
+            };
+
+            var context = new ValidationContext(model) { MemberName = nameof(ModelocrachaModel.Texto) };
+            var results = new List<ValidationResult>();
+            var isValid = Validator.TryValidateProperty(model.Texto, context, results);
+
+            Assert.IsFalse(isValid);
+            Assert.IsTrue(results.Any(r => r.ErrorMessage == "O texto do crachá deve ter no máximo 5 quebras de linha"));
+        }
+
+        [TestMethod]
+        public void ModelocrachaModel_Texto_ComAteCincoQuebras_Valido()
+        {
+            var model = new ModelocrachaModel
+            {
+                Id = 1,
+                IdEvento = 1,
+                Texto = "1\n2\n3\n4\n5\n6"
+            };
+
+            var context = new ValidationContext(model) { MemberName = nameof(ModelocrachaModel.Texto) };
+            var results = new List<ValidationResult>();
+            var isValid = Validator.TryValidateProperty(model.Texto, context, results);
+
+            Assert.IsTrue(isValid);
+            Assert.AreEqual(0, results.Count);
         }
 
         private static ClaimsPrincipal GestorPrincipal() => new(new ClaimsIdentity(new List<Claim>

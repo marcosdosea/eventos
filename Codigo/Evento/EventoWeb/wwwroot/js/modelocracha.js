@@ -39,9 +39,43 @@
 
         let escalaAtual = 1;
 
+        function calcularTamanhoTexto(texto) {
+            if (!texto) return 0;
+            return texto.replace(/\r?\n/g, "\r\n").length;
+        }
+
+        function limitarTextoAosCaracteres(texto, maxCaracteres, maxQuebras = 5) {
+            if (!texto) return "";
+            let tamanho = 0;
+            let quebras = 0;
+            let resultado = "";
+            for (let i = 0; i < texto.length; i++) {
+                const char = texto[i];
+                if (char === "\n") {
+                    if (quebras >= maxQuebras) {
+                        continue;
+                    }
+                    quebras++;
+                }
+                const incremento = (char === "\n") ? 2 : 1;
+                if (tamanho + incremento > maxCaracteres) {
+                    break;
+                }
+                resultado += char;
+                tamanho += incremento;
+            }
+            return resultado;
+        }
+
         function atualizarTexto() {
             if (!txtTexto) return;
-            const len = txtTexto.value.length;
+
+            const textoLimitado = limitarTextoAosCaracteres(txtTexto.value, 200, 5);
+            if (txtTexto.value !== textoLimitado) {
+                txtTexto.value = textoLimitado;
+            }
+
+            const len = calcularTamanhoTexto(txtTexto.value);
             if (lblContador) {
                 lblContador.textContent = `${len} / 200 caracteres`;
             }
@@ -102,7 +136,23 @@
         }
 
         if (txtTexto) {
+            txtTexto.addEventListener("keydown", function (e) {
+                if (e.key === "Enter") {
+                    const start = this.selectionStart;
+                    const end = this.selectionEnd;
+                    const selecionado = this.value.substring(start, end);
+                    const quebrasNoSelecionado = (selecionado.match(/\n/g) || []).length;
+                    const totalQuebrasAtuais = (this.value.match(/\n/g) || []).length;
+                    if ((totalQuebrasAtuais - quebrasNoSelecionado + 1) > 5) {
+                        e.preventDefault();
+                    }
+                }
+            });
             txtTexto.addEventListener("input", atualizarTexto);
+            txtTexto.addEventListener("change", atualizarTexto);
+            txtTexto.addEventListener("paste", function () {
+                setTimeout(atualizarTexto, 0);
+            });
             atualizarTexto();
         }
 
@@ -231,6 +281,26 @@
                 window.print();
             });
         }
+
+        window.addEventListener("beforeprint", function () {
+            if (crachaCard) {
+                crachaCard.dataset.escalaPreImpressao = escalaAtual.toString();
+                crachaCard.style.transform = "none";
+            }
+        });
+
+        window.addEventListener("afterprint", function () {
+            if (crachaCard && crachaCard.dataset.escalaPreImpressao !== undefined) {
+                const escalaRestaurada = parseFloat(crachaCard.dataset.escalaPreImpressao);
+                if (!isNaN(escalaRestaurada) && escalaRestaurada !== 1) {
+                    crachaCard.style.transformOrigin = "top center";
+                    crachaCard.style.transform = `scale(${escalaRestaurada})`;
+                } else {
+                    crachaCard.style.transform = "";
+                }
+                delete crachaCard.dataset.escalaPreImpressao;
+            }
+        });
 
         if (btnFullscreen) {
             btnFullscreen.addEventListener("click", function () {
