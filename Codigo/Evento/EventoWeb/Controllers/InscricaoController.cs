@@ -22,10 +22,10 @@ namespace EventoWeb.Controllers
         private readonly ISubeventoService _subeventoService;
         private readonly UserManager<UsuarioIdentity> _userManager;
         private readonly ITipoInscricaoService _tipoinscricaoService;
-        private readonly ITransacaoService _transacaoService;
+        private readonly ITransacaoService? _transacaoService;
         private readonly IMapper _mapper;
 
-        public InscricaoController(UserManager<UsuarioIdentity> userManager, ITipoInscricaoService tipoinscricaoService, IEventoService eventoService, IMapper mapper, IInscricaoService inscricaoService, IPessoaService pessoaService, ISubeventoService subeventoService, ITransacaoService transacaoService = null)
+        public InscricaoController(UserManager<UsuarioIdentity> userManager, ITipoInscricaoService tipoinscricaoService, IEventoService eventoService, IMapper mapper, IInscricaoService inscricaoService, IPessoaService pessoaService, ISubeventoService subeventoService, ITransacaoService? transacaoService = null)
         {
             _tipoinscricaoService = tipoinscricaoService;
             _eventoService = eventoService;
@@ -536,24 +536,38 @@ namespace EventoWeb.Controllers
 
             if (eventosParaSalvar.Any() || subeventosParaSalvar.Any())
             {
-                // A transação cobre o caso de uso inteiro: inscrições + atualização
-                // de vagas + SaveChanges. Se qualquer passo falhar, tudo é revertido.
-                ExecutarEmTransacao(() =>
+                try
                 {
-                    _inscricaoService.CreateInscricoesEmLote(eventosParaSalvar, subeventosParaSalvar, saveChanges: false);
-
-                    if (eventosParaSalvar.Any())
+                    // A transação cobre o caso de uso inteiro: inscrições + atualização
+                    // de vagas + SaveChanges. Se qualquer passo falhar, tudo é revertido.
+                    ExecutarEmTransacao(() =>
                     {
-                        _eventoService.AtualizarVagasDisponiveis(idEvento, saveChanges: false);
-                    }
+                        _inscricaoService.CreateInscricoesEmLote(eventosParaSalvar, subeventosParaSalvar, saveChanges: false);
 
-                    foreach (var idSub in subeventosAtualizarVagas)
-                    {
-                        _subeventoService.AtualizarVagasDisponiveis(idSub, saveChanges: false);
-                    }
+                        if (eventosParaSalvar.Any())
+                        {
+                            _eventoService.AtualizarVagasDisponiveis(idEvento, saveChanges: false);
+                        }
 
-                    _inscricaoService.SaveChanges();
-                });
+                        foreach (var idSub in subeventosAtualizarVagas)
+                        {
+                            _subeventoService.AtualizarVagasDisponiveis(idSub, saveChanges: false);
+                        }
+
+                        _inscricaoService.SaveChanges();
+                    });
+                }
+                catch (DbUpdateException)
+                {
+                    // A transação foi revertida: nada foi gravado.
+                    TempData["ParticipanteMessage"] = "Não foi possível concluir a inscrição. Tente novamente.";
+                    return RedirectToAction("realizarInscricao", new { idEvento = idEvento });
+                }
+                catch (Exception)
+                {
+                    TempData["ParticipanteMessage"] = "Não foi possível concluir a inscrição. Tente novamente.";
+                    return RedirectToAction("realizarInscricao", new { idEvento = idEvento });
+                }
             }
 
             if (jaInscritoEventoPrincipal)

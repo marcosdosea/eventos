@@ -160,13 +160,10 @@ namespace Service
         /// <summary>
         /// Cancela as inscrições de participante (papel 4) de uma pessoa em um evento,
         /// incluindo as inscrições nos subeventos do evento, em um único SaveChanges.
-        /// Retorna a quantidade de inscrições do evento removidas e os ids dos
-        /// subeventos afetados (para atualização de vagas).
-        /// <summary>
-        /// Remove as inscrições de participante do evento e dos subeventos.
         /// O SaveChanges é enlistado na transação aberta pelo caso de uso
         /// (ver ITransacaoService), que também cobre a atualização de vagas.
-        /// </summary>
+        /// Retorna a quantidade de inscrições do evento removidas e os ids dos
+        /// subeventos afetados (para atualização de vagas).
         /// </summary>
         public (int Removidas, List<uint> SubeventosAfetados) CancelarInscricaoParticipante(uint idPessoa, uint idEvento)
         {

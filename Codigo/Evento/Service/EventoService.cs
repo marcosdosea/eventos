@@ -8,10 +8,12 @@ namespace Service
 {
     public class EventoService : IEventoService
     {
+        private const int PapelParticipante = 4;
+
         private readonly EventoContext _context;
         private readonly ITransacaoService _transacaoService;
 
-        public EventoService(EventoContext context, ITransacaoService transacaoService = null)
+        public EventoService(EventoContext context, ITransacaoService? transacaoService = null)
         {
             _context = context;
             _transacaoService = transacaoService ?? new TransacaoService(context);
@@ -333,10 +335,29 @@ namespace Service
 
             if (evento != null)
             {
-                // Conta direto no banco: a coleção navegada pode conter inscrições
-                // já removidas no mesmo contexto, o que geraria contagem obsoleta.
-                var quantidadeParticipantes = _context.Inscricaopessoaeventos
-                    .Count(i => i.IdEvento == idEvento && i.IdPapel == 4);
+                // Regra de negócio: vagas disponíveis = vagas ofertadas - participantes.
+                //
+                // A contagem soma o que já está gravado com o que está pendente no
+                // ChangeTracker (inscrições adicionadas ou removidas no mesmo contexto).
+                // Sem isso, a chamada feita antes do SaveChanges do lote
+                // (InscricaoController.realizarInscricao) ignoraria as inscrições
+                // recém-criadas e as vagas não seriam abatidas.
+                var participantesNoBanco = _context.Inscricaopessoaeventos
+                    .Count(i => i.IdEvento == idEvento && i.IdPapel == PapelParticipante);
+
+                var inscricoesPendentes = _context.ChangeTracker
+                    .Entries<Inscricaopessoaevento>()
+                    .Count(e => e.State == EntityState.Added
+                             && e.Entity.IdEvento == idEvento
+                             && e.Entity.IdPapel == PapelParticipante);
+
+                var inscricoesRemovidas = _context.ChangeTracker
+                    .Entries<Inscricaopessoaevento>()
+                    .Count(e => e.State == EntityState.Deleted
+                             && e.Entity.IdEvento == idEvento
+                             && e.Entity.IdPapel == PapelParticipante);
+
+                var quantidadeParticipantes = participantesNoBanco + inscricoesPendentes - inscricoesRemovidas;
 
                 evento.VagasDisponiveis = evento.VagasOfertadas - quantidadeParticipantes;
 

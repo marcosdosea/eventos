@@ -20,6 +20,7 @@ namespace Service.Tests
         private EventoContext _context = null!;
         private TransacaoService _transacaoService = null!;
         private EventoService _eventoService = null!;
+        private SubeventoService _subeventoService = null!;
         private InscricaoService _inscricaoService = null!;
 
         [TestInitialize]
@@ -37,6 +38,7 @@ namespace Service.Tests
 
             _transacaoService = new TransacaoService(_context);
             _eventoService = new EventoService(_context, _transacaoService);
+            _subeventoService = new SubeventoService(_context);
             _inscricaoService = new InscricaoService(_context, new MockUserManager<UsuarioIdentity>());
 
             SemearBase();
@@ -295,6 +297,10 @@ BEGIN SELECT RAISE(ABORT, 'falha simulada no banco'); END;";
             {
                 var resultado = _inscricaoService.CancelarInscricaoParticipante(1, 1);
                 _eventoService.AtualizarVagasDisponiveis(1);
+                foreach (var idSub in resultado.SubeventosAfetados)
+                {
+                    _subeventoService.AtualizarVagasDisponiveis(idSub);
+                }
                 return resultado;
             });
 
@@ -306,6 +312,56 @@ BEGIN SELECT RAISE(ABORT, 'falha simulada no banco'); END;";
             Assert.AreEqual(0, _context.Inscricaopessoasubeventos.Count());
             Assert.AreEqual(0, _context.Pagamentos.Count());
             Assert.AreEqual(200, _context.Eventos.First().VagasDisponiveis);
+            Assert.AreEqual(50u, _context.Subeventos.First().VagasDisponiveis);
+        }
+
+        [TestMethod()]
+        public void InscricaoLote_ComInscricoesPendentes_AtualizaVagasDoEventoESubevento()
+        {
+            // O lote entra no contexto antes do SaveChanges (saveChanges: false),
+            // como no InscricaoController.realizarInscricao. A contagem de vagas
+            // precisa considerar as inscrições pendentes, senão as vagas do evento
+            // e do subevento não são abatidas na inscrição.
+            var vagasOfertadasEvento = _context.Eventos.First().VagasOfertadas;
+            var vagasOfertadasSubevento = _context.Subeventos.First().VagasOfertadas;
+
+            _inscricaoService.CreateInscricoesEmLote(
+                new List<Inscricaopessoaevento>
+                {
+                    new Inscricaopessoaevento
+                    {
+                        IdPessoa = 2,
+                        IdEvento = 1,
+                        IdPapel = 4,
+                        IdTipoInscricao = 1,
+                        DataInscricao = DateTime.Now,
+                        Status = "S",
+                        ValorTotal = 80
+                    }
+                },
+                new List<Inscricaopessoasubevento>
+                {
+                    new Inscricaopessoasubevento
+                    {
+                        IdPessoa = 2,
+                        IdSubEvento = 10,
+                        IdPapel = 4,
+                        IdTipoInscricao = 1,
+                        DataInscricao = DateTime.Now,
+                        Status = "S",
+                        Valor = 80
+                    }
+                },
+                saveChanges: false);
+
+            _eventoService.AtualizarVagasDisponiveis(1, saveChanges: false);
+            _subeventoService.AtualizarVagasDisponiveis(10, saveChanges: false);
+            _inscricaoService.SaveChanges();
+            _context.ChangeTracker.Clear();
+
+            // 1 participante já inscrito + 1 nova inscrição = 2 participantes.
+            Assert.AreEqual(vagasOfertadasEvento - 2, _context.Eventos.First().VagasDisponiveis);
+            Assert.AreEqual((uint)(vagasOfertadasSubevento - 2), _context.Subeventos.First().VagasDisponiveis);
         }
 
         [TestMethod()]
