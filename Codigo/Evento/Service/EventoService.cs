@@ -359,7 +359,7 @@ namespace Service
 
                 var quantidadeParticipantes = participantesNoBanco + inscricoesPendentes - inscricoesRemovidas;
 
-                evento.VagasDisponiveis = evento.VagasOfertadas - quantidadeParticipantes;
+                evento.VagasDisponiveis = Math.Max(0, evento.VagasOfertadas - quantidadeParticipantes);
 
                 if (saveChanges)
                 {
