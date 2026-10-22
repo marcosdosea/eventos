@@ -17,8 +17,8 @@ namespace EventoWeb.Controllers
     public class ModelocrachaController : Controller
     {
         private const string TextoPadraoCracha = "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.";
-        private const int MaxLogotipoBytes = 65535;
-        private const int MaxLogotipoBase64Chars = 87384;
+        private const int MaxLogotipoBytes = 64 * 1024;
+        private const int MaxLogotipoBase64Chars = ((MaxLogotipoBytes + 2) / 3) * 4;
 
         private readonly IModelocrachaService _modelocrachaService;
         private readonly IEventoService _eventoService;
@@ -98,7 +98,7 @@ namespace EventoWeb.Controllers
                     if (m.Logotipo != null && m.Logotipo.Length > 0)
                     {
                         model.LogotipoBase64 = Convert.ToBase64String(m.Logotipo);
-                        model.NomeArquivo = "logo_institucional.png";
+                        model.NomeArquivo = ObterNomeArquivoLogo(m.Logotipo);
                         var kb = Math.Round((double)m.Logotipo.Length / 1024.0, 1);
                         model.TamanhoArquivo = $"{kb} KB";
                     }
@@ -126,7 +126,7 @@ namespace EventoWeb.Controllers
                     if (x.Logotipo != null && x.Logotipo.Length > 0)
                     {
                         m.LogotipoBase64 = Convert.ToBase64String(x.Logotipo);
-                        m.NomeArquivo = "logo_institucional.png";
+                        m.NomeArquivo = ObterNomeArquivoLogo(x.Logotipo);
                         var kb = Math.Round((double)x.Logotipo.Length / 1024.0, 1);
                         m.TamanhoArquivo = $"{kb} KB";
                     }
@@ -249,7 +249,7 @@ namespace EventoWeb.Controllers
             if (modelo.Logotipo != null && modelo.Logotipo.Length > 0)
             {
                 logotipoBase64 = Convert.ToBase64String(modelo.Logotipo);
-                nomeArquivo = "logo_institucional.png";
+                nomeArquivo = ObterNomeArquivoLogo(modelo.Logotipo);
                 var kb = Math.Round((double)modelo.Logotipo.Length / 1024.0, 1);
                 tamanhoArquivo = $"{kb} KB";
             }
@@ -319,7 +319,28 @@ namespace EventoWeb.Controllers
                 }
             }
 
-            return (null, "LOGOTIPO.png", "64 KB");
+            return (null, string.Empty, string.Empty);
+        }
+
+        private static string ObterNomeArquivoLogo(byte[] logo)
+        {
+            if (logo.Length >= 3 && logo[0] == 0xFF && logo[1] == 0xD8 && logo[2] == 0xFF)
+                return "logo_institucional.jpg";
+
+            if (logo.Length >= 12 &&
+                logo[0] == 0x52 && logo[1] == 0x49 && logo[2] == 0x46 && logo[3] == 0x46 &&
+                logo[8] == 0x57 && logo[9] == 0x45 && logo[10] == 0x42 && logo[11] == 0x50)
+                return "logo_institucional.webp";
+
+            if (logo.Length >= 4 &&
+                ((logo[0] == 0x49 && logo[1] == 0x49 && logo[2] == 0x2A && logo[3] == 0x00) ||
+                 (logo[0] == 0x4D && logo[1] == 0x4D && logo[2] == 0x00 && logo[3] == 0x2A)))
+                return "logo_institucional.tif";
+
+            if (logo.Length >= 3 && logo[0] == 0x47 && logo[1] == 0x49 && logo[2] == 0x46)
+                return "logo_institucional.gif";
+
+            return "logo_institucional.png";
         }
 
         private static bool ValidarLogotipoBase64(string? base64Logo, out byte[]? bytesValidos, out string? erroValidacao)
@@ -337,10 +358,9 @@ namespace EventoWeb.Controllers
                 base64Limpo = base64Limpo.Substring(indexVirgula + 1).Trim();
             }
 
-            long tamanhoEstimadoBytes = (base64Limpo.Length * 3L) / 4L;
-            if (base64Limpo.Length > MaxLogotipoBase64Chars || tamanhoEstimadoBytes > MaxLogotipoBytes)
+            if (base64Limpo.Length > MaxLogotipoBase64Chars)
             {
-                erroValidacao = "O arquivo de imagem deve ter menos de 64 KB.";
+                erroValidacao = "O arquivo de imagem deve ter no máximo 64 KB.";
                 return false;
             }
 
@@ -357,7 +377,7 @@ namespace EventoWeb.Controllers
 
             if (bytes.Length > MaxLogotipoBytes)
             {
-                erroValidacao = "O arquivo de imagem deve ter menos de 64 KB.";
+                erroValidacao = "O arquivo de imagem deve ter no máximo 64 KB.";
                 return false;
             }
 
@@ -422,11 +442,12 @@ namespace EventoWeb.Controllers
             var modeloComLogotipo = modelosDoEvento.FirstOrDefault(m => m.Logotipo != null && m.Logotipo.Length > 0);
 
             byte[]? logoBytes = modeloComLogotipo?.Logotipo;
-            string nomeArquivo = "logo_institucional.png";
-            string tamanhoArquivo = "64 KB";
+            string? nomeArquivo = null;
+            string? tamanhoArquivo = null;
 
             if (logoBytes != null && logoBytes.Length > 0)
             {
+                nomeArquivo = ObterNomeArquivoLogo(logoBytes);
                 var kb = Math.Round((double)logoBytes.Length / 1024.0, 1);
                 tamanhoArquivo = $"{kb} KB";
             }
@@ -493,7 +514,7 @@ namespace EventoWeb.Controllers
                     }
                     else
                     {
-                        ModelState.AddModelError("Logotipo", "O arquivo é muito grande. Deve ser menor que 64 KB.");
+                        ModelState.AddModelError("Logotipo", "O arquivo é muito grande. Deve ter no máximo 64 KB.");
                         ViewBag.EventosDisponiveis = ObterEventosDoUsuario();
                         return View(modelocrachaModel);
                     }
@@ -584,7 +605,7 @@ namespace EventoWeb.Controllers
             if (modelocracha.Logotipo != null && modelocracha.Logotipo.Length > 0)
             {
                 viewModel.LogotipoBase64 = Convert.ToBase64String(modelocracha.Logotipo);
-                viewModel.NomeArquivo = "logo_institucional.png";
+                viewModel.NomeArquivo = ObterNomeArquivoLogo(modelocracha.Logotipo);
                 var kb = Math.Round((double)modelocracha.Logotipo.Length / 1024.0, 1);
                 viewModel.TamanhoArquivo = $"{kb} KB";
             }
@@ -632,7 +653,7 @@ namespace EventoWeb.Controllers
                     }
                     else
                     {
-                        ModelState.AddModelError("Logotipo", "O arquivo é muito grande. Deve ser menor que 64 KB.");
+                        ModelState.AddModelError("Logotipo", "O arquivo é muito grande. Deve ter no máximo 64 KB.");
                         ViewBag.EventosDisponiveis = ObterEventosDoUsuario();
                         return View(viewModel);
                     }

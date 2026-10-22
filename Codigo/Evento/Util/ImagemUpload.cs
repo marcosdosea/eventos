@@ -31,7 +31,7 @@ namespace Util
                     using (var memoryStream = new MemoryStream())
                     {
                         imagem.CopyTo(memoryStream);
-                        if (memoryStream.Length < 65535)
+                        if (memoryStream.Length <= 64 * 1024)
                         {
                             byte[] bytes = memoryStream.ToArray();
                             if (!bytes.IsImagem())
@@ -43,7 +43,7 @@ namespace Util
                         }
                         else
                         {
-                            ErrorMessage = "O arquivo de imagem deve ter menos de 64 KB.";
+                            ErrorMessage = "O arquivo de imagem deve ter no máximo 64 KB.";
                             return false;
                         }
                     }
@@ -80,8 +80,8 @@ namespace Util
             var headers = new List<byte[]>
             {
                 new byte[] { 137, 80, 78, 71 },
-                new byte[] { 73, 73, 42 },
-                new byte[] { 77, 77, 42 }
+                new byte[] { 73, 73, 42, 0 },
+                new byte[] { 77, 77, 0, 42 }
             };
 
             return headers.Any(header => fileBytes.Take(header.Length).SequenceEqual(header));

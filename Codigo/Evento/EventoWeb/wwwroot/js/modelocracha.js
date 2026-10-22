@@ -139,17 +139,21 @@
         }
 
         function obterMimeType(nomeArquivo, base64) {
+            if (base64) {
+                if (base64.startsWith("/9j/")) return "image/jpeg";
+                if (base64.startsWith("UklGR")) return "image/webp";
+                if (base64.startsWith("iVBOR")) return "image/png";
+                if (base64.startsWith("R0lGOD")) return "image/gif";
+                if (base64.startsWith("SUkq") || base64.startsWith("TU0A")) return "image/tiff";
+            }
             if (nomeArquivo) {
                 const nome = nomeArquivo.toLowerCase();
                 if (nome.endsWith(".jpg") || nome.endsWith(".jpeg")) return "image/jpeg";
                 if (nome.endsWith(".webp")) return "image/webp";
                 if (nome.endsWith(".svg")) return "image/svg+xml";
+                if (nome.endsWith(".tif") || nome.endsWith(".tiff")) return "image/tiff";
+                if (nome.endsWith(".gif")) return "image/gif";
                 if (nome.endsWith(".png")) return "image/png";
-            }
-            if (base64) {
-                if (base64.startsWith("/9j/")) return "image/jpeg";
-                if (base64.startsWith("UklGR")) return "image/webp";
-                if (base64.startsWith("iVBOR")) return "image/png";
             }
             return "image/png";
         }
@@ -334,12 +338,16 @@
                     aplicarLogotipo(srcImg, nomeArquivo, infoTamanho);
                 } else {
                     if (hiddenLogo) hiddenLogo.value = "";
-                    aplicarLogotipo(null, nomeArquivo, infoTamanho);
+                    aplicarLogotipo(null);
                 }
 
                 atualizarTexto();
                 atualizarQrcode();
-                exibirMensagemFeedback("Modelo pré-definido carregado com sucesso!");
+                if (logotipoBase64) {
+                    exibirMensagemFeedback("Modelo pré-definido carregado com sucesso!");
+                } else {
+                    exibirMensagemFeedback("Modelo pré-definido carregado, mas sem logotipo. Envie uma imagem manualmente.", "warning");
+                }
             });
         }
 

@@ -56,7 +56,7 @@
                         @if (!string.IsNullOrEmpty(Model.LogotipoBase64))
                         {
                             <div class="p-2 border rounded-3 bg-light d-inline-block" style="width: 140px; height: 70px;">
-                                <img src="data:image/png;base64,@Model.LogotipoBase64" alt="Logotipo" style="width: 100%; height: 100%; object-fit: contain;" />
+                                <img src="@Model.LogotipoDataUrl" alt="Logotipo" style="width: 100%; height: 100%; object-fit: contain;" />
                             </div>
                         }
                         else
@@ -103,7 +103,7 @@
                         @if (!string.IsNullOrEmpty(Model.LogotipoBase64))
                         {
                             <div class="cracha-logo-institucional-container">
-                                <img src="data:image/png;base64,@Model.LogotipoBase64" alt="Logotipo Institucional" class="cracha-logo-institucional-img" />
+                                <img src="@Model.LogotipoDataUrl" alt="Logotipo Institucional" class="cracha-logo-institucional-img" />
                             </div>
                         }
                         <h6 class="cracha-evento-title">@eventoNome</h6>
