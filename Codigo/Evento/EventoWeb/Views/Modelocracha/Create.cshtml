@@ -114,7 +114,11 @@
                                 <i class="bi bi-card-text blue-normal"></i>
                                 <span>Texto do Crachá</span>
                             </label>
-                            <span id="lblContadorCaracteres" class="blue-normal small fw-semibold">118 / 200 caracteres</span>
+                            @{
+                                var textoInicialCreate = Model.Texto ?? "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.";
+                                var contagemInicialCreate = System.Text.RegularExpressions.Regex.Replace(textoInicialCreate, @"\r?\n", "\r\n").Length;
+                            }
+                            <span id="lblContadorCaracteres" class="blue-normal small fw-semibold">@contagemInicialCreate / 200 caracteres</span>
                         </div>
 
                         <textarea asp-for="Texto" id="txtTextoCracha" rows="3" maxlength="200" class="form-control rounded-3" style="border-color: #CBD5E1; font-size: 0.88rem; line-height: 1.45;">@(Model.Texto ?? "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.")</textarea>

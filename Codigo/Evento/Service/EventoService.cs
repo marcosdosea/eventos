@@ -8,11 +8,15 @@ namespace Service
 {
     public class EventoService : IEventoService
     {
-        private readonly EventoContext _context;
+        private const int PapelParticipante = 4;
 
-        public EventoService(EventoContext context)
+        private readonly EventoContext _context;
+        private readonly ITransacaoService _transacaoService;
+
+        public EventoService(EventoContext context, ITransacaoService? transacaoService = null)
         {
             _context = context;
+            _transacaoService = transacaoService ?? new TransacaoService(context);
         }
 
         /// <summary>
@@ -62,88 +66,100 @@ namespace Service
                     .ThenInclude(t => t.IdSubEventos)
                 .FirstOrDefault(e => e.Id == Id);
 
-            if (evento != null)
+            if (evento == null)
             {
-                try
+                return;
+            }
+
+            try
+            {
+                _transacaoService.Executar(() => RemoverEventoComDependentes(evento));
+            }
+            catch (ServiceException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new ServiceException("Não foi possível excluir o evento. Verifique se existem dependências ativas.", ex);
+            }
+        }
+
+        /// <summary>
+        /// Remove o evento e todas as linhas que dependem dele.
+        /// As FKs do schema são ON DELETE RESTRICT, então as linhas dependentes
+        /// precisam ser removidas antes dos pais (inscrição em subevento,
+        /// participação em subevento, junção tipo-inscrição/subevento e pagamento).
+        /// </summary>
+        private void RemoverEventoComDependentes(Evento evento)
+        {
+            var idsSubeventos = evento.Subeventos.Select(s => s.Id).ToList();
+            var idsInscricoes = evento.Inscricaopessoaeventos.Select(i => i.Id).ToList();
+            var idsTiposInscricao = evento.Tipoinscricaos.Select(t => t.Id).ToList();
+
+            if (idsSubeventos.Count > 0)
+            {
+                var inscricoesSub = _context.Inscricaopessoasubeventos
+                    .Where(s => idsSubeventos.Contains(s.IdSubEvento))
+                    .ToList();
+                var participacoesSub = _context.Participacaopessoasubeventos
+                    .Where(p => idsSubeventos.Contains(p.IdSubEvento))
+                    .ToList();
+
+                _context.Inscricaopessoasubeventos.RemoveRange(inscricoesSub);
+                _context.Participacaopessoasubeventos.RemoveRange(participacoesSub);
+
+                // Junção tipoinscricaosubevento (skip navigation): limpar a coleção
+                // remove as linhas da tabela de junção.
+                foreach (var subevento in evento.Subeventos)
                 {
-                    evento.IdAreaInteresses.Clear();
-
-                    if (evento.Subeventos != null)
-                    {
-                        foreach (var sub in evento.Subeventos)
-                        {
-                            if (sub.Inscricaopessoasubeventos != null && sub.Inscricaopessoasubeventos.Any())
-                            {
-                                _context.Inscricaopessoasubeventos.RemoveRange(sub.Inscricaopessoasubeventos);
-                            }
-
-                            if (sub.Participacaopessoasubeventos != null && sub.Participacaopessoasubeventos.Any())
-                            {
-                                _context.Participacaopessoasubeventos.RemoveRange(sub.Participacaopessoasubeventos);
-                            }
-
-                            sub.IdTipoInscricaos?.Clear();
-                        }
-                    }
-
-                    if (evento.Tipoinscricaos != null)
-                    {
-                        foreach (var tipo in evento.Tipoinscricaos)
-                        {
-                            tipo.IdSubEventos?.Clear();
-                        }
-                    }
-
-                    if (evento.Inscricaopessoaeventos != null)
-                    {
-                        foreach (var inscricao in evento.Inscricaopessoaeventos)
-                        {
-                            if (inscricao.Pagamentos != null && inscricao.Pagamentos.Any())
-                            {
-                                _context.Pagamentos.RemoveRange(inscricao.Pagamentos);
-                            }
-                        }
-                        _context.Inscricaopessoaeventos.RemoveRange(evento.Inscricaopessoaeventos);
-                    }
-
-                    if (evento.Subeventos != null && evento.Subeventos.Any())
-                    {
-                        _context.Subeventos.RemoveRange(evento.Subeventos);
-                    }
-
-                    if (evento.Tipoinscricaos != null && evento.Tipoinscricaos.Any())
-                    {
-                        _context.Tipoinscricaos.RemoveRange(evento.Tipoinscricaos);
-                    }
-
-                    if (evento.Modelocertificados != null && evento.Modelocertificados.Any())
-                    {
-                        _context.Modelocertificados.RemoveRange(evento.Modelocertificados);
-                    }
-
-                    if (evento.Modelocrachas != null && evento.Modelocrachas.Any())
-                    {
-                        _context.Modelocrachas.RemoveRange(evento.Modelocrachas);
-                    }
-
-                    if (evento.Participacaopessoaeventos != null && evento.Participacaopessoaeventos.Any())
-                    {
-                        _context.Participacaopessoaeventos.RemoveRange(evento.Participacaopessoaeventos);
-                    }
-
-                    _context.Eventos.Remove(evento);
-
-                    _context.SaveChanges();
-                }
-                catch (ServiceException)
-                {
-                    throw;
-                }
-                catch (Exception ex)
-                {
-                    throw new ServiceException("Não foi possível excluir o evento. Verifique se existem dependências ativas.", ex);
+                    subevento.IdTipoInscricaos.Clear();
                 }
             }
+
+            if (idsInscricoes.Count > 0)
+            {
+                var pagamentos = _context.Pagamentos
+                    .Where(p => idsInscricoes.Contains(p.IdInscricaoPessoaEvento))
+                    .ToList();
+                _context.Pagamentos.RemoveRange(pagamentos);
+            }
+
+            if (idsTiposInscricao.Count > 0)
+            {
+                // Inscrições que apontam para o tipo de inscrição deste evento
+                // (FK RESTRICT) impedem a remoção do tipo.
+                var inscricoesDoTipo = _context.Inscricaopessoaeventos
+                    .Where(i => i.IdTipoInscricao.HasValue && idsTiposInscricao.Contains(i.IdTipoInscricao.Value))
+                    .ToList();
+                _context.Inscricaopessoaeventos.RemoveRange(inscricoesDoTipo);
+
+                var inscricoesSubDoTipo = _context.Inscricaopessoasubeventos
+                    .Where(s => s.IdTipoInscricao.HasValue && idsTiposInscricao.Contains(s.IdTipoInscricao.Value))
+                    .ToList();
+                _context.Inscricaopessoasubeventos.RemoveRange(inscricoesSubDoTipo);
+            }
+
+            if (evento.Tipoinscricaos != null)
+            {
+                foreach (var tipo in evento.Tipoinscricaos)
+                {
+                    tipo.IdSubEventos?.Clear();
+                }
+            }
+
+            evento.IdAreaInteresses.Clear();
+
+            _context.Subeventos.RemoveRange(evento.Subeventos);
+            _context.Inscricaopessoaeventos.RemoveRange(evento.Inscricaopessoaeventos);
+            _context.Modelocertificados.RemoveRange(evento.Modelocertificados);
+            _context.Modelocrachas.RemoveRange(evento.Modelocrachas);
+            _context.Participacaopessoaeventos.RemoveRange(evento.Participacaopessoaeventos);
+            _context.Tipoinscricaos.RemoveRange(evento.Tipoinscricaos);
+
+            _context.Eventos.Remove(evento);
+
+            _context.SaveChanges();
         }
 
         /// <summary>
@@ -315,16 +331,33 @@ namespace Service
 		}
 		public void AtualizarVagasDisponiveis(uint idEvento, bool saveChanges = true)
         {
-            
-            var evento = _context.Eventos
-                .Include(e => e.Inscricaopessoaeventos)
-                .FirstOrDefault(e => e.Id == idEvento);
+            var evento = _context.Eventos.FirstOrDefault(e => e.Id == idEvento);
 
             if (evento != null)
             {
-                
-                var quantidadeParticipantes = evento.Inscricaopessoaeventos
-                    .Count(i => i.IdPapel == 4); 
+                // Regra de negócio: vagas disponíveis = vagas ofertadas - participantes.
+                //
+                // A contagem soma o que já está gravado com o que está pendente no
+                // ChangeTracker (inscrições adicionadas ou removidas no mesmo contexto).
+                // Sem isso, a chamada feita antes do SaveChanges do lote
+                // (InscricaoController.realizarInscricao) ignoraria as inscrições
+                // recém-criadas e as vagas não seriam abatidas.
+                var participantesNoBanco = _context.Inscricaopessoaeventos
+                    .Count(i => i.IdEvento == idEvento && i.IdPapel == PapelParticipante);
+
+                var inscricoesPendentes = _context.ChangeTracker
+                    .Entries<Inscricaopessoaevento>()
+                    .Count(e => e.State == EntityState.Added
+                             && e.Entity.IdEvento == idEvento
+                             && e.Entity.IdPapel == PapelParticipante);
+
+                var inscricoesRemovidas = _context.ChangeTracker
+                    .Entries<Inscricaopessoaevento>()
+                    .Count(e => e.State == EntityState.Deleted
+                             && e.Entity.IdEvento == idEvento
+                             && e.Entity.IdPapel == PapelParticipante);
+
+                var quantidadeParticipantes = participantesNoBanco + inscricoesPendentes - inscricoesRemovidas;
 
                 evento.VagasDisponiveis = evento.VagasOfertadas - quantidadeParticipantes;
 

@@ -20,10 +20,17 @@ namespace EventoWeb.Models
         [BindNever]
         public string? LogotipoBase64 { get; set; }
 
+        private string _texto = string.Empty;
+
         [Display(Name = "Texto")]
         [Required(ErrorMessage = "Informe o texto do crachá")]
         [StringLength(200, ErrorMessage = "O texto do crachá deve ter no máximo 200 caracteres")]
-        public string Texto { get; set; } = null!;
+        [MaxQuebrasLinha(5, ErrorMessage = "O texto do crachá deve ter no máximo 5 quebras de linha")]
+        public string Texto
+        {
+            get => _texto;
+            set => _texto = value != null ? value.Replace("\r\n", "\n") : null!;
+        }
 
         [Display(Name = "Qrcode")]
         public sbyte Qrcode { get; set; }

@@ -22,9 +22,10 @@ namespace EventoWeb.Controllers
         private readonly ISubeventoService _subeventoService;
         private readonly UserManager<UsuarioIdentity> _userManager;
         private readonly ITipoInscricaoService _tipoinscricaoService;
+        private readonly ITransacaoService? _transacaoService;
         private readonly IMapper _mapper;
 
-        public InscricaoController(UserManager<UsuarioIdentity> userManager, ITipoInscricaoService tipoinscricaoService, IEventoService eventoService, IMapper mapper, IInscricaoService inscricaoService, IPessoaService pessoaService, ISubeventoService subeventoService)
+        public InscricaoController(UserManager<UsuarioIdentity> userManager, ITipoInscricaoService tipoinscricaoService, IEventoService eventoService, IMapper mapper, IInscricaoService inscricaoService, IPessoaService pessoaService, ISubeventoService subeventoService, ITransacaoService? transacaoService = null)
         {
             _tipoinscricaoService = tipoinscricaoService;
             _eventoService = eventoService;
@@ -33,6 +34,7 @@ namespace EventoWeb.Controllers
             _pessoaService = pessoaService;
             _subeventoService = subeventoService;
             _userManager = userManager;
+            _transacaoService = transacaoService;
         }
 
         [AllowAnonymous]
@@ -534,19 +536,38 @@ namespace EventoWeb.Controllers
 
             if (eventosParaSalvar.Any() || subeventosParaSalvar.Any())
             {
-                _inscricaoService.CreateInscricoesEmLote(eventosParaSalvar, subeventosParaSalvar, saveChanges: false);
-
-                if (eventosParaSalvar.Any())
+                try
                 {
-                    _eventoService.AtualizarVagasDisponiveis(idEvento, saveChanges: false);
-                }
+                    // A transação cobre o caso de uso inteiro: inscrições + atualização
+                    // de vagas + SaveChanges. Se qualquer passo falhar, tudo é revertido.
+                    ExecutarEmTransacao(() =>
+                    {
+                        _inscricaoService.CreateInscricoesEmLote(eventosParaSalvar, subeventosParaSalvar, saveChanges: false);
 
-                foreach (var idSub in subeventosAtualizarVagas)
+                        if (eventosParaSalvar.Any())
+                        {
+                            _eventoService.AtualizarVagasDisponiveis(idEvento, saveChanges: false);
+                        }
+
+                        foreach (var idSub in subeventosAtualizarVagas)
+                        {
+                            _subeventoService.AtualizarVagasDisponiveis(idSub, saveChanges: false);
+                        }
+
+                        _inscricaoService.SaveChanges();
+                    });
+                }
+                catch (DbUpdateException)
                 {
-                    _subeventoService.AtualizarVagasDisponiveis(idSub, saveChanges: false);
+                    // A transação foi revertida: nada foi gravado.
+                    TempData["ParticipanteMessage"] = "Não foi possível concluir a inscrição. Tente novamente.";
+                    return RedirectToAction("realizarInscricao", new { idEvento = idEvento });
                 }
-
-                _inscricaoService.SaveChanges();
+                catch (Exception)
+                {
+                    TempData["ParticipanteMessage"] = "Não foi possível concluir a inscrição. Tente novamente.";
+                    return RedirectToAction("realizarInscricao", new { idEvento = idEvento });
+                }
             }
 
             if (jaInscritoEventoPrincipal)
@@ -676,17 +697,30 @@ namespace EventoWeb.Controllers
 
             try
             {
-                var (removidas, subeventosAfetados) = _inscricaoService.CancelarInscricaoParticipante(pessoa.Id, idEvento);
+                // A transação cobre a desistência inteira: remoção das inscrições
+                // + liberação das vagas. Se a atualização de vagas falhar, as
+                // inscrições são preservadas.
+                var (removidas, subeventosAfetados) = ExecutarEmTransacao(() =>
+                {
+                    var resultado = _inscricaoService.CancelarInscricaoParticipante(pessoa.Id, idEvento);
+                    if (resultado.Removidas == 0)
+                    {
+                        return resultado;
+                    }
+
+                    _eventoService.AtualizarVagasDisponiveis(idEvento);
+                    foreach (var idSub in resultado.SubeventosAfetados)
+                    {
+                        _subeventoService.AtualizarVagasDisponiveis(idSub);
+                    }
+
+                    return resultado;
+                });
+
                 if (removidas == 0)
                 {
                     TempData["ParticipanteMessage"] = "Nenhuma inscrição de participante encontrada para este evento.";
                     return RedirectToAction(nameof(minhasInscricoes));
-                }
-
-                _eventoService.AtualizarVagasDisponiveis(idEvento);
-                foreach (var idSub in subeventosAfetados)
-                {
-                    _subeventoService.AtualizarVagasDisponiveis(idSub);
                 }
             }
             catch (DbUpdateException)
@@ -702,6 +736,32 @@ namespace EventoWeb.Controllers
 
             TempData["ParticipanteSuccessMessage"] = "Desistência realizada com sucesso! Sua vaga foi liberada.";
             return RedirectToAction(nameof(minhasInscricoes));
+        }
+
+        /// <summary>
+        /// Executa a ação dentro de uma transação explícita quando o provedor é
+        /// relacional. Sem o serviço de transação (ex.: em testes com mocks),
+        /// a ação é executada diretamente.
+        /// </summary>
+        private void ExecutarEmTransacao(Action acao)
+        {
+            if (_transacaoService == null)
+            {
+                acao();
+                return;
+            }
+
+            _transacaoService.Executar(acao);
+        }
+
+        private TResult ExecutarEmTransacao<TResult>(Func<TResult> acao)
+        {
+            if (_transacaoService == null)
+            {
+                return acao();
+            }
+
+            return _transacaoService.Executar(acao);
         }
 
     }

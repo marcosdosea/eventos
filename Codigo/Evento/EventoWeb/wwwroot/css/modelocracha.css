@@ -133,6 +133,8 @@
     color: #0F172A;
     line-height: 1.35;
     max-width: 300px;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .logo-thumb-box {
@@ -317,6 +319,12 @@
     border: 1px solid #E2E8F0;
     box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
     padding: 24px;
+}
+
+.card-details dd,
+.info-summary-box span {
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .card-header-icon {
@@ -584,6 +592,8 @@
     text-transform: uppercase;
     margin: 0;
     color: #FFFFFF;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .cracha-body {
@@ -634,6 +644,8 @@
     letter-spacing: 0.4px;
     text-transform: uppercase;
     margin-bottom: 2px;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .participant-org {
@@ -641,6 +653,8 @@
     color: #64748B;
     font-weight: 500;
     margin-bottom: 10px;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .badge-role-pill {
@@ -682,6 +696,9 @@
     padding: 12px 18px;
     text-align: center;
     border-radius: 0 0 18px 18px;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 .cracha-footer-text {
@@ -691,6 +708,10 @@
     color: #475569;
     margin: 0;
     font-weight: 400;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    white-space: pre-wrap;
+    max-width: 100%;
 }
 
 .watermark-scale {
@@ -763,20 +784,89 @@
    -------------------------------------------------------------------------- */
 
 @media print {
+    @page {
+        size: portrait;
+        margin: 10mm;
+    }
+
+    /* Oculta elementos de layout, navegação, cabeçalhos e painéis laterais */
+    header,
+    footer,
+    nav,
+    .navbar,
+    .cracha-title,
+    .preview-header-bar,
+    .card-parametros,
+    .card-details,
+    .lanyard-strap,
+    .lanyard-clip,
+    .watermark-scale,
+    .btn,
+    .cracha-page-container > .d-flex,
+    .cracha-config-container > .d-flex,
+    .cracha-details-container > .d-flex,
+    .cracha-delete-container > .d-flex,
+    .table-footer-bar,
+    #filtroModelos {
+        display: none !important;
+    }
+
+    body, html {
+        background: #FFFFFF !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+    }
+
+    /* Anula o contexto de posicionamento e padding dos containers para impressão limpa */
+    .cracha-config-container,
+    .cracha-details-container,
+    .row,
+    .col-lg-6,
+    .preview-card-container,
+    .preview-stage {
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        min-height: auto !important;
+        display: block !important;
+        position: static !important;
+        width: 100% !important;
+    }
+
     body * {
         visibility: hidden;
     }
+
     .cracha-physical-card,
     .cracha-physical-card * {
-        visibility: visible;
+        visibility: visible !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
+
     .cracha-physical-card {
-        position: absolute;
-        left: 0;
-        top: 0;
-        box-shadow: none;
-        margin: 0;
+        position: relative !important;
+        margin: 15mm auto !important;
+        top: auto !important;
+        left: auto !important;
+        transform: none !important; /* Desfaz qualquer zoom da tela na impressão */
+        transform-origin: top center !important;
+        box-shadow: none !important;
+        border: 1px dashed #94A3B8 !important;
+        width: 320px !important;
+        max-width: 100% !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        display: block !important;
+        background-color: #FFFFFF !important;
+    }
+
+    .cracha-hole {
+        border: 1px solid #94A3B8 !important;
+        background-color: #FFFFFF !important;
     }
 }

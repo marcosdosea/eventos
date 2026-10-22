@@ -121,6 +121,45 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
+        public async Task RealizarInscricaoTest_Post_FalhaNaTransacao_NaoSalvaEMostraMensagem()
+        {
+            // Falha ao gravar o lote: a transação é revertida, nada é salvo
+            // e o participante recebe uma mensagem amigável em vez de erro 500.
+            var tipos = new Dictionary<uint, Tipoinscricao>
+            {
+                { 1, new Tipoinscricao { Id = 1, IdEvento = 1, Nome = "Paga", Valor = 100m } }
+            };
+
+            var mockTransacao = new Mock<ITransacaoService>();
+            mockTransacao.Setup(t => t.Executar(It.IsAny<Action>()))
+                .Throws(new DbUpdateException("falha ao salvar a inscrição"));
+
+            var (postController, criadas, criadasSub) = CreatePostController(
+                tipos,
+                new Dictionary<string, string>
+                {
+                    { "QuantidadeTipoInscricao_1", "1" }
+                },
+                customTransacaoService: mockTransacao);
+
+            var input = new InscricaoEventoModel
+            {
+                IdTipoInscricao = 1,
+                SelectedSubeventos = new List<uint>(),
+                ValorTotal = 100m
+            };
+
+            var result = await postController.realizarInscricao(1, input);
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("realizarInscricao", redirect.ActionName);
+            Assert.AreEqual("Não foi possível concluir a inscrição. Tente novamente.", postController.TempData["ParticipanteMessage"]);
+            Assert.AreEqual(0, criadas.Count);
+            Assert.AreEqual(0, criadasSub.Count);
+        }
+
+        [TestMethod()]
         public async Task RealizarInscricaoTest_Post_TipoDeOutroEvento_RejeitaSemSalvar()
         {
             // Arrange (#780): tipo 9 pertence ao evento 2, mas o form forja
@@ -1575,7 +1614,8 @@ namespace EventoWeb.Controllers.Tests
             Dictionary<string, string> formFields,
             Evento? evento = null,
             Pessoa? pessoa = null,
-            Mock<ISubeventoService>? customSubeventoService = null)
+            Mock<ISubeventoService>? customSubeventoService = null,
+            Mock<ITransacaoService>? customTransacaoService = null)
         {
             var mockPessoaService = new Mock<IPessoaService>();
             mockPessoaService.Setup(service => service.GetByCpf(UsernameTeste))
@@ -1623,7 +1663,8 @@ namespace EventoWeb.Controllers.Tests
                 mapper,
                 mockInscricaoService.Object,
                 mockPessoaService.Object,
-                mockSubeventoService.Object);
+                mockSubeventoService.Object,
+                customTransacaoService?.Object);
 
             var claims = new List<Claim> { new Claim(ClaimTypes.Name, UsernameTeste) };
             var httpContext = new DefaultHttpContext
