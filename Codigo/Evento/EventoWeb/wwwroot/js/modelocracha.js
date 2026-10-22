@@ -267,8 +267,8 @@
                 let texto = textoPadrao;
                 let qrcode = qrcodePadrao;
                 let logotipoBase64 = null;
-                let nomeArquivo = "logo_congresso_nacional_vetor.svg";
-                let infoTamanho = "64 KB";
+                let nomeArquivo = "LOGOTIPO.png";
+                let infoTamanho = "7.3 KB";
 
                 try {
                     const endpoint = idEvento && idEvento !== "0"
@@ -282,8 +282,8 @@
                         qrcode = (data.qrcode === 1);
                         if (data.temLogotipo && data.logotipoBase64) {
                             logotipoBase64 = data.logotipoBase64;
-                            nomeArquivo = data.nomeArquivo || "logo_institucional.png";
-                            infoTamanho = data.tamanhoArquivo || "64 KB";
+                            nomeArquivo = data.nomeArquivo || "LOGOTIPO.png";
+                            infoTamanho = data.tamanhoArquivo || "7.3 KB";
                         }
                     }
                 } catch (err) {
@@ -302,7 +302,8 @@
 
                 if (logotipoBase64) {
                     if (hiddenLogo) hiddenLogo.value = logotipoBase64;
-                    const srcImg = "data:image/png;base64," + logotipoBase64;
+                    const mime = (nomeArquivo && nomeArquivo.toLowerCase().endsWith(".svg")) ? "image/svg+xml" : "image/png";
+                    const srcImg = `data:${mime};base64,` + logotipoBase64;
                     aplicarLogotipo(srcImg, nomeArquivo, infoTamanho);
                 } else {
                     if (hiddenLogo) hiddenLogo.value = "";
