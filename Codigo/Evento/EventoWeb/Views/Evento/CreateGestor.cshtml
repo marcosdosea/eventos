@@ -58,7 +58,7 @@
 
                     <div class="form-group">
                         <label asp-for="Pessoa.Telefone1" class="control-label">Telefone</label>
-                        <input asp-for="Pessoa.Telefone1" type="number" class="form-control" id="Telefone1" placeholder="Com o DDD" />
+                        <input asp-for="Pessoa.Telefone1" type="tel" class="form-control" id="Telefone1" placeholder="Com o DDD" oninput="formatarTelefoneForm(this)" />
                         <span asp-validation-for="Pessoa.Telefone1" class="text-danger"></span>
                     </div>
                 </div>
