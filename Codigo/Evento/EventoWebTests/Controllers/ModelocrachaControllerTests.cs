@@ -702,6 +702,13 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod]
+        public void IsImagemTest_Gif_Invalido()
+        {
+            var gifBytes = System.Text.Encoding.ASCII.GetBytes("GIF89a");
+            Assert.IsFalse(gifBytes.IsImagem());
+        }
+
+        [TestMethod]
         public void CreateTest_Post_QuandoModeloJaExisteParaEvento_Atualiza()
         {
             var model = GetNewModelocracha();

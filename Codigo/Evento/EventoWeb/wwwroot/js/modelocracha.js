@@ -143,14 +143,12 @@
                 const nome = nomeArquivo.toLowerCase();
                 if (nome.endsWith(".jpg") || nome.endsWith(".jpeg")) return "image/jpeg";
                 if (nome.endsWith(".webp")) return "image/webp";
-                if (nome.endsWith(".gif")) return "image/gif";
                 if (nome.endsWith(".svg")) return "image/svg+xml";
                 if (nome.endsWith(".png")) return "image/png";
             }
             if (base64) {
                 if (base64.startsWith("/9j/")) return "image/jpeg";
                 if (base64.startsWith("UklGR")) return "image/webp";
-                if (base64.startsWith("R0lGO")) return "image/gif";
                 if (base64.startsWith("iVBOR")) return "image/png";
             }
             return "image/png";

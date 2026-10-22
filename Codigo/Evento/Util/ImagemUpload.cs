@@ -79,7 +79,6 @@ namespace Util
 
             var headers = new List<byte[]>
             {
-                Encoding.ASCII.GetBytes("GIF"),
                 new byte[] { 137, 80, 78, 71 },
                 new byte[] { 73, 73, 42 },
                 new byte[] { 77, 77, 42 }

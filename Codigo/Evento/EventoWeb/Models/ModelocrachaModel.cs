@@ -13,7 +13,7 @@ namespace EventoWeb.Models
         public uint Id { get; set; }
 
         [Display(Name = "Logotipo")]
-        [ImagemUpload(ErrorMessage = "A imagem deve estar nos formatos PNG, JPG, JPEG, TIF, GIF ou WEBP e ter menos de 1 MB.")]
+        [ImagemUpload(ErrorMessage = "A imagem deve estar nos formatos PNG, JPG, JPEG, TIF ou WEBP e ter menos de 1 MB.")]
         public IFormFile? Logotipo { get; set; }
 
         [Display(Name = "Logotipo")]
@@ -37,7 +37,6 @@ namespace EventoWeb.Models
                     {
                         ".jpg" or ".jpeg" => "image/jpeg",
                         ".webp" => "image/webp",
-                        ".gif" => "image/gif",
                         ".svg" => "image/svg+xml",
                         _ => "image/png"
                     };
