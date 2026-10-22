@@ -74,7 +74,6 @@ namespace EventoWeb.Controllers
                     }
                     catch
                     {
-                        // Degradação graciosa
                     }
                 }
             }
@@ -318,7 +317,6 @@ namespace EventoWeb.Controllers
                 base64Limpo = base64Limpo.Substring(indexVirgula + 1).Trim();
             }
 
-            // 1. Validação de tamanho ANTES de decodificar (evita decodificação e estouro de memória)
             long tamanhoEstimadoBytes = (base64Limpo.Length * 3L) / 4L;
             if (base64Limpo.Length > MaxLogotipoBase64Chars || tamanhoEstimadoBytes > MaxLogotipoBytes)
             {
@@ -326,7 +324,6 @@ namespace EventoWeb.Controllers
                 return false;
             }
 
-            // 2. Decodificação segura
             byte[] bytes;
             try
             {
@@ -338,14 +335,12 @@ namespace EventoWeb.Controllers
                 return false;
             }
 
-            // 3. Validação do tamanho real decodificado (limite da coluna BLOB de 65.535 bytes)
             if (bytes.Length > MaxLogotipoBytes)
             {
                 erroValidacao = "O arquivo de imagem deve ter menos de 64 KB.";
                 return false;
             }
 
-            // 4. Validação de magic bytes (PNG, JPG, JPEG, TIF, GIF) via ImageExtensions.IsImagem
             if (!bytes.IsImagem())
             {
                 erroValidacao = "Formato de Imagem Inválido";
@@ -497,7 +492,6 @@ namespace EventoWeb.Controllers
 
                 try
                 {
-                    // Regra de negócio: permite múltiplos modelos por evento, sempre criando nova entidade
                     var modelocracha = _mapper.Map<Modelocracha>(modelocrachaModel);
                     modelocracha.Id = 0;
                     modelocracha.IdEvento = idEventoAlvo;

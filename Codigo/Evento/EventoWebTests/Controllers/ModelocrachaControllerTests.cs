@@ -211,7 +211,6 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void EditTest_Post_ComLogotipoBase64_AtualizaLogotipoComNovoValor()
         {
-            // Arrange: PNG magic bytes válidos
             var novoLogoBytes = new byte[] { 137, 80, 78, 71, 13, 10, 26, 10, 0x11, 0x22 };
             var mockCracha = new Mock<IModelocrachaService>();
             var mockInsc = new Mock<IInscricaoService>();
@@ -240,10 +239,8 @@ namespace EventoWeb.Controllers.Tests
                 LogotipoBase64 = Convert.ToBase64String(novoLogoBytes)
             };
 
-            // Act
             var result = ctl.Edit(1, modelEdit);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             mockCracha.Verify(s => s.Edit(It.Is<Modelocracha>(m => m.Logotipo != null && m.Logotipo.SequenceEqual(novoLogoBytes))), Times.Once);
         }
@@ -251,7 +248,6 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void CreateTest_Post_ComLogotipoBase64_Valido_SalvaComSucesso()
         {
-            // Arrange
             var logoValidoBytes = new byte[] { 137, 80, 78, 71, 13, 10, 26, 10, 0xAA, 0xBB };
             var mockCracha = new Mock<IModelocrachaService>();
             var mockInsc = new Mock<IInscricaoService>();
@@ -278,10 +274,8 @@ namespace EventoWeb.Controllers.Tests
                 LogotipoBase64 = Convert.ToBase64String(logoValidoBytes)
             };
 
-            // Act
             var result = ctl.Create(model);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             mockCracha.Verify(s => s.Create(It.Is<Modelocracha>(m => m.Logotipo != null && m.Logotipo.SequenceEqual(logoValidoBytes))), Times.Once);
         }
@@ -289,7 +283,6 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void CreateTest_Post_ComLogotipoBase64_MaiorQue64KB_RetornaModelError()
         {
-            // Arrange: 70 KB excede o limite BLOB de 64 KB (65.535 bytes)
             var bytesGrandes = new byte[70000];
             var mockCracha = new Mock<IModelocrachaService>();
             var mockInsc = new Mock<IInscricaoService>();
@@ -313,10 +306,8 @@ namespace EventoWeb.Controllers.Tests
                 LogotipoBase64 = Convert.ToBase64String(bytesGrandes)
             };
 
-            // Act
             var result = ctl.Create(model);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             Assert.IsFalse(ctl.ModelState.IsValid);
             Assert.IsTrue(ctl.ModelState.ContainsKey("Logotipo"));
@@ -327,7 +318,6 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void CreateTest_Post_ComLogotipoBase64_MagicBytesInvalidos_RetornaModelError()
         {
-            // Arrange: bytes que não formam formato de imagem suportado
             var bytesInvalidos = new byte[] { 0x11, 0x22, 0x33, 0x44 };
             var mockCracha = new Mock<IModelocrachaService>();
             var mockInsc = new Mock<IInscricaoService>();
@@ -351,10 +341,8 @@ namespace EventoWeb.Controllers.Tests
                 LogotipoBase64 = Convert.ToBase64String(bytesInvalidos)
             };
 
-            // Act
             var result = ctl.Create(model);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             Assert.IsFalse(ctl.ModelState.IsValid);
             Assert.IsTrue(ctl.ModelState.ContainsKey("Logotipo"));
@@ -365,7 +353,6 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void EditTest_Post_ComLogotipoBase64_MaiorQue64KB_RetornaModelError()
         {
-            // Arrange: 70 KB excede o limite de 64 KB
             var bytesGrandes = new byte[70000];
             var mockCracha = new Mock<IModelocrachaService>();
             var mockInsc = new Mock<IInscricaoService>();
@@ -391,10 +378,8 @@ namespace EventoWeb.Controllers.Tests
                 LogotipoBase64 = Convert.ToBase64String(bytesGrandes)
             };
 
-            // Act
             var result = ctl.Edit(1, modelEdit);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             Assert.IsFalse(ctl.ModelState.IsValid);
             Assert.IsTrue(ctl.ModelState.ContainsKey("Logotipo"));
@@ -405,7 +390,6 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void EditTest_Post_ComLogotipoBase64_MagicBytesInvalidos_RetornaModelError()
         {
-            // Arrange
             var bytesInvalidos = new byte[] { 0x11, 0x22, 0x33, 0x44 };
             var mockCracha = new Mock<IModelocrachaService>();
             var mockInsc = new Mock<IInscricaoService>();
@@ -431,10 +415,8 @@ namespace EventoWeb.Controllers.Tests
                 LogotipoBase64 = Convert.ToBase64String(bytesInvalidos)
             };
 
-            // Act
             var result = ctl.Edit(1, modelEdit);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             Assert.IsFalse(ctl.ModelState.IsValid);
             Assert.IsTrue(ctl.ModelState.ContainsKey("Logotipo"));
@@ -586,17 +568,14 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void ObterPredefinidoTest_SemEvento_Gestor_RetornaForbid()
         {
-            // Act: Gestor sem vínculo/idEvento recebe Forbid (403)
             var result = controller.ObterPredefinido(null);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ForbidResult));
         }
 
         [TestMethod]
         public void ObterPredefinidoTest_SemEvento_Administrador_RetornaJsonPadrao()
         {
-            // Arrange: Administrador possui governança global e pode obter pré-definido sem evento
             var mockCracha = new Mock<IModelocrachaService>();
             var mockInsc = new Mock<IInscricaoService>();
             IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
@@ -606,10 +585,8 @@ namespace EventoWeb.Controllers.Tests
                 HttpContext = new DefaultHttpContext { User = AdministradorPrincipal() }
             };
 
-            // Act
             var result = ctl.ObterPredefinido(null);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(JsonResult));
             var json = (JsonResult)result;
             Assert.IsNotNull(json.Value);
@@ -618,10 +595,8 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void ObterPredefinidoTest_ComEventoValido_RetornaJsonComLogotipoValido()
         {
-            // Act
             var result = controller.ObterPredefinido(1);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(JsonResult));
             var json = (JsonResult)result;
             Assert.IsNotNull(json.Value);
@@ -646,7 +621,6 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod]
         public void ObterPredefinidoTest_NaoAutorizado_RetornaForbid()
         {
-            // Arrange
             var mockCracha = new Mock<IModelocrachaService>();
             var mockInsc = new Mock<IInscricaoService>();
             mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 99))
@@ -658,10 +632,8 @@ namespace EventoWeb.Controllers.Tests
                 HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
             };
 
-            // Act
             var result = ctl.ObterPredefinido(99);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(ForbidResult));
         }
 
