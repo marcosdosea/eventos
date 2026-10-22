@@ -4,17 +4,20 @@ using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Security.Claims;
+using System.Text.Json;
 using AutoMapper;
 using Core;
 using Core.DTO;
 using Core.Service;
 using EventoWeb.Mappers;
 using EventoWeb.Models;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Util;
 
 namespace EventoWeb.Controllers.Tests
 {
@@ -195,6 +198,43 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod]
+        public void EditTest_Get_ComTiffBigEndian_NomeArquivoTif()
+        {
+            var tiffBytes = new byte[] { 0x4D, 0x4D, 0x00, 0x2A, 0x00, 0x00, 0x00, 0x08 };
+            var mockService = new Mock<IModelocrachaService>();
+            var mockServiceEvento = new Mock<IEventoService>();
+            var mockServicePessoa = new Mock<IPessoaService>();
+            var mockServiceInscricao = new Mock<IInscricaoService>();
+
+            mockService.Setup(s => s.Get(1)).Returns(new Modelocracha
+            {
+                Id = 1,
+                IdEvento = 1,
+                Texto = "Texto 1",
+                Qrcode = 1,
+                Logotipo = tiffBytes
+            });
+            mockServiceInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockService.Object, mockServiceEvento.Object, mockServicePessoa.Object, mockServiceInscricao.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            var result = ctl.Edit(1);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var view = (ViewResult)result;
+            var model = (ModelocrachaModel)view.ViewData.Model!;
+            Assert.IsNotNull(model);
+            Assert.AreEqual("logo_institucional.tif", model.NomeArquivo);
+            Assert.AreEqual("data:image/tiff;base64," + Convert.ToBase64String(tiffBytes), model.LogotipoDataUrl);
+        }
+
+        [TestMethod]
         public void EditTest_Post_Valid()
         {
             var result = controller.Edit(GetTargetEditModelocrachaModel().Id, GetTargetEditModelocrachaModel());
@@ -204,6 +244,263 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsNull(redirectToActionResult.ControllerName);
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
             Assert.AreEqual("Modelo salvo com sucesso", controller.TempData["SuccessMessage"]);
+        }
+
+        [TestMethod]
+        public void EditTest_Post_ComLogotipoBase64_AtualizaLogotipoComNovoValor()
+        {
+            var novoLogoBytes = new byte[] { 137, 80, 78, 71, 13, 10, 26, 10, 0x11, 0x22 };
+            var mockCracha = new Mock<IModelocrachaService>();
+            var mockInsc = new Mock<IInscricaoService>();
+            mockCracha.Setup(s => s.Get(1))
+                .Returns(new Modelocracha { Id = 1, IdEvento = 1, Logotipo = new byte[] { 0x99, 0x88 }, Texto = "Texto Antigo", Qrcode = 1 });
+            mockCracha.Setup(s => s.GetByEvento(1))
+                .Returns(new List<Modelocracha> { new Modelocracha { Id = 1, IdEvento = 1, Logotipo = new byte[] { 0x99, 0x88 } } });
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+            ctl.TempData = new TempDataDictionary(ctl.ControllerContext.HttpContext, Mock.Of<ITempDataProvider>());
+
+            var modelEdit = new ModelocrachaModel
+            {
+                Id = 1,
+                IdEvento = 1,
+                Texto = "Texto Atualizado",
+                Qrcode = 1,
+                Logotipo = null,
+                LogotipoBase64 = Convert.ToBase64String(novoLogoBytes)
+            };
+
+            var result = ctl.Edit(1, modelEdit);
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            mockCracha.Verify(s => s.Edit(It.Is<Modelocracha>(m => m.Logotipo != null && m.Logotipo.SequenceEqual(novoLogoBytes))), Times.Once);
+        }
+
+        [TestMethod]
+        public void CreateTest_Post_ComLogotipoBase64_Valido_SalvaComSucesso()
+        {
+            var logoValidoBytes = new byte[] { 137, 80, 78, 71, 13, 10, 26, 10, 0xAA, 0xBB };
+            var mockCracha = new Mock<IModelocrachaService>();
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+            mockCracha.Setup(s => s.GetByEvento(1)).Returns(new List<Modelocracha>());
+            mockCracha.Setup(s => s.Create(It.IsAny<Modelocracha>())).Returns(10);
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+            ctl.TempData = new TempDataDictionary(ctl.ControllerContext.HttpContext, Mock.Of<ITempDataProvider>());
+
+            var model = new ModelocrachaModel
+            {
+                Id = 0,
+                IdEvento = 1,
+                Texto = "Texto do Modelo",
+                Qrcode = 1,
+                Logotipo = null,
+                LogotipoBase64 = Convert.ToBase64String(logoValidoBytes)
+            };
+
+            var result = ctl.Create(model);
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            mockCracha.Verify(s => s.Create(It.Is<Modelocracha>(m => m.Logotipo != null && m.Logotipo.SequenceEqual(logoValidoBytes))), Times.Once);
+        }
+
+        [TestMethod]
+        public void CreateTest_Post_ComLogotipoBase64_MaiorQue64KB_RetornaModelError()
+        {
+            var bytesGrandes = new byte[64 * 1024 + 1];
+            var mockCracha = new Mock<IModelocrachaService>();
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            var model = new ModelocrachaModel
+            {
+                Id = 0,
+                IdEvento = 1,
+                Texto = "Texto do Modelo",
+                Qrcode = 1,
+                Logotipo = null,
+                LogotipoBase64 = Convert.ToBase64String(bytesGrandes)
+            };
+
+            var result = ctl.Create(model);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            Assert.IsFalse(ctl.ModelState.IsValid);
+            Assert.IsTrue(ctl.ModelState.ContainsKey("Logotipo"));
+            Assert.IsTrue(ctl.ModelState["Logotipo"]!.Errors.Any(e => e.ErrorMessage.Contains("64 KB")));
+            mockCracha.Verify(s => s.Create(It.IsAny<Modelocracha>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void CreateTest_Post_ComLogotipoBase64_Com64KBBytes_Valido()
+        {
+            var bytes64Kb = new byte[64 * 1024];
+            bytes64Kb[0] = 0x89;
+            bytes64Kb[1] = 0x50;
+            bytes64Kb[2] = 0x4E;
+            bytes64Kb[3] = 0x47;
+            bytes64Kb[4] = 0x0D;
+            bytes64Kb[5] = 0x0A;
+            bytes64Kb[6] = 0x1A;
+            bytes64Kb[7] = 0x0A;
+
+            var mockCracha = new Mock<IModelocrachaService>();
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            var model = new ModelocrachaModel
+            {
+                Id = 0,
+                IdEvento = 1,
+                Texto = "Texto do Modelo",
+                Qrcode = 1,
+                Logotipo = null,
+                LogotipoBase64 = Convert.ToBase64String(bytes64Kb)
+            };
+
+            var result = ctl.Create(model);
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            mockCracha.Verify(s => s.Create(It.Is<Modelocracha>(m => m.Logotipo != null && m.Logotipo.Length == 64 * 1024)), Times.Once);
+        }
+
+        [TestMethod]
+        public void CreateTest_Post_ComLogotipoBase64_MagicBytesInvalidos_RetornaModelError()
+        {
+            var bytesInvalidos = new byte[] { 0x11, 0x22, 0x33, 0x44 };
+            var mockCracha = new Mock<IModelocrachaService>();
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            var model = new ModelocrachaModel
+            {
+                Id = 0,
+                IdEvento = 1,
+                Texto = "Texto do Modelo",
+                Qrcode = 1,
+                Logotipo = null,
+                LogotipoBase64 = Convert.ToBase64String(bytesInvalidos)
+            };
+
+            var result = ctl.Create(model);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            Assert.IsFalse(ctl.ModelState.IsValid);
+            Assert.IsTrue(ctl.ModelState.ContainsKey("Logotipo"));
+            Assert.IsTrue(ctl.ModelState["Logotipo"]!.Errors.Any(e => e.ErrorMessage.Contains("Inválido")));
+            mockCracha.Verify(s => s.Create(It.IsAny<Modelocracha>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void EditTest_Post_ComLogotipoBase64_MaiorQue64KB_RetornaModelError()
+        {
+            var bytesGrandes = new byte[70000];
+            var mockCracha = new Mock<IModelocrachaService>();
+            var mockInsc = new Mock<IInscricaoService>();
+            mockCracha.Setup(s => s.Get(1))
+                .Returns(new Modelocracha { Id = 1, IdEvento = 1, Logotipo = new byte[] { 0x99, 0x88 }, Texto = "Texto Antigo", Qrcode = 1 });
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            var modelEdit = new ModelocrachaModel
+            {
+                Id = 1,
+                IdEvento = 1,
+                Texto = "Texto Atualizado",
+                Qrcode = 1,
+                Logotipo = null,
+                LogotipoBase64 = Convert.ToBase64String(bytesGrandes)
+            };
+
+            var result = ctl.Edit(1, modelEdit);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            Assert.IsFalse(ctl.ModelState.IsValid);
+            Assert.IsTrue(ctl.ModelState.ContainsKey("Logotipo"));
+            Assert.IsTrue(ctl.ModelState["Logotipo"]!.Errors.Any(e => e.ErrorMessage.Contains("64 KB")));
+            mockCracha.Verify(s => s.Edit(It.IsAny<Modelocracha>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void EditTest_Post_ComLogotipoBase64_MagicBytesInvalidos_RetornaModelError()
+        {
+            var bytesInvalidos = new byte[] { 0x11, 0x22, 0x33, 0x44 };
+            var mockCracha = new Mock<IModelocrachaService>();
+            var mockInsc = new Mock<IInscricaoService>();
+            mockCracha.Setup(s => s.Get(1))
+                .Returns(new Modelocracha { Id = 1, IdEvento = 1, Logotipo = new byte[] { 0x99, 0x88 }, Texto = "Texto Antigo", Qrcode = 1 });
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            var modelEdit = new ModelocrachaModel
+            {
+                Id = 1,
+                IdEvento = 1,
+                Texto = "Texto Atualizado",
+                Qrcode = 1,
+                Logotipo = null,
+                LogotipoBase64 = Convert.ToBase64String(bytesInvalidos)
+            };
+
+            var result = ctl.Edit(1, modelEdit);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            Assert.IsFalse(ctl.ModelState.IsValid);
+            Assert.IsTrue(ctl.ModelState.ContainsKey("Logotipo"));
+            Assert.IsTrue(ctl.ModelState["Logotipo"]!.Errors.Any(e => e.ErrorMessage.Contains("Inválido")));
+            mockCracha.Verify(s => s.Edit(It.IsAny<Modelocracha>()), Times.Never);
         }
 
         [TestMethod]
@@ -345,6 +642,249 @@ namespace EventoWeb.Controllers.Tests
             var result = ctl.ObterModeloPorEvento(99);
 
             Assert.IsInstanceOfType(result, typeof(ForbidResult));
+        }
+
+        [TestMethod]
+        public void ObterPredefinidoTest_SemEvento_Gestor_RetornaForbid()
+        {
+            var result = controller.ObterPredefinido(null);
+
+            Assert.IsInstanceOfType(result, typeof(ForbidResult));
+        }
+
+        [TestMethod]
+        public void ObterPredefinidoTest_SemEvento_Administrador_RetornaJsonPadrao()
+        {
+            var mockCracha = new Mock<IModelocrachaService>();
+            var mockInsc = new Mock<IInscricaoService>();
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = AdministradorPrincipal() }
+            };
+
+            var result = ctl.ObterPredefinido(null);
+
+            Assert.IsInstanceOfType(result, typeof(JsonResult));
+            var json = (JsonResult)result;
+            Assert.IsNotNull(json.Value);
+        }
+
+        [TestMethod]
+        public void ObterPredefinidoTest_ComEventoValido_RetornaJsonComLogotipoValido()
+        {
+            var result = controller.ObterPredefinido(1);
+
+            Assert.IsInstanceOfType(result, typeof(JsonResult));
+            var json = (JsonResult)result;
+            Assert.IsNotNull(json.Value);
+
+            var jsonString = JsonSerializer.Serialize(json.Value);
+            using var doc = JsonDocument.Parse(jsonString);
+            var root = doc.RootElement;
+
+            Assert.IsTrue(root.GetProperty("sucesso").GetBoolean());
+            Assert.AreEqual(1, root.GetProperty("qrcode").GetInt32());
+            Assert.AreEqual("Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.", root.GetProperty("texto").GetString());
+            Assert.IsTrue(root.GetProperty("temLogotipo").GetBoolean());
+            Assert.AreEqual("LOGOTIPO.png", root.GetProperty("nomeArquivo").GetString());
+
+            var b64 = root.GetProperty("logotipoBase64").GetString();
+            Assert.IsFalse(string.IsNullOrEmpty(b64));
+            var logoBytes = Convert.FromBase64String(b64!);
+            Assert.IsTrue(logoBytes.Length > 0 && logoBytes.Length <= 64 * 1024);
+            Assert.IsTrue(logoBytes.IsImagem());
+        }
+
+        [TestMethod]
+        public void ObterPredefinidoTest_NaoAutorizado_RetornaForbid()
+        {
+            var mockCracha = new Mock<IModelocrachaService>();
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 99))
+                .Returns((Inscricaopessoaevento)null!);
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            var result = ctl.ObterPredefinido(99);
+
+            Assert.IsInstanceOfType(result, typeof(ForbidResult));
+        }
+
+        [TestMethod]
+        public void ObterPredefinidoTest_SemArquivoPredefinido_RetornaSemNomeETamanho()
+        {
+            var mockCracha = new Mock<IModelocrachaService>();
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+
+            var mockEnv = new Mock<IWebHostEnvironment>();
+            mockEnv.SetupGet(e => e.WebRootPath)
+                .Returns(Path.Combine(Path.GetTempPath(), "borala-sem-logo-" + Guid.NewGuid().ToString("N")));
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper, mockEnv.Object);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            var result = ctl.ObterPredefinido(1);
+
+            var json = (JsonResult)result;
+            var jsonString = JsonSerializer.Serialize(json.Value);
+            using var doc = JsonDocument.Parse(jsonString);
+            var root = doc.RootElement;
+
+            Assert.IsFalse(root.GetProperty("temLogotipo").GetBoolean());
+            Assert.AreEqual(string.Empty, root.GetProperty("nomeArquivo").GetString());
+            Assert.AreEqual(string.Empty, root.GetProperty("tamanhoArquivo").GetString());
+        }
+
+        [TestMethod]
+        public void CreateTest_Get_SemModelosExistentes_CarregaLogotipoPredefinido()
+        {
+            var mockCracha = new Mock<IModelocrachaService>();
+            mockCracha.Setup(s => s.GetByEvento(99)).Returns(new List<Modelocracha>());
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 99))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 99, IdPapel = 2 });
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            var result = ctl.Create(99);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var view = (ViewResult)result;
+            Assert.IsInstanceOfType(view.ViewData.Model, typeof(ModelocrachaModel));
+            var model = (ModelocrachaModel)view.ViewData.Model;
+            Assert.IsFalse(string.IsNullOrEmpty(model.LogotipoBase64));
+            Assert.AreEqual("LOGOTIPO.png", model.NomeArquivo);
+        }
+
+        [TestMethod]
+        public void IsImagemTest_WebP_Valido()
+        {
+            var webpBytes = new byte[] { 0x52, 0x49, 0x46, 0x46, 0x24, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50, 0x56, 0x50, 0x38, 0x20 };
+            Assert.IsTrue(webpBytes.IsImagem());
+        }
+
+        [TestMethod]
+        public void IsImagemTest_Jpeg_Valido()
+        {
+            var jpegBytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xDB, 0x00, 0x43, 0x00 };
+            Assert.IsTrue(jpegBytes.IsImagem());
+        }
+
+        [TestMethod]
+        public void IsImagemTest_TiffLittleEndian_Valido()
+        {
+            var tiffBytes = new byte[] { 0x49, 0x49, 0x2A, 0x00, 0x08, 0x00, 0x00, 0x00 };
+            Assert.IsTrue(tiffBytes.IsImagem());
+        }
+
+        [TestMethod]
+        public void IsImagemTest_TiffBigEndian_Valido()
+        {
+            var tiffBytes = new byte[] { 0x4D, 0x4D, 0x00, 0x2A, 0x00, 0x00, 0x00, 0x08 };
+            Assert.IsTrue(tiffBytes.IsImagem());
+        }
+
+        [TestMethod]
+        public void ImagemUploadTest_Com64KBBytes_Valido()
+        {
+            var bytes = new byte[64 * 1024];
+            bytes[0] = 0x89;
+            bytes[1] = 0x50;
+            bytes[2] = 0x4E;
+            bytes[3] = 0x47;
+
+            using var stream = new MemoryStream(bytes);
+            var file = new FormFile(stream, 0, bytes.Length, "Logotipo", "logo.png");
+
+            Assert.IsTrue(new ImagemUpload().IsValid(file));
+        }
+
+        [TestMethod]
+        public void ImagemUploadTest_Com64KBMais1Byte_Invalido()
+        {
+            var bytes = new byte[64 * 1024 + 1];
+            bytes[0] = 0x89;
+            bytes[1] = 0x50;
+            bytes[2] = 0x4E;
+            bytes[3] = 0x47;
+
+            using var stream = new MemoryStream(bytes);
+            var file = new FormFile(stream, 0, bytes.Length, "Logotipo", "logo.png");
+
+            Assert.IsFalse(new ImagemUpload().IsValid(file));
+        }
+
+        [TestMethod]
+        public void LogotipoDataUrlTest_RetornaDataUriCorreta()
+        {
+            var modelWebp = new ModelocrachaModel
+            {
+                NomeArquivo = "logo.webp",
+                LogotipoBase64 = "UklGRiQAAABXRUJQVlA4"
+            };
+            Assert.AreEqual("data:image/webp;base64,UklGRiQAAABXRUJQVlA4", modelWebp.LogotipoDataUrl);
+
+            var modelJpeg = new ModelocrachaModel
+            {
+                NomeArquivo = "logo.jpg",
+                LogotipoBase64 = "/9j/4AAQSkZJRgABAQEA"
+            };
+            Assert.AreEqual("data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA", modelJpeg.LogotipoDataUrl);
+
+            var modelPng = new ModelocrachaModel
+            {
+                NomeArquivo = "logo.png",
+                LogotipoBase64 = "iVBORw0KGgoAAAANSUh"
+            };
+            Assert.AreEqual("data:image/png;base64,iVBORw0KGgoAAAANSUh", modelPng.LogotipoDataUrl);
+        }
+
+        [TestMethod]
+        public void LogotipoDataUrlTest_NomePngComBytesWebp_UsaMimeReal()
+        {
+            var modelWebp = new ModelocrachaModel
+            {
+                NomeArquivo = "logo_institucional.png",
+                LogotipoBase64 = "UklGRiQAAABXRUJQVlA4"
+            };
+            Assert.AreEqual("data:image/webp;base64,UklGRiQAAABXRUJQVlA4", modelWebp.LogotipoDataUrl);
+
+            var modelTiff = new ModelocrachaModel
+            {
+                NomeArquivo = "logo_institucional.png",
+                LogotipoBase64 = "SUkqAAgAAAAQAAAB"
+            };
+            Assert.AreEqual("data:image/tiff;base64,SUkqAAgAAAAQAAAB", modelTiff.LogotipoDataUrl);
+
+            var modelTiffBigEndian = new ModelocrachaModel
+            {
+                NomeArquivo = "logo_institucional.png",
+                LogotipoBase64 = "TU0AKgAAAAgAAAAQAAAB"
+            };
+            Assert.AreEqual("data:image/tiff;base64,TU0AKgAAAAgAAAAQAAAB", modelTiffBigEndian.LogotipoDataUrl);
+        }
+
+        [TestMethod]
+        public void IsImagemTest_Gif_Invalido()
+        {
+            var gifBytes = System.Text.Encoding.ASCII.GetBytes("GIF89a");
+            Assert.IsFalse(gifBytes.IsImagem());
         }
 
         [TestMethod]
@@ -548,6 +1088,12 @@ namespace EventoWeb.Controllers.Tests
         {
             new Claim(ClaimTypes.Name, "12345678900"),
             new Claim(ClaimTypes.Role, "GESTOR")
+        }, "TestAuthType"));
+
+        private static ClaimsPrincipal AdministradorPrincipal() => new(new ClaimsIdentity(new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, "65535216038"),
+            new Claim(ClaimTypes.Role, "ADMINISTRADOR")
         }, "TestAuthType"));
 
         private ModelocrachaModel GetNewModelocracha()

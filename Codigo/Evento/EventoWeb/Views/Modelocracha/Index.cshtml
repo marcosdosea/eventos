@@ -63,7 +63,7 @@
                                         <div class="logo-thumb-box" title="Logotipo do Modelo">
                                             @if (!string.IsNullOrEmpty(item.LogotipoBase64))
                                             {
-                                                <img src="data:image/png;base64,@item.LogotipoBase64" alt="Logotipo" />
+                                                <img src="@item.LogotipoDataUrl" alt="Logotipo" />
                                             }
                                             else
                                             {

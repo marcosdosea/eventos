@@ -13,12 +13,60 @@ namespace EventoWeb.Models
         public uint Id { get; set; }
 
         [Display(Name = "Logotipo")]
-        [ImagemUpload(ErrorMessage = "A imagem deve estar nos formatos PNG, JPG, JPEG, TIF ou GIF e ter menos de 1 MB.")]
+        [ImagemUpload(ErrorMessage = "A imagem deve estar nos formatos PNG, JPG, JPEG, TIF ou WEBP e ter no máximo 64 KB.")]
         public IFormFile? Logotipo { get; set; }
 
         [Display(Name = "Logotipo")]
-        [BindNever]
         public string? LogotipoBase64 { get; set; }
+
+        public string? LogotipoDataUrl
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(LogotipoBase64))
+                    return null;
+
+                if (LogotipoBase64.StartsWith("data:image", StringComparison.OrdinalIgnoreCase))
+                    return LogotipoBase64;
+
+                string? mime = ObterMimePorBase64(LogotipoBase64);
+                if (mime == null && !string.IsNullOrEmpty(NomeArquivo))
+                {
+                    var ext = Path.GetExtension(NomeArquivo).ToLowerInvariant();
+                    mime = ext switch
+                    {
+                        ".jpg" or ".jpeg" => "image/jpeg",
+                        ".webp" => "image/webp",
+                        ".svg" => "image/svg+xml",
+                        ".tif" or ".tiff" => "image/tiff",
+                        ".gif" => "image/gif",
+                        _ => "image/png"
+                    };
+                }
+
+                return $"data:{mime ?? "image/png"};base64,{LogotipoBase64}";
+            }
+        }
+
+        private static string? ObterMimePorBase64(string base64)
+        {
+            if (base64.StartsWith("/9j/", StringComparison.Ordinal))
+                return "image/jpeg";
+            if (base64.StartsWith("iVBORw0KGgo", StringComparison.Ordinal))
+                return "image/png";
+            if (base64.StartsWith("R0lGOD", StringComparison.Ordinal))
+                return "image/gif";
+            if (base64.StartsWith("UklGR", StringComparison.Ordinal))
+                return "image/webp";
+            if (base64.StartsWith("SUkq", StringComparison.Ordinal) ||
+                base64.StartsWith("TU0A", StringComparison.Ordinal))
+                return "image/tiff";
+            if (base64.StartsWith("PHN2Zy", StringComparison.Ordinal) ||
+                base64.StartsWith("PD94bWw", StringComparison.Ordinal))
+                return "image/svg+xml";
+
+            return null;
+        }
 
         private string _texto = string.Empty;
 

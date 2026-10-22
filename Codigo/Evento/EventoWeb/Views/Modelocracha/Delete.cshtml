@@ -36,7 +36,7 @@
                     <div class="logo-preview-box">
                         @if (!string.IsNullOrEmpty(Model.LogotipoBase64))
                         {
-                            <img src="data:image/png;base64,@Model.LogotipoBase64" alt="Logotipo" />
+                            <img src="@Model.LogotipoDataUrl" alt="Logotipo" />
                         }
                         else
                         {

@@ -12,6 +12,7 @@
         const inputId = document.getElementById("inputModeloId");
         const hiddenLogo = document.getElementById("hiddenLogotipoBase64");
         const btnCancelar = document.getElementById("btnCancelarAcao");
+        const btnCarregarPredefinido = document.getElementById("btnCarregarPredefinido");
 
         const btnUpload = document.getElementById("btnDispararUpload");
         const inputArquivo = document.getElementById("inputArquivoLogotipo");
@@ -36,6 +37,8 @@
         const urlIndexBase = form.dataset.indexUrl || "/Modelocracha/Index";
         const urlCreateBase = form.dataset.createUrl || "/Modelocracha/Create";
         const urlEditBase = form.dataset.editUrl || "/Modelocracha/Edit";
+        const urlObterPredefinidoBase = form.dataset.obterPredefinidoUrl || "/Modelocracha/ObterPredefinido";
+        const TEXTO_PADRAO_CRACHA = "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.";
 
         let escalaAtual = 1;
 
@@ -80,7 +83,7 @@
                 lblContador.textContent = `${len} / 200 caracteres`;
             }
             if (lblTextoCracha) {
-                lblTextoCracha.textContent = txtTexto.value || "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.";
+                lblTextoCracha.textContent = txtTexto.value || TEXTO_PADRAO_CRACHA;
             }
         }
 
@@ -120,10 +123,10 @@
                     thumbIcon.style.display = "block";
                 }
                 if (lblNomeArquivo) {
-                    lblNomeArquivo.textContent = "Nenhum arquivo selecionado";
+                    lblNomeArquivo.textContent = nomeArquivo || "Nenhum arquivo selecionado";
                 }
                 if (lblInfoArquivo) {
-                    lblInfoArquivo.textContent = "PNG, SVG, JPEG (máx. 64 KB)";
+                    lblInfoArquivo.textContent = infoTamanho || "PNG, JPEG, WEBP (máx. 64 KB)";
                 }
 
                 if (crachaLogoImg) {
@@ -133,6 +136,26 @@
                     crachaLogoContainer.style.display = "none";
                 }
             }
+        }
+
+        function obterMimeType(nomeArquivo, base64) {
+            if (base64) {
+                if (base64.startsWith("/9j/")) return "image/jpeg";
+                if (base64.startsWith("UklGR")) return "image/webp";
+                if (base64.startsWith("iVBOR")) return "image/png";
+                if (base64.startsWith("R0lGOD")) return "image/gif";
+                if (base64.startsWith("SUkq") || base64.startsWith("TU0A")) return "image/tiff";
+            }
+            if (nomeArquivo) {
+                const nome = nomeArquivo.toLowerCase();
+                if (nome.endsWith(".jpg") || nome.endsWith(".jpeg")) return "image/jpeg";
+                if (nome.endsWith(".webp")) return "image/webp";
+                if (nome.endsWith(".svg")) return "image/svg+xml";
+                if (nome.endsWith(".tif") || nome.endsWith(".tiff")) return "image/tiff";
+                if (nome.endsWith(".gif")) return "image/gif";
+                if (nome.endsWith(".png")) return "image/png";
+            }
+            return "image/png";
         }
 
         if (txtTexto) {
@@ -225,7 +248,8 @@
 
                             if (data.temLogotipo && data.logotipoBase64) {
                                 if (hiddenLogo) hiddenLogo.value = data.logotipoBase64;
-                                const srcImg = "data:image/png;base64," + data.logotipoBase64;
+                                const mime = obterMimeType(data.nomeArquivo, data.logotipoBase64);
+                                const srcImg = `data:${mime};base64,` + data.logotipoBase64;
                                 aplicarLogotipo(srcImg, data.nomeArquivo || "logo_institucional.png", data.tamanhoArquivo || "64 KB");
                             } else {
                                 if (hiddenLogo) hiddenLogo.value = "";
@@ -233,7 +257,7 @@
                             }
                         } else {
                             if (txtTexto) {
-                                txtTexto.value = data.texto || "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.";
+                                txtTexto.value = data.texto || TEXTO_PADRAO_CRACHA;
                             }
                             if (chkQrcode) chkQrcode.checked = (data.qrcode === 1);
                             if (inputId) inputId.value = "0";
@@ -242,8 +266,15 @@
                                 form.action = urlCreateBase;
                             }
 
-                            if (hiddenLogo) hiddenLogo.value = "";
-                            aplicarLogotipo(null);
+                            if (data.temLogotipo && data.logotipoBase64) {
+                                if (hiddenLogo) hiddenLogo.value = data.logotipoBase64;
+                                const mime = obterMimeType(data.nomeArquivo, data.logotipoBase64);
+                                const srcImg = `data:${mime};base64,` + data.logotipoBase64;
+                                aplicarLogotipo(srcImg, data.nomeArquivo || "LOGOTIPO.png", data.tamanhoArquivo || "64 KB");
+                            } else {
+                                if (hiddenLogo) hiddenLogo.value = "";
+                                aplicarLogotipo(null);
+                            }
                         }
 
                         if (inputArquivo) inputArquivo.value = "";
@@ -254,6 +285,118 @@
                     console.error("Erro ao carregar modelo do evento:", error);
                 }
             });
+        }
+
+        if (btnCarregarPredefinido) {
+            btnCarregarPredefinido.addEventListener("click", async function () {
+                const idEvento = selectEvento ? selectEvento.value : 0;
+                if (!idEvento || idEvento === "0") {
+                    exibirMensagemFeedback("Selecione um evento antes de carregar o modelo pré-definido.", "warning");
+                    return;
+                }
+
+                let texto = TEXTO_PADRAO_CRACHA;
+                let qrcode = true;
+                let logotipoBase64 = null;
+                let nomeArquivo = "LOGOTIPO.png";
+                let infoTamanho = "7.3 KB";
+
+                try {
+                    const endpoint = `${urlObterPredefinidoBase}/${idEvento}`;
+                    const response = await fetch(endpoint);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.texto) texto = data.texto;
+                        qrcode = (data.qrcode === 1);
+                        if (data.temLogotipo && data.logotipoBase64) {
+                            logotipoBase64 = data.logotipoBase64;
+                            nomeArquivo = data.nomeArquivo || "LOGOTIPO.png";
+                            infoTamanho = data.tamanhoArquivo || "7.3 KB";
+                        }
+                    } else if (response.status === 403) {
+                        exibirMensagemFeedback("Você não tem permissão para gerenciar modelos deste evento.", "danger");
+                        return;
+                    }
+                } catch (err) {
+                    console.warn("Falha ao buscar pré-definido do servidor, aplicando padrão local:", err);
+                }
+
+                if (txtTexto) {
+                    txtTexto.value = texto;
+                }
+                if (chkQrcode) {
+                    chkQrcode.checked = qrcode;
+                }
+                if (inputArquivo) {
+                    inputArquivo.value = "";
+                }
+
+                if (logotipoBase64) {
+                    if (hiddenLogo) hiddenLogo.value = logotipoBase64;
+                    const mime = obterMimeType(nomeArquivo, logotipoBase64);
+                    const srcImg = `data:${mime};base64,` + logotipoBase64;
+                    aplicarLogotipo(srcImg, nomeArquivo, infoTamanho);
+                } else {
+                    if (hiddenLogo) hiddenLogo.value = "";
+                    aplicarLogotipo(null);
+                }
+
+                atualizarTexto();
+                atualizarQrcode();
+                if (logotipoBase64) {
+                    exibirMensagemFeedback("Modelo pré-definido carregado com sucesso!");
+                } else {
+                    exibirMensagemFeedback("Modelo pré-definido carregado, mas sem logotipo. Envie uma imagem manualmente.", "warning");
+                }
+            });
+        }
+
+        function exibirMensagemFeedback(mensagem, tipo) {
+            tipo = tipo || "success";
+            const icone = tipo === "success" ? "bi-check-circle-fill text-success" : (tipo === "warning" ? "bi-exclamation-triangle-fill text-warning" : "bi-exclamation-octagon-fill text-danger");
+            let container = document.getElementById("alertaPredefinidoContainer");
+            if (!container) {
+                container = document.createElement("div");
+                container.id = "alertaPredefinidoContainer";
+                if (form && form.parentNode) {
+                    form.parentNode.insertBefore(container, form);
+                }
+            }
+
+            const alertDiv = document.createElement("div");
+            alertDiv.className = `alert alert-${tipo} alert-dismissible fade show d-flex align-items-center shadow-sm rounded-3 py-2 px-3 mb-3`;
+            alertDiv.setAttribute("role", "alert");
+
+            const iconEl = document.createElement("i");
+            iconEl.className = `bi ${icone} fs-5 me-2`;
+
+            const spanEl = document.createElement("span");
+            spanEl.className = "fw-semibold small";
+            spanEl.textContent = mensagem;
+
+            const btnClose = document.createElement("button");
+            btnClose.type = "button";
+            btnClose.className = "btn-close ms-auto";
+            btnClose.setAttribute("data-bs-dismiss", "alert");
+            btnClose.setAttribute("aria-label", "Fechar");
+
+            alertDiv.appendChild(iconEl);
+            alertDiv.appendChild(spanEl);
+            alertDiv.appendChild(btnClose);
+
+            container.innerHTML = "";
+            container.appendChild(alertDiv);
+
+            setTimeout(function () {
+                if (alertDiv && alertDiv.parentNode) {
+                    alertDiv.classList.remove("show");
+                    setTimeout(function () {
+                        if (alertDiv.parentNode) {
+                            alertDiv.remove();
+                        }
+                    }, 300);
+                }
+            }, 4000);
         }
 
         if (btnZoomIn && crachaCard) {

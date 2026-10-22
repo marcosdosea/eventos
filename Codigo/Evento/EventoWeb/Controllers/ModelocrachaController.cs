@@ -5,7 +5,9 @@ using Core.Service;
 using EventoWeb.Helpers;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using System.IO;
 using Util;
 
 namespace EventoWeb.Controllers
@@ -14,19 +16,31 @@ namespace EventoWeb.Controllers
     [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
     public class ModelocrachaController : Controller
     {
+        private const string TextoPadraoCracha = "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.";
+        private const int MaxLogotipoBytes = 64 * 1024;
+        private const int MaxLogotipoBase64Chars = ((MaxLogotipoBytes + 2) / 3) * 4;
+
         private readonly IModelocrachaService _modelocrachaService;
         private readonly IEventoService _eventoService;
         private readonly IPessoaService _pessoaService;
         private readonly IInscricaoService _inscricaoService;
         private readonly IMapper _mapper;
+        private readonly IWebHostEnvironment? _environment;
 
-        public ModelocrachaController(IModelocrachaService modelocrachaService, IEventoService eventoService, IPessoaService pessoaSevice, IInscricaoService inscricaoService, IMapper mapper)
+        public ModelocrachaController(
+            IModelocrachaService modelocrachaService,
+            IEventoService eventoService,
+            IPessoaService pessoaSevice,
+            IInscricaoService inscricaoService,
+            IMapper mapper,
+            IWebHostEnvironment? environment = null)
         {
             _modelocrachaService = modelocrachaService;
             _eventoService = eventoService;
             _pessoaService = pessoaSevice;
             _inscricaoService = inscricaoService;
             _mapper = mapper;
+            _environment = environment;
         }
 
         private bool IsAuthorized(uint idEvento)
@@ -60,7 +74,6 @@ namespace EventoWeb.Controllers
                     }
                     catch
                     {
-                        // Degradação graciosa
                     }
                 }
             }
@@ -85,7 +98,7 @@ namespace EventoWeb.Controllers
                     if (m.Logotipo != null && m.Logotipo.Length > 0)
                     {
                         model.LogotipoBase64 = Convert.ToBase64String(m.Logotipo);
-                        model.NomeArquivo = "logo_institucional.png";
+                        model.NomeArquivo = ObterNomeArquivoLogo(m.Logotipo);
                         var kb = Math.Round((double)m.Logotipo.Length / 1024.0, 1);
                         model.TamanhoArquivo = $"{kb} KB";
                     }
@@ -113,7 +126,7 @@ namespace EventoWeb.Controllers
                     if (x.Logotipo != null && x.Logotipo.Length > 0)
                     {
                         m.LogotipoBase64 = Convert.ToBase64String(x.Logotipo);
-                        m.NomeArquivo = "logo_institucional.png";
+                        m.NomeArquivo = ObterNomeArquivoLogo(x.Logotipo);
                         var kb = Math.Round((double)x.Logotipo.Length / 1024.0, 1);
                         m.TamanhoArquivo = $"{kb} KB";
                     }
@@ -211,18 +224,21 @@ namespace EventoWeb.Controllers
             var modelo = _modelocrachaService.GetByEvento(idEvento).FirstOrDefault();
             if (modelo == null)
             {
+                var (logoPadrao, nomePadrao, tamanhoPadrao) = ObterLogotipoPredefinido();
+                var logoPadraoB64 = logoPadrao != null && logoPadrao.Length > 0 ? Convert.ToBase64String(logoPadrao) : null;
+
                 return Json(new
                 {
                     existe = false,
                     id = 0,
                     idEvento = idEvento,
                     nomeEvento = _eventoService.GetNomeById(idEvento),
-                    texto = "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.",
+                    texto = TextoPadraoCracha,
                     qrcode = 1,
-                    temLogotipo = false,
-                    logotipoBase64 = (string?)null,
-                    nomeArquivo = (string?)null,
-                    tamanhoArquivo = (string?)null
+                    temLogotipo = !string.IsNullOrEmpty(logoPadraoB64),
+                    logotipoBase64 = logoPadraoB64,
+                    nomeArquivo = nomePadrao,
+                    tamanhoArquivo = tamanhoPadrao
                 });
             }
 
@@ -233,9 +249,19 @@ namespace EventoWeb.Controllers
             if (modelo.Logotipo != null && modelo.Logotipo.Length > 0)
             {
                 logotipoBase64 = Convert.ToBase64String(modelo.Logotipo);
-                nomeArquivo = "logo_institucional.png";
+                nomeArquivo = ObterNomeArquivoLogo(modelo.Logotipo);
                 var kb = Math.Round((double)modelo.Logotipo.Length / 1024.0, 1);
                 tamanhoArquivo = $"{kb} KB";
+            }
+            else
+            {
+                var (logoPadrao, nomePadrao, tamanhoPadrao) = ObterLogotipoPredefinido();
+                if (logoPadrao != null && logoPadrao.Length > 0)
+                {
+                    logotipoBase64 = Convert.ToBase64String(logoPadrao);
+                    nomeArquivo = nomePadrao;
+                    tamanhoArquivo = tamanhoPadrao;
+                }
             }
 
             return Json(new
@@ -253,9 +279,148 @@ namespace EventoWeb.Controllers
             });
         }
 
-        [HttpGet]
-        [Route("Create")]
-        [Route("Create/{idEvento}")]
+        private (byte[]? bytes, string nomeArquivo, string tamanhoArquivo) ObterLogotipoPredefinido()
+        {
+            var nomesCandidatos = new[] { "LOGOTIPO.png", "LOGOTIPO.jpg", "LOGOTIPO.jpeg", "LOGOTIPO.webp" };
+
+            string? pastaImg = null;
+            if (!string.IsNullOrEmpty(_environment?.WebRootPath))
+            {
+                pastaImg = Path.Combine(_environment.WebRootPath, "img");
+            }
+            else if (!string.IsNullOrEmpty(_environment?.ContentRootPath))
+            {
+                pastaImg = Path.Combine(_environment.ContentRootPath, "wwwroot", "img");
+            }
+            else
+            {
+                var baseDir = AppContext.BaseDirectory;
+                var caminhoTeste = Path.Combine(baseDir, "..", "..", "..", "..", "EventoWeb", "wwwroot", "img");
+                if (Directory.Exists(caminhoTeste))
+                {
+                    pastaImg = Path.GetFullPath(caminhoTeste);
+                }
+            }
+
+            if (pastaImg != null && Directory.Exists(pastaImg))
+            {
+                foreach (var nome in nomesCandidatos)
+                {
+                    var caminhoCompleto = Path.Combine(pastaImg, nome);
+                    if (System.IO.File.Exists(caminhoCompleto))
+                    {
+                        var bytes = System.IO.File.ReadAllBytes(caminhoCompleto);
+                        if (bytes.Length > 0 && bytes.Length <= MaxLogotipoBytes && bytes.IsImagem())
+                        {
+                            var kb = Math.Round((double)bytes.Length / 1024.0, 1);
+                            return (bytes, nome, $"{kb} KB");
+                        }
+                    }
+                }
+            }
+
+            return (null, string.Empty, string.Empty);
+        }
+
+        private static string ObterNomeArquivoLogo(byte[] logo)
+        {
+            if (logo.Length >= 3 && logo[0] == 0xFF && logo[1] == 0xD8 && logo[2] == 0xFF)
+                return "logo_institucional.jpg";
+
+            if (logo.Length >= 12 &&
+                logo[0] == 0x52 && logo[1] == 0x49 && logo[2] == 0x46 && logo[3] == 0x46 &&
+                logo[8] == 0x57 && logo[9] == 0x45 && logo[10] == 0x42 && logo[11] == 0x50)
+                return "logo_institucional.webp";
+
+            if (logo.Length >= 4 &&
+                ((logo[0] == 0x49 && logo[1] == 0x49 && logo[2] == 0x2A && logo[3] == 0x00) ||
+                 (logo[0] == 0x4D && logo[1] == 0x4D && logo[2] == 0x00 && logo[3] == 0x2A)))
+                return "logo_institucional.tif";
+
+            if (logo.Length >= 3 && logo[0] == 0x47 && logo[1] == 0x49 && logo[2] == 0x46)
+                return "logo_institucional.gif";
+
+            return "logo_institucional.png";
+        }
+
+        private static bool ValidarLogotipoBase64(string? base64Logo, out byte[]? bytesValidos, out string? erroValidacao)
+        {
+            bytesValidos = null;
+            erroValidacao = null;
+
+            if (string.IsNullOrWhiteSpace(base64Logo))
+                return true;
+
+            var base64Limpo = base64Logo.Trim();
+            var indexVirgula = base64Limpo.IndexOf(',');
+            if (indexVirgula >= 0 && base64Limpo.Substring(0, indexVirgula).Contains("base64", StringComparison.OrdinalIgnoreCase))
+            {
+                base64Limpo = base64Limpo.Substring(indexVirgula + 1).Trim();
+            }
+
+            if (base64Limpo.Length > MaxLogotipoBase64Chars)
+            {
+                erroValidacao = "O arquivo de imagem deve ter no máximo 64 KB.";
+                return false;
+            }
+
+            byte[] bytes;
+            try
+            {
+                bytes = Convert.FromBase64String(base64Limpo);
+            }
+            catch
+            {
+                erroValidacao = "Formato de Imagem Inválido";
+                return false;
+            }
+
+            if (bytes.Length > MaxLogotipoBytes)
+            {
+                erroValidacao = "O arquivo de imagem deve ter no máximo 64 KB.";
+                return false;
+            }
+
+            if (!bytes.IsImagem())
+            {
+                erroValidacao = "Formato de Imagem Inválido";
+                return false;
+            }
+
+            bytesValidos = bytes;
+            return true;
+        }
+
+        [HttpGet("ObterPredefinido/{idEvento?}")]
+        public IActionResult ObterPredefinido(uint? idEvento)
+        {
+            if (!idEvento.HasValue || idEvento.Value == 0)
+            {
+                if (!User.IsInRole("ADMINISTRADOR"))
+                    return Forbid();
+            }
+            else
+            {
+                if (!IsAuthorized(idEvento.Value))
+                    return Forbid();
+            }
+
+            var (logoBytes, nomeArquivo, tamanhoArquivo) = ObterLogotipoPredefinido();
+            string? logotipoBase64 = logoBytes != null && logoBytes.Length > 0 ? Convert.ToBase64String(logoBytes) : null;
+
+            return Json(new
+            {
+                sucesso = true,
+                texto = TextoPadraoCracha,
+                qrcode = 1,
+                temLogotipo = !string.IsNullOrEmpty(logotipoBase64),
+                logotipoBase64,
+                nomeArquivo,
+                tamanhoArquivo
+            });
+        }
+
+        [HttpGet("Create/{idEvento?}")]
         public ActionResult Create(uint? idEvento)
         {
             var eventosDisponiveis = ObterEventosDoUsuario();
@@ -276,27 +441,46 @@ namespace EventoWeb.Controllers
             var modelosDoEvento = idEventoAlvo > 0 ? _modelocrachaService.GetByEvento(idEventoAlvo).ToList() : new List<Modelocracha>();
             var modeloComLogotipo = modelosDoEvento.FirstOrDefault(m => m.Logotipo != null && m.Logotipo.Length > 0);
 
+            byte[]? logoBytes = modeloComLogotipo?.Logotipo;
+            string? nomeArquivo = null;
+            string? tamanhoArquivo = null;
+
+            if (logoBytes != null && logoBytes.Length > 0)
+            {
+                nomeArquivo = ObterNomeArquivoLogo(logoBytes);
+                var kb = Math.Round((double)logoBytes.Length / 1024.0, 1);
+                tamanhoArquivo = $"{kb} KB";
+            }
+            else
+            {
+                var predefinido = ObterLogotipoPredefinido();
+                if (predefinido.bytes != null && predefinido.bytes.Length > 0)
+                {
+                    logoBytes = predefinido.bytes;
+                    nomeArquivo = predefinido.nomeArquivo;
+                    tamanhoArquivo = predefinido.tamanhoArquivo;
+                }
+            }
+
             var viewModel = new ModelocrachaModel
             {
                 Id = 0,
                 IdEvento = idEventoAlvo,
                 Evento = evento ?? (idEventoAlvo > 0 ? _eventoService.GetEventoSimpleDto(idEventoAlvo) : null),
                 NomeEvento = evento?.Nome ?? (idEventoAlvo > 0 ? _eventoService.GetNomeById(idEventoAlvo) : "Selecione o Evento"),
-                Texto = "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.",
+                Texto = TextoPadraoCracha,
                 Qrcode = 1,
-                NomeArquivo = modeloComLogotipo != null ? "logo_institucional.png" : "logo_congresso_nacional_vetor.svg",
-                TamanhoArquivo = "64 KB",
-                LogotipoBase64 = modeloComLogotipo?.Logotipo != null && modeloComLogotipo.Logotipo.Length > 0
-                    ? Convert.ToBase64String(modeloComLogotipo.Logotipo)
+                NomeArquivo = nomeArquivo,
+                TamanhoArquivo = tamanhoArquivo,
+                LogotipoBase64 = logoBytes != null && logoBytes.Length > 0
+                    ? Convert.ToBase64String(logoBytes)
                     : null
             };
 
             return View(viewModel);
         }
 
-        [HttpPost]
-        [Route("Create")]
-        [Route("Create/{idEvento?}")]
+        [HttpPost("Create/{idEvento?}")]
         [ValidateAntiForgeryToken]
         public ActionResult Create(ModelocrachaModel modelocrachaModel, string? btnRascunho = null, uint? idEvento = null)
         {
@@ -315,63 +499,60 @@ namespace EventoWeb.Controllers
             var modelosExistentes = idEventoAlvo > 0 ? _modelocrachaService.GetByEvento(idEventoAlvo).ToList() : new List<Modelocracha>();
             var modeloComLogotipo = modelosExistentes.FirstOrDefault(m => m.Logotipo != null && m.Logotipo.Length > 0);
 
-            if (isRascunho || (modelocrachaModel.Logotipo == null && (modeloComLogotipo?.Logotipo != null || !string.IsNullOrEmpty(modelocrachaModel.LogotipoBase64))))
+            var base64Logo = modelocrachaModel.LogotipoBase64;
+            byte[]? logoTipoSource = null;
+
+            if (modelocrachaModel.Logotipo != null && modelocrachaModel.Logotipo.Length > 0)
             {
+                using (var memoryStream = new MemoryStream())
+                {
+                    modelocrachaModel.Logotipo.CopyTo(memoryStream);
+
+                    if (memoryStream.Length <= MaxLogotipoBytes)
+                    {
+                        logoTipoSource = memoryStream.ToArray();
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("Logotipo", "O arquivo é muito grande. Deve ter no máximo 64 KB.");
+                        ViewBag.EventosDisponiveis = ObterEventosDoUsuario();
+                        return View(modelocrachaModel);
+                    }
+                }
+            }
+            else if (!string.IsNullOrEmpty(base64Logo))
+            {
+                if (ValidarLogotipoBase64(base64Logo, out var logoValido, out var erroValidacao))
+                {
+                    logoTipoSource = logoValido;
+                    ModelState.Remove("Logotipo");
+                }
+                else
+                {
+                    ModelState.AddModelError("Logotipo", erroValidacao!);
+                }
+            }
+            else if (modeloComLogotipo?.Logotipo != null)
+            {
+                logoTipoSource = modeloComLogotipo.Logotipo;
                 ModelState.Remove("Logotipo");
             }
-            else if (modelocrachaModel.Logotipo == null || modelocrachaModel.Logotipo.Length == 0)
+            else if (isRascunho)
             {
-                if (modeloComLogotipo == null || modeloComLogotipo.Logotipo == null)
-                {
-                    ModelState.AddModelError("Logotipo", "Informe a logotipo");
-                }
+                logoTipoSource = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+                ModelState.Remove("Logotipo");
+            }
+            else
+            {
+                ModelState.AddModelError("Logotipo", "Informe a logotipo");
             }
 
             if (ModelState.IsValid)
             {
-                byte[]? logoTipoSource = null;
-                if (modelocrachaModel.Logotipo != null && modelocrachaModel.Logotipo.Length > 0)
-                {
-                    using (var memoryStream = new MemoryStream())
-                    {
-                        modelocrachaModel.Logotipo.CopyTo(memoryStream);
-
-                        if (memoryStream.Length <= 65535)
-                        {
-                            logoTipoSource = memoryStream.ToArray();
-                        }
-                        else
-                        {
-                            ModelState.AddModelError("Logotipo", "O arquivo é muito grande. Deve ser menor que 64 KB.");
-                            ViewBag.EventosDisponiveis = ObterEventosDoUsuario();
-                            return View(modelocrachaModel);
-                        }
-                    }
-                }
-                else if (!string.IsNullOrEmpty(modelocrachaModel.LogotipoBase64))
-                {
-                    try
-                    {
-                        logoTipoSource = Convert.FromBase64String(modelocrachaModel.LogotipoBase64);
-                    }
-                    catch
-                    {
-                    }
-                }
-                else if (modeloComLogotipo?.Logotipo != null)
-                {
-                    logoTipoSource = modeloComLogotipo.Logotipo;
-                }
-                else if (isRascunho)
-                {
-                    logoTipoSource = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
-                }
-
                 modelocrachaModel.IdEvento = idEventoAlvo;
 
                 try
                 {
-                    // Regra de negócio: permite múltiplos modelos por evento, sempre criando nova entidade
                     var modelocracha = _mapper.Map<Modelocracha>(modelocrachaModel);
                     modelocracha.Id = 0;
                     modelocracha.IdEvento = idEventoAlvo;
@@ -424,7 +605,7 @@ namespace EventoWeb.Controllers
             if (modelocracha.Logotipo != null && modelocracha.Logotipo.Length > 0)
             {
                 viewModel.LogotipoBase64 = Convert.ToBase64String(modelocracha.Logotipo);
-                viewModel.NomeArquivo = "logo_institucional.png";
+                viewModel.NomeArquivo = ObterNomeArquivoLogo(modelocracha.Logotipo);
                 var kb = Math.Round((double)modelocracha.Logotipo.Length / 1024.0, 1);
                 viewModel.TamanhoArquivo = $"{kb} KB";
             }
@@ -433,8 +614,7 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
 
-        [HttpPost]
-        [Route("Edit/{id}")]
+        [HttpPost("Edit/{id}")]
         [ValidateAntiForgeryToken]
         public ActionResult Edit(uint id, ModelocrachaModel viewModel, string? btnRascunho = null)
         {
@@ -458,51 +638,52 @@ namespace EventoWeb.Controllers
 
             var modeloBaseParaLogotipo = modeloEventoAlvo ?? existente;
 
-            if (isRascunho || (viewModel.Logotipo == null && (modeloBaseParaLogotipo.Logotipo != null || !string.IsNullOrEmpty(viewModel.LogotipoBase64))))
+            var base64Logo = viewModel.LogotipoBase64;
+            byte[]? logoTipoSource = null;
+
+            if (viewModel.Logotipo != null && viewModel.Logotipo.Length > 0)
             {
+                using (var memoryStream = new MemoryStream())
+                {
+                    viewModel.Logotipo.CopyTo(memoryStream);
+
+                    if (memoryStream.Length <= MaxLogotipoBytes)
+                    {
+                        logoTipoSource = memoryStream.ToArray();
+                    }
+                    else
+                    {
+                        ModelState.AddModelError("Logotipo", "O arquivo é muito grande. Deve ter no máximo 64 KB.");
+                        ViewBag.EventosDisponiveis = ObterEventosDoUsuario();
+                        return View(viewModel);
+                    }
+                }
+            }
+            else if (!string.IsNullOrEmpty(base64Logo))
+            {
+                if (ValidarLogotipoBase64(base64Logo, out var logoValido, out var erroValidacao))
+                {
+                    logoTipoSource = logoValido;
+                    ModelState.Remove("Logotipo");
+                }
+                else
+                {
+                    ModelState.AddModelError("Logotipo", erroValidacao!);
+                }
+            }
+            else if (modeloBaseParaLogotipo.Logotipo != null)
+            {
+                logoTipoSource = modeloBaseParaLogotipo.Logotipo;
+                ModelState.Remove("Logotipo");
+            }
+            else if (isRascunho)
+            {
+                logoTipoSource = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
                 ModelState.Remove("Logotipo");
             }
 
             if (ModelState.IsValid)
             {
-                byte[]? logoTipoSource = null;
-                if (viewModel.Logotipo != null && viewModel.Logotipo.Length > 0)
-                {
-                    using (var memoryStream = new MemoryStream())
-                    {
-                        viewModel.Logotipo.CopyTo(memoryStream);
-
-                        if (memoryStream.Length <= 65535)
-                        {
-                            logoTipoSource = memoryStream.ToArray();
-                        }
-                        else
-                        {
-                            ModelState.AddModelError("Logotipo", "O arquivo é muito grande. Deve ser menor que 64 KB.");
-                            ViewBag.EventosDisponiveis = ObterEventosDoUsuario();
-                            return View(viewModel);
-                        }
-                    }
-                }
-                else if (modeloBaseParaLogotipo.Logotipo != null)
-                {
-                    logoTipoSource = modeloBaseParaLogotipo.Logotipo;
-                }
-                else if (!string.IsNullOrEmpty(viewModel.LogotipoBase64))
-                {
-                    try
-                    {
-                        logoTipoSource = Convert.FromBase64String(viewModel.LogotipoBase64);
-                    }
-                    catch
-                    {
-                    }
-                }
-                else if (isRascunho)
-                {
-                    logoTipoSource = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
-                }
-
                 try
                 {
                     existente.IdEvento = idEventoAlvo;
