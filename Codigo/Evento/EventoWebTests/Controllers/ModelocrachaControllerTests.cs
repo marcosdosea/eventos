@@ -638,6 +638,70 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod]
+        public void CreateTest_Get_SemModelosExistentes_CarregaLogotipoPredefinido()
+        {
+            var mockCracha = new Mock<IModelocrachaService>();
+            mockCracha.Setup(s => s.GetByEvento(99)).Returns(new List<Modelocracha>());
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 99))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 99, IdPapel = 2 });
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            var result = ctl.Create(99);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var view = (ViewResult)result;
+            Assert.IsInstanceOfType(view.ViewData.Model, typeof(ModelocrachaModel));
+            var model = (ModelocrachaModel)view.ViewData.Model;
+            Assert.IsFalse(string.IsNullOrEmpty(model.LogotipoBase64));
+            Assert.AreEqual("LOGOTIPO.png", model.NomeArquivo);
+        }
+
+        [TestMethod]
+        public void IsImagemTest_WebP_Valido()
+        {
+            var webpBytes = new byte[] { 0x52, 0x49, 0x46, 0x46, 0x24, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50, 0x56, 0x50, 0x38, 0x20 };
+            Assert.IsTrue(webpBytes.IsImagem());
+        }
+
+        [TestMethod]
+        public void IsImagemTest_Jpeg_Valido()
+        {
+            var jpegBytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xDB, 0x00, 0x43, 0x00 };
+            Assert.IsTrue(jpegBytes.IsImagem());
+        }
+
+        [TestMethod]
+        public void LogotipoDataUrlTest_RetornaDataUriCorreta()
+        {
+            var modelWebp = new ModelocrachaModel
+            {
+                NomeArquivo = "logo.webp",
+                LogotipoBase64 = "UklGRiQAAABXRUJQVlA4"
+            };
+            Assert.AreEqual("data:image/webp;base64,UklGRiQAAABXRUJQVlA4", modelWebp.LogotipoDataUrl);
+
+            var modelJpeg = new ModelocrachaModel
+            {
+                NomeArquivo = "logo.jpg",
+                LogotipoBase64 = "/9j/4AAQSkZJRgABAQEA"
+            };
+            Assert.AreEqual("data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEA", modelJpeg.LogotipoDataUrl);
+
+            var modelPng = new ModelocrachaModel
+            {
+                NomeArquivo = "logo.png",
+                LogotipoBase64 = "iVBORw0KGgoAAAANSUh"
+            };
+            Assert.AreEqual("data:image/png;base64,iVBORw0KGgoAAAANSUh", modelPng.LogotipoDataUrl);
+        }
+
+        [TestMethod]
         public void CreateTest_Post_QuandoModeloJaExisteParaEvento_Atualiza()
         {
             var model = GetNewModelocracha();

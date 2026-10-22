@@ -126,7 +126,7 @@
                     lblNomeArquivo.textContent = nomeArquivo || "Nenhum arquivo selecionado";
                 }
                 if (lblInfoArquivo) {
-                    lblInfoArquivo.textContent = infoTamanho || "PNG, SVG, JPEG (máx. 64 KB)";
+                    lblInfoArquivo.textContent = infoTamanho || "PNG, JPEG, WEBP (máx. 64 KB)";
                 }
 
                 if (crachaLogoImg) {
@@ -136,6 +136,24 @@
                     crachaLogoContainer.style.display = "none";
                 }
             }
+        }
+
+        function obterMimeType(nomeArquivo, base64) {
+            if (nomeArquivo) {
+                const nome = nomeArquivo.toLowerCase();
+                if (nome.endsWith(".jpg") || nome.endsWith(".jpeg")) return "image/jpeg";
+                if (nome.endsWith(".webp")) return "image/webp";
+                if (nome.endsWith(".gif")) return "image/gif";
+                if (nome.endsWith(".svg")) return "image/svg+xml";
+                if (nome.endsWith(".png")) return "image/png";
+            }
+            if (base64) {
+                if (base64.startsWith("/9j/")) return "image/jpeg";
+                if (base64.startsWith("UklGR")) return "image/webp";
+                if (base64.startsWith("R0lGO")) return "image/gif";
+                if (base64.startsWith("iVBOR")) return "image/png";
+            }
+            return "image/png";
         }
 
         if (txtTexto) {
@@ -228,7 +246,8 @@
 
                             if (data.temLogotipo && data.logotipoBase64) {
                                 if (hiddenLogo) hiddenLogo.value = data.logotipoBase64;
-                                const srcImg = "data:image/png;base64," + data.logotipoBase64;
+                                const mime = obterMimeType(data.nomeArquivo, data.logotipoBase64);
+                                const srcImg = `data:${mime};base64,` + data.logotipoBase64;
                                 aplicarLogotipo(srcImg, data.nomeArquivo || "logo_institucional.png", data.tamanhoArquivo || "64 KB");
                             } else {
                                 if (hiddenLogo) hiddenLogo.value = "";
@@ -245,8 +264,15 @@
                                 form.action = urlCreateBase;
                             }
 
-                            if (hiddenLogo) hiddenLogo.value = "";
-                            aplicarLogotipo(null);
+                            if (data.temLogotipo && data.logotipoBase64) {
+                                if (hiddenLogo) hiddenLogo.value = data.logotipoBase64;
+                                const mime = obterMimeType(data.nomeArquivo, data.logotipoBase64);
+                                const srcImg = `data:${mime};base64,` + data.logotipoBase64;
+                                aplicarLogotipo(srcImg, data.nomeArquivo || "LOGOTIPO.png", data.tamanhoArquivo || "64 KB");
+                            } else {
+                                if (hiddenLogo) hiddenLogo.value = "";
+                                aplicarLogotipo(null);
+                            }
                         }
 
                         if (inputArquivo) inputArquivo.value = "";
@@ -305,7 +331,7 @@
 
                 if (logotipoBase64) {
                     if (hiddenLogo) hiddenLogo.value = logotipoBase64;
-                    const mime = (nomeArquivo && nomeArquivo.toLowerCase().endsWith(".svg")) ? "image/svg+xml" : "image/png";
+                    const mime = obterMimeType(nomeArquivo, logotipoBase64);
                     const srcImg = `data:${mime};base64,` + logotipoBase64;
                     aplicarLogotipo(srcImg, nomeArquivo, infoTamanho);
                 } else {

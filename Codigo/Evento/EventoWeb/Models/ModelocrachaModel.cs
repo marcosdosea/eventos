@@ -13,11 +13,47 @@ namespace EventoWeb.Models
         public uint Id { get; set; }
 
         [Display(Name = "Logotipo")]
-        [ImagemUpload(ErrorMessage = "A imagem deve estar nos formatos PNG, JPG, JPEG, TIF ou GIF e ter menos de 1 MB.")]
+        [ImagemUpload(ErrorMessage = "A imagem deve estar nos formatos PNG, JPG, JPEG, TIF, GIF ou WEBP e ter menos de 1 MB.")]
         public IFormFile? Logotipo { get; set; }
 
         [Display(Name = "Logotipo")]
         public string? LogotipoBase64 { get; set; }
+
+        public string? LogotipoDataUrl
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(LogotipoBase64))
+                    return null;
+
+                if (LogotipoBase64.StartsWith("data:image", StringComparison.OrdinalIgnoreCase))
+                    return LogotipoBase64;
+
+                string mime = "image/png";
+                if (!string.IsNullOrEmpty(NomeArquivo))
+                {
+                    var ext = Path.GetExtension(NomeArquivo).ToLowerInvariant();
+                    mime = ext switch
+                    {
+                        ".jpg" or ".jpeg" => "image/jpeg",
+                        ".webp" => "image/webp",
+                        ".gif" => "image/gif",
+                        ".svg" => "image/svg+xml",
+                        _ => "image/png"
+                    };
+                }
+                else if (LogotipoBase64.StartsWith("/9j/", StringComparison.Ordinal))
+                {
+                    mime = "image/jpeg";
+                }
+                else if (LogotipoBase64.StartsWith("UklGR", StringComparison.Ordinal))
+                {
+                    mime = "image/webp";
+                }
+
+                return $"data:{mime};base64,{LogotipoBase64}";
+            }
+        }
 
         private string _texto = string.Empty;
 

@@ -64,14 +64,25 @@ namespace Util
     {
         public static bool IsImagem(this byte[] fileBytes)
         {
+            if (fileBytes == null || fileBytes.Length < 3)
+                return false;
+
+            if (fileBytes[0] == 0xFF && fileBytes[1] == 0xD8 && fileBytes[2] == 0xFF)
+                return true;
+
+            if (fileBytes.Length >= 12 &&
+                fileBytes[0] == 0x52 && fileBytes[1] == 0x49 && fileBytes[2] == 0x46 && fileBytes[3] == 0x46 &&
+                fileBytes[8] == 0x57 && fileBytes[9] == 0x45 && fileBytes[10] == 0x42 && fileBytes[11] == 0x50)
+            {
+                return true;
+            }
+
             var headers = new List<byte[]>
             {
-                Encoding.ASCII.GetBytes("GIF"),     // GIF
-                new byte[] { 137, 80, 78, 71 },     // PNG
-                new byte[] { 73, 73, 42 },          // TIFF
-                new byte[] { 77, 77, 42 },          // TIFF
-                new byte[] { 255, 216, 255, 224 },  // JPEG
-                new byte[] { 255, 216, 255, 225 }   // JPEG CANON
+                Encoding.ASCII.GetBytes("GIF"),
+                new byte[] { 137, 80, 78, 71 },
+                new byte[] { 73, 73, 42 },
+                new byte[] { 77, 77, 42 }
             };
 
             return headers.Any(header => fileBytes.Take(header.Length).SequenceEqual(header));

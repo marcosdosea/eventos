@@ -84,7 +84,7 @@
                                 <div class="upload-thumb-preview" id="thumbBoxContainer">
                                     @if (!string.IsNullOrEmpty(Model.LogotipoBase64))
                                     {
-                                        <img id="thumbImageElement" src="data:image/png;base64,@Model.LogotipoBase64" alt="Logotipo Cadastrado" />
+                                        <img id="thumbImageElement" src="@(Model.LogotipoDataUrl ?? $"data:image/png;base64,{Model.LogotipoBase64}")" alt="Logotipo Cadastrado" />
                                         <i class="bi bi-image text-muted fs-4" id="thumbIconPlaceholder" style="display: none;"></i>
                                     }
                                     else
@@ -103,7 +103,7 @@
                                 <i class="bi bi-cloud-arrow-up"></i>
                                 <span>Carregar Arquivo</span>
                             </button>
-                            <input type="file" id="inputArquivoLogotipo" name="Logotipo" class="d-none" accept=".png,.jpg,.jpeg,.gif,.svg,.tif" />
+                            <input type="file" id="inputArquivoLogotipo" name="Logotipo" class="d-none" accept=".png,.jpg,.jpeg,.gif,.svg,.tif,.webp,image/png,image/jpeg,image/webp,image/gif,image/tiff" />
                         </div>
                         <span asp-validation-for="Logotipo" class="text-danger small"></span>
                     </div>
@@ -204,7 +204,7 @@
                                     <span>BORA LÁ EVENTOS</span>
                                 </div>
                                 <div class="cracha-logo-institucional-container" id="crachaLogoContainer" style="@(string.IsNullOrEmpty(Model.LogotipoBase64) ? "display: none;" : "")">
-                                    <img id="crachaLogoElement" src="@(!string.IsNullOrEmpty(Model.LogotipoBase64) ? "data:image/png;base64," + Model.LogotipoBase64 : "")" alt="Logotipo Institucional" class="cracha-logo-institucional-img" />
+                                    <img id="crachaLogoElement" src="@(Model.LogotipoDataUrl ?? (!string.IsNullOrEmpty(Model.LogotipoBase64) ? "data:image/png;base64," + Model.LogotipoBase64 : ""))" alt="Logotipo Institucional" class="cracha-logo-institucional-img" />
                                 </div>
                                 <h6 class="cracha-evento-title" id="lblPreviewNomeEvento">@eventoAtualNome</h6>
                             </div>

@@ -224,6 +224,9 @@ namespace EventoWeb.Controllers
             var modelo = _modelocrachaService.GetByEvento(idEvento).FirstOrDefault();
             if (modelo == null)
             {
+                var (logoPadrao, nomePadrao, tamanhoPadrao) = ObterLogotipoPredefinido();
+                var logoPadraoB64 = logoPadrao != null && logoPadrao.Length > 0 ? Convert.ToBase64String(logoPadrao) : null;
+
                 return Json(new
                 {
                     existe = false,
@@ -232,10 +235,10 @@ namespace EventoWeb.Controllers
                     nomeEvento = _eventoService.GetNomeById(idEvento),
                     texto = TextoPadraoCracha,
                     qrcode = 1,
-                    temLogotipo = false,
-                    logotipoBase64 = (string?)null,
-                    nomeArquivo = (string?)null,
-                    tamanhoArquivo = (string?)null
+                    temLogotipo = !string.IsNullOrEmpty(logoPadraoB64),
+                    logotipoBase64 = logoPadraoB64,
+                    nomeArquivo = nomePadrao,
+                    tamanhoArquivo = tamanhoPadrao
                 });
             }
 
@@ -249,6 +252,16 @@ namespace EventoWeb.Controllers
                 nomeArquivo = "logo_institucional.png";
                 var kb = Math.Round((double)modelo.Logotipo.Length / 1024.0, 1);
                 tamanhoArquivo = $"{kb} KB";
+            }
+            else
+            {
+                var (logoPadrao, nomePadrao, tamanhoPadrao) = ObterLogotipoPredefinido();
+                if (logoPadrao != null && logoPadrao.Length > 0)
+                {
+                    logotipoBase64 = Convert.ToBase64String(logoPadrao);
+                    nomeArquivo = nomePadrao;
+                    tamanhoArquivo = tamanhoPadrao;
+                }
             }
 
             return Json(new
@@ -268,38 +281,45 @@ namespace EventoWeb.Controllers
 
         private (byte[]? bytes, string nomeArquivo, string tamanhoArquivo) ObterLogotipoPredefinido()
         {
-            const string nomeArquivo = "LOGOTIPO.png";
-            string? caminhoArquivo = null;
+            var nomesCandidatos = new[] { "LOGOTIPO.png", "LOGOTIPO.jpg", "LOGOTIPO.jpeg", "LOGOTIPO.webp" };
 
+            string? pastaImg = null;
             if (!string.IsNullOrEmpty(_environment?.WebRootPath))
             {
-                caminhoArquivo = Path.Combine(_environment.WebRootPath, "img", nomeArquivo);
+                pastaImg = Path.Combine(_environment.WebRootPath, "img");
             }
             else if (!string.IsNullOrEmpty(_environment?.ContentRootPath))
             {
-                caminhoArquivo = Path.Combine(_environment.ContentRootPath, "wwwroot", "img", nomeArquivo);
+                pastaImg = Path.Combine(_environment.ContentRootPath, "wwwroot", "img");
             }
             else
             {
                 var baseDir = AppContext.BaseDirectory;
-                var caminhoTeste = Path.Combine(baseDir, "..", "..", "..", "..", "EventoWeb", "wwwroot", "img", nomeArquivo);
-                if (System.IO.File.Exists(caminhoTeste))
+                var caminhoTeste = Path.Combine(baseDir, "..", "..", "..", "..", "EventoWeb", "wwwroot", "img");
+                if (Directory.Exists(caminhoTeste))
                 {
-                    caminhoArquivo = Path.GetFullPath(caminhoTeste);
+                    pastaImg = Path.GetFullPath(caminhoTeste);
                 }
             }
 
-            if (caminhoArquivo != null && System.IO.File.Exists(caminhoArquivo))
+            if (pastaImg != null && Directory.Exists(pastaImg))
             {
-                var bytes = System.IO.File.ReadAllBytes(caminhoArquivo);
-                if (bytes.Length > 0 && bytes.Length <= MaxLogotipoBytes && bytes.IsImagem())
+                foreach (var nome in nomesCandidatos)
                 {
-                    var kb = Math.Round((double)bytes.Length / 1024.0, 1);
-                    return (bytes, nomeArquivo, $"{kb} KB");
+                    var caminhoCompleto = Path.Combine(pastaImg, nome);
+                    if (System.IO.File.Exists(caminhoCompleto))
+                    {
+                        var bytes = System.IO.File.ReadAllBytes(caminhoCompleto);
+                        if (bytes.Length > 0 && bytes.Length <= MaxLogotipoBytes && bytes.IsImagem())
+                        {
+                            var kb = Math.Round((double)bytes.Length / 1024.0, 1);
+                            return (bytes, nome, $"{kb} KB");
+                        }
+                    }
                 }
             }
 
-            return (null, nomeArquivo, "64 KB");
+            return (null, "LOGOTIPO.png", "64 KB");
         }
 
         private static bool ValidarLogotipoBase64(string? base64Logo, out byte[]? bytesValidos, out string? erroValidacao)
@@ -401,6 +421,26 @@ namespace EventoWeb.Controllers
             var modelosDoEvento = idEventoAlvo > 0 ? _modelocrachaService.GetByEvento(idEventoAlvo).ToList() : new List<Modelocracha>();
             var modeloComLogotipo = modelosDoEvento.FirstOrDefault(m => m.Logotipo != null && m.Logotipo.Length > 0);
 
+            byte[]? logoBytes = modeloComLogotipo?.Logotipo;
+            string nomeArquivo = "logo_institucional.png";
+            string tamanhoArquivo = "64 KB";
+
+            if (logoBytes != null && logoBytes.Length > 0)
+            {
+                var kb = Math.Round((double)logoBytes.Length / 1024.0, 1);
+                tamanhoArquivo = $"{kb} KB";
+            }
+            else
+            {
+                var predefinido = ObterLogotipoPredefinido();
+                if (predefinido.bytes != null && predefinido.bytes.Length > 0)
+                {
+                    logoBytes = predefinido.bytes;
+                    nomeArquivo = predefinido.nomeArquivo;
+                    tamanhoArquivo = predefinido.tamanhoArquivo;
+                }
+            }
+
             var viewModel = new ModelocrachaModel
             {
                 Id = 0,
@@ -409,10 +449,10 @@ namespace EventoWeb.Controllers
                 NomeEvento = evento?.Nome ?? (idEventoAlvo > 0 ? _eventoService.GetNomeById(idEventoAlvo) : "Selecione o Evento"),
                 Texto = TextoPadraoCracha,
                 Qrcode = 1,
-                NomeArquivo = modeloComLogotipo != null ? "logo_institucional.png" : "logo_congresso_nacional_vetor.svg",
-                TamanhoArquivo = "64 KB",
-                LogotipoBase64 = modeloComLogotipo?.Logotipo != null && modeloComLogotipo.Logotipo.Length > 0
-                    ? Convert.ToBase64String(modeloComLogotipo.Logotipo)
+                NomeArquivo = nomeArquivo,
+                TamanhoArquivo = tamanhoArquivo,
+                LogotipoBase64 = logoBytes != null && logoBytes.Length > 0
+                    ? Convert.ToBase64String(logoBytes)
                     : null
             };
 
