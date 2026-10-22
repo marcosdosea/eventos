@@ -17,7 +17,6 @@ namespace EventoWeb.Models
         public IFormFile? Logotipo { get; set; }
 
         [Display(Name = "Logotipo")]
-        [BindNever]
         public string? LogotipoBase64 { get; set; }
 
         private string _texto = string.Empty;

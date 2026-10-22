@@ -411,7 +411,13 @@ namespace EventoWeb.Controllers
             var modelosExistentes = idEventoAlvo > 0 ? _modelocrachaService.GetByEvento(idEventoAlvo).ToList() : new List<Modelocracha>();
             var modeloComLogotipo = modelosExistentes.FirstOrDefault(m => m.Logotipo != null && m.Logotipo.Length > 0);
 
-            if (isRascunho || (modelocrachaModel.Logotipo == null && (modeloComLogotipo?.Logotipo != null || !string.IsNullOrEmpty(modelocrachaModel.LogotipoBase64))))
+            var base64Logo = modelocrachaModel.LogotipoBase64;
+            if (string.IsNullOrEmpty(base64Logo) && Request?.HasFormContentType == true && Request.Form.ContainsKey("LogotipoBase64"))
+            {
+                base64Logo = Request.Form["LogotipoBase64"].ToString();
+            }
+
+            if (isRascunho || (modelocrachaModel.Logotipo == null && (modeloComLogotipo?.Logotipo != null || !string.IsNullOrEmpty(base64Logo))))
             {
                 ModelState.Remove("Logotipo");
             }
@@ -444,11 +450,11 @@ namespace EventoWeb.Controllers
                         }
                     }
                 }
-                else if (!string.IsNullOrEmpty(modelocrachaModel.LogotipoBase64))
+                else if (!string.IsNullOrEmpty(base64Logo))
                 {
                     try
                     {
-                        logoTipoSource = Convert.FromBase64String(modelocrachaModel.LogotipoBase64);
+                        logoTipoSource = Convert.FromBase64String(base64Logo);
                     }
                     catch
                     {
@@ -554,7 +560,13 @@ namespace EventoWeb.Controllers
 
             var modeloBaseParaLogotipo = modeloEventoAlvo ?? existente;
 
-            if (isRascunho || (viewModel.Logotipo == null && (modeloBaseParaLogotipo.Logotipo != null || !string.IsNullOrEmpty(viewModel.LogotipoBase64))))
+            var base64Logo = viewModel.LogotipoBase64;
+            if (string.IsNullOrEmpty(base64Logo) && Request?.HasFormContentType == true && Request.Form.ContainsKey("LogotipoBase64"))
+            {
+                base64Logo = Request.Form["LogotipoBase64"].ToString();
+            }
+
+            if (isRascunho || (viewModel.Logotipo == null && (modeloBaseParaLogotipo.Logotipo != null || !string.IsNullOrEmpty(base64Logo))))
             {
                 ModelState.Remove("Logotipo");
             }
@@ -580,11 +592,11 @@ namespace EventoWeb.Controllers
                         }
                     }
                 }
-                else if (!string.IsNullOrEmpty(viewModel.LogotipoBase64))
+                else if (!string.IsNullOrEmpty(base64Logo))
                 {
                     try
                     {
-                        logoTipoSource = Convert.FromBase64String(viewModel.LogotipoBase64);
+                        logoTipoSource = Convert.FromBase64String(base64Logo);
                     }
                     catch
                     {

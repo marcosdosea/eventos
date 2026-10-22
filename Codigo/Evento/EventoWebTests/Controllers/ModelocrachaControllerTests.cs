@@ -207,6 +207,46 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod]
+        public void EditTest_Post_ComLogotipoBase64_AtualizaLogotipoComNovoValor()
+        {
+            // Arrange
+            var novoLogoBytes = new byte[] { 0x11, 0x22, 0x33, 0x44 };
+            var mockCracha = new Mock<IModelocrachaService>();
+            var mockInsc = new Mock<IInscricaoService>();
+            mockCracha.Setup(s => s.Get(1))
+                .Returns(new Modelocracha { Id = 1, IdEvento = 1, Logotipo = new byte[] { 0x99, 0x88 }, Texto = "Texto Antigo", Qrcode = 1 });
+            mockCracha.Setup(s => s.GetByEvento(1))
+                .Returns(new List<Modelocracha> { new Modelocracha { Id = 1, IdEvento = 1, Logotipo = new byte[] { 0x99, 0x88 } } });
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctl = new ModelocrachaController(mockCracha.Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockInsc.Object, mapper);
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+            ctl.TempData = new TempDataDictionary(ctl.ControllerContext.HttpContext, Mock.Of<ITempDataProvider>());
+
+            var modelEdit = new ModelocrachaModel
+            {
+                Id = 1,
+                IdEvento = 1,
+                Texto = "Texto Atualizado",
+                Qrcode = 1,
+                Logotipo = null,
+                LogotipoBase64 = Convert.ToBase64String(novoLogoBytes)
+            };
+
+            // Act
+            var result = ctl.Edit(1, modelEdit);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            mockCracha.Verify(s => s.Edit(It.Is<Modelocracha>(m => m.Logotipo != null && m.Logotipo.SequenceEqual(novoLogoBytes))), Times.Once);
+        }
+
+        [TestMethod]
         public void DeleteTest_Post_Valid()
         {
             var result = controller.Delete(1);
