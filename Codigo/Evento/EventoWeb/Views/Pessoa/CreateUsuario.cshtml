@@ -17,7 +17,7 @@
     }
     <div class="row">
         <div class="col-md-12">
-            <form asp-action="CreateUsuario" method="post" onsubmit="return validarFormulario()">
+            <form asp-action="CreateUsuario" method="post" onsubmit="removerMascara()">
                 <input type="hidden" name="idEvento" value="@ViewBag.IdEvento" />
                 <div asp-validation-summary="ModelOnly" class="text-danger"></div>
                 <div class="row">
@@ -27,7 +27,7 @@
                             <input asp-for="Cpf" class="form-control"
                                    id="Cpf"
                                    placeholder="000.000.000-00"
-                                   oninput="formatarCPF()"
+                                   oninput="formatarCpfForm(this)"
                                    maxlength="14" />
                             <span asp-validation-for="Cpf" class="text-danger"></span>
                         </div>
@@ -83,5 +83,6 @@
             </form>
         </div>
     </div>
+    <script src="~/js/FormatarCampoCadastro.js" asp-append-version="true"></script>
 </body>
 </html>
