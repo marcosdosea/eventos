@@ -24,7 +24,7 @@
 
 <div class="row">
     <div>
-        <form asp-action="CreateGestor" method="post" onsubmit="return validarFormulario()">
+        <form asp-action="CreateGestor" method="post" onsubmit="removerMascara()">
             <div class="row">
                 <div class="col-lg-3">
                     <div class="form-group">
@@ -52,7 +52,7 @@
                 <div class="col-6 col-sm-6 col-md-3 col-lg-2">
                     <div class="form-group mb-3">
                         <label asp-for="Pessoa.Cpf" class="control-label">CPF</label>
-                        <input asp-for="Pessoa.Cpf" class="form-control" id="Cpf" placeholder="000.000.000-00" onblur="autoCompletarCPF(true)" oninput="formatarCPF()" maxlength="14" />
+                        <input asp-for="Pessoa.Cpf" class="form-control" id="Cpf" placeholder="000.000.000-00" onblur="autoCompletarCPF(true)" oninput="formatarCpfForm(this)" maxlength="14" />
                         <span asp-validation-for="Pessoa.Cpf" class="text-danger"></span>
                     </div>
 
@@ -149,6 +149,7 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/FormatarCampoCadastro.js"></script>
     <script src="~/js/autoCompletarDadosCPF.js"></script>
 
     <script>
