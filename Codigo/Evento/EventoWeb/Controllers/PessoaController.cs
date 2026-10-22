@@ -58,10 +58,11 @@ namespace EventoWeb.Controllers
         [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
         [HttpGet]
         [Route("BuscarPessoaPorCpf")]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
         public ActionResult BuscarPessoaPorCpf(string cpf)
         {
             if (Request.Headers["X-Requested-With"] != "XMLHttpRequest")
-                return Forbid();
+                return StatusCode(403);
 
             if (string.IsNullOrWhiteSpace(cpf))
                 return BadRequest("CPF é obrigatório.");
@@ -69,12 +70,13 @@ namespace EventoWeb.Controllers
             if (!Methods.ValidarCpf(cpf))
                 return BadRequest("CPF inválido.");
 
-            var pessoa = _pessoaService.GetByCpf(cpf);
+            var cpfNormalizado = Methods.RemoveNaoNumericos(cpf);
+            var pessoa = _pessoaService.GetByCpf(cpfNormalizado);
 
             if (pessoa == null)
                 return NotFound();
 
-            return Json(new { pessoa.Cpf, pessoa.Nome, pessoa.NomeCracha, pessoa.Email, pessoa.Telefone1 });
+            return Json(new { pessoa.Nome, pessoa.NomeCracha, pessoa.Email, pessoa.Telefone1 });
         }
 
         [Authorize(Roles = "ADMINISTRADOR")]
