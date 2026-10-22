@@ -956,6 +956,86 @@ namespace EventoWeb.Controllers.Tests
             };
         }
 
+        [TestMethod()]
+        public void BuscarPessoaPorCpfTest_NaoAjax_RetornaForbid()
+        {
+            var pessoa = GetTargetPessoa();
+            var mockService = new Mock<IPessoaService>();
+            mockService.Setup(service => service.GetByCpf(It.IsAny<string>())).Returns(pessoa);
+            var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
+            var localController = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, mapper, new Mock<IEmailService>().Object);
+
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, "111.111.111-11"),
+                new Claim(ClaimTypes.Role, "GESTOR")
+            }, "mock"));
+
+            localController.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext() { User = user }
+            };
+
+            var result = localController.BuscarPessoaPorCpf(pessoa.Cpf);
+
+            Assert.IsInstanceOfType(result, typeof(ForbidResult));
+            mockService.Verify(service => service.GetByCpf(It.IsAny<string>()), Times.Never);
+        }
+
+        [TestMethod()]
+        public void BuscarPessoaPorCpfTest_Ajax_PessoaExistente_RetornaJson()
+        {
+            var pessoa = GetTargetPessoa();
+            var mockService = new Mock<IPessoaService>();
+            mockService.Setup(service => service.GetByCpf(It.IsAny<string>())).Returns(pessoa);
+            var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
+            var localController = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, mapper, new Mock<IEmailService>().Object);
+
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, "111.111.111-11"),
+                new Claim(ClaimTypes.Role, "GESTOR")
+            }, "mock"));
+
+            var httpContext = new DefaultHttpContext() { User = user };
+            httpContext.Request.Headers["X-Requested-With"] = "XMLHttpRequest";
+            localController.ControllerContext = new ControllerContext()
+            {
+                HttpContext = httpContext
+            };
+
+            var result = localController.BuscarPessoaPorCpf(pessoa.Cpf);
+
+            Assert.IsInstanceOfType(result, typeof(JsonResult));
+            mockService.Verify(service => service.GetByCpf(It.IsAny<string>()), Times.Once);
+        }
+
+        [TestMethod()]
+        public void BuscarPessoaPorCpfTest_Ajax_PessoaInexistente_RetornaNotFound()
+        {
+            var mockService = new Mock<IPessoaService>();
+            mockService.Setup(service => service.GetByCpf(It.IsAny<string>())).Returns((Pessoa)null!);
+            var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
+            var localController = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, mapper, new Mock<IEmailService>().Object);
+
+            var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.Name, "111.111.111-11"),
+                new Claim(ClaimTypes.Role, "GESTOR")
+            }, "mock"));
+
+            var httpContext = new DefaultHttpContext() { User = user };
+            httpContext.Request.Headers["X-Requested-With"] = "XMLHttpRequest";
+            localController.ControllerContext = new ControllerContext()
+            {
+                HttpContext = httpContext
+            };
+
+            var result = localController.BuscarPessoaPorCpf("040.268.930-57");
+
+            Assert.IsInstanceOfType(result, typeof(NotFoundResult));
+        }
+
         private static Pessoa GetTargetPessoa()
         {
             return new Pessoa
