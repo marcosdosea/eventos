@@ -38,6 +38,7 @@
         const urlCreateBase = form.dataset.createUrl || "/Modelocracha/Create";
         const urlEditBase = form.dataset.editUrl || "/Modelocracha/Edit";
         const urlObterPredefinidoBase = form.dataset.obterPredefinidoUrl || "/Modelocracha/ObterPredefinido";
+        const TEXTO_PADRAO_CRACHA = "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.";
 
         let escalaAtual = 1;
 
@@ -82,7 +83,7 @@
                 lblContador.textContent = `${len} / 200 caracteres`;
             }
             if (lblTextoCracha) {
-                lblTextoCracha.textContent = txtTexto.value || "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.";
+                lblTextoCracha.textContent = txtTexto.value || TEXTO_PADRAO_CRACHA;
             }
         }
 
@@ -235,7 +236,7 @@
                             }
                         } else {
                             if (txtTexto) {
-                                txtTexto.value = data.texto || "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.";
+                                txtTexto.value = data.texto || TEXTO_PADRAO_CRACHA;
                             }
                             if (chkQrcode) chkQrcode.checked = (data.qrcode === 1);
                             if (inputId) inputId.value = "0";
@@ -261,20 +262,19 @@
         if (btnCarregarPredefinido) {
             btnCarregarPredefinido.addEventListener("click", async function () {
                 const idEvento = selectEvento ? selectEvento.value : 0;
-                const textoPadrao = "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.";
-                const qrcodePadrao = true;
+                if (!idEvento || idEvento === "0") {
+                    exibirMensagemFeedback("Selecione um evento antes de carregar o modelo pré-definido.", "warning");
+                    return;
+                }
 
-                let texto = textoPadrao;
-                let qrcode = qrcodePadrao;
+                let texto = TEXTO_PADRAO_CRACHA;
+                let qrcode = true;
                 let logotipoBase64 = null;
                 let nomeArquivo = "LOGOTIPO.png";
                 let infoTamanho = "7.3 KB";
 
                 try {
-                    const endpoint = idEvento && idEvento !== "0"
-                        ? `${urlObterPredefinidoBase}/${idEvento}`
-                        : urlObterPredefinidoBase;
-
+                    const endpoint = `${urlObterPredefinidoBase}/${idEvento}`;
                     const response = await fetch(endpoint);
                     if (response.ok) {
                         const data = await response.json();
@@ -285,6 +285,9 @@
                             nomeArquivo = data.nomeArquivo || "LOGOTIPO.png";
                             infoTamanho = data.tamanhoArquivo || "7.3 KB";
                         }
+                    } else if (response.status === 403) {
+                        exibirMensagemFeedback("Você não tem permissão para gerenciar modelos deste evento.", "danger");
+                        return;
                     }
                 } catch (err) {
                     console.warn("Falha ao buscar pré-definido do servidor, aplicando padrão local:", err);
@@ -318,7 +321,7 @@
 
         function exibirMensagemFeedback(mensagem, tipo) {
             tipo = tipo || "success";
-            const icone = tipo === "success" ? "bi-check-circle-fill text-success" : "bi-exclamation-triangle-fill text-danger";
+            const icone = tipo === "success" ? "bi-check-circle-fill text-success" : (tipo === "warning" ? "bi-exclamation-triangle-fill text-warning" : "bi-exclamation-octagon-fill text-danger");
             let container = document.getElementById("alertaPredefinidoContainer");
             if (!container) {
                 container = document.createElement("div");
@@ -331,11 +334,23 @@
             const alertDiv = document.createElement("div");
             alertDiv.className = `alert alert-${tipo} alert-dismissible fade show d-flex align-items-center shadow-sm rounded-3 py-2 px-3 mb-3`;
             alertDiv.setAttribute("role", "alert");
-            alertDiv.innerHTML = `
-                <i class="bi ${icone} fs-5 me-2"></i>
-                <span class="fw-semibold small">${mensagem}</span>
-                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Fechar"></button>
-            `;
+
+            const iconEl = document.createElement("i");
+            iconEl.className = `bi ${icone} fs-5 me-2`;
+
+            const spanEl = document.createElement("span");
+            spanEl.className = "fw-semibold small";
+            spanEl.textContent = mensagem;
+
+            const btnClose = document.createElement("button");
+            btnClose.type = "button";
+            btnClose.className = "btn-close ms-auto";
+            btnClose.setAttribute("data-bs-dismiss", "alert");
+            btnClose.setAttribute("aria-label", "Fechar");
+
+            alertDiv.appendChild(iconEl);
+            alertDiv.appendChild(spanEl);
+            alertDiv.appendChild(btnClose);
 
             container.innerHTML = "";
             container.appendChild(alertDiv);
