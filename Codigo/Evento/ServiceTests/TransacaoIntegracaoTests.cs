@@ -1,27 +1,29 @@
 using Core;
-using Core.DTO;
 using Core.Service;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Service;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Service.Tests
 {
     /// <summary>
     /// Testes de integração com provedor relacional (SQLite com FKs ativas).
-    /// Cobrem o controle transacional do Issue #841, que não é exercitado
-    /// pelos testes InMemory (nele IsRelational() é false).
+    /// Cobrem a atomicidade dos casos de uso críticos (#841/#861), que não é
+    /// exercitada pelos testes InMemory.
     /// </summary>
     [TestClass()]
     public class TransacaoIntegracaoTests
     {
         private SqliteConnection _connection = null!;
         private EventoContext _context = null!;
-        private TransacaoService _transacaoService = null!;
         private EventoService _eventoService = null!;
         private SubeventoService _subeventoService = null!;
         private InscricaoService _inscricaoService = null!;
+        private InscricaopessoaeventoService _inscricaopessoaeventoService = null!;
 
         [TestInitialize]
         public void Initialize()
@@ -36,10 +38,10 @@ namespace Service.Tests
             _context = new EventoContext(options);
             SqliteSchemaEvento.Criar(_connection);
 
-            _transacaoService = new TransacaoService(_context);
-            _eventoService = new EventoService(_context, _transacaoService);
+            _eventoService = new EventoService(_context);
             _subeventoService = new SubeventoService(_context);
-            _inscricaoService = new InscricaoService(_context, new MockUserManager<UsuarioIdentity>());
+            _inscricaoService = new InscricaoService(_context, new MockUserManager<UsuarioIdentity>(), _eventoService, _subeventoService);
+            _inscricaopessoaeventoService = new InscricaopessoaeventoService(_context, _eventoService);
 
             SemearBase();
         }
@@ -155,12 +157,6 @@ namespace Service.Tests
         }
 
         [TestMethod()]
-        public void TransacaoService_ProvedorRelacional_UsaTransacaoExplicita()
-        {
-            Assert.IsTrue(_context.Database.IsRelational());
-        }
-
-        [TestMethod()]
         public void ModeloEvento_UsaDeleteRestrictNasFkCriticas()
         {
             // Garante que o schema SQLite usado nos testes deste arquivo continua
@@ -187,31 +183,6 @@ namespace Service.Tests
                     fk.DeleteBehavior,
                     $"FK {dependente} -> {principal} deve ser Restrict");
             }
-        }
-
-        [TestMethod()]
-        public void TransacaoService_FalhaNoMeio_ReverteTudo()
-        {
-            var antes = _context.Inscricaopessoaeventos.Count();
-
-            Assert.ThrowsException<InvalidOperationException>(() =>
-                _transacaoService.Executar(() =>
-                {
-                    _context.Inscricaopessoaeventos.Add(new Inscricaopessoaevento
-                    {
-                        IdPessoa = 2,
-                        IdEvento = 1,
-                        IdPapel = 4,
-                        DataInscricao = DateTime.Now,
-                        Status = "A"
-                    });
-                    _context.SaveChanges();
-
-                    throw new InvalidOperationException("falha simulada");
-                }));
-
-            _context.ChangeTracker.Clear();
-            Assert.AreEqual(antes, _context.Inscricaopessoaeventos.Count());
         }
 
         [TestMethod()]
@@ -270,42 +241,11 @@ BEGIN SELECT RAISE(ABORT, 'falha simulada no banco'); END;";
         }
 
         [TestMethod()]
-        public void CancelarInscricaoParticipante_FalhaAoLiberarVagas_PreservaInscricao()
-        {
-            var inscricoesAntes = _context.Inscricaopessoaeventos.Count();
-
-            // Simula a falha na atualização de vagas depois da remoção.
-            Assert.ThrowsException<InvalidOperationException>(() =>
-                _transacaoService.Executar(() =>
-                {
-                    var (removidas, subeventosAfetados) = _inscricaoService.CancelarInscricaoParticipante(1, 1);
-                    Assert.AreEqual(1, removidas);
-                    Assert.AreEqual(1, subeventosAfetados.Count);
-
-                    throw new InvalidOperationException("falha ao liberar vagas");
-                }));
-
-            _context.ChangeTracker.Clear();
-            Assert.AreEqual(inscricoesAntes, _context.Inscricaopessoaeventos.Count());
-            Assert.AreEqual(1, _context.Inscricaopessoasubeventos.Count());
-        }
-
-        [TestMethod()]
         public void CancelarInscricaoParticipante_Sucesso_RemoveInscricaoELiberaVaga()
         {
-            var (removidas, subeventosAfetados) = _transacaoService.Executar(() =>
-            {
-                var resultado = _inscricaoService.CancelarInscricaoParticipante(1, 1);
-                _eventoService.AtualizarVagasDisponiveis(1);
-                foreach (var idSub in resultado.SubeventosAfetados)
-                {
-                    _subeventoService.AtualizarVagasDisponiveis(idSub);
-                }
-                return resultado;
-            });
+            var removidas = _inscricaoService.CancelarInscricaoParticipante(1, 1);
 
             Assert.AreEqual(1, removidas);
-            Assert.AreEqual(1, subeventosAfetados.Count);
 
             _context.ChangeTracker.Clear();
             Assert.AreEqual(0, _context.Inscricaopessoaeventos.Count());
@@ -318,14 +258,11 @@ BEGIN SELECT RAISE(ABORT, 'falha simulada no banco'); END;";
         [TestMethod()]
         public void InscricaoLote_ComInscricoesPendentes_AtualizaVagasDoEventoESubevento()
         {
-            // O lote entra no contexto antes do SaveChanges (saveChanges: false),
-            // como no InscricaoController.realizarInscricao. A contagem de vagas
-            // precisa considerar as inscrições pendentes, senão as vagas do evento
-            // e do subevento não são abatidas na inscrição.
             var vagasOfertadasEvento = _context.Eventos.First().VagasOfertadas;
             var vagasOfertadasSubevento = _context.Subeventos.First().VagasOfertadas;
 
             _inscricaoService.CreateInscricoesEmLote(
+                1,
                 new List<Inscricaopessoaevento>
                 {
                     new Inscricaopessoaevento
@@ -352,11 +289,8 @@ BEGIN SELECT RAISE(ABORT, 'falha simulada no banco'); END;";
                         Valor = 80
                     }
                 },
-                saveChanges: false);
+                new List<uint> { 10 });
 
-            _eventoService.AtualizarVagasDisponiveis(1, saveChanges: false);
-            _subeventoService.AtualizarVagasDisponiveis(10, saveChanges: false);
-            _inscricaoService.SaveChanges();
             _context.ChangeTracker.Clear();
 
             // 1 participante já inscrito + 1 nova inscrição = 2 participantes.
@@ -369,41 +303,65 @@ BEGIN SELECT RAISE(ABORT, 'falha simulada no banco'); END;";
         {
             var totalAntes = _context.Inscricaopessoaeventos.Count();
 
+            // Duplicidade proposital: força a falha do único SaveChanges do caso de uso.
+            _context.Inscricaopessoaeventos.Add(new Inscricaopessoaevento
+            {
+                Id = 101,
+                IdPessoa = 2,
+                IdEvento = 1,
+                IdPapel = 4,
+                DataInscricao = DateTime.Now,
+                Status = "A"
+            });
+
             Assert.ThrowsException<DbUpdateException>(() =>
-                _transacaoService.Executar(() =>
-                {
-                    _inscricaoService.CreateInscricoesEmLote(
-                        new List<Inscricaopessoaevento>
-                        {
-                            new Inscricaopessoaevento
-                            {
-                                IdPessoa = 2,
-                                IdEvento = 1,
-                                IdPapel = 4,
-                                DataInscricao = DateTime.Now,
-                                Status = "A"
-                            }
-                        },
-                        new List<Inscricaopessoasubevento>(),
-                        saveChanges: false);
-
-                    // Duplicidade proposital: viola a unicidade de cpf do participante
-                    // referenciado e força a falha do SaveChanges.
-                    _context.Inscricaopessoaeventos.Add(new Inscricaopessoaevento
+                _inscricaoService.CreateInscricoesEmLote(
+                    1,
+                    new List<Inscricaopessoaevento>
                     {
-                        Id = 101,
-                        IdPessoa = 2,
-                        IdEvento = 1,
-                        IdPapel = 4,
-                        DataInscricao = DateTime.Now,
-                        Status = "A"
-                    });
-
-                    _inscricaoService.SaveChanges();
-                }));
+                        new Inscricaopessoaevento
+                        {
+                            IdPessoa = 2,
+                            IdEvento = 1,
+                            IdPapel = 4,
+                            DataInscricao = DateTime.Now,
+                            Status = "A"
+                        }
+                    },
+                    new List<Inscricaopessoasubevento>(),
+                    new List<uint>()));
 
             _context.ChangeTracker.Clear();
             Assert.AreEqual(totalAntes, _context.Inscricaopessoaeventos.Count());
+        }
+
+        [TestMethod()]
+        public void InscricaopessoaeventoServiceDelete_RecalculaVagasDoEvento()
+        {
+            _context.Inscricaopessoaeventos.Add(new Inscricaopessoaevento
+            {
+                Id = 102,
+                IdPessoa = 2,
+                IdEvento = 1,
+                IdPapel = 4,
+                IdTipoInscricao = 1,
+                DataInscricao = DateTime.Now,
+                Status = "A",
+                ValorTotal = 80
+            });
+            _context.SaveChanges();
+            _context.ChangeTracker.Clear();
+
+            var evento = _context.Eventos.First();
+            evento.VagasDisponiveis = 199;
+            _context.SaveChanges();
+            _context.ChangeTracker.Clear();
+
+            _inscricaopessoaeventoService.Delete(102);
+
+            _context.ChangeTracker.Clear();
+            Assert.AreEqual(0, _context.Inscricaopessoaeventos.Count(i => i.Id == 102));
+            Assert.AreEqual(199, _context.Eventos.First().VagasDisponiveis);
         }
     }
 }

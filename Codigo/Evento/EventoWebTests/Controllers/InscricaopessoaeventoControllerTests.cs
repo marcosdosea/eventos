@@ -11,14 +11,14 @@ using Moq;
 namespace EventoWeb.Controllers.Tests
 {
     /// <summary>
-    /// Garante que a exclusão administrativa de uma inscrição libera a vaga
-    /// do evento dentro da mesma transação (Issue #861).
+    /// A exclusão administrativa deve apenas delegar ao service; a exclusão e o
+    /// recálculo de vagas acontecem de forma atômica na camada Service (Issue #861).
     /// </summary>
     [TestClass()]
     public class InscricaopessoaeventoControllerTests
     {
         [TestMethod()]
-        public void DeleteConfirmed_RecalculaVagasDisponiveisDentroDaTransacao()
+        public void DeleteConfirmed_DelegaExclusaoAoService()
         {
             var inscricao = new Inscricaopessoaevento
             {
@@ -32,34 +32,6 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(s => s.GetById(5)).Returns(inscricao);
 
             var mockEvento = new Mock<IEventoService>();
-            var mockTransacao = new Mock<ITransacaoService>();
-
-            var dentroDaTransacao = false;
-            var deleteExecutado = false;
-
-            mockService.Setup(s => s.Delete(5))
-                .Callback(() => deleteExecutado = true);
-
-            mockEvento.Setup(e => e.AtualizarVagasDisponiveis(1, It.IsAny<bool>()))
-                .Callback(() =>
-                {
-                    Assert.IsTrue(dentroDaTransacao, "O recálculo de vagas deve ocorrer dentro da transação.");
-                    Assert.IsTrue(deleteExecutado, "O recálculo deve ocorrer após a exclusão da inscrição.");
-                });
-
-            mockTransacao.Setup(t => t.Executar(It.IsAny<Action>()))
-                .Callback<Action>(acao =>
-                {
-                    dentroDaTransacao = true;
-                    try
-                    {
-                        acao();
-                    }
-                    finally
-                    {
-                        dentroDaTransacao = false;
-                    }
-                });
 
             var controller = new InscricaopessoaeventoController(
                 mockService.Object,
@@ -67,8 +39,7 @@ namespace EventoWeb.Controllers.Tests
                 mockEvento.Object,
                 Mock.Of<ITipoInscricaoService>(),
                 Mock.Of<ILogger<InscricaopessoaeventoController>>(),
-                Mock.Of<IMapper>(),
-                mockTransacao.Object);
+                Mock.Of<IMapper>());
 
             var httpContext = new DefaultHttpContext();
             controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
@@ -78,8 +49,7 @@ namespace EventoWeb.Controllers.Tests
 
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             mockService.Verify(s => s.Delete(5), Times.Once);
-            mockEvento.Verify(e => e.AtualizarVagasDisponiveis(1, It.IsAny<bool>()), Times.Once);
-            mockTransacao.Verify(t => t.Executar(It.IsAny<Action>()), Times.Once);
+            mockEvento.Verify(e => e.AtualizarVagasDisponiveis(It.IsAny<uint>(), It.IsAny<bool>()), Times.Never);
         }
     }
 }

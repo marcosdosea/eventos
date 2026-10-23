@@ -20,7 +20,6 @@ namespace EventoWeb.Controllers
         private readonly ITipoInscricaoService _tipoInscricaoService;
         private readonly ILogger<InscricaopessoaeventoController> _logger;
         private readonly IMapper _mapper;
-        private readonly ITransacaoService? _transacaoService;
 
         public InscricaopessoaeventoController(
             IInscricaopessoaeventoService service,
@@ -28,8 +27,7 @@ namespace EventoWeb.Controllers
             IEventoService eventoService,
             ITipoInscricaoService tipoInscricaoService,
             ILogger<InscricaopessoaeventoController> logger,
-            IMapper mapper,
-            ITransacaoService? transacaoService = null)
+            IMapper mapper)
         {
             _service = service;
             _pessoaService = pessoaService;
@@ -37,7 +35,6 @@ namespace EventoWeb.Controllers
             _tipoInscricaoService = tipoInscricaoService;
             _logger = logger;
             _mapper = mapper;
-            _transacaoService = transacaoService;
         }
 
         // ------------------ CRUD ADMINISTRATIVO ------------------
@@ -157,11 +154,7 @@ namespace EventoWeb.Controllers
 
             try
             {
-                ExecutarEmTransacao(() =>
-                {
-                    _service.Delete(id);
-                    _eventoService.AtualizarVagasDisponiveis(inscricao.IdEvento);
-                });
+                _service.Delete(id);
             }
             catch (Exception ex)
             {
@@ -172,17 +165,6 @@ namespace EventoWeb.Controllers
             }
             TempData["Message"] = "Inscrição do participante removida com sucesso.";
             return RedirectToAction(nameof(Index));
-        }
-
-        private void ExecutarEmTransacao(Action acao)
-        {
-            if (_transacaoService == null)
-            {
-                acao();
-                return;
-            }
-
-            _transacaoService.Executar(acao);
         }
 
         // ------------------ TELA PÚBLICA DE INSCRIÇÃO ------------------

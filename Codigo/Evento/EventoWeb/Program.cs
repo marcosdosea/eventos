@@ -54,7 +54,6 @@ namespace EventoWeb
             builder.Services.AddTransient<IModelocrachaService, ModelocrachaService>();
             builder.Services.AddScoped<IModelocertificadoService, ModelocertificadoService>();
             builder.Services.AddTransient<IInscricaoService, InscricaoService>();
-            builder.Services.AddTransient<ITransacaoService, TransacaoService>();
             builder.Services.AddTransient<IEstadosbrasilService, EstadosbrasilService>();
             builder.Services.AddTransient<ITipoeventoService, TipoeventoService>();
             builder.Services.AddTransient<IEmailSender, EmailSender>();
