@@ -312,11 +312,26 @@ function applyDetectedLocation(locObj) {
         if (modal) modal.hide();
     }
 
-    // Se estivermos na tela de busca, recarregar a busca com o novo filtro
-    if (window.location.pathname.toLowerCase().includes('/home/buscar') || window.location.pathname.toLowerCase() === '/buscar') {
+    reloadLocationContext();
+}
+
+function isHomePage() {
+    const path = window.location.pathname.toLowerCase();
+    return path === '/' || path === '/home' || path === '/home/index';
+}
+
+function reloadLocationContext() {
+    const isSearchPage = window.location.pathname.toLowerCase().includes('/home/buscar') || window.location.pathname.toLowerCase() === '/buscar';
+    if (isSearchPage) {
         const searchForm = document.getElementById('headerSearchForm');
         if (searchForm) {
             searchForm.requestSubmit();
+        } else {
+            window.location.reload();
+        }
+    } else if (isHomePage()) {
+        if (window.location.search) {
+            window.location.href = window.location.pathname;
         } else {
             window.location.reload();
         }
@@ -416,14 +431,7 @@ function saveManualLocation() {
     if (modal) modal.hide();
 
     // Se estivermos na tela de busca, podemos querer recarregar a busca com o novo filtro
-    if (window.location.pathname.toLowerCase().includes('/home/buscar') || window.location.pathname.toLowerCase() === '/buscar') {
-        const searchForm = document.getElementById('headerSearchForm');
-        if (searchForm) {
-            searchForm.requestSubmit();
-        } else {
-            window.location.reload();
-        }
-    }
+    reloadLocationContext();
 }
 
 function clearManualLocation() {
@@ -435,12 +443,7 @@ function clearManualLocation() {
     const modal = bootstrap.Modal.getInstance(modalEl);
     if (modal) modal.hide();
 
-    if (window.location.pathname.toLowerCase().includes('/home/buscar')) {
-         const searchForm = document.getElementById('headerSearchForm');
-         if (searchForm) {
-             searchForm.requestSubmit();
-         }
-    }
+    reloadLocationContext();
 }
 
 // Ensure the header search form appends the location correctly when submitted

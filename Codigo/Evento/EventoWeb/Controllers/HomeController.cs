@@ -16,9 +16,11 @@ namespace EventoWeb.Controllers
         private readonly ITipoeventoService _tipoEventoService;
         private readonly IAreaInteresseService _areaInteresseService;
         private readonly IEstadosbrasilService _estadosbrasilService;
+        private readonly IPessoaService _pessoaService;
 
         public HomeController(ILogger<HomeController> logger, IEventoService eventoService, IMapper mapper,
-            ITipoeventoService tipoEventoService, IAreaInteresseService areaInteresseService, IEstadosbrasilService estadosbrasilService)
+            ITipoeventoService tipoEventoService, IAreaInteresseService areaInteresseService, IEstadosbrasilService estadosbrasilService,
+            IPessoaService pessoaService)
         {
             _logger = logger;
             _eventoService = eventoService;
@@ -26,21 +28,100 @@ namespace EventoWeb.Controllers
             _tipoEventoService = tipoEventoService;
             _areaInteresseService = areaInteresseService;
             _estadosbrasilService = estadosbrasilService;
+            _pessoaService = pessoaService;
         }
 
-        public IActionResult Index(bool vitrine = false, bool adminRemovido = false)
+        public class UserLocationCookieModel
+        {
+            public string? Cidade { get; set; }
+            public string? Estado { get; set; }
+            public bool? Manual { get; set; }
+        }
+
+        public string? ObterEstadoAtivo(string? ufParam = null)
+        {
+            if (!string.IsNullOrWhiteSpace(ufParam))
+            {
+                var ufTrim = ufParam.Trim();
+                if (ufTrim.Equals("TODOS", StringComparison.OrdinalIgnoreCase) ||
+                    ufTrim.Equals("BR", StringComparison.OrdinalIgnoreCase))
+                {
+                    return null;
+                }
+                return ufTrim.ToUpper();
+            }
+
+            UserLocationCookieModel? cookieLocation = null;
+            if (Request?.Cookies != null && Request.Cookies.TryGetValue("UserLocation", out var cookieRaw) && !string.IsNullOrWhiteSpace(cookieRaw))
+            {
+                try
+                {
+                    var json = cookieRaw;
+                    if (json.StartsWith("%"))
+                    {
+                        json = Uri.UnescapeDataString(json);
+                    }
+                    cookieLocation = System.Text.Json.JsonSerializer.Deserialize<UserLocationCookieModel>(json, new System.Text.Json.JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogWarning(ex, "Erro ao deserializar cookie UserLocation.");
+                }
+            }
+
+            if (cookieLocation != null && cookieLocation.Manual == true)
+            {
+                if (!string.IsNullOrWhiteSpace(cookieLocation.Estado))
+                {
+                    return cookieLocation.Estado.Trim().ToUpper();
+                }
+                return null;
+            }
+
+            if (User?.Identity != null && User.Identity.IsAuthenticated)
+            {
+                var userCpf = User.FindFirstValue(ClaimTypes.Name);
+                if (!string.IsNullOrEmpty(userCpf))
+                {
+                    try
+                    {
+                        var pessoa = _pessoaService.GetByCpf(userCpf);
+                        if (pessoa != null && !string.IsNullOrWhiteSpace(pessoa.Estado))
+                        {
+                            return pessoa.Estado.Trim().ToUpper();
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, "Erro ao buscar Estado da pessoa autenticada.");
+                    }
+                }
+            }
+
+            if (cookieLocation != null && !string.IsNullOrWhiteSpace(cookieLocation.Estado))
+            {
+                return cookieLocation.Estado.Trim().ToUpper();
+            }
+
+            return null;
+        }
+
+        public IActionResult Index(string? uf = null, bool vitrine = false, bool adminRemovido = false)
         {
             
-            if (!User.Identity.IsAuthenticated)
+            if (User?.Identity == null || !User.Identity.IsAuthenticated)
             {
                 TempData.Remove("Message");
             }
             TempData["SelecionarPerfil"] = "false";
-            if (!vitrine)
+            if (!vitrine && User?.Identity != null && User.Identity.IsAuthenticated)
             {
                 if(User.IsInRole("ADMINISTRADOR") && (User.IsInRole("GESTOR") || User.IsInRole("PARTICIPANTE") || User.IsInRole("COLABORADOR") || User.IsInRole("USUARIO")))
                 {
-                    var perfilAtivo = HttpContext.Session.GetString("PerfilAtivo");
+                    var perfilAtivo = HttpContext?.Session?.GetString("PerfilAtivo");
                     if (string.IsNullOrEmpty(perfilAtivo))
                     {
                        
@@ -69,7 +150,9 @@ namespace EventoWeb.Controllers
                 TempData["SuccessMessage"] = "Aviso: Seu cargo de administrador foi removido!";
                 TempData["ToastTimeout"] = 5000;
             }
-            var listarEventos = _eventoService.GetAll().ToList();
+
+            var estadoAtivo = ObterEstadoAtivo(uf);
+            var listarEventos = _eventoService.GetEventosVitrine(estadoAtivo).ToList();
             var listarEventosModel = _mapper.Map<List<EventoModel>>(listarEventos);
 
             foreach (var evento in listarEventosModel)
@@ -79,7 +162,7 @@ namespace EventoWeb.Controllers
 
 
             var eventosGerenciadosIds = new HashSet<uint>();
-            if (User.Identity.IsAuthenticated && User.IsInRole("GESTOR"))
+            if (User?.Identity != null && User.Identity.IsAuthenticated && User.IsInRole("GESTOR"))
             {
                 var userCpf = User.FindFirstValue(ClaimTypes.Name);
                 if (!string.IsNullOrEmpty(userCpf))
@@ -93,11 +176,27 @@ namespace EventoWeb.Controllers
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning(ex, "Não foi possível obter os eventos gerenciados pelo usuário na vitrine.");
+                        _logger?.LogWarning(ex, "Não foi possível obter os eventos gerenciados pelo usuário na vitrine.");
                     }
                 }
             }
             ViewBag.EventosGerenciadosIds = eventosGerenciadosIds;
+
+            ViewBag.EstadoAtivo = estadoAtivo;
+            string nomeEstado = "Todo o Brasil";
+            if (!string.IsNullOrEmpty(estadoAtivo))
+            {
+                try
+                {
+                    var estadoObj = _estadosbrasilService.Get(estadoAtivo);
+                    nomeEstado = estadoObj != null ? $"{estadoObj.Nome} ({estadoObj.Estado})" : estadoAtivo;
+                }
+                catch
+                {
+                    nomeEstado = estadoAtivo;
+                }
+            }
+            ViewBag.NomeEstadoAtivo = nomeEstado;
 
             return View(listarEventosModel);
         }
@@ -118,7 +217,6 @@ namespace EventoWeb.Controllers
             ViewBag.Estados = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(_estadosbrasilService.GetAll().OrderBy(e => e.Nome), "Estado", "Nome", filter.Estado);
             ViewBag.FiltroAtual = filter;
             
-            // Dados de paginação para a view
             ViewBag.PaginaAtual = pagina;
             ViewBag.TotalPaginas = (int)Math.Ceiling((double)totalRegistros / tamanhoPagina);
             ViewBag.TamanhoPagina = tamanhoPagina;
@@ -127,7 +225,6 @@ namespace EventoWeb.Controllers
             return View(eventosModel);
         }
 
-        // Outras ações do controlador
         public IActionResult Privacy()
         {
             return View();
