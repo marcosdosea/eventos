@@ -16,7 +16,7 @@ namespace Service.Tests
     /// exercitada pelos testes InMemory.
     /// </summary>
     [TestClass()]
-    public class TransacaoIntegracaoTests
+    public class InscricaoIntegracaoTests
     {
         private SqliteConnection _connection = null!;
         private EventoContext _context = null!;
