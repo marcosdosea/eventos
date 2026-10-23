@@ -71,6 +71,20 @@ namespace Service
                 return;
             }
 
+            if (evento.Status == "A")
+            {
+                throw new ServiceException("Não é possível excluir um evento ativo. Cancele o evento antes de excluí-lo.");
+            }
+
+            var idsSubeventos = evento.Subeventos?.Select(s => s.Id).ToList() ?? new List<uint>();
+            var temInscricaoEvento = evento.Inscricaopessoaeventos != null && evento.Inscricaopessoaeventos.Any();
+            var temInscricaoSubevento = idsSubeventos.Count > 0 && _context.Inscricaopessoasubeventos.Any(s => idsSubeventos.Contains(s.IdSubEvento));
+
+            if (temInscricaoEvento || temInscricaoSubevento)
+            {
+                throw new ServiceException("Não é possível excluir um evento que possui inscrições vinculadas.");
+            }
+
             try
             {
                 _transacaoService.Executar(() => RemoverEventoComDependentes(evento));
