@@ -218,9 +218,8 @@ namespace Service.Tests
         [TestMethod()]
         public void DeleteTest()
         {
-            // Act: Evento 3 está cancelado ("C") e sem inscrições
             _eventoService.Delete(3);
-            // Assert
+
             Assert.AreEqual(2, _eventoService.GetAll().Count());
             var evento = _eventoService.Get(3);
             Assert.IsNull(evento);
@@ -229,7 +228,6 @@ namespace Service.Tests
         [TestMethod()]
         public void DeleteTest_EventoAtivo_LancaServiceException()
         {
-            // Evento 1 possui Status = "A"
             var ex = Assert.ThrowsException<ServiceException>(() => _eventoService.Delete(1));
             Assert.AreEqual("Não é possível excluir um evento ativo. Cancele o evento antes de excluí-lo.", ex.Message);
         }
@@ -237,7 +235,6 @@ namespace Service.Tests
         [TestMethod()]
         public void DeleteTest_EventoComInscricoes_LancaServiceException()
         {
-            // Arrange: Evento 2 está finalizado ("F"), mas vinculamos uma inscrição
             var inscricao = new Inscricaopessoaevento
             {
                 Id = 10,
@@ -250,7 +247,6 @@ namespace Service.Tests
             _context.SaveChanges();
             _context.ChangeTracker.Clear();
 
-            // Act & Assert
             var ex = Assert.ThrowsException<ServiceException>(() => _eventoService.Delete(2));
             Assert.AreEqual("Não é possível excluir um evento que possui inscrições vinculadas.", ex.Message);
         }
@@ -258,7 +254,6 @@ namespace Service.Tests
         [TestMethod()]
         public void DeleteTest_WithDependencies_DeletesSuccessfully()
         {
-            // Arrange: criar subevento e tipo de inscricao para o evento 2 (Finalizado e sem inscritos)
             var subevento = new Subevento
             {
                 Id = 10,
@@ -286,10 +281,8 @@ namespace Service.Tests
             _context.Tipoinscricaos.Add(tipoInscricao);
             _context.SaveChanges();
 
-            // Act
             _eventoService.Delete(2);
 
-            // Assert
             Assert.IsNull(_eventoService.Get(2));
             Assert.IsFalse(_context.Subeventos.Any(s => s.Id == 10));
             Assert.IsFalse(_context.Tipoinscricaos.Any(t => t.Id == 10));

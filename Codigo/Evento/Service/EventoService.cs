@@ -123,8 +123,6 @@ namespace Service
                 _context.Inscricaopessoasubeventos.RemoveRange(inscricoesSub);
                 _context.Participacaopessoasubeventos.RemoveRange(participacoesSub);
 
-                // Junção tipoinscricaosubevento (skip navigation): limpar a coleção
-                // remove as linhas da tabela de junção.
                 foreach (var subevento in evento.Subeventos)
                 {
                     subevento.IdTipoInscricaos.Clear();
@@ -141,8 +139,6 @@ namespace Service
 
             if (idsTiposInscricao.Count > 0)
             {
-                // Inscrições que apontam para o tipo de inscrição deste evento
-                // (FK RESTRICT) impedem a remoção do tipo.
                 var inscricoesDoTipo = _context.Inscricaopessoaeventos
                     .Where(i => i.IdTipoInscricao.HasValue && idsTiposInscricao.Contains(i.IdTipoInscricao.Value))
                     .ToList();
@@ -349,13 +345,6 @@ namespace Service
 
             if (evento != null)
             {
-                // Regra de negócio: vagas disponíveis = vagas ofertadas - participantes.
-                //
-                // A contagem soma o que já está gravado com o que está pendente no
-                // ChangeTracker (inscrições adicionadas ou removidas no mesmo contexto).
-                // Sem isso, a chamada feita antes do SaveChanges do lote
-                // (InscricaoController.realizarInscricao) ignoraria as inscrições
-                // recém-criadas e as vagas não seriam abatidas.
                 var participantesNoBanco = _context.Inscricaopessoaeventos
                     .Count(i => i.IdEvento == idEvento && i.IdPapel == PapelParticipante);
 
