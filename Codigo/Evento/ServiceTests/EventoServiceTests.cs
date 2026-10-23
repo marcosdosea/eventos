@@ -680,5 +680,199 @@ namespace Service.Tests
             Assert.IsTrue(resultados.Any(e => e.Id == 200));
             Assert.IsTrue(resultados.Any(e => e.Id == 201));
         }
+
+        [TestMethod()]
+        public void GetEventosVitrine_GaranteExclusaoDeEventosComStatusNaoAtivo()
+        {
+            // Arrange
+            var eventoAtivo = new Evento
+            {
+                Id = 301,
+                Nome = "Evento Ativo",
+                Status = "A",
+                Estado = "SE",
+                DataInicioInscricao = DateTime.Now.AddDays(-2),
+                DataFimInscricao = DateTime.Now.AddDays(5),
+                DataInicio = DateTime.Now.AddDays(6),
+                DataFim = DateTime.Now.AddDays(10)
+            };
+            var eventoCadastro = new Evento
+            {
+                Id = 302,
+                Nome = "Evento Cadastro",
+                Status = "C",
+                Estado = "SE",
+                DataInicioInscricao = DateTime.Now.AddDays(-2),
+                DataFimInscricao = DateTime.Now.AddDays(5),
+                DataInicio = DateTime.Now.AddDays(6),
+                DataFim = DateTime.Now.AddDays(10)
+            };
+            var eventoInativo = new Evento
+            {
+                Id = 303,
+                Nome = "Evento Inativo",
+                Status = "I",
+                Estado = "SE",
+                DataInicioInscricao = DateTime.Now.AddDays(-2),
+                DataFimInscricao = DateTime.Now.AddDays(5),
+                DataInicio = DateTime.Now.AddDays(6),
+                DataFim = DateTime.Now.AddDays(10)
+            };
+            var eventoFinalizado = new Evento
+            {
+                Id = 304,
+                Nome = "Evento Finalizado",
+                Status = "F",
+                Estado = "SE",
+                DataInicioInscricao = DateTime.Now.AddDays(-2),
+                DataFimInscricao = DateTime.Now.AddDays(5),
+                DataInicio = DateTime.Now.AddDays(6),
+                DataFim = DateTime.Now.AddDays(10)
+            };
+
+            _context.Eventos.AddRange(eventoAtivo, eventoCadastro, eventoInativo, eventoFinalizado);
+            _context.SaveChanges();
+
+            // Act
+            var vitrine = _eventoService.GetEventosVitrine("SE").ToList();
+
+            // Assert
+            Assert.IsTrue(vitrine.Any(e => e.Id == 301));
+            Assert.IsFalse(vitrine.Any(e => e.Id == 302));
+            Assert.IsFalse(vitrine.Any(e => e.Id == 303));
+            Assert.IsFalse(vitrine.Any(e => e.Id == 304));
+        }
+
+        [TestMethod()]
+        public void GetEventosVitrine_GaranteExclusaoDeEventosComInscricoesOuEventoVencidos()
+        {
+            // Arrange
+            var eventoValido = new Evento
+            {
+                Id = 310,
+                Nome = "Evento Valido",
+                Status = "A",
+                Estado = "SE",
+                DataInicioInscricao = DateTime.Now.AddDays(-2),
+                DataFimInscricao = DateTime.Now.AddDays(5),
+                DataInicio = DateTime.Now.AddDays(6),
+                DataFim = DateTime.Now.AddDays(10)
+            };
+            var eventoInscricaoVencida = new Evento
+            {
+                Id = 311,
+                Nome = "Evento Inscricao Vencida",
+                Status = "A",
+                Estado = "SE",
+                DataInicioInscricao = DateTime.Now.AddDays(-10),
+                DataFimInscricao = DateTime.Now.AddDays(-1),
+                DataInicio = DateTime.Now.AddDays(2),
+                DataFim = DateTime.Now.AddDays(5)
+            };
+            var eventoJaAconteceu = new Evento
+            {
+                Id = 312,
+                Nome = "Evento Ja Aconteceu",
+                Status = "A",
+                Estado = "SE",
+                DataInicioInscricao = DateTime.Now.AddDays(-15),
+                DataFimInscricao = DateTime.Now.AddDays(-10),
+                DataInicio = DateTime.Now.AddDays(-5),
+                DataFim = DateTime.Now.AddDays(-1)
+            };
+
+            _context.Eventos.AddRange(eventoValido, eventoInscricaoVencida, eventoJaAconteceu);
+            _context.SaveChanges();
+
+            // Act
+            var vitrine = _eventoService.GetEventosVitrine("SE").ToList();
+
+            // Assert
+            Assert.IsTrue(vitrine.Any(e => e.Id == 310));
+            Assert.IsFalse(vitrine.Any(e => e.Id == 311));
+            Assert.IsFalse(vitrine.Any(e => e.Id == 312));
+        }
+
+        [TestMethod()]
+        public void GetEventosVitrine_GaranteInclusaoDeEventosComInscricoesAbertasEEmBreve()
+        {
+            // Arrange
+            var eventoAberto = new Evento
+            {
+                Id = 320,
+                Nome = "Evento Inscricoes Abertas",
+                Status = "A",
+                Estado = "BA",
+                DataInicioInscricao = DateTime.Now.AddDays(-3),
+                DataFimInscricao = DateTime.Now.AddDays(4),
+                DataInicio = DateTime.Now.AddDays(5),
+                DataFim = DateTime.Now.AddDays(10)
+            };
+            var eventoEmBreve = new Evento
+            {
+                Id = 321,
+                Nome = "Evento Em Breve",
+                Status = "A",
+                Estado = "BA",
+                DataInicioInscricao = DateTime.Now.AddDays(2),
+                DataFimInscricao = DateTime.Now.AddDays(10),
+                DataInicio = DateTime.Now.AddDays(12),
+                DataFim = DateTime.Now.AddDays(15)
+            };
+
+            _context.Eventos.AddRange(eventoAberto, eventoEmBreve);
+            _context.SaveChanges();
+
+            // Act
+            var vitrine = _eventoService.GetEventosVitrine("BA").ToList();
+
+            // Assert
+            Assert.IsTrue(vitrine.Any(e => e.Id == 320));
+            Assert.IsTrue(vitrine.Any(e => e.Id == 321));
+        }
+
+        [TestMethod()]
+        public void GetEventosVitrine_GaranteFiltragemPrecisaPorUF()
+        {
+            // Arrange
+            var eventoSE = new Evento
+            {
+                Id = 330,
+                Nome = "Evento Sergipe",
+                Status = "A",
+                Estado = "SE",
+                DataInicioInscricao = DateTime.Now.AddDays(-1),
+                DataFimInscricao = DateTime.Now.AddDays(5),
+                DataInicio = DateTime.Now.AddDays(6),
+                DataFim = DateTime.Now.AddDays(10)
+            };
+            var eventoSP = new Evento
+            {
+                Id = 331,
+                Nome = "Evento Sao Paulo",
+                Status = "A",
+                Estado = "SP",
+                DataInicioInscricao = DateTime.Now.AddDays(-1),
+                DataFimInscricao = DateTime.Now.AddDays(5),
+                DataInicio = DateTime.Now.AddDays(6),
+                DataFim = DateTime.Now.AddDays(10)
+            };
+
+            _context.Eventos.AddRange(eventoSE, eventoSP);
+            _context.SaveChanges();
+
+            // Act & Assert
+            var vitrineSE = _eventoService.GetEventosVitrine("SE").ToList();
+            Assert.IsTrue(vitrineSE.Any(e => e.Id == 330));
+            Assert.IsFalse(vitrineSE.Any(e => e.Id == 331));
+
+            var vitrineSP = _eventoService.GetEventosVitrine("SP").ToList();
+            Assert.IsTrue(vitrineSP.Any(e => e.Id == 331));
+            Assert.IsFalse(vitrineSP.Any(e => e.Id == 330));
+
+            var vitrineTodos = _eventoService.GetEventosVitrine(null).ToList();
+            Assert.IsTrue(vitrineTodos.Any(e => e.Id == 330));
+            Assert.IsTrue(vitrineTodos.Any(e => e.Id == 331));
+        }
     }
 }
