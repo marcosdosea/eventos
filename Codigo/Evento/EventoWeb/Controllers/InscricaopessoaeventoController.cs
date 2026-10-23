@@ -158,8 +158,8 @@ namespace EventoWeb.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro ao salvar inscrição {Id}", id);
-                ModelState.AddModelError(string.Empty, "Não foi possível salvar");
+                _logger.LogError(ex, "Erro ao excluir inscrição {Id}", id);
+                ModelState.AddModelError(string.Empty, "Não foi possível excluir a inscrição");
                 var dto = _mapper.Map<InscricaopessoaeventoDTO>(inscricao);
                 return View("Delete", dto);
             }

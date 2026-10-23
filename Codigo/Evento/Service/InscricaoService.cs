@@ -10,12 +10,16 @@ namespace Service
     {
         private readonly EventoContext _context;
         private readonly UserManager<UsuarioIdentity> _userManager;
+        private readonly IEventoService _eventoService;
+        private readonly ISubeventoService _subeventoService;
 
         private const int PapelParticipante = 4;
-        public InscricaoService(EventoContext context, UserManager<UsuarioIdentity> userManager)
+        public InscricaoService(EventoContext context, UserManager<UsuarioIdentity> userManager, IEventoService eventoService, ISubeventoService subeventoService)
         {
             _userManager = userManager;
             _context = context;
+            _eventoService = eventoService;
+            _subeventoService = subeventoService;
         }
 
         public bool IsInscrito(uint idPessoa, uint idEvento)
@@ -44,29 +48,33 @@ namespace Service
         }
 
         /// <summary>
-        /// Adiciona as inscrições do lote ao contexto. A transação é responsabilidade
-        /// do caso de uso (ver ITransacaoService), que envolve também a atualização
-        /// de vagas e o SaveChanges final.
+        /// Adiciona as inscrições do lote, atualiza as vagas do evento e dos
+        /// subeventos afetados e persiste tudo em um único SaveChanges.
         /// </summary>
-        public void CreateInscricoesEmLote(IEnumerable<Inscricaopessoaevento> eventos, IEnumerable<Inscricaopessoasubevento> subeventos, bool saveChanges = true)
+        public void CreateInscricoesEmLote(uint idEvento, IEnumerable<Inscricaopessoaevento> eventos, IEnumerable<Inscricaopessoasubevento> subeventos, IEnumerable<uint> idsSubeventosAtualizarVagas)
         {
-            if (eventos != null && eventos.Any())
+            var eventosList = eventos?.ToList() ?? new List<Inscricaopessoaevento>();
+            var subeventosList = subeventos?.ToList() ?? new List<Inscricaopessoasubevento>();
+
+            if (eventosList.Count > 0)
             {
-                _context.AddRange(eventos);
+                _context.AddRange(eventosList);
             }
-            if (subeventos != null && subeventos.Any())
+            if (subeventosList.Count > 0)
             {
-                _context.AddRange(subeventos);
+                _context.AddRange(subeventosList);
             }
 
-            if (saveChanges && ((eventos != null && eventos.Any()) || (subeventos != null && subeventos.Any())))
+            if (eventosList.Count > 0)
             {
-                _context.SaveChanges();
+                _eventoService.AtualizarVagasDisponiveis(idEvento, saveChanges: false);
             }
-        }
 
-        public void SaveChanges()
-        {
+            foreach (var idSubevento in (idsSubeventosAtualizarVagas ?? Enumerable.Empty<uint>()).Distinct())
+            {
+                _subeventoService.AtualizarVagasDisponiveis(idSubevento, saveChanges: false);
+            }
+
             _context.SaveChanges();
         }
 
@@ -159,13 +167,11 @@ namespace Service
 
         /// <summary>
         /// Cancela as inscrições de participante (papel 4) de uma pessoa em um evento,
-        /// incluindo as inscrições nos subeventos do evento, em um único SaveChanges.
-        /// O SaveChanges é enlistado na transação aberta pelo caso de uso
-        /// (ver ITransacaoService), que também cobre a atualização de vagas.
-        /// Retorna a quantidade de inscrições do evento removidas e os ids dos
-        /// subeventos afetados (para atualização de vagas).
+        /// incluindo as inscrições nos subeventos, e libera as vagas do evento e dos
+        /// subeventos afetados em um único SaveChanges.
+        /// Retorna a quantidade de inscrições do evento removidas.
         /// </summary>
-        public (int Removidas, List<uint> SubeventosAfetados) CancelarInscricaoParticipante(uint idPessoa, uint idEvento)
+        public int CancelarInscricaoParticipante(uint idPessoa, uint idEvento)
         {
             var inscricoesEvento = _context.Inscricaopessoaeventos
                 .Where(i => i.IdPessoa == idPessoa && i.IdEvento == idEvento && i.IdPapel == PapelParticipante)
@@ -173,7 +179,7 @@ namespace Service
 
             if (!inscricoesEvento.Any())
             {
-                return (0, new List<uint>());
+                return 0;
             }
 
             var idsSubeventosDoEvento = _context.Subeventos
@@ -196,9 +202,16 @@ namespace Service
             _context.Pagamentos.RemoveRange(pagamentos);
             _context.Inscricaopessoasubeventos.RemoveRange(inscricoesSub);
             _context.Inscricaopessoaeventos.RemoveRange(inscricoesEvento);
+
+            _eventoService.AtualizarVagasDisponiveis(idEvento, saveChanges: false);
+            foreach (var idSub in idsSubAfetados)
+            {
+                _subeventoService.AtualizarVagasDisponiveis(idSub, saveChanges: false);
+            }
+
             _context.SaveChanges();
 
-            return (inscricoesEvento.Count, idsSubAfetados);
+            return inscricoesEvento.Count;
         }
 
         public IEnumerable<Inscricaopessoasubevento> GetSubByEvento(uint idEvento)

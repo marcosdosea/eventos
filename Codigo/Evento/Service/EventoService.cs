@@ -11,12 +11,10 @@ namespace Service
         private const int PapelParticipante = 4;
 
         private readonly EventoContext _context;
-        private readonly ITransacaoService _transacaoService;
 
-        public EventoService(EventoContext context, ITransacaoService? transacaoService = null)
+        public EventoService(EventoContext context)
         {
             _context = context;
-            _transacaoService = transacaoService ?? new TransacaoService(context);
         }
 
         /// <summary>
@@ -73,7 +71,7 @@ namespace Service
 
             try
             {
-                _transacaoService.Executar(() => RemoverEventoComDependentes(evento));
+                RemoverEventoComDependentes(evento);
             }
             catch (ServiceException)
             {
@@ -359,7 +357,7 @@ namespace Service
 
                 var quantidadeParticipantes = participantesNoBanco + inscricoesPendentes - inscricoesRemovidas;
 
-                evento.VagasDisponiveis = evento.VagasOfertadas - quantidadeParticipantes;
+                evento.VagasDisponiveis = Math.Max(0, evento.VagasOfertadas - quantidadeParticipantes);
 
                 if (saveChanges)
                 {

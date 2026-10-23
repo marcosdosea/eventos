@@ -8,10 +8,12 @@ namespace Service
     public class InscricaopessoaeventoService : IInscricaopessoaeventoService
     {
         private readonly EventoContext _context;
+        private readonly IEventoService _eventoService;
 
-        public InscricaopessoaeventoService(EventoContext context)
+        public InscricaopessoaeventoService(EventoContext context, IEventoService eventoService)
         {
             _context = context;
+            _eventoService = eventoService;
         }
 
         public void Create(Inscricaopessoaevento inscricao)
@@ -44,11 +46,13 @@ namespace Service
         public void Delete(uint id)
         {
             var inscricao = GetById(id);
-            if (inscricao != null)
-            {
-                _context.Inscricaopessoaeventos.Remove(inscricao);
-                _context.SaveChanges();
-            }
+            if (inscricao == null)
+                return;
+
+            var idEvento = inscricao.IdEvento;
+            _context.Inscricaopessoaeventos.Remove(inscricao);
+            _eventoService.AtualizarVagasDisponiveis(idEvento, saveChanges: false);
+            _context.SaveChanges();
         }
 
         public bool PessoaJaInscrita(uint idPessoa, uint idEvento)
