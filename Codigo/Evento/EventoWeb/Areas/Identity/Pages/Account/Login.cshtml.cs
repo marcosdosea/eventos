@@ -177,7 +177,6 @@ namespace EventoWeb.Areas.Identity.Pages.Account
 
             }
             else{
-                var x = ModelState.GetType();
                 ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.EmailOrCpf)}", "Os dados estão inválidos");
                 ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.Password)}", "Os dados estão inválidos");
                 return Page();
