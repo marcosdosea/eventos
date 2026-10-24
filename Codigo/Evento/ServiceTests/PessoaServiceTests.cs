@@ -1,15 +1,9 @@
 ﻿using Core;
 using Core.Service;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
-using EventoWeb.Models;
-using System;
 using System.Collections.Immutable;
-using Service;
 
 namespace Service.Tests
 {
@@ -89,7 +83,7 @@ namespace Service.Tests
                     Email = "muzanpvp@gmail.com",
                     Telefone1 = "7999001133",
                     Telefone2 = "NULL",
-                },
+                }
             };
 
             var evento = new Evento
@@ -134,6 +128,7 @@ namespace Service.Tests
             _context.AddRange(evento);
             _context.AddRange(papel);
             _context.SaveChanges();
+
 
             _userManager = new MockUserManager<UsuarioIdentity>();
             _inscricaoService = new InscricaoService(_context, _userManager);
@@ -614,8 +609,28 @@ namespace Service.Tests
         }
 
         [TestMethod()]
-        public async Task EmailExist_ReturnsTrue_WhenEmailBelongsToOtherCpf()
+        public async Task EmailExist_ReturnsTrue_EmailDuplicado()
         {
+            var pessoaDuplicada = new Pessoa
+            {
+                    Id = 4,
+                    Nome = "João Duplicado Sodré",
+                    NomeCracha = "Sodré",
+                    Cpf = "030.268.930-57",
+                    Sexo = "M",
+                    Cep = "48370-000",
+                    Rua = "Avenida Principal",
+                    Bairro = "Centro",
+                    Cidade = "Irece",
+                    Estado = "BA",
+                    Numero = "s/n",
+                    Complemento = "casa",
+                    Email = "email@gmail.com",
+                    Telefone1 = "7999990011",
+                    Telefone2 = "NULL",
+                
+            };
+           
             var pessoa = _pessoaService.Get(1);
             var usuario = new UsuarioIdentity
             {
@@ -624,9 +639,17 @@ namespace Service.Tests
                 PhoneNumber = pessoa.Telefone1,
                 EmailConfirmed = true
             };
+            var usuarioDuplicado = new UsuarioIdentity
+            {
+                UserName = pessoaDuplicada.Cpf,
+                Email = pessoaDuplicada.Email,
+                PhoneNumber = pessoaDuplicada.Telefone1,
+                EmailConfirmed = true
+            };
             await _userManager.CreateAsync(usuario, "Temp@1234!");
+            await _userManager.CreateAsync(usuarioDuplicado, "Temp@1234!");
 
-            Assert.IsTrue(await _pessoaService.EmailExist(pessoa.Email, "000.000.000-00"));
+            Assert.IsTrue(await _pessoaService.EmailExist(pessoaDuplicada.Email, pessoaDuplicada.Cpf));
         }
 
         [TestMethod()]

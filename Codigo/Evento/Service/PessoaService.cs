@@ -284,13 +284,15 @@ public class PessoaService : IPessoaService
     }
     public async Task<bool> EmailExist(String email, String cpf)
     {
-        List<UsuarioIdentity> users = await _userManager.Users
-                                                    .Where(u => u.Email == email)
-                                                    .ToListAsync();
-        if (users == null || users.Count == 0)
-            return false;
+        List <Pessoa> pessoas = await _context.Pessoas.Where(u => u.Email == email).ToListAsync();
 
-        return users.Any(u => u.UserName != cpf);
+        if (pessoas == null || pessoas.Count == 0)
+        {
+            return false;
+        }
+        
+
+        return pessoas.Any(u => u.Cpf != cpf);
     }
     public async Task<bool>  EmailConfirmado(string email)
     {
