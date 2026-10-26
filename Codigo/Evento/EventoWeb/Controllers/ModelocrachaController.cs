@@ -343,6 +343,30 @@ namespace EventoWeb.Controllers
             return "logo_institucional.png";
         }
 
+        private static string ObterMimeType(string nomeArquivo, string base64)
+        {
+            if (base64.StartsWith("/9j/", StringComparison.Ordinal)) return "image/jpeg";
+            if (base64.StartsWith("UklGR", StringComparison.Ordinal)) return "image/webp";
+            if (base64.StartsWith("iVBOR", StringComparison.Ordinal)) return "image/png";
+            if (base64.StartsWith("R0lGOD", StringComparison.Ordinal)) return "image/gif";
+            if (base64.StartsWith("SUkq", StringComparison.Ordinal) || base64.StartsWith("TU0A", StringComparison.Ordinal)) return "image/tiff";
+
+            if (!string.IsNullOrEmpty(nomeArquivo))
+            {
+                var ext = Path.GetExtension(nomeArquivo).ToLowerInvariant();
+                return ext switch
+                {
+                    ".jpg" or ".jpeg" => "image/jpeg",
+                    ".webp" => "image/webp",
+                    ".svg" => "image/svg+xml",
+                    ".tif" or ".tiff" => "image/tiff",
+                    ".gif" => "image/gif",
+                    _ => "image/png"
+                };
+            }
+            return "image/png";
+        }
+
         private static bool ValidarLogotipoBase64(string? base64Logo, out byte[]? bytesValidos, out string? erroValidacao)
         {
             bytesValidos = null;
@@ -742,6 +766,343 @@ namespace EventoWeb.Controllers
                 return Forbid();
             _modelocrachaService.Delete(id);
             return RedirectToAction(nameof(Index), new { idEvento = idEvento });
+        }
+
+        [HttpGet]
+        [Route("EmitirCracha/{idEvento?}")]
+        [Route("Emitir/{idEvento?}")]
+        public ActionResult EmitirCracha(uint? idEvento, uint? idModelo, uint? idPessoa)
+        {
+            var eventosDisponiveis = ObterEventosDoUsuario();
+            ViewBag.EventosDisponiveis = eventosDisponiveis;
+
+            uint idEventoAlvo = idEvento ?? 0;
+            if (idEventoAlvo > 0)
+            {
+                if (!IsAuthorized(idEventoAlvo))
+                    return Forbid();
+            }
+            else if (eventosDisponiveis.Any())
+            {
+                idEventoAlvo = eventosDisponiveis.First().Id;
+            }
+
+            var eventoDto = idEventoAlvo > 0 ? _eventoService.GetEventoSimpleDto(idEventoAlvo) : null;
+            var nomeEvento = eventoDto?.Nome ?? (idEventoAlvo > 0 ? _eventoService.GetNomeById(idEventoAlvo) : "Evento Vinculado") ?? "Evento Vinculado";
+
+            var modelosDoEvento = idEventoAlvo > 0
+                ? _modelocrachaService.GetByEvento(idEventoAlvo).ToList()
+                : new List<Modelocracha>();
+
+            var modelosDTO = modelosDoEvento.Select(m => new ModelocrachaItemDTO
+            {
+                Id = m.Id,
+                Nome = $"Gabarito #{m.Id} - 90×130mm",
+                Texto = m.Texto,
+                TemLogotipo = m.Logotipo != null && m.Logotipo.Length > 0,
+                Qrcode = m.Qrcode
+            }).ToList();
+
+            if (!modelosDTO.Any())
+            {
+                modelosDTO.Add(new ModelocrachaItemDTO
+                {
+                    Id = 0,
+                    Nome = "Modelo Padrão Vertical 9×13cm",
+                    Texto = TextoPadraoCracha,
+                    TemLogotipo = true,
+                    Qrcode = 1
+                });
+            }
+
+            Modelocracha? modeloSelecionado = null;
+            if (idModelo.HasValue && idModelo.Value > 0)
+            {
+                modeloSelecionado = modelosDoEvento.FirstOrDefault(m => m.Id == idModelo.Value);
+            }
+            modeloSelecionado ??= modelosDoEvento.FirstOrDefault();
+
+            byte[]? logoBytes = modeloSelecionado?.Logotipo;
+            if (logoBytes == null || logoBytes.Length == 0)
+            {
+                var predefinido = ObterLogotipoPredefinido();
+                if (predefinido.bytes != null && predefinido.bytes.Length > 0)
+                {
+                    logoBytes = predefinido.bytes;
+                }
+            }
+
+            string? logoDataUrl = null;
+            if (logoBytes != null && logoBytes.Length > 0)
+            {
+                var nomeLogo = ObterNomeArquivoLogo(logoBytes);
+                var mime = ObterMimeType(nomeLogo, Convert.ToBase64String(logoBytes));
+                logoDataUrl = $"data:{mime};base64,{Convert.ToBase64String(logoBytes)}";
+            }
+
+            var textoModelo = modeloSelecionado?.Texto ?? TextoPadraoCracha;
+            var qrcodeHabilitado = modeloSelecionado?.Qrcode != 0;
+
+            var participantes = new List<ParticipanteCrachaItemModel>();
+
+            if (idEventoAlvo > 0)
+            {
+                var inscricoes = _inscricaoService.GetByEvento(idEventoAlvo);
+                var subeventos = _inscricaoService.GetSubByEvento(idEventoAlvo);
+
+                if (inscricoes != null && inscricoes.Any())
+                {
+                    var inscricoesOrdenadas = inscricoes.OrderBy(i => i.IdPessoaNavigation?.Nome ?? "").ToList();
+
+                    foreach (var ins in inscricoesOrdenadas)
+                    {
+                        var pessoa = ins.IdPessoaNavigation;
+                        var nomeCompleto = pessoa?.Nome ?? "Participante";
+                        var nomeCracha = !string.IsNullOrWhiteSpace(ins.NomeCracha)
+                            ? ins.NomeCracha
+                            : (!string.IsNullOrWhiteSpace(pessoa?.NomeCracha)
+                                ? pessoa.NomeCracha
+                                : nomeCompleto);
+
+                        var cpfPuro = pessoa?.Cpf ?? string.Empty;
+                        var cpfMascarado = MascararCpfParaExibicao(cpfPuro);
+
+                        var subeventosIdsPessoa = subeventos?
+                            .Where(sub => sub.IdPessoa == ins.IdPessoa)
+                            .Select(sub => sub.IdSubEvento)
+                            .Distinct()
+                            .ToList() ?? new List<uint>();
+
+                        var conteudoQrCode = $"[{ins.IdPessoa}] [{nomeCracha}] [{idEventoAlvo}] [{ins.Id}]";
+                        if (subeventosIdsPessoa.Any())
+                        {
+                            conteudoQrCode += $" {string.Join(" ", subeventosIdsPessoa.Select(idSub => $"[{idSub}]"))}";
+                        }
+
+                        string qrCodeBase64 = string.Empty;
+                        try
+                        {
+                            var qrBytes = QrCodeGenerator.GenerateQr(conteudoQrCode);
+                            qrCodeBase64 = Convert.ToBase64String(qrBytes);
+                        }
+                        catch
+                        {
+                        }
+
+                        string? fotoDataUrl = null;
+                        if (pessoa?.Foto != null && pessoa.Foto.Length > 0)
+                        {
+                            fotoDataUrl = $"data:image/jpeg;base64,{Convert.ToBase64String(pessoa.Foto)}";
+                        }
+
+                        bool statusApto = ins.Status == "A" || ins.Status == "1" || string.IsNullOrEmpty(ins.Status);
+                        string statusDescricao = statusApto ? "Apto" : "Pendente Foto";
+
+                        participantes.Add(new ParticipanteCrachaItemModel
+                        {
+                            IdInscricao = ins.Id,
+                            IdPessoa = ins.IdPessoa,
+                            NomeCompleto = nomeCompleto,
+                            NomeCracha = nomeCracha,
+                            OrganizacaoOuDepto = ObterOrganizacaoOuDepto(ins),
+                            CpfPuro = cpfPuro,
+                            CpfMascarado = cpfMascarado,
+                            Papel = ObterDescricaoPapel(ins.IdPapel, ins.IdPapelNavigation?.Nome),
+                            TipoInscricao = ins.IdTipoInscricaoNavigation?.Nome ?? "Geral",
+                            CodigoCredencial = $"#{ins.Id:D5}",
+                            CodigoPresenca = $"BL - EVT - {DateTime.Now.Year} - {ins.Id:D5}",
+                            StatusApto = statusApto,
+                            StatusDescricao = statusDescricao,
+                            FotoDataUrl = fotoDataUrl,
+                            QrCodeBase64 = qrCodeBase64,
+                            Selecionado = true
+                        });
+                    }
+                }
+            }
+
+            if (!participantes.Any())
+            {
+                participantes = ObterParticipantesDemonstracao(idEventoAlvo);
+            }
+
+            if (idPessoa.HasValue)
+            {
+                var pAlvo = participantes.FirstOrDefault(p => p.IdPessoa == idPessoa.Value);
+                if (pAlvo != null)
+                {
+                    participantes.Remove(pAlvo);
+                    participantes.Insert(0, pAlvo);
+                }
+            }
+
+            var model = new EmitirCrachaModel
+            {
+                IdEvento = idEventoAlvo,
+                NomeEvento = nomeEvento,
+                SubtituloEvento = "TECNOLOGIA & GOVERNANÇA 2025",
+                IdModelo = modeloSelecionado?.Id,
+                NomeModelo = modeloSelecionado != null ? $"Gabarito #{modeloSelecionado.Id} - 90×130mm" : "Modelo Padrão Vertical 9×13cm",
+                TextoModelo = textoModelo,
+                LogotipoDataUrl = logoDataUrl,
+                QrcodeHabilitado = qrcodeHabilitado,
+                EventosDisponiveis = eventosDisponiveis,
+                ModelosDisponiveis = modelosDTO,
+                Participantes = participantes
+            };
+
+            return View(model);
+        }
+
+        private static string MascararCpfParaExibicao(string? cpf)
+        {
+            if (string.IsNullOrWhiteSpace(cpf))
+                return "***.***.***-**";
+            var limpo = Util.Methods.RemoveNaoNumericos(cpf);
+            if (limpo.Length == 11)
+            {
+                return $"{limpo.Substring(0, 3)}.***.***-{limpo.Substring(9, 2)}";
+            }
+            return "***.***.***-**";
+        }
+
+        private static string ObterDescricaoPapel(int idPapel, string? nomePapel)
+        {
+            if (!string.IsNullOrWhiteSpace(nomePapel))
+                return nomePapel.ToUpperInvariant();
+            return idPapel switch
+            {
+                1 => "ADMINISTRADOR",
+                2 => "GESTOR",
+                3 => "COLABORADOR",
+                4 => "PARTICIPANTE",
+                _ => "PARTICIPANTE"
+            };
+        }
+
+        private static string ObterOrganizacaoOuDepto(Inscricaopessoaevento inscricao)
+        {
+            var p = inscricao.IdPessoaNavigation;
+            if (p != null)
+            {
+                if (!string.IsNullOrWhiteSpace(p.Cidade) && !string.IsNullOrWhiteSpace(p.Estado))
+                    return $"{p.Cidade} - {p.Estado}";
+                if (!string.IsNullOrWhiteSpace(p.Email))
+                    return p.Email;
+            }
+            return "Participante Homologado";
+        }
+
+        private static List<ParticipanteCrachaItemModel> ObterParticipantesDemonstracao(uint idEvento)
+        {
+            var ano = DateTime.Now.Year;
+            var demo = new List<ParticipanteCrachaItemModel>
+            {
+                new ParticipanteCrachaItemModel
+                {
+                    IdInscricao = 142,
+                    IdPessoa = 1,
+                    NomeCompleto = "Cassiano Menezes",
+                    NomeCracha = "Cassiano Menezes",
+                    OrganizacaoOuDepto = "UFS - Depto. Sistemas",
+                    CpfPuro = "04299988818",
+                    CpfMascarado = "042.***.***-18",
+                    Papel = "PALESTRANTE",
+                    TipoInscricao = "Convidado Especial",
+                    CodigoCredencial = "#00142",
+                    CodigoPresenca = $"BL - EVT - {ano} - 00142",
+                    StatusApto = true,
+                    StatusDescricao = "Apto",
+                    QrCodeBase64 = GerarQrCodeSeguro($"[1] [Cassiano Menezes] [{idEvento}] [#00142]"),
+                    Selecionado = true
+                },
+                new ParticipanteCrachaItemModel
+                {
+                    IdInscricao = 143,
+                    IdPessoa = 2,
+                    NomeCompleto = "Carlos E. M. Santos",
+                    NomeCracha = "Carlos E. M. Santos",
+                    OrganizacaoOuDepto = "Coordenação Geral",
+                    CpfPuro = "11988877745",
+                    CpfMascarado = "119.***.***-45",
+                    Papel = "GESTOR",
+                    TipoInscricao = "Organizador",
+                    CodigoCredencial = "#00143",
+                    CodigoPresenca = $"BL - EVT - {ano} - 00143",
+                    StatusApto = true,
+                    StatusDescricao = "Apto",
+                    QrCodeBase64 = GerarQrCodeSeguro($"[2] [Carlos E. M. Santos] [{idEvento}] [#00143]"),
+                    Selecionado = true
+                },
+                new ParticipanteCrachaItemModel
+                {
+                    IdInscricao = 144,
+                    IdPessoa = 3,
+                    NomeCompleto = "Mariana Silveira Rocha",
+                    NomeCracha = "Mariana Silveira Rocha",
+                    OrganizacaoOuDepto = "USP - Congressista",
+                    CpfPuro = "83277766601",
+                    CpfMascarado = "832.***.***-01",
+                    Papel = "PARTICIPANTE",
+                    TipoInscricao = "Estudante",
+                    CodigoCredencial = "#00144",
+                    CodigoPresenca = $"BL - EVT - {ano} - 00144",
+                    StatusApto = true,
+                    StatusDescricao = "Apto",
+                    QrCodeBase64 = GerarQrCodeSeguro($"[3] [Mariana Silveira Rocha] [{idEvento}] [#00144]"),
+                    Selecionado = true
+                },
+                new ParticipanteCrachaItemModel
+                {
+                    IdInscricao = 145,
+                    IdPessoa = 4,
+                    NomeCompleto = "Rafael Lima Mendes",
+                    NomeCracha = "Rafael Lima Mendes",
+                    OrganizacaoOuDepto = "Equipe Técnica / TI",
+                    CpfPuro = "55466655590",
+                    CpfMascarado = "554.***.***-90",
+                    Papel = "COLABORADOR",
+                    TipoInscricao = "Equipe de Apoio",
+                    CodigoCredencial = "#00145",
+                    CodigoPresenca = $"BL - EVT - {ano} - 00145",
+                    StatusApto = true,
+                    StatusDescricao = "Apto",
+                    QrCodeBase64 = GerarQrCodeSeguro($"[4] [Rafael Lima Mendes] [{idEvento}] [#00145]"),
+                    Selecionado = true
+                },
+                new ParticipanteCrachaItemModel
+                {
+                    IdInscricao = 146,
+                    IdPessoa = 5,
+                    NomeCompleto = "Júlia Prado Fontes",
+                    NomeCracha = "Júlia Prado Fontes",
+                    OrganizacaoOuDepto = "Revista Inovação & Foco",
+                    CpfPuro = "90155544422",
+                    CpfMascarado = "901.***.***-22",
+                    Papel = "PARTICIPANTE",
+                    TipoInscricao = "Imprensa",
+                    CodigoCredencial = "#00146",
+                    CodigoPresenca = $"BL - EVT - {ano} - 00146",
+                    StatusApto = false,
+                    StatusDescricao = "Pendente Foto",
+                    QrCodeBase64 = GerarQrCodeSeguro($"[5] [Júlia Prado Fontes] [{idEvento}] [#00146]"),
+                    Selecionado = false
+                }
+            };
+            return demo;
+        }
+
+        private static string GerarQrCodeSeguro(string conteudo)
+        {
+            try
+            {
+                var bytes = QrCodeGenerator.GenerateQr(conteudo);
+                return Convert.ToBase64String(bytes);
+            }
+            catch
+            {
+                return string.Empty;
+            }
         }
     }
 }

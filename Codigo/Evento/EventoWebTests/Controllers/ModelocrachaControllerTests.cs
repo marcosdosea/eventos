@@ -1283,5 +1283,128 @@ namespace EventoWeb.Controllers.Tests
                 },
             };
         }
+
+        [TestMethod]
+        public void EmitirCrachaTest_ComEventoValido_RetornaViewResultComModelo()
+        {
+            var result = controller.EmitirCracha(1, null, null);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var viewResult = (ViewResult)result;
+            Assert.IsInstanceOfType(viewResult.Model, typeof(EmitirCrachaModel));
+
+            var model = (EmitirCrachaModel)viewResult.Model!;
+            Assert.AreEqual((uint)1, model.IdEvento);
+            Assert.IsNotNull(model.Participantes);
+            Assert.IsTrue(model.Participantes.Count > 0);
+            Assert.IsNotNull(model.ModelosDisponiveis);
+        }
+
+        [TestMethod]
+        public void EmitirCrachaTest_NaoAutorizado_RetornaForbid()
+        {
+            var mockServiceInscricao = new Mock<IInscricaoService>();
+            mockServiceInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 999))
+                .Returns((Inscricaopessoaevento)null!);
+
+            var mockService = new Mock<IModelocrachaService>();
+            var mockServiceEvento = new Mock<IEventoService>();
+            var mockServicePessoa = new Mock<IPessoaService>();
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+
+            var ctrl = new ModelocrachaController(mockService.Object, mockServiceEvento.Object, mockServicePessoa.Object, mockServiceInscricao.Object, mapper);
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "12345678900"),
+                new Claim(ClaimTypes.Role, "GESTOR")
+            };
+            ctrl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) }
+            };
+
+            var result = ctrl.EmitirCracha(999, null, null);
+            Assert.IsInstanceOfType(result, typeof(ForbidResult));
+        }
+
+        [TestMethod]
+        public void EmitirCrachaTest_ComInscricoesNoBanco_PreencheParticipantesECpfMascarado()
+        {
+            var mockServiceInscricao = new Mock<IInscricaoService>();
+            mockServiceInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+
+            var mockPessoa = new Pessoa
+            {
+                Id = 10,
+                Nome = "Ana Souza",
+                NomeCracha = "Ana",
+                Cpf = "12345678901",
+                Cidade = "Aracaju",
+                Estado = "SE"
+            };
+
+            var mockInscricoes = new List<Inscricaopessoaevento>
+            {
+                new Inscricaopessoaevento
+                {
+                    Id = 20,
+                    IdPessoa = 10,
+                    IdEvento = 1,
+                    IdPapel = 4,
+                    NomeCracha = "Ana",
+                    Status = "A",
+                    IdPessoaNavigation = mockPessoa
+                }
+            };
+
+            mockServiceInscricao.Setup(s => s.GetByEvento(1))
+                .Returns(mockInscricoes);
+            mockServiceInscricao.Setup(s => s.GetSubByEvento(1))
+                .Returns(new List<Inscricaopessoasubevento>());
+
+            var mockService = new Mock<IModelocrachaService>();
+            mockService.Setup(s => s.GetByEvento(1)).Returns(GetTestModelocracha());
+            var mockServiceEvento = new Mock<IEventoService>();
+            mockServiceEvento.Setup(s => s.GetNomeById(1)).Returns("Congresso de Tecnologia");
+            var mockServicePessoa = new Mock<IPessoaService>();
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+
+            var ctrl = new ModelocrachaController(mockService.Object, mockServiceEvento.Object, mockServicePessoa.Object, mockServiceInscricao.Object, mapper);
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "12345678900"),
+                new Claim(ClaimTypes.Role, "GESTOR")
+            };
+            ctrl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) }
+            };
+
+            var result = ctrl.EmitirCracha(1, null, null);
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var viewResult = (ViewResult)result;
+            var model = (EmitirCrachaModel)viewResult.Model!;
+
+            Assert.AreEqual(1, model.Participantes.Count);
+            var part = model.Participantes.First();
+            Assert.AreEqual("Ana", part.NomeCracha);
+            Assert.AreEqual("123.***.***-01", part.CpfMascarado);
+            Assert.AreEqual("Aracaju - SE", part.OrganizacaoOuDepto);
+            Assert.IsTrue(part.StatusApto);
+            Assert.AreEqual("#00020", part.CodigoCredencial);
+        }
+
+        [TestMethod]
+        public void EmitirCrachaTest_ComPessoaEspecifica_PriorizaPessoaNoInicio()
+        {
+            var result = controller.EmitirCracha(1, null, 3);
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var viewResult = (ViewResult)result;
+            var model = (EmitirCrachaModel)viewResult.Model!;
+
+            Assert.IsNotNull(model.Participantes);
+            Assert.AreEqual((uint)3, model.Participantes.First().IdPessoa);
+        }
     }
 }

@@ -17,6 +17,10 @@
                 <i class="bi bi-search text-muted me-2"></i>
                 <input type="text" id="filtroModelos" class="cracha-search-input" placeholder="Filtrar modelos cadastrados..." />
             </div>
+            <a asp-action="EmitirCracha" asp-route-idEvento="@eventoId" class="btn btn-outline-blue-normal bg-white px-3 py-2 rounded-3 fw-semibold shadow-sm d-flex align-items-center gap-2">
+                <i class="bi bi-printer"></i>
+                <span>Emitir Crachás</span>
+            </a>
             <a asp-action="Create" asp-route-idEvento="@eventoId" class="btn btn-blue-normal color-white px-3 py-2 rounded-3 fw-semibold shadow-sm d-flex align-items-center gap-2">
                 <i class="bi bi-plus-lg"></i>
                 <span>Novo Modelo</span>
@@ -90,6 +94,7 @@
                                     }
                                 </td>
                                 <td style="text-align: right; white-space: nowrap;">
+                                    <a asp-action="EmitirCracha" asp-route-idEvento="@item.IdEvento" asp-route-idModelo="@item.Id" class="action-link-edit blue-normal me-3" title="Emitir crachás com este modelo">Emitir</a>
                                     <a asp-action="Edit" asp-route-id="@item.Id" class="action-link-edit blue-normal me-3">Editar</a>
                                     <a asp-action="Delete" asp-route-id="@item.Id" class="action-link-delete danger-normal me-2">Excluir</a>
                                 </td>
