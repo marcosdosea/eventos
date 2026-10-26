@@ -84,6 +84,7 @@
                 var statusText = "Padrão";
                 switch(Model.Status) {
                     case "A": statusBadge = "success"; statusText = "Ativo"; break;
+                    case "S" when totalGeral <= 0: statusBadge = "success"; statusText = "Ativo"; break;
                     case "S": statusBadge = "warning text-dark"; statusText = "Solicitado"; break;
                     case "C": statusBadge = "danger"; statusText = "Cancelado"; break;
                 }
@@ -226,3 +227,10 @@
         </div>
     </div>
 </div>
+
+@if (string.Equals(Context.Request.Query["imprimir"], "true", StringComparison.OrdinalIgnoreCase))
+{
+    <script>
+        window.addEventListener('load', function () { window.print(); });
+    </script>
+}

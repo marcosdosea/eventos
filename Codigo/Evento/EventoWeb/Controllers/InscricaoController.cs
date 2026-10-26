@@ -603,8 +603,49 @@ namespace EventoWeb.Controllers
                 return model;
             }).ToList();
 
-            ViewBag.EventoId = idEvento ?? listarEventosModel.FirstOrDefault()?.IdEvento;
+            var participante = _pessoaService.GetByCpf(username)
+                ?? inscricaoUser.FirstOrDefault()?.IdPessoaNavigation;
+            ViewBag.NomeParticipante = participante?.Nome;
+            ViewBag.CpfMascarado = MascararCpf(participante?.Cpf ?? username);
+
+            ViewBag.EventoId = ObterEventoParaVoltar(idEvento, listarEventosModel);
             return View(listarEventosModel);
+        }
+
+        private uint? ObterEventoParaVoltar(uint? idEvento, List<InscricaoEventoModel> inscricoes)
+        {
+            if (idEvento.HasValue && idEvento.Value > 0)
+            {
+                var evento = inscricoes.FirstOrDefault(i => i.IdEvento == idEvento.Value)?.IdEventoNavigation
+                    ?? _eventoService.Get(idEvento.Value);
+                return InscricoesAbertas(evento) ? idEvento.Value : null;
+            }
+
+            return inscricoes.FirstOrDefault(i => InscricoesAbertas(i.IdEventoNavigation))?.IdEvento;
+        }
+
+        private static bool InscricoesAbertas(Evento? evento)
+        {
+            if (evento == null || evento.Status != "A")
+            {
+                return false;
+            }
+            var agora = DateTime.Now;
+            if (evento.DataInicioInscricao.HasValue && evento.DataInicioInscricao.Value > agora)
+            {
+                return false;
+            }
+            return !evento.DataFimInscricao.HasValue || evento.DataFimInscricao.Value >= agora;
+        }
+
+        private static string? MascararCpf(string? cpf)
+        {
+            var digitos = Util.Methods.RemoveNaoNumericos(cpf ?? string.Empty);
+            if (digitos.Length != 11)
+            {
+                return null;
+            }
+            return $"***.{digitos.Substring(3, 3)}.{digitos.Substring(6, 3)}-**";
         }
 
         [Authorize]

@@ -73,14 +73,131 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public async Task MinhasInscricoesTest_UsesEventoIdFromFirstInscricaoWhenNotProvided()
+        public async Task MinhasInscricoesTest_SemEventoComInscricaoAberta_NaoExibeVoltar()
         {
-            // Act
+            // Act: os eventos de GetTestInscricoes nao estao ativos
             var result = await controller.minhasInscricoes(null);
 
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
-            Assert.AreEqual((uint)1, controller.ViewBag.EventoId);
+            Assert.IsNull(controller.ViewBag.EventoId);
+        }
+
+        [TestMethod()]
+        public async Task MinhasInscricoesTest_SemIdEvento_UsaPrimeiroEventoComInscricaoAberta()
+        {
+            // Arrange
+            var inscricoes = new List<Inscricaopessoaevento>
+            {
+                new Inscricaopessoaevento { Id = 1, IdEvento = 1, IdPapel = 4, Status = "S", IdEventoNavigation = new Evento { Id = 1, Status = "F" } },
+                new Inscricaopessoaevento { Id = 2, IdEvento = 2, IdPapel = 4, Status = "S", IdEventoNavigation = new Evento { Id = 2, Status = "A", DataFimInscricao = DateTime.Now.AddDays(-1) } },
+                new Inscricaopessoaevento { Id = 3, IdEvento = 3, IdPapel = 4, Status = "S", IdEventoNavigation = new Evento { Id = 3, Status = "A", DataFimInscricao = DateTime.Now.AddDays(5) } }
+            };
+            var minhasController = CriarControllerMinhasInscricoes(inscricoes, Mock.Of<IEventoService>());
+
+            // Act
+            await minhasController.minhasInscricoes(null);
+
+            // Assert
+            Assert.AreEqual((uint)3, minhasController.ViewBag.EventoId);
+        }
+
+        [TestMethod()]
+        public async Task MinhasInscricoesTest_IdEventoInativo_NaoExibeVoltar()
+        {
+            // Arrange
+            var mockEvento = new Mock<IEventoService>();
+            mockEvento.Setup(s => s.Get(7)).Returns(new Evento { Id = 7, Status = "I" });
+            var minhasController = CriarControllerMinhasInscricoes(new List<Inscricaopessoaevento>(), mockEvento.Object);
+
+            // Act
+            await minhasController.minhasInscricoes(7);
+
+            // Assert
+            Assert.IsNull(minhasController.ViewBag.EventoId);
+        }
+
+        [TestMethod()]
+        public async Task MinhasInscricoesTest_IdEventoComInscricaoAberta_ExibeVoltar()
+        {
+            // Arrange
+            var mockEvento = new Mock<IEventoService>();
+            mockEvento.Setup(s => s.Get(7)).Returns(new Evento { Id = 7, Status = "A" });
+            var minhasController = CriarControllerMinhasInscricoes(new List<Inscricaopessoaevento>(), mockEvento.Object);
+
+            // Act
+            await minhasController.minhasInscricoes(7);
+
+            // Assert
+            Assert.AreEqual((uint)7, minhasController.ViewBag.EventoId);
+        }
+
+        private static InscricaoController CriarControllerMinhasInscricoes(IEnumerable<Inscricaopessoaevento> inscricoes, IEventoService eventoService)
+        {
+            var mockInscricao = new Mock<IInscricaoService>();
+            mockInscricao.Setup(s => s.GetAllEventsByUserId(UsernameTeste)).Returns(inscricoes);
+
+            var minhasController = new InscricaoController(
+                null!,
+                Mock.Of<ITipoInscricaoService>(),
+                eventoService,
+                new MapperConfiguration(cfg => cfg.AddProfile(new InscricaoProfile())).CreateMapper(),
+                mockInscricao.Object,
+                Mock.Of<IPessoaService>(),
+                Mock.Of<ISubeventoService>());
+            var httpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, UsernameTeste) }, "TestAuthType"))
+            };
+            minhasController.ControllerContext = new ControllerContext { HttpContext = httpContext };
+            minhasController.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
+            return minhasController;
+        }
+
+        [TestMethod()]
+        public async Task MinhasInscricoesTest_ExibeParticipanteComCpfMascarado()
+        {
+            // Arrange
+            var mockInscricao = new Mock<IInscricaoService>();
+            mockInscricao.Setup(s => s.GetAllEventsByUserId("04026893057"))
+                .Returns(new List<Inscricaopessoaevento>());
+            var mockPessoa = new Mock<IPessoaService>();
+            mockPessoa.Setup(s => s.GetByCpf("04026893057"))
+                .Returns(new Pessoa { Id = 1, Nome = "Marcos Dósea", Cpf = "04026893057", Email = "m@teste.com", NomeCracha = "Marcos" });
+
+            var minhasController = new InscricaoController(
+                null!,
+                Mock.Of<ITipoInscricaoService>(),
+                Mock.Of<IEventoService>(),
+                new MapperConfiguration(cfg => cfg.AddProfile(new InscricaoProfile())).CreateMapper(),
+                mockInscricao.Object,
+                mockPessoa.Object,
+                Mock.Of<ISubeventoService>());
+            var httpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, "04026893057") }, "TestAuthType"))
+            };
+            minhasController.ControllerContext = new ControllerContext { HttpContext = httpContext };
+            minhasController.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
+
+            // Act
+            var result = await minhasController.minhasInscricoes(null);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            Assert.AreEqual("Marcos Dósea", minhasController.ViewBag.NomeParticipante);
+            Assert.AreEqual("***.268.930-**", minhasController.ViewBag.CpfMascarado);
+        }
+
+        [TestMethod()]
+        public async Task MinhasInscricoesTest_SemPessoaECpfInvalido_NaoExibeCpf()
+        {
+            // Act: o usuario de teste nao e CPF e o mock de pessoa retorna null
+            var result = await controller.minhasInscricoes(null);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            Assert.IsNull(controller.ViewBag.CpfMascarado);
         }
 
         [TestMethod()]
