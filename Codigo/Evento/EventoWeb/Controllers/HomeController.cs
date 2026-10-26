@@ -48,7 +48,20 @@ namespace EventoWeb.Controllers
                 {
                     return null;
                 }
-                return ufTrim.ToUpper();
+                var ufUpper = ufTrim.ToUpper();
+                try
+                {
+                    var estadoValido = _estadosbrasilService.Get(ufUpper);
+                    if (estadoValido != null)
+                    {
+                        return ufUpper;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogWarning(ex, "Erro ao validar UF fornecida na requisição.");
+                }
+                return null;
             }
 
             UserLocationCookieModel? cookieLocation = null;
@@ -221,6 +234,23 @@ namespace EventoWeb.Controllers
             ViewBag.TotalPaginas = (int)Math.Ceiling((double)totalRegistros / tamanhoPagina);
             ViewBag.TamanhoPagina = tamanhoPagina;
             ViewBag.TotalRegistros = totalRegistros;
+
+            var estadoAtivo = ObterEstadoAtivo(filter.Estado);
+            ViewBag.EstadoAtivo = estadoAtivo;
+            string nomeEstado = "Todo o Brasil";
+            if (!string.IsNullOrEmpty(estadoAtivo))
+            {
+                try
+                {
+                    var estadoObj = _estadosbrasilService.Get(estadoAtivo);
+                    nomeEstado = estadoObj != null ? $"{estadoObj.Nome} ({estadoObj.Estado})" : estadoAtivo;
+                }
+                catch
+                {
+                    nomeEstado = estadoAtivo;
+                }
+            }
+            ViewBag.NomeEstadoAtivo = nomeEstado;
 
             return View(eventosModel);
         }

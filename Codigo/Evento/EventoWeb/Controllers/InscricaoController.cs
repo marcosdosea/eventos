@@ -54,11 +54,7 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("Index", "Home", new { vitrine = "true" });
             }
 
-            if (evento.DataInicioInscricao.HasValue && evento.DataInicioInscricao.Value > DateTime.Now)
-            {
-                TempData["ParticipanteMessage"] = "O período de inscrições para este evento ainda não começou.";
-                return RedirectToAction("Index", "Home", new { vitrine = "true" });
-            }
+            ViewBag.InscricaoFutura = evento.DataInicioInscricao.HasValue && evento.DataInicioInscricao.Value > DateTime.Now;
 
             if (evento.DataFimInscricao.HasValue && evento.DataFimInscricao.Value < DateTime.Now)
             {

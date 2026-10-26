@@ -300,10 +300,7 @@ namespace Service
             query = query.Where(e =>
                 e.DataFim.HasValue && e.DataFim.Value >= now &&
                 e.DataInicioInscricao.HasValue &&
-                (
-                    (e.DataInicioInscricao.Value <= now && e.DataFimInscricao.HasValue && e.DataFimInscricao.Value >= now) ||
-                    (e.DataInicioInscricao.Value > now && (!e.DataFimInscricao.HasValue || e.DataFimInscricao.Value >= now))
-                )
+                (!e.DataFimInscricao.HasValue || e.DataFimInscricao.Value >= now)
             );
 
             return query.OrderBy(e => e.DataInicio ?? e.DataInicioInscricao).ToList();

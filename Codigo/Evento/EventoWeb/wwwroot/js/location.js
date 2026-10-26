@@ -121,15 +121,39 @@ async function reverseGeocodeByIp() {
     }
 }
 
+function isSearchPage() {
+    const path = window.location.pathname.toLowerCase();
+    return path.includes('/home/buscar') || path === '/buscar';
+}
+
 function initializeLocation() {
+    const headerBtnText = document.getElementById('headerLocationText');
+    const serverResolvedUf = headerBtnText ? (headerBtnText.getAttribute('data-server-resolved') || '').trim() : '';
     const location = parseLocationCookie();
     
-    // Se não há cookie, ou se o cookie está vazio sem ter sido escolha manual explícita
-    if (!location || (!location.estado && !location.manual)) {
-        requestGeolocation();
-    } else {
-        updateHeaderLocationText(location);
+    // Se o servidor já resolveu o estado ativo (ex: usuário autenticado ou busca por estado específico)
+    if (serverResolvedUf) {
+        if (location && location.manual && location.estado === serverResolvedUf && location.cidade) {
+            updateHeaderLocationText(location);
+        }
+        // Não substitui o header nem dispara geolocalização automática se o servidor já resolveu a localização
+        return;
     }
+
+    // Se temos cookie manual explícito
+    if (location && location.manual) {
+        updateHeaderLocationText(location);
+        return;
+    }
+
+    // Se temos cookie automático persistido
+    if (location && location.estado) {
+        updateHeaderLocationText(location);
+        return;
+    }
+
+    // Visitante novo sem cookie e sem estado resolvido pelo servidor
+    requestGeolocation();
 }
 
 function requestGeolocation() {
@@ -146,6 +170,9 @@ function requestGeolocation() {
                     ipLoc.manual = false;
                     setCookie(LOCATION_COOKIE_NAME, JSON.stringify(ipLoc));
                     updateHeaderLocationText(ipLoc);
+                    if (isHomePage() || isSearchPage()) {
+                        reloadLocationContext();
+                    }
                 } else {
                     setDefaultLocation(false);
                 }
@@ -159,6 +186,9 @@ function requestGeolocation() {
                 ipLoc.manual = false;
                 setCookie(LOCATION_COOKIE_NAME, JSON.stringify(ipLoc));
                 updateHeaderLocationText(ipLoc);
+                if (isHomePage() || isSearchPage()) {
+                    reloadLocationContext();
+                }
             } else {
                 setDefaultLocation(false);
             }
@@ -174,6 +204,9 @@ async function reverseGeocode(lat, lon) {
             console.log("Localização detectada:", locObj);
             setCookie(LOCATION_COOKIE_NAME, JSON.stringify(locObj));
             updateHeaderLocationText(locObj);
+            if (isHomePage() || isSearchPage()) {
+                reloadLocationContext();
+            }
             return;
         }
         
@@ -183,6 +216,9 @@ async function reverseGeocode(lat, lon) {
             ipLoc.manual = false;
             setCookie(LOCATION_COOKIE_NAME, JSON.stringify(ipLoc));
             updateHeaderLocationText(ipLoc);
+            if (isHomePage() || isSearchPage()) {
+                reloadLocationContext();
+            }
             return;
         }
         
@@ -286,7 +322,7 @@ async function detectCurrentLocation() {
 }
 
 function applyDetectedLocation(locObj) {
-    locObj.manual = false;
+    locObj.manual = true;
     setCookie(LOCATION_COOKIE_NAME, JSON.stringify(locObj));
     updateHeaderLocationText(locObj);
 

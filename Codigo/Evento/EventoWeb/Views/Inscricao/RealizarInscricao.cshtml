@@ -135,6 +135,108 @@
                 <a href="@ViewBag.UrlVoltar" class="btn btn-outline-danger mt-2">Voltar</a>
             </aside>
         }
+        else if (ViewBag.InscricaoFutura == true || (Model.eventoNavigation.DataInicioInscricao.HasValue && Model.eventoNavigation.DataInicioInscricao.Value > DateTime.Now))
+        {
+            <div class="inscricao-grid-layout">
+                <!-- Coluna da Esquerda: Informações do Evento -->
+                <div class="inscricao-left-col">
+                    <article class="card-inscricao">
+                        <div class="inscricao-header">
+                            @if (!string.IsNullOrEmpty(Model.eventoNavigation.ImagemPortalBase64) && Model.eventoNavigation.ImagemPortalBase64.Length > 100)
+                            {
+                                <img src="data:image/jpeg;base64,@Model.eventoNavigation.ImagemPortalBase64" alt="Imagem do Evento" class="inscricao-header-img" onclick="openImageModal(this.src)" style="cursor: zoom-in;" title="Clique para ampliar" />
+                            }
+                            else
+                            {
+                                <img src="@Url.Content("~/Imagens_Eventos/Evento-BoraLa.png")" alt="Imagem Padrão do Evento" class="inscricao-header-img" onclick="openImageModal(this.src)" style="cursor: zoom-in;" title="Clique para ampliar" />
+                            }
+                            <div>
+                                <h1 class="inscricao-header-title">@Model.eventoNavigation.Nome</h1>
+                                <p class="inscricao-header-subtitle">Detalhes do Evento</p>
+                            </div>
+                        </div>
+                        <h2 class="section-title">Informações do Evento</h2>
+                        
+                        <section class="info-grid">
+                            <div class="info-item">
+                                <div class="info-icon" aria-hidden="true"><i class="bi bi-calendar3"></i></div>
+                                <div class="info-text">
+                                    <h3>Data do Evento</h3>
+                                    <p>@(Model.eventoNavigation.DataInicio?.ToString("dd/MM/yyyy") ?? "A definir") a @(Model.eventoNavigation.DataFim?.ToString("dd/MM/yyyy") ?? "A definir")</p>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-icon" aria-hidden="true"><i class="bi bi-geo-alt-fill"></i></div>
+                                <div class="info-text">
+                                    <h3>Local</h3>
+                                    @{
+                                        string local = "Local não informado";
+                                        if (!string.IsNullOrEmpty(Model.eventoNavigation.Cidade) && !string.IsNullOrEmpty(Model.eventoNavigation.Estado))
+                                        {
+                                            local = $"{Model.eventoNavigation.Cidade}, {Model.eventoNavigation.Estado}";
+                                        }
+                                        else if (!string.IsNullOrEmpty(Model.eventoNavigation.Estado))
+                                        {
+                                            local = Model.eventoNavigation.Estado;
+                                        }
+                                    }
+                                    <p>@local</p>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-icon" aria-hidden="true"><i class="bi bi-clock-fill"></i></div>
+                                <div class="info-text">
+                                    <h3>Carga Horária</h3>
+                                    <p>@Model.eventoNavigation.CargaHoraria Horas @(Model.eventoNavigation.PossuiCertificado == 1 ? "(Com Certificado)" : "")</p>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-icon" aria-hidden="true"><i class="bi bi-ticket-perforated-fill"></i></div>
+                                <div class="info-text">
+                                    <h3>Entrada</h3>
+                                    @if (Model.eventoNavigation.InscricaoGratuita == 1 || Model.eventoNavigation.ValorInscricao == 0)
+                                    {
+                                        <p class="entry-free">Gratuita</p>
+                                    }
+                                    else
+                                    {
+                                        <p>R$ @Model.eventoNavigation.ValorInscricao.ToString("N2")</p>
+                                    }
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-icon" aria-hidden="true"><i class="bi bi-people-fill"></i></div>
+                                <div class="info-text">
+                                    <h3>Vagas Oferecidas</h3>
+                                    <p>@Model.eventoNavigation.VagasOfertadas vagas</p>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="evento-sobre">
+                            <h2 class="section-title mt-20">Sobre o Evento</h2>
+                            <p class="evento-sobre-text">
+                                @(string.IsNullOrWhiteSpace(Model.eventoNavigation.Descricao) ? "Nenhuma descrição disponível para este evento." : Model.eventoNavigation.Descricao)
+                            </p>
+                        </section>
+                    </article>
+                </div>
+
+                <!-- Coluna da Direita: Card Informativo Inscrições em Breve -->
+                <div class="inscricao-right-col">
+                    <aside class="alert alert-info mt-3 card-inscricao text-center alert-inscricao" role="alert">
+                        <h4 class="alert-heading text-primary"><i class="bi bi-clock-history me-2"></i>Inscrições em Breve</h4>
+                        <p>O período de inscrições para este evento ainda não começou.</p>
+                        @if (Model.eventoNavigation.DataInicioInscricao.HasValue)
+                        {
+                            <p class="mb-2"><strong>Abertura das inscrições:</strong><br />@Model.eventoNavigation.DataInicioInscricao.Value.ToString("dd/MM/yyyy 'às' HH:mm")</p>
+                        }
+                        <hr>
+                        <a href="@ViewBag.UrlVoltar" class="btn btn-outline-secondary mt-2">Voltar para Eventos</a>
+                    </aside>
+                </div>
+            </div>
+        }
         else
         {
             <form method="post" asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@Model.eventoNavigation.Id">

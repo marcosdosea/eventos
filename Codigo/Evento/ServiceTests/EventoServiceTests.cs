@@ -819,8 +819,19 @@ namespace Service.Tests
                 DataInicio = DateTime.Now.AddDays(12),
                 DataFim = DateTime.Now.AddDays(15)
             };
+            var eventoAbertoSemDataFim = new Evento
+            {
+                Id = 322,
+                Nome = "Evento Aberto Sem Data Fim Inscricao",
+                Status = "A",
+                Estado = "BA",
+                DataInicioInscricao = DateTime.Now.AddDays(-2),
+                DataFimInscricao = null,
+                DataInicio = DateTime.Now.AddDays(3),
+                DataFim = DateTime.Now.AddDays(7)
+            };
 
-            _context.Eventos.AddRange(eventoAberto, eventoEmBreve);
+            _context.Eventos.AddRange(eventoAberto, eventoEmBreve, eventoAbertoSemDataFim);
             _context.SaveChanges();
 
             // Act
@@ -829,6 +840,7 @@ namespace Service.Tests
             // Assert
             Assert.IsTrue(vitrine.Any(e => e.Id == 320));
             Assert.IsTrue(vitrine.Any(e => e.Id == 321));
+            Assert.IsTrue(vitrine.Any(e => e.Id == 322));
         }
 
         [TestMethod()]
