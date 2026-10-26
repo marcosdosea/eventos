@@ -23,7 +23,6 @@
 
         // Elementos do Live Preview
         const crachaCardElement = document.getElementById("crachaCardElement");
-        const crachaFlipCardElement = document.getElementById("crachaFlipCardElement");
         const previewFoto = document.getElementById("previewFotoElement");
         const previewAvatarPlaceholder = document.getElementById("previewAvatarPlaceholder");
         const previewNome = document.getElementById("previewNomeElement");
@@ -38,7 +37,6 @@
         const lblTextoCracha = document.getElementById("lblPreviewTextoCracha");
         const blocoQrCode = document.getElementById("blocoQrCodePreview");
 
-        const btnFrenteVerso = document.getElementById("btnFrenteVerso");
         const btnExportarPng = document.getElementById("btnExportarPng");
         const btnZoomIn = document.getElementById("btnZoomIn");
         const btnZoomOut = document.getElementById("btnZoomOut");
@@ -52,7 +50,6 @@
         const ITENS_POR_PAGINA = 5;
         let paginaAtual = 1;
         let escalaAtual = 1;
-        let isVersoAtivo = false;
 
         function atualizarContadores() {
             if (!lblQtdSelecionados || !lblQtdTotal) return;
@@ -201,12 +198,6 @@
                     previewQrPlaceholder.style.display = "block";
                 }
             }
-
-            // Se estiver com verso ativo, vira para frente ao trocar participante
-            if (isVersoAtivo && crachaFlipCardElement) {
-                crachaFlipCardElement.classList.remove("flipped");
-                isVersoAtivo = false;
-            }
         }
 
         // Eventos da Tabela
@@ -342,21 +333,13 @@
             });
         }
 
-        // Efeito 3D Frente & Verso
-        if (btnFrenteVerso && crachaFlipCardElement) {
-            btnFrenteVerso.addEventListener("click", function () {
-                isVersoAtivo = !isVersoAtivo;
-                crachaFlipCardElement.classList.toggle("flipped", isVersoAtivo);
-            });
-        }
-
         // Zoom no Card
         if (btnZoomIn && crachaCardElement) {
             btnZoomIn.addEventListener("click", function () {
                 if (escalaAtual < 1.3) {
                     escalaAtual = Math.round((escalaAtual + 0.1) * 10) / 10;
-                    crachaFlipCardElement.style.transformOrigin = "top center";
-                    crachaFlipCardElement.style.transform = `scale(${escalaAtual})`;
+                    crachaCardElement.style.transformOrigin = "top center";
+                    crachaCardElement.style.transform = `scale(${escalaAtual})`;
                 }
             });
         }
@@ -365,8 +348,8 @@
             btnZoomOut.addEventListener("click", function () {
                 if (escalaAtual > 0.7) {
                     escalaAtual = Math.round((escalaAtual - 0.1) * 10) / 10;
-                    crachaFlipCardElement.style.transformOrigin = "top center";
-                    crachaFlipCardElement.style.transform = `scale(${escalaAtual})`;
+                    crachaCardElement.style.transformOrigin = "top center";
+                    crachaCardElement.style.transform = `scale(${escalaAtual})`;
                 }
             });
         }

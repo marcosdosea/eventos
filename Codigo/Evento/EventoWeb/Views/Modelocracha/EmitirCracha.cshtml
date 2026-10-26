@@ -264,160 +264,114 @@
                     </div>
                     <div class="lanyard-clip"></div>
 
-                    <!-- Flip Card Container para Frente e Verso -->
-                    <div class="cracha-flip-scene">
-                        <div class="cracha-flip-card" id="crachaFlipCardElement">
-                            <!-- FACE FRONTAL DO CRACHÁ -->
-                            <div class="cracha-card-face cracha-card-front" id="crachaCardElement">
-                                <div class="cracha-hole"></div>
+                    <!-- Cartão Físico do Crachá (Live Preview) -->
+                    <div class="cracha-physical-card" id="crachaCardElement">
+                        <div class="cracha-hole"></div>
 
-                                <!-- Cabeçalho do Crachá com Banner e Logotipo -->
-                                <div class="cracha-header">
-                                    <div class="cracha-header-sub">
-                                        <span class="cracha-header-sub-icon">
-                                            <i class="bi bi-person-vcard-fill"></i>
-                                        </span>
-                                        <span>BORA LÁ EVENTOS</span>
-                                    </div>
+                        <!-- Cabeçalho do Crachá com Banner e Logotipo -->
+                        <div class="cracha-header">
+                            <div class="cracha-header-sub">
+                                <span class="cracha-header-sub-icon">
+                                    <i class="bi bi-person-vcard-fill"></i>
+                                </span>
+                                <span>BORA LÁ EVENTOS</span>
+                            </div>
 
-                                    <div class="cracha-logo-institucional-container" id="crachaLogoContainer" style="@(string.IsNullOrEmpty(Model.LogotipoDataUrl) ? "display: none;" : "")">
-                                        <img id="crachaLogoElement" src="@Model.LogotipoDataUrl" alt="Logotipo Institucional" class="cracha-logo-institucional-img" />
-                                    </div>
+                            <div class="cracha-logo-institucional-container" id="crachaLogoContainer" style="@(string.IsNullOrEmpty(Model.LogotipoDataUrl) ? "display: none;" : "")">
+                                <img id="crachaLogoElement" src="@Model.LogotipoDataUrl" alt="Logotipo Institucional" class="cracha-logo-institucional-img" />
+                            </div>
 
-                                    <h6 class="cracha-evento-title" id="lblPreviewNomeEvento">@eventoAtualNome</h6>
-                                    <div class="cracha-evento-subtitle" id="lblPreviewSubtituloEvento">@Model.SubtituloEvento</div>
+                            <h6 class="cracha-evento-title" id="lblPreviewNomeEvento">@eventoAtualNome</h6>
+                            <div class="cracha-evento-subtitle" id="lblPreviewSubtituloEvento">@Model.SubtituloEvento</div>
+                        </div>
+
+                        <!-- Corpo com Dados do Participante Homologado -->
+                        <div class="cracha-body">
+                            <div class="participant-avatar-wrapper">
+                                <img id="previewFotoElement"
+                                     src="@(primeiroParticipante?.FotoDataUrl ?? "")"
+                                     class="participant-avatar-img"
+                                     alt="Foto do Participante"
+                                     style="@(string.IsNullOrEmpty(primeiroParticipante?.FotoDataUrl) ? "display:none;" : "")" />
+
+                                <div id="previewAvatarPlaceholder" class="avatar-placeholder-svg" style="@(!string.IsNullOrEmpty(primeiroParticipante?.FotoDataUrl) ? "display:none;" : "")">
+                                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="50" cy="50" r="50" fill="#E2E8F0" />
+                                        <circle cx="50" cy="38" r="20" fill="#475569" />
+                                        <path d="M16 88C16 70 30 64 50 64C70 64 84 70 84 88" fill="#1E293B" />
+                                    </svg>
                                 </div>
 
-                                <!-- Corpo com Dados do Participante Homologado -->
-                                <div class="cracha-body">
-                                    <div class="participant-avatar-wrapper">
-                                        <img id="previewFotoElement"
-                                             src="@(primeiroParticipante?.FotoDataUrl ?? "")"
-                                             class="participant-avatar-img"
-                                             alt="Foto do Participante"
-                                             style="@(string.IsNullOrEmpty(primeiroParticipante?.FotoDataUrl) ? "display:none;" : "")" />
-
-                                        <div id="previewAvatarPlaceholder" class="avatar-placeholder-svg" style="@(!string.IsNullOrEmpty(primeiroParticipante?.FotoDataUrl) ? "display:none;" : "")">
-                                            <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <circle cx="50" cy="50" r="50" fill="#E2E8F0" />
-                                                <circle cx="50" cy="38" r="20" fill="#475569" />
-                                                <path d="M16 88C16 70 30 64 50 64C70 64 84 70 84 88" fill="#1E293B" />
-                                            </svg>
-                                        </div>
-
-                                        <div class="participant-verified-badge" title="Participante Verificado e Homologado">
-                                            <i class="bi bi-check-lg"></i>
-                                        </div>
-                                    </div>
-
-                                    <div class="participant-name" id="previewNomeElement">@(primeiroParticipante?.NomeCracha ?? "CASSIANO MENEZES")</div>
-                                    <div class="participant-org" id="previewOrgElement">@(primeiroParticipante?.OrganizacaoOuDepto ?? "Universidade Federal de Sergipe - DSI")</div>
-
-                                    <div class="badge-role-pill" id="previewPapelElement">
-                                        <i class="bi bi-megaphone-fill me-1" id="previewPapelIcon"></i>
-                                        <span id="previewPapelTexto">@(primeiroParticipante?.Papel ?? "PALESTRANTE")</span>
-                                    </div>
-
-                                    <!-- Linha de Metadados: CPF e Credencial -->
-                                    <div class="cracha-meta-info-row">
-                                        <div>CPF: <strong id="previewCpfElement">@(primeiroParticipante?.CpfMascarado ?? "042.***.***-18")</strong></div>
-                                        <div>Credencial: <strong id="previewCredencialElement">@(primeiroParticipante?.CodigoCredencial ?? "#00142")</strong></div>
-                                    </div>
-
-                                    <!-- Bloco Integrado de Código de Presença e QR Code -->
-                                    <div class="cracha-presenca-box" id="blocoQrCodePreview">
-                                        <div class="cracha-qrcode-box">
-                                            <img id="previewQrCodeImg"
-                                                 src="@(primeiroParticipante != null && !string.IsNullOrEmpty(primeiroParticipante.QrCodeBase64) ? $"data:image/png;base64,{primeiroParticipante.QrCodeBase64}" : "")"
-                                                 alt="QR Code de Presença"
-                                                 style="@(primeiroParticipante != null && !string.IsNullOrEmpty(primeiroParticipante.QrCodeBase64) ? "" : "display:none;")" />
-
-                                            <div id="previewQrPlaceholderSvg" style="@(primeiroParticipante != null && !string.IsNullOrEmpty(primeiroParticipante.QrCodeBase64) ? "display:none;" : "")">
-                                                <svg viewBox="0 0 100 100" width="68" height="68">
-                                                    <rect width="100" height="100" fill="#FFFFFF" />
-                                                    <rect x="8" y="8" width="28" height="28" fill="#0F172A" />
-                                                    <rect x="14" y="14" width="16" height="16" fill="#FFFFFF" />
-                                                    <rect x="18" y="18" width="8" height="8" fill="#0F172A" />
-                                                    <rect x="64" y="8" width="28" height="28" fill="#0F172A" />
-                                                    <rect x="70" y="14" width="16" height="16" fill="#FFFFFF" />
-                                                    <rect x="74" y="18" width="8" height="8" fill="#0F172A" />
-                                                    <rect x="8" y="64" width="28" height="28" fill="#0F172A" />
-                                                    <rect x="14" y="70" width="16" height="16" fill="#FFFFFF" />
-                                                    <rect x="18" y="74" width="8" height="8" fill="#0F172A" />
-                                                    <rect x="44" y="12" width="10" height="10" fill="#0F172A" />
-                                                    <rect x="44" y="30" width="10" height="16" fill="#0F172A" />
-                                                    <rect x="12" y="44" width="16" height="10" fill="#0F172A" />
-                                                    <rect x="48" y="48" width="16" height="16" fill="#0F172A" />
-                                                    <rect x="72" y="44" width="14" height="10" fill="#0F172A" />
-                                                    <rect x="48" y="72" width="12" height="16" fill="#0F172A" />
-                                                    <rect x="70" y="70" width="18" height="18" fill="#0F172A" />
-                                                </svg>
-                                            </div>
-                                        </div>
-
-                                        <div class="cracha-presenca-text">
-                                            <div class="presenca-label">CÓDIGO DE PRESENÇA</div>
-                                            <div class="presenca-code" id="previewCodigoPresenca">@(primeiroParticipante?.CodigoPresenca ?? "BL - EVT - 2025 - 00142")</div>
-                                            <div class="presenca-status">
-                                                <i class="bi bi-patch-check-fill text-primary"></i>
-                                                <span>Válido em todas salas</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Rodapé Institucional -->
-                                <div class="cracha-footer">
-                                    <p class="cracha-footer-text" id="lblPreviewTextoCracha">
-                                        @(Model.TextoModelo ?? "Uso obrigatório e intransferível nas dependências do evento.")
-                                    </p>
+                                <div class="participant-verified-badge" title="Participante Verificado e Homologado">
+                                    <i class="bi bi-check-lg"></i>
                                 </div>
                             </div>
 
-                            <!-- FACE TRASEIRA DO CRACHÁ (VERSO) -->
-                            <div class="cracha-card-face cracha-card-back">
-                                <div class="cracha-hole"></div>
+                            <div class="participant-name" id="previewNomeElement">@(primeiroParticipante?.NomeCracha ?? "CASSIANO MENEZES")</div>
+                            <div class="participant-org" id="previewOrgElement">@(primeiroParticipante?.OrganizacaoOuDepto ?? "Universidade Federal de Sergipe - DSI")</div>
 
-                                <div class="cracha-header-back">
-                                    <h6 class="fw-bold mb-0 text-white text-uppercase" style="font-size: 0.8rem; letter-spacing: 0.5px;">
-                                        ORIENTAÇÕES GERAIS E SEGURANÇA
-                                    </h6>
+                            <div class="badge-role-pill" id="previewPapelElement">
+                                <i class="bi bi-megaphone-fill me-1" id="previewPapelIcon"></i>
+                                <span id="previewPapelTexto">@(primeiroParticipante?.Papel ?? "PALESTRANTE")</span>
+                            </div>
+
+                            <!-- Linha de Metadados: CPF e Credencial -->
+                            <div class="cracha-meta-info-row">
+                                <div>CPF: <strong id="previewCpfElement">@(primeiroParticipante?.CpfMascarado ?? "042.***.***-18")</strong></div>
+                                <div>Credencial: <strong id="previewCredencialElement">@(primeiroParticipante?.CodigoCredencial ?? "#00142")</strong></div>
+                            </div>
+
+                            <!-- Bloco Integrado de Código de Presença e QR Code -->
+                            <div class="cracha-presenca-box" id="blocoQrCodePreview">
+                                <div class="cracha-qrcode-box">
+                                    <img id="previewQrCodeImg"
+                                         src="@(primeiroParticipante != null && !string.IsNullOrEmpty(primeiroParticipante.QrCodeBase64) ? $"data:image/png;base64,{primeiroParticipante.QrCodeBase64}" : "")"
+                                         alt="QR Code de Presença"
+                                         style="@(primeiroParticipante != null && !string.IsNullOrEmpty(primeiroParticipante.QrCodeBase64) ? "" : "display:none;")" />
+
+                                    <div id="previewQrPlaceholderSvg" style="@(primeiroParticipante != null && !string.IsNullOrEmpty(primeiroParticipante.QrCodeBase64) ? "display:none;" : "")">
+                                        <svg viewBox="0 0 100 100" width="68" height="68">
+                                            <rect width="100" height="100" fill="#FFFFFF" />
+                                            <rect x="8" y="8" width="28" height="28" fill="#0F172A" />
+                                            <rect x="14" y="14" width="16" height="16" fill="#FFFFFF" />
+                                            <rect x="18" y="18" width="8" height="8" fill="#0F172A" />
+                                            <rect x="64" y="8" width="28" height="28" fill="#0F172A" />
+                                            <rect x="70" y="14" width="16" height="16" fill="#FFFFFF" />
+                                            <rect x="74" y="18" width="8" height="8" fill="#0F172A" />
+                                            <rect x="8" y="64" width="28" height="28" fill="#0F172A" />
+                                            <rect x="14" y="70" width="16" height="16" fill="#FFFFFF" />
+                                            <rect x="18" y="74" width="8" height="8" fill="#0F172A" />
+                                            <rect x="44" y="12" width="10" height="10" fill="#0F172A" />
+                                            <rect x="44" y="30" width="10" height="16" fill="#0F172A" />
+                                            <rect x="12" y="44" width="16" height="10" fill="#0F172A" />
+                                            <rect x="48" y="48" width="16" height="16" fill="#0F172A" />
+                                            <rect x="72" y="44" width="14" height="10" fill="#0F172A" />
+                                            <rect x="48" y="72" width="12" height="16" fill="#0F172A" />
+                                            <rect x="70" y="70" width="18" height="18" fill="#0F172A" />
+                                        </svg>
+                                    </div>
                                 </div>
 
-                                <div class="cracha-body-back">
-                                    <div class="verso-instrucoes-box">
-                                        <p class="mb-2"><strong>1. Acesso Pessoal:</strong> Este crachá é pessoal, intransferível e de porte obrigatório nas dependências do evento.</p>
-                                        <p class="mb-2"><strong>2. Frequência e Atividades:</strong> Apresente o QR Code frontal em cada atividade e sessão para cômputo da frequência oficial.</p>
-                                        <p class="mb-2"><strong>3. Certificação:</strong> A emissão do certificado de conclusão requer frequência mínima registrada no credenciamento.</p>
-                                        <p class="mb-0"><strong>4. Perda ou Extravio:</strong> Em caso de extravio, procure imediatamente a secretaria central de credenciamento.</p>
+                                <div class="cracha-presenca-text">
+                                    <div class="presenca-label">CÓDIGO DE PRESENÇA</div>
+                                    <div class="presenca-code" id="previewCodigoPresenca">@(primeiroParticipante?.CodigoPresenca ?? "BL - EVT - 2025 - 00142")</div>
+                                    <div class="presenca-status">
+                                        <i class="bi bi-patch-check-fill text-primary"></i>
+                                        <span>Válido em todas salas</span>
                                     </div>
-
-                                    <div class="verso-wifi-box mt-3">
-                                        <div class="small fw-bold text-dark"><i class="bi bi-wifi me-1 blue-normal"></i> Rede Wi-Fi Oficial:</div>
-                                        <div class="small text-muted font-monospace">SSID: <strong>BoraLa_Eventos</strong> | Senha: <strong>conecta2025</strong></div>
-                                    </div>
-
-                                    <div class="verso-suporte-box mt-3">
-                                        <div class="small text-muted">Secretaria Geral • Bora Lá Eventos</div>
-                                        <div class="small fw-semibold text-primary">contato@boralaeventos.com.br</div>
-                                    </div>
-                                </div>
-
-                                <div class="cracha-footer">
-                                    <p class="cracha-footer-text mb-0">Emitido digitalmente via Plataforma Bora Lá</p>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Rodapé Institucional -->
+                        <div class="cracha-footer">
+                            <p class="cracha-footer-text" id="lblPreviewTextoCracha">@(string.IsNullOrWhiteSpace(Model.TextoModelo) ? "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas." : Model.TextoModelo)</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Botões de Ação sob o Preview -->
-                <div class="d-flex align-items-center justify-content-between gap-3 mt-3 pt-3 border-top">
-                    <button type="button" id="btnFrenteVerso" class="btn btn-outline-secondary rounded-3 fw-semibold px-3 py-2 d-inline-flex align-items-center gap-2">
-                        <i class="bi bi-arrow-repeat fs-6"></i>
-                        <span>Frente & Verso</span>
-                    </button>
-
+                <div class="d-flex align-items-center justify-content-end gap-3 mt-3 pt-3 border-top">
                     <button type="button" id="btnExportarPng" class="btn btn-blue-normal color-white rounded-3 fw-semibold px-4 py-2 shadow-sm d-inline-flex align-items-center gap-2">
                         <i class="bi bi-download"></i>
                         <span>Exportar PNG</span>

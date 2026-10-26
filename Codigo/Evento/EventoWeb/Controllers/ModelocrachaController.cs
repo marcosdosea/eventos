@@ -13,7 +13,7 @@ using Util;
 namespace EventoWeb.Controllers
 {
     [Route("[controller]")]
-    [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
+    [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
     public class ModelocrachaController : Controller
     {
         private const string TextoPadraoCracha = "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.";
@@ -48,6 +48,16 @@ namespace EventoWeb.Controllers
             return AutorizacaoEventoHelper.IsAutorizado(User, _inscricaoService, idEvento);
         }
 
+        private bool IsAuthorizedParaEmissao(uint idEvento)
+        {
+            if (User == null) return false;
+            if (User.IsInRole("ADMINISTRADOR")) return true;
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username)) return false;
+            return _inscricaoService.GetGestorInEvent(username, idEvento) != null ||
+                   _inscricaoService.GetColaboradorInEvent(username, idEvento) != null;
+        }
+
         private List<EventoSimpleDTO> ObterEventosDoUsuario()
         {
             var eventos = new List<EventoSimpleDTO>();
@@ -66,10 +76,27 @@ namespace EventoWeb.Controllers
                 {
                     try
                     {
-                        var eventosGestor = _eventoService.GetEventByCpf(cpf, 2);
-                        if (eventosGestor != null)
+                        if (User.IsInRole("GESTOR"))
                         {
-                            eventos = eventosGestor.Select(e => new EventoSimpleDTO { Id = e.Id, Nome = e.Nome }).ToList();
+                            var eventosGestor = _eventoService.GetEventByCpf(cpf, 2);
+                            if (eventosGestor != null)
+                            {
+                                eventos.AddRange(eventosGestor.Select(e => new EventoSimpleDTO { Id = e.Id, Nome = e.Nome }));
+                            }
+                        }
+                        if (User.IsInRole("COLABORADOR"))
+                        {
+                            var eventosColab = _eventoService.GetEventByCpf(cpf, 3);
+                            if (eventosColab != null)
+                            {
+                                foreach (var ev in eventosColab)
+                                {
+                                    if (!eventos.Any(e => e.Id == ev.Id))
+                                    {
+                                        eventos.Add(new EventoSimpleDTO { Id = ev.Id, Nome = ev.Nome });
+                                    }
+                                }
+                            }
                         }
                     }
                     catch
@@ -779,7 +806,7 @@ namespace EventoWeb.Controllers
             uint idEventoAlvo = idEvento ?? 0;
             if (idEventoAlvo > 0)
             {
-                if (!IsAuthorized(idEventoAlvo))
+                if (!IsAuthorizedParaEmissao(idEventoAlvo))
                     return Forbid();
             }
             else if (eventosDisponiveis.Any())
