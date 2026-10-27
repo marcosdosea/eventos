@@ -388,6 +388,27 @@
             });
         }
 
+        function quebrarTextoEmLinhas(context, text, maxWidth) {
+            if (!text) return [];
+            const words = text.toString().trim().split(/\s+/);
+            const lines = [];
+            let currentLine = "";
+
+            for (let i = 0; i < words.length; i++) {
+                const testLine = currentLine ? `${currentLine} ${words[i]}` : words[i];
+                if (context.measureText(testLine).width > maxWidth && currentLine) {
+                    lines.push(currentLine);
+                    currentLine = words[i];
+                } else {
+                    currentLine = testLine;
+                }
+            }
+            if (currentLine) {
+                lines.push(currentLine);
+            }
+            return lines;
+        }
+
         function renderizarEBaixarPng() {
             try {
                 const canvas = document.createElement("canvas");
@@ -406,7 +427,7 @@
                 // Cabeçalho Azul
                 ctx.fillStyle = "#232ed0";
                 ctx.beginPath();
-                ctx.roundRect(0, 0, largura, 200, [36, 36, 0, 0]);
+                ctx.roundRect(0, 0, largura, 205, [36, 36, 0, 0]);
                 ctx.fill();
 
                 // Furo do crachá
@@ -415,22 +436,84 @@
                 ctx.roundRect(largura / 2 - 40, 16, 80, 20, 10);
                 ctx.fill();
 
-                // Títulos do Cabeçalho
+                // Título Institucional Superior
                 ctx.fillStyle = "#FFFFFF";
-                ctx.font = "bold 18px Segoe UI, sans-serif";
+                ctx.font = "bold 13px Segoe UI, sans-serif";
                 ctx.textAlign = "center";
-                ctx.fillText("BORA LÁ EVENTOS", largura / 2, 80);
+                ctx.fillText("BORA LÁ EVENTOS", largura / 2, 60);
 
-                const nomeEvento = (document.getElementById("lblPreviewNomeEvento")?.textContent || "EVENTO").toUpperCase();
-                ctx.font = "bold 24px Segoe UI, sans-serif";
-                ctx.fillText(nomeEvento, largura / 2, 130);
+                // Logotipo Institucional se presente
+                const logoImg = document.getElementById("crachaLogoElement");
+                let titleStartY = 96;
+                if (logoImg && logoImg.style.display !== "none" && logoImg.src && logoImg.complete && logoImg.naturalWidth > 0) {
+                    try {
+                        const logoMaxW = 160;
+                        const logoMaxH = 34;
+                        let logoW = logoImg.naturalWidth;
+                        let logoH = logoImg.naturalHeight;
+                        const scale = Math.min(logoMaxW / logoW, logoMaxH / logoH);
+                        logoW *= scale;
+                        logoH *= scale;
+                        ctx.drawImage(logoImg, largura / 2 - logoW / 2, 68, logoW, logoH);
+                        titleStartY = 118;
+                    } catch (e) {
+                    }
+                }
 
+                // Nome do Evento (quebra automática de linhas e ajuste de fonte para nunca cortar)
+                const nomeEvento = (document.getElementById("lblPreviewNomeEvento")?.textContent || "EVENTO").trim().toUpperCase();
                 const elSub = document.getElementById("lblPreviewSubtituloEvento");
                 const subEvento = (elSub && elSub.style.display !== "none" ? elSub.textContent.trim() : "").toUpperCase();
-                if (subEvento) {
-                    ctx.font = "bold 16px Segoe UI, sans-serif";
+
+                let fontSizeTitle = 22;
+                let lineHeightTitle = 26;
+                let titleLines = [];
+                const maxTitleWidth = 540;
+
+                while (fontSizeTitle >= 14) {
+                    ctx.font = `bold ${fontSizeTitle}px Segoe UI, sans-serif`;
+                    titleLines = quebrarTextoEmLinhas(ctx, nomeEvento, maxTitleWidth);
+                    const nenhumEstouro = !titleLines.some(l => ctx.measureText(l).width > maxTitleWidth);
+                    if (nenhumEstouro && titleLines.length <= 2) {
+                        break;
+                    }
+                    if (fontSizeTitle <= 15) {
+                        break;
+                    }
+                    fontSizeTitle -= 1;
+                    lineHeightTitle = Math.round(fontSizeTitle * 1.25);
+                }
+
+                ctx.fillStyle = "#FFFFFF";
+                ctx.font = `bold ${fontSizeTitle}px Segoe UI, sans-serif`;
+                ctx.textAlign = "center";
+
+                // Centralização vertical matemática no cabeçalho azul
+                const subLines = subEvento ? quebrarTextoEmLinhas(ctx, subEvento, maxTitleWidth) : [];
+                const totalSubHeight = subLines.length > 0 ? (subLines.length * 18 + 6) : 0;
+                const totalTitleHeight = (titleLines.length - 1) * lineHeightTitle + fontSizeTitle;
+                const totalBlockHeight = totalTitleHeight + totalSubHeight;
+
+                const topAvailableY = titleStartY;
+                const bottomAvailableY = 196;
+                const availableHeight = bottomAvailableY - topAvailableY;
+                const espacoSobra = Math.max(0, (availableHeight - totalBlockHeight) / 2);
+
+                let currentY = topAvailableY + espacoSobra + (fontSizeTitle * 0.75);
+
+                titleLines.forEach(line => {
+                    ctx.fillText(line, largura / 2, currentY);
+                    currentY += lineHeightTitle;
+                });
+
+                if (subLines.length > 0) {
+                    ctx.font = "bold 13px Segoe UI, sans-serif";
                     ctx.fillStyle = "#E0E7FF";
-                    ctx.fillText(subEvento, largura / 2, 165);
+                    currentY += 4;
+                    subLines.forEach(line => {
+                        ctx.fillText(line, largura / 2, currentY);
+                        currentY += 18;
+                    });
                 }
 
                 // Foto ou Avatar
@@ -445,9 +528,15 @@
                 } else {
                     ctx.fillStyle = "#E2E8F0";
                     ctx.fillRect(largura / 2 - 70, centroY - 70, 140, 140);
+                    // Cabeça do avatar
                     ctx.fillStyle = "#475569";
                     ctx.beginPath();
                     ctx.arc(largura / 2, centroY - 20, 30, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Ombros do avatar
+                    ctx.fillStyle = "#1E293B";
+                    ctx.beginPath();
+                    ctx.arc(largura / 2, centroY + 68, 52, Math.PI, 0, false);
                     ctx.fill();
                 }
                 ctx.restore();
@@ -463,76 +552,108 @@
                 ctx.font = "bold 18px Segoe UI, sans-serif";
                 ctx.fillText(aptoExport ? "✓" : "!", largura / 2 + 50, centroY + 56);
 
-                // Nome do participante
-                const nomePart = (previewNome?.textContent || "PARTICIPANTE").toUpperCase();
+                // Nome do participante (auto-ajuste de tamanho de fonte para nomes extensos)
+                const nomePart = (previewNome?.textContent || "PARTICIPANTE").trim().toUpperCase();
                 ctx.fillStyle = "#0F172A";
-                ctx.font = "bold 32px Segoe UI, sans-serif";
+                let nomeFontSize = 30;
+                ctx.font = `bold ${nomeFontSize}px Segoe UI, sans-serif`;
+                while (ctx.measureText(nomePart).width > 540 && nomeFontSize > 18) {
+                    nomeFontSize -= 2;
+                    ctx.font = `bold ${nomeFontSize}px Segoe UI, sans-serif`;
+                }
                 ctx.textAlign = "center";
                 ctx.fillText(nomePart, largura / 2, 450);
 
-                // Organização
-                const orgPart = previewOrg?.textContent || "";
-                ctx.fillStyle = "#64748B";
-                ctx.font = "500 20px Segoe UI, sans-serif";
-                ctx.fillText(orgPart, largura / 2, 485);
+                // Organização ou Departamento (auto-ajuste para nunca estourar)
+                const orgPart = (previewOrg?.textContent || "").trim();
+                if (orgPart) {
+                    ctx.fillStyle = "#64748B";
+                    let orgFontSize = 19;
+                    ctx.font = `500 ${orgFontSize}px Segoe UI, sans-serif`;
+                    while (ctx.measureText(orgPart).width > 540 && orgFontSize > 13) {
+                        orgFontSize -= 1.5;
+                        ctx.font = `500 ${orgFontSize}px Segoe UI, sans-serif`;
+                    }
+                    ctx.fillText(orgPart, largura / 2, 485);
+                }
 
                 // Pílula de Papel
-                const papelTexto = (previewPapelTexto?.textContent || "PARTICIPANTE").toUpperCase();
+                const papelTexto = (previewPapelTexto?.textContent || "PARTICIPANTE").trim().toUpperCase();
+                ctx.font = "bold 18px Segoe UI, sans-serif";
+                const textPapelWidth = ctx.measureText(papelTexto).width;
+                const pillWidth = Math.max(220, Math.min(360, textPapelWidth + 50));
                 ctx.fillStyle = "#232ed0";
                 ctx.beginPath();
-                ctx.roundRect(largura / 2 - 130, 520, 260, 44, 22);
+                ctx.roundRect(largura / 2 - pillWidth / 2, 516, pillWidth, 42, 21);
                 ctx.fill();
                 ctx.fillStyle = "#FFFFFF";
-                ctx.font = "bold 20px Segoe UI, sans-serif";
-                ctx.fillText(papelTexto, largura / 2, 550);
+                ctx.fillText(papelTexto, largura / 2, 544);
 
                 // Metadados CPF e Credencial
                 ctx.fillStyle = "#64748B";
-                ctx.font = "16px Segoe UI, sans-serif";
+                ctx.font = "15px Segoe UI, sans-serif";
                 const cpfTexto = previewCpf?.textContent || "";
                 const credTexto = previewCredencial?.textContent || "";
-                ctx.fillText(`CPF: ${cpfTexto}       Credencial: ${credTexto}`, largura / 2, 605);
+                ctx.fillText(`CPF: ${cpfTexto}       Credencial: ${credTexto}`, largura / 2, 598);
 
                 // Caixa de QR Code e Código de Presença
                 ctx.fillStyle = "#FFFFFF";
                 ctx.strokeStyle = "#E2E8F0";
                 ctx.lineWidth = 2;
                 ctx.beginPath();
-                ctx.roundRect(60, 635, largura - 120, 175, 16);
+                ctx.roundRect(50, 625, largura - 100, 165, 16);
                 ctx.fill();
                 ctx.stroke();
 
                 if (previewQrCodeImg && previewQrCodeImg.style.display !== "none" && previewQrCodeImg.src) {
-                    ctx.drawImage(previewQrCodeImg, 80, 650, 140, 140);
+                    ctx.drawImage(previewQrCodeImg, 70, 640, 135, 135);
                 }
 
                 ctx.textAlign = "left";
                 ctx.fillStyle = "#64748B";
-                ctx.font = "bold 14px Segoe UI, sans-serif";
-                ctx.fillText("CÓDIGO DE PRESENÇA", 240, 690);
+                ctx.font = "bold 13px Segoe UI, sans-serif";
+                ctx.fillText("CÓDIGO DE PRESENÇA", 225, 672);
 
                 const presencaTexto = previewCodigoPresenca?.textContent || "BL - EVT - 2025 - 00142";
                 ctx.fillStyle = "#0F172A";
-                ctx.font = "bold 20px Consolas, monospace";
-                ctx.fillText(presencaTexto, 240, 725);
+                ctx.font = "bold 18px Consolas, monospace";
+                ctx.fillText(presencaTexto, 225, 706);
 
                 ctx.fillStyle = "#232ed0";
-                ctx.font = "bold 15px Segoe UI, sans-serif";
-                ctx.fillText("✓ Válido em todas salas", 240, 765);
+                ctx.font = "bold 14px Segoe UI, sans-serif";
+                ctx.fillText("✓ Válido em todas salas", 225, 744);
 
-                // Rodapé
+                // Rodapé com quebra de linhas para nunca cortar texto com reticências
                 ctx.fillStyle = "#F8FAFC";
                 ctx.beginPath();
                 ctx.roundRect(0, altura - 75, largura, 75, [0, 0, 36, 36]);
                 ctx.fill();
 
                 ctx.fillStyle = "#475569";
-                ctx.font = "italic 15px Segoe UI, sans-serif";
                 ctx.textAlign = "center";
-                const textoFooter = lblTextoCracha?.textContent || "Uso obrigatório e intransferível nas dependências do evento.";
-                ctx.fillText(textoFooter.length > 60 ? textoFooter.substring(0, 57) + "..." : textoFooter, largura / 2, altura - 30);
+                const textoFooter = (lblTextoCracha?.textContent || "Uso obrigatório e intransferível nas dependências do evento.").trim();
+                
+                let footerFontSize = 13;
+                let footerLines = [];
+                while (footerFontSize >= 10) {
+                    ctx.font = `italic ${footerFontSize}px Segoe UI, sans-serif`;
+                    footerLines = quebrarTextoEmLinhas(ctx, textoFooter, 560);
+                    if (footerLines.length <= 2 || footerFontSize <= 10) {
+                        break;
+                    }
+                    footerFontSize -= 1;
+                }
+                ctx.font = `italic ${footerFontSize}px Segoe UI, sans-serif`;
+                const footerLineHeight = footerFontSize + 5;
+                const footerTotalHeight = (footerLines.length - 1) * footerLineHeight;
+                let footerY = (altura - 75) + (75 - footerTotalHeight) / 2 + (footerFontSize * 0.35);
 
-                // Download da imagem
+                footerLines.forEach(line => {
+                    ctx.fillText(line, largura / 2, footerY);
+                    footerY += footerLineHeight;
+                });
+
+                // Download da imagem PNG
                 const link = document.createElement("a");
                 const nomeLimpo = nomePart.replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
                 link.download = `cracha_${nomeLimpo}.png`;
