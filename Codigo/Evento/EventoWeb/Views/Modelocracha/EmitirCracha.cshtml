@@ -10,31 +10,13 @@
 <link rel="stylesheet" href="~/css/modelocracha.css" asp-append-version="true" />
 
 <div class="cracha-page-container">
-    <!-- Título Principal -->
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
         <div>
             <h1 class="cracha-title blue-normal mb-1">Emissão e Pré-visualização de Crachás</h1>
             <p class="text-muted small mb-0">Homologação, filtragem e emissão gráfica de credenciais e crachás para eventos</p>
         </div>
-        <div>
-            @if (eventoAtualId > 0)
-            {
-                <a asp-action="Index" asp-route-idEvento="@eventoAtualId" class="btn btn-outline-secondary rounded-3 fw-semibold px-3 py-2 d-inline-flex align-items-center gap-2">
-                    <i class="bi bi-arrow-left"></i>
-                    <span>Voltar</span>
-                </a>
-            }
-            else
-            {
-                <a asp-action="Index" class="btn btn-outline-secondary rounded-3 fw-semibold px-3 py-2 d-inline-flex align-items-center gap-2">
-                    <i class="bi bi-arrow-left"></i>
-                    <span>Voltar</span>
-                </a>
-            }
-        </div>
     </div>
 
-    <!-- Parâmetros de Produção e Filtragem -->
     <div class="card-parametros mb-4">
         <div class="d-flex align-items-center gap-2 mb-3">
             <div class="card-header-icon">
@@ -103,12 +85,9 @@
         </div>
     </div>
 
-    <!-- Área Principal em 2 Colunas: Lista e Preview 1:1 -->
     <div class="row g-4 align-items-start">
-        <!-- Coluna Esquerda: Participantes Selecionados -->
         <div class="col-xxl-8 col-xl-7 col-lg-12">
             <div class="card-parametros p-0 overflow-hidden">
-                <!-- Cabeçalho da Tabela -->
                 <div class="p-3 bg-white border-bottom d-flex flex-wrap align-items-center justify-content-between gap-3">
                     <div class="d-flex align-items-center gap-2">
                         <h5 class="fw-bold text-dark mb-0 fs-6">Participantes Selecionados</h5>
@@ -130,7 +109,6 @@
                     </div>
                 </div>
 
-                <!-- Tabela de Participantes -->
                 <div class="table-responsive">
                     <table class="cracha-table align-middle" id="tabelaParticipantes">
                         <thead>
@@ -142,7 +120,7 @@
                                 <th>NOME NO CRACHÁ</th>
                                 <th style="width: 120px;">CPF</th>
                                 <th style="width: 110px; text-align: center;">STATUS</th>
-                                <th style="width: 125px; text-align: right;">AÇÕES</th>
+                                <th style="width: 140px; text-align: center;">AÇÕES</th>
                             </tr>
                         </thead>
                         <tbody id="tabelaParticipantesBody">
@@ -204,7 +182,7 @@
                                                 </span>
                                             }
                                         </td>
-                                        <td style="text-align: right; white-space: nowrap;">
+                                        <td style="text-align: center; white-space: nowrap;">
                                             <a href="javascript:void(0)" class="action-link-edit btn-ver-previa me-2" data-index="@index" title="Exibir crachá deste participante na simulação 1:1">Prévia</a>
                                             <a asp-controller="Pessoa" asp-action="Edit" asp-route-id="@p.IdPessoa" class="action-link-edit me-2" target="_blank" title="Editar dados cadastrais">Editar</a>
                                             <a href="javascript:void(0)" class="action-link-delete btn-excluir-item" data-index="@index" title="Remover da lista de emissão">Excluir</a>
@@ -226,7 +204,6 @@
                     </table>
                 </div>
 
-                <!-- Rodapé da Tabela: Ações em Lote e Paginação -->
                 <div class="table-footer-bar">
                     <div class="d-flex align-items-center gap-2 flex-wrap">
                         <button type="button" id="btnSelecionarTodosPagina" class="btn btn-outline-secondary btn-sm rounded-3 fw-semibold px-3 py-1">
@@ -252,10 +229,8 @@
             </div>
         </div>
 
-        <!-- Coluna Direita: Simulação de Impressão 1:1 (Live Preview) -->
         <div class="col-xxl-4 col-xl-5 col-lg-12">
             <div class="preview-card-container sticky-preview-card" id="cardSimulacaoImpressao">
-                <!-- Barra Superior do Preview -->
                 <div class="preview-header-bar">
                     <div class="preview-status-indicator">
                         <span class="green-dot"></span>
@@ -275,18 +250,15 @@
                     </div>
                 </div>
 
-                <!-- Palco com Cordão e Crachá -->
                 <div class="preview-stage">
                     <div class="lanyard-strap">
                         <span class="lanyard-strap-text">BORA LÁ EVENTOS</span>
                     </div>
                     <div class="lanyard-clip"></div>
 
-                    <!-- Cartão Físico do Crachá (Live Preview) -->
                     <div class="cracha-physical-card" id="crachaCardElement">
                         <div class="cracha-hole"></div>
 
-                        <!-- Cabeçalho do Crachá com Banner e Logotipo -->
                         <div class="cracha-header">
                             <div class="cracha-header-sub">
                                 <span class="cracha-header-sub-icon">
@@ -303,7 +275,6 @@
                             <div class="cracha-evento-subtitle" id="lblPreviewSubtituloEvento" style="@(string.IsNullOrWhiteSpace(Model.SubtituloEvento) ? "display: none;" : "")">@Model.SubtituloEvento</div>
                         </div>
 
-                        <!-- Corpo com Dados do Participante Homologado -->
                         <div class="cracha-body">
                             <div class="participant-avatar-wrapper">
                                 <img id="previewFotoElement"
@@ -333,13 +304,11 @@
                                 <span id="previewPapelTexto">@(primeiroParticipante?.Papel ?? "PALESTRANTE")</span>
                             </div>
 
-                            <!-- Linha de Metadados: CPF e Credencial -->
                             <div class="cracha-meta-info-row">
                                 <div>CPF: <strong id="previewCpfElement">@(primeiroParticipante?.CpfMascarado ?? "042.***.***-18")</strong></div>
                                 <div>Credencial: <strong id="previewCredencialElement">@(primeiroParticipante?.CodigoCredencial ?? "#00142")</strong></div>
                             </div>
 
-                            <!-- Bloco Integrado de Código de Presença e QR Code -->
                             <div class="cracha-presenca-box" id="blocoQrCodePreview">
                                 <div class="cracha-qrcode-box">
                                     <img id="previewQrCodeImg"
@@ -381,14 +350,12 @@
                             </div>
                         </div>
 
-                        <!-- Rodapé Institucional -->
                         <div class="cracha-footer">
                             <p class="cracha-footer-text" id="lblPreviewTextoCracha">@(string.IsNullOrWhiteSpace(Model.TextoModelo) ? "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas." : Model.TextoModelo)</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Botões de Ação sob o Preview -->
                 <div class="d-flex align-items-center justify-content-center gap-3 mt-3 pt-3 border-top">
                     <button type="button" id="btnExportarPng" class="btn btn-blue-normal color-white rounded-3 fw-semibold px-4 py-2 shadow-sm d-inline-flex align-items-center gap-2">
                         <i class="bi bi-download"></i>
@@ -398,9 +365,23 @@
             </div>
         </div>
     </div>
+
+    <div class="d-flex justify-content-end mt-4 mb-4 w-100">
+        @if (eventoAtualId > 0)
+        {
+            <a asp-action="Index" asp-route-idEvento="@eventoAtualId" class="btn btn-blue-normal btn-lg" style="text-decoration:none; color:white">
+                Voltar
+            </a>
+        }
+        else
+        {
+            <a asp-action="Index" class="btn btn-blue-normal btn-lg" style="text-decoration:none; color:white">
+                Voltar
+            </a>
+        }
+    </div>
 </div>
 
-<!-- Container oculto exclusivo para impressão em lote (PDF A4) -->
 <div id="containerImpressaoLoteA4" class="d-none"></div>
 
 @section Scripts {
