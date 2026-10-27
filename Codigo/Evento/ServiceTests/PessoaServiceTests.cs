@@ -618,15 +618,14 @@ namespace Service.Tests
         public async Task EmailExist_ReturnsFalse_WhenEmailBelongsToSameCpf()
         {
             var pessoa = _pessoaService.Get(2);
-            var (pessoaServiceLocal, userManagerLocal) = QueryableStore();
             var usuario = new UsuarioIdentity
             {
-                UserName = pessoa.Cpf,
+                UserName = Util.Methods.RemoveNaoNumericos(pessoa.Cpf),
                 Email = pessoa.Email,
                 PhoneNumber = pessoa.Telefone1,
                 EmailConfirmed = true
             };
-            await userManagerLocal.CreateAsync(usuario, "Temp@1234!");
+            var (pessoaServiceLocal, _) = QueryableStore(new List<UsuarioIdentity> { usuario });
 
             Assert.IsFalse(await pessoaServiceLocal.EmailExist(pessoa.Email, pessoa.Cpf));
         }
@@ -639,14 +638,14 @@ namespace Service.Tests
             
             var usuario = new UsuarioIdentity
             {
-                UserName = pessoa.Cpf,
+                UserName = Util.Methods.RemoveNaoNumericos(pessoa.Cpf),
                 Email = pessoa.Email,
                 PhoneNumber = pessoa.Telefone1,
                 EmailConfirmed = true
             };
             var usuarioDuplicado = new UsuarioIdentity
             {
-                UserName = pessoaDuplicada.Cpf,
+                UserName = Util.Methods.RemoveNaoNumericos(pessoaDuplicada.Cpf),
                 Email = pessoaDuplicada.Email,
                 PhoneNumber = pessoaDuplicada.Telefone1,
                 EmailConfirmed = true
@@ -667,7 +666,7 @@ namespace Service.Tests
             var pessoa = _pessoaService.Get(2);
             var usuario = new UsuarioIdentity
             {
-                UserName = pessoa.Cpf,
+                UserName = Util.Methods.RemoveNaoNumericos(pessoa.Cpf),
                 Email = pessoa.Email,
                 PhoneNumber = pessoa.Telefone1,
                 EmailConfirmed = true
