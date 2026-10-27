@@ -1,15 +1,10 @@
 ﻿using Core;
 using Core.Service;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Identity;
-using EventoWeb.Models;
-using System;
+using Moq;
 using System.Collections.Immutable;
-using Service;
 
 namespace Service.Tests
 {
@@ -90,6 +85,25 @@ namespace Service.Tests
                     Telefone1 = "7999001133",
                     Telefone2 = "NULL",
                 },
+                new Pessoa
+                {
+                    Id = 4,
+                    Nome = "João Duplicado Sodré",
+                    NomeCracha = "Sodré",
+                    Cpf = "030.268.930-57",
+                    Sexo = "M",
+                    Cep = "48370-000",
+                    Rua = "Avenida Principal",
+                    Bairro = "Centro",
+                    Cidade = "Irece",
+                    Estado = "BA",
+                    Numero = "s/n",
+                    Complemento = "casa",
+                    Email = "email@gmail.com",
+                    Telefone1 = "7999990011",
+                    Telefone2 = "NULL",
+
+                }
             };
 
             var evento = new Evento
@@ -135,6 +149,7 @@ namespace Service.Tests
             _context.AddRange(papel);
             _context.SaveChanges();
 
+
             _userManager = new MockUserManager<UsuarioIdentity>();
             _inscricaoService = new InscricaoService(_context, _userManager);
             _pessoaService = new PessoaService(_userManager, _context, _inscricaoService, _signInManager);
@@ -145,7 +160,7 @@ namespace Service.Tests
         {
             _pessoaService.Create(new Pessoa()
             {
-                Id = 4,
+                Id = 5,
                 Nome = "Marcos Venicios da Palma Dias",
                 NomeCracha = "Marcos Venicios",
                 Cpf = "206.065.300-04",
@@ -162,8 +177,8 @@ namespace Service.Tests
                 Telefone2 = "NULL",
             });
 
-            Assert.AreEqual(4, _pessoaService.GetAll().Count());
-            var pessoa = _pessoaService.Get(4);
+            Assert.AreEqual(5, _pessoaService.GetAll().Count());
+            var pessoa = _pessoaService.Get(5);
             Assert.AreEqual("Marcos Venicios da Palma Dias", pessoa.Nome);
             Assert.AreEqual("Marcos Venicios", pessoa.NomeCracha);
             Assert.AreEqual("206.065.300-04", pessoa.Cpf);
@@ -186,7 +201,7 @@ namespace Service.Tests
             
             _pessoaService.Delete(1);
 
-            Assert.AreEqual(2, _pessoaService.GetAll().Count());
+            Assert.AreEqual(3, _pessoaService.GetAll().Count());
             var pessoa = _pessoaService.Get(1);
             Assert.AreEqual(null, pessoa);
         }
@@ -266,7 +281,7 @@ namespace Service.Tests
 
             Assert.IsInstanceOfType(listaPessoa, typeof(IEnumerable<Pessoa>));
             Assert.IsNotNull(listaPessoa);
-            Assert.AreEqual(3, listaPessoa.Count());
+            Assert.AreEqual(4, listaPessoa.Count());
             var firstPessoa = listaPessoa.First();
             Assert.AreEqual((uint)1, firstPessoa.Id);
         }
@@ -276,7 +291,7 @@ namespace Service.Tests
         {
             var pessoaAdm = new Pessoa
             {
-                Id = 4,
+                Id = 5,
                 Nome = "Admin Teste",
                 NomeCracha = "Admin",
                 Cpf = "111.111.111-11",
@@ -299,7 +314,7 @@ namespace Service.Tests
 
             var pessoaSemUsuario = new Pessoa
             {
-                Id = 5,
+                Id = 6,
                 Nome = "Sem Usuario",
                 NomeCracha = "SemUsuario",
                 Cpf = "555.555.555-55",
@@ -325,7 +340,7 @@ namespace Service.Tests
 
             Assert.IsNotNull(admins);
             Assert.AreEqual(1, admins.Count);
-            Assert.AreEqual((uint)4, admins[0].Id);
+            Assert.AreEqual((uint)5, admins[0].Id);
             Assert.AreEqual("Admin Teste", admins[0].Nome);
             Assert.AreEqual("Admin", admins[0].NomeCracha);
             Assert.AreEqual(pessoaAdm.Cpf, admins[0].Cpf);
@@ -403,7 +418,7 @@ namespace Service.Tests
         {
             var pessoa = new Pessoa
             {
-                Id = 4,
+                Id = 5,
                 Nome = "Novo Admin",
                 NomeCracha = "Admin",
                 Cpf = "111.111.111-11",
@@ -447,7 +462,7 @@ namespace Service.Tests
             Assert.IsNotNull(pessoaPersistida);
             Assert.AreEqual("João Vitor Sodré", pessoaPersistida.Nome);
             Assert.AreEqual("email@gmail.com", pessoaPersistida.Email);
-            Assert.AreEqual(3, _pessoaService.GetAll().Count());
+            Assert.AreEqual(4, _pessoaService.GetAll().Count());
             Assert.IsTrue(_inscricaoService.IsInscrito(pessoa.Id, 1));
         }
 
@@ -467,7 +482,7 @@ namespace Service.Tests
 
             var pessoaNova = new Pessoa
             {
-                Id = 4,
+                Id = 5,
                 Nome = "Outro Admin",
                 NomeCracha = "Admin2",
                 Cpf = pessoaExistente.Cpf,
@@ -479,7 +494,7 @@ namespace Service.Tests
             var sucesso = await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoaNova, 0, 1);
 
             Assert.IsFalse(sucesso);
-            Assert.AreEqual(3, _pessoaService.GetAll().Count());
+            Assert.AreEqual(4, _pessoaService.GetAll().Count());
             var usuarioMantido = await _userManager.FindByNameAsync(pessoaExistente.Cpf);
             Assert.IsNotNull(usuarioMantido);
             Assert.IsTrue(await _userManager.IsInRoleAsync(usuarioMantido, "ADMINISTRADOR"));
@@ -490,7 +505,7 @@ namespace Service.Tests
         {
             var pessoa = new Pessoa
             {
-                Id = 4,
+                Id = 5,
                 Nome = "Novo Gestor",
                 NomeCracha = "Gestor",
                 Cpf = "222.222.222-22",
@@ -522,7 +537,7 @@ namespace Service.Tests
         {
             var pessoa = new Pessoa
             {
-                Id = 4,
+                Id = 5,
                 Nome = "Novo Usuario",
                 NomeCracha = "Usuario",
                 Cpf = "333.333.333-33",
@@ -556,7 +571,7 @@ namespace Service.Tests
         {
             var pessoa = new Pessoa
             {
-                Id = 4,
+                Id = 5,
                 Nome = "Papel Invalido",
                 NomeCracha = "Invalido",
                 Cpf = "444.444.444-44",
@@ -594,39 +609,73 @@ namespace Service.Tests
         [TestMethod()]
         public async Task EmailExist_ReturnsFalse_WhenEmailNotRegistered()
         {
-            Assert.IsFalse(await _pessoaService.EmailExist("ninguem@teste.com", "000.000.000-00"));
+            var (pessoaServiceLocal, _) = QueryableStore();
+
+            Assert.IsFalse(await pessoaServiceLocal.EmailExist("ninguem@teste.com", "000.000.000-00"));
         }
 
         [TestMethod()]
         public async Task EmailExist_ReturnsFalse_WhenEmailBelongsToSameCpf()
         {
-            var pessoa = _pessoaService.Get(1);
+            var pessoa = _pessoaService.Get(2);
             var usuario = new UsuarioIdentity
             {
-                UserName = pessoa.Cpf,
+                UserName = Util.Methods.RemoveNaoNumericos(pessoa.Cpf),
                 Email = pessoa.Email,
                 PhoneNumber = pessoa.Telefone1,
                 EmailConfirmed = true
             };
-            await _userManager.CreateAsync(usuario, "Temp@1234!");
+            var (pessoaServiceLocal, _) = QueryableStore(new List<UsuarioIdentity> { usuario });
 
-            Assert.IsFalse(await _pessoaService.EmailExist(pessoa.Email, pessoa.Cpf));
+            Assert.IsFalse(await pessoaServiceLocal.EmailExist(pessoa.Email, pessoa.Cpf));
         }
 
         [TestMethod()]
-        public async Task EmailExist_ReturnsTrue_WhenEmailBelongsToOtherCpf()
+        public async Task EmailExist_ReturnsTrue_EmailDuplicado()
         {
             var pessoa = _pessoaService.Get(1);
+            var pessoaDuplicada = _pessoaService.Get(4);
+            
             var usuario = new UsuarioIdentity
             {
-                UserName = pessoa.Cpf,
+                UserName = Util.Methods.RemoveNaoNumericos(pessoa.Cpf),
                 Email = pessoa.Email,
                 PhoneNumber = pessoa.Telefone1,
                 EmailConfirmed = true
             };
-            await _userManager.CreateAsync(usuario, "Temp@1234!");
+            var usuarioDuplicado = new UsuarioIdentity
+            {
+                UserName = Util.Methods.RemoveNaoNumericos(pessoaDuplicada.Cpf),
+                Email = pessoaDuplicada.Email,
+                PhoneNumber = pessoaDuplicada.Telefone1,
+                EmailConfirmed = true
+            };
+           
+           
+            var lista = new List<UsuarioIdentity> { usuario, usuarioDuplicado };
+            var (pessoaServiceLocal, userManagerLocal) = QueryableStore(lista);
+            await userManagerLocal.CreateAsync(usuario, "Temp@1234!");
+            await userManagerLocal.CreateAsync(usuarioDuplicado, "Temp@1234!");
+            Assert.IsTrue(await pessoaServiceLocal.EmailExist(pessoaDuplicada.Email, pessoaDuplicada.Cpf));
+        
+        }
 
-            Assert.IsTrue(await _pessoaService.EmailExist(pessoa.Email, "000.000.000-00"));
+        [TestMethod()]
+        public async Task EmailExist_ReturnsTrue_EmailExistCpfDiferente()
+        {
+            var pessoa = _pessoaService.Get(2);
+            var usuario = new UsuarioIdentity
+            {
+                UserName = Util.Methods.RemoveNaoNumericos(pessoa.Cpf),
+                Email = pessoa.Email,
+                PhoneNumber = pessoa.Telefone1,
+                EmailConfirmed = true
+            };
+            var lista = new List<UsuarioIdentity> { usuario};
+            var (pessoaServiceLocal, userManagerLocal) = QueryableStore(lista);
+            await userManagerLocal.CreateAsync(usuario, "Temp@1234!");
+            Assert.IsTrue(await pessoaServiceLocal.EmailExist(pessoa.Email, "040.268.930-57"));
+
         }
 
         [TestMethod()]
@@ -717,7 +766,7 @@ namespace Service.Tests
             Assert.IsFalse(sucesso);
             Assert.AreEqual(" Não é possível remover o último administrador do sistema.", mensagem);
             Assert.IsNotNull(_pessoaService.Get(1));
-            Assert.AreEqual(3, _pessoaService.GetAll().Count());
+            Assert.AreEqual(4, _pessoaService.GetAll().Count());
             Assert.IsTrue(await _userManager.IsInRoleAsync(usuario, "ADMINISTRADOR"));
         }
 
@@ -755,7 +804,7 @@ namespace Service.Tests
 
             Assert.IsTrue(sucesso);
             Assert.IsNull(_pessoaService.Get(2));
-            Assert.AreEqual(2, _pessoaService.GetAll().Count());
+            Assert.AreEqual(3, _pessoaService.GetAll().Count());
         }
 
         [TestMethod()]
@@ -795,6 +844,28 @@ namespace Service.Tests
 
             Assert.IsTrue(sucesso);
             Assert.IsTrue(_inscricaoService.IsInscrito(pessoa.Id, 1));
+        }
+
+        private (IPessoaService service, MockUserManager<UsuarioIdentity> userManager) QueryableStore(List<UsuarioIdentity> usuariosIniciais = null)
+        {
+            var listaUsuarios = usuariosIniciais ?? new List<UsuarioIdentity>();
+
+            var userStoreMock = new Mock<IQueryableUserStore<UsuarioIdentity>>();
+
+            userStoreMock.As<IQueryableUserStore<UsuarioIdentity>>()
+                         .Setup(x => x.Users)
+                         .Returns(() => listaUsuarios.AsQueryable());
+
+            var userManagerLocal = new MockUserManager<UsuarioIdentity>(userStoreMock.Object);
+
+            var pessoaServiceLocal = new PessoaService(
+                userManagerLocal,
+                _context,
+                _inscricaoService,
+                _signInManager
+            );
+
+            return (pessoaServiceLocal, userManagerLocal);
         }
     }
 }
