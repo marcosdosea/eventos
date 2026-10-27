@@ -279,6 +279,33 @@ namespace Service
             return _context.Eventos.AsNoTracking();
         }
 
+        /// <summary>
+        /// Retorna os eventos ativos e vigentes para a vitrine da Home.
+        /// Aplica filtros: Status == "A", inscrições abertas ou em breve, e filtro opcional por estado (UF).
+        /// Eventos expirados (com DataFim < DateTime.Now ou DataFimInscricao < DateTime.Now) são excluídos.
+        /// </summary>
+        /// <param name="uf">Sigla da Unidade Federativa (UF) ou null/vazio para Todo o Brasil</param>
+        /// <returns>Lista de eventos vigentes</returns>
+        public IEnumerable<Evento> GetEventosVitrine(string? uf = null)
+        {
+            var now = DateTime.Now;
+            var query = _context.Eventos.AsNoTracking().Where(e => e.Status == "A");
+
+            if (!string.IsNullOrWhiteSpace(uf))
+            {
+                var ufLimpa = uf.Trim().ToUpper();
+                query = query.Where(e => e.Estado != null && e.Estado.Trim().ToUpper() == ufLimpa);
+            }
+
+            query = query.Where(e =>
+                e.DataFim.HasValue && e.DataFim.Value >= now &&
+                e.DataInicioInscricao.HasValue &&
+                (!e.DataFimInscricao.HasValue || e.DataFimInscricao.Value >= now)
+            );
+
+            return query.OrderBy(e => e.DataInicio ?? e.DataInicioInscricao).ToList();
+        }
+
         public IEnumerable<Evento> GetEventByCpf(string userCpf, uint idPapel)
         {
             var pessoa = _context.Pessoas.AsNoTracking().FirstOrDefault(p => p.Cpf == userCpf);

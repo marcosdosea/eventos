@@ -20,7 +20,7 @@
         <div class="container-fluid px-3">
             <div class="badge-location-filter">
                 <i class="bi bi-geo-alt-fill"></i>
-                Resultados filtrados por: @(hasCityFilter ? $"{filtroLocal.Cidade} - {filtroLocal.Estado}" : $"Todo o estado ({filtroLocal.Estado})")
+                Resultados filtrados por: @(hasCityFilter ? $"{filtroLocal.Cidade} ({filtroLocal.Estado})" : $"Todo o estado ({filtroLocal.Estado})")
                 <button type="button" class="btn-clear-location" aria-label="Remover filtro de localização" onclick="clearSearchLocationFilter()">
                     <i class="bi bi-x"></i>
                 </button>
@@ -34,8 +34,8 @@
             {
                 foreach (var evento in Model)
                 {
-                    bool inscricaoAberta = evento.DataInicioInscricao <= DateTime.Now && evento.DataFimInscricao >= DateTime.Now;
-                    bool inscricaoFutura = evento.DataInicioInscricao > DateTime.Now;
+                    bool inscricaoAberta = (!evento.DataInicioInscricao.HasValue || evento.DataInicioInscricao <= DateTime.Now) && (!evento.DataFimInscricao.HasValue || evento.DataFimInscricao >= DateTime.Now);
+                    bool inscricaoFutura = evento.DataInicioInscricao.HasValue && evento.DataInicioInscricao > DateTime.Now;
                     bool eventoGratuito = evento.InscricaoGratuita == 1 || evento.ValorInscricao == 0;
 
                     <div class="card">

@@ -37,15 +37,27 @@ function parseLocationCookie() {
     }
 }
 
+const ESTADOS_BRASIL_NOMES = {
+    'AC': 'Acre', 'AL': 'Alagoas', 'AP': 'Amapá', 'AM': 'Amazonas',
+    'BA': 'Bahia', 'CE': 'Ceará', 'DF': 'Distrito Federal', 'ES': 'Espírito Santo',
+    'GO': 'Goiás', 'MA': 'Maranhão', 'MT': 'Mato Grosso', 'MS': 'Mato Grosso do Sul',
+    'MG': 'Minas Gerais', 'PA': 'Pará', 'PB': 'Paraíba', 'PR': 'Paraná',
+    'PE': 'Pernambuco', 'PI': 'Piauí', 'RJ': 'Rio de Janeiro', 'RN': 'Rio Grande do Norte',
+    'RS': 'Rio Grande do Sul', 'RO': 'Rondônia', 'RR': 'Roraima', 'SC': 'Santa Catarina',
+    'SP': 'São Paulo', 'SE': 'Sergipe', 'TO': 'Tocantins'
+};
+
 function updateHeaderLocationText(locationObj) {
     const headerBtnText = document.getElementById('headerLocationText');
     if (!headerBtnText) return;
 
     if (locationObj && locationObj.estado) {
+        const uf = locationObj.estado.toUpperCase();
         if (locationObj.cidade) {
-            headerBtnText.textContent = `${locationObj.cidade} - ${locationObj.estado}`;
+            headerBtnText.textContent = `${locationObj.cidade} (${uf})`;
         } else {
-            headerBtnText.textContent = `Todo o estado (${locationObj.estado})`;
+            const nomeEstado = ESTADOS_BRASIL_NOMES[uf] || uf;
+            headerBtnText.textContent = `${nomeEstado} (${uf})`;
         }
     } else {
         headerBtnText.textContent = "Todo o Brasil";
@@ -121,15 +133,44 @@ async function reverseGeocodeByIp() {
     }
 }
 
+function isSearchPage() {
+    const path = window.location.pathname.toLowerCase();
+    return path.includes('/home/buscar') || path === '/buscar';
+}
+
 function initializeLocation() {
+    if (isSearchPage()) {
+        // Na tela de busca, o cabeçalho reflete o filtro efetivo da busca vindo do servidor
+        return;
+    }
+
+    const headerBtnText = document.getElementById('headerLocationText');
+    const serverResolvedUf = headerBtnText ? (headerBtnText.getAttribute('data-server-resolved') || '').trim() : '';
     const location = parseLocationCookie();
     
-    // Se não há cookie, ou se o cookie está vazio sem ter sido escolha manual explícita
-    if (!location || (!location.estado && !location.manual)) {
-        requestGeolocation();
-    } else {
-        updateHeaderLocationText(location);
+    // Se o servidor já resolveu o estado ativo (ex: usuário autenticado ou busca por estado específico)
+    if (serverResolvedUf) {
+        if (location && location.manual && location.estado === serverResolvedUf && location.cidade) {
+            updateHeaderLocationText(location);
+        }
+        // Não substitui o header nem dispara geolocalização automática se o servidor já resolveu a localização
+        return;
     }
+
+    // Se temos cookie manual explícito
+    if (location && location.manual) {
+        updateHeaderLocationText(location);
+        return;
+    }
+
+    // Se temos cookie automático persistido
+    if (location && location.estado) {
+        updateHeaderLocationText(location);
+        return;
+    }
+
+    // Visitante novo sem cookie e sem estado resolvido pelo servidor
+    requestGeolocation();
 }
 
 function requestGeolocation() {
@@ -146,6 +187,9 @@ function requestGeolocation() {
                     ipLoc.manual = false;
                     setCookie(LOCATION_COOKIE_NAME, JSON.stringify(ipLoc));
                     updateHeaderLocationText(ipLoc);
+                    if (isHomePage() || isSearchPage()) {
+                        reloadLocationContext();
+                    }
                 } else {
                     setDefaultLocation(false);
                 }
@@ -159,6 +203,9 @@ function requestGeolocation() {
                 ipLoc.manual = false;
                 setCookie(LOCATION_COOKIE_NAME, JSON.stringify(ipLoc));
                 updateHeaderLocationText(ipLoc);
+                if (isHomePage() || isSearchPage()) {
+                    reloadLocationContext();
+                }
             } else {
                 setDefaultLocation(false);
             }
@@ -174,6 +221,9 @@ async function reverseGeocode(lat, lon) {
             console.log("Localização detectada:", locObj);
             setCookie(LOCATION_COOKIE_NAME, JSON.stringify(locObj));
             updateHeaderLocationText(locObj);
+            if (isHomePage() || isSearchPage()) {
+                reloadLocationContext();
+            }
             return;
         }
         
@@ -183,6 +233,9 @@ async function reverseGeocode(lat, lon) {
             ipLoc.manual = false;
             setCookie(LOCATION_COOKIE_NAME, JSON.stringify(ipLoc));
             updateHeaderLocationText(ipLoc);
+            if (isHomePage() || isSearchPage()) {
+                reloadLocationContext();
+            }
             return;
         }
         
@@ -286,7 +339,7 @@ async function detectCurrentLocation() {
 }
 
 function applyDetectedLocation(locObj) {
-    locObj.manual = false;
+    locObj.manual = true;
     setCookie(LOCATION_COOKIE_NAME, JSON.stringify(locObj));
     updateHeaderLocationText(locObj);
 
@@ -312,11 +365,26 @@ function applyDetectedLocation(locObj) {
         if (modal) modal.hide();
     }
 
-    // Se estivermos na tela de busca, recarregar a busca com o novo filtro
-    if (window.location.pathname.toLowerCase().includes('/home/buscar') || window.location.pathname.toLowerCase() === '/buscar') {
+    reloadLocationContext();
+}
+
+function isHomePage() {
+    const path = window.location.pathname.toLowerCase();
+    return path === '/' || path === '/home' || path === '/home/index';
+}
+
+function reloadLocationContext() {
+    const isSearchPage = window.location.pathname.toLowerCase().includes('/home/buscar') || window.location.pathname.toLowerCase() === '/buscar';
+    if (isSearchPage) {
         const searchForm = document.getElementById('headerSearchForm');
         if (searchForm) {
             searchForm.requestSubmit();
+        } else {
+            window.location.reload();
+        }
+    } else if (isHomePage()) {
+        if (window.location.search) {
+            window.location.href = window.location.pathname;
         } else {
             window.location.reload();
         }
@@ -344,13 +412,24 @@ function openLocationModal() {
         btnText.innerHTML = 'Usar minha localização atual';
     }
 
-    // Populate form with current cookie if exists
+    // Populate form with current cookie if exists, or fallback to serverResolvedUf (ViewBag.EstadoAtivo)
+    const estadoSelect = document.getElementById('modalEstado');
+    const serverResolvedUf = (
+        (modalEl ? modalEl.getAttribute('data-server-resolved') : '') ||
+        (estadoSelect ? estadoSelect.getAttribute('data-server-resolved') : '') ||
+        (document.getElementById('headerLocationText') ? document.getElementById('headerLocationText').getAttribute('data-server-resolved') : '') ||
+        ''
+    ).trim();
+
     const location = parseLocationCookie();
     if (location && location.estado) {
-        document.getElementById('modalEstado').value = location.estado;
+        if (estadoSelect) estadoSelect.value = location.estado;
         loadCitiesForState(location.estado, location.cidade);
+    } else if (serverResolvedUf) {
+        if (estadoSelect) estadoSelect.value = serverResolvedUf;
+        loadCitiesForState(serverResolvedUf, "");
     } else {
-        document.getElementById('modalEstado').value = "";
+        if (estadoSelect) estadoSelect.value = "";
         const cidadeSelect = document.getElementById('modalCidade');
         if (cidadeSelect) {
             cidadeSelect.innerHTML = '<option value="">Selecione um Estado primeiro</option>';
@@ -416,14 +495,7 @@ function saveManualLocation() {
     if (modal) modal.hide();
 
     // Se estivermos na tela de busca, podemos querer recarregar a busca com o novo filtro
-    if (window.location.pathname.toLowerCase().includes('/home/buscar') || window.location.pathname.toLowerCase() === '/buscar') {
-        const searchForm = document.getElementById('headerSearchForm');
-        if (searchForm) {
-            searchForm.requestSubmit();
-        } else {
-            window.location.reload();
-        }
-    }
+    reloadLocationContext();
 }
 
 function clearManualLocation() {
@@ -435,12 +507,7 @@ function clearManualLocation() {
     const modal = bootstrap.Modal.getInstance(modalEl);
     if (modal) modal.hide();
 
-    if (window.location.pathname.toLowerCase().includes('/home/buscar')) {
-         const searchForm = document.getElementById('headerSearchForm');
-         if (searchForm) {
-             searchForm.requestSubmit();
-         }
-    }
+    reloadLocationContext();
 }
 
 // Ensure the header search form appends the location correctly when submitted

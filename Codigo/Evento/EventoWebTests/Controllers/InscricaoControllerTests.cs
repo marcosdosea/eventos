@@ -722,7 +722,7 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public void RealizarInscricaoTest_Get_PeriodoInscricaoNaoIniciado_RedirecionaParaHomeComMensagem()
+        public void RealizarInscricaoTest_Get_PeriodoInscricaoNaoIniciado_PermiteVisualizarDetalhes()
         {
             // Arrange
             var evento = new Evento
@@ -738,11 +738,10 @@ namespace EventoWeb.Controllers.Tests
             var result = controller.realizarInscricao(1, (uint?)null);
 
             // Assert
-            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
-            var redirect = (RedirectToActionResult)result;
-            Assert.AreEqual("Index", redirect.ActionName);
-            Assert.AreEqual("Home", redirect.ControllerName);
-            Assert.AreEqual("O período de inscrições para este evento ainda não começou.", controller.TempData["ParticipanteMessage"]);
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var viewResult = (ViewResult)result;
+            Assert.IsInstanceOfType(viewResult.Model, typeof(InscricaoEventoViewModel));
+            Assert.AreEqual(true, controller.ViewBag.InscricaoFutura);
         }
 
         [TestMethod()]
