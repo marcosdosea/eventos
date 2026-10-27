@@ -235,7 +235,29 @@ namespace EventoWeb.Controllers
             ViewBag.TamanhoPagina = tamanhoPagina;
             ViewBag.TotalRegistros = totalRegistros;
 
-            var estadoAtivo = ObterEstadoAtivo(filter.Estado);
+            string? estadoAtivo = null;
+            if (!string.IsNullOrWhiteSpace(filter.Estado))
+            {
+                var ufTrim = filter.Estado.Trim();
+                if (!ufTrim.Equals("TODOS", StringComparison.OrdinalIgnoreCase) &&
+                    !ufTrim.Equals("BR", StringComparison.OrdinalIgnoreCase))
+                {
+                    var ufUpper = ufTrim.ToUpper();
+                    try
+                    {
+                        var estadoValido = _estadosbrasilService.Get(ufUpper);
+                        if (estadoValido != null)
+                        {
+                            estadoAtivo = ufUpper;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, "Erro ao validar UF fornecida no filtro de busca.");
+                    }
+                }
+            }
+
             ViewBag.EstadoAtivo = estadoAtivo;
             string nomeEstado = "Todo o Brasil";
             if (!string.IsNullOrEmpty(estadoAtivo))

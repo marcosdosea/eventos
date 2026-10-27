@@ -168,8 +168,8 @@
                         <div class="cards-container">
                             @foreach (var evento in Model)
                             {
-                                bool inscricaoAberta = evento.DataInicioInscricao <= DateTime.Now && evento.DataFimInscricao >= DateTime.Now;
-                                bool inscricaoFutura = evento.DataInicioInscricao > DateTime.Now;
+                                bool inscricaoAberta = (!evento.DataInicioInscricao.HasValue || evento.DataInicioInscricao <= DateTime.Now) && (!evento.DataFimInscricao.HasValue || evento.DataFimInscricao >= DateTime.Now);
+                                bool inscricaoFutura = evento.DataInicioInscricao.HasValue && evento.DataInicioInscricao > DateTime.Now;
                                 bool eventoGratuito = evento.InscricaoGratuita == 1 || evento.ValorInscricao == 0;
 
                                 <div class="card">
@@ -239,8 +239,8 @@
                                 {
                                     foreach (var evento in eventosShows)
                                     {
-                                        bool inscricaoAberta = evento.DataInicioInscricao <= DateTime.Now && evento.DataFimInscricao >= DateTime.Now;
-                                        bool inscricaoFutura = evento.DataInicioInscricao > DateTime.Now;
+                                        bool inscricaoAberta = (!evento.DataInicioInscricao.HasValue || evento.DataInicioInscricao <= DateTime.Now) && (!evento.DataFimInscricao.HasValue || evento.DataFimInscricao >= DateTime.Now);
+                                        bool inscricaoFutura = evento.DataInicioInscricao.HasValue && evento.DataInicioInscricao > DateTime.Now;
                                         bool eventoGratuito = evento.InscricaoGratuita == 1 || evento.ValorInscricao == 0;
 
                                         <div class="card">
@@ -316,8 +316,8 @@
                                 {
                                     foreach (var evento in eventosPalestra)
                                     {
-                                        bool inscricaoAberta = evento.DataInicioInscricao <= DateTime.Now && evento.DataFimInscricao >= DateTime.Now;
-                                        bool inscricaoFutura = evento.DataInicioInscricao > DateTime.Now;
+                                        bool inscricaoAberta = (!evento.DataInicioInscricao.HasValue || evento.DataInicioInscricao <= DateTime.Now) && (!evento.DataFimInscricao.HasValue || evento.DataFimInscricao >= DateTime.Now);
+                                        bool inscricaoFutura = evento.DataInicioInscricao.HasValue && evento.DataInicioInscricao > DateTime.Now;
                                         bool eventoGratuito = evento.InscricaoGratuita == 1 || evento.ValorInscricao == 0;
 
                                         <div class="card">
@@ -393,8 +393,8 @@
                                 {
                                     foreach (var evento in eventosWorkshop)
                                     {
-                                        bool inscricaoAberta = evento.DataInicioInscricao <= DateTime.Now && evento.DataFimInscricao >= DateTime.Now;
-                                        bool inscricaoFutura = evento.DataInicioInscricao > DateTime.Now;
+                                        bool inscricaoAberta = (!evento.DataInicioInscricao.HasValue || evento.DataInicioInscricao <= DateTime.Now) && (!evento.DataFimInscricao.HasValue || evento.DataFimInscricao >= DateTime.Now);
+                                        bool inscricaoFutura = evento.DataInicioInscricao.HasValue && evento.DataInicioInscricao > DateTime.Now;
                                         bool eventoGratuito = evento.InscricaoGratuita == 1 || evento.ValorInscricao == 0;
 
                                         <div class="card">

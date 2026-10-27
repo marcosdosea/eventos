@@ -37,15 +37,27 @@ function parseLocationCookie() {
     }
 }
 
+const ESTADOS_BRASIL_NOMES = {
+    'AC': 'Acre', 'AL': 'Alagoas', 'AP': 'Amapá', 'AM': 'Amazonas',
+    'BA': 'Bahia', 'CE': 'Ceará', 'DF': 'Distrito Federal', 'ES': 'Espírito Santo',
+    'GO': 'Goiás', 'MA': 'Maranhão', 'MT': 'Mato Grosso', 'MS': 'Mato Grosso do Sul',
+    'MG': 'Minas Gerais', 'PA': 'Pará', 'PB': 'Paraíba', 'PR': 'Paraná',
+    'PE': 'Pernambuco', 'PI': 'Piauí', 'RJ': 'Rio de Janeiro', 'RN': 'Rio Grande do Norte',
+    'RS': 'Rio Grande do Sul', 'RO': 'Rondônia', 'RR': 'Roraima', 'SC': 'Santa Catarina',
+    'SP': 'São Paulo', 'SE': 'Sergipe', 'TO': 'Tocantins'
+};
+
 function updateHeaderLocationText(locationObj) {
     const headerBtnText = document.getElementById('headerLocationText');
     if (!headerBtnText) return;
 
     if (locationObj && locationObj.estado) {
+        const uf = locationObj.estado.toUpperCase();
         if (locationObj.cidade) {
-            headerBtnText.textContent = `${locationObj.cidade} - ${locationObj.estado}`;
+            headerBtnText.textContent = `${locationObj.cidade} (${uf})`;
         } else {
-            headerBtnText.textContent = `Todo o estado (${locationObj.estado})`;
+            const nomeEstado = ESTADOS_BRASIL_NOMES[uf] || uf;
+            headerBtnText.textContent = `${nomeEstado} (${uf})`;
         }
     } else {
         headerBtnText.textContent = "Todo o Brasil";
@@ -127,6 +139,11 @@ function isSearchPage() {
 }
 
 function initializeLocation() {
+    if (isSearchPage()) {
+        // Na tela de busca, o cabeçalho reflete o filtro efetivo da busca vindo do servidor
+        return;
+    }
+
     const headerBtnText = document.getElementById('headerLocationText');
     const serverResolvedUf = headerBtnText ? (headerBtnText.getAttribute('data-server-resolved') || '').trim() : '';
     const location = parseLocationCookie();
@@ -395,13 +412,24 @@ function openLocationModal() {
         btnText.innerHTML = 'Usar minha localização atual';
     }
 
-    // Populate form with current cookie if exists
+    // Populate form with current cookie if exists, or fallback to serverResolvedUf (ViewBag.EstadoAtivo)
+    const estadoSelect = document.getElementById('modalEstado');
+    const serverResolvedUf = (
+        (modalEl ? modalEl.getAttribute('data-server-resolved') : '') ||
+        (estadoSelect ? estadoSelect.getAttribute('data-server-resolved') : '') ||
+        (document.getElementById('headerLocationText') ? document.getElementById('headerLocationText').getAttribute('data-server-resolved') : '') ||
+        ''
+    ).trim();
+
     const location = parseLocationCookie();
     if (location && location.estado) {
-        document.getElementById('modalEstado').value = location.estado;
+        if (estadoSelect) estadoSelect.value = location.estado;
         loadCitiesForState(location.estado, location.cidade);
+    } else if (serverResolvedUf) {
+        if (estadoSelect) estadoSelect.value = serverResolvedUf;
+        loadCitiesForState(serverResolvedUf, "");
     } else {
-        document.getElementById('modalEstado').value = "";
+        if (estadoSelect) estadoSelect.value = "";
         const cidadeSelect = document.getElementById('modalCidade');
         if (cidadeSelect) {
             cidadeSelect.innerHTML = '<option value="">Selecione um Estado primeiro</option>';

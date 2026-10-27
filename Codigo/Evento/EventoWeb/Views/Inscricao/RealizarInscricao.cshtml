@@ -222,19 +222,7 @@
                     </article>
                 </div>
 
-                <!-- Coluna da Direita: Card Informativo Inscrições em Breve -->
-                <div class="inscricao-right-col">
-                    <aside class="alert alert-info mt-3 card-inscricao text-center alert-inscricao" role="alert">
-                        <h4 class="alert-heading text-primary"><i class="bi bi-clock-history me-2"></i>Inscrições em Breve</h4>
-                        <p>O período de inscrições para este evento ainda não começou.</p>
-                        @if (Model.eventoNavigation.DataInicioInscricao.HasValue)
-                        {
-                            <p class="mb-2"><strong>Abertura das inscrições:</strong><br />@Model.eventoNavigation.DataInicioInscricao.Value.ToString("dd/MM/yyyy 'às' HH:mm")</p>
-                        }
-                        <hr>
-                        <a href="@ViewBag.UrlVoltar" class="btn btn-outline-secondary mt-2">Voltar para Eventos</a>
-                    </aside>
-                </div>
+                <partial name="_InscricaoEmBreveCard" model="Model.eventoNavigation.DataInicioInscricao" />
             </div>
         }
         else
