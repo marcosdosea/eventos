@@ -662,6 +662,24 @@ namespace Service.Tests
         }
 
         [TestMethod()]
+        public async Task EmailExist_ReturnsTrue_EmailExistCpfDiferente()
+        {
+            var pessoa = _pessoaService.Get(2);
+            var usuario = new UsuarioIdentity
+            {
+                UserName = pessoa.Cpf,
+                Email = pessoa.Email,
+                PhoneNumber = pessoa.Telefone1,
+                EmailConfirmed = true
+            };
+            var lista = new List<UsuarioIdentity> { usuario};
+            var (pessoaServiceLocal, userManagerLocal) = QueryableStore(lista);
+            await userManagerLocal.CreateAsync(usuario, "Temp@1234!");
+            Assert.IsTrue(await pessoaServiceLocal.EmailExist(pessoa.Email, "040.268.930-57"));
+
+        }
+
+        [TestMethod()]
         public async Task VerificaEdit_ReturnsFalse_WhenPessoaIsNull()
         {
             Assert.IsFalse(await _pessoaService.VerificaEdit(null));

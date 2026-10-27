@@ -288,10 +288,10 @@ public class PessoaService : IPessoaService
         if (string.IsNullOrWhiteSpace(email))
             return false;
         string cpfLimpo = Util.Methods.RemoveNaoNumericos(cpf);
-        bool existeDuplicado = _userManager.Users
+        bool emUso = _userManager.Users
             .Any(u => u.Email == email && u.UserName != cpfLimpo);
 
-        return await Task.FromResult(existeDuplicado);
+        return await Task.FromResult(emUso);
     }
     public async Task<bool>  EmailConfirmado(string email)
     {
