@@ -41,7 +41,7 @@ namespace Service.Tests
             _eventoService = new EventoService(_context);
             _subeventoService = new SubeventoService(_context);
             _inscricaoService = new InscricaoService(_context, new MockUserManager<UsuarioIdentity>(), _eventoService, _subeventoService);
-            _inscricaopessoaeventoService = new InscricaopessoaeventoService(_context, _eventoService);
+            _inscricaopessoaeventoService = new InscricaopessoaeventoService(_context, _eventoService, _subeventoService);
 
             SemearBase();
         }
@@ -350,18 +350,39 @@ BEGIN SELECT RAISE(ABORT, 'falha simulada no banco'); END;";
                 ValorTotal = 80
             });
             _context.SaveChanges();
+
+            _eventoService.AtualizarVagasDisponiveis(1);
             _context.ChangeTracker.Clear();
 
-            var evento = _context.Eventos.First();
-            evento.VagasDisponiveis = 199;
-            _context.SaveChanges();
-            _context.ChangeTracker.Clear();
+            Assert.AreEqual(198, _context.Eventos.First().VagasDisponiveis);
 
             _inscricaopessoaeventoService.Delete(102);
 
             _context.ChangeTracker.Clear();
             Assert.AreEqual(0, _context.Inscricaopessoaeventos.Count(i => i.Id == 102));
             Assert.AreEqual(199, _context.Eventos.First().VagasDisponiveis);
+        }
+
+        [TestMethod()]
+        public void InscricaopessoaeventoServiceDelete_ComPagamentoESubevento_RemoveRegistrosERecalculaVagas()
+        {
+            _eventoService.AtualizarVagasDisponiveis(1);
+            _subeventoService.AtualizarVagasDisponiveis(10);
+            _context.ChangeTracker.Clear();
+
+            Assert.AreEqual(199, _context.Eventos.First().VagasDisponiveis);
+            Assert.AreEqual(49u, _context.Subeventos.First().VagasDisponiveis);
+            Assert.AreEqual(1, _context.Pagamentos.Count(p => p.IdInscricaoPessoaEvento == 101));
+            Assert.AreEqual(1, _context.Inscricaopessoasubeventos.Count(s => s.IdPessoa == 1 && s.IdSubEvento == 10));
+
+            _inscricaopessoaeventoService.Delete(101);
+
+            _context.ChangeTracker.Clear();
+            Assert.AreEqual(0, _context.Inscricaopessoaeventos.Count(i => i.Id == 101));
+            Assert.AreEqual(0, _context.Pagamentos.Count(p => p.IdInscricaoPessoaEvento == 101));
+            Assert.AreEqual(0, _context.Inscricaopessoasubeventos.Count(s => s.IdPessoa == 1 && s.IdSubEvento == 10));
+            Assert.AreEqual(200, _context.Eventos.First().VagasDisponiveis);
+            Assert.AreEqual(50u, _context.Subeventos.First().VagasDisponiveis);
         }
     }
 }
