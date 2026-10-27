@@ -2,7 +2,12 @@
 
 @{
     ViewData["Title"] = "Modelos de Crachás";
-    var eventoId = ViewData["EventoId"];
+    var eventoIdObj = ViewData["EventoId"];
+    uint eventoId = 0;
+    if (eventoIdObj != null && uint.TryParse(eventoIdObj.ToString(), out var idParsed))
+    {
+        eventoId = idParsed;
+    }
     var eventoNome = ViewData["EventoNome"]?.ToString() ?? "Todos os Eventos";
 }
 
@@ -17,11 +22,25 @@
                 <i class="bi bi-search text-muted me-2"></i>
                 <input type="text" id="filtroModelos" class="cracha-search-input" placeholder="Filtrar modelos cadastrados..." />
             </div>
-            <a asp-action="EmitirCracha" asp-route-idEvento="@eventoId" class="btn btn-outline-blue-normal bg-white px-3 py-2 rounded-3 fw-semibold shadow-sm d-flex align-items-center gap-2">
+            @if (eventoId > 0)
+            {
+                <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@eventoId" class="btn btn-outline-secondary rounded-3 fw-semibold px-3 py-2 shadow-sm d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>Voltar</span>
+                </a>
+            }
+            else
+            {
+                <a asp-controller="Evento" asp-action="Index" class="btn btn-outline-secondary rounded-3 fw-semibold px-3 py-2 shadow-sm d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>Voltar</span>
+                </a>
+            }
+            <a asp-action="EmitirCracha" asp-route-idEvento="@(eventoId > 0 ? (object)eventoId : null)" class="btn btn-outline-blue-normal bg-white px-3 py-2 rounded-3 fw-semibold shadow-sm d-flex align-items-center gap-2">
                 <i class="bi bi-printer"></i>
                 <span>Emitir Crachás</span>
             </a>
-            <a asp-action="Create" asp-route-idEvento="@eventoId" class="btn btn-blue-normal color-white px-3 py-2 rounded-3 fw-semibold shadow-sm d-flex align-items-center gap-2">
+            <a asp-action="Create" asp-route-idEvento="@(eventoId > 0 ? (object)eventoId : null)" class="btn btn-blue-normal color-white px-3 py-2 rounded-3 fw-semibold shadow-sm d-flex align-items-center gap-2">
                 <i class="bi bi-plus-lg"></i>
                 <span>Novo Modelo</span>
             </a>

@@ -916,6 +916,11 @@ namespace EventoWeb.Controllers
                         {
                         }
 
+                        if (string.IsNullOrEmpty(qrCodeBase64))
+                        {
+                            qrCodeBase64 = GerarQrCodeSeguro($"[{ins.IdPessoa}] [{idEventoAlvo}] [{ins.Id}]");
+                        }
+
                         string? fotoDataUrl = null;
                         bool temFoto = pessoa?.Foto != null && pessoa.Foto.Length > 0;
                         if (temFoto)

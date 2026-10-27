@@ -883,6 +883,27 @@
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
+
+    /* Quando imprimindo em lote, oculta a tela principal e exibe apenas o container de lote */
+    body.imprimindo-lote .cracha-page-container {
+        display: none !important;
+    }
+
+    body.imprimindo-lote #containerImpressaoLoteA4 {
+        display: block !important;
+        visibility: visible !important;
+    }
+
+    body.imprimindo-lote .print-grid-lote {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10mm !important;
+        padding: 5mm !important;
+    }
+
+    body.imprimindo-lote .cracha-print-item .cracha-physical-card {
+        margin: 0 auto 10mm auto !important;
+    }
 }
 
 /* --------------------------------------------------------------------------

@@ -16,6 +16,22 @@
             <h1 class="cracha-title blue-normal mb-1">Emissão e Pré-visualização de Crachás</h1>
             <p class="text-muted small mb-0">Homologação, filtragem e emissão gráfica de credenciais e crachás para eventos</p>
         </div>
+        <div>
+            @if (eventoAtualId > 0)
+            {
+                <a asp-action="Index" asp-route-idEvento="@eventoAtualId" class="btn btn-outline-secondary rounded-3 fw-semibold px-3 py-2 d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>Voltar</span>
+                </a>
+            }
+            else
+            {
+                <a asp-action="Index" class="btn btn-outline-secondary rounded-3 fw-semibold px-3 py-2 d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>Voltar</span>
+                </a>
+            }
+        </div>
     </div>
 
     <!-- Parâmetros de Produção e Filtragem -->
@@ -373,7 +389,7 @@
                 </div>
 
                 <!-- Botões de Ação sob o Preview -->
-                <div class="d-flex align-items-center justify-content-end gap-3 mt-3 pt-3 border-top">
+                <div class="d-flex align-items-center justify-content-center gap-3 mt-3 pt-3 border-top">
                     <button type="button" id="btnExportarPng" class="btn btn-blue-normal color-white rounded-3 fw-semibold px-4 py-2 shadow-sm d-inline-flex align-items-center gap-2">
                         <i class="bi bi-download"></i>
                         <span>Exportar PNG</span>

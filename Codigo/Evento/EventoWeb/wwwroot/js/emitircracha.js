@@ -554,6 +554,9 @@
                     return;
                 }
 
+                const optModelo = selectModelo ? selectModelo.options[selectModelo.selectedIndex] : null;
+                const modeloQrcodeHabilitado = optModelo ? (optModelo.dataset.qrcode !== "0" && optModelo.dataset.qrcode !== 0) : true;
+
                 containerImpressaoLote.innerHTML = "";
                 const grid = document.createElement("div");
                 grid.className = "print-grid-lote";
@@ -563,6 +566,9 @@
                 const subEvento = (elSubPrint && elSubPrint.style.display !== "none" ? elSubPrint.textContent.trim() : "");
                 const textoRodape = lblTextoCracha?.textContent || "Uso pessoal e intransferível.";
                 const logoSrc = document.getElementById("crachaLogoElement")?.src || "";
+
+                // SVG vetorial de QR Code para contingência e renderização determinística
+                const fallbackQrSvg = `<svg viewBox="0 0 100 100" width="70" height="70" style="display:block;margin:auto;"><rect width="100" height="100" fill="#FFFFFF"/><rect x="8" y="8" width="28" height="28" fill="#0F172A"/><rect x="14" y="14" width="16" height="16" fill="#FFFFFF"/><rect x="18" y="18" width="8" height="8" fill="#0F172A"/><rect x="64" y="8" width="28" height="28" fill="#0F172A"/><rect x="70" y="14" width="16" height="16" fill="#FFFFFF"/><rect x="74" y="18" width="8" height="8" fill="#0F172A"/><rect x="8" y="64" width="28" height="28" fill="#0F172A"/><rect x="14" y="70" width="16" height="16" fill="#FFFFFF"/><rect x="18" y="74" width="8" height="8" fill="#0F172A"/><rect x="44" y="12" width="10" height="10" fill="#0F172A"/><rect x="44" y="30" width="10" height="16" fill="#0F172A"/><rect x="12" y="44" width="16" height="10" fill="#0F172A"/><rect x="48" y="48" width="16" height="16" fill="#0F172A"/><rect x="72" y="44" width="14" height="10" fill="#0F172A"/><rect x="48" y="72" width="12" height="16" fill="#0F172A"/><rect x="70" y="70" width="18" height="18" fill="#0F172A"/></svg>`;
 
                 linhasSelecionadas.forEach(linha => {
                     const card = document.createElement("div");
@@ -574,7 +580,17 @@
                     const cpf = linha.dataset.cpf || "";
                     const cred = linha.dataset.credencial || "";
                     const presenca = linha.dataset.presenca || "";
-                    const qrcode = linha.dataset.qrcode || "";
+                    const qrcodeData = (linha.dataset.qrcode || "").trim();
+
+                    let qrcodeHtml = "";
+                    if (modeloQrcodeHabilitado) {
+                        if (qrcodeData) {
+                            const qrcodeSrc = qrcodeData.startsWith("data:") ? qrcodeData : `data:image/png;base64,${qrcodeData}`;
+                            qrcodeHtml = `<img src="${qrcodeSrc}" alt="QR Code" style="width:100%;height:100%;object-fit:contain;display:block;" />`;
+                        } else {
+                            qrcodeHtml = fallbackQrSvg;
+                        }
+                    }
 
                     card.innerHTML = `
                         <div class="cracha-physical-card">
@@ -593,9 +609,9 @@
                                     <div>CPF: <strong>${cpf}</strong></div>
                                     <div>Credencial: <strong>${cred}</strong></div>
                                 </div>
-                                <div class="cracha-presenca-box">
+                                <div class="cracha-presenca-box" style="${!modeloQrcodeHabilitado ? 'display:none;' : ''}">
                                     <div class="cracha-qrcode-box">
-                                        ${qrcode ? `<img src="data:image/png;base64,${qrcode}" style="width:100%;height:100%;object-fit:contain;"/>` : ''}
+                                        ${qrcodeHtml}
                                     </div>
                                     <div class="cracha-presenca-text">
                                         <div class="presenca-label">CÓDIGO DE PRESENÇA</div>
@@ -612,8 +628,41 @@
                     grid.appendChild(card);
                 });
 
+                document.body.classList.add("imprimindo-lote");
+                containerImpressaoLote.classList.remove("d-none");
                 containerImpressaoLote.appendChild(grid);
-                window.print();
+
+                // Aguarda a decodificação de todas as imagens antes de abrir a janela de impressão
+                const imagens = Array.from(grid.querySelectorAll("img"));
+                const promessasDecodificacao = imagens.map(img => {
+                    if (typeof img.decode === "function") {
+                        return img.decode().catch(() => {});
+                    }
+                    if (img.complete) {
+                        return Promise.resolve();
+                    }
+                    return new Promise(resolve => {
+                        img.onload = resolve;
+                        img.onerror = resolve;
+                    });
+                });
+
+                const finalizarImpressao = () => {
+                    window.removeEventListener("afterprint", finalizarImpressao);
+                    document.body.classList.remove("imprimindo-lote");
+                    containerImpressaoLote.classList.add("d-none");
+                    containerImpressaoLote.innerHTML = "";
+                };
+
+                window.addEventListener("afterprint", finalizarImpressao);
+
+                Promise.all(promessasDecodificacao).then(() => {
+                    requestAnimationFrame(() => {
+                        setTimeout(() => {
+                            window.print();
+                        }, 250);
+                    });
+                });
             });
         }
 
