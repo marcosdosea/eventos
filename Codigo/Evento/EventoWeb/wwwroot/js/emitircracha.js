@@ -198,6 +198,21 @@
                     previewQrPlaceholder.style.display = "block";
                 }
             }
+
+            const apto = (linha.dataset.apto === "true");
+            const statusDesc = linha.dataset.statusDesc || (apto ? "Apto" : "Pendente Foto");
+            const badgeVerified = document.querySelector(".participant-verified-badge");
+            if (badgeVerified) {
+                if (apto) {
+                    badgeVerified.style.backgroundColor = "#10B981";
+                    badgeVerified.title = "Participante Apto para Emissão";
+                    badgeVerified.innerHTML = '<i class="bi bi-check-lg"></i>';
+                } else {
+                    badgeVerified.style.backgroundColor = "#F59E0B";
+                    badgeVerified.title = statusDesc;
+                    badgeVerified.innerHTML = '<i class="bi bi-clock-history"></i>';
+                }
+            }
         }
 
         // Eventos da Tabela
@@ -410,10 +425,13 @@
                 ctx.font = "bold 24px Segoe UI, sans-serif";
                 ctx.fillText(nomeEvento, largura / 2, 130);
 
-                const subEvento = (document.getElementById("lblPreviewSubtituloEvento")?.textContent || "TECNOLOGIA & GOVERNANÇA 2025").toUpperCase();
-                ctx.font = "bold 16px Segoe UI, sans-serif";
-                ctx.fillStyle = "#E0E7FF";
-                ctx.fillText(subEvento, largura / 2, 165);
+                const elSub = document.getElementById("lblPreviewSubtituloEvento");
+                const subEvento = (elSub && elSub.style.display !== "none" ? elSub.textContent.trim() : "").toUpperCase();
+                if (subEvento) {
+                    ctx.font = "bold 16px Segoe UI, sans-serif";
+                    ctx.fillStyle = "#E0E7FF";
+                    ctx.fillText(subEvento, largura / 2, 165);
+                }
 
                 // Foto ou Avatar
                 const centroY = 320;
@@ -435,13 +453,15 @@
                 ctx.restore();
 
                 // Selo de verificado
-                ctx.fillStyle = "#10B981";
+                const linhaAtiva = document.querySelector(".linha-ativa-preview");
+                const aptoExport = linhaAtiva ? (linhaAtiva.dataset.apto === "true") : true;
+                ctx.fillStyle = aptoExport ? "#10B981" : "#F59E0B";
                 ctx.beginPath();
                 ctx.arc(largura / 2 + 50, centroY + 50, 18, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.fillStyle = "#FFFFFF";
                 ctx.font = "bold 18px Segoe UI, sans-serif";
-                ctx.fillText("✓", largura / 2 + 50, centroY + 56);
+                ctx.fillText(aptoExport ? "✓" : "!", largura / 2 + 50, centroY + 56);
 
                 // Nome do participante
                 const nomePart = (previewNome?.textContent || "PARTICIPANTE").toUpperCase();
@@ -539,7 +559,8 @@
                 grid.className = "print-grid-lote";
 
                 const nomeEvento = document.getElementById("lblPreviewNomeEvento")?.textContent || "EVENTO";
-                const subEvento = document.getElementById("lblPreviewSubtituloEvento")?.textContent || "TECNOLOGIA & GOVERNANÇA 2025";
+                const elSubPrint = document.getElementById("lblPreviewSubtituloEvento");
+                const subEvento = (elSubPrint && elSubPrint.style.display !== "none" ? elSubPrint.textContent.trim() : "");
                 const textoRodape = lblTextoCracha?.textContent || "Uso pessoal e intransferível.";
                 const logoSrc = document.getElementById("crachaLogoElement")?.src || "";
 
@@ -562,7 +583,7 @@
                                 <div class="cracha-header-sub"><span>BORA LÁ EVENTOS</span></div>
                                 ${logoSrc ? `<div class="cracha-logo-institucional-container"><img src="${logoSrc}" class="cracha-logo-institucional-img" alt="Logo"/></div>` : ''}
                                 <h6 class="cracha-evento-title">${nomeEvento}</h6>
-                                <div class="cracha-evento-subtitle">${subEvento}</div>
+                                ${subEvento ? `<div class="cracha-evento-subtitle">${subEvento}</div>` : ''}
                             </div>
                             <div class="cracha-body">
                                 <div class="participant-name">${nome}</div>

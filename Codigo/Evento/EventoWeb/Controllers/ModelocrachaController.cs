@@ -917,13 +917,15 @@ namespace EventoWeb.Controllers
                         }
 
                         string? fotoDataUrl = null;
-                        if (pessoa?.Foto != null && pessoa.Foto.Length > 0)
+                        bool temFoto = pessoa?.Foto != null && pessoa.Foto.Length > 0;
+                        if (temFoto)
                         {
-                            fotoDataUrl = $"data:image/jpeg;base64,{Convert.ToBase64String(pessoa.Foto)}";
+                            fotoDataUrl = $"data:image/jpeg;base64,{Convert.ToBase64String(pessoa!.Foto)}";
                         }
 
-                        bool statusApto = ins.Status == "A" || ins.Status == "1" || string.IsNullOrEmpty(ins.Status);
-                        string statusDescricao = statusApto ? "Apto" : "Pendente Foto";
+                        bool inscricaoAtiva = ins.Status == "A" || ins.Status == "1" || string.IsNullOrEmpty(ins.Status);
+                        bool statusApto = inscricaoAtiva && temFoto;
+                        string statusDescricao = statusApto ? "Apto" : (!temFoto ? "Pendente Foto" : "Inscrição Pendente");
 
                         participantes.Add(new ParticipanteCrachaItemModel
                         {
@@ -967,7 +969,7 @@ namespace EventoWeb.Controllers
             {
                 IdEvento = idEventoAlvo,
                 NomeEvento = nomeEvento,
-                SubtituloEvento = "TECNOLOGIA & GOVERNANÇA 2025",
+                SubtituloEvento = null,
                 IdModelo = modeloSelecionado?.Id,
                 NomeModelo = modeloSelecionado != null ? $"Gabarito #{modeloSelecionado.Id} - 90×130mm" : "Modelo Padrão Vertical 9×13cm",
                 TextoModelo = textoModelo,

@@ -898,6 +898,54 @@
     border-radius: 50px;
     display: inline-flex;
     align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+#tabelaParticipantes {
+    width: 100%;
+    margin-bottom: 0;
+}
+
+#tabelaParticipantes thead th {
+    padding: 10px 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #475569;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #E2E8F0;
+    white-space: nowrap;
+}
+
+#tabelaParticipantes tbody td {
+    padding: 9px 8px;
+    font-size: 0.85rem;
+    color: #334155;
+    vertical-align: middle;
+    border-top: 1px solid #F1F5F9;
+}
+
+#tabelaParticipantes .participante-nome-tabela {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #0F172A;
+    line-height: 1.25;
+}
+
+#tabelaParticipantes .participante-sub-tabela {
+    font-size: 0.74rem;
+    color: #64748B;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 170px;
+}
+
+#tabelaParticipantes .action-link-edit,
+#tabelaParticipantes .action-link-delete {
+    font-size: 0.82rem;
+    font-weight: 600;
 }
 
 .custom-chk {
@@ -913,8 +961,8 @@
 }
 
 .participant-thumb-box {
-    width: 40px;
-    height: 40px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     overflow: hidden;
     background-color: #F1F5F9;
@@ -933,7 +981,7 @@
 .avatar-iniciais {
     font-weight: 700;
     color: #232ed0;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
 }
 
 .avatar-placeholder-svg {
@@ -954,22 +1002,26 @@
     background-color: #D1FAE5;
     color: #065F46;
     border-radius: 50px;
-    padding: 4px 12px;
+    padding: 3px 8px;
     font-weight: 600;
-    font-size: 0.8rem;
+    font-size: 0.74rem;
     display: inline-flex;
     align-items: center;
+    gap: 4px;
+    white-space: nowrap;
 }
 
 .badge-status-pendente {
     background-color: #FEF3C7;
     color: #92400E;
     border-radius: 50px;
-    padding: 4px 12px;
+    padding: 3px 8px;
     font-weight: 600;
-    font-size: 0.8rem;
+    font-size: 0.74rem;
     display: inline-flex;
     align-items: center;
+    gap: 4px;
+    white-space: nowrap;
 }
 
 .linha-participante {

@@ -90,14 +90,16 @@
     <!-- Área Principal em 2 Colunas: Lista e Preview 1:1 -->
     <div class="row g-4 align-items-start">
         <!-- Coluna Esquerda: Participantes Selecionados -->
-        <div class="col-xl-7 col-lg-7">
+        <div class="col-xxl-8 col-xl-7 col-lg-12">
             <div class="card-parametros p-0 overflow-hidden">
                 <!-- Cabeçalho da Tabela -->
                 <div class="p-3 bg-white border-bottom d-flex flex-wrap align-items-center justify-content-between gap-3">
                     <div class="d-flex align-items-center gap-2">
                         <h5 class="fw-bold text-dark mb-0 fs-6">Participantes Selecionados</h5>
                         <span class="badge-selecionados" id="badgeContagemSelecionados">
-                            <span id="lblQtdSelecionados">@Model.TotalSelecionados</span> selecionados de <span id="lblQtdTotal">@Model.TotalParticipantes</span>
+                            <span id="lblQtdSelecionados">@Model.TotalSelecionados</span>
+                            <span>selecionados de</span>
+                            <span id="lblQtdTotal">@Model.TotalParticipantes</span>
                         </span>
                     </div>
 
@@ -117,14 +119,14 @@
                     <table class="cracha-table align-middle" id="tabelaParticipantes">
                         <thead>
                             <tr>
-                                <th style="width: 44px; text-align: center;">
+                                <th style="width: 36px; text-align: center;">
                                     <input type="checkbox" id="chkSelecionarTodosHeader" class="form-check-input custom-chk" checked title="Selecionar todos os participantes exibidos" />
                                 </th>
-                                <th style="width: 60px; text-align: center;">FOTO</th>
-                                <th style="min-width: 190px;">NOME NO CRACHÁ</th>
-                                <th style="min-width: 130px;">CPF</th>
-                                <th style="min-width: 110px;">STATUS</th>
-                                <th style="width: 140px; text-align: right;">AÇÕES</th>
+                                <th style="width: 48px; text-align: center;">FOTO</th>
+                                <th>NOME NO CRACHÁ</th>
+                                <th style="width: 120px;">CPF</th>
+                                <th style="width: 110px; text-align: center;">STATUS</th>
+                                <th style="width: 125px; text-align: right;">AÇÕES</th>
                             </tr>
                         </thead>
                         <tbody id="tabelaParticipantesBody">
@@ -235,7 +237,7 @@
         </div>
 
         <!-- Coluna Direita: Simulação de Impressão 1:1 (Live Preview) -->
-        <div class="col-xl-5 col-lg-5">
+        <div class="col-xxl-4 col-xl-5 col-lg-12">
             <div class="preview-card-container sticky-preview-card" id="cardSimulacaoImpressao">
                 <!-- Barra Superior do Preview -->
                 <div class="preview-header-bar">
@@ -282,7 +284,7 @@
                             </div>
 
                             <h6 class="cracha-evento-title" id="lblPreviewNomeEvento">@eventoAtualNome</h6>
-                            <div class="cracha-evento-subtitle" id="lblPreviewSubtituloEvento">@Model.SubtituloEvento</div>
+                            <div class="cracha-evento-subtitle" id="lblPreviewSubtituloEvento" style="@(string.IsNullOrWhiteSpace(Model.SubtituloEvento) ? "display: none;" : "")">@Model.SubtituloEvento</div>
                         </div>
 
                         <!-- Corpo com Dados do Participante Homologado -->

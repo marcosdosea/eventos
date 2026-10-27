@@ -1341,7 +1341,8 @@ namespace EventoWeb.Controllers.Tests
                 NomeCracha = "Ana",
                 Cpf = "12345678901",
                 Cidade = "Aracaju",
-                Estado = "SE"
+                Estado = "SE",
+                Foto = new byte[] { 0xFF, 0xD8, 0xFF }
             };
 
             var mockInscricoes = new List<Inscricaopessoaevento>
@@ -1393,6 +1394,66 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("Aracaju - SE", part.OrganizacaoOuDepto);
             Assert.IsTrue(part.StatusApto);
             Assert.AreEqual("#00020", part.CodigoCredencial);
+        }
+
+        [TestMethod]
+        public void EmitirCrachaTest_ParticipanteSemFoto_RetornaStatusPendenteFoto()
+        {
+            var mockPessoa = new Pessoa
+            {
+                Id = 11,
+                Nome = "Carlos Sem Foto",
+                NomeCracha = "Carlos",
+                Cpf = "98765432100",
+                Foto = null
+            };
+
+            var mockInscricoes = new List<Inscricaopessoaevento>
+            {
+                new Inscricaopessoaevento
+                {
+                    Id = 21,
+                    IdPessoa = 11,
+                    IdEvento = 1,
+                    IdPapel = 4,
+                    NomeCracha = "Carlos",
+                    Status = "A",
+                    IdPessoaNavigation = mockPessoa
+                }
+            };
+
+            var mockServiceInscricao = new Mock<IInscricaoService>();
+            mockServiceInscricao.Setup(s => s.GetByEvento(1)).Returns(mockInscricoes);
+            mockServiceInscricao.Setup(s => s.GetSubByEvento(1)).Returns(new List<Inscricaopessoasubevento>());
+            mockServiceInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1)).Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+
+            var mockService = new Mock<IModelocrachaService>();
+            mockService.Setup(s => s.GetByEvento(1)).Returns(GetTestModelocracha());
+            var mockServiceEvento = new Mock<IEventoService>();
+            mockServiceEvento.Setup(s => s.GetNomeById(1)).Returns("Congresso");
+            var mockServicePessoa = new Mock<IPessoaService>();
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+
+            var ctrl = new ModelocrachaController(mockService.Object, mockServiceEvento.Object, mockServicePessoa.Object, mockServiceInscricao.Object, mapper);
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "12345678900"),
+                new Claim(ClaimTypes.Role, "GESTOR")
+            };
+            ctrl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) }
+            };
+
+            var result = ctrl.EmitirCracha(1, null, null);
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var viewResult = (ViewResult)result;
+            var model = (EmitirCrachaModel)viewResult.Model!;
+
+            var part = model.Participantes.First();
+            Assert.IsFalse(part.StatusApto);
+            Assert.AreEqual("Pendente Foto", part.StatusDescricao);
+            Assert.IsNull(model.SubtituloEvento);
         }
 
         [TestMethod]
