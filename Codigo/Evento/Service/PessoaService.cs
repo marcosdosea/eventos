@@ -7,6 +7,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Net.Mail;
 using System.Text.RegularExpressions;
+using static QRCoder.PayloadGenerator;
 namespace Service;
 
 public class PessoaService : IPessoaService
@@ -282,17 +283,15 @@ public class PessoaService : IPessoaService
       
         return true;
     }
-    public async Task<bool> EmailExist(String email, String cpf)
+    public async Task<bool> EmailExist(string email, string cpf)
     {
-        List <Pessoa> pessoas = await _context.Pessoas.Where(u => u.Email == email).ToListAsync();
-
-        if (pessoas == null || pessoas.Count == 0)
-        {
+        if (string.IsNullOrWhiteSpace(email))
             return false;
-        }
-        
+        string cpfLimpo = Util.Methods.RemoveNaoNumericos(cpf);
+        bool existeDuplicado = _userManager.Users
+            .Any(u => u.Email == email && u.UserName != cpfLimpo);
 
-        return pessoas.Any(u => u.Cpf != cpf);
+        return await Task.FromResult(existeDuplicado);
     }
     public async Task<bool>  EmailConfirmado(string email)
     {
