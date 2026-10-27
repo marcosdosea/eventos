@@ -5,7 +5,10 @@
     var culturaBr = System.Globalization.CultureInfo.GetCultureInfo("pt-BR");
     var nomeParticipante = ViewBag.NomeParticipante as string;
     var cpfMascarado = ViewBag.CpfMascarado as string;
-    var totalRegistros = Model.Count();
+    var totalRegistros = ViewBag.TotalRegistros as int? ?? Model.Count();
+    var paginaAtual = ViewBag.PaginaAtual as int? ?? 1;
+    var totalPaginas = ViewBag.TotalPaginas as int? ?? 1;
+    var idEventoRota = ViewBag.IdEventoRota as uint?;
 }
 
 <style>
@@ -17,38 +20,52 @@
     .mi-participante-nome .ponto { width: 8px; height: 8px; border-radius: 50%; background: #1d4ed8; flex-shrink: 0; }
     .mi-participante-nome strong { color: #1d4ed8; }
     .mi-participante-cpf { background: #dde6fa; border-radius: 8px; padding: .5rem .9rem; font-size: .78rem; font-weight: 600; color: #374151; }
-    .mi-card { background: #fff; border-radius: 14px; box-shadow: 0 1px 4px rgba(15, 23, 42, .06); padding: 1.5rem; }
+    .mi-card { background: #fff; border-radius: 14px; box-shadow: 0 1px 4px rgba(15, 23, 42, .06); padding: 1.25rem 1rem; }
     .mi-card-header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
     .mi-card-titulo { font-size: 1.3rem; font-weight: 600; margin: 0; color: #111827; display: flex; align-items: center; gap: .5rem; }
     .mi-card-titulo i { color: #1d4ed8; }
     .mi-contador { background: #eef2fb; color: #374151; border-radius: 999px; padding: .25rem .8rem; font-size: .8rem; font-weight: 600; display: inline-flex; align-items: center; gap: .4rem; }
     .mi-contador .ponto { width: 8px; height: 8px; border-radius: 50%; background: #1d4ed8; }
-    .mi-tabela { width: 100%; border-collapse: separate; border-spacing: 0; }
-    .mi-tabela thead th { background: #e8edf9; color: #111827; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; padding: 1rem .9rem; vertical-align: middle; }
-    .mi-tabela thead th:first-child { border-top-left-radius: 10px; border-bottom-left-radius: 10px; }
-    .mi-tabela thead th:last-child { border-top-right-radius: 10px; border-bottom-right-radius: 10px; text-align: right; }
-    .mi-tabela tbody td { padding: 1.25rem .9rem; vertical-align: middle; border-bottom: 1px solid #eef0f4; }
+    .mi-tabela { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .9rem; }
+    .mi-tabela thead th { background: #e8edf9; color: #111827; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; padding: .8rem .5rem; vertical-align: middle; text-align: center; }
+    .mi-tabela thead th:first-child { border-top-left-radius: 10px; border-bottom-left-radius: 10px; padding-left: .75rem; }
+    .mi-tabela thead th:last-child { border-top-right-radius: 10px; border-bottom-right-radius: 10px; padding-right: .75rem; }
+    .mi-tabela tbody td { padding: 1rem .5rem; vertical-align: middle; border-bottom: 1px solid #eef0f4; text-align: center; }
+    .mi-tabela .mi-col-evento { text-align: left; }
+    .mi-tabela thead th.mi-col-evento { width: 24%; }
+    .mi-tabela tbody td:first-child { padding-left: .75rem; }
+    .mi-tabela tbody td:last-child { padding-right: .75rem; }
     .mi-tabela tbody tr:last-child td { border-bottom: none; }
+    .mi-data { white-space: nowrap; }
     .mi-protocolo { color: #1d4ed8; font-weight: 600; white-space: nowrap; }
     .mi-protocolo.confirmado { color: #111827; }
     .mi-evento-nome { font-weight: 600; color: #111827; }
     .mi-evento-local { font-size: .82rem; color: #6b7280; margin-top: .25rem; }
-    .mi-subeventos { list-style: none; padding: 0; margin: .5rem 0 0; font-size: .8rem; color: #4b5563; }
-    .mi-subeventos li { display: flex; gap: .35rem; align-items: center; }
+    .mi-col-evento { min-width: 190px; }
+    .mi-subeventos { margin-top: .65rem; padding: .5rem .75rem; background: #f5f7fd; border-left: 3px solid #c7d4f5; border-radius: 0 8px 8px 0; }
+    .mi-subeventos-titulo { display: block; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: #6b7280; margin-bottom: .35rem; }
+    .mi-subeventos ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .4rem; }
+    .mi-subeventos li { display: flex; align-items: flex-start; gap: .4rem; font-size: .82rem; line-height: 1.3; }
+    .mi-subeventos li > i { color: #1d4ed8; font-size: .8rem; margin-top: .1rem; flex-shrink: 0; }
+    .mi-sub-info { display: flex; flex-direction: column; min-width: 0; }
+    .mi-sub-nome { color: #374151; font-weight: 500; overflow-wrap: anywhere; }
+    .mi-sub-valor { color: #6b7280; font-size: .76rem; white-space: nowrap; }
     .mi-valor { font-weight: 600; white-space: nowrap; }
-    .mi-status { display: inline-flex; align-items: center; gap: .35rem; padding: .3rem .8rem; border-radius: 999px; font-size: .78rem; font-weight: 600; white-space: nowrap; }
+    .mi-status { display: inline-flex; align-items: center; gap: .3rem; padding: .25rem .6rem; border-radius: 999px; font-size: .74rem; font-weight: 600; white-space: nowrap; }
     .mi-status-pendente { background: #fef3c7; color: #92400e; }
     .mi-status-confirmado { background: #dcfce7; color: #166534; }
     .mi-status-cancelado { background: #f1f3f5; color: #6c757d; }
-    .mi-indisponivel { color: #6b7280; font-size: .85rem; }
-    .mi-btn-pdf { background: #e8edf9; color: #1d4ed8; border: none; font-weight: 600; font-size: .82rem; }
+    .mi-indisponivel { color: #6b7280; font-size: .8rem; }
+    .mi-btn-pdf { background: #e8edf9; color: #1d4ed8; border: none; font-weight: 600; font-size: .78rem; white-space: nowrap; }
     .mi-btn-pdf:hover { background: #d6e0f7; color: #1d4ed8; }
-    .mi-acoes { display: flex; flex-direction: column; align-items: flex-end; gap: .5rem; }
-    .mi-acoes-botoes { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: .5rem; }
-    .mi-acoes .btn { display: inline-flex; align-items: center; gap: .35rem; font-weight: 600; }
-    .mi-link-acao { color: #1d4ed8; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: .3rem; font-size: .88rem; background: none; border: none; padding: 0; }
+    .mi-acoes { display: flex; flex-direction: column; align-items: center; gap: .4rem; }
+    .mi-acoes-botoes { display: flex; flex-direction: column; align-items: center; gap: .4rem; }
+    .mi-acoes .btn { display: inline-flex; align-items: center; gap: .35rem; font-weight: 600; white-space: nowrap; }
+    .mi-link-acao { color: #1d4ed8; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: .3rem; font-size: .82rem; background: none; border: none; padding: 0; white-space: nowrap; }
     .mi-link-acao:hover { text-decoration: underline; }
     .mi-link-acao:disabled { color: #9ca3af; cursor: not-allowed; text-decoration: none; }
+    .mi-paginacao { display: flex; justify-content: flex-end; align-items: center; gap: .75rem; margin-top: 1.25rem; flex-wrap: wrap; }
+    .mi-paginacao-info { color: #4b5563; font-size: .85rem; font-weight: 600; }
     .cert-status { display: inline-flex; align-items: center; gap: .35rem; padding: .2rem .65rem; border-radius: 999px;
                    font-size: .75rem; font-weight: 500; border: 1px solid transparent; white-space: nowrap; }
     .cert-neutro  { background: #f1f3f5; color: #6c757d; border-color: #dee2e6; }
@@ -126,11 +143,13 @@
             <thead>
                 <tr>
                     <th scope="col">Protocolo / Inscrição</th>
-                    <th scope="col">Evento</th>
+                    <th scope="col" class="mi-col-evento">Evento</th>
                     <th scope="col">Data da Inscrição</th>
                     <th scope="col">Valor Total</th>
                     <th scope="col">Status do Pagamento</th>
                     <th scope="col">Comprovante</th>
+                    <th scope="col">Pagamento</th>
+                    <th scope="col">Credencial</th>
                     <th scope="col">Ações</th>
                 </tr>
             </thead>
@@ -138,7 +157,7 @@
                 @if (totalRegistros == 0)
                 {
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
+                        <td colspan="9" class="text-center text-muted py-4">
                             Nenhuma inscrição encontrada.
                         </td>
                     </tr>
@@ -176,7 +195,7 @@
                         <td>
                             <span class="mi-protocolo @(confirmado ? "confirmado" : "")">@protocolo</span>
                         </td>
-                        <td>
+                        <td class="mi-col-evento">
                             <div class="mi-evento-nome">@(evento?.Nome ?? "Evento")</div>
                             @if (localPartes.Any())
                             {
@@ -184,18 +203,24 @@
                             }
                             @if (subeventos.Any())
                             {
-                                <ul class="mi-subeventos">
-                                    @foreach (var sub in subeventos)
-                                    {
-                                        <li>
-                                            <span class="badge bg-secondary">Subevento</span>
-                                            <span>@(sub.IdSubEventoNavigation?.Nome ?? "Subevento") — @sub.Valor.ToString("C", culturaBr)</span>
-                                        </li>
-                                    }
-                                </ul>
+                                <div class="mi-subeventos">
+                                    <span class="mi-subeventos-titulo">@(subeventos.Count == 1 ? "Subevento" : "Subeventos")</span>
+                                    <ul>
+                                        @foreach (var sub in subeventos)
+                                        {
+                                            <li>
+                                                <i class="bi bi-arrow-return-right" aria-hidden="true"></i>
+                                                <div class="mi-sub-info">
+                                                    <span class="mi-sub-nome">@(sub.IdSubEventoNavigation?.Nome ?? "Subevento")</span>
+                                                    <span class="mi-sub-valor">@sub.Valor.ToString("C", culturaBr)</span>
+                                                </div>
+                                            </li>
+                                        }
+                                    </ul>
+                                </div>
                             }
                         </td>
-                        <td>@item.DataInscricao.ToString("dd/MM/yyyy")</td>
+                        <td class="mi-data">@item.DataInscricao.ToString("dd/MM/yyyy")</td>
                         <td><span class="mi-valor">@valorTotalGeral.ToString("C", culturaBr)</span></td>
                         <td>
                             @if (confirmado)
@@ -218,10 +243,42 @@
                         <td>
                             @if (confirmado && item.Id > 0)
                             {
-                                <a asp-action="DetalhesInscricao" asp-controller="Inscricao" asp-route-id="@item.Id" asp-route-imprimir="true"
-                                   target="_blank" class="btn btn-sm mi-btn-pdf" title="Abre o comprovante para salvar em PDF">
-                                    <i class="bi bi-download" aria-hidden="true"></i> Baixar PDF
+                                <a asp-action="DetalhesInscricao" asp-controller="Inscricao" asp-route-id="@item.Id" class="btn btn-sm mi-btn-pdf">
+                                    <i class="bi bi-file-earmark-text" aria-hidden="true"></i> Ver Recibo
                                 </a>
+                            }
+                            else
+                            {
+                                <span class="mi-indisponivel">Indisponível</span>
+                            }
+                        </td>
+                        <td>
+                            @if (pendente)
+                            {
+                                <button type="button" class="btn btn-sm btn-primary text-nowrap" disabled
+                                        title="Pagamento online ainda não disponível">
+                                    <i class="bi bi-credit-card" aria-hidden="true"></i> Pagar Agora
+                                </button>
+                            }
+                            else if (confirmado && semCusto)
+                            {
+                                <span class="mi-indisponivel">Gratuito</span>
+                            }
+                            else if (confirmado)
+                            {
+                                <span class="mi-indisponivel">Pago</span>
+                            }
+                            else
+                            {
+                                <span class="mi-indisponivel">-</span>
+                            }
+                        </td>
+                        <td>
+                            @if (confirmado)
+                            {
+                                <button type="button" class="mi-link-acao text-nowrap" disabled title="Credencial digital ainda não disponível">
+                                    <i class="bi bi-person-badge" aria-hidden="true"></i> Credencial
+                                </button>
                             }
                             else
                             {
@@ -231,29 +288,13 @@
                         <td>
                             <div class="mi-acoes">
                                 <div class="mi-acoes-botoes">
-                                    @if (pendente)
-                                    {
-                                        <button type="button" class="btn btn-sm btn-primary" disabled
-                                                title="Pagamento online ainda não disponível">
-                                            <i class="bi bi-credit-card" aria-hidden="true"></i> Pagar Agora
-                                        </button>
-                                    }
-                                    @if (confirmado)
-                                    {
-                                        <a asp-action="DetalhesInscricao" asp-controller="Inscricao" asp-route-id="@item.Id" class="mi-link-acao">
-                                            <i class="bi bi-file-earmark-text" aria-hidden="true"></i> Ver Recibo
-                                        </a>
-                                        <button type="button" class="mi-link-acao" disabled title="Credencial digital ainda não disponível">
-                                            <i class="bi bi-person-badge" aria-hidden="true"></i> Credencial
-                                        </button>
-                                    }
-                                    else if (item.Id > 0)
+                                    @if (!confirmado && item.Id > 0)
                                     {
                                         <a asp-action="DetalhesInscricao" asp-controller="Inscricao" asp-route-id="@item.Id" class="mi-link-acao">
                                             <i class="bi bi-eye" aria-hidden="true"></i> Ver Inscrição
                                         </a>
                                     }
-                                    else if (item.IdEvento > 0)
+                                    else if (!confirmado && item.IdEvento > 0)
                                     {
                                         <a asp-action="DetalhesInscricao" asp-controller="Inscricao" asp-route-idEvento="@item.IdEvento" class="mi-link-acao">
                                             <i class="bi bi-eye" aria-hidden="true"></i> Ver Inscrição
@@ -295,6 +336,27 @@
             </tbody>
         </table>
     </div>
+
+    @if (totalPaginas > 1)
+    {
+        <nav class="mi-paginacao" aria-label="Paginação das inscrições">
+            @if (paginaAtual > 1)
+            {
+                <a asp-action="minhasInscricoes" asp-controller="Inscricao" asp-route-idEvento="@idEventoRota" asp-route-pagina="@(paginaAtual - 1)"
+                   class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-chevron-left" aria-hidden="true"></i> Anterior
+                </a>
+            }
+            <span class="mi-paginacao-info" aria-current="page">Página @paginaAtual de @totalPaginas</span>
+            @if (paginaAtual < totalPaginas)
+            {
+                <a asp-action="minhasInscricoes" asp-controller="Inscricao" asp-route-idEvento="@idEventoRota" asp-route-pagina="@(paginaAtual + 1)"
+                   class="btn btn-sm btn-primary">
+                    Próximo <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                </a>
+            }
+        </nav>
+    }
 </section>
 
 <div class="mt-4 d-flex gap-2 flex-wrap">

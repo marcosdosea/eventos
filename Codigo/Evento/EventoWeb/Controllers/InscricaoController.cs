@@ -584,7 +584,7 @@ namespace EventoWeb.Controllers
         [Authorize]
         [HttpGet]
         [Route("MinhasInscricoes")]
-        public async Task<IActionResult> minhasInscricoes(uint? idEvento)
+        public async Task<IActionResult> minhasInscricoes(uint? idEvento, int pagina = 1)
         {
             var username = User.Identity?.Name;
             if (string.IsNullOrEmpty(username))
@@ -609,8 +609,24 @@ namespace EventoWeb.Controllers
             ViewBag.CpfMascarado = MascararCpf(participante?.Cpf ?? username);
 
             ViewBag.EventoId = ObterEventoParaVoltar(idEvento, listarEventosModel);
-            return View(listarEventosModel);
+
+            var totalRegistros = listarEventosModel.Count;
+            var totalPaginas = Math.Max(1, (int)Math.Ceiling(totalRegistros / (double)INSCRICOES_POR_PAGINA));
+            var paginaAtual = Math.Clamp(pagina, 1, totalPaginas);
+
+            ViewBag.TotalRegistros = totalRegistros;
+            ViewBag.PaginaAtual = paginaAtual;
+            ViewBag.TotalPaginas = totalPaginas;
+            ViewBag.IdEventoRota = idEvento;
+
+            var inscricoesDaPagina = listarEventosModel
+                .Skip((paginaAtual - 1) * INSCRICOES_POR_PAGINA)
+                .Take(INSCRICOES_POR_PAGINA)
+                .ToList();
+            return View(inscricoesDaPagina);
         }
+
+        private const int INSCRICOES_POR_PAGINA = 10;
 
         private uint? ObterEventoParaVoltar(uint? idEvento, List<InscricaoEventoModel> inscricoes)
         {

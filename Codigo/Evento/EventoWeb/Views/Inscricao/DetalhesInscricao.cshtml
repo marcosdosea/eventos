@@ -5,6 +5,14 @@
 
 <style>
     @@media print {
+        html, body {
+            height: auto !important;
+            overflow: visible !important;
+            display: block !important;
+        }
+        .table-responsive {
+            overflow: visible !important;
+        }
         .no-print, header, footer, .sidebar, nav, .btn, .navbar, .alert {
             display: none !important;
         }
@@ -228,9 +236,7 @@
     </div>
 </div>
 
-@if (string.Equals(Context.Request.Query["imprimir"], "true", StringComparison.OrdinalIgnoreCase))
-{
-    <script>
-        window.addEventListener('load', function () { window.print(); });
-    </script>
-}
+<script>
+    document.title = @Json.Serialize($"Comprovante ({Model.IdEventoNavigation?.Nome ?? "Evento"})");
+</script>
+

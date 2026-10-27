@@ -132,6 +132,71 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual((uint)7, minhasController.ViewBag.EventoId);
         }
 
+        [TestMethod()]
+        public async Task MinhasInscricoesTest_MaisDeDezInscricoes_ExibeDezNaPrimeiraPagina()
+        {
+            // Arrange
+            var minhasController = CriarControllerMinhasInscricoes(CriarInscricoes(23), Mock.Of<IEventoService>());
+
+            // Act
+            var result = await minhasController.minhasInscricoes(null);
+
+            // Assert
+            var lista = (List<InscricaoEventoModel>)((ViewResult)result).ViewData.Model!;
+            Assert.AreEqual(10, lista.Count);
+            Assert.AreEqual((uint)1, lista[0].Id);
+            Assert.AreEqual(23, minhasController.ViewBag.TotalRegistros);
+            Assert.AreEqual(1, minhasController.ViewBag.PaginaAtual);
+            Assert.AreEqual(3, minhasController.ViewBag.TotalPaginas);
+        }
+
+        [TestMethod()]
+        public async Task MinhasInscricoesTest_UltimaPagina_ExibeExcedentes()
+        {
+            // Arrange
+            var minhasController = CriarControllerMinhasInscricoes(CriarInscricoes(23), Mock.Of<IEventoService>());
+
+            // Act
+            var result = await minhasController.minhasInscricoes(null, 3);
+
+            // Assert
+            var lista = (List<InscricaoEventoModel>)((ViewResult)result).ViewData.Model!;
+            Assert.AreEqual(3, lista.Count);
+            Assert.AreEqual((uint)21, lista[0].Id);
+            Assert.AreEqual(3, minhasController.ViewBag.PaginaAtual);
+        }
+
+        [TestMethod()]
+        public async Task MinhasInscricoesTest_PaginaForaDoIntervalo_AjustaParaLimites()
+        {
+            // Arrange
+            var minhasController = CriarControllerMinhasInscricoes(CriarInscricoes(12), Mock.Of<IEventoService>());
+
+            // Act
+            await minhasController.minhasInscricoes(null, 99);
+            var paginaAcima = minhasController.ViewBag.PaginaAtual;
+            await minhasController.minhasInscricoes(null, 0);
+            var paginaAbaixo = minhasController.ViewBag.PaginaAtual;
+
+            // Assert
+            Assert.AreEqual(2, paginaAcima);
+            Assert.AreEqual(1, paginaAbaixo);
+        }
+
+        private static List<Inscricaopessoaevento> CriarInscricoes(int quantidade)
+        {
+            return Enumerable.Range(1, quantidade)
+                .Select(i => new Inscricaopessoaevento
+                {
+                    Id = (uint)i,
+                    IdEvento = (uint)i,
+                    IdPapel = 4,
+                    Status = "S",
+                    IdEventoNavigation = new Evento { Id = (uint)i, Status = "F" }
+                })
+                .ToList();
+        }
+
         private static InscricaoController CriarControllerMinhasInscricoes(IEnumerable<Inscricaopessoaevento> inscricoes, IEventoService eventoService)
         {
             var mockInscricao = new Mock<IInscricaoService>();
