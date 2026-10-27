@@ -369,13 +369,13 @@
     <div class="d-flex justify-content-end mt-4 mb-4 w-100">
         @if (eventoAtualId > 0)
         {
-            <a asp-action="Index" asp-route-idEvento="@eventoAtualId" class="btn btn-blue-normal btn-lg" style="text-decoration:none; color:white">
+            <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@eventoAtualId" class="btn btn-blue-normal btn-lg" style="text-decoration:none; color:white">
                 Voltar
             </a>
         }
         else
         {
-            <a asp-action="Index" class="btn btn-blue-normal btn-lg" style="text-decoration:none; color:white">
+            <a asp-controller="Evento" asp-action="GerenciarEventoListar" class="btn btn-blue-normal btn-lg" style="text-decoration:none; color:white">
                 Voltar
             </a>
         }
