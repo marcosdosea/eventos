@@ -217,6 +217,15 @@ namespace Service.Tests
         [TestMethod()]
         public void EventoServiceDelete_ComInscricaoEmSubevento_ConcluiELimpaDependentes()
         {
+            // Ajustado para a regra do Issue #866: eventos só podem ser excluídos se cancelados e sem inscrições
+            var evento = _context.Eventos.Find((uint)1)!;
+            evento.Status = "C";
+            _context.Pagamentos.RemoveRange(_context.Pagamentos);
+            _context.Inscricaopessoasubeventos.RemoveRange(_context.Inscricaopessoasubeventos);
+            _context.Inscricaopessoaeventos.RemoveRange(_context.Inscricaopessoaeventos);
+            _context.SaveChanges();
+            _context.ChangeTracker.Clear();
+
             _eventoService.Delete(1);
 
             _context.ChangeTracker.Clear();
@@ -230,8 +239,36 @@ namespace Service.Tests
         }
 
         [TestMethod()]
+        public void EventoServiceDelete_ComInscricaoEmSubevento_LancaServiceException()
+        {
+            var evento = _context.Eventos.Find((uint)1)!;
+            evento.Status = "C";
+            // Remove inscrições diretas do evento e pagamentos, mantendo apenas a inscrição no subevento
+            _context.Pagamentos.RemoveRange(_context.Pagamentos);
+            _context.Inscricaopessoaeventos.RemoveRange(_context.Inscricaopessoaeventos);
+            _context.SaveChanges();
+            _context.ChangeTracker.Clear();
+
+            var ex = Assert.ThrowsException<ServiceException>(() => _eventoService.Delete(1));
+            Assert.AreEqual("Não é possível excluir um evento que possui inscrições vinculadas.", ex.Message);
+
+            _context.ChangeTracker.Clear();
+            Assert.AreEqual(1, _context.Eventos.Count());
+            Assert.AreEqual(1, _context.Subeventos.Count());
+            Assert.AreEqual(1, _context.Inscricaopessoasubeventos.Count());
+        }
+
+        [TestMethod()]
         public void EventoServiceDelete_FalhaInesperadaNoBanco_NaoApagaNada()
         {
+            var evento = _context.Eventos.Find((uint)1)!;
+            evento.Status = "C";
+            _context.Pagamentos.RemoveRange(_context.Pagamentos);
+            _context.Inscricaopessoasubeventos.RemoveRange(_context.Inscricaopessoasubeventos);
+            _context.Inscricaopessoaeventos.RemoveRange(_context.Inscricaopessoaeventos);
+            _context.SaveChanges();
+            _context.ChangeTracker.Clear();
+
             // Sabotagem no banco: um trigger que falha na remoção do subevento,
             // simulando uma falha inesperada que o código não consegue antecipar.
             using (var command = _connection.CreateCommand())
@@ -247,14 +284,17 @@ BEGIN SELECT RAISE(ABORT, 'falha simulada no banco'); END;";
             _context.ChangeTracker.Clear();
             Assert.AreEqual(1, _context.Eventos.Count());
             Assert.AreEqual(1, _context.Subeventos.Count());
-            Assert.AreEqual(1, _context.Inscricaopessoaeventos.Count());
-            Assert.AreEqual(1, _context.Inscricaopessoasubeventos.Count());
-            Assert.AreEqual(1, _context.Pagamentos.Count());
         }
 
         [TestMethod()]
         public void EventoServiceDelete_ComJuncaoTipoInscricaoSubevento_Conclui()
         {
+            var evento = _context.Eventos.Find((uint)1)!;
+            evento.Status = "C";
+            _context.Pagamentos.RemoveRange(_context.Pagamentos);
+            _context.Inscricaopessoasubeventos.RemoveRange(_context.Inscricaopessoasubeventos);
+            _context.Inscricaopessoaeventos.RemoveRange(_context.Inscricaopessoaeventos);
+
             var tipo = _context.Tipoinscricaos.First();
             var subevento = _context.Subeventos.First();
             tipo.IdSubEventos.Add(subevento);

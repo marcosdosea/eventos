@@ -218,6 +218,7 @@ namespace Service.Tests
         [TestMethod()]
         public void DeleteTest()
         {
+            // Act: Evento 3 está cancelado ("C") e sem inscrições
             _eventoService.Delete(3);
 
             Assert.AreEqual(2, _eventoService.GetAll().Count());
@@ -228,6 +229,7 @@ namespace Service.Tests
         [TestMethod()]
         public void DeleteTest_EventoAtivo_LancaServiceException()
         {
+            // Evento 1 possui Status = "A"
             var ex = Assert.ThrowsException<ServiceException>(() => _eventoService.Delete(1));
             Assert.AreEqual("Não é possível excluir um evento ativo. Cancele o evento antes de excluí-lo.", ex.Message);
         }
@@ -235,6 +237,7 @@ namespace Service.Tests
         [TestMethod()]
         public void DeleteTest_EventoComInscricoes_LancaServiceException()
         {
+            // Arrange: Evento 2 está finalizado ("F"), mas vinculamos uma inscrição direta
             var inscricao = new Inscricaopessoaevento
             {
                 Id = 10,
@@ -252,8 +255,43 @@ namespace Service.Tests
         }
 
         [TestMethod()]
+        public void DeleteTest_EventoComInscricaoEmSubevento_LancaServiceException()
+        {
+            // Arrange: Evento 2 está finalizado ("F") e sem inscrições diretas, mas possui subevento com inscrição
+            var subevento = new Subevento
+            {
+                Id = 20,
+                IdEvento = 2,
+                Nome = "Palestra de Abertura",
+                Descricao = "Palestra",
+                Status = "F",
+                DataInicio = DateTime.Now,
+                DataFim = DateTime.Now.AddDays(1),
+                DataInicioInscricao = DateTime.Now,
+                DataFimInscricao = DateTime.Now.AddDays(1),
+                IdTipoEvento = 1
+            };
+            var inscricaoSub = new Inscricaopessoasubevento
+            {
+                IdPessoa = 1,
+                IdSubEvento = 20,
+                IdPapel = 4,
+                Status = "A"
+            };
+
+            _context.Subeventos.Add(subevento);
+            _context.Inscricaopessoasubeventos.Add(inscricaoSub);
+            _context.SaveChanges();
+            _context.ChangeTracker.Clear();
+
+            var ex = Assert.ThrowsException<ServiceException>(() => _eventoService.Delete(2));
+            Assert.AreEqual("Não é possível excluir um evento que possui inscrições vinculadas.", ex.Message);
+        }
+
+        [TestMethod()]
         public void DeleteTest_WithDependencies_DeletesSuccessfully()
         {
+            // Arrange: criar subevento e tipo de inscricao para o evento 2 (Finalizado e sem inscritos)
             var subevento = new Subevento
             {
                 Id = 10,
