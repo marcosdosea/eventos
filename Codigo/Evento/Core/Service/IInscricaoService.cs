@@ -11,19 +11,17 @@ namespace Core.Service
 
         void CreateInscricaoSubEvento(Inscricaopessoasubevento inscricaopessoasubevento);
 
-        void CreateInscricoesEmLote(IEnumerable<Inscricaopessoaevento> eventos, IEnumerable<Inscricaopessoasubevento> subeventos, bool saveChanges = true);
-        
-        void SaveChanges();
+        void CreateInscricoesEmLote(uint idEvento, IEnumerable<Inscricaopessoaevento> eventos, IEnumerable<Inscricaopessoasubevento> subeventos, IEnumerable<uint> idsSubeventosAtualizarVagas);
 
         Task DeletePessoaPapelAsync(uint idPessoa, uint idEvento, uint idPapel, string cpf);
 
         /// <summary>
         /// Cancela as inscrições de participante (papel 4) de uma pessoa em um evento,
-        /// incluindo as inscrições nos subeventos do evento. Retorna a quantidade de
-        /// inscrições do evento removidas e os ids dos subeventos afetados
-        /// (para atualização de vagas).
+        /// incluindo as inscrições nos subeventos, e libera as vagas do evento e dos
+        /// subeventos afetados em um único SaveChanges. Retorna a quantidade de
+        /// inscrições do evento removidas.
         /// </summary>
-        (int Removidas, List<uint> SubeventosAfetados) CancelarInscricaoParticipante(uint idPessoa, uint idEvento);
+        int CancelarInscricaoParticipante(uint idPessoa, uint idEvento);
 
         IEnumerable<Inscricaopessoaevento> GetByEventoAndPapel(uint idEvento, int idPapel);
 

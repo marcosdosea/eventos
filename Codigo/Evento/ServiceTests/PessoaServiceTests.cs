@@ -151,7 +151,7 @@ namespace Service.Tests
 
 
             _userManager = new MockUserManager<UsuarioIdentity>();
-            _inscricaoService = new InscricaoService(_context, _userManager);
+            _inscricaoService = new InscricaoService(_context, _userManager, new EventoService(_context), new SubeventoService(_context));
             _pessoaService = new PessoaService(_userManager, _context, _inscricaoService, _signInManager);
         }
 

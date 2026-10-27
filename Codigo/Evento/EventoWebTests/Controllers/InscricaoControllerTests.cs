@@ -130,17 +130,13 @@ namespace EventoWeb.Controllers.Tests
                 { 1, new Tipoinscricao { Id = 1, IdEvento = 1, Nome = "Paga", Valor = 100m } }
             };
 
-            var mockTransacao = new Mock<ITransacaoService>();
-            mockTransacao.Setup(t => t.Executar(It.IsAny<Action>()))
-                .Throws(new DbUpdateException("falha ao salvar a inscrição"));
-
             var (postController, criadas, criadasSub) = CreatePostController(
                 tipos,
                 new Dictionary<string, string>
                 {
                     { "QuantidadeTipoInscricao_1", "1" }
                 },
-                customTransacaoService: mockTransacao);
+                falhaAoSalvar: new DbUpdateException("falha ao salvar a inscrição"));
 
             var input = new InscricaoEventoModel
             {
@@ -1072,10 +1068,11 @@ namespace EventoWeb.Controllers.Tests
             var criadasEvento = new List<Inscricaopessoaevento>();
             var criadasSub = new List<Inscricaopessoasubevento>();
             mockInscricaoService.Setup(s => s.CreateInscricoesEmLote(
+                    It.IsAny<uint>(),
                     It.IsAny<IEnumerable<Inscricaopessoaevento>>(),
                     It.IsAny<IEnumerable<Inscricaopessoasubevento>>(),
-                    It.IsAny<bool>()))
-                .Callback<IEnumerable<Inscricaopessoaevento>, IEnumerable<Inscricaopessoasubevento>, bool>((e, s, _) =>
+                    It.IsAny<IEnumerable<uint>>()))
+                .Callback<uint, IEnumerable<Inscricaopessoaevento>, IEnumerable<Inscricaopessoasubevento>, IEnumerable<uint>>((_, e, s, _) =>
                 {
                     if (e != null) criadasEvento.AddRange(e);
                     if (s != null) criadasSub.AddRange(s);
@@ -1313,10 +1310,11 @@ namespace EventoWeb.Controllers.Tests
             var criadasEvento = new List<Inscricaopessoaevento>();
             var criadasSub = new List<Inscricaopessoasubevento>();
             mockInscricaoService.Setup(s => s.CreateInscricoesEmLote(
+                    It.IsAny<uint>(),
                     It.IsAny<IEnumerable<Inscricaopessoaevento>>(),
                     It.IsAny<IEnumerable<Inscricaopessoasubevento>>(),
-                    It.IsAny<bool>()))
-                .Callback<IEnumerable<Inscricaopessoaevento>, IEnumerable<Inscricaopessoasubevento>, bool>((e, s, _) =>
+                    It.IsAny<IEnumerable<uint>>()))
+                .Callback<uint, IEnumerable<Inscricaopessoaevento>, IEnumerable<Inscricaopessoasubevento>, IEnumerable<uint>>((_, e, s, _) =>
                 {
                     if (e != null) criadasEvento.AddRange(e);
                     if (s != null) criadasSub.AddRange(s);
@@ -1400,10 +1398,11 @@ namespace EventoWeb.Controllers.Tests
 
             var criadasSub = new List<Inscricaopessoasubevento>();
             mockInscricaoService.Setup(s => s.CreateInscricoesEmLote(
+                    It.IsAny<uint>(),
                     It.IsAny<IEnumerable<Inscricaopessoaevento>>(),
                     It.IsAny<IEnumerable<Inscricaopessoasubevento>>(),
-                    It.IsAny<bool>()))
-                .Callback<IEnumerable<Inscricaopessoaevento>, IEnumerable<Inscricaopessoasubevento>, bool>((_, s, _) =>
+                    It.IsAny<IEnumerable<uint>>()))
+                .Callback<uint, IEnumerable<Inscricaopessoaevento>, IEnumerable<Inscricaopessoasubevento>, IEnumerable<uint>>((_, _, s, _) =>
                 {
                     if (s != null) criadasSub.AddRange(s);
                 });
@@ -1470,10 +1469,11 @@ namespace EventoWeb.Controllers.Tests
             var criadasEvento = new List<Inscricaopessoaevento>();
             var criadasSub = new List<Inscricaopessoasubevento>();
             mockInscricaoService.Setup(s => s.CreateInscricoesEmLote(
+                    It.IsAny<uint>(),
                     It.IsAny<IEnumerable<Inscricaopessoaevento>>(),
                     It.IsAny<IEnumerable<Inscricaopessoasubevento>>(),
-                    It.IsAny<bool>()))
-                .Callback<IEnumerable<Inscricaopessoaevento>, IEnumerable<Inscricaopessoasubevento>, bool>((e, s, _) =>
+                    It.IsAny<IEnumerable<uint>>()))
+                .Callback<uint, IEnumerable<Inscricaopessoaevento>, IEnumerable<Inscricaopessoasubevento>, IEnumerable<uint>>((_, e, s, _) =>
                 {
                     if (e != null) criadasEvento.AddRange(e);
                     if (s != null) criadasSub.AddRange(s);
@@ -1614,7 +1614,7 @@ namespace EventoWeb.Controllers.Tests
             Evento? evento = null,
             Pessoa? pessoa = null,
             Mock<ISubeventoService>? customSubeventoService = null,
-            Mock<ITransacaoService>? customTransacaoService = null)
+            Exception? falhaAoSalvar = null)
         {
             var mockPessoaService = new Mock<IPessoaService>();
             mockPessoaService.Setup(service => service.GetByCpf(UsernameTeste))
@@ -1626,15 +1626,24 @@ namespace EventoWeb.Controllers.Tests
             var criadas = new List<Inscricaopessoaevento>();
             var criadasSub = new List<Inscricaopessoasubevento>();
             
-            mockInscricaoService.Setup(service => service.CreateInscricoesEmLote(
-                    It.IsAny<IEnumerable<Inscricaopessoaevento>>(), 
+            var setupLote = mockInscricaoService.Setup(service => service.CreateInscricoesEmLote(
+                    It.IsAny<uint>(),
+                    It.IsAny<IEnumerable<Inscricaopessoaevento>>(),
                     It.IsAny<IEnumerable<Inscricaopessoasubevento>>(),
-                    It.IsAny<bool>()))
-                .Callback<IEnumerable<Inscricaopessoaevento>, IEnumerable<Inscricaopessoasubevento>, bool>((e, s, _) => 
+                    It.IsAny<IEnumerable<uint>>()));
+
+            if (falhaAoSalvar != null)
+            {
+                setupLote.Throws(falhaAoSalvar);
+            }
+            else
+            {
+                setupLote.Callback<uint, IEnumerable<Inscricaopessoaevento>, IEnumerable<Inscricaopessoasubevento>, IEnumerable<uint>>((_, e, s, _) =>
                 {
                     if (e != null) criadas.AddRange(e);
                     if (s != null) criadasSub.AddRange(s);
                 });
+            }
 
             var mockTipoService = new Mock<ITipoInscricaoService>();
             mockTipoService.Setup(service => service.Get(It.IsAny<uint>()))
@@ -1662,8 +1671,7 @@ namespace EventoWeb.Controllers.Tests
                 mapper,
                 mockInscricaoService.Object,
                 mockPessoaService.Object,
-                mockSubeventoService.Object,
-                customTransacaoService?.Object);
+                mockSubeventoService.Object);
 
             var claims = new List<Claim> { new Claim(ClaimTypes.Name, UsernameTeste) };
             var httpContext = new DefaultHttpContext
@@ -1934,14 +1942,14 @@ namespace EventoWeb.Controllers.Tests
         public void CancelarInscricaoTest_Dono_EventoAtivo_CancelaRestauraVagasERedireciona()
         {
             // Arrange
-            var (cancelarController, mockInscricao, mockEvento, mockSubevento) = CreateCancelarController(
+            var (cancelarController, mockInscricao, _, _) = CreateCancelarController(
                 pessoa: new Pessoa { Id = 7, Cpf = UsernameTeste, Nome = "Participante Teste" },
                 evento: new Evento { Id = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(1) },
-                cancelamento: (2, new List<uint> { 10 }));
+                cancelamento: 2);
             uint pessoaIdChamada = 0, eventoIdChamado = 0;
             mockInscricao.Setup(s => s.CancelarInscricaoParticipante(It.IsAny<uint>(), It.IsAny<uint>()))
                 .Callback<uint, uint>((p, e) => { pessoaIdChamada = p; eventoIdChamado = e; })
-                .Returns((2, new List<uint> { 10 }));
+                .Returns(2);
 
             // Act
             var result = cancelarController.CancelarInscricao(1);
@@ -1949,8 +1957,7 @@ namespace EventoWeb.Controllers.Tests
             // Assert: usa o Id da pessoa logada (dono), nunca um id arbitrario
             Assert.AreEqual((uint)7, pessoaIdChamada);
             Assert.AreEqual((uint)1, eventoIdChamado);
-            mockEvento.Verify(e => e.AtualizarVagasDisponiveis((uint)1, true), Times.Once);
-            mockSubevento.Verify(s => s.AtualizarVagasDisponiveis((uint)10, true), Times.Once);
+            mockInscricao.Verify(s => s.CancelarInscricaoParticipante((uint)7, (uint)1), Times.Once);
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             Assert.AreEqual("minhasInscricoes", ((RedirectToActionResult)result).ActionName);
             Assert.AreEqual("Desistência realizada com sucesso! Sua vaga foi liberada.", cancelarController.TempData["ParticipanteSuccessMessage"]);
@@ -1963,7 +1970,7 @@ namespace EventoWeb.Controllers.Tests
             var (cancelarController, mockInscricao, _, _) = CreateCancelarController(
                 pessoa: new Pessoa { Id = 7, Cpf = UsernameTeste },
                 evento: new Evento { Id = 1, Status = "F" },
-                cancelamento: (0, new List<uint>()));
+                cancelamento: 0);
 
             // Act
             var result = cancelarController.CancelarInscricao(1);
@@ -1979,17 +1986,16 @@ namespace EventoWeb.Controllers.Tests
         {
             // Arrange: prazo de inscricao fechado NAO bloqueia (regra M1);
             // so o inicio/encerramento do evento bloqueia.
-            var (cancelarController, mockInscricao, mockEvento, _) = CreateCancelarController(
+            var (cancelarController, mockInscricao, _, _) = CreateCancelarController(
                 pessoa: new Pessoa { Id = 7, Cpf = UsernameTeste },
                 evento: new Evento { Id = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(-1), DataInicio = DateTime.Now.AddDays(5) },
-                cancelamento: (1, new List<uint>()));
+                cancelamento: 1);
 
             // Act
             var result = cancelarController.CancelarInscricao(1);
 
             // Assert
             mockInscricao.Verify(s => s.CancelarInscricaoParticipante((uint)7, (uint)1), Times.Once);
-            mockEvento.Verify(e => e.AtualizarVagasDisponiveis((uint)1, true), Times.Once);
             Assert.AreEqual("Desistência realizada com sucesso! Sua vaga foi liberada.", cancelarController.TempData["ParticipanteSuccessMessage"]);
             Assert.AreEqual("minhasInscricoes", ((RedirectToActionResult)result).ActionName);
         }
@@ -2001,7 +2007,7 @@ namespace EventoWeb.Controllers.Tests
             var (cancelarController, mockInscricao, _, _) = CreateCancelarController(
                 pessoa: new Pessoa { Id = 7, Cpf = UsernameTeste },
                 evento: new Evento { Id = 1, Status = "A", DataInicio = DateTime.Now.AddHours(-1) },
-                cancelamento: (0, new List<uint>()));
+                cancelamento: 0);
 
             // Act
             var result = cancelarController.CancelarInscricao(1);
@@ -2019,7 +2025,7 @@ namespace EventoWeb.Controllers.Tests
             var (cancelarController, mockInscricao, _, _) = CreateCancelarController(
                 pessoa: new Pessoa { Id = 7, Cpf = UsernameTeste },
                 evento: new Evento { Id = 1, Status = "A", DataFim = DateTime.Now.AddDays(-1) },
-                cancelamento: (0, new List<uint>()));
+                cancelamento: 0);
 
             // Act
             var result = cancelarController.CancelarInscricao(1);
@@ -2077,7 +2083,7 @@ namespace EventoWeb.Controllers.Tests
             var (cancelarController, mockInscricao, _, _) = CreateCancelarController(
                 pessoa: new Pessoa { Id = 7, Cpf = UsernameTeste },
                 evento: new Evento { Id = 1, Status = "A" },
-                cancelamento: (0, new List<uint>()));
+                cancelamento: 0);
             var anonContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity()) };
             var original = cancelarController.ControllerContext;
             cancelarController.ControllerContext = new ControllerContext { HttpContext = anonContext };
@@ -2103,18 +2109,17 @@ namespace EventoWeb.Controllers.Tests
         public void CancelarInscricaoTest_SemInscricao_InformaNaoEncontradaSemAtualizarVagas()
         {
             // Arrange
-            var (cancelarController, _, mockEvento, mockSubevento) = CreateCancelarController(
+            var (cancelarController, mockInscricao, _, _) = CreateCancelarController(
                 pessoa: new Pessoa { Id = 7, Cpf = UsernameTeste },
                 evento: new Evento { Id = 1, Status = "A" },
-                cancelamento: (0, new List<uint>()));
+                cancelamento: 0);
 
             // Act
             var result = cancelarController.CancelarInscricao(1);
 
             // Assert
             Assert.AreEqual("Nenhuma inscrição de participante encontrada para este evento.", cancelarController.TempData["ParticipanteMessage"]);
-            mockEvento.Verify(e => e.AtualizarVagasDisponiveis(It.IsAny<uint>(), It.IsAny<bool>()), Times.Never);
-            mockSubevento.Verify(s => s.AtualizarVagasDisponiveis(It.IsAny<uint>(), It.IsAny<bool>()), Times.Never);
+            mockInscricao.Verify(s => s.CancelarInscricaoParticipante((uint)7, (uint)1), Times.Once);
             Assert.AreEqual("minhasInscricoes", ((RedirectToActionResult)result).ActionName);
         }
 
@@ -2125,7 +2130,7 @@ namespace EventoWeb.Controllers.Tests
             var (cancelarController, mockInscricao, _, _) = CreateCancelarController(
                 pessoa: null,
                 evento: new Evento { Id = 1, Status = "A" },
-                cancelamento: (0, new List<uint>()));
+                cancelamento: 0);
 
             // Act
             var result = cancelarController.CancelarInscricao(1);
@@ -2143,7 +2148,7 @@ namespace EventoWeb.Controllers.Tests
             var (cancelarController, mockInscricao, _, _) = CreateCancelarController(
                 pessoa: new Pessoa { Id = 7, Cpf = UsernameTeste },
                 evento: null,
-                cancelamento: (0, new List<uint>()));
+                cancelamento: 0);
 
             // Act
             var result = cancelarController.CancelarInscricao(1);
@@ -2157,7 +2162,7 @@ namespace EventoWeb.Controllers.Tests
         private static (InscricaoController Controller, Mock<IInscricaoService> InscricaoService, Mock<IEventoService> EventoService, Mock<ISubeventoService> SubeventoService) CreateCancelarController(
             Pessoa? pessoa,
             Evento? evento,
-            (int Removidas, List<uint> SubeventosAfetados) cancelamento)
+            int cancelamento)
         {
             var mockPessoaService = new Mock<IPessoaService>();
             mockPessoaService.Setup(s => s.GetByCpf(UsernameTeste)).Returns(pessoa!);
