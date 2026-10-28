@@ -154,50 +154,31 @@ function initializeLocation() {
         return;
     }
 
-    // Sem cookie: NÃO dispara geolocalização automática nem carrega Estado.
-    // Permanece como "Todo o Brasil" até o usuário definir no modal ou clicar em "Usar minha localização atual".
+    // Sem cookie: exibe inicialmente "Todo o Brasil" e solicita a permissão de localização nativa ao navegador.
+    // Se o usuário aceitar (ou já tiver permitido no navegador): detecta coordenadas, salva o cookie e atualiza a região.
+    // Se recusar, bloquear ou fechar: NÃO salva cookie nem força IP, permanecendo como "Todo o Brasil".
     updateHeaderLocationText({ cidade: "", estado: "", manual: false });
+    requestGeolocation();
 }
 
 function requestGeolocation() {
     if ("geolocation" in navigator) {
         navigator.geolocation.getCurrentPosition(
             (position) => {
-                console.log("Coordenadas obtidas:", position.coords.latitude, position.coords.longitude);
+                console.log("Permissão concedida. Coordenadas obtidas:", position.coords.latitude, position.coords.longitude);
                 reverseGeocode(position.coords.latitude, position.coords.longitude);
             },
-            async (error) => {
-                console.warn("Falha na geolocalização do navegador:", error.message);
-                const ipLoc = await reverseGeocodeByIp();
-                if (ipLoc) {
-                    ipLoc.cidade = "";
-                    ipLoc.manual = false;
-                    setCookie(LOCATION_COOKIE_NAME, JSON.stringify(ipLoc));
-                    updateHeaderLocationText(ipLoc);
-                    if (isHomePage() || isSearchPage()) {
-                        reloadLocationContext();
-                    }
-                } else {
-                    setDefaultLocation(false);
-                }
+            (error) => {
+                console.warn("Permissão de geolocalização não concedida pelo usuário:", error.message);
+                // Usuário não aceitou a permissão ou bloqueou:
+                // NÃO força localização por IP nem salva cookie. Permanece como "Todo o Brasil".
+                updateHeaderLocationText({ cidade: "", estado: "", manual: false });
             },
             { timeout: 10000, enableHighAccuracy: false, maximumAge: 60000 }
         );
     } else {
         console.warn("Navegador não suporta geolocalização");
-        reverseGeocodeByIp().then(ipLoc => {
-            if (ipLoc) {
-                ipLoc.cidade = "";
-                ipLoc.manual = false;
-                setCookie(LOCATION_COOKIE_NAME, JSON.stringify(ipLoc));
-                updateHeaderLocationText(ipLoc);
-                if (isHomePage() || isSearchPage()) {
-                    reloadLocationContext();
-                }
-            } else {
-                setDefaultLocation(false);
-            }
-        });
+        updateHeaderLocationText({ cidade: "", estado: "", manual: false });
     }
 }
 
