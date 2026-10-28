@@ -27,14 +27,12 @@ namespace EventoWeb.Models
         public string Descricao { get; set; } = null!;
 
         [Display(Name = "Data Inicial do Subvento")]
-        [DataType(DataType.Date)]
-        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = false)]
         [DataInicio(nameof(DataFim))]
         public DateTime DataInicio { get; set; } = DateTime.Today;
 
         [Display(Name = "Data Final do Subvento")]
-        [DataType(DataType.Date)]
-        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = false)]
         public DateTime DataFim { get; set; } = DateTime.Today.AddDays(7);
 
         [Display(Name = "Incrição gratuita")]
@@ -58,7 +56,6 @@ namespace EventoWeb.Models
 
         [Required(ErrorMessage = "A data e hora inicial de inscrição são obrigatórias.")]
         [Display(Name = "Data Inicial de Inscrição")]
-        [DataType(DataType.Date)]
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = false)]
         [DataInicio(nameof(DataFim))]
         public DateTime DataInicioInscricao { get; set; } = DateTime.Today;

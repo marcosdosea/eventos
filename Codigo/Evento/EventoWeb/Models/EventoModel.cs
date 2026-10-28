@@ -19,14 +19,12 @@ namespace EventoWeb.Models
         public string Nome { get; set; } = null!;
 
         [Display(Name = "Data Inicio")]
-        [DataType(DataType.Date)]
-        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = false)]
 		[DataInicio(nameof(DataFim))]
 		public DateTime? DataInicio { get; set; } = DateTime.Today;
 
         [Display(Name = "Data Fim")]
-        [DataType(DataType.Date)]
-        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy}", ApplyFormatInEditMode = false)]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = false)]
 		public DateTime? DataFim { get; set; } = DateTime.Today.AddDays(7);
 
 		[Display(Name = "Descrição")]
