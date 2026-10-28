@@ -7,7 +7,7 @@
         const btnImprimirLote = document.getElementById("btnImprimirLotePdf");
 
         const chkMaster = document.getElementById("chkSelecionarTodosHeader");
-        const btnSelecionarTodosPagina = document.getElementById("btnSelecionarTodosPagina");
+        const btnSelecionarTodosPagina = document.getElementById("btnSelecionarTodosPagina") || document.getElementById("btnSelecionarTodos");
         const btnLimparSelecao = document.getElementById("btnLimparSelecao");
 
         const filtroInput = document.getElementById("filtroParticipantes");
@@ -59,6 +59,27 @@
             }).length;
             lblQtdSelecionados.textContent = selecionados.toString();
             lblQtdTotal.textContent = linhas.length.toString();
+
+            // Atualiza estado do checkbox master refletindo todos os participantes (todas as páginas)
+            if (chkMaster) {
+                const alvoLinhas = (linhasFiltradas && linhasFiltradas.length > 0) ? linhasFiltradas : linhas;
+                if (alvoLinhas.length === 0) {
+                    chkMaster.checked = false;
+                    chkMaster.indeterminate = false;
+                } else {
+                    const marcados = alvoLinhas.filter(l => l.querySelector(".chk-participante-item")?.checked).length;
+                    if (marcados === alvoLinhas.length) {
+                        chkMaster.checked = true;
+                        chkMaster.indeterminate = false;
+                    } else if (marcados > 0) {
+                        chkMaster.checked = false;
+                        chkMaster.indeterminate = true;
+                    } else {
+                        chkMaster.checked = false;
+                        chkMaster.indeterminate = false;
+                    }
+                }
+            }
         }
 
         function aplicarPaginacao() {
@@ -85,20 +106,6 @@
 
             if (btnPaginaAnt) btnPaginaAnt.disabled = (paginaAtual <= 1);
             if (btnPaginaProx) btnPaginaProx.disabled = (paginaAtual >= totalPaginas);
-
-            // Atualiza estado do checkbox master na página
-            if (chkMaster) {
-                const linhasPagina = linhasFiltradas.slice(inicio, fim);
-                if (linhasPagina.length === 0) {
-                    chkMaster.checked = false;
-                    chkMaster.indeterminate = false;
-                } else {
-                    const todosMarcados = linhasPagina.every(l => l.querySelector(".chk-participante-item")?.checked);
-                    const algumMarcado = linhasPagina.some(l => l.querySelector(".chk-participante-item")?.checked);
-                    chkMaster.checked = todosMarcados;
-                    chkMaster.indeterminate = (!todosMarcados && algumMarcado);
-                }
-            }
         }
 
         function filtrarParticipantes() {
@@ -125,6 +132,7 @@
 
             paginaAtual = 1;
             aplicarPaginacao();
+            atualizarContadores();
         }
 
         function atualizarPreviewComLinha(linha) {
@@ -243,33 +251,34 @@
                 const chk = e.target.closest(".chk-participante-item");
                 if (chk) {
                     atualizarContadores();
-                    aplicarPaginacao();
                 }
             });
         }
 
         if (chkMaster) {
             chkMaster.addEventListener("change", function () {
-                const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
-                const fim = inicio + ITENS_POR_PAGINA;
-                const linhasPagina = linhasFiltradas.slice(inicio, fim);
-                linhasPagina.forEach(l => {
+                const marcar = chkMaster.checked;
+                const alvoLinhas = (linhasFiltradas && linhasFiltradas.length > 0) ? linhasFiltradas : linhas;
+                alvoLinhas.forEach(l => {
                     const c = l.querySelector(".chk-participante-item");
-                    if (c) c.checked = chkMaster.checked;
+                    if (c) c.checked = marcar;
                 });
+                chkMaster.indeterminate = false;
                 atualizarContadores();
             });
         }
 
         if (btnSelecionarTodosPagina) {
             btnSelecionarTodosPagina.addEventListener("click", function () {
-                const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
-                const fim = inicio + ITENS_POR_PAGINA;
-                linhasFiltradas.slice(inicio, fim).forEach(l => {
+                const alvoLinhas = (linhasFiltradas && linhasFiltradas.length > 0) ? linhasFiltradas : linhas;
+                alvoLinhas.forEach(l => {
                     const c = l.querySelector(".chk-participante-item");
                     if (c) c.checked = true;
                 });
-                if (chkMaster) chkMaster.checked = true;
+                if (chkMaster) {
+                    chkMaster.checked = true;
+                    chkMaster.indeterminate = false;
+                }
                 atualizarContadores();
             });
         }
