@@ -53,8 +53,8 @@ function updateHeaderLocationText(locationObj) {
 
     if (locationObj && locationObj.estado) {
         const uf = locationObj.estado.toUpperCase();
-        if (locationObj.cidade) {
-            headerBtnText.textContent = `${locationObj.cidade} (${uf})`;
+        if (locationObj.cidade && locationObj.cidade.trim() !== '') {
+            headerBtnText.textContent = `${locationObj.cidade.trim()} (${uf})`;
         } else {
             const nomeEstado = ESTADOS_BRASIL_NOMES[uf] || uf;
             headerBtnText.textContent = `${nomeEstado} (${uf})`;
@@ -145,31 +145,23 @@ function initializeLocation() {
     }
 
     const headerBtnText = document.getElementById('headerLocationText');
-    const serverResolvedUf = headerBtnText ? (headerBtnText.getAttribute('data-server-resolved') || '').trim() : '';
     const location = parseLocationCookie();
-    
-    // Se o servidor já resolveu o estado ativo (ex: usuário autenticado ou busca por estado específico)
-    if (serverResolvedUf) {
-        if (location && location.manual && location.estado === serverResolvedUf && location.cidade) {
+
+    // Se temos cookie de localização persistido
+    if (location) {
+        if (location.estado || location.manual) {
             updateHeaderLocationText(location);
         }
-        // Não substitui o header nem dispara geolocalização automática se o servidor já resolveu a localização
         return;
     }
 
-    // Se temos cookie manual explícito
-    if (location && location.manual) {
-        updateHeaderLocationText(location);
+    // Se o servidor já resolveu o estado ativo (ex: usuário autenticado ou busca por estado específico)
+    const serverResolvedUf = headerBtnText ? (headerBtnText.getAttribute('data-server-resolved') || '').trim() : '';
+    if (serverResolvedUf) {
         return;
     }
 
-    // Se temos cookie automático persistido
-    if (location && location.estado) {
-        updateHeaderLocationText(location);
-        return;
-    }
-
-    // Visitante novo sem cookie e sem estado resolvido pelo servidor
+    // Visitante novo sem cookie e sem estado resolvido pelo servidor: detecção automática
     requestGeolocation();
 }
 
@@ -184,6 +176,7 @@ function requestGeolocation() {
                 console.warn("Falha na geolocalização do navegador:", error.message);
                 const ipLoc = await reverseGeocodeByIp();
                 if (ipLoc) {
+                    ipLoc.cidade = "";
                     ipLoc.manual = false;
                     setCookie(LOCATION_COOKIE_NAME, JSON.stringify(ipLoc));
                     updateHeaderLocationText(ipLoc);
@@ -200,6 +193,7 @@ function requestGeolocation() {
         console.warn("Navegador não suporta geolocalização");
         reverseGeocodeByIp().then(ipLoc => {
             if (ipLoc) {
+                ipLoc.cidade = "";
                 ipLoc.manual = false;
                 setCookie(LOCATION_COOKIE_NAME, JSON.stringify(ipLoc));
                 updateHeaderLocationText(ipLoc);
@@ -217,6 +211,7 @@ async function reverseGeocode(lat, lon) {
     try {
         const locObj = await reverseGeocodeCoords(lat, lon);
         if (locObj) {
+            locObj.cidade = "";
             locObj.manual = false;
             console.log("Localização detectada:", locObj);
             setCookie(LOCATION_COOKIE_NAME, JSON.stringify(locObj));
@@ -230,6 +225,7 @@ async function reverseGeocode(lat, lon) {
         console.warn("Coordenadas não retornaram cidade/estado, tentando IP...");
         const ipLoc = await reverseGeocodeByIp();
         if (ipLoc) {
+            ipLoc.cidade = "";
             ipLoc.manual = false;
             setCookie(LOCATION_COOKIE_NAME, JSON.stringify(ipLoc));
             updateHeaderLocationText(ipLoc);
@@ -412,27 +408,33 @@ function openLocationModal() {
         btnText.innerHTML = 'Usar minha localização atual';
     }
 
-    // Populate form with current cookie if exists, or fallback to serverResolvedUf (ViewBag.EstadoAtivo)
+    // Populate form with current cookie if exists, or fallback to server-resolved values
     const estadoSelect = document.getElementById('modalEstado');
+    const headerBtnText = document.getElementById('headerLocationText');
     const serverResolvedUf = (
         (modalEl ? modalEl.getAttribute('data-server-resolved') : '') ||
         (estadoSelect ? estadoSelect.getAttribute('data-server-resolved') : '') ||
-        (document.getElementById('headerLocationText') ? document.getElementById('headerLocationText').getAttribute('data-server-resolved') : '') ||
+        (headerBtnText ? headerBtnText.getAttribute('data-server-resolved') : '') ||
+        ''
+    ).trim();
+    const serverResolvedCidade = (
+        (modalEl ? modalEl.getAttribute('data-server-resolved-cidade') : '') ||
+        (headerBtnText ? headerBtnText.getAttribute('data-server-resolved-cidade') : '') ||
         ''
     ).trim();
 
     const location = parseLocationCookie();
     if (location && location.estado) {
         if (estadoSelect) estadoSelect.value = location.estado;
-        loadCitiesForState(location.estado, location.cidade);
+        loadCitiesForState(location.estado, location.cidade || "");
     } else if (serverResolvedUf) {
         if (estadoSelect) estadoSelect.value = serverResolvedUf;
-        loadCitiesForState(serverResolvedUf, "");
+        loadCitiesForState(serverResolvedUf, serverResolvedCidade);
     } else {
         if (estadoSelect) estadoSelect.value = "";
         const cidadeSelect = document.getElementById('modalCidade');
         if (cidadeSelect) {
-            cidadeSelect.innerHTML = '<option value="">Selecione um Estado primeiro</option>';
+            cidadeSelect.innerHTML = '<option value="">Todas as cidades (Todo o estado)</option>';
             cidadeSelect.disabled = true;
         }
     }
@@ -444,11 +446,11 @@ async function loadCitiesForState(uf, selectedCity = "") {
     const cidadeSelect = document.getElementById('modalCidade');
     if (!cidadeSelect) return;
 
-    cidadeSelect.innerHTML = '<option value="">Carregando...</option>';
+    cidadeSelect.innerHTML = '<option value="">Carregando cidades...</option>';
     cidadeSelect.disabled = true;
 
     if (!uf) {
-        cidadeSelect.innerHTML = '<option value="">Selecione um Estado primeiro</option>';
+        cidadeSelect.innerHTML = '<option value="">Todas as cidades (Todo o estado)</option>';
         return;
     }
 
@@ -456,7 +458,7 @@ async function loadCitiesForState(uf, selectedCity = "") {
         const response = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${uf}/municipios`);
         const cidades = await response.json();
 
-        cidadeSelect.innerHTML = '<option value="">Selecione uma Cidade</option>';
+        cidadeSelect.innerHTML = '<option value="">Todas as cidades (Todo o estado)</option>';
 
         cidades.sort((a, b) => a.nome.localeCompare(b.nome));
 
@@ -464,7 +466,7 @@ async function loadCitiesForState(uf, selectedCity = "") {
             const option = document.createElement('option');
             option.value = c.nome;
             option.textContent = c.nome;
-            if (c.nome === selectedCity) {
+            if (selectedCity && c.nome.toLowerCase() === selectedCity.toLowerCase()) {
                 option.selected = true;
             }
             cidadeSelect.appendChild(option);
@@ -473,7 +475,8 @@ async function loadCitiesForState(uf, selectedCity = "") {
         cidadeSelect.disabled = false;
     } catch (e) {
         console.error("Erro ao carregar cidades do IBGE", e);
-        cidadeSelect.innerHTML = '<option value="">Erro ao carregar cidades</option>';
+        cidadeSelect.innerHTML = '<option value="">Todas as cidades (Todo o estado)</option>';
+        cidadeSelect.disabled = false;
     }
 }
 
@@ -491,10 +494,11 @@ function saveManualLocation() {
     }
 
     const modalEl = document.getElementById('locationModal');
-    const modal = bootstrap.Modal.getInstance(modalEl);
-    if (modal) modal.hide();
+    if (modalEl) {
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+    }
 
-    // Se estivermos na tela de busca, podemos querer recarregar a busca com o novo filtro
     reloadLocationContext();
 }
 
@@ -504,8 +508,10 @@ function clearManualLocation() {
     setDefaultLocation(true);
 
     const modalEl = document.getElementById('locationModal');
-    const modal = bootstrap.Modal.getInstance(modalEl);
-    if (modal) modal.hide();
+    if (modalEl) {
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+    }
 
     reloadLocationContext();
 }
@@ -516,16 +522,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (searchForm) {
         searchForm.addEventListener('submit', function(e) {
             // Check if user clicked 'clear filter' in the search results
-            // We use a flag (e.g. data attribute or a global variable) if we should ignore the cookie for this submission
             if (window.ignoreLocationCookie) {
-                return; // Let the form submit normally without injecting cookie location
+                return;
             }
 
             const location = parseLocationCookie();
             if (location && location.estado) {
-                // Remove existing ones if present to avoid duplication
-                const existingEstado = document.querySelector('input[name="Estado"]');
-                const existingCidade = document.querySelector('input[name="Cidade"]');
+                // Remove existing ones inside the form if present to avoid duplication
+                const existingEstado = searchForm.querySelector('input[name="Estado"]');
+                const existingCidade = searchForm.querySelector('input[name="Cidade"]');
                 
                 if (existingEstado) existingEstado.remove();
                 if (existingCidade) existingCidade.remove();
@@ -536,11 +541,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 estadoInput.value = location.estado;
                 searchForm.appendChild(estadoInput);
                 
-                if (location.cidade) {
+                if (location.cidade && location.cidade.trim() !== '') {
                     const cidadeInput = document.createElement('input');
                     cidadeInput.type = 'hidden';
                     cidadeInput.name = 'Cidade';
-                    cidadeInput.value = location.cidade;
+                    cidadeInput.value = location.cidade.trim();
                     searchForm.appendChild(cidadeInput);
                 }
             }
@@ -550,22 +555,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function clearSearchLocationFilter() {
     // This is called from the badge in the search results
-    window.ignoreLocationCookie = true; // Flag for form submit
+    window.ignoreLocationCookie = true;
     const searchForm = document.getElementById('headerSearchForm');
     
     if (searchForm) {
-        // Ensure there are no Estado/Cidade inputs
-        const existingEstado = document.querySelector('input[name="Estado"]');
-        const existingCidade = document.querySelector('input[name="Cidade"]');
-        if (existingEstado) existingEstado.value = "";
-        if (existingCidade) existingCidade.value = "";
+        const existingEstado = searchForm.querySelector('input[name="Estado"]');
+        const existingCidade = searchForm.querySelector('input[name="Cidade"]');
+        if (existingEstado) existingEstado.remove();
+        if (existingCidade) existingCidade.remove();
         
-        // Also remove them from the URL by submitting a clean form
+        const todosInput = document.createElement('input');
+        todosInput.type = 'hidden';
+        todosInput.name = 'Estado';
+        todosInput.value = 'TODOS';
+        searchForm.appendChild(todosInput);
+
         searchForm.submit();
     } else {
-        // Fallback
         const url = new URL(window.location.href);
-        url.searchParams.delete('Estado');
+        url.searchParams.set('Estado', 'TODOS');
         url.searchParams.delete('Cidade');
         window.location.href = url.toString();
     }
