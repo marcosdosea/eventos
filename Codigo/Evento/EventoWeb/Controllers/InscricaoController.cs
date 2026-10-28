@@ -560,7 +560,7 @@ namespace EventoWeb.Controllers
         [Authorize]
         [HttpGet]
         [Route("MinhasInscricoes")]
-        public async Task<IActionResult> minhasInscricoes(uint? idEvento)
+        public async Task<IActionResult> minhasInscricoes(uint? idEvento, int pagina = 1)
         {
             var username = User.Identity?.Name;
             if (string.IsNullOrEmpty(username))
@@ -579,8 +579,65 @@ namespace EventoWeb.Controllers
                 return model;
             }).ToList();
 
-            ViewBag.EventoId = idEvento ?? listarEventosModel.FirstOrDefault()?.IdEvento;
-            return View(listarEventosModel);
+            var participante = _pessoaService.GetByCpf(username)
+                ?? inscricaoUser.FirstOrDefault()?.IdPessoaNavigation;
+            ViewBag.NomeParticipante = participante?.Nome;
+            ViewBag.CpfMascarado = MascararCpf(participante?.Cpf ?? username);
+
+            ViewBag.EventoId = ObterEventoParaVoltar(idEvento, listarEventosModel);
+
+            var totalRegistros = listarEventosModel.Count;
+            var totalPaginas = Math.Max(1, (int)Math.Ceiling(totalRegistros / (double)INSCRICOES_POR_PAGINA));
+            var paginaAtual = Math.Clamp(pagina, 1, totalPaginas);
+
+            ViewBag.TotalRegistros = totalRegistros;
+            ViewBag.PaginaAtual = paginaAtual;
+            ViewBag.TotalPaginas = totalPaginas;
+            ViewBag.IdEventoRota = idEvento;
+
+            var inscricoesDaPagina = listarEventosModel
+                .Skip((paginaAtual - 1) * INSCRICOES_POR_PAGINA)
+                .Take(INSCRICOES_POR_PAGINA)
+                .ToList();
+            return View(inscricoesDaPagina);
+        }
+
+        private const int INSCRICOES_POR_PAGINA = 10;
+
+        private uint? ObterEventoParaVoltar(uint? idEvento, List<InscricaoEventoModel> inscricoes)
+        {
+            if (idEvento.HasValue && idEvento.Value > 0)
+            {
+                var evento = inscricoes.FirstOrDefault(i => i.IdEvento == idEvento.Value)?.IdEventoNavigation
+                    ?? _eventoService.Get(idEvento.Value);
+                return InscricoesAbertas(evento) ? idEvento.Value : null;
+            }
+
+            return inscricoes.FirstOrDefault(i => InscricoesAbertas(i.IdEventoNavigation))?.IdEvento;
+        }
+
+        private static bool InscricoesAbertas(Evento? evento)
+        {
+            if (evento == null || evento.Status != "A")
+            {
+                return false;
+            }
+            var agora = DateTime.Now;
+            if (evento.DataInicioInscricao.HasValue && evento.DataInicioInscricao.Value > agora)
+            {
+                return false;
+            }
+            return !evento.DataFimInscricao.HasValue || evento.DataFimInscricao.Value >= agora;
+        }
+
+        private static string? MascararCpf(string? cpf)
+        {
+            var digitos = Util.Methods.RemoveNaoNumericos(cpf ?? string.Empty);
+            if (digitos.Length != 11)
+            {
+                return null;
+            }
+            return $"***.{digitos.Substring(3, 3)}.{digitos.Substring(6, 3)}-**";
         }
 
         [Authorize]

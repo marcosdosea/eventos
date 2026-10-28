@@ -133,7 +133,8 @@
 
     @{
         var showFooter = ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && 
-                         (ViewContext.RouteData.Values["action"]?.ToString() == "Index" || ViewContext.RouteData.Values["action"]?.ToString() == "Buscar");
+                         (ViewContext.RouteData.Values["action"]?.ToString() == "Index" || ViewContext.RouteData.Values["action"]?.ToString() == "Buscar")
+                         || ViewData["RodapeCompleto"] as bool? == true;
     }
     @if (showFooter)
     {
