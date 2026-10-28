@@ -105,8 +105,9 @@ namespace EventoWeb.Controllers
                 }
             }
 
-            // 1. Cookie manual prevalece sobre qualquer detecção ou cadastro
-            if (cookieLocation != null && cookieLocation.Manual == true)
+            // A localização só é carregada se a pessoa tiver o cookie UserLocation aceito/salvo.
+            // Sem cookie: NÃO carrega estado do perfil de Pessoa nem força geolocalização. Inicia como "Todo o Brasil".
+            if (cookieLocation != null)
             {
                 if (!string.IsNullOrWhiteSpace(cookieLocation.Estado))
                 {
@@ -125,73 +126,19 @@ namespace EventoWeb.Controllers
                             {
                                 Estado = ufUpper,
                                 Cidade = cidadeLimpa,
-                                Manual = true,
+                                Manual = cookieLocation.Manual ?? true,
                                 NomeExibicao = nomeExibicao
                             };
                         }
                     }
                     catch (Exception ex)
                     {
-                        _logger?.LogWarning(ex, "Erro ao validar estado do cookie manual.");
+                        _logger?.LogWarning(ex, "Erro ao validar estado do cookie UserLocation.");
                     }
                 }
+
+                // Cookie com estado vazio (ex: usuário escolheu "Ver Todo o Brasil")
                 return new LocalizacaoAtivaModel { Estado = null, Cidade = null, Manual = true, NomeExibicao = "Todo o Brasil" };
-            }
-
-            // 2. Usuário autenticado: fallback para o Estado cadastrado no perfil da pessoa
-            if (User?.Identity != null && User.Identity.IsAuthenticated)
-            {
-                var userCpf = User.FindFirstValue(ClaimTypes.Name);
-                if (!string.IsNullOrEmpty(userCpf))
-                {
-                    try
-                    {
-                        var pessoa = _pessoaService.GetByCpf(userCpf);
-                        if (pessoa != null && !string.IsNullOrWhiteSpace(pessoa.Estado))
-                        {
-                            var ufUpper = pessoa.Estado.Trim().ToUpper();
-                            var estadoValido = _estadosbrasilService.Get(ufUpper);
-                            if (estadoValido != null)
-                            {
-                                return new LocalizacaoAtivaModel
-                                {
-                                    Estado = ufUpper,
-                                    Cidade = null,
-                                    Manual = false,
-                                    NomeExibicao = $"{estadoValido.Nome} ({estadoValido.Estado})"
-                                };
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogWarning(ex, "Erro ao buscar Estado da pessoa autenticada.");
-                    }
-                }
-            }
-
-            // 3. Cookie automático (geolocalização/IP)
-            if (cookieLocation != null && !string.IsNullOrWhiteSpace(cookieLocation.Estado))
-            {
-                var ufUpper = cookieLocation.Estado.Trim().ToUpper();
-                try
-                {
-                    var estadoValido = _estadosbrasilService.Get(ufUpper);
-                    if (estadoValido != null)
-                    {
-                        return new LocalizacaoAtivaModel
-                        {
-                            Estado = ufUpper,
-                            Cidade = null,
-                            Manual = false,
-                            NomeExibicao = $"{estadoValido.Nome} ({estadoValido.Estado})"
-                        };
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger?.LogWarning(ex, "Erro ao validar estado do cookie automático.");
-                }
             }
 
             return new LocalizacaoAtivaModel { Estado = null, Cidade = null, Manual = false, NomeExibicao = "Todo o Brasil" };

@@ -144,10 +144,9 @@ function initializeLocation() {
         return;
     }
 
-    const headerBtnText = document.getElementById('headerLocationText');
     const location = parseLocationCookie();
 
-    // Se temos cookie de localização persistido
+    // Se temos cookie de localização aceito/definido
     if (location) {
         if (location.estado || location.manual) {
             updateHeaderLocationText(location);
@@ -155,14 +154,9 @@ function initializeLocation() {
         return;
     }
 
-    // Se o servidor já resolveu o estado ativo (ex: usuário autenticado ou busca por estado específico)
-    const serverResolvedUf = headerBtnText ? (headerBtnText.getAttribute('data-server-resolved') || '').trim() : '';
-    if (serverResolvedUf) {
-        return;
-    }
-
-    // Visitante novo sem cookie e sem estado resolvido pelo servidor: detecção automática
-    requestGeolocation();
+    // Sem cookie: NÃO dispara geolocalização automática nem carrega Estado.
+    // Permanece como "Todo o Brasil" até o usuário definir no modal ou clicar em "Usar minha localização atual".
+    updateHeaderLocationText({ cidade: "", estado: "", manual: false });
 }
 
 function requestGeolocation() {
