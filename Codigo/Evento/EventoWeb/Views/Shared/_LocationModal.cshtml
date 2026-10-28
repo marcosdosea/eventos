@@ -1,5 +1,5 @@
 <!-- Modal de Localização -->
-<div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true">
+<div class="modal fade" id="locationModal" tabindex="-1" aria-labelledby="locationModalLabel" aria-hidden="true" data-server-resolved="@ViewBag.EstadoAtivo">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
@@ -23,7 +23,7 @@
                 <div class="location-options">
                     <div class="location-form-group">
                         <label for="modalEstado">Estado (UF)</label>
-                        <select id="modalEstado" class="form-select">
+                        <select id="modalEstado" class="form-select" data-server-resolved="@ViewBag.EstadoAtivo">
                             <option value="">Todos os Estados</option>
                             <option value="AC">Acre</option>
                             <option value="AL">Alagoas</option>

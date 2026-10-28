@@ -253,7 +253,7 @@ namespace Service.Tests
             _context.SaveChanges();
 
             _userManager = new MockUserManager<UsuarioIdentity>();
-            _inscricaoService = new InscricaoService(_context, _userManager);
+            _inscricaoService = new InscricaoService(_context, _userManager, new EventoService(_context), new SubeventoService(_context));
 
             var user = new UsuarioIdentity
             {
@@ -591,11 +591,10 @@ namespace Service.Tests
             _context.SaveChanges();
 
             // Act
-            var (removidas, afetados) = _inscricaoService.CancelarInscricaoParticipante(1, 1);
+            var removidas = _inscricaoService.CancelarInscricaoParticipante(1, 1);
 
             // Assert
             Assert.AreEqual(2, removidas);
-            CollectionAssert.AreEquivalent(new List<uint> { 10, 11 }, afetados);
             Assert.AreEqual(0, _context.Inscricaopessoaeventos.Count(i => i.IdPessoa == 1 && i.IdEvento == 1 && i.IdPapel == 4));
             Assert.AreEqual(1, _context.Inscricaopessoaeventos.Count(i => i.IdPessoa == 2 && i.IdEvento == 1 && i.IdPapel == 4));
             Assert.AreEqual(1, _context.Inscricaopessoaeventos.Count(i => i.IdPessoa == 1 && i.IdEvento == 1 && i.IdPapel == 2));
@@ -604,9 +603,8 @@ namespace Service.Tests
             Assert.AreEqual(1, _context.Inscricaopessoasubeventos.Count(s => s.IdPessoa == 2 && s.IdSubEvento == 10));
 
             // Act 2: sem nada para remover
-            var (removidas2, afetados2) = _inscricaoService.CancelarInscricaoParticipante(1, 1);
+            var removidas2 = _inscricaoService.CancelarInscricaoParticipante(1, 1);
             Assert.AreEqual(0, removidas2);
-            Assert.AreEqual(0, afetados2.Count);
         }
     }
 }

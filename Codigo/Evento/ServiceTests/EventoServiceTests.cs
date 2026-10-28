@@ -218,25 +218,87 @@ namespace Service.Tests
         [TestMethod()]
         public void DeleteTest()
         {
-            // Act
-            _eventoService.Delete(1);
-            // Assert
+            // Act: Evento 3 está cancelado ("C") e sem inscrições
+            _eventoService.Delete(3);
+
             Assert.AreEqual(2, _eventoService.GetAll().Count());
-            var evento = _eventoService.Get(1);
-            Assert.AreEqual(null, evento);
+            var evento = _eventoService.Get(3);
+            Assert.IsNull(evento);
+        }
+
+        [TestMethod()]
+        public void DeleteTest_EventoAtivo_LancaServiceException()
+        {
+            // Evento 1 possui Status = "A"
+            var ex = Assert.ThrowsException<ServiceException>(() => _eventoService.Delete(1));
+            Assert.AreEqual("Não é possível excluir um evento ativo. Cancele o evento antes de excluí-lo.", ex.Message);
+        }
+
+        [TestMethod()]
+        public void DeleteTest_EventoComInscricoes_LancaServiceException()
+        {
+            // Arrange: Evento 2 está finalizado ("F"), mas vinculamos uma inscrição direta
+            var inscricao = new Inscricaopessoaevento
+            {
+                Id = 10,
+                IdEvento = 2,
+                IdPessoa = 1,
+                IdPapel = 4,
+                Status = "A"
+            };
+            _context.Inscricaopessoaeventos.Add(inscricao);
+            _context.SaveChanges();
+            _context.ChangeTracker.Clear();
+
+            var ex = Assert.ThrowsException<ServiceException>(() => _eventoService.Delete(2));
+            Assert.AreEqual("Não é possível excluir um evento que possui inscrições vinculadas.", ex.Message);
+        }
+
+        [TestMethod()]
+        public void DeleteTest_EventoComInscricaoEmSubevento_LancaServiceException()
+        {
+            // Arrange: Evento 2 está finalizado ("F") e sem inscrições diretas, mas possui subevento com inscrição
+            var subevento = new Subevento
+            {
+                Id = 20,
+                IdEvento = 2,
+                Nome = "Palestra de Abertura",
+                Descricao = "Palestra",
+                Status = "F",
+                DataInicio = DateTime.Now,
+                DataFim = DateTime.Now.AddDays(1),
+                DataInicioInscricao = DateTime.Now,
+                DataFimInscricao = DateTime.Now.AddDays(1),
+                IdTipoEvento = 1
+            };
+            var inscricaoSub = new Inscricaopessoasubevento
+            {
+                IdPessoa = 1,
+                IdSubEvento = 20,
+                IdPapel = 4,
+                Status = "A"
+            };
+
+            _context.Subeventos.Add(subevento);
+            _context.Inscricaopessoasubeventos.Add(inscricaoSub);
+            _context.SaveChanges();
+            _context.ChangeTracker.Clear();
+
+            var ex = Assert.ThrowsException<ServiceException>(() => _eventoService.Delete(2));
+            Assert.AreEqual("Não é possível excluir um evento que possui inscrições vinculadas.", ex.Message);
         }
 
         [TestMethod()]
         public void DeleteTest_WithDependencies_DeletesSuccessfully()
         {
-            // Arrange: criar subevento, tipo de inscricao, inscricao e pagamento para o evento 2
+            // Arrange: criar subevento e tipo de inscricao para o evento 2 (Finalizado e sem inscritos)
             var subevento = new Subevento
             {
                 Id = 10,
                 IdEvento = 2,
                 Nome = "Workshop C#",
                 Descricao = "Workshop",
-                Status = "A",
+                Status = "F",
                 DataInicio = DateTime.Now,
                 DataFim = DateTime.Now.AddDays(1),
                 DataInicioInscricao = DateTime.Now,
@@ -252,37 +314,16 @@ namespace Service.Tests
                 DataInicio = DateTime.Now,
                 Datafim = DateTime.Now.AddDays(1)
             };
-            var inscricao = new Inscricaopessoaevento
-            {
-                Id = 10,
-                IdEvento = 2,
-                IdPessoa = 1,
-                IdPapel = 4,
-                Status = "A"
-            };
-            var pagamento = new Pagamento
-            {
-                Id = 10,
-                IdInscricaoPessoaEvento = 10,
-                Status = "C",
-                Forma = "P"
-            };
 
             _context.Subeventos.Add(subevento);
             _context.Tipoinscricaos.Add(tipoInscricao);
-            _context.Inscricaopessoaeventos.Add(inscricao);
-            _context.Pagamentos.Add(pagamento);
             _context.SaveChanges();
 
-            // Act
             _eventoService.Delete(2);
 
-            // Assert
             Assert.IsNull(_eventoService.Get(2));
             Assert.IsFalse(_context.Subeventos.Any(s => s.Id == 10));
             Assert.IsFalse(_context.Tipoinscricaos.Any(t => t.Id == 10));
-            Assert.IsFalse(_context.Inscricaopessoaeventos.Any(i => i.Id == 10));
-            Assert.IsFalse(_context.Pagamentos.Any(p => p.Id == 10));
         }
 
         [TestMethod()]
@@ -679,6 +720,212 @@ namespace Service.Tests
             Assert.IsTrue(totalRegistros >= 2);
             Assert.IsTrue(resultados.Any(e => e.Id == 200));
             Assert.IsTrue(resultados.Any(e => e.Id == 201));
+        }
+
+        [TestMethod()]
+        public void GetEventosVitrine_GaranteExclusaoDeEventosComStatusNaoAtivo()
+        {
+            // Arrange
+            var eventoAtivo = new Evento
+            {
+                Id = 301,
+                Nome = "Evento Ativo",
+                Status = "A",
+                Estado = "SE",
+                DataInicioInscricao = DateTime.Now.AddDays(-2),
+                DataFimInscricao = DateTime.Now.AddDays(5),
+                DataInicio = DateTime.Now.AddDays(6),
+                DataFim = DateTime.Now.AddDays(10)
+            };
+            var eventoCadastro = new Evento
+            {
+                Id = 302,
+                Nome = "Evento Cadastro",
+                Status = "C",
+                Estado = "SE",
+                DataInicioInscricao = DateTime.Now.AddDays(-2),
+                DataFimInscricao = DateTime.Now.AddDays(5),
+                DataInicio = DateTime.Now.AddDays(6),
+                DataFim = DateTime.Now.AddDays(10)
+            };
+            var eventoInativo = new Evento
+            {
+                Id = 303,
+                Nome = "Evento Inativo",
+                Status = "I",
+                Estado = "SE",
+                DataInicioInscricao = DateTime.Now.AddDays(-2),
+                DataFimInscricao = DateTime.Now.AddDays(5),
+                DataInicio = DateTime.Now.AddDays(6),
+                DataFim = DateTime.Now.AddDays(10)
+            };
+            var eventoFinalizado = new Evento
+            {
+                Id = 304,
+                Nome = "Evento Finalizado",
+                Status = "F",
+                Estado = "SE",
+                DataInicioInscricao = DateTime.Now.AddDays(-2),
+                DataFimInscricao = DateTime.Now.AddDays(5),
+                DataInicio = DateTime.Now.AddDays(6),
+                DataFim = DateTime.Now.AddDays(10)
+            };
+
+            _context.Eventos.AddRange(eventoAtivo, eventoCadastro, eventoInativo, eventoFinalizado);
+            _context.SaveChanges();
+
+            // Act
+            var vitrine = _eventoService.GetEventosVitrine("SE").ToList();
+
+            // Assert
+            Assert.IsTrue(vitrine.Any(e => e.Id == 301));
+            Assert.IsFalse(vitrine.Any(e => e.Id == 302));
+            Assert.IsFalse(vitrine.Any(e => e.Id == 303));
+            Assert.IsFalse(vitrine.Any(e => e.Id == 304));
+        }
+
+        [TestMethod()]
+        public void GetEventosVitrine_GaranteExclusaoDeEventosComInscricoesOuEventoVencidos()
+        {
+            // Arrange
+            var eventoValido = new Evento
+            {
+                Id = 310,
+                Nome = "Evento Valido",
+                Status = "A",
+                Estado = "SE",
+                DataInicioInscricao = DateTime.Now.AddDays(-2),
+                DataFimInscricao = DateTime.Now.AddDays(5),
+                DataInicio = DateTime.Now.AddDays(6),
+                DataFim = DateTime.Now.AddDays(10)
+            };
+            var eventoInscricaoVencida = new Evento
+            {
+                Id = 311,
+                Nome = "Evento Inscricao Vencida",
+                Status = "A",
+                Estado = "SE",
+                DataInicioInscricao = DateTime.Now.AddDays(-10),
+                DataFimInscricao = DateTime.Now.AddDays(-1),
+                DataInicio = DateTime.Now.AddDays(2),
+                DataFim = DateTime.Now.AddDays(5)
+            };
+            var eventoJaAconteceu = new Evento
+            {
+                Id = 312,
+                Nome = "Evento Ja Aconteceu",
+                Status = "A",
+                Estado = "SE",
+                DataInicioInscricao = DateTime.Now.AddDays(-15),
+                DataFimInscricao = DateTime.Now.AddDays(-10),
+                DataInicio = DateTime.Now.AddDays(-5),
+                DataFim = DateTime.Now.AddDays(-1)
+            };
+
+            _context.Eventos.AddRange(eventoValido, eventoInscricaoVencida, eventoJaAconteceu);
+            _context.SaveChanges();
+
+            // Act
+            var vitrine = _eventoService.GetEventosVitrine("SE").ToList();
+
+            // Assert
+            Assert.IsTrue(vitrine.Any(e => e.Id == 310));
+            Assert.IsFalse(vitrine.Any(e => e.Id == 311));
+            Assert.IsFalse(vitrine.Any(e => e.Id == 312));
+        }
+
+        [TestMethod()]
+        public void GetEventosVitrine_GaranteInclusaoDeEventosComInscricoesAbertasEEmBreve()
+        {
+            // Arrange
+            var eventoAberto = new Evento
+            {
+                Id = 320,
+                Nome = "Evento Inscricoes Abertas",
+                Status = "A",
+                Estado = "BA",
+                DataInicioInscricao = DateTime.Now.AddDays(-3),
+                DataFimInscricao = DateTime.Now.AddDays(4),
+                DataInicio = DateTime.Now.AddDays(5),
+                DataFim = DateTime.Now.AddDays(10)
+            };
+            var eventoEmBreve = new Evento
+            {
+                Id = 321,
+                Nome = "Evento Em Breve",
+                Status = "A",
+                Estado = "BA",
+                DataInicioInscricao = DateTime.Now.AddDays(2),
+                DataFimInscricao = DateTime.Now.AddDays(10),
+                DataInicio = DateTime.Now.AddDays(12),
+                DataFim = DateTime.Now.AddDays(15)
+            };
+            var eventoAbertoSemDataFim = new Evento
+            {
+                Id = 322,
+                Nome = "Evento Aberto Sem Data Fim Inscricao",
+                Status = "A",
+                Estado = "BA",
+                DataInicioInscricao = DateTime.Now.AddDays(-2),
+                DataFimInscricao = null,
+                DataInicio = DateTime.Now.AddDays(3),
+                DataFim = DateTime.Now.AddDays(7)
+            };
+
+            _context.Eventos.AddRange(eventoAberto, eventoEmBreve, eventoAbertoSemDataFim);
+            _context.SaveChanges();
+
+            // Act
+            var vitrine = _eventoService.GetEventosVitrine("BA").ToList();
+
+            // Assert
+            Assert.IsTrue(vitrine.Any(e => e.Id == 320));
+            Assert.IsTrue(vitrine.Any(e => e.Id == 321));
+            Assert.IsTrue(vitrine.Any(e => e.Id == 322));
+        }
+
+        [TestMethod()]
+        public void GetEventosVitrine_GaranteFiltragemPrecisaPorUF()
+        {
+            // Arrange
+            var eventoSE = new Evento
+            {
+                Id = 330,
+                Nome = "Evento Sergipe",
+                Status = "A",
+                Estado = "SE",
+                DataInicioInscricao = DateTime.Now.AddDays(-1),
+                DataFimInscricao = DateTime.Now.AddDays(5),
+                DataInicio = DateTime.Now.AddDays(6),
+                DataFim = DateTime.Now.AddDays(10)
+            };
+            var eventoSP = new Evento
+            {
+                Id = 331,
+                Nome = "Evento Sao Paulo",
+                Status = "A",
+                Estado = "SP",
+                DataInicioInscricao = DateTime.Now.AddDays(-1),
+                DataFimInscricao = DateTime.Now.AddDays(5),
+                DataInicio = DateTime.Now.AddDays(6),
+                DataFim = DateTime.Now.AddDays(10)
+            };
+
+            _context.Eventos.AddRange(eventoSE, eventoSP);
+            _context.SaveChanges();
+
+            // Act & Assert
+            var vitrineSE = _eventoService.GetEventosVitrine("SE").ToList();
+            Assert.IsTrue(vitrineSE.Any(e => e.Id == 330));
+            Assert.IsFalse(vitrineSE.Any(e => e.Id == 331));
+
+            var vitrineSP = _eventoService.GetEventosVitrine("SP").ToList();
+            Assert.IsTrue(vitrineSP.Any(e => e.Id == 331));
+            Assert.IsFalse(vitrineSP.Any(e => e.Id == 330));
+
+            var vitrineTodos = _eventoService.GetEventosVitrine(null).ToList();
+            Assert.IsTrue(vitrineTodos.Any(e => e.Id == 330));
+            Assert.IsTrue(vitrineTodos.Any(e => e.Id == 331));
         }
     }
 }

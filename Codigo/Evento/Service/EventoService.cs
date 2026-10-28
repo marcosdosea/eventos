@@ -11,12 +11,10 @@ namespace Service
         private const int PapelParticipante = 4;
 
         private readonly EventoContext _context;
-        private readonly ITransacaoService _transacaoService;
 
-        public EventoService(EventoContext context, ITransacaoService? transacaoService = null)
+        public EventoService(EventoContext context)
         {
             _context = context;
-            _transacaoService = transacaoService ?? new TransacaoService(context);
         }
 
         /// <summary>
@@ -71,9 +69,23 @@ namespace Service
                 return;
             }
 
+            if (evento.Status == "A")
+            {
+                throw new ServiceException("Não é possível excluir um evento ativo. Cancele o evento antes de excluí-lo.");
+            }
+
+            var idsSubeventos = evento.Subeventos?.Select(s => s.Id).ToList() ?? new List<uint>();
+            var temInscricaoEvento = _context.Inscricaopessoaeventos.Any(i => i.IdEvento == Id);
+            var temInscricaoSubevento = idsSubeventos.Count > 0 && _context.Inscricaopessoasubeventos.Any(s => idsSubeventos.Contains(s.IdSubEvento));
+
+            if (temInscricaoEvento || temInscricaoSubevento)
+            {
+                throw new ServiceException("Não é possível excluir um evento que possui inscrições vinculadas.");
+            }
+
             try
             {
-                _transacaoService.Executar(() => RemoverEventoComDependentes(evento));
+                RemoverEventoComDependentes(evento);
             }
             catch (ServiceException)
             {
@@ -279,6 +291,33 @@ namespace Service
             return _context.Eventos.AsNoTracking();
         }
 
+        /// <summary>
+        /// Retorna os eventos ativos e vigentes para a vitrine da Home.
+        /// Aplica filtros: Status == "A", inscrições abertas ou em breve, e filtro opcional por estado (UF).
+        /// Eventos expirados (com DataFim < DateTime.Now ou DataFimInscricao < DateTime.Now) são excluídos.
+        /// </summary>
+        /// <param name="uf">Sigla da Unidade Federativa (UF) ou null/vazio para Todo o Brasil</param>
+        /// <returns>Lista de eventos vigentes</returns>
+        public IEnumerable<Evento> GetEventosVitrine(string? uf = null)
+        {
+            var now = DateTime.Now;
+            var query = _context.Eventos.AsNoTracking().Where(e => e.Status == "A");
+
+            if (!string.IsNullOrWhiteSpace(uf))
+            {
+                var ufLimpa = uf.Trim().ToUpper();
+                query = query.Where(e => e.Estado != null && e.Estado.Trim().ToUpper() == ufLimpa);
+            }
+
+            query = query.Where(e =>
+                e.DataFim.HasValue && e.DataFim.Value >= now &&
+                e.DataInicioInscricao.HasValue &&
+                (!e.DataFimInscricao.HasValue || e.DataFimInscricao.Value >= now)
+            );
+
+            return query.OrderBy(e => e.DataInicio ?? e.DataInicioInscricao).ToList();
+        }
+
         public IEnumerable<Evento> GetEventByCpf(string userCpf, uint idPapel)
         {
             var pessoa = _context.Pessoas.AsNoTracking().FirstOrDefault(p => p.Cpf == userCpf);
@@ -359,7 +398,7 @@ namespace Service
 
                 var quantidadeParticipantes = participantesNoBanco + inscricoesPendentes - inscricoesRemovidas;
 
-                evento.VagasDisponiveis = evento.VagasOfertadas - quantidadeParticipantes;
+                evento.VagasDisponiveis = Math.Max(0, evento.VagasOfertadas - quantidadeParticipantes);
 
                 if (saveChanges)
                 {

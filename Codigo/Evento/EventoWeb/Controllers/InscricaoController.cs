@@ -22,10 +22,9 @@ namespace EventoWeb.Controllers
         private readonly ISubeventoService _subeventoService;
         private readonly UserManager<UsuarioIdentity> _userManager;
         private readonly ITipoInscricaoService _tipoinscricaoService;
-        private readonly ITransacaoService? _transacaoService;
         private readonly IMapper _mapper;
 
-        public InscricaoController(UserManager<UsuarioIdentity> userManager, ITipoInscricaoService tipoinscricaoService, IEventoService eventoService, IMapper mapper, IInscricaoService inscricaoService, IPessoaService pessoaService, ISubeventoService subeventoService, ITransacaoService? transacaoService = null)
+        public InscricaoController(UserManager<UsuarioIdentity> userManager, ITipoInscricaoService tipoinscricaoService, IEventoService eventoService, IMapper mapper, IInscricaoService inscricaoService, IPessoaService pessoaService, ISubeventoService subeventoService)
         {
             _tipoinscricaoService = tipoinscricaoService;
             _eventoService = eventoService;
@@ -34,7 +33,6 @@ namespace EventoWeb.Controllers
             _pessoaService = pessoaService;
             _subeventoService = subeventoService;
             _userManager = userManager;
-            _transacaoService = transacaoService;
         }
 
         [AllowAnonymous]
@@ -54,11 +52,7 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("Index", "Home", new { vitrine = "true" });
             }
 
-            if (evento.DataInicioInscricao.HasValue && evento.DataInicioInscricao.Value > DateTime.Now)
-            {
-                TempData["ParticipanteMessage"] = "O período de inscrições para este evento ainda não começou.";
-                return RedirectToAction("Index", "Home", new { vitrine = "true" });
-            }
+            ViewBag.InscricaoFutura = evento.DataInicioInscricao.HasValue && evento.DataInicioInscricao.Value > DateTime.Now;
 
             if (evento.DataFimInscricao.HasValue && evento.DataFimInscricao.Value < DateTime.Now)
             {
@@ -538,28 +532,10 @@ namespace EventoWeb.Controllers
             {
                 try
                 {
-                    // A transação cobre o caso de uso inteiro: inscrições + atualização
-                    // de vagas + SaveChanges. Se qualquer passo falhar, tudo é revertido.
-                    ExecutarEmTransacao(() =>
-                    {
-                        _inscricaoService.CreateInscricoesEmLote(eventosParaSalvar, subeventosParaSalvar, saveChanges: false);
-
-                        if (eventosParaSalvar.Any())
-                        {
-                            _eventoService.AtualizarVagasDisponiveis(idEvento, saveChanges: false);
-                        }
-
-                        foreach (var idSub in subeventosAtualizarVagas)
-                        {
-                            _subeventoService.AtualizarVagasDisponiveis(idSub, saveChanges: false);
-                        }
-
-                        _inscricaoService.SaveChanges();
-                    });
+                    _inscricaoService.CreateInscricoesEmLote(idEvento, eventosParaSalvar, subeventosParaSalvar, subeventosAtualizarVagas);
                 }
                 catch (DbUpdateException)
                 {
-                    // A transação foi revertida: nada foi gravado.
                     TempData["ParticipanteMessage"] = "Não foi possível concluir a inscrição. Tente novamente.";
                     return RedirectToAction("realizarInscricao", new { idEvento = idEvento });
                 }
@@ -584,7 +560,7 @@ namespace EventoWeb.Controllers
         [Authorize]
         [HttpGet]
         [Route("MinhasInscricoes")]
-        public async Task<IActionResult> minhasInscricoes(uint? idEvento)
+        public async Task<IActionResult> minhasInscricoes(uint? idEvento, int pagina = 1)
         {
             var username = User.Identity?.Name;
             if (string.IsNullOrEmpty(username))
@@ -603,8 +579,65 @@ namespace EventoWeb.Controllers
                 return model;
             }).ToList();
 
-            ViewBag.EventoId = idEvento ?? listarEventosModel.FirstOrDefault()?.IdEvento;
-            return View(listarEventosModel);
+            var participante = _pessoaService.GetByCpf(username)
+                ?? inscricaoUser.FirstOrDefault()?.IdPessoaNavigation;
+            ViewBag.NomeParticipante = participante?.Nome;
+            ViewBag.CpfMascarado = MascararCpf(participante?.Cpf ?? username);
+
+            ViewBag.EventoId = ObterEventoParaVoltar(idEvento, listarEventosModel);
+
+            var totalRegistros = listarEventosModel.Count;
+            var totalPaginas = Math.Max(1, (int)Math.Ceiling(totalRegistros / (double)INSCRICOES_POR_PAGINA));
+            var paginaAtual = Math.Clamp(pagina, 1, totalPaginas);
+
+            ViewBag.TotalRegistros = totalRegistros;
+            ViewBag.PaginaAtual = paginaAtual;
+            ViewBag.TotalPaginas = totalPaginas;
+            ViewBag.IdEventoRota = idEvento;
+
+            var inscricoesDaPagina = listarEventosModel
+                .Skip((paginaAtual - 1) * INSCRICOES_POR_PAGINA)
+                .Take(INSCRICOES_POR_PAGINA)
+                .ToList();
+            return View(inscricoesDaPagina);
+        }
+
+        private const int INSCRICOES_POR_PAGINA = 10;
+
+        private uint? ObterEventoParaVoltar(uint? idEvento, List<InscricaoEventoModel> inscricoes)
+        {
+            if (idEvento.HasValue && idEvento.Value > 0)
+            {
+                var evento = inscricoes.FirstOrDefault(i => i.IdEvento == idEvento.Value)?.IdEventoNavigation
+                    ?? _eventoService.Get(idEvento.Value);
+                return InscricoesAbertas(evento) ? idEvento.Value : null;
+            }
+
+            return inscricoes.FirstOrDefault(i => InscricoesAbertas(i.IdEventoNavigation))?.IdEvento;
+        }
+
+        private static bool InscricoesAbertas(Evento? evento)
+        {
+            if (evento == null || evento.Status != "A")
+            {
+                return false;
+            }
+            var agora = DateTime.Now;
+            if (evento.DataInicioInscricao.HasValue && evento.DataInicioInscricao.Value > agora)
+            {
+                return false;
+            }
+            return !evento.DataFimInscricao.HasValue || evento.DataFimInscricao.Value >= agora;
+        }
+
+        private static string? MascararCpf(string? cpf)
+        {
+            var digitos = Util.Methods.RemoveNaoNumericos(cpf ?? string.Empty);
+            if (digitos.Length != 11)
+            {
+                return null;
+            }
+            return $"***.{digitos.Substring(3, 3)}.{digitos.Substring(6, 3)}-**";
         }
 
         [Authorize]
@@ -697,25 +730,7 @@ namespace EventoWeb.Controllers
 
             try
             {
-                // A transação cobre a desistência inteira: remoção das inscrições
-                // + liberação das vagas. Se a atualização de vagas falhar, as
-                // inscrições são preservadas.
-                var (removidas, subeventosAfetados) = ExecutarEmTransacao(() =>
-                {
-                    var resultado = _inscricaoService.CancelarInscricaoParticipante(pessoa.Id, idEvento);
-                    if (resultado.Removidas == 0)
-                    {
-                        return resultado;
-                    }
-
-                    _eventoService.AtualizarVagasDisponiveis(idEvento);
-                    foreach (var idSub in resultado.SubeventosAfetados)
-                    {
-                        _subeventoService.AtualizarVagasDisponiveis(idSub);
-                    }
-
-                    return resultado;
-                });
+                var removidas = _inscricaoService.CancelarInscricaoParticipante(pessoa.Id, idEvento);
 
                 if (removidas == 0)
                 {
@@ -736,32 +751,6 @@ namespace EventoWeb.Controllers
 
             TempData["ParticipanteSuccessMessage"] = "Desistência realizada com sucesso! Sua vaga foi liberada.";
             return RedirectToAction(nameof(minhasInscricoes));
-        }
-
-        /// <summary>
-        /// Executa a ação dentro de uma transação explícita quando o provedor é
-        /// relacional. Sem o serviço de transação (ex.: em testes com mocks),
-        /// a ação é executada diretamente.
-        /// </summary>
-        private void ExecutarEmTransacao(Action acao)
-        {
-            if (_transacaoService == null)
-            {
-                acao();
-                return;
-            }
-
-            _transacaoService.Executar(acao);
-        }
-
-        private TResult ExecutarEmTransacao<TResult>(Func<TResult> acao)
-        {
-            if (_transacaoService == null)
-            {
-                return acao();
-            }
-
-            return _transacaoService.Executar(acao);
         }
 
     }

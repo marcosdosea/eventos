@@ -148,7 +148,7 @@
                         <div class="nav-item">
                             <button type="button" class="btn-location-header" onclick="openLocationModal()" aria-label="Localização">
                                 <i class="bi bi-geo-alt-fill"></i>
-                                <span id="headerLocationText">Carregando...</span>
+                                <span id="headerLocationText" data-server-resolved="@ViewBag.EstadoAtivo">@(ViewBag.NomeEstadoAtivo as string ?? "Todo o Brasil")</span>
                             </button>
                         </div>
                     }
@@ -228,7 +228,8 @@
 
     @{
         var showFooter = ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && 
-                         (ViewContext.RouteData.Values["action"]?.ToString() == "Index" || ViewContext.RouteData.Values["action"]?.ToString() == "Buscar");
+                         (ViewContext.RouteData.Values["action"]?.ToString() == "Index" || ViewContext.RouteData.Values["action"]?.ToString() == "Buscar")
+                         || ViewData["RodapeCompleto"] as bool? == true;
     }
     @if (showFooter)
     {

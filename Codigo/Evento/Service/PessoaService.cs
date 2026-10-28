@@ -7,6 +7,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Net.Mail;
 using System.Text.RegularExpressions;
+using static QRCoder.PayloadGenerator;
 namespace Service;
 
 public class PessoaService : IPessoaService
@@ -282,15 +283,15 @@ public class PessoaService : IPessoaService
       
         return true;
     }
-    public async Task<bool> EmailExist(String email, String cpf)
+    public async Task<bool> EmailExist(string email, string cpf)
     {
-        var user = await _userManager.FindByEmailAsync(email);
-        if (user == null) return false;
-        if (cpf != user.UserName)
-        {
-            return true;
-        }
-        return false;
+        if (string.IsNullOrWhiteSpace(email))
+            return false;
+        string cpfLimpo = Util.Methods.RemoveNaoNumericos(cpf);
+        bool emUso = _userManager.Users
+            .Any(u => u.Email == email && u.UserName != cpfLimpo);
+
+        return await Task.FromResult(emUso);
     }
     public async Task<bool>  EmailConfirmado(string email)
     {

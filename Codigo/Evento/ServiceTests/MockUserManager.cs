@@ -15,6 +15,10 @@ namespace Service.Tests
         private readonly Dictionary<string, TUser> _users = new();
         private readonly Dictionary<string, List<string>> _userRoles = new();
 
+        public MockUserManager(IUserStore<TUser> store)
+        : base(store, null, null, null, null, null, null, null, null)
+        {
+        }
         public MockUserManager()
             : base(new Mock<IUserStore<TUser>>().Object,
                    new Mock<IOptions<IdentityOptions>>().Object,
