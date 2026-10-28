@@ -184,7 +184,7 @@
                                         </td>
                                         <td style="text-align: center; white-space: nowrap;">
                                             <a href="javascript:void(0)" class="action-link-edit btn-ver-previa me-2" data-index="@index" title="Exibir crachá deste participante na simulação 1:1">Prévia</a>
-                                            <a asp-controller="Pessoa" asp-action="Edit" asp-route-id="@p.IdPessoa" class="action-link-edit me-2" target="_blank" title="Editar dados cadastrais">Editar</a>
+                                            <a asp-controller="Evento" asp-action="EditParticipante" asp-route-idEvento="@eventoAtualId" asp-route-idPessoa="@p.IdPessoa" class="action-link-edit me-2" target="_blank" title="Editar dados cadastrais e crachá do participante">Editar</a>
                                             <a href="javascript:void(0)" class="action-link-delete btn-excluir-item" data-index="@index" title="Remover da lista de emissão">Excluir</a>
                                         </td>
                                     </tr>
