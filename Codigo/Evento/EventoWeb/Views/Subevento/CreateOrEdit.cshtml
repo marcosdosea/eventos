@@ -60,82 +60,82 @@
                         <span asp-validation-for="Descricao" class="text-danger"></span>
                     </div>
                 </div>
-            </div>       
-                <div class="row">
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label asp-for="DataInicio" class="control-label">Data Início</label>
-                            <input asp-for="DataInicio" class="form-control" style="width:13rem;"/>
-                            <span asp-validation-for="DataInicio" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label asp-for="DataFim" class="control-label">Data Fim</label>
-                            <input asp-for="DataFim" class="form-control" style="width:13rem;/>
-                            <span asp-validation-for="DataFim" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mt-4">
-                        <div class="form-group mb-2">
-                            <div class="d-flex align-items-center">
-                                <div class="form-check">
-                                    <!-- Checkbox que marca se a inscrição será gratuita (valor 1) -->
-                                    <input class="form-check-input" type="checkbox" id="InscricaoGratuita_Checkbox"
-                                    @(Model.InscricaoGratuita == 1 ? "checked" : "")>
-                                    <label class="form-check-label" for="InscricaoGratuita_Checkbox">Gratuito</label>
-                                    <!-- Campo oculto para enviar 1 ou 0 correspondente à propriedade do Model -->
-                                    <input type="hidden" id="InscricaoGratuita" name="InscricaoGratuita" value="@(Model.InscricaoGratuita == 1 ? 1 : 0)">
-                                </div>
-                            </div>
-                            <span asp-validation-for="InscricaoGratuita" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mt-4">
-                        <div class="form-group mb-3">
-                            <div class="d-flex align-items-center">
-                                <div class="form-check">
-                                    <!-- Checkbox que marca se o subevento terá certificado (valor 1) -->
-                                    <input class="form-check-input" type="checkbox" id="PossuiCertificado_Checkbox"
-                                    @(Model.PossuiCertificado == 1 ? "checked" : "")>
-                                    <label class="form-check-label" for="PossuiCertificado_Checkbox">Possui certificado</label>
-                                    <!-- Campo oculto para enviar 1 ou 0 correspondente à propriedade do Model -->
-                                    <input type="hidden" id="PossuiCertificado" name="PossuiCertificado" value="@(Model.PossuiCertificado == 1 ? 1 : 0)">
-                                </div>
-                            </div>
-                            <span asp-validation-for="PossuiCertificado" class="text-danger"></span>
-                        </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label asp-for="DataInicio" class="control-label">Data e Hora Início</label>
+                        <input asp-for="DataInicio" class="form-control" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
+                        <span asp-validation-for="DataInicio" class="text-danger"></span>
                     </div>
                 </div>
-            <br />        
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label asp-for="Status" class="control-label">Status</label>
-                            <select asp-for="Status" class="form-select">
-                                <option value="C">Cadastro</option>
-                                <option value="A">Ativo</option>
-                                <option value="F">Finalizado</option>
-                                <option value="I">Inativo</option>
-                            </select>
-                            <span asp-validation-for="Status" class="text-danger"></span>
-                        </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label asp-for="DataFim" class="control-label">Data e Hora Fim</label>
+                        <input asp-for="DataFim" class="form-control" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
+                        <span asp-validation-for="DataFim" class="text-danger"></span>
                     </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label asp-for="DataInicioInscricao" class="control-label">Início das inscrições</label>
-                            <input asp-for="DataInicioInscricao" class="form-control" style="width:13rem;"/>
-                            <span asp-validation-for="DataInicioInscricao" class="text-danger"></span>
+                </div>
+                <div class="col-md-3 mt-4">
+                    <div class="form-group mb-2">
+                        <div class="d-flex align-items-center">
+                            <div class="form-check">
+                                <!-- Checkbox que marca se a inscrição será gratuita (valor 1) -->
+                                <input class="form-check-input" type="checkbox" id="InscricaoGratuita_Checkbox"
+                                       @(Model.InscricaoGratuita == 1 ? "checked" : "")>
+                                <label class="form-check-label" for="InscricaoGratuita_Checkbox">Gratuito</label>
+                                <!-- Campo oculto para enviar 1 ou 0 correspondente à propriedade do Model -->
+                                <input type="hidden" id="InscricaoGratuita" name="InscricaoGratuita" value="@(Model.InscricaoGratuita == 1 ? 1 : 0)">
+                            </div>
                         </div>
+                        <span asp-validation-for="InscricaoGratuita" class="text-danger"></span>
                     </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label asp-for="DataFimInscricao" class="control-label">Fim das inscrições</label>
-                            <input asp-for="DataFimInscricao" class="form-control" style="width:13rem;"/>
-                            <span asp-validation-for="DataFimInscricao" class="text-danger"></span>
+                </div>
+                <div class="col-md-3 mt-4">
+                    <div class="form-group mb-3">
+                        <div class="d-flex align-items-center">
+                            <div class="form-check">
+                                <!-- Checkbox que marca se o subevento terá certificado (valor 1) -->
+                                <input class="form-check-input" type="checkbox" id="PossuiCertificado_Checkbox"
+                                       @(Model.PossuiCertificado == 1 ? "checked" : "")>
+                                <label class="form-check-label" for="PossuiCertificado_Checkbox">Possui certificado</label>
+                                <!-- Campo oculto para enviar 1 ou 0 correspondente à propriedade do Model -->
+                                <input type="hidden" id="PossuiCertificado" name="PossuiCertificado" value="@(Model.PossuiCertificado == 1 ? 1 : 0)">
+                            </div>
                         </div>
+                        <span asp-validation-for="PossuiCertificado" class="text-danger"></span>
                     </div>
-                </div>      
+                </div>
+            </div>
+            <br />
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label asp-for="Status" class="control-label">Status</label>
+                        <select asp-for="Status" class="form-select">
+                            <option value="C">Cadastro</option>
+                            <option value="A">Ativo</option>
+                            <option value="F">Finalizado</option>
+                            <option value="I">Inativo</option>
+                        </select>
+                        <span asp-validation-for="Status" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label asp-for="DataInicioInscricao" class="control-label">Início das inscrições</label>
+                        <input asp-for="DataInicioInscricao" class="form-control" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
+                        <span asp-validation-for="DataInicioInscricao" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label asp-for="DataFimInscricao" class="control-label">Fim das inscrições</label>
+                        <input asp-for="DataFimInscricao" class="form-control" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
+                        <span asp-validation-for="DataFimInscricao" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
             <div class="row">
                 <div class="col-md-4">
                     <div class="form-group" id="FrequenciaMinimaCertificado">
