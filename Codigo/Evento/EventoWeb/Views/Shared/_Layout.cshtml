@@ -67,12 +67,20 @@
                                     </button>
                                 </div>
                             }
-                            <div class="nav-item">
-                                <a class="nav-link fw-bold text-primary" asp-controller="Evento" asp-action="Create">
-                                    <span class="d-inline d-sm-none">Seu evento</span>
-                                    <span class="d-none d-sm-inline">Seu evento aqui!</span>
-                                </a>
-                            </div>
+                            @{
+                                var perfilAtivoLayout = Context.Session?.GetString("PerfilAtivo");
+                                var podeCriarEventoLayout = (string.IsNullOrEmpty(perfilAtivoLayout) || perfilAtivoLayout == "ADMINISTRADOR" || perfilAtivoLayout == "GESTOR") &&
+                                                            (User.IsInRole("ADMINISTRADOR") || User.IsInRole("GESTOR"));
+                            }
+                            @if (podeCriarEventoLayout)
+                            {
+                                <div class="nav-item">
+                                    <a class="nav-link fw-bold text-primary" asp-controller="Evento" asp-action="Create">
+                                        <span class="d-inline d-sm-none">Seu evento</span>
+                                        <span class="d-none d-sm-inline">Seu evento aqui!</span>
+                                    </a>
+                                </div>
+                            }
                             <partial name="_LoginPartial" />
                         </div>
                     </div>

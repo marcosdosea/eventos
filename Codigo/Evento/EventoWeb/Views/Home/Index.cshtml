@@ -460,13 +460,21 @@
                 </section>
             }
 
-            <section class="destaque">
-                <div class="destaque-content">
-                    <h1>Crie seu evento</h1>
-                    <p>Você está planejando um evento e quer garantir<br> que ele alcance o máximo de pessoas possíveis? <br>O Boralá é o lugar certo para você!</p>
-                    <a href="/Evento" class="btn btn-blue-normal">Criar meu evento!</a>
-                </div>
-            </section>
+            @{
+                var perfilAtivo = Context.Session?.GetString("PerfilAtivo");
+                var podeCriarEvento = (string.IsNullOrEmpty(perfilAtivo) || perfilAtivo == "ADMINISTRADOR" || perfilAtivo == "GESTOR") &&
+                                      (User.IsInRole("ADMINISTRADOR") || User.IsInRole("GESTOR"));
+            }
+            @if (podeCriarEvento)
+            {
+                <section class="destaque">
+                    <div class="destaque-content">
+                        <h1>Crie seu evento</h1>
+                        <p>Você está planejando um evento e quer garantir<br> que ele alcance o máximo de pessoas possíveis? <br>O Boralá é o lugar certo para você!</p>
+                        <a asp-controller="Evento" asp-action="Create" class="btn btn-blue-normal">Criar meu evento!</a>
+                    </div>
+                </section>
+            }
 
             <script src="~/js/carrossel.js"></script>
 
