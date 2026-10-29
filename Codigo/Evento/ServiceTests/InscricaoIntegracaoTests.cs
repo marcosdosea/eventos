@@ -186,7 +186,7 @@ namespace Service.Tests
         }
 
         [TestMethod()]
-        public async Task EventoServiceDelete_ComInscricaoEmSubevento_ConcluiELimpaDependentes()
+        public void EventoServiceDelete_ComInscricaoEmSubevento_ConcluiELimpaDependentes()
         {
             Evento evento = _eventoService.Get(1);
             evento.Status = "I";
