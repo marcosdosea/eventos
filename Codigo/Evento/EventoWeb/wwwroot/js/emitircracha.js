@@ -347,36 +347,39 @@
             });
         }
 
-        // Alteração de Gabarito / Modelo
-        if (selectModelo) {
-            selectModelo.addEventListener("change", function () {
-                const opt = this.options[this.selectedIndex];
-                if (opt) {
-                    const texto = opt.dataset.texto;
-                    const qrcode = opt.dataset.qrcode;
-                    const logo = opt.dataset.logo;
+        function atualizarModeloSelecionado() {
+            if (!selectModelo) return;
+            const opt = selectModelo.options[selectModelo.selectedIndex];
+            if (opt) {
+                const texto = opt.dataset.texto;
+                const qrcode = opt.dataset.qrcode;
+                const logo = opt.dataset.logo;
 
-                    if (lblTextoCracha && texto) {
-                        lblTextoCracha.textContent = texto;
-                    }
+                if (lblTextoCracha && texto) {
+                    lblTextoCracha.textContent = texto;
+                }
 
-                    if (blocoQrCode) {
-                        blocoQrCode.style.display = (qrcode === "0" || qrcode === 0) ? "none" : "flex";
-                    }
+                if (blocoQrCode) {
+                    blocoQrCode.style.display = (qrcode === "0" || qrcode === 0) ? "none" : "flex";
+                }
 
-                    const crachaLogoElement = document.getElementById("crachaLogoElement");
-                    const crachaLogoContainer = document.getElementById("crachaLogoContainer");
-                    if (crachaLogoElement && crachaLogoContainer) {
-                        if (logo && logo.trim() !== "") {
-                            crachaLogoElement.src = logo;
-                            crachaLogoContainer.style.display = "";
-                        } else {
-                            crachaLogoElement.src = "";
-                            crachaLogoContainer.style.display = "none";
-                        }
+                const crachaLogoElement = document.getElementById("crachaLogoElement");
+                const crachaLogoContainer = document.getElementById("crachaLogoContainer");
+                if (crachaLogoElement && crachaLogoContainer) {
+                    if (logo && logo.trim() !== "") {
+                        crachaLogoElement.src = logo;
+                        crachaLogoContainer.style.display = "";
+                    } else {
+                        crachaLogoElement.src = "";
+                        crachaLogoContainer.style.display = "none";
                     }
                 }
-            });
+            }
+        }
+
+        // Alteração de Gabarito / Modelo
+        if (selectModelo) {
+            selectModelo.addEventListener("change", atualizarModeloSelecionado);
         }
 
         // Zoom no Card
@@ -627,32 +630,34 @@
                 const credTexto = previewCredencial?.textContent || "";
                 ctx.fillText(`CPF: ${cpfTexto}       Credencial: ${credTexto}`, largura / 2, 598);
 
-                // Caixa de QR Code e Código de Presença
-                ctx.fillStyle = "#FFFFFF";
-                ctx.strokeStyle = "#E2E8F0";
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.roundRect(50, 625, largura - 100, 165, 16);
-                ctx.fill();
-                ctx.stroke();
+                // Caixa de QR Code e Código de Presença (somente se habilitado no modelo)
+                if (blocoQrCode && blocoQrCode.style.display !== "none") {
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.strokeStyle = "#E2E8F0";
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.roundRect(50, 625, largura - 100, 165, 16);
+                    ctx.fill();
+                    ctx.stroke();
 
-                if (previewQrCodeImg && previewQrCodeImg.style.display !== "none" && previewQrCodeImg.src) {
-                    ctx.drawImage(previewQrCodeImg, 70, 640, 135, 135);
+                    if (previewQrCodeImg && previewQrCodeImg.style.display !== "none" && previewQrCodeImg.src) {
+                        ctx.drawImage(previewQrCodeImg, 70, 640, 135, 135);
+                    }
+
+                    ctx.textAlign = "left";
+                    ctx.fillStyle = "#64748B";
+                    ctx.font = "bold 13px Segoe UI, sans-serif";
+                    ctx.fillText("CÓDIGO DE PRESENÇA", 225, 672);
+
+                    const presencaTexto = previewCodigoPresenca?.textContent || "BL - EVT - 2025 - 00142";
+                    ctx.fillStyle = "#0F172A";
+                    ctx.font = "bold 18px Consolas, monospace";
+                    ctx.fillText(presencaTexto, 225, 706);
+
+                    ctx.fillStyle = "#232ed0";
+                    ctx.font = "bold 14px Segoe UI, sans-serif";
+                    ctx.fillText("✓ Válido em todas salas", 225, 744);
                 }
-
-                ctx.textAlign = "left";
-                ctx.fillStyle = "#64748B";
-                ctx.font = "bold 13px Segoe UI, sans-serif";
-                ctx.fillText("CÓDIGO DE PRESENÇA", 225, 672);
-
-                const presencaTexto = previewCodigoPresenca?.textContent || "BL - EVT - 2025 - 00142";
-                ctx.fillStyle = "#0F172A";
-                ctx.font = "bold 18px Consolas, monospace";
-                ctx.fillText(presencaTexto, 225, 706);
-
-                ctx.fillStyle = "#232ed0";
-                ctx.font = "bold 14px Segoe UI, sans-serif";
-                ctx.fillText("✓ Válido em todas salas", 225, 744);
 
                 // Rodapé com quebra de linhas para nunca cortar texto com reticências
                 ctx.fillStyle = "#F8FAFC";
@@ -841,6 +846,7 @@
         }
 
         // Inicialização
+        atualizarModeloSelecionado();
         filtrarParticipantes();
         atualizarContadores();
         if (linhasFiltradas.length > 0) {

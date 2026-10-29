@@ -316,7 +316,7 @@
                                 <div>Credencial: <strong id="previewCredencialElement">@(primeiroParticipante?.CodigoCredencial ?? "#00142")</strong></div>
                             </div>
 
-                            <div class="cracha-presenca-box" id="blocoQrCodePreview">
+                            <div class="cracha-presenca-box" id="blocoQrCodePreview" style="@(!Model.QrcodeHabilitado ? "display:none;" : "")">
                                 <div class="cracha-qrcode-box">
                                     <img id="previewQrCodeImg"
                                          src="@(primeiroParticipante != null && !string.IsNullOrEmpty(primeiroParticipante.QrCodeBase64) ? $"data:image/png;base64,{primeiroParticipante.QrCodeBase64}" : "")"
