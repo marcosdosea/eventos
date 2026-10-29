@@ -2,12 +2,42 @@
 @using EventoWeb.Models
 @model RegisterConfirmationModel
 @{
-    ViewData["Title"] = "Confirmação de cadastro";
+    ViewData["Title"] = "Confirmação de e-mail";
     var cpf = Request.Query["cpf"].ToString();
 }
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+                <h1 class="text-center blue-normal mb-4">@ViewData["Title"]</h1>
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success alert-dismissible fade show position-relative alert-dismissible-custom" role="alert">
+                        <div class="text-success m-0">
+                            @TempData["SuccessMessage"]
+                        </div>
 
-<h1 class="blue-normal">@ViewData["Title"]</h1>
+                        <button type="button" class="btn-close-custom" data-bs-dismiss="alert" aria-label="Close">
+                            &times;
+                        </button>
+                    </div>
+                }
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-danger alert-dismissible fade show position-relative alert-dismissible-custom" role="alert">
+                        <div class="text-danger m-0">
+                            @TempData["ErrorMessage"]
+                        </div>
 
-
-<partial name="_RegistraConfirmacao" 
-         model="new ConfirmaUserModel { Email = Model.Email, Cpf = @cpf }" />
+                        <button type="button" class="btn-close-custom" data-bs-dismiss="alert" aria-label="Close">
+                            &times;
+                        </button>
+                    </div>
+                }
+            <div class="card shadow-sm border-0">
+                
+                <partial name="_RegistraConfirmacao" 
+                 model="new ConfirmaUserModel { Email = Model.Email, Cpf = @cpf }" />
+            </div>
+        </div>
+    </div>
+</div>
