@@ -821,12 +821,33 @@ namespace EventoWeb.Controllers
                 ? _modelocrachaService.GetByEvento(idEventoAlvo).ToList()
                 : new List<Modelocracha>();
 
+            var predefinido = ObterLogotipoPredefinido();
+            string? logoPadraoDataUrl = null;
+            if (predefinido.bytes != null && predefinido.bytes.Length > 0)
+            {
+                var nomePadrao = ObterNomeArquivoLogo(predefinido.bytes);
+                var mimePadrao = ObterMimeType(nomePadrao, Convert.ToBase64String(predefinido.bytes));
+                logoPadraoDataUrl = $"data:{mimePadrao};base64,{Convert.ToBase64String(predefinido.bytes)}";
+            }
+
+            string? ObterDataUrlLogo(byte[]? bytes)
+            {
+                if (bytes != null && bytes.Length > 0)
+                {
+                    var nome = ObterNomeArquivoLogo(bytes);
+                    var mime = ObterMimeType(nome, Convert.ToBase64String(bytes));
+                    return $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
+                }
+                return logoPadraoDataUrl;
+            }
+
             var modelosDTO = modelosDoEvento.Select(m => new ModelocrachaItemDTO
             {
                 Id = m.Id,
                 Nome = $"Gabarito #{m.Id} - 90×130mm",
                 Texto = m.Texto,
                 TemLogotipo = m.Logotipo != null && m.Logotipo.Length > 0,
+                LogotipoDataUrl = ObterDataUrlLogo(m.Logotipo),
                 Qrcode = m.Qrcode
             }).ToList();
 
@@ -838,6 +859,7 @@ namespace EventoWeb.Controllers
                     Nome = "Modelo Padrão Vertical 9×13cm",
                     Texto = TextoPadraoCracha,
                     TemLogotipo = true,
+                    LogotipoDataUrl = logoPadraoDataUrl,
                     Qrcode = 1
                 });
             }
@@ -849,23 +871,8 @@ namespace EventoWeb.Controllers
             }
             modeloSelecionado ??= modelosDoEvento.FirstOrDefault();
 
-            byte[]? logoBytes = modeloSelecionado?.Logotipo;
-            if (logoBytes == null || logoBytes.Length == 0)
-            {
-                var predefinido = ObterLogotipoPredefinido();
-                if (predefinido.bytes != null && predefinido.bytes.Length > 0)
-                {
-                    logoBytes = predefinido.bytes;
-                }
-            }
+            string? logoDataUrl = ObterDataUrlLogo(modeloSelecionado?.Logotipo);
 
-            string? logoDataUrl = null;
-            if (logoBytes != null && logoBytes.Length > 0)
-            {
-                var nomeLogo = ObterNomeArquivoLogo(logoBytes);
-                var mime = ObterMimeType(nomeLogo, Convert.ToBase64String(logoBytes));
-                logoDataUrl = $"data:{mime};base64,{Convert.ToBase64String(logoBytes)}";
-            }
 
             var textoModelo = modeloSelecionado?.Texto ?? TextoPadraoCracha;
             var qrcodeHabilitado = modeloSelecionado?.Qrcode != 0;

@@ -42,6 +42,7 @@ namespace EventoWeb.Models
         public string Nome { get; set; } = string.Empty;
         public string? Texto { get; set; }
         public bool TemLogotipo { get; set; }
+        public string? LogotipoDataUrl { get; set; }
         public sbyte Qrcode { get; set; }
     }
 

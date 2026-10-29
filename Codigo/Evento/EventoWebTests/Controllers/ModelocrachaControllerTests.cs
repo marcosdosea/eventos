@@ -1298,6 +1298,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsNotNull(model.Participantes);
             Assert.IsTrue(model.Participantes.Count > 0);
             Assert.IsNotNull(model.ModelosDisponiveis);
+            Assert.IsTrue(model.ModelosDisponiveis.Count > 0);
+            Assert.IsFalse(string.IsNullOrEmpty(model.ModelosDisponiveis[0].LogotipoDataUrl));
         }
 
         [TestMethod]

@@ -60,6 +60,7 @@
                                 <option value="@mod.Id"
                                         data-texto="@mod.Texto"
                                         data-qrcode="@mod.Qrcode"
+                                        data-logo="@mod.LogotipoDataUrl"
                                         selected="@(mod.Id == Model.IdModelo ? "selected" : null)">
                                     @mod.Nome
                                 </option>
@@ -67,7 +68,7 @@
                         }
                         else
                         {
-                            <option value="0" selected>Modelo Padrão Vertical 9×13cm</option>
+                            <option value="0" data-logo="@Model.LogotipoDataUrl" selected>Modelo Padrão Vertical 9×13cm</option>
                         }
                     </select>
                 </div>
@@ -200,6 +201,12 @@
                                     </td>
                                 </tr>
                             }
+                            <tr id="linhaSemResultadosBusca" style="display: none;">
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="bi bi-search fs-2 d-block mb-2 text-secondary opacity-50"></i>
+                                    <span class="fw-semibold">Nenhum participante encontrado para o termo pesquisado.</span>
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>

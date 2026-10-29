@@ -106,6 +106,15 @@
 
             if (btnPaginaAnt) btnPaginaAnt.disabled = (paginaAtual <= 1);
             if (btnPaginaProx) btnPaginaProx.disabled = (paginaAtual >= totalPaginas);
+
+            const linhaSemResultados = document.getElementById("linhaSemResultadosBusca");
+            if (linhaSemResultados) {
+                if (linhas.length > 0 && linhasFiltradas.length === 0) {
+                    linhaSemResultados.style.display = "";
+                } else {
+                    linhaSemResultados.style.display = "none";
+                }
+            }
         }
 
         function filtrarParticipantes() {
@@ -345,6 +354,7 @@
                 if (opt) {
                     const texto = opt.dataset.texto;
                     const qrcode = opt.dataset.qrcode;
+                    const logo = opt.dataset.logo;
 
                     if (lblTextoCracha && texto) {
                         lblTextoCracha.textContent = texto;
@@ -352,6 +362,18 @@
 
                     if (blocoQrCode) {
                         blocoQrCode.style.display = (qrcode === "0" || qrcode === 0) ? "none" : "flex";
+                    }
+
+                    const crachaLogoElement = document.getElementById("crachaLogoElement");
+                    const crachaLogoContainer = document.getElementById("crachaLogoContainer");
+                    if (crachaLogoElement && crachaLogoContainer) {
+                        if (logo && logo.trim() !== "") {
+                            crachaLogoElement.src = logo;
+                            crachaLogoContainer.style.display = "";
+                        } else {
+                            crachaLogoElement.src = "";
+                            crachaLogoContainer.style.display = "none";
+                        }
                     }
                 }
             });
@@ -696,6 +718,8 @@
                 const subEvento = (elSubPrint && elSubPrint.style.display !== "none" ? elSubPrint.textContent.trim() : "");
                 const textoRodape = lblTextoCracha?.textContent || "Uso pessoal e intransferível.";
                 const logoSrc = document.getElementById("crachaLogoElement")?.src || "";
+                const crachaLogoContainer = document.getElementById("crachaLogoContainer");
+                const logoVisivel = crachaLogoContainer && crachaLogoContainer.style.display !== "none" && logoSrc;
 
                 // SVG vetorial de QR Code para contingência e renderização determinística
                 const fallbackQrSvg = `<svg viewBox="0 0 100 100" width="70" height="70" style="display:block;margin:auto;"><rect width="100" height="100" fill="#FFFFFF"/><rect x="8" y="8" width="28" height="28" fill="#0F172A"/><rect x="14" y="14" width="16" height="16" fill="#FFFFFF"/><rect x="18" y="18" width="8" height="8" fill="#0F172A"/><rect x="64" y="8" width="28" height="28" fill="#0F172A"/><rect x="70" y="14" width="16" height="16" fill="#FFFFFF"/><rect x="74" y="18" width="8" height="8" fill="#0F172A"/><rect x="8" y="64" width="28" height="28" fill="#0F172A"/><rect x="14" y="70" width="16" height="16" fill="#FFFFFF"/><rect x="18" y="74" width="8" height="8" fill="#0F172A"/><rect x="44" y="12" width="10" height="10" fill="#0F172A"/><rect x="44" y="30" width="10" height="16" fill="#0F172A"/><rect x="12" y="44" width="16" height="10" fill="#0F172A"/><rect x="48" y="48" width="16" height="16" fill="#0F172A"/><rect x="72" y="44" width="14" height="10" fill="#0F172A"/><rect x="48" y="72" width="12" height="16" fill="#0F172A"/><rect x="70" y="70" width="18" height="18" fill="#0F172A"/></svg>`;
@@ -711,6 +735,25 @@
                     const cred = linha.dataset.credencial || "";
                     const presenca = linha.dataset.presenca || "";
                     const qrcodeData = (linha.dataset.qrcode || "").trim();
+                    const fotoUrl = (linha.dataset.foto || "").trim();
+                    const apto = (linha.dataset.apto === "true");
+                    const statusDesc = linha.dataset.statusDesc || (apto ? "Apto" : "Pendente Foto");
+
+                    let avatarHtml = `
+                        <div class="participant-avatar-wrapper">
+                            ${fotoUrl ? `<img src="${fotoUrl}" class="participant-avatar-img" alt="Foto de ${nome}" />` : `
+                            <div class="avatar-placeholder-svg">
+                                <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <circle cx="50" cy="50" r="50" fill="#E2E8F0" />
+                                    <circle cx="50" cy="38" r="20" fill="#475569" />
+                                    <path d="M16 88C16 70 30 64 50 64C70 64 84 70 84 88" fill="#1E293B" />
+                                </svg>
+                            </div>`}
+                            <div class="participant-verified-badge" style="background-color: ${apto ? '#10B981' : '#F59E0B'};" title="${statusDesc}">
+                                <i class="bi ${apto ? 'bi-check-lg' : 'bi-clock-history'}"></i>
+                            </div>
+                        </div>
+                    `;
 
                     let qrcodeHtml = "";
                     if (modeloQrcodeHabilitado) {
@@ -727,11 +770,12 @@
                             <div class="cracha-hole"></div>
                             <div class="cracha-header">
                                 <div class="cracha-header-sub"><span>BORA LÁ EVENTOS</span></div>
-                                ${logoSrc ? `<div class="cracha-logo-institucional-container"><img src="${logoSrc}" class="cracha-logo-institucional-img" alt="Logo"/></div>` : ''}
+                                ${logoVisivel ? `<div class="cracha-logo-institucional-container"><img src="${logoSrc}" class="cracha-logo-institucional-img" alt="Logo"/></div>` : ''}
                                 <h6 class="cracha-evento-title">${nomeEvento}</h6>
                                 ${subEvento ? `<div class="cracha-evento-subtitle">${subEvento}</div>` : ''}
                             </div>
                             <div class="cracha-body">
+                                ${avatarHtml}
                                 <div class="participant-name">${nome}</div>
                                 <div class="participant-org">${depto}</div>
                                 <div class="badge-role-pill">${papel}</div>
