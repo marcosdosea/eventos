@@ -69,8 +69,8 @@
                             }
                             @{
                                 var perfilAtivoLayout = Context.Session?.GetString("PerfilAtivo");
-                                var podeCriarEventoLayout = (string.IsNullOrEmpty(perfilAtivoLayout) || perfilAtivoLayout == "ADMINISTRADOR" || perfilAtivoLayout == "GESTOR") &&
-                                                            (User.IsInRole("ADMINISTRADOR") || User.IsInRole("GESTOR"));
+                                var podeCriarEventoLayout = (string.IsNullOrEmpty(perfilAtivoLayout) || perfilAtivoLayout == "ADMINISTRADOR") &&
+                                                            User.IsInRole("ADMINISTRADOR");
                             }
                             @if (podeCriarEventoLayout)
                             {
