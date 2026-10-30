@@ -117,7 +117,7 @@ namespace EventoWeb.Helpers
                   .AppendLine();
             }
 
-            return Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+            return CsvFormat.ComBom(sb.ToString());
         }
 
         public static string NomeArquivo(string? nomeEvento, uint idEvento, DateTime geradoEm)
@@ -128,21 +128,7 @@ namespace EventoWeb.Helpers
         /// <summary>
         /// Escapa um campo de texto e neutraliza fórmulas de planilha (CSV Injection).
         /// </summary>
-        public static string CampoCsv(string? valor)
-        {
-            valor ??= string.Empty;
-            if (valor.Length > 0 && (valor[0] == '=' || valor[0] == '+' || valor[0] == '-' || valor[0] == '@' || valor[0] == '\t' || valor[0] == '\r'))
-            {
-                valor = "'" + valor;
-            }
-
-            if (valor.Contains(';') || valor.Contains('"') || valor.Contains('\n') || valor.Contains('\r'))
-            {
-                return "\"" + valor.Replace("\"", "\"\"") + "\"";
-            }
-
-            return valor;
-        }
+        public static string CampoCsv(string? valor) => CsvFormat.Campo(valor);
 
         public static string NumCsv(decimal valor) => valor.ToString("0.00", CultureInfo.InvariantCulture);
 
@@ -150,28 +136,6 @@ namespace EventoWeb.Helpers
 
         public static string IntCsv(int valor) => valor.ToString(CultureInfo.InvariantCulture);
 
-        private static string Slug(string? nome)
-        {
-            if (string.IsNullOrWhiteSpace(nome))
-                return "evento";
-
-            var normalizado = nome.Normalize(NormalizationForm.FormD);
-            var semAcentos = new StringBuilder();
-            foreach (var c in normalizado)
-            {
-                if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
-                    semAcentos.Append(c);
-            }
-
-            var slug = System.Text.RegularExpressions.Regex
-                .Replace(semAcentos.ToString(), "[^a-zA-Z0-9]+", "-")
-                .Trim('-')
-                .ToLowerInvariant();
-
-            if (slug.Length > 60)
-                slug = slug.Substring(0, 60).Trim('-');
-
-            return string.IsNullOrEmpty(slug) ? "evento" : slug;
-        }
+        private static string Slug(string? nome) => CsvFormat.Slug(nome);
     }
 }
