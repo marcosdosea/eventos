@@ -16,36 +16,43 @@ namespace EventoWeb.Helpers
     }
 
     /// <summary>
-    /// Gera o CSV da tela de frequência por evento/subevento (Issue #880).
+    /// Gera o CSV da tela de frequência por evento/subevento (Issue #880),
+    /// seguindo o layout da planilha padrão do Moodle:
+    /// title na linha 1, linha em branco e cabeçalho na linha 3.
     /// </summary>
     public static class FrequenciaCsvExporter
     {
-        public const string Cabecalho = "evento;subevento;nome;cpf;email;entrada;saida;permanencia_minutos";
+        public const string Cabecalho = "CPF;NOME;SOBRENOME;E-MAIL;TIPO DA PARTICIPAÇÃO;ENTRADA;SAIDA;PERMANENCIA_MINUTOS";
+        public const string TipoParticipacao = "PARTICIPANTE";
 
         /// <summary>
-        /// Gera as linhas do CSV (cabeçalho + dados) para pré-visualização e serialização.
+        /// Gera as linhas do CSV (título, linha em branco, cabeçalho e dados).
         /// </summary>
         public static List<string[]> GerarLinhas(string? nomeEvento, string? nomeSubEvento, IEnumerable<FrequenciaCsvItem> itens)
         {
             ArgumentNullException.ThrowIfNull(itens);
 
-            var linhas = new List<string[]> { Cabecalho.Split(';') };
-            var evento = CsvFormat.Campo(nomeEvento);
-            var subEvento = CsvFormat.Campo(nomeSubEvento);
+            var linhas = new List<string[]>
+            {
+                new[] { CsvFormat.Campo(Titulo(nomeEvento, nomeSubEvento)) },
+                Array.Empty<string>(),
+                Cabecalho.Split(';')
+            };
 
             foreach (var item in itens)
             {
+                var (nome, sobrenome) = DividirNome(item.Nome);
                 int? permanencia = item.Saida.HasValue
                     ? Math.Max(0, (int)Math.Round((item.Saida.Value - item.Entrada).TotalMinutes, MidpointRounding.AwayFromZero))
                     : null;
 
                 linhas.Add(new[]
                 {
-                    evento,
-                    subEvento,
-                    CsvFormat.Campo(item.Nome),
                     CsvFormat.Campo(item.Cpf),
+                    CsvFormat.Campo(nome),
+                    CsvFormat.Campo(sobrenome),
                     CsvFormat.Campo(item.Email),
+                    TipoParticipacao,
                     item.Entrada.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture),
                     item.Saida?.ToString("dd/MM/yyyy HH:mm", CultureInfo.InvariantCulture) ?? string.Empty,
                     permanencia?.ToString(CultureInfo.InvariantCulture) ?? string.Empty
@@ -53,6 +60,42 @@ namespace EventoWeb.Helpers
             }
 
             return linhas;
+        }
+
+        /// <summary>
+        /// Monta o título da planilha com o nome do evento e, quando houver, do subevento.
+        /// </summary>
+        public static string Titulo(string? nomeEvento, string? nomeSubEvento)
+        {
+            var evento = string.IsNullOrWhiteSpace(nomeEvento) ? "Evento" : nomeEvento.Trim();
+            if (string.IsNullOrWhiteSpace(nomeSubEvento))
+            {
+                return $"TÍTULO: {evento}";
+            }
+
+            return $"TÍTULO: {evento} - {nomeSubEvento.Trim()}";
+        }
+
+        /// <summary>
+        /// Separa o nome completo no primeiro nome e no restante (sobrenome),
+        /// como na planilha padrão do Moodle.
+        /// </summary>
+        public static (string Nome, string Sobrenome) DividirNome(string? nomeCompleto)
+        {
+            var partes = (nomeCompleto ?? string.Empty)
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            if (partes.Length == 0)
+            {
+                return (string.Empty, string.Empty);
+            }
+
+            if (partes.Length == 1)
+            {
+                return (partes[0], string.Empty);
+            }
+
+            return (partes[0], string.Join(' ', partes.Skip(1)));
         }
 
         public static byte[] Gerar(string? nomeEvento, string? nomeSubEvento, IEnumerable<FrequenciaCsvItem> itens)

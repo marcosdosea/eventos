@@ -27,7 +27,8 @@ namespace EventoWeb.Helpers.Tests
         private static string[] Linhas(byte[] csv) =>
             Encoding.UTF8.GetString(csv)
                 .TrimStart('\uFEFF')
-                .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+                .TrimEnd('\r', '\n')
+                .Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
 
         private static string[] Campos(string linha)
         {
@@ -74,41 +75,43 @@ namespace EventoWeb.Helpers.Tests
         }
 
         [TestMethod()]
-        public void Gerar_DeveUsarCabecalhoFixoEOitoColunas()
+        public void Gerar_DeveUsarTituloELayoutDaPlanilhaMoodle()
         {
             var csv = FrequenciaCsvExporter.Gerar("SEMAC 2026", null, new[] { CriarItem() });
             var linhas = Linhas(csv);
 
-            Assert.AreEqual("evento;subevento;nome;cpf;email;entrada;saida;permanencia_minutos", FrequenciaCsvExporter.Cabecalho);
-            Assert.AreEqual(FrequenciaCsvExporter.Cabecalho, linhas[0]);
-            Assert.AreEqual(8, Campos(linhas[0]).Length);
-            Assert.AreEqual(8, Campos(linhas[1]).Length);
+            Assert.AreEqual("CPF;NOME;SOBRENOME;E-MAIL;TIPO DA PARTICIPAÇÃO;ENTRADA;SAIDA;PERMANENCIA_MINUTOS", FrequenciaCsvExporter.Cabecalho);
+            Assert.AreEqual("TÍTULO: SEMAC 2026", linhas[0]);
+            Assert.AreEqual(string.Empty, linhas[1]);
+            Assert.AreEqual(FrequenciaCsvExporter.Cabecalho, linhas[2]);
+            Assert.AreEqual(8, Campos(linhas[2]).Length);
+            Assert.AreEqual(8, Campos(linhas[3]).Length);
         }
 
         [TestMethod()]
-        public void Gerar_EventoSemSubEvento_DeixaColunaSubEventoVazia()
+        public void Gerar_EventoSemSubEvento_PreencheNomeSobrenomeETipo()
         {
             var csv = FrequenciaCsvExporter.Gerar("SEMAC 2026", null, new[] { CriarItem() });
 
-            var campos = Campos(Linhas(csv)[1]);
+            var campos = Campos(Linhas(csv)[3]);
 
             CollectionAssert.AreEqual(
-                new[] { "SEMAC 2026", "", "Maria Silva", "12345678909", "maria@teste.com", "30/10/2026 09:00", "", "" },
+                new[] { "12345678909", "Maria", "Silva", "maria@teste.com", "PARTICIPANTE", "30/10/2026 09:00", "", "" },
                 campos);
         }
 
         [TestMethod()]
-        public void Gerar_ComSubEvento_PreencheColunaECalculaPermanencia()
+        public void Gerar_ComSubEvento_UsaTituloCompletoECalculaPermanencia()
         {
             var item = CriarItem(
                 entrada: new DateTime(2026, 10, 30, 9, 0, 0),
                 saida: new DateTime(2026, 10, 30, 10, 30, 0));
 
             var csv = FrequenciaCsvExporter.Gerar("SEMAC 2026", "Workshop .NET", new[] { item });
-            var campos = Campos(Linhas(csv)[1]);
+            var linhas = Linhas(csv);
+            var campos = Campos(linhas[3]);
 
-            Assert.AreEqual("SEMAC 2026", campos[0]);
-            Assert.AreEqual("Workshop .NET", campos[1]);
+            Assert.AreEqual("TÍTULO: SEMAC 2026 - Workshop .NET", linhas[0]);
             Assert.AreEqual("30/10/2026 09:00", campos[5]);
             Assert.AreEqual("30/10/2026 10:30", campos[6]);
             Assert.AreEqual("90", campos[7]);
@@ -118,7 +121,7 @@ namespace EventoWeb.Helpers.Tests
         public void Gerar_SemSaida_DeixaSaidaEPermanenciaVazias()
         {
             var csv = FrequenciaCsvExporter.Gerar("SEMAC 2026", null, new[] { CriarItem() });
-            var campos = Campos(Linhas(csv)[1]);
+            var campos = Campos(Linhas(csv)[3]);
 
             Assert.AreEqual(string.Empty, campos[6]);
             Assert.AreEqual(string.Empty, campos[7]);
@@ -133,32 +136,35 @@ namespace EventoWeb.Helpers.Tests
 
             var csv = FrequenciaCsvExporter.Gerar("SEMAC 2026", null, new[] { item });
 
-            Assert.AreEqual("0", Campos(Linhas(csv)[1])[7]);
+            Assert.AreEqual("0", Campos(Linhas(csv)[3])[7]);
         }
 
         [TestMethod()]
-        public void Gerar_ListaVazia_RetornaSomenteCabecalhoComBom()
+        public void Gerar_ListaVazia_RetornaTituloLinhaEmBrancoECabecalhoComBom()
         {
             var csv = FrequenciaCsvExporter.Gerar("SEMAC 2026", null, Array.Empty<FrequenciaCsvItem>());
             var linhas = Linhas(csv);
 
             CollectionAssert.AreEqual(new byte[] { 0xEF, 0xBB, 0xBF }, csv.Take(3).ToArray());
-            Assert.AreEqual(1, linhas.Length);
-            Assert.AreEqual(FrequenciaCsvExporter.Cabecalho, linhas[0]);
+            Assert.AreEqual(3, linhas.Length);
+            Assert.AreEqual("TÍTULO: SEMAC 2026", linhas[0]);
+            Assert.AreEqual(string.Empty, linhas[1]);
+            Assert.AreEqual(FrequenciaCsvExporter.Cabecalho, linhas[2]);
         }
 
         [TestMethod()]
         public void Gerar_DeveEscaparDelimitadorAspasEQuebraDeLinha()
         {
-            var item = CriarItem(nome: "Ana;Maria \"X\"", cpf: "1;2", email: "ana@teste.com");
+            var item = CriarItem(nome: "Ana;Maria \"X\" Silva", cpf: "1;2", email: "ana@teste.com");
 
             var csv = FrequenciaCsvExporter.Gerar("SEMAC 2026", null, new[] { item });
-            var linha = Linhas(csv)[1];
+            var linha = Linhas(csv)[3];
 
-            StringAssert.Contains(linha, "\"Ana;Maria \"\"X\"\"\"");
+            StringAssert.Contains(linha, "\"Ana;Maria\";\"\"\"X\"\" Silva\"");
             var campos = Campos(linha);
-            Assert.AreEqual("Ana;Maria \"X\"", campos[2]);
-            Assert.AreEqual("1;2", campos[3]);
+            Assert.AreEqual("1;2", campos[0]);
+            Assert.AreEqual("Ana;Maria", campos[1]);
+            Assert.AreEqual("\"X\" Silva", campos[2]);
 
             Assert.AreEqual("\"a\r\nb\"", CsvFormat.Campo("a\r\nb"));
         }
@@ -175,13 +181,30 @@ namespace EventoWeb.Helpers.Tests
             };
 
             var csv = FrequenciaCsvExporter.Gerar("=HYPERLINK(\"http://malicioso\")", null, itens);
-            var linhas = Linhas(csv).Skip(1).Select(Campos).ToArray();
+            var linhas = Linhas(csv);
+            var dados = linhas.Skip(3).Select(Campos).ToArray();
 
-            StringAssert.StartsWith(linhas[0][0], "'=");
-            StringAssert.StartsWith(linhas[0][2], "'=");
-            StringAssert.StartsWith(linhas[1][2], "'+");
-            StringAssert.StartsWith(linhas[2][2], "'-");
-            StringAssert.StartsWith(linhas[3][2], "'@");
+            StringAssert.Contains(linhas[0], "TÍTULO: =HYPERLINK");
+            StringAssert.StartsWith(dados[0][1], "'=");
+            StringAssert.StartsWith(dados[1][1], "'+");
+            StringAssert.StartsWith(dados[2][1], "'-");
+            StringAssert.StartsWith(dados[3][1], "'@");
+        }
+
+        [TestMethod()]
+        public void DividirNome_DeveSepararPrimeiroNomeDoSobrenome()
+        {
+            var (nome, sobrenome) = FrequenciaCsvExporter.DividirNome("Maria Silva");
+            Assert.AreEqual("Maria", nome);
+            Assert.AreEqual("Silva", sobrenome);
+
+            (nome, sobrenome) = FrequenciaCsvExporter.DividirNome("Maria");
+            Assert.AreEqual("Maria", nome);
+            Assert.AreEqual(string.Empty, sobrenome);
+
+            (nome, sobrenome) = FrequenciaCsvExporter.DividirNome("   ");
+            Assert.AreEqual(string.Empty, nome);
+            Assert.AreEqual(string.Empty, sobrenome);
         }
 
         [TestMethod()]

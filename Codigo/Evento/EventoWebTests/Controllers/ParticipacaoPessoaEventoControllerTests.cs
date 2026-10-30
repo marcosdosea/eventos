@@ -449,13 +449,16 @@ namespace EventoWeb.Controllers.Tests
             StringAssert.EndsWith(result.FileDownloadName, ".csv");
 
             var linhas = LerLinhas(result.FileContents);
-            Assert.AreEqual(2, linhas.Length);
-            Assert.AreEqual(FrequenciaCsvExporter.Cabecalho, linhas[0]);
-            StringAssert.Contains(linhas[1], "Maria Silva");
-            StringAssert.Contains(linhas[1], "maria@teste.com");
-            StringAssert.Contains(linhas[1], "30/10/2026 09:00");
-            StringAssert.Contains(linhas[1], "30/10/2026 10:30");
-            StringAssert.EndsWith(linhas[1], ";90");
+            Assert.AreEqual(3, linhas.Length);
+            StringAssert.StartsWith(linhas[0], "TÍTULO: Evento Teste");
+            Assert.AreEqual(FrequenciaCsvExporter.Cabecalho, linhas[1]);
+            StringAssert.Contains(linhas[2], "Maria");
+            StringAssert.Contains(linhas[2], "Silva");
+            StringAssert.Contains(linhas[2], "maria@teste.com");
+            StringAssert.Contains(linhas[2], "PARTICIPANTE");
+            StringAssert.Contains(linhas[2], "30/10/2026 09:00");
+            StringAssert.Contains(linhas[2], "30/10/2026 10:30");
+            StringAssert.EndsWith(linhas[2], ";90");
             Assert.IsFalse(linhas.Any(l => l.Contains("Outro Evento")));
         }
 
@@ -489,10 +492,12 @@ namespace EventoWeb.Controllers.Tests
             StringAssert.StartsWith(result.FileDownloadName, "frequencia-evento-teste-1-workshop-net-7-");
 
             var linhas = LerLinhas(result.FileContents);
-            Assert.AreEqual(2, linhas.Length);
-            StringAssert.Contains(linhas[1], "Workshop .NET");
-            StringAssert.Contains(linhas[1], "Maria Silva");
-            StringAssert.EndsWith(linhas[1], ";45");
+            Assert.AreEqual(3, linhas.Length);
+            Assert.AreEqual("TÍTULO: Evento Teste - Workshop .NET", linhas[0]);
+            Assert.AreEqual(FrequenciaCsvExporter.Cabecalho, linhas[1]);
+            StringAssert.Contains(linhas[2], "Maria");
+            StringAssert.Contains(linhas[2], "Silva");
+            StringAssert.EndsWith(linhas[2], ";45");
             _mockParticipacao.Verify(s => s.GetAllAsync(), Times.Never);
         }
 
@@ -505,8 +510,9 @@ namespace EventoWeb.Controllers.Tests
 
             Assert.IsNotNull(result);
             var linhas = LerLinhas(result.FileContents);
-            Assert.AreEqual(1, linhas.Length);
-            Assert.AreEqual(FrequenciaCsvExporter.Cabecalho, linhas[0]);
+            Assert.AreEqual(2, linhas.Length);
+            StringAssert.StartsWith(linhas[0], "TÍTULO: Evento Teste");
+            Assert.AreEqual(FrequenciaCsvExporter.Cabecalho, linhas[1]);
         }
 
         [TestMethod()]
