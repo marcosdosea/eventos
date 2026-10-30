@@ -5,7 +5,7 @@ using System.Text;
 namespace EventoWeb.Helpers.Tests
 {
     /// <summary>
-    /// Cobertura da exportação CSV da tela de frequência (Issue #880).
+    /// Cobertura da exportação CSV da tela de frequência.
     /// </summary>
     [TestClass()]
     public class FrequenciaCsvExporterTests

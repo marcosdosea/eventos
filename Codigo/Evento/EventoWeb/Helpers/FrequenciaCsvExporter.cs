@@ -4,7 +4,7 @@ using System.Text;
 namespace EventoWeb.Helpers
 {
     /// <summary>
-    /// Linha de frequência já desacoplada das entidades, usada na exportação CSV (Issue #880).
+    /// Linha de frequência já desacoplada das entidades, usada na exportação CSV.
     /// </summary>
     public sealed class FrequenciaCsvItem
     {
@@ -16,9 +16,9 @@ namespace EventoWeb.Helpers
     }
 
     /// <summary>
-    /// Gera o CSV da tela de frequência por evento/subevento (Issue #880),
+    /// Gera o CSV da tela de frequência por evento/subevento,
     /// seguindo o layout da planilha padrão do Moodle:
-    /// title na linha 1, linha em branco e cabeçalho na linha 3.
+    /// título na linha 1, linha em branco e cabeçalho na linha 3.
     /// </summary>
     public static class FrequenciaCsvExporter
     {
