@@ -253,7 +253,7 @@ namespace EventoWeb.Controllers
             if (gestor == null && colaborador == null)
             {
                 TempData.Clear();
-                TempData["Message"] = mensagemSemVinculo;
+                TempData["ErrorMessage"] = mensagemSemVinculo;
                 if (idEvento > 0 && (User.IsInRole("GESTOR") || User.IsInRole("ADMINISTRADOR")))
                 {
                     return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });

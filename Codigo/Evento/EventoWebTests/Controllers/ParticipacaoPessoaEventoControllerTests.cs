@@ -543,7 +543,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsNotNull(result);
             Assert.AreEqual("GerenciarEventoListar", result.ActionName);
             Assert.AreEqual("Evento", result.ControllerName);
-            Assert.AreEqual("Você não possui um evento vinculado para exportar a frequência!", controller.TempData["Message"]);
+            Assert.AreEqual("Você não possui um evento vinculado para exportar a frequência!", controller.TempData["ErrorMessage"]);
         }
 
         [TestMethod()]
