@@ -1,0 +1,396 @@
+@model EventoWeb.Models.EmitirCrachaModel
+
+@{
+    ViewData["Title"] = "Emissão e Pré-visualização de Crachás";
+    var eventoAtualId = Model.IdEvento;
+    var eventoAtualNome = Model.NomeEvento;
+    var primeiroParticipante = Model.Participantes.FirstOrDefault();
+}
+
+<link rel="stylesheet" href="~/css/modelocracha.css" asp-append-version="true" />
+
+<div class="cracha-page-container">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="cracha-title blue-normal mb-1">Emissão e Pré-visualização de Crachás</h1>
+            <p class="text-muted small mb-0">Homologação, filtragem e emissão gráfica de credenciais e crachás para eventos</p>
+        </div>
+    </div>
+
+    <div class="card-parametros mb-4">
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="card-header-icon">
+                <i class="bi bi-sliders"></i>
+            </div>
+            <h6 class="fw-bold mb-0 text-dark">Parâmetros de Produção e Filtragem</h6>
+        </div>
+
+        <div class="row g-3 align-items-end">
+            <div class="col-lg-5 col-md-6">
+                <label for="selectEventoEmitir" class="form-label fw-bold text-dark small mb-1">
+                    <i class="bi bi-calendar-event blue-normal me-1"></i> Evento Vinculado
+                </label>
+                <select class="form-select rounded-3 py-2" id="selectEventoEmitir" style="border-color: #CBD5E1; font-size: 0.92rem;">
+                    @if (Model.EventosDisponiveis != null && Model.EventosDisponiveis.Any())
+                    {
+                        foreach (var ev in Model.EventosDisponiveis)
+                        {
+                            <option value="@ev.Id" selected="@(ev.Id == eventoAtualId ? "selected" : null)">
+                                @ev.Nome
+                            </option>
+                        }
+                    }
+                    else
+                    {
+                        <option value="@eventoAtualId" selected>@eventoAtualNome</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-lg-4 col-md-6">
+                <label for="selectModeloEmitir" class="form-label fw-bold text-dark small mb-1">
+                    <i class="bi bi-person-badge blue-normal me-1"></i> Gabarito / Modelo do Crachá
+                </label>
+                <div class="input-group">
+                    <select class="form-select rounded-3 py-2" id="selectModeloEmitir" style="border-color: #CBD5E1; font-size: 0.92rem;">
+                        @if (Model.ModelosDisponiveis != null && Model.ModelosDisponiveis.Any())
+                        {
+                            foreach (var mod in Model.ModelosDisponiveis)
+                            {
+                                <option value="@mod.Id"
+                                        data-texto="@mod.Texto"
+                                        data-qrcode="@mod.Qrcode"
+                                        data-logo="@mod.LogotipoDataUrl"
+                                        selected="@(mod.Id == Model.IdModelo ? "selected" : null)">
+                                    @mod.Nome
+                                </option>
+                            }
+                        }
+                        else
+                        {
+                            <option value="0" data-logo="@Model.LogotipoDataUrl" selected>Modelo Padrão Vertical 9×13cm</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-12 text-lg-end text-start">
+                <button type="button" id="btnImprimirLotePdf" class="btn btn-blue-normal color-white py-2 px-4 rounded-3 fw-semibold shadow-sm w-100 d-inline-flex align-items-center justify-content-center gap-2">
+                    <i class="bi bi-printer-fill fs-5"></i>
+                    <div class="text-start lh-1">
+                        <span class="d-block" style="font-size: 0.88rem;">Imprimir Todos</span>
+                        <span class="d-block text-white-50" style="font-size: 0.72rem;">(PDF A4)</span>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 align-items-start">
+        <div class="col-xxl-8 col-xl-7 col-lg-12">
+            <div class="card-parametros p-0 overflow-hidden">
+                <div class="p-3 bg-white border-bottom d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <h5 class="fw-bold text-dark mb-0 fs-6">Participantes Selecionados</h5>
+                        <span class="badge-selecionados" id="badgeContagemSelecionados">
+                            <span id="lblQtdSelecionados">@Model.TotalSelecionados</span>
+                            <span>selecionados de</span>
+                            <span id="lblQtdTotal">@Model.TotalParticipantes</span>
+                        </span>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2 flex-grow-1 justify-content-end" style="max-width: 380px;">
+                        <div class="cracha-search-box w-100">
+                            <i class="bi bi-search text-muted me-2"></i>
+                            <input type="text" id="filtroParticipantes" class="cracha-search-input" placeholder="Filtrar por nome ou CPF..." />
+                        </div>
+                        <button type="button" class="cracha-filter-btn" id="btnLimparBusca" title="Limpar busca">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="cracha-table align-middle" id="tabelaParticipantes">
+                        <thead>
+                            <tr>
+                                <th style="width: 36px; text-align: center;">
+                                    <input type="checkbox" id="chkSelecionarTodosHeader" class="form-check-input custom-chk" checked title="Selecionar todos os participantes" />
+                                </th>
+                                <th style="width: 48px; text-align: center;">FOTO</th>
+                                <th>NOME NO CRACHÁ</th>
+                                <th style="width: 120px;">CPF</th>
+                                <th style="width: 110px; text-align: center;">STATUS</th>
+                                <th style="width: 140px; text-align: center;">AÇÕES</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaParticipantesBody">
+                            @if (Model.Participantes != null && Model.Participantes.Any())
+                            {
+                                int index = 0;
+                                foreach (var p in Model.Participantes)
+                                {
+                                    <tr class="linha-participante @(index == 0 ? "linha-ativa-preview" : "")"
+                                        data-index="@index"
+                                        data-id="@p.IdInscricao"
+                                        data-id-pessoa="@p.IdPessoa"
+                                        data-nome="@p.NomeCracha"
+                                        data-nome-completo="@p.NomeCompleto"
+                                        data-depto="@p.OrganizacaoOuDepto"
+                                        data-cpf-puro="@p.CpfPuro"
+                                        data-cpf="@p.CpfMascarado"
+                                        data-papel="@p.Papel"
+                                        data-tipo="@p.TipoInscricao"
+                                        data-credencial="@p.CodigoCredencial"
+                                        data-presenca="@p.CodigoPresenca"
+                                        data-apto="@(p.StatusApto ? "true" : "false")"
+                                        data-status-desc="@p.StatusDescricao"
+                                        data-qrcode="@p.QrCodeBase64"
+                                        data-foto="@p.FotoDataUrl">
+                                        <td style="text-align: center;">
+                                            <input type="checkbox" class="form-check-input custom-chk chk-participante-item" @(p.Selecionado ? "checked" : "") />
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <div class="participant-thumb-box mx-auto">
+                                                @if (!string.IsNullOrEmpty(p.FotoDataUrl))
+                                                {
+                                                    <img src="@p.FotoDataUrl" alt="@p.NomeCracha" />
+                                                }
+                                                else
+                                                {
+                                                    <div class="avatar-iniciais">@p.NomeCracha.Substring(0, Math.Min(2, p.NomeCracha.Length)).ToUpperInvariant()</div>
+                                                }
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="fw-bold text-dark participante-nome-tabela">@p.NomeCracha</div>
+                                            <div class="text-muted small participante-sub-tabela">@(p.OrganizacaoOuDepto ?? p.TipoInscricao)</div>
+                                        </td>
+                                        <td>
+                                            <span class="font-monospace text-secondary small fw-semibold">@p.CpfMascarado</span>
+                                        </td>
+                                        <td>
+                                            @if (p.StatusApto)
+                                            {
+                                                <span class="badge-status-apto">
+                                                    <i class="bi bi-check-circle-fill me-1"></i> Apto
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge-status-pendente">
+                                                    <i class="bi bi-clock-history me-1"></i> @p.StatusDescricao
+                                                </span>
+                                            }
+                                        </td>
+                                        <td style="text-align: center; white-space: nowrap;">
+                                            <a href="javascript:void(0)" class="action-link-edit btn-ver-previa me-2" data-index="@index" title="Exibir crachá deste participante na simulação 1:1">Prévia</a>
+                                            <a asp-controller="Evento" asp-action="EditParticipante" asp-route-idEvento="@eventoAtualId" asp-route-idPessoa="@p.IdPessoa" class="action-link-edit me-2" target="_blank" title="Editar dados cadastrais e crachá do participante">Editar</a>
+                                            <a href="javascript:void(0)" class="action-link-delete btn-excluir-item" data-index="@index" title="Remover da lista de emissão">Excluir</a>
+                                        </td>
+                                    </tr>
+                                    index++;
+                                }
+                            }
+                            else
+                            {
+                                <tr id="linhaVaziaParticipantes">
+                                    <td colspan="6" class="text-center py-5 text-muted">
+                                        <i class="bi bi-people fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                                        <span class="fw-semibold">Nenhum participante encontrado para este evento.</span>
+                                    </td>
+                                </tr>
+                            }
+                            <tr id="linhaSemResultadosBusca" style="display: none;">
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="bi bi-search fs-2 d-block mb-2 text-secondary opacity-50"></i>
+                                    <span class="fw-semibold">Nenhum participante encontrado para o termo pesquisado.</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-footer-bar">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <button type="button" id="btnSelecionarTodosPagina" class="btn btn-outline-secondary btn-sm rounded-3 fw-semibold px-3 py-1">
+                            Selecionar Todos
+                        </button>
+                        <button type="button" id="btnLimparSelecao" class="btn btn-outline-secondary btn-sm rounded-3 fw-semibold px-3 py-1">
+                            Limpar Seleção
+                        </button>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted small fw-semibold" id="lblTextoPaginacao">Página 1 de 1</span>
+                        <div class="d-flex align-items-center gap-1">
+                            <button type="button" class="cracha-filter-btn" id="btnPaginaAnt" disabled title="Página anterior">
+                                <i class="bi bi-chevron-left"></i>
+                            </button>
+                            <button type="button" class="cracha-filter-btn" id="btnPaginaProx" disabled title="Próxima página">
+                                <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xxl-4 col-xl-5 col-lg-12">
+            <div class="preview-card-container sticky-preview-card" id="cardSimulacaoImpressao">
+                <div class="preview-header-bar">
+                    <div class="preview-status-indicator">
+                        <span class="green-dot"></span>
+                        <span class="fw-bold" style="font-size: 0.85rem; letter-spacing: 0.5px;">SIMULAÇÃO DE IMPRESSÃO 1:1</span>
+                    </div>
+
+                    <div class="preview-actions-bar">
+                        <button type="button" class="preview-action-icon-btn" id="btnZoomOut" title="Reduzir Zoom">
+                            <i class="bi bi-zoom-out"></i>
+                        </button>
+                        <button type="button" class="preview-action-icon-btn" id="btnZoomIn" title="Aumentar Zoom">
+                            <i class="bi bi-zoom-in"></i>
+                        </button>
+                        <button type="button" class="preview-action-icon-btn" id="btnFullscreenPreview" title="Tela Cheia">
+                            <i class="bi bi-arrows-fullscreen"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="preview-stage">
+                    <div class="lanyard-strap">
+                        <span class="lanyard-strap-text">BORA LÁ EVENTOS</span>
+                    </div>
+                    <div class="lanyard-clip"></div>
+
+                    <div class="cracha-physical-card" id="crachaCardElement">
+                        <div class="cracha-hole"></div>
+
+                        <div class="cracha-header">
+                            <div class="cracha-header-sub">
+                                <span class="cracha-header-sub-icon">
+                                    <i class="bi bi-person-vcard-fill"></i>
+                                </span>
+                                <span>BORA LÁ EVENTOS</span>
+                            </div>
+
+                            <div class="cracha-logo-institucional-container" id="crachaLogoContainer" style="@(string.IsNullOrEmpty(Model.LogotipoDataUrl) ? "display: none;" : "")">
+                                <img id="crachaLogoElement" src="@Model.LogotipoDataUrl" alt="Logotipo Institucional" class="cracha-logo-institucional-img" />
+                            </div>
+
+                            <h6 class="cracha-evento-title" id="lblPreviewNomeEvento">@eventoAtualNome</h6>
+                            <div class="cracha-evento-subtitle" id="lblPreviewSubtituloEvento" style="@(string.IsNullOrWhiteSpace(Model.SubtituloEvento) ? "display: none;" : "")">@Model.SubtituloEvento</div>
+                        </div>
+
+                        <div class="cracha-body">
+                            <div class="participant-avatar-wrapper">
+                                <img id="previewFotoElement"
+                                     src="@(primeiroParticipante?.FotoDataUrl ?? "")"
+                                     class="participant-avatar-img"
+                                     alt="Foto do Participante"
+                                     style="@(string.IsNullOrEmpty(primeiroParticipante?.FotoDataUrl) ? "display:none;" : "")" />
+
+                                <div id="previewAvatarPlaceholder" class="avatar-placeholder-svg" style="@(!string.IsNullOrEmpty(primeiroParticipante?.FotoDataUrl) ? "display:none;" : "")">
+                                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <circle cx="50" cy="50" r="50" fill="#E2E8F0" />
+                                        <circle cx="50" cy="38" r="20" fill="#475569" />
+                                        <path d="M16 88C16 70 30 64 50 64C70 64 84 70 84 88" fill="#1E293B" />
+                                    </svg>
+                                </div>
+
+                                <div class="participant-verified-badge" title="Participante Verificado e Homologado">
+                                    <i class="bi bi-check-lg"></i>
+                                </div>
+                            </div>
+
+                            <div class="participant-name" id="previewNomeElement">@(primeiroParticipante?.NomeCracha ?? "CASSIANO MENEZES")</div>
+                            <div class="participant-org" id="previewOrgElement">@(primeiroParticipante?.OrganizacaoOuDepto ?? "Universidade Federal de Sergipe - DSI")</div>
+
+                            <div class="badge-role-pill" id="previewPapelElement">
+                                <i class="bi bi-megaphone-fill me-1" id="previewPapelIcon"></i>
+                                <span id="previewPapelTexto">@(primeiroParticipante?.Papel ?? "PALESTRANTE")</span>
+                            </div>
+
+                            <div class="cracha-meta-info-row">
+                                <div>CPF: <strong id="previewCpfElement">@(primeiroParticipante?.CpfMascarado ?? "042.***.***-18")</strong></div>
+                                <div>Credencial: <strong id="previewCredencialElement">@(primeiroParticipante?.CodigoCredencial ?? "#00142")</strong></div>
+                            </div>
+
+                            <div class="cracha-presenca-box" id="blocoQrCodePreview" style="@(!Model.QrcodeHabilitado ? "display:none;" : "")">
+                                <div class="cracha-qrcode-box">
+                                    <img id="previewQrCodeImg"
+                                         src="@(primeiroParticipante != null && !string.IsNullOrEmpty(primeiroParticipante.QrCodeBase64) ? $"data:image/png;base64,{primeiroParticipante.QrCodeBase64}" : "")"
+                                         alt="QR Code de Presença"
+                                         style="@(primeiroParticipante != null && !string.IsNullOrEmpty(primeiroParticipante.QrCodeBase64) ? "" : "display:none;")" />
+
+                                    <div id="previewQrPlaceholderSvg" style="@(primeiroParticipante != null && !string.IsNullOrEmpty(primeiroParticipante.QrCodeBase64) ? "display:none;" : "")">
+                                        <svg viewBox="0 0 100 100" width="68" height="68">
+                                            <rect width="100" height="100" fill="#FFFFFF" />
+                                            <rect x="8" y="8" width="28" height="28" fill="#0F172A" />
+                                            <rect x="14" y="14" width="16" height="16" fill="#FFFFFF" />
+                                            <rect x="18" y="18" width="8" height="8" fill="#0F172A" />
+                                            <rect x="64" y="8" width="28" height="28" fill="#0F172A" />
+                                            <rect x="70" y="14" width="16" height="16" fill="#FFFFFF" />
+                                            <rect x="74" y="18" width="8" height="8" fill="#0F172A" />
+                                            <rect x="8" y="64" width="28" height="28" fill="#0F172A" />
+                                            <rect x="14" y="70" width="16" height="16" fill="#FFFFFF" />
+                                            <rect x="18" y="74" width="8" height="8" fill="#0F172A" />
+                                            <rect x="44" y="12" width="10" height="10" fill="#0F172A" />
+                                            <rect x="44" y="30" width="10" height="16" fill="#0F172A" />
+                                            <rect x="12" y="44" width="16" height="10" fill="#0F172A" />
+                                            <rect x="48" y="48" width="16" height="16" fill="#0F172A" />
+                                            <rect x="72" y="44" width="14" height="10" fill="#0F172A" />
+                                            <rect x="48" y="72" width="12" height="16" fill="#0F172A" />
+                                            <rect x="70" y="70" width="18" height="18" fill="#0F172A" />
+                                        </svg>
+                                    </div>
+                                </div>
+
+                                <div class="cracha-presenca-text">
+                                    <div class="presenca-label">CÓDIGO DE PRESENÇA</div>
+                                    <div class="presenca-code" id="previewCodigoPresenca">@(primeiroParticipante?.CodigoPresenca ?? "BL - EVT - 2025 - 00142")</div>
+                                    <div class="presenca-status">
+                                        <i class="bi bi-patch-check-fill text-primary"></i>
+                                        <span>Válido em todas salas</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="cracha-footer">
+                            <p class="cracha-footer-text" id="lblPreviewTextoCracha">@(string.IsNullOrWhiteSpace(Model.TextoModelo) ? "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas." : Model.TextoModelo)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center justify-content-center gap-3 mt-3 pt-3 border-top">
+                    <button type="button" id="btnExportarPng" class="btn btn-blue-normal color-white rounded-3 fw-semibold px-4 py-2 shadow-sm d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-download"></i>
+                        <span>Exportar PNG</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-end mt-4 mb-4 w-100">
+        @if (eventoAtualId > 0)
+        {
+            <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@eventoAtualId" class="btn btn-blue-normal btn-lg" style="text-decoration:none; color:white">
+                Voltar
+            </a>
+        }
+        else
+        {
+            <a asp-controller="Evento" asp-action="GerenciarEventoListar" class="btn btn-blue-normal btn-lg" style="text-decoration:none; color:white">
+                Voltar
+            </a>
+        }
+    </div>
+</div>
+
+<div id="containerImpressaoLoteA4" class="d-none"></div>
+
+@section Scripts {
+    <script src="~/js/emitircracha.js" asp-append-version="true"></script>
+}

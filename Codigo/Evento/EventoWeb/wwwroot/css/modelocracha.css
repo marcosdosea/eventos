@@ -704,13 +704,14 @@
 .cracha-footer-text {
     font-style: italic;
     font-size: 0.72rem;
-    line-height: 1.35;
+    line-height: 1.4;
     color: #475569;
     margin: 0;
     font-weight: 400;
-    overflow-wrap: anywhere;
-    word-break: break-word;
-    white-space: pre-wrap;
+    overflow-wrap: break-word;
+    word-break: normal;
+    white-space: normal;
+    text-align: center;
     max-width: 100%;
 }
 
@@ -869,4 +870,276 @@
         border: 1px solid #94A3B8 !important;
         background-color: #FFFFFF !important;
     }
+
+    #containerImpressaoLoteA4 {
+        display: block !important;
+        visibility: visible !important;
+        position: static !important;
+        width: 100% !important;
+    }
+
+    #containerImpressaoLoteA4 * {
+        visibility: visible !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* Quando imprimindo em lote, oculta a tela principal e exibe apenas o container de lote */
+    body.imprimindo-lote .cracha-page-container {
+        display: none !important;
+    }
+
+    body.imprimindo-lote #containerImpressaoLoteA4 {
+        display: block !important;
+        visibility: visible !important;
+    }
+
+    body.imprimindo-lote .print-grid-lote {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10mm !important;
+        padding: 5mm !important;
+    }
+
+    body.imprimindo-lote .cracha-print-item .cracha-physical-card {
+        margin: 0 auto 10mm auto !important;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Emissão de Crachás (EmitirCracha)
+   -------------------------------------------------------------------------- */
+
+.badge-selecionados {
+    background-color: #EEF2FF;
+    color: #232ed0;
+    font-weight: 700;
+    font-size: 0.8rem;
+    padding: 4px 12px;
+    border-radius: 50px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+#tabelaParticipantes {
+    width: 100%;
+    margin-bottom: 0;
+}
+
+#tabelaParticipantes thead th {
+    padding: 10px 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #475569;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #E2E8F0;
+    white-space: nowrap;
+}
+
+#tabelaParticipantes tbody td {
+    padding: 9px 8px;
+    font-size: 0.85rem;
+    color: #334155;
+    vertical-align: middle;
+    border-top: 1px solid #F1F5F9;
+}
+
+#tabelaParticipantes .participante-nome-tabela {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #0F172A;
+    line-height: 1.25;
+}
+
+#tabelaParticipantes .participante-sub-tabela {
+    font-size: 0.74rem;
+    color: #64748B;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 170px;
+}
+
+#tabelaParticipantes .action-link-edit,
+#tabelaParticipantes .action-link-delete {
+    font-size: 0.82rem;
+    font-weight: 600;
+}
+
+.custom-chk {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    border-color: #CBD5E1;
+}
+
+.custom-chk:checked {
+    background-color: #232ed0;
+    border-color: #232ed0;
+}
+
+.participant-thumb-box {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: #F1F5F9;
+    border: 1px solid #E2E8F0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.participant-thumb-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-iniciais {
+    font-weight: 700;
+    color: #232ed0;
+    font-size: 0.82rem;
+}
+
+.avatar-placeholder-svg {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border: 2px solid #FFFFFF;
+}
+
+.avatar-placeholder-svg svg {
+    width: 100%;
+    height: 100%;
+}
+
+.badge-status-apto {
+    background-color: #D1FAE5;
+    color: #065F46;
+    border-radius: 50px;
+    padding: 3px 8px;
+    font-weight: 600;
+    font-size: 0.74rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.badge-status-pendente {
+    background-color: #FEF3C7;
+    color: #92400E;
+    border-radius: 50px;
+    padding: 3px 8px;
+    font-weight: 600;
+    font-size: 0.74rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.linha-participante {
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.linha-participante:hover {
+    background-color: #F8FAFC;
+}
+
+.linha-ativa-preview {
+    background-color: #EFF6FF !important;
+    border-left: 3px solid #232ed0 !important;
+}
+
+.sticky-preview-card {
+    position: sticky;
+    top: 90px;
+}
+
+.cracha-evento-subtitle {
+    font-size: 0.65rem;
+    color: #E0E7FF;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    margin-top: 2px;
+}
+
+.cracha-meta-info-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 4px;
+    margin-bottom: 10px;
+    font-size: 0.72rem;
+    color: #64748B;
+}
+
+.cracha-meta-info-row strong {
+    color: #1E293B;
+}
+
+.cracha-presenca-box {
+    background-color: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.cracha-presenca-text {
+    flex: 1;
+    text-align: left;
+}
+
+.presenca-label {
+    font-size: 0.62rem;
+    font-weight: 800;
+    color: #64748B;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.presenca-code {
+    font-family: 'Consolas', monospace;
+    font-weight: 700;
+    font-size: 0.8rem;
+    color: #0F172A;
+    margin: 2px 0;
+}
+
+.presenca-status {
+    font-size: 0.68rem;
+    color: #232ed0;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+
+/* Impressão em Lote no PDF A4 */
+.print-grid-lote {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12mm;
+    padding: 10mm;
+}
+
+.cracha-print-item {
+    page-break-inside: avoid;
+    break-inside: avoid;
 }
