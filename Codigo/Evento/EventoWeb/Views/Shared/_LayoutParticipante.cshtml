@@ -73,7 +73,7 @@
                             <div class="nav-item">
                                 <button type="button" class="btn-location-header" onclick="openLocationModal()" aria-label="Localização">
                                     <i class="bi bi-geo-alt-fill"></i>
-                                    <span id="headerLocationText" data-server-resolved="@ViewBag.EstadoAtivo">@(ViewBag.NomeEstadoAtivo as string ?? "Todo o Brasil")</span>
+                                    <span id="headerLocationText" data-server-resolved="@ViewBag.EstadoAtivo" data-server-resolved-cidade="@ViewBag.CidadeAtiva">@(ViewBag.NomeEstadoAtivo as string ?? "Todo o Brasil")</span>
                                 </button>
                             </div>
                         }

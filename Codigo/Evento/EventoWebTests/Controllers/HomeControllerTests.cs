@@ -61,7 +61,7 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod]
-        public void Index_UsuarioAutenticadoComUFCadastrada_FiltraPorEstadoDoUsuario()
+        public void Index_UsuarioAutenticadoSemCookie_NaoCarregaEstadoDoPerfil_DefineComoTodoOBrasil()
         {
             var userCpf = "12345678901";
             var httpContext = new DefaultHttpContext();
@@ -75,13 +75,10 @@ namespace EventoWeb.Controllers.Tests
             _mockPessoaService.Setup(s => s.GetByCpf(userCpf))
                 .Returns(new Pessoa { Cpf = userCpf, Estado = "SE" });
 
-            _mockEstadosBrasilService.Setup(s => s.Get("SE"))
-                .Returns(new Estadosbrasil { Estado = "SE", Nome = "Sergipe" });
-
-            _mockEventoService.Setup(s => s.GetEventosVitrine("SE"))
+            _mockEventoService.Setup(s => s.GetEventosVitrine(null))
                 .Returns(new List<Evento>
                 {
-                    new Evento { Id = 1, Nome = "Evento Sergipe", Estado = "SE", Status = "A", DataFim = DateTime.Now.AddDays(5) }
+                    new Evento { Id = 1, Nome = "Evento Geral Brasil", Status = "A", DataFim = DateTime.Now.AddDays(5) }
                 });
 
             var controller = CreateController(httpContext);
@@ -91,10 +88,9 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             var viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.Model, typeof(List<EventoModel>));
-            var model = (List<EventoModel>)viewResult.Model!;
-            Assert.AreEqual(1, model.Count);
-            Assert.AreEqual("SE", controller.ViewBag.EstadoAtivo);
-            _mockEventoService.Verify(s => s.GetEventosVitrine("SE"), Times.Once);
+            Assert.IsNull(controller.ViewBag.EstadoAtivo);
+            Assert.AreEqual("Todo o Brasil", controller.ViewBag.NomeEstadoAtivo);
+            _mockEventoService.Verify(s => s.GetEventosVitrine(null), Times.Once);
         }
 
         [TestMethod]
@@ -201,7 +197,7 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod]
-        public void Index_UsuarioAutenticadoComCookieNaoManual_PrevaleceEstadoDoCadastro()
+        public void Index_UsuarioAutenticadoComCookie_PrevaleceLocalizacaoDoCookie()
         {
             var userCpf = "12345678901";
             var httpContext = new DefaultHttpContext();
@@ -218,13 +214,13 @@ namespace EventoWeb.Controllers.Tests
             _mockPessoaService.Setup(s => s.GetByCpf(userCpf))
                 .Returns(new Pessoa { Cpf = userCpf, Estado = "SE" });
 
-            _mockEstadosBrasilService.Setup(s => s.Get("SE"))
-                .Returns(new Estadosbrasil { Estado = "SE", Nome = "Sergipe" });
+            _mockEstadosBrasilService.Setup(s => s.Get("SP"))
+                .Returns(new Estadosbrasil { Estado = "SP", Nome = "São Paulo" });
 
-            _mockEventoService.Setup(s => s.GetEventosVitrine("SE"))
+            _mockEventoService.Setup(s => s.GetEventosVitrine("SP"))
                 .Returns(new List<Evento>
                 {
-                    new Evento { Id = 1, Nome = "Evento SE", Estado = "SE", Status = "A", DataFim = DateTime.Now.AddDays(5) }
+                    new Evento { Id = 1, Nome = "Evento SP", Estado = "SP", Status = "A", DataFim = DateTime.Now.AddDays(5) }
                 });
 
             var controller = CreateController(httpContext);
@@ -232,9 +228,9 @@ namespace EventoWeb.Controllers.Tests
             var result = controller.Index(vitrine: true);
 
             Assert.IsInstanceOfType(result, typeof(ViewResult));
-            Assert.AreEqual("SE", controller.ViewBag.EstadoAtivo);
-            Assert.AreEqual("Sergipe (SE)", controller.ViewBag.NomeEstadoAtivo);
-            _mockEventoService.Verify(s => s.GetEventosVitrine("SE"), Times.Once);
+            Assert.AreEqual("SP", controller.ViewBag.EstadoAtivo);
+            Assert.AreEqual("São Paulo (SP)", controller.ViewBag.NomeEstadoAtivo);
+            _mockEventoService.Verify(s => s.GetEventosVitrine("SP"), Times.Once);
         }
 
         [TestMethod]
@@ -338,6 +334,110 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             Assert.IsNull(controller.ViewBag.EstadoAtivo);
             Assert.AreEqual("Todo o Brasil", controller.ViewBag.NomeEstadoAtivo);
+        }
+
+        [TestMethod]
+        public void Index_ComCookieManualContendoCidade_DefineCidadeAtivaENomeExibicaoComCidadeEEstado()
+        {
+            var httpContext = new DefaultHttpContext();
+            var cookieJson = "{\"cidade\":\"Itabaiana\",\"estado\":\"SE\",\"manual\":true}";
+            httpContext.Request.Headers.Append("Cookie", $"UserLocation={Uri.EscapeDataString(cookieJson)}");
+
+            _mockEstadosBrasilService.Setup(s => s.Get("SE"))
+                .Returns(new Estadosbrasil { Estado = "SE", Nome = "Sergipe" });
+
+            _mockEventoService.Setup(s => s.GetEventosVitrine("SE"))
+                .Returns(new List<Evento>
+                {
+                    new Evento { Id = 10, Nome = "Evento Itabaiana", Estado = "SE", Status = "A", DataFim = DateTime.Now.AddDays(3) }
+                });
+
+            var controller = CreateController(httpContext);
+
+            var result = controller.Index(vitrine: true);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            Assert.AreEqual("SE", controller.ViewBag.EstadoAtivo);
+            Assert.AreEqual("Itabaiana", controller.ViewBag.CidadeAtiva);
+            Assert.AreEqual("Itabaiana (SE)", controller.ViewBag.NomeEstadoAtivo);
+            _mockEventoService.Verify(s => s.GetEventosVitrine("SE"), Times.Once);
+        }
+
+        [TestMethod]
+        public void Index_ComCookieManualSemCidade_DefineNomeExibicaoComEstadoEEstado()
+        {
+            var httpContext = new DefaultHttpContext();
+            var cookieJson = "{\"cidade\":\"\",\"estado\":\"SE\",\"manual\":true}";
+            httpContext.Request.Headers.Append("Cookie", $"UserLocation={Uri.EscapeDataString(cookieJson)}");
+
+            _mockEstadosBrasilService.Setup(s => s.Get("SE"))
+                .Returns(new Estadosbrasil { Estado = "SE", Nome = "Sergipe" });
+
+            _mockEventoService.Setup(s => s.GetEventosVitrine("SE"))
+                .Returns(new List<Evento>
+                {
+                    new Evento { Id = 11, Nome = "Evento Geral SE", Estado = "SE", Status = "A", DataFim = DateTime.Now.AddDays(3) }
+                });
+
+            var controller = CreateController(httpContext);
+
+            var result = controller.Index(vitrine: true);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            Assert.AreEqual("SE", controller.ViewBag.EstadoAtivo);
+            Assert.IsNull(controller.ViewBag.CidadeAtiva);
+            Assert.AreEqual("Sergipe (SE)", controller.ViewBag.NomeEstadoAtivo);
+            _mockEventoService.Verify(s => s.GetEventosVitrine("SE"), Times.Once);
+        }
+
+        [TestMethod]
+        public void Buscar_ComEstadoECidadeNoFiltro_DefineCidadeAtivaENomeExibicaoComCidadeEEstado()
+        {
+            var httpContext = new DefaultHttpContext();
+            _mockEstadosBrasilService.Setup(s => s.Get("SE"))
+                .Returns(new Estadosbrasil { Estado = "SE", Nome = "Sergipe" });
+
+            int totalRegistros = 0;
+            _mockEventoService.Setup(s => s.Search(It.IsAny<Core.DTO.EventoFilterDTO>(), It.IsAny<int>(), It.IsAny<int>(), out totalRegistros))
+                .Returns(new List<Evento>());
+            _mockTipoEventoService.Setup(s => s.GetAll()).Returns(new List<Tipoevento>());
+            _mockAreaInteresseService.Setup(s => s.GetAll()).Returns(new List<Areainteresse>());
+            _mockEstadosBrasilService.Setup(s => s.GetAll()).Returns(new List<Estadosbrasil>());
+
+            var controller = CreateController(httpContext);
+            var filter = new Core.DTO.EventoFilterDTO { Estado = "SE", Cidade = "Itabaiana" };
+
+            var result = controller.Buscar(filter);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            Assert.AreEqual("SE", controller.ViewBag.EstadoAtivo);
+            Assert.AreEqual("Itabaiana", controller.ViewBag.CidadeAtiva);
+            Assert.AreEqual("Itabaiana (SE)", controller.ViewBag.NomeEstadoAtivo);
+        }
+
+        [TestMethod]
+        public void Buscar_ComEstadoNoFiltroESemCidade_DefineNomeExibicaoComEstadoEEstado()
+        {
+            var httpContext = new DefaultHttpContext();
+            _mockEstadosBrasilService.Setup(s => s.Get("SE"))
+                .Returns(new Estadosbrasil { Estado = "SE", Nome = "Sergipe" });
+
+            int totalRegistros = 0;
+            _mockEventoService.Setup(s => s.Search(It.IsAny<Core.DTO.EventoFilterDTO>(), It.IsAny<int>(), It.IsAny<int>(), out totalRegistros))
+                .Returns(new List<Evento>());
+            _mockTipoEventoService.Setup(s => s.GetAll()).Returns(new List<Tipoevento>());
+            _mockAreaInteresseService.Setup(s => s.GetAll()).Returns(new List<Areainteresse>());
+            _mockEstadosBrasilService.Setup(s => s.GetAll()).Returns(new List<Estadosbrasil>());
+
+            var controller = CreateController(httpContext);
+            var filter = new Core.DTO.EventoFilterDTO { Estado = "SE", Cidade = "" };
+
+            var result = controller.Buscar(filter);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            Assert.AreEqual("SE", controller.ViewBag.EstadoAtivo);
+            Assert.IsNull(controller.ViewBag.CidadeAtiva);
+            Assert.AreEqual("Sergipe (SE)", controller.ViewBag.NomeEstadoAtivo);
         }
     }
 }

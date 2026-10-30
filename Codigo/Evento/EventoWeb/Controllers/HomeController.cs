@@ -38,7 +38,15 @@ namespace EventoWeb.Controllers
             public bool? Manual { get; set; }
         }
 
-        public string? ObterEstadoAtivo(string? ufParam = null)
+        public class LocalizacaoAtivaModel
+        {
+            public string? Estado { get; set; }
+            public string? Cidade { get; set; }
+            public bool Manual { get; set; }
+            public string NomeExibicao { get; set; } = "Todo o Brasil";
+        }
+
+        public LocalizacaoAtivaModel ObterLocalizacaoAtiva(string? ufParam = null, string? cidadeParam = null)
         {
             if (!string.IsNullOrWhiteSpace(ufParam))
             {
@@ -46,22 +54,34 @@ namespace EventoWeb.Controllers
                 if (ufTrim.Equals("TODOS", StringComparison.OrdinalIgnoreCase) ||
                     ufTrim.Equals("BR", StringComparison.OrdinalIgnoreCase))
                 {
-                    return null;
+                    return new LocalizacaoAtivaModel { Estado = null, Cidade = null, Manual = false, NomeExibicao = "Todo o Brasil" };
                 }
+
                 var ufUpper = ufTrim.ToUpper();
                 try
                 {
                     var estadoValido = _estadosbrasilService.Get(ufUpper);
                     if (estadoValido != null)
                     {
-                        return ufUpper;
+                        var cidadeLimpa = !string.IsNullOrWhiteSpace(cidadeParam) ? cidadeParam.Trim() : null;
+                        var nomeExibicao = !string.IsNullOrEmpty(cidadeLimpa)
+                            ? $"{cidadeLimpa} ({ufUpper})"
+                            : $"{estadoValido.Nome} ({estadoValido.Estado})";
+
+                        return new LocalizacaoAtivaModel
+                        {
+                            Estado = ufUpper,
+                            Cidade = cidadeLimpa,
+                            Manual = false,
+                            NomeExibicao = nomeExibicao
+                        };
                     }
                 }
                 catch (Exception ex)
                 {
                     _logger?.LogWarning(ex, "Erro ao validar UF fornecida na requisição.");
                 }
-                return null;
+                return new LocalizacaoAtivaModel { Estado = null, Cidade = null, Manual = false, NomeExibicao = "Todo o Brasil" };
             }
 
             UserLocationCookieModel? cookieLocation = null;
@@ -85,41 +105,48 @@ namespace EventoWeb.Controllers
                 }
             }
 
-            if (cookieLocation != null && cookieLocation.Manual == true)
+            // A localização só é carregada se a pessoa tiver o cookie UserLocation aceito/salvo.
+            // Sem cookie: NÃO carrega estado do perfil de Pessoa nem força geolocalização. Inicia como "Todo o Brasil".
+            if (cookieLocation != null)
             {
                 if (!string.IsNullOrWhiteSpace(cookieLocation.Estado))
                 {
-                    return cookieLocation.Estado.Trim().ToUpper();
-                }
-                return null;
-            }
-
-            if (User?.Identity != null && User.Identity.IsAuthenticated)
-            {
-                var userCpf = User.FindFirstValue(ClaimTypes.Name);
-                if (!string.IsNullOrEmpty(userCpf))
-                {
+                    var ufUpper = cookieLocation.Estado.Trim().ToUpper();
                     try
                     {
-                        var pessoa = _pessoaService.GetByCpf(userCpf);
-                        if (pessoa != null && !string.IsNullOrWhiteSpace(pessoa.Estado))
+                        var estadoValido = _estadosbrasilService.Get(ufUpper);
+                        if (estadoValido != null)
                         {
-                            return pessoa.Estado.Trim().ToUpper();
+                            var cidadeLimpa = !string.IsNullOrWhiteSpace(cookieLocation.Cidade) ? cookieLocation.Cidade.Trim() : null;
+                            var nomeExibicao = !string.IsNullOrEmpty(cidadeLimpa)
+                                ? $"{cidadeLimpa} ({ufUpper})"
+                                : $"{estadoValido.Nome} ({estadoValido.Estado})";
+
+                            return new LocalizacaoAtivaModel
+                            {
+                                Estado = ufUpper,
+                                Cidade = cidadeLimpa,
+                                Manual = cookieLocation.Manual ?? true,
+                                NomeExibicao = nomeExibicao
+                            };
                         }
                     }
                     catch (Exception ex)
                     {
-                        _logger?.LogWarning(ex, "Erro ao buscar Estado da pessoa autenticada.");
+                        _logger?.LogWarning(ex, "Erro ao validar estado do cookie UserLocation.");
                     }
                 }
+
+                // Cookie com estado vazio (ex: usuário escolheu "Ver Todo o Brasil")
+                return new LocalizacaoAtivaModel { Estado = null, Cidade = null, Manual = true, NomeExibicao = "Todo o Brasil" };
             }
 
-            if (cookieLocation != null && !string.IsNullOrWhiteSpace(cookieLocation.Estado))
-            {
-                return cookieLocation.Estado.Trim().ToUpper();
-            }
+            return new LocalizacaoAtivaModel { Estado = null, Cidade = null, Manual = false, NomeExibicao = "Todo o Brasil" };
+        }
 
-            return null;
+        public string? ObterEstadoAtivo(string? ufParam = null)
+        {
+            return ObterLocalizacaoAtiva(ufParam).Estado;
         }
 
         public IActionResult Index(string? uf = null, bool vitrine = false, bool adminRemovido = false)
@@ -164,7 +191,8 @@ namespace EventoWeb.Controllers
                 TempData["ToastTimeout"] = 5000;
             }
 
-            var estadoAtivo = ObterEstadoAtivo(uf);
+            var localizacao = ObterLocalizacaoAtiva(uf);
+            var estadoAtivo = localizacao.Estado;
             var listarEventos = _eventoService.GetEventosVitrine(estadoAtivo).ToList();
             var listarEventosModel = _mapper.Map<List<EventoModel>>(listarEventos);
 
@@ -195,21 +223,9 @@ namespace EventoWeb.Controllers
             }
             ViewBag.EventosGerenciadosIds = eventosGerenciadosIds;
 
-            ViewBag.EstadoAtivo = estadoAtivo;
-            string nomeEstado = "Todo o Brasil";
-            if (!string.IsNullOrEmpty(estadoAtivo))
-            {
-                try
-                {
-                    var estadoObj = _estadosbrasilService.Get(estadoAtivo);
-                    nomeEstado = estadoObj != null ? $"{estadoObj.Nome} ({estadoObj.Estado})" : estadoAtivo;
-                }
-                catch
-                {
-                    nomeEstado = estadoAtivo;
-                }
-            }
-            ViewBag.NomeEstadoAtivo = nomeEstado;
+            ViewBag.EstadoAtivo = localizacao.Estado;
+            ViewBag.CidadeAtiva = localizacao.Cidade;
+            ViewBag.NomeEstadoAtivo = localizacao.NomeExibicao;
 
             return View(listarEventosModel);
         }
@@ -219,6 +235,58 @@ namespace EventoWeb.Controllers
         {
             int tamanhoPagina = 16; // Garante máximo de 4 linhas x 4 colunas (16 eventos por página)
             IEnumerable<Core.Evento> eventos = new List<Core.Evento>();
+
+            string? estadoAtivo = null;
+            string? cidadeAtiva = null;
+
+            if (!string.IsNullOrWhiteSpace(filter.Estado))
+            {
+                var ufTrim = filter.Estado.Trim();
+                if (!ufTrim.Equals("TODOS", StringComparison.OrdinalIgnoreCase) &&
+                    !ufTrim.Equals("BR", StringComparison.OrdinalIgnoreCase))
+                {
+                    var ufUpper = ufTrim.ToUpper();
+                    try
+                    {
+                        var estadoValido = _estadosbrasilService.Get(ufUpper);
+                        if (estadoValido != null)
+                        {
+                            estadoAtivo = ufUpper;
+                            filter.Estado = ufUpper;
+                            if (!string.IsNullOrWhiteSpace(filter.Cidade))
+                            {
+                                cidadeAtiva = filter.Cidade.Trim();
+                                filter.Cidade = cidadeAtiva;
+                            }
+                            else
+                            {
+                                filter.Cidade = null;
+                            }
+                        }
+                        else
+                        {
+                            filter.Estado = null;
+                            filter.Cidade = null;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, "Erro ao validar UF fornecida no filtro de busca.");
+                        filter.Estado = null;
+                        filter.Cidade = null;
+                    }
+                }
+                else
+                {
+                    filter.Estado = null;
+                    filter.Cidade = null;
+                }
+            }
+            else
+            {
+                filter.Estado = null;
+                filter.Cidade = null;
+            }
 
             int totalRegistros;
             eventos = _eventoService.Search(filter, pagina, tamanhoPagina, out totalRegistros);
@@ -235,41 +303,27 @@ namespace EventoWeb.Controllers
             ViewBag.TamanhoPagina = tamanhoPagina;
             ViewBag.TotalRegistros = totalRegistros;
 
-            string? estadoAtivo = null;
-            if (!string.IsNullOrWhiteSpace(filter.Estado))
-            {
-                var ufTrim = filter.Estado.Trim();
-                if (!ufTrim.Equals("TODOS", StringComparison.OrdinalIgnoreCase) &&
-                    !ufTrim.Equals("BR", StringComparison.OrdinalIgnoreCase))
-                {
-                    var ufUpper = ufTrim.ToUpper();
-                    try
-                    {
-                        var estadoValido = _estadosbrasilService.Get(ufUpper);
-                        if (estadoValido != null)
-                        {
-                            estadoAtivo = ufUpper;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger?.LogWarning(ex, "Erro ao validar UF fornecida no filtro de busca.");
-                    }
-                }
-            }
-
             ViewBag.EstadoAtivo = estadoAtivo;
+            ViewBag.CidadeAtiva = cidadeAtiva;
+
             string nomeEstado = "Todo o Brasil";
             if (!string.IsNullOrEmpty(estadoAtivo))
             {
-                try
+                if (!string.IsNullOrEmpty(cidadeAtiva))
                 {
-                    var estadoObj = _estadosbrasilService.Get(estadoAtivo);
-                    nomeEstado = estadoObj != null ? $"{estadoObj.Nome} ({estadoObj.Estado})" : estadoAtivo;
+                    nomeEstado = $"{cidadeAtiva} ({estadoAtivo})";
                 }
-                catch
+                else
                 {
-                    nomeEstado = estadoAtivo;
+                    try
+                    {
+                        var estadoObj = _estadosbrasilService.Get(estadoAtivo);
+                        nomeEstado = estadoObj != null ? $"{estadoObj.Nome} ({estadoObj.Estado})" : estadoAtivo;
+                    }
+                    catch
+                    {
+                        nomeEstado = estadoAtivo;
+                    }
                 }
             }
             ViewBag.NomeEstadoAtivo = nomeEstado;
