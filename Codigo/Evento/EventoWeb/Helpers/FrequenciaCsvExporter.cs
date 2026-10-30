@@ -83,7 +83,7 @@ namespace EventoWeb.Helpers
         public static (string Nome, string Sobrenome) DividirNome(string? nomeCompleto)
         {
             var partes = (nomeCompleto ?? string.Empty)
-                .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                .Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
             if (partes.Length == 0)
             {

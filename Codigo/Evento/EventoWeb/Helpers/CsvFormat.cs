@@ -11,11 +11,13 @@ namespace EventoWeb.Helpers
     {
         /// <summary>
         /// Escapa um campo de texto e neutraliza fórmulas de planilha (CSV Injection).
+        /// Trata também fórmulas precedidas por espaços em branco no início.
         /// </summary>
         public static string Campo(string? valor)
         {
             valor ??= string.Empty;
-            if (valor.Length > 0 && (valor[0] == '=' || valor[0] == '+' || valor[0] == '-' || valor[0] == '@' || valor[0] == '\t' || valor[0] == '\r'))
+            var inicio = valor.TrimStart();
+            if (inicio.Length > 0 && (inicio[0] == '=' || inicio[0] == '+' || inicio[0] == '-' || inicio[0] == '@' || inicio[0] == '\t' || inicio[0] == '\r'))
             {
                 valor = "'" + valor;
             }
@@ -56,12 +58,18 @@ namespace EventoWeb.Helpers
         }
 
         /// <summary>
-        /// Prefixa o conteúdo com o BOM UTF-8 para que o Excel reconheça acentos.
+        /// Prefixa o conteúdo com o BOM UTF-8 para que o Excel reconheça acentos,
+        /// com alocação otimizada sem iteradores LINQ.
         /// </summary>
         public static byte[] ComBom(string conteudo)
         {
             conteudo ??= string.Empty;
-            return Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(conteudo)).ToArray();
+            var preamble = Encoding.UTF8.GetPreamble();
+            var bytes = Encoding.UTF8.GetBytes(conteudo);
+            var resultado = new byte[preamble.Length + bytes.Length];
+            Buffer.BlockCopy(preamble, 0, resultado, 0, preamble.Length);
+            Buffer.BlockCopy(bytes, 0, resultado, preamble.Length, bytes.Length);
+            return resultado;
         }
     }
 }

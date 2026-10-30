@@ -75,6 +75,8 @@ namespace EventoWeb.Controllers.Tests
 
             _mockParticipacao.Setup(s => s.GetAllAsync())
                 .ReturnsAsync(new List<Participacaopessoaevento>());
+            _mockParticipacao.Setup(s => s.GetByEventoAsync(It.IsAny<uint>()))
+                .ReturnsAsync(new List<Participacaopessoaevento>());
             _mockParticipacao.Setup(s => s.AddAsync(It.IsAny<Participacaopessoaevento>()))
                 .ReturnsAsync(new Participacaopessoaevento());
 
@@ -265,6 +267,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual(1, viewModel.Frequencias.Count());
             Assert.AreEqual((uint)101, viewModel.Frequencias.First().Id);
             Assert.AreEqual("Participante Sub", viewModel.Frequencias.First().IdPessoaNavigation.Nome);
+            _mockParticipacao.Verify(s => s.GetByEventoAsync(It.IsAny<uint>()), Times.Never);
             _mockParticipacao.Verify(s => s.GetAllAsync(), Times.Never);
         }
 
@@ -410,7 +413,7 @@ namespace EventoWeb.Controllers.Tests
         public async Task ExportarFrequencia_Evento_RetornaCsvApenasComParticipacoesDoEvento()
         {
             var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
-            _mockParticipacao.Setup(s => s.GetAllAsync()).ReturnsAsync(new List<Participacaopessoaevento>
+            _mockParticipacao.Setup(s => s.GetByEventoAsync((uint)1)).ReturnsAsync(new List<Participacaopessoaevento>
             {
                 new()
                 {
@@ -424,19 +427,6 @@ namespace EventoWeb.Controllers.Tests
                         Nome = "Maria Silva",
                         Cpf = "12345678909",
                         Email = "maria@teste.com"
-                    }
-                },
-                new()
-                {
-                    Id = 2,
-                    IdEvento = 99,
-                    Entrada = new DateTime(2026, 10, 30, 11, 0, 0),
-                    IdPessoaNavigation = new Pessoa
-                    {
-                        Id = 11,
-                        Nome = "Outro Evento",
-                        Cpf = "98765432100",
-                        Email = "outro@teste.com"
                     }
                 }
             });
@@ -498,11 +488,12 @@ namespace EventoWeb.Controllers.Tests
             StringAssert.Contains(linhas[2], "Maria");
             StringAssert.Contains(linhas[2], "Silva");
             StringAssert.EndsWith(linhas[2], ";45");
+            _mockParticipacao.Verify(s => s.GetByEventoAsync(It.IsAny<uint>()), Times.Never);
             _mockParticipacao.Verify(s => s.GetAllAsync(), Times.Never);
         }
 
         [TestMethod()]
-        public async Task ExportarFrequencia_ListaVazia_RetornaApenasCabecalho()
+        public async Task ExportarFrequencia_ListaVazia_RetornaTituloECabecalho()
         {
             var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
 

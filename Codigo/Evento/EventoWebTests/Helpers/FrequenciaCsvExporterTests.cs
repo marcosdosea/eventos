@@ -177,7 +177,8 @@ namespace EventoWeb.Helpers.Tests
                 CriarItem(nome: "=1+1"),
                 CriarItem(nome: "+SUM(A1)"),
                 CriarItem(nome: "-2+3"),
-                CriarItem(nome: "@cmd")
+                CriarItem(nome: "@cmd"),
+                CriarItem(cpf: "   =cmdComEspaco")
             };
 
             var csv = FrequenciaCsvExporter.Gerar("=HYPERLINK(\"http://malicioso\")", null, itens);
@@ -189,6 +190,8 @@ namespace EventoWeb.Helpers.Tests
             StringAssert.StartsWith(dados[1][1], "'+");
             StringAssert.StartsWith(dados[2][1], "'-");
             StringAssert.StartsWith(dados[3][1], "'@");
+            StringAssert.StartsWith(dados[4][0], "'   =");
+            Assert.AreEqual("'   =teste", CsvFormat.Campo("   =teste"));
         }
 
         [TestMethod()]
@@ -205,6 +208,14 @@ namespace EventoWeb.Helpers.Tests
             (nome, sobrenome) = FrequenciaCsvExporter.DividirNome("   ");
             Assert.AreEqual(string.Empty, nome);
             Assert.AreEqual(string.Empty, sobrenome);
+
+            (nome, sobrenome) = FrequenciaCsvExporter.DividirNome("Maria\u00A0Silva");
+            Assert.AreEqual("Maria", nome);
+            Assert.AreEqual("Silva", sobrenome);
+
+            (nome, sobrenome) = FrequenciaCsvExporter.DividirNome("Maria\tSilva");
+            Assert.AreEqual("Maria", nome);
+            Assert.AreEqual("Silva", sobrenome);
         }
 
         [TestMethod()]

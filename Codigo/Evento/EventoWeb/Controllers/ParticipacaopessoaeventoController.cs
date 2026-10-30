@@ -42,7 +42,7 @@ namespace EventoWeb.Controllers
             _userManager = userManager;
         }
 
-        [Authorize(Roles = "GESTOR,COLABORADOR")]
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
         [HttpGet]
         [Route("ParticipacaoPessoaEvento/Index/{idEvento}/{idSubEvento?}")]
         [Route("ParticipacaoPessoaEvento/Index")]
@@ -113,7 +113,7 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
 
-        [Authorize(Roles = "GESTOR,COLABORADOR")]
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
         [HttpGet]
         [Route("ParticipacaoPessoaEvento/Frequencia/{idEvento}/{idSubEvento?}")]
         [Route("ParticipacaoPessoaEvento/Frequencia")]
@@ -185,7 +185,7 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
 
-        [Authorize(Roles = "GESTOR,COLABORADOR")]
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
         [HttpGet]
         [Route("ParticipacaoPessoaEvento/ExportarFrequencia/{idEvento}/{idSubEvento?}")]
         [Route("ParticipacaoPessoaEvento/ExportarFrequencia")]
@@ -299,12 +299,7 @@ namespace EventoWeb.Controllers
                 return (frequenciasSubEvento, subEvento);
             }
 
-            var todasParticipacoes = await _participacaoService.GetAllAsync();
-            var frequencias = todasParticipacoes
-                .Where(f => f.IdEvento == idEvento)
-                .OrderByDescending(f => f.Entrada)
-                .ToList();
-
+            var frequencias = await _participacaoService.GetByEventoAsync(idEvento);
             return (frequencias, null);
         }
 
