@@ -2,6 +2,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Core;
 using Core.DTO;
 using Core.Service;
+using EventoWeb.Helpers;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -11,6 +12,7 @@ using Moq;
 using AutoMapper;
 using System.Collections.Generic;
 using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace EventoWeb.Controllers.Tests
@@ -72,6 +74,8 @@ namespace EventoWeb.Controllers.Tests
                 .Returns(papelSeVinculado);
 
             _mockParticipacao.Setup(s => s.GetAllAsync())
+                .ReturnsAsync(new List<Participacaopessoaevento>());
+            _mockParticipacao.Setup(s => s.GetByEventoAsync(It.IsAny<uint>()))
                 .ReturnsAsync(new List<Participacaopessoaevento>());
             _mockParticipacao.Setup(s => s.AddAsync(It.IsAny<Participacaopessoaevento>()))
                 .ReturnsAsync(new Participacaopessoaevento());
@@ -263,6 +267,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual(1, viewModel.Frequencias.Count());
             Assert.AreEqual((uint)101, viewModel.Frequencias.First().Id);
             Assert.AreEqual("Participante Sub", viewModel.Frequencias.First().IdPessoaNavigation.Nome);
+            _mockParticipacao.Verify(s => s.GetByEventoAsync(It.IsAny<uint>()), Times.Never);
             _mockParticipacao.Verify(s => s.GetAllAsync(), Times.Never);
         }
 
@@ -397,6 +402,168 @@ namespace EventoWeb.Controllers.Tests
 
             Assert.IsInstanceOfType(result, typeof(NotFoundResult));
             _mockParticipacao.Verify(s => s.DeleteAsync(It.IsAny<uint>()), Times.Never);
+        }
+
+        private static string[] LerLinhas(byte[] conteudo) =>
+            Encoding.UTF8.GetString(conteudo)
+                .TrimStart('\uFEFF')
+                .Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+
+        [TestMethod()]
+        public async Task ExportarFrequencia_Evento_RetornaCsvApenasComParticipacoesDoEvento()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+            _mockParticipacao.Setup(s => s.GetByEventoAsync((uint)1)).ReturnsAsync(new List<Participacaopessoaevento>
+            {
+                new()
+                {
+                    Id = 1,
+                    IdEvento = 1,
+                    Entrada = new DateTime(2026, 10, 30, 9, 0, 0),
+                    Saida = new DateTime(2026, 10, 30, 10, 30, 0),
+                    IdPessoaNavigation = new Pessoa
+                    {
+                        Id = 10,
+                        Nome = "Maria Silva",
+                        Cpf = "12345678909",
+                        Email = "maria@teste.com"
+                    }
+                }
+            });
+
+            var result = await controller.ExportarFrequencia(1, null) as FileContentResult;
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual("text/csv; charset=utf-8", result.ContentType);
+            StringAssert.StartsWith(result.FileDownloadName, "frequencia-evento-teste-1-");
+            StringAssert.EndsWith(result.FileDownloadName, ".csv");
+
+            var linhas = LerLinhas(result.FileContents);
+            Assert.AreEqual(3, linhas.Length);
+            StringAssert.StartsWith(linhas[0], "TÍTULO: Evento Teste");
+            Assert.AreEqual(FrequenciaCsvExporter.Cabecalho, linhas[1]);
+            StringAssert.Contains(linhas[2], "Maria");
+            StringAssert.Contains(linhas[2], "Silva");
+            StringAssert.Contains(linhas[2], "maria@teste.com");
+            StringAssert.Contains(linhas[2], "PARTICIPANTE");
+            StringAssert.Contains(linhas[2], "30/10/2026 09:00");
+            StringAssert.Contains(linhas[2], "30/10/2026 10:30");
+            StringAssert.EndsWith(linhas[2], ";90");
+            Assert.IsFalse(linhas.Any(l => l.Contains("Outro Evento")));
+        }
+
+        [TestMethod()]
+        public async Task ExportarFrequencia_SubEvento_RetornaCsvDoSubEvento()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+            _mockSubevento.Setup(s => s.Get((uint)7)).Returns(new Subevento { Id = 7, Nome = "Workshop .NET", IdEvento = 1 });
+            _mockParticipacaoSubEvento.Setup(s => s.GetBySubEvento((uint)7)).Returns(new List<Participacaopessoasubevento>
+            {
+                new()
+                {
+                    Id = 101,
+                    IdPessoa = 10,
+                    IdSubEvento = 7,
+                    Entrada = new DateTime(2026, 10, 30, 9, 0, 0),
+                    Saida = new DateTime(2026, 10, 30, 9, 45, 0),
+                    IdPessoaNavigation = new Pessoa
+                    {
+                        Id = 10,
+                        Nome = "Maria Silva",
+                        Cpf = "12345678909",
+                        Email = "maria@teste.com"
+                    }
+                }
+            });
+
+            var result = await controller.ExportarFrequencia(1, 7) as FileContentResult;
+
+            Assert.IsNotNull(result);
+            StringAssert.StartsWith(result.FileDownloadName, "frequencia-evento-teste-1-workshop-net-7-");
+
+            var linhas = LerLinhas(result.FileContents);
+            Assert.AreEqual(3, linhas.Length);
+            Assert.AreEqual("TÍTULO: Evento Teste - Workshop .NET", linhas[0]);
+            Assert.AreEqual(FrequenciaCsvExporter.Cabecalho, linhas[1]);
+            StringAssert.Contains(linhas[2], "Maria");
+            StringAssert.Contains(linhas[2], "Silva");
+            StringAssert.EndsWith(linhas[2], ";45");
+            _mockParticipacao.Verify(s => s.GetByEventoAsync(It.IsAny<uint>()), Times.Never);
+            _mockParticipacao.Verify(s => s.GetAllAsync(), Times.Never);
+        }
+
+        [TestMethod()]
+        public async Task ExportarFrequencia_ListaVazia_RetornaTituloECabecalho()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+
+            var result = await controller.ExportarFrequencia(1, null) as FileContentResult;
+
+            Assert.IsNotNull(result);
+            var linhas = LerLinhas(result.FileContents);
+            Assert.AreEqual(2, linhas.Length);
+            StringAssert.StartsWith(linhas[0], "TÍTULO: Evento Teste");
+            Assert.AreEqual(FrequenciaCsvExporter.Cabecalho, linhas[1]);
+        }
+
+        [TestMethod()]
+        public async Task ExportarFrequencia_IdEventoZero_RedirecionaParaListaDeEventos()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+
+            var result = await controller.ExportarFrequencia(0, null) as RedirectToActionResult;
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual("GerenciarEventoListar", result.ActionName);
+            Assert.AreEqual("Evento", result.ControllerName);
+        }
+
+        [TestMethod()]
+        public async Task ExportarFrequencia_SemPermissao_RedirecionaParaGerenciarEventoListar()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+            _mockInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
+                .Returns((Inscricaopessoaevento)null);
+            _mockInscricao.Setup(s => s.GetColaboradorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
+                .Returns((Inscricaopessoaevento)null);
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "colaborador@teste.com"),
+                new Claim(ClaimTypes.Role, "COLABORADOR")
+            };
+            controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(
+                new ClaimsIdentity(claims, "TestAuthType"));
+
+            var result = await controller.ExportarFrequencia(10, null) as RedirectToActionResult;
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual("GerenciarEventoListar", result.ActionName);
+            Assert.AreEqual("Evento", result.ControllerName);
+            Assert.AreEqual("Você não possui um evento vinculado para exportar a frequência!", controller.TempData["ErrorMessage"]);
+        }
+
+        [TestMethod()]
+        public async Task ExportarFrequencia_SubEventoDeOutroEvento_RetornaNotFound()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+            _mockSubevento.Setup(s => s.Get((uint)7)).Returns(new Subevento { Id = 7, Nome = "Workshop", IdEvento = 999 });
+
+            var result = await controller.ExportarFrequencia(1, 7);
+
+            Assert.IsInstanceOfType(result, typeof(NotFoundResult));
+            _mockParticipacaoSubEvento.Verify(s => s.GetBySubEvento(It.IsAny<uint>()), Times.Never);
+        }
+
+        [TestMethod()]
+        public async Task ExportarFrequencia_EventoInexistente_RetornaNotFound()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+            _mockEvento.Setup(s => s.GetEventoSimpleDto(1)).Returns((EventoSimpleDTO)null);
+
+            var result = await controller.ExportarFrequencia(1, null);
+
+            Assert.IsInstanceOfType(result, typeof(NotFoundResult));
         }
     }
 }

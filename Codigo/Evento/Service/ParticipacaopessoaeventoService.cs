@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Core;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +19,16 @@ namespace Core.Service
         {
             return await _context.Participacaopessoaeventos
                 .Include(p => p.IdPessoaNavigation)
+                .ToListAsync();
+        }
+
+        public async Task<List<Participacaopessoaevento>> GetByEventoAsync(uint idEvento)
+        {
+            return await _context.Participacaopessoaeventos
+                .Include(p => p.IdPessoaNavigation)
+                .Where(p => p.IdEvento == idEvento)
+                .OrderByDescending(p => p.Entrada)
+                .AsNoTracking()
                 .ToListAsync();
         }
 

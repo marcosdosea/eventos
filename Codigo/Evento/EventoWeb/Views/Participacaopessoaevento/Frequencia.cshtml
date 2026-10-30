@@ -5,8 +5,8 @@
 <h1 class="blue-normal">Frequência do Participante</h1>
 <hr />
 
-<div class="row mb-4">
-    <div class="col-md-12">
+<div class="row mb-4 align-items-start">
+    <div class="col-md-8">
         <div class="mb-3">
             <strong>Nome:</strong> @Model.Evento.Nome
         </div>
@@ -16,6 +16,12 @@
                 <strong>Sub evento:</strong> @Model.SubEvento.Nome
             </div>
         }
+    </div>
+    <div class="col-md-4 text-md-end">
+        <a href="@Url.Action("ExportarFrequencia", "ParticipacaoPessoaEvento", new { idEvento = Model.Evento.Id, idSubEvento = Model.SubEvento?.Id })"
+           class="btn btn-blue-normal">
+            <i class="bi bi-download me-1"></i> Exportar CSV
+        </a>
     </div>
 </div>
 

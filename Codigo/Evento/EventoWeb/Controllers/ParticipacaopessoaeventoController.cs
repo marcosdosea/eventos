@@ -2,6 +2,7 @@ using AutoMapper;
 using Core;
 using Core.DTO;
 using Core.Service;
+using EventoWeb.Helpers;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -41,7 +42,7 @@ namespace EventoWeb.Controllers
             _userManager = userManager;
         }
 
-        [Authorize(Roles = "GESTOR,COLABORADOR")]
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
         [HttpGet]
         [Route("ParticipacaoPessoaEvento/Index/{idEvento}/{idSubEvento?}")]
         [Route("ParticipacaoPessoaEvento/Index")]
@@ -89,62 +90,17 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("GerenciarEventoListar", "Evento");
             }
 
-            var gestor = _inscricaoService.GetGestorInEvent(username, idEvento);
-            var colaborador = _inscricaoService.GetColaboradorInEvent(username, idEvento);
-
-            if (gestor == null && colaborador == null)
+            var acessoNegado = ValidarPermissaoEvento(
+                idEvento, username, cpfLimpo, "Você não possui um evento vinculado para registrar participação!");
+            if (acessoNegado != null)
             {
-                gestor = _inscricaoService.GetGestorInEvent(cpfLimpo, idEvento);
-                colaborador = _inscricaoService.GetColaboradorInEvent(cpfLimpo, idEvento);
+                return acessoNegado;
             }
 
-            if (gestor == null && colaborador == null)
+            var (frequencias, subEvento) = await CarregarFrequenciasAsync(idEvento, idSubEvento);
+            if (frequencias == null)
             {
-                TempData.Clear();
-                TempData["Message"] = "Você não possui um evento vinculado para registrar participação!";
-                if (idEvento > 0 && (User.IsInRole("GESTOR") || User.IsInRole("ADMINISTRADOR")))
-                {
-                    return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });
-                }
-                if (User.IsInRole("COLABORADOR"))
-                {
-                    return RedirectToAction("GerenciarEventoListar", "Evento");
-                }
-                return RedirectToAction("Index", "Home");
-            }
-
-            ViewData["EventoId"] = idEvento;
-
-            List<Participacaopessoaevento> frequencias;
-            Subevento? subEvento = null;
-
-            if (idSubEvento.HasValue && idSubEvento.Value > 0)
-            {
-                subEvento = _subeventoService.Get(idSubEvento.Value);
-                if (subEvento == null || subEvento.IdEvento != idEvento)
-                {
-                    return NotFound();
-                }
-
-                frequencias = _participacaoSubEventoService.GetBySubEvento(idSubEvento.Value)
-                    .OrderByDescending(f => f.Entrada)
-                    .Select(f => new Participacaopessoaevento
-                    {
-                        Id = f.Id,
-                        IdPessoa = f.IdPessoa,
-                        IdEvento = idEvento,
-                        Entrada = f.Entrada,
-                        Saida = f.Saida,
-                        IdPessoaNavigation = f.IdPessoaNavigation
-                    }).ToList();
-            }
-            else
-            {
-                var todasParticipacoes = await _participacaoService.GetAllAsync();
-                frequencias = todasParticipacoes
-                    .Where(f => f.IdEvento == idEvento)
-                    .OrderByDescending(f => f.Entrada)
-                    .ToList();
+                return NotFound();
             }
 
             var viewModel = new FrequenciaViewModel
@@ -157,7 +113,7 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
 
-        [Authorize(Roles = "GESTOR,COLABORADOR")]
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
         [HttpGet]
         [Route("ParticipacaoPessoaEvento/Frequencia/{idEvento}/{idSubEvento?}")]
         [Route("ParticipacaoPessoaEvento/Frequencia")]
@@ -206,6 +162,85 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("GerenciarEventoListar", "Evento");
             }
 
+            var acessoNegado = ValidarPermissaoEvento(
+                idEvento, username, cpfLimpo, "Você não possui um evento vinculado para registrar participação!");
+            if (acessoNegado != null)
+            {
+                return acessoNegado;
+            }
+
+            var (frequencias, subEvento) = await CarregarFrequenciasAsync(idEvento, idSubEvento);
+            if (frequencias == null)
+            {
+                return NotFound();
+            }
+
+            var viewModel = new FrequenciaViewModel
+            {
+                Evento = _eventoService.GetEventoSimpleDto(idEvento),
+                SubEvento = subEvento,
+                Frequencias = frequencias
+            };
+
+            return View(viewModel);
+        }
+
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
+        [HttpGet]
+        [Route("ParticipacaoPessoaEvento/ExportarFrequencia/{idEvento}/{idSubEvento?}")]
+        [Route("ParticipacaoPessoaEvento/ExportarFrequencia")]
+        public async Task<IActionResult> ExportarFrequencia(uint idEvento, uint? idSubEvento)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null || string.IsNullOrEmpty(user.UserName))
+            {
+                return Challenge();
+            }
+
+            var username = User.Identity?.Name ?? user.UserName;
+            var cpfLimpo = username.Replace(".", "").Replace("-", "");
+
+            if (idEvento == 0)
+            {
+                return RedirectToAction("GerenciarEventoListar", "Evento");
+            }
+
+            var acessoNegado = ValidarPermissaoEvento(
+                idEvento, username, cpfLimpo, "Você não possui um evento vinculado para exportar a frequência!");
+            if (acessoNegado != null)
+            {
+                return acessoNegado;
+            }
+
+            var evento = _eventoService.GetEventoSimpleDto(idEvento);
+            if (evento == null)
+            {
+                return NotFound();
+            }
+
+            var (frequencias, subEvento) = await CarregarFrequenciasAsync(idEvento, idSubEvento);
+            if (frequencias == null)
+            {
+                return NotFound();
+            }
+
+            var itens = frequencias.Select(ParaItemCsv).ToList();
+            var geradoEm = DateTime.Now;
+            var csv = FrequenciaCsvExporter.Gerar(evento.Nome, subEvento?.Nome, itens);
+            var nomeArquivo = FrequenciaCsvExporter.NomeArquivo(
+                evento.Nome, idEvento, subEvento?.Nome, subEvento?.Id, geradoEm);
+
+            return File(csv, "text/csv; charset=utf-8", nomeArquivo);
+        }
+
+        /// <summary>
+        /// Valida se o usuário logado é gestor ou colaborador do evento.
+        /// Retorna null quando o acesso é permitido; caso contrário, o resultado
+        /// que a action deve devolver.
+        /// </summary>
+        private IActionResult? ValidarPermissaoEvento(
+            uint idEvento, string username, string cpfLimpo, string mensagemSemVinculo)
+        {
             var gestor = _inscricaoService.GetGestorInEvent(username, idEvento);
             var colaborador = _inscricaoService.GetColaboradorInEvent(username, idEvento);
 
@@ -218,7 +253,7 @@ namespace EventoWeb.Controllers
             if (gestor == null && colaborador == null)
             {
                 TempData.Clear();
-                TempData["Message"] = "Você não possui um evento vinculado para registrar participação!";
+                TempData["ErrorMessage"] = mensagemSemVinculo;
                 if (idEvento > 0 && (User.IsInRole("GESTOR") || User.IsInRole("ADMINISTRADOR")))
                 {
                     return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });
@@ -231,19 +266,25 @@ namespace EventoWeb.Controllers
             }
 
             ViewData["EventoId"] = idEvento;
+            return null;
+        }
 
-            List<Participacaopessoaevento> frequencias;
-            Subevento? subEvento = null;
-
+        /// <summary>
+        /// Carrega as participações do evento ou do subevento informado.
+        /// Retorna (null, null) quando o subevento não existe ou pertence a outro evento.
+        /// </summary>
+        private async Task<(List<Participacaopessoaevento>? Frequencias, Subevento? SubEvento)> CarregarFrequenciasAsync(
+            uint idEvento, uint? idSubEvento)
+        {
             if (idSubEvento.HasValue && idSubEvento.Value > 0)
             {
-                subEvento = _subeventoService.Get(idSubEvento.Value);
+                var subEvento = _subeventoService.Get(idSubEvento.Value);
                 if (subEvento == null || subEvento.IdEvento != idEvento)
                 {
-                    return NotFound();
+                    return (null, null);
                 }
 
-                frequencias = _participacaoSubEventoService.GetBySubEvento(idSubEvento.Value)
+                var frequenciasSubEvento = _participacaoSubEventoService.GetBySubEvento(idSubEvento.Value)
                     .OrderByDescending(f => f.Entrada)
                     .Select(f => new Participacaopessoaevento
                     {
@@ -254,24 +295,24 @@ namespace EventoWeb.Controllers
                         Saida = f.Saida,
                         IdPessoaNavigation = f.IdPessoaNavigation
                     }).ToList();
-            }
-            else
-            {
-                var todasParticipacoes = await _participacaoService.GetAllAsync();
-                frequencias = todasParticipacoes
-                    .Where(f => f.IdEvento == idEvento)
-                    .OrderByDescending(f => f.Entrada)
-                    .ToList();
+
+                return (frequenciasSubEvento, subEvento);
             }
 
-            var viewModel = new FrequenciaViewModel
+            var frequencias = await _participacaoService.GetByEventoAsync(idEvento);
+            return (frequencias, null);
+        }
+
+        private static FrequenciaCsvItem ParaItemCsv(Participacaopessoaevento participacao)
+        {
+            return new FrequenciaCsvItem
             {
-                Evento = _eventoService.GetEventoSimpleDto(idEvento),
-                SubEvento = subEvento,
-                Frequencias = frequencias
+                Nome = participacao.IdPessoaNavigation?.Nome,
+                Cpf = participacao.IdPessoaNavigation?.Cpf,
+                Email = participacao.IdPessoaNavigation?.Email,
+                Entrada = participacao.Entrada,
+                Saida = participacao.Saida
             };
-
-            return View(viewModel);
         }
 
         [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
