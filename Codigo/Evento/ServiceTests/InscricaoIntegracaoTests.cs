@@ -188,6 +188,10 @@ namespace Service.Tests
         [TestMethod()]
         public void EventoServiceDelete_ComInscricaoEmSubevento_ConcluiELimpaDependentes()
         {
+            Evento evento = _eventoService.Get(1);
+            evento.Status = "I";
+            _eventoService.Edit(evento,null);
+            _inscricaoService.CancelarInscricaoParticipante(1, 1);
             _eventoService.Delete(1);
 
             _context.ChangeTracker.Clear();
@@ -208,8 +212,8 @@ namespace Service.Tests
             using (var command = _connection.CreateCommand())
             {
                 command.CommandText = @"
-CREATE TRIGGER falha_delete_subevento BEFORE DELETE ON subevento
-BEGIN SELECT RAISE(ABORT, 'falha simulada no banco'); END;";
+                CREATE TRIGGER falha_delete_subevento BEFORE DELETE ON subevento
+                BEGIN SELECT RAISE(ABORT, 'falha simulada no banco'); END;";
                 command.ExecuteNonQuery();
             }
 
@@ -226,12 +230,15 @@ BEGIN SELECT RAISE(ABORT, 'falha simulada no banco'); END;";
         [TestMethod()]
         public void EventoServiceDelete_ComJuncaoTipoInscricaoSubevento_Conclui()
         {
+            Evento evento = _eventoService.Get(1);
+            evento.Status = "I";
+            _eventoService.Edit(evento, null);
             var tipo = _context.Tipoinscricaos.First();
             var subevento = _context.Subeventos.First();
             tipo.IdSubEventos.Add(subevento);
             _context.SaveChanges();
             _context.ChangeTracker.Clear();
-
+            _inscricaoService.CancelarInscricaoParticipante(1, 1);
             _eventoService.Delete(1);
 
             _context.ChangeTracker.Clear();
