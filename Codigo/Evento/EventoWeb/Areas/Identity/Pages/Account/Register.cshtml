@@ -58,7 +58,7 @@
                 <i class="bi bi-eye-slash position-absolute" id="toggleConfirmPassword" style="top: 50%; right: 15px; cursor: pointer; transform: translateY(-50%);"></i>
             </div>
             
-            <button type="submit" class="w-100 btn btn-lg btn-blue-normal">Bora lá</button>
+            <button id="btnCadastrar" type="submit" class="w-100 btn btn-lg btn-blue-normal">Bora lá</button>
             
             <div class="d-flex justify-content-center align-items-center" style="margin-top: 32px; margin-bottom: 96px;">
                 <div class="mb-3" style="text-align: center;">
@@ -98,7 +98,7 @@
     <partial name="_ValidationScriptsPartial" />
    
 }
-
+<script src="~/js/Countdown.js"></script>
 <script>
     document.getElementById('togglePassword').addEventListener('click', function () {
         const passwordInput = document.getElementById('password');
@@ -117,4 +117,15 @@
         icon.classList.toggle('bi-eye');
         icon.classList.toggle('bi-eye-slash');
     });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const btnCadastrar = document.getElementById("btnCadastrar");
+        if (btnCadastrar) {
+            btnCadastrar.addEventListener("click", function () {
+                localStorage.setItem("inicioCountdownConfirmacao", "true");
+            });
+        }
+    });
+
+
 </script>
