@@ -26,16 +26,18 @@ namespace EventoWeb.Models
         [Required(ErrorMessage = "Fale um pouco a respeito desse Sub-Evento")]
         public string Descricao { get; set; } = null!;
 
-        [Display(Name = "Data Inicial do Subvento")]
+        [Display(Name = "Data e hora inicial do subevento")]
+        [Required(ErrorMessage = "A data e hora de início do subevento são obrigatórias.")]
         [DataType(DataType.DateTime)]
-        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = false)]
         [DataInicio(nameof(DataFim))]
-        public DateTime DataInicio { get; set; } = DateTime.Today;
+        public DateTime DataInicio { get; set; }
 
-        [Display(Name = "Data Final do Subvento")]
+        [Display(Name = "Data e hora final do subevento")]
+        [Required(ErrorMessage = "A data e hora de término do subevento são obrigatórias.")]
         [DataType(DataType.DateTime)]
-        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = true)]
-        public DateTime DataFim { get; set; } = DateTime.Today.AddDays(7);
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = false)]
+        public DateTime DataFim { get; set; }
 
         [Display(Name = "Incrição gratuita")]
         public sbyte InscricaoGratuita { get; set; }
@@ -49,18 +51,18 @@ namespace EventoWeb.Models
         [Required(ErrorMessage = "Status do Subevento é obrigatório")]
         public string Status { get; set; } = null!;
 
+        [Display(Name = "Data e hora inicial de inscrição")]
         [Required(ErrorMessage = "A data e hora inicial de inscrição são obrigatórias.")]
-        [Display(Name = "Data Inicial de Inscrição")]
         [DataType(DataType.DateTime)]
-        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = true)]
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = false)]
         [DataInicio(nameof(DataFimInscricao))]
-        public DateTime DataInicioInscricao { get; set; } = DateTime.Today;
+        public DateTime DataInicioInscricao { get; set; }
 
+        [Display(Name = "Data e hora final de inscrição")]
         [Required(ErrorMessage = "A data e hora final de inscrição são obrigatórias.")]
-        [Display(Name = "Data Final de Inscrição")]
         [DataType(DataType.DateTime)]
-        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = true)]
-        public DateTime DataFimInscricao { get; set; } = DateTime.Today.AddDays(7);
+        [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = false)]
+        public DateTime DataFimInscricao { get; set; }
 
         [Display(Name = "Menor Valor de Inscrição", Prompt = "R$ 00.00")]
         [Range(typeof(decimal), "0", "999999", ErrorMessage = "O valor deve ser zero ou maior que zero.")]

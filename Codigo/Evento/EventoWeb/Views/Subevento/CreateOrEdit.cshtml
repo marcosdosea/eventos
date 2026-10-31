@@ -65,14 +65,14 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         <label asp-for="DataInicio" class="control-label">Data e Hora Início</label>
-                        <input asp-for="DataInicio" class="form-control" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
+                        <input asp-for="DataInicio" class="form-control" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" value="@(Model != null && Model.DataInicio != default ? Model.DataInicio.ToString("yyyy-MM-ddTHH:mm") : "")" />
                         <span asp-validation-for="DataInicio" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
                         <label asp-for="DataFim" class="control-label">Data e Hora Fim</label>
-                        <input asp-for="DataFim" class="form-control" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
+                        <input asp-for="DataFim" class="form-control" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" value="@(Model != null && Model.DataFim != default ? Model.DataFim.ToString("yyyy-MM-ddTHH:mm") : "")" />
                         <span asp-validation-for="DataFim" class="text-danger"></span>
                     </div>
                 </div>
@@ -124,14 +124,14 @@
                 <div class="col-md-4">
                     <div class="form-group">
                         <label asp-for="DataInicioInscricao" class="control-label">Início das inscrições</label>
-                        <input asp-for="DataInicioInscricao" class="form-control" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
+                        <input asp-for="DataInicioInscricao" class="form-control" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" value="@(Model != null && Model.DataInicioInscricao != default ? Model.DataInicioInscricao.ToString("yyyy-MM-ddTHH:mm") : "")" />
                         <span asp-validation-for="DataInicioInscricao" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
                         <label asp-for="DataFimInscricao" class="control-label">Fim das inscrições</label>
-                        <input asp-for="DataFimInscricao" class="form-control" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
+                        <input asp-for="DataFimInscricao" class="form-control" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" value="@(Model != null && Model.DataFimInscricao != default ? Model.DataFimInscricao.ToString("yyyy-MM-ddTHH:mm") : "")" />
                         <span asp-validation-for="DataFimInscricao" class="text-danger"></span>
                     </div>
                 </div>

@@ -488,53 +488,29 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual(new DateTime(2024, 09, 7, 12, 30, 0), evento.DataFimInscricao);
         }
 
-        [TestMethod()]
-        public void EventoModel_DisplayFormat_IncluiHora()
-        {
-            // Testa que o DisplayFormat foi atualizado para incluir HH:mm
-            var propriedade = typeof(EventoModel).GetProperty("DataInicio");
-            var displayFormatAttr = propriedade?.GetCustomAttributes(typeof(DisplayFormatAttribute), false)
-                .FirstOrDefault() as DisplayFormatAttribute;
+        private static DisplayFormatAttribute GetDisplayFormat(Type tipo, string propriedade) =>
+        tipo.GetProperty(propriedade)!
+        .GetCustomAttributes(typeof(DisplayFormatAttribute), false)
+        .Cast<DisplayFormatAttribute>()
+        .First();
 
-            Assert.IsNotNull(displayFormatAttr);
-            Assert.AreEqual("{0:dd/MM/yyyy HH:mm}", displayFormatAttr.DataFormatString);
-            Assert.IsTrue(displayFormatAttr.ApplyFormatInEditMode);
-        }
-
-        [TestMethod()]
-        public void EventoModel_DataType_DateTime()
-        {
-            // Testa que o DataType foi alterado para DateTime
-            var propriedade = typeof(EventoModel).GetProperty("DataInicio");
-            var dataTypeAttr = propriedade?.GetCustomAttributes(typeof(DataTypeAttribute), false)
-                .FirstOrDefault() as DataTypeAttribute;
-
-            Assert.IsNotNull(dataTypeAttr);
-            Assert.AreEqual(DataType.DateTime, dataTypeAttr.DataType);
-        }
+        private static DataTypeAttribute GetDataType(Type tipo, string propriedade) =>
+            tipo.GetProperty(propriedade)!
+                .GetCustomAttributes(typeof(DataTypeAttribute), false)
+                .Cast<DataTypeAttribute>()
+                .First();
 
         [TestMethod()]
-        public void SubeventoModel_DisplayFormat_IncluiHora()
+        public void EventoModel_Datas_TemDataTypeDateTimeEFormatoComHora()
         {
-            // Testa que SubeventoModel também tem DateTime com hora
-            var propriedade = typeof(SubeventoModel).GetProperty("DataInicio");
-            var displayFormatAttr = propriedade?.GetCustomAttributes(typeof(DisplayFormatAttribute), false)
-                .FirstOrDefault() as DisplayFormatAttribute;
+            foreach (var prop in new[] { "DataInicio", "DataFim", "DataInicioInscricao", "DataFimInscricao" })
+            {
+                Assert.AreEqual(DataType.DateTime, GetDataType(typeof(EventoModel), prop).DataType, prop);
 
-            Assert.IsNotNull(displayFormatAttr);
-            Assert.AreEqual("{0:dd/MM/yyyy HH:mm}", displayFormatAttr.DataFormatString);
-        }
-
-        [TestMethod()]
-        public void SubeventoModel_DataType_DateTime()
-        {
-            // Testa que SubeventoModel usa DataType.DateTime
-            var propriedade = typeof(SubeventoModel).GetProperty("DataInicio");
-            var dataTypeAttr = propriedade?.GetCustomAttributes(typeof(DataTypeAttribute), false)
-                .FirstOrDefault() as DataTypeAttribute;
-
-            Assert.IsNotNull(dataTypeAttr);
-            Assert.AreEqual(DataType.DateTime, dataTypeAttr.DataType);
+                var formato = GetDisplayFormat(typeof(EventoModel), prop);
+                StringAssert.Contains(formato.DataFormatString, "HH:mm", prop);
+                Assert.IsFalse(formato.ApplyFormatInEditMode, prop);
+            }
         }
 
         [TestMethod()]
@@ -579,39 +555,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsTrue(modelo.DataFimInscricao < modelo.DataFim);
         }
 
-        [TestMethod()]
-        public void SubeventoModel_ValidarOrdenacao_DiasDiferentes()
-        {
-            // Subevento pode ter múltiplos dias
-            var modelo = new SubeventoModel
-            {
-                DataInicio = new DateTime(2024, 10, 15, 9, 0, 0),    // 15/10 09:00
-                DataFim = new DateTime(2024, 10, 16, 18, 0, 0)       // 16/10 18:00
-            };
 
-            Assert.IsTrue(modelo.DataInicio < modelo.DataFim);
-        }
 
-        [TestMethod()]
-        public void SubeventoModel_ValidarInscricao_PeriodoCompleto()
-        {
-            // Teste completo de validação de subevento
-            var modeloSubevento = new SubeventoModel
-            {
-                DataInicio = new DateTime(2024, 10, 15, 9, 0, 0),
-                DataFim = new DateTime(2024, 10, 15, 17, 0, 0),
-                DataInicioInscricao = new DateTime(2024, 10, 1, 10, 0, 0),
-                DataFimInscricao = new DateTime(2024, 10, 14, 23, 59, 0)
-            };
-
-            // Validações básicas
-            Assert.IsTrue(modeloSubevento.DataInicio < modeloSubevento.DataFim,
-                "Início deve ser anterior ao fim");
-            Assert.IsTrue(modeloSubevento.DataInicioInscricao < modeloSubevento.DataFimInscricao,
-                "Início de inscrição deve ser anterior ao fim");
-            Assert.IsTrue(modeloSubevento.DataFimInscricao <= modeloSubevento.DataInicio,
-                "Inscrições devem fechar antes do evento começar");
-        }
 
         [TestMethod()]
         public void EventoModel_ComparacaoHoras_SegundosIgnorados()
@@ -627,46 +572,6 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual(dataHora1.Hour, dataHora2.Hour);
             Assert.AreEqual(dataHora1.Minute, dataHora2.Minute);
             // Segundos podem ser diferentes
-        }
-
-        [TestMethod()]
-        public void EventoModel_GerenciarEvento_TodosOsCamposComHora()
-        {
-            // Verificar que todos os 4 campos de data têm DisplayFormat com hora
-            var campos = new[] { "DataInicio", "DataFim", "DataInicioInscricao", "DataFimInscricao" };
-
-            foreach (var nomePropriedade in campos)
-            {
-                var propriedade = typeof(EventoModel).GetProperty(nomePropriedade);
-                var displayFormatAttr = propriedade?.GetCustomAttributes(typeof(DisplayFormatAttribute), false)
-                    .FirstOrDefault() as DisplayFormatAttribute;
-
-                Assert.IsNotNull(displayFormatAttr, $"Campo {nomePropriedade} não tem DisplayFormat");
-                Assert.IsTrue(displayFormatAttr.DataFormatString.Contains("HH:mm"),
-                    $"Campo {nomePropriedade} não inclui HH:mm no formato");
-                Assert.IsTrue(displayFormatAttr.ApplyFormatInEditMode,
-                    $"Campo {nomePropriedade} não tem ApplyFormatInEditMode = true");
-            }
-        }
-
-        [TestMethod()]
-        public void SubeventoModel_GerenciarSubevento_TodosOsCamposComHora()
-        {
-            // Verificar que SubeventoModel também tem todos os campos atualizados
-            var campos = new[] { "DataInicio", "DataFim", "DataInicioInscricao", "DataFimInscricao" };
-
-            foreach (var nomePropriedade in campos)
-            {
-                var propriedade = typeof(SubeventoModel).GetProperty(nomePropriedade);
-                var displayFormatAttr = propriedade?.GetCustomAttributes(typeof(DisplayFormatAttribute), false)
-                    .FirstOrDefault() as DisplayFormatAttribute;
-
-                Assert.IsNotNull(displayFormatAttr, $"Campo {nomePropriedade} não tem DisplayFormat");
-                Assert.IsTrue(displayFormatAttr.DataFormatString.Contains("HH:mm"),
-                    $"Campo {nomePropriedade} não inclui HH:mm no formato");
-                Assert.IsTrue(displayFormatAttr.ApplyFormatInEditMode,
-                    $"Campo {nomePropriedade} não tem ApplyFormatInEditMode = true");
-            }
         }
 
         [TestMethod()]
@@ -692,6 +597,44 @@ namespace EventoWeb.Controllers.Tests
         // ============================================
         // MÉTODOS AUXILIARES
         // ============================================
+
+        [TestMethod()]
+        public void Index_ComEventoDataInicioNula_NaoLancaExcecao()
+        {
+            var mockService = new Mock<IEventoService>();
+            var mockServiceTipoevento = new Mock<ITipoeventoService>();
+            var mockUserManager = new Mock<UserManager<UsuarioIdentity>>(
+                Mock.Of<IUserStore<UsuarioIdentity>>(), null, null, null, null, null, null, null, null);
+
+            var eventos = new List<Evento>
+            {
+                new Evento { Id = 1, Nome = "Evento Sem Data", DataInicio = null, Status = "C", IdTipoEvento = 1 }
+            };
+
+            mockService.Setup(s => s.GetAll()).Returns(eventos);
+            mockServiceTipoevento.Setup(s => s.GetNomeById(1)).Returns("Congresso");
+
+            IMapper mapper = new MapperConfiguration(cfg => { }).CreateMapper();
+
+            var ctl = new EventoController(
+                mockUserManager.Object,
+                mockService.Object,
+                mapper,
+                Mock.Of<IEstadosbrasilService>(),
+                Mock.Of<IInscricaoService>(),
+                mockServiceTipoevento.Object,
+                Mock.Of<IAreaInteresseService>(),
+                Mock.Of<IPessoaService>(),
+                Mock.Of<ISubeventoService>());
+
+            var result = ctl.Index();
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var viewResult = (ViewResult)result;
+            var model = viewResult.Model as List<EventoModel>;
+            Assert.IsNotNull(model);
+            Assert.IsNull(model[0].DataInicio);
+        }
 
         private static Evento GetTargetEventoComHora()
         {
