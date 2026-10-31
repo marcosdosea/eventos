@@ -53,7 +53,7 @@ namespace EventoWeb.Controllers
             var listarEventosModel = listarEventos.Select(e => new EventoModel
             {
                 Id = e.Id,
-                DataInicio = (DateTime)e.DataInicio,
+                DataInicio = e.DataInicio,
                 Nome = e.Nome,
                 Status = e.Status,
                 IdTipoEvento = (uint)e.IdTipoEvento,
@@ -901,7 +901,7 @@ namespace EventoWeb.Controllers
             var listarEventosModel = eventosList.Select(e => new EventoModel
             {
                 Id = e.Id,
-                DataInicio = (DateTime)e.DataInicio,
+                DataInicio = e.DataInicio,
                 Nome = e.Nome,
                 Status = e.Status,
                 IdTipoEvento = (uint)e.IdTipoEvento,

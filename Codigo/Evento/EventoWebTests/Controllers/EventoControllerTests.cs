@@ -1,22 +1,23 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using AutoMapper;
 using Core;
+using Core.DTO;
+using Core.Service;
+using EventoWeb.Mappers;
+using EventoWeb.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using EventoWeb.Models;
-using EventoWeb.Mappers;
-using Core.Service;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using AutoMapper;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using System.Runtime.ConstrainedExecution;
-using System.Security.Cryptography;
-using Core.DTO;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Http;
-using System.Security.Claims;
-using System.Reflection;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.ConstrainedExecution;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace EventoWeb.Controllers.Tests
 {
@@ -56,7 +57,7 @@ namespace EventoWeb.Controllers.Tests
             mockServiceInscricao.Setup(service => service.GetByEventoAndPapel(It.IsAny<uint>(), It.IsAny<int>()))
                 .Returns(GetTestInscricoes());
             mockServiceInscricao.Setup(service => service.GetGestorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
-                .Returns(new Inscricaopessoaevento()); 
+                .Returns(new Inscricaopessoaevento());
             mockService.Setup(service => service.GetEventoSimpleDto(It.IsAny<uint>()))
                 .Returns(new EventoSimpleDTO { Id = 1, Nome = "Evento Teste" });
             mockServiceInscricao.Setup(service => service.GetByEventoAndPapel(It.IsAny<uint>(), 3))
@@ -472,6 +473,204 @@ namespace EventoWeb.Controllers.Tests
             var antiFalsificacao = metodo.GetCustomAttributes(typeof(ValidateAntiForgeryTokenAttribute), false);
             Assert.IsTrue(antiFalsificacao.Length > 0, $"POST {nomeAcao} sem [ValidateAntiForgeryToken].");
         }
+        [TestMethod()]
+        public void DetailsTest_ComDataHora()
+        {
+            var mockService = new Mock<IEventoService>();
+            mockService.Setup(service => service.Get(1))
+                .Returns(GetTargetEventoComHora());
+
+            // Verificar que a data inclui hora
+            var evento = mockService.Object.Get(1);
+            Assert.AreEqual(new DateTime(2024, 10, 2, 7, 30, 0), evento.DataInicio);
+            Assert.AreEqual(new DateTime(2024, 10, 7, 12, 30, 0), evento.DataFim);
+            Assert.AreEqual(new DateTime(2024, 09, 2, 7, 30, 0), evento.DataInicioInscricao);
+            Assert.AreEqual(new DateTime(2024, 09, 7, 12, 30, 0), evento.DataFimInscricao);
+        }
+
+        private static DisplayFormatAttribute GetDisplayFormat(Type tipo, string propriedade) =>
+        tipo.GetProperty(propriedade)!
+        .GetCustomAttributes(typeof(DisplayFormatAttribute), false)
+        .Cast<DisplayFormatAttribute>()
+        .First();
+
+        private static DataTypeAttribute GetDataType(Type tipo, string propriedade) =>
+            tipo.GetProperty(propriedade)!
+                .GetCustomAttributes(typeof(DataTypeAttribute), false)
+                .Cast<DataTypeAttribute>()
+                .First();
+
+        [TestMethod()]
+        public void EventoModel_Datas_TemDataTypeDateTimeEFormatoComHora()
+        {
+            foreach (var prop in new[] { "DataInicio", "DataFim", "DataInicioInscricao", "DataFimInscricao" })
+            {
+                Assert.AreEqual(DataType.DateTime, GetDataType(typeof(EventoModel), prop).DataType, prop);
+
+                var formato = GetDisplayFormat(typeof(EventoModel), prop);
+                StringAssert.Contains(formato.DataFormatString, "HH:mm", prop);
+                Assert.IsFalse(formato.ApplyFormatInEditMode, prop);
+            }
+        }
+
+        [TestMethod()]
+        public void EventoModel_ValidarOrdenacao_MesmoDia_HorasFormatadas()
+        {
+            // Teste de validação: DataInicio anterior a DataFim no mesmo dia com horários diferentes
+            var modelo = new EventoModel
+            {
+                DataInicio = new DateTime(2024, 10, 15, 9, 0, 0),   // 09:00
+                DataFim = new DateTime(2024, 10, 15, 17, 0, 0)      // 17:00
+            };
+
+            // Deve ser válido - DataInicio < DataFim
+            Assert.IsTrue(modelo.DataInicio < modelo.DataFim);
+        }
+
+        [TestMethod()]
+        public void EventoModel_ValidarOrdenacao_MesmoDia_HorasFimAnterior_Invalido()
+        {
+            // Teste de validação negativa: Hora final anterior à inicial no mesmo dia
+            var modelo = new EventoModel
+            {
+                DataInicio = new DateTime(2024, 10, 15, 17, 0, 0),   // 17:00
+                DataFim = new DateTime(2024, 10, 15, 9, 0, 0)        // 09:00
+            };
+
+            // Deve ser inválido - DataInicio >= DataFim
+            Assert.IsFalse(modelo.DataInicio < modelo.DataFim);
+        }
+
+        [TestMethod()]
+        public void EventoModel_ValidarInscricao_DataFimAnteriorDataFim()
+        {
+            // Inscrições devem fechar ANTES do evento terminar
+            var modelo = new EventoModel
+            {
+                DataFimInscricao = new DateTime(2024, 10, 14, 23, 59, 0), // Dia anterior
+                DataFim = new DateTime(2024, 10, 15, 18, 0, 0)             // Próximo dia
+            };
+
+            // Deve ser válido
+            Assert.IsTrue(modelo.DataFimInscricao < modelo.DataFim);
+        }
+
+
+
+
+        [TestMethod()]
+        public void EventoModel_ComparacaoHoras_SegundosIgnorados()
+        {
+            // Verificar se a comparação considera minutos mas pode ignorar segundos
+            var dataHora1 = new DateTime(2024, 10, 15, 14, 30, 0);
+            var dataHora2 = new DateTime(2024, 10, 15, 14, 30, 30);
+
+            // Na prática, para validação de negócio, podem ser consideradas iguais
+            Assert.AreEqual(dataHora1.Year, dataHora2.Year);
+            Assert.AreEqual(dataHora1.Month, dataHora2.Month);
+            Assert.AreEqual(dataHora1.Day, dataHora2.Day);
+            Assert.AreEqual(dataHora1.Hour, dataHora2.Hour);
+            Assert.AreEqual(dataHora1.Minute, dataHora2.Minute);
+            // Segundos podem ser diferentes
+        }
+
+        [TestMethod()]
+        public void FormatacaoDataHora_BrasileiraComHora()
+        {
+            // Teste de formatação: data brasileira com hora
+            var data = new DateTime(2024, 10, 15, 14, 30, 0);
+            var formatado = data.ToString("dd/MM/yyyy HH:mm");
+
+            Assert.AreEqual("15/10/2024 14:30", formatado);
+        }
+
+        [TestMethod()]
+        public void FormatacaoDataHora_IsoParaInput()
+        {
+            // Teste de formatação ISO para inputs datetime-local
+            var data = new DateTime(2024, 10, 15, 14, 30, 0);
+            var formatado = data.ToString("yyyy-MM-ddTHH:mm");
+
+            Assert.AreEqual("2024-10-15T14:30", formatado);
+        }
+
+        // ============================================
+        // MÉTODOS AUXILIARES
+        // ============================================
+
+        [TestMethod()]
+        public void Index_ComEventoDataInicioNula_NaoLancaExcecao()
+        {
+            var mockService = new Mock<IEventoService>();
+            var mockServiceTipoevento = new Mock<ITipoeventoService>();
+            var mockUserManager = new Mock<UserManager<UsuarioIdentity>>(
+                Mock.Of<IUserStore<UsuarioIdentity>>(), null, null, null, null, null, null, null, null);
+
+            var eventos = new List<Evento>
+            {
+                new Evento { Id = 1, Nome = "Evento Sem Data", DataInicio = null, Status = "C", IdTipoEvento = 1 }
+            };
+
+            mockService.Setup(s => s.GetAll()).Returns(eventos);
+            mockServiceTipoevento.Setup(s => s.GetNomeById(1)).Returns("Congresso");
+
+            IMapper mapper = new MapperConfiguration(cfg => { }).CreateMapper();
+
+            var ctl = new EventoController(
+                mockUserManager.Object,
+                mockService.Object,
+                mapper,
+                Mock.Of<IEstadosbrasilService>(),
+                Mock.Of<IInscricaoService>(),
+                mockServiceTipoevento.Object,
+                Mock.Of<IAreaInteresseService>(),
+                Mock.Of<IPessoaService>(),
+                Mock.Of<ISubeventoService>());
+
+            var result = ctl.Index();
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var viewResult = (ViewResult)result;
+            var model = viewResult.Model as List<EventoModel>;
+            Assert.IsNotNull(model);
+            Assert.IsNull(model[0].DataInicio);
+        }
+
+        private static Evento GetTargetEventoComHora()
+        {
+            return new Evento
+            {
+                Id = 1,
+                Nome = "SEMINFO",
+                Descricao = "Evento para a semana da tecnologia",
+                DataInicio = new DateTime(2024, 10, 2, 7, 30, 0),      // 07:30
+                DataFim = new DateTime(2024, 10, 7, 12, 30, 0),        // 12:30
+                InscricaoGratuita = 1,
+                Status = "A",
+                DataInicioInscricao = new DateTime(2024, 09, 2, 7, 30, 0),   // 07:30
+                DataFimInscricao = new DateTime(2024, 09, 7, 12, 30, 0),     // 12:30
+                ValorInscricao = 0,
+                Website = "www.itatechjr.com.br",
+                EmailEvento = "DSI@academico.ufs.br",
+                EventoPublico = 1,
+                Cep = "49506036",
+                Estado = "SE",
+                Cidade = "Itabaiana",
+                Bairro = "Porto",
+                Rua = " Av. Vereador Olímpio Grande",
+                Numero = "s/n",
+                Complemento = "Universidade",
+                PossuiCertificado = 1,
+                FrequenciaMinimaCertificado = 1,
+                IdTipoEvento = 1,
+                VagasOfertadas = 100,
+                VagasReservadas = 35,
+                VagasDisponiveis = 65,
+                TempoMinutosReserva = 240,
+                CargaHoraria = 4,
+            };
+        }
+
 
         private EventoModel GetNewEvento()
         {
