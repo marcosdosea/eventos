@@ -204,7 +204,14 @@ namespace EventoWeb.Areas.Identity.Pages.Account
             
                 foreach (var error in result.Errors)
                 {
-                    ModelState.AddModelError(string.Empty, error.Description);
+                    if (error.Code == "DuplicateEmail")
+                    {
+                        ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.Email)}", error.Description);
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
                 }
             }
     
