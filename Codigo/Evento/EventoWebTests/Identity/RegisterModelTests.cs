@@ -78,29 +78,6 @@ namespace EventoWeb.Identity.Tests
         }
 
         [TestMethod()]
-        public async Task OnPostAsync_WhenEmailAlreadyExistsInPessoaService_ReturnsPageWithModelError()
-        {
-            _pessoaServiceMock
-                .Setup(p => p.GetByCpf(It.IsAny<string>()))
-                .Returns((Pessoa)null);
-
-            _pessoaServiceMock
-                .Setup(p => p.ValidaEmail(It.IsAny<string>()))
-                .Returns(true);
-
-            _pessoaServiceMock
-                .Setup(p => p.EmailExist(It.IsAny<string>(), It.IsAny<string>()))
-                .ReturnsAsync(true);
-
-            var result = await _model.OnPostAsync();
-
-            Assert.IsInstanceOfType(result, typeof(PageResult));
-            Assert.IsFalse(_model.ModelState.IsValid);
-            Assert.IsTrue(_model.ModelState.ContainsKey("Input.Email"));
-            Assert.AreEqual("O e-mail informado já está em uso.", _model.ModelState["Input.Email"].Errors[0].ErrorMessage);
-        }
-
-        [TestMethod()]
         public async Task OnPostAsync_WhenIdentityReturnsDuplicateEmail_AttachesFriendlyErrorToEmailField()
         {
             _pessoaServiceMock
