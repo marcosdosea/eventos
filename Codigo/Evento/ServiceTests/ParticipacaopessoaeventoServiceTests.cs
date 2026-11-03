@@ -19,7 +19,7 @@ namespace Service.Tests
         public void Initialize()
         {
             var builder = new DbContextOptionsBuilder<EventoContext>();
-            builder.UseInMemoryDatabase("Evento");
+            builder.UseInMemoryDatabase(Guid.NewGuid().ToString());
             var options = builder.Options;
 
             _context = new EventoContext(options);
@@ -96,6 +96,18 @@ namespace Service.Tests
 
             Assert.AreEqual(1, doEvento1.Count);
             Assert.AreEqual((uint)1, doEvento1[0].IdPessoa);
+        }
+
+        [TestMethod()]
+        public async Task GetByEventoAsync_RetornaApenasDoEventoInformado()
+        {
+            var lista = await _participacaoService.GetByEventoAsync(1);
+
+            Assert.IsNotNull(lista);
+            Assert.AreEqual(1, lista.Count);
+            Assert.AreEqual((uint)1, lista[0].IdPessoa);
+            Assert.IsNotNull(lista[0].IdPessoaNavigation);
+            Assert.AreEqual("João Vitor Sodré", lista[0].IdPessoaNavigation.Nome);
         }
     }
 }
