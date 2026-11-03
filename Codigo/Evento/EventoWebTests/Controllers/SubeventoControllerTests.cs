@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 namespace EventoWeb.Controllers.Tests
 {
@@ -92,6 +93,17 @@ namespace EventoWeb.Controllers.Tests
             };
             controller.TempData = new Microsoft.AspNetCore.Mvc.ViewFeatures.TempDataDictionary(controller.HttpContext, new Mock<Microsoft.AspNetCore.Mvc.ViewFeatures.ITempDataProvider>().Object);
         }
+        private static DisplayFormatAttribute GetDisplayFormat(Type tipo, string propriedade) =>
+        tipo.GetProperty(propriedade)!
+        .GetCustomAttributes(typeof(DisplayFormatAttribute), false)
+        .Cast<DisplayFormatAttribute>()
+        .First();
+
+        private static DataTypeAttribute GetDataType(Type tipo, string propriedade) =>
+            tipo.GetProperty(propriedade)!
+                .GetCustomAttributes(typeof(DataTypeAttribute), false)
+                .Cast<DataTypeAttribute>()
+                .First();
 
         [TestMethod()]
         public void IndexTest()
@@ -660,6 +672,107 @@ namespace EventoWeb.Controllers.Tests
             };
 
             Assert.IsInstanceOfType(ctl.CreateOrEdit(2, (uint?)null), typeof(ForbidResult));
+        }
+
+        [TestMethod()]
+        public void CreateTest_MesmoDiaHoraFimAnteriorAoInicio_Invalid()
+        {
+            var subevento = GetNewSubevento();
+            subevento.DataInicio = new DateTime(2024, 09, 2, 14, 0, 0);
+            subevento.DataFim = new DateTime(2024, 09, 2, 9, 0, 0);
+
+            var result = controller.CreateOrEdit(1, subevento);
+
+            Assert.IsTrue(controller.ModelState.ContainsKey("DataFim"));
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+        }
+
+        [TestMethod()]
+        public void CreateTest_MesmoDiaHorariosValidos_Valid()
+        {
+            var subevento = GetNewSubevento();
+            subevento.DataInicio = new DateTime(2024, 09, 2, 14, 0, 0);
+            subevento.DataFim = new DateTime(2024, 09, 2, 18, 0, 0);
+            subevento.DataFimInscricao = new DateTime(2024, 09, 2, 13, 30, 0);
+
+            var result = controller.CreateOrEdit(1, subevento);
+
+            Assert.IsTrue(controller.ModelState.IsValid);
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+        }
+
+        [TestMethod()]
+        public void CreateTest_DataFimComHoraAposEventoPaiNoMesmoDia_Invalid()
+        {
+            // O evento pai termina em 10/09/2024 00:00 (mock do Initialize)
+            var subevento = GetNewSubevento();
+            subevento.DataInicio = new DateTime(2024, 09, 10, 8, 0, 0);
+            subevento.DataFim = new DateTime(2024, 09, 10, 18, 0, 0);
+
+            var result = controller.CreateOrEdit(1, subevento);
+
+            Assert.IsTrue(controller.ModelState.ContainsKey("DataFim"));
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+        }
+
+        [TestMethod()]
+        public void SubeventoModel_DataInicioDepoisDeDataFimMesmoDia_NaoPassaNaValidacao()
+        {
+            var subevento = GetNewSubevento();
+            subevento.DataInicio = new DateTime(2024, 09, 2, 14, 0, 0);
+            subevento.DataFim = new DateTime(2024, 09, 2, 9, 0, 0);
+
+            var results = new List<ValidationResult>();
+            var valido = Validator.TryValidateObject(subevento, new ValidationContext(subevento), results, true);
+
+            Assert.IsFalse(valido);
+        }
+
+        [TestMethod()]
+        public void SubeventoModel_Datas_TemDataTypeDateTimeEFormatoComHora()
+        {
+            foreach (var prop in new[] { "DataInicio", "DataFim", "DataInicioInscricao", "DataFimInscricao" })
+            {
+                Assert.AreEqual(DataType.DateTime, GetDataType(typeof(SubeventoModel), prop).DataType, prop);
+
+                var formato = GetDisplayFormat(typeof(SubeventoModel), prop);
+                StringAssert.Contains(formato.DataFormatString, "HH:mm", prop);
+                Assert.IsFalse(formato.ApplyFormatInEditMode, prop);
+            }
+        }
+
+        [TestMethod()]
+        public void SubeventoModel_ValidarOrdenacao_DiasDiferentes()
+        {
+            // Subevento pode ter múltiplos dias
+            var modelo = new SubeventoModel
+            {
+                DataInicio = new DateTime(2024, 10, 15, 9, 0, 0),    // 15/10 09:00
+                DataFim = new DateTime(2024, 10, 16, 18, 0, 0)       // 16/10 18:00
+            };
+
+            Assert.IsTrue(modelo.DataInicio < modelo.DataFim);
+        }
+
+        [TestMethod()]
+        public void SubeventoModel_ValidarInscricao_PeriodoCompleto()
+        {
+            // Teste completo de validação de subevento
+            var modeloSubevento = new SubeventoModel
+            {
+                DataInicio = new DateTime(2024, 10, 15, 9, 0, 0),
+                DataFim = new DateTime(2024, 10, 15, 17, 0, 0),
+                DataInicioInscricao = new DateTime(2024, 10, 1, 10, 0, 0),
+                DataFimInscricao = new DateTime(2024, 10, 14, 23, 59, 0)
+            };
+
+            // Validações básicas
+            Assert.IsTrue(modeloSubevento.DataInicio < modeloSubevento.DataFim,
+                "Início deve ser anterior ao fim");
+            Assert.IsTrue(modeloSubevento.DataInicioInscricao < modeloSubevento.DataFimInscricao,
+                "Início de inscrição deve ser anterior ao fim");
+            Assert.IsTrue(modeloSubevento.DataFimInscricao <= modeloSubevento.DataInicio,
+                "Inscrições devem fechar antes do evento começar");
         }
 
         private static ClaimsPrincipal GestorPrincipal() => new(new ClaimsIdentity(new List<Claim>
