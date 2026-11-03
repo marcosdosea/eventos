@@ -891,50 +891,18 @@ namespace EventoWeb.Controllers
                     foreach (var ins in inscricoesOrdenadas)
                     {
                         var pessoa = ins.IdPessoaNavigation;
-                        var nomeCompleto = pessoa?.Nome ?? "Participante";
+                        var nomeCompleto = (pessoa?.Nome ?? "Participante").Trim();
                         var nomeCracha = !string.IsNullOrWhiteSpace(ins.NomeCracha)
-                            ? ins.NomeCracha
+                            ? ins.NomeCracha.Trim()
                             : (!string.IsNullOrWhiteSpace(pessoa?.NomeCracha)
-                                ? pessoa.NomeCracha
+                                ? pessoa.NomeCracha.Trim()
                                 : nomeCompleto);
 
                         var cpfPuro = pessoa?.Cpf ?? string.Empty;
                         var cpfMascarado = MascararCpfParaExibicao(cpfPuro);
+                        var qrCodeBase64 = GerarQrCodeInscricao(ins, nomeCracha, idEventoAlvo, subeventos);
 
-                        var subeventosIdsPessoa = subeventos?
-                            .Where(sub => sub.IdPessoa == ins.IdPessoa)
-                            .Select(sub => sub.IdSubEvento)
-                            .Distinct()
-                            .ToList() ?? new List<uint>();
-
-                        var conteudoQrCode = $"[{ins.IdPessoa}] [{nomeCracha}] [{idEventoAlvo}] [{ins.Id}]";
-                        if (subeventosIdsPessoa.Any())
-                        {
-                            conteudoQrCode += $" {string.Join(" ", subeventosIdsPessoa.Select(idSub => $"[{idSub}]"))}";
-                        }
-
-                        string qrCodeBase64 = string.Empty;
-                        try
-                        {
-                            var qrBytes = QrCodeGenerator.GenerateQr(conteudoQrCode);
-                            qrCodeBase64 = Convert.ToBase64String(qrBytes);
-                        }
-                        catch
-                        {
-                        }
-
-                        if (string.IsNullOrEmpty(qrCodeBase64))
-                        {
-                            qrCodeBase64 = GerarQrCodeSeguro($"[{ins.IdPessoa}] [{idEventoAlvo}] [{ins.Id}]");
-                        }
-
-                        string? fotoDataUrl = null;
-                        bool temFoto = pessoa?.Foto != null && pessoa.Foto.Length > 0;
-                        if (temFoto)
-                        {
-                            fotoDataUrl = $"data:image/jpeg;base64,{Convert.ToBase64String(pessoa!.Foto)}";
-                        }
-
+                        bool temFoto = FotoHelper.TryObterFotoDataUrl(pessoa?.Foto, out var fotoDataUrl);
                         bool inscricaoAtiva = ins.Status == "A" || ins.Status == "1" || string.IsNullOrEmpty(ins.Status);
                         bool statusApto = inscricaoAtiva && temFoto;
                         string statusDescricao = statusApto ? "Apto" : (!temFoto ? "Pendente Foto" : "Inscrição Pendente");
@@ -993,6 +961,119 @@ namespace EventoWeb.Controllers
             };
 
             return View(model);
+        }
+
+        [HttpPost]
+        [Route("AtualizarNomeCracha")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AtualizarNomeCracha([FromForm] AtualizarNomeCrachaModel model)
+        {
+            if (model == null || model.IdEvento == 0 || model.IdPessoa == 0)
+            {
+                return BadRequest(new { sucesso = false, mensagem = "Dados inválidos para atualização do participante." });
+            }
+
+            if (!IsAuthorizedParaEmissao(model.IdEvento))
+            {
+                return Forbid();
+            }
+
+            if (!ModelState.IsValid)
+            {
+                var erro = ModelState.Values.SelectMany(v => v.Errors).FirstOrDefault()?.ErrorMessage
+                           ?? "Dados inválidos para atualização do crachá.";
+                return BadRequest(new { sucesso = false, mensagem = erro });
+            }
+
+            var nomeCompleto = model.Nome.Trim();
+            var nomeCracha = !string.IsNullOrWhiteSpace(model.NomeCracha)
+                ? model.NomeCracha.Trim()
+                : (nomeCompleto.Length > 20 ? nomeCompleto.Substring(0, 20).Trim() : nomeCompleto);
+
+            if (nomeCracha.Length > 20)
+            {
+                return BadRequest(new { sucesso = false, mensagem = "O nome no crachá deve ter no máximo 20 caracteres." });
+            }
+
+            var inscricoes = _inscricaoService.GetByEvento(model.IdEvento)?.ToList() ?? new List<Inscricaopessoaevento>();
+            var inscricao = inscricoes.FirstOrDefault(i => i.IdPessoa == model.IdPessoa);
+
+            if (inscricao == null)
+            {
+                if (!inscricoes.Any())
+                {
+                    return Json(new
+                    {
+                        sucesso = true,
+                        idPessoa = model.IdPessoa,
+                        nomeCompleto,
+                        nomeCracha,
+                        qrCodeBase64 = GerarQrCodeSeguro($"[{model.IdPessoa}] [{nomeCracha}] [{model.IdEvento}]"),
+                        mensagem = "Nome no crachá atualizado com sucesso!"
+                    });
+                }
+
+                return NotFound(new { sucesso = false, mensagem = "Participante não encontrado neste evento." });
+            }
+
+            var pessoa = _pessoaService.Get(model.IdPessoa) ?? inscricao.IdPessoaNavigation;
+            if (pessoa == null)
+            {
+                return NotFound(new { sucesso = false, mensagem = "Cadastro do participante não encontrado." });
+            }
+
+            pessoa.Nome = nomeCompleto;
+            pessoa.NomeCracha = nomeCracha;
+
+            try
+            {
+                await _pessoaService.Edit(pessoa);
+                _inscricaoService.UpdateNomeCracha(model.IdPessoa, model.IdEvento, nomeCracha);
+            }
+            catch (Exception)
+            {
+                return BadRequest(new { sucesso = false, mensagem = "Não foi possível salvar as alterações do participante. Tente novamente." });
+            }
+
+            var subeventos = _inscricaoService.GetSubByEvento(model.IdEvento);
+            var qrCodeBase64 = GerarQrCodeInscricao(inscricao, nomeCracha, model.IdEvento, subeventos);
+
+            return Json(new
+            {
+                sucesso = true,
+                idPessoa = model.IdPessoa,
+                nomeCompleto,
+                nomeCracha,
+                qrCodeBase64,
+                mensagem = "Nome no crachá atualizado com sucesso!"
+            });
+        }
+
+        private static string GerarQrCodeInscricao(
+            Inscricaopessoaevento ins,
+            string nomeCracha,
+            uint idEvento,
+            IEnumerable<Inscricaopessoasubevento>? subeventos)
+        {
+            var subeventosIdsPessoa = subeventos?
+                .Where(sub => sub.IdPessoa == ins.IdPessoa)
+                .Select(sub => sub.IdSubEvento)
+                .Distinct()
+                .ToList() ?? new List<uint>();
+
+            var conteudoQrCode = $"[{ins.IdPessoa}] [{nomeCracha}] [{idEvento}] [{ins.Id}]";
+            if (subeventosIdsPessoa.Any())
+            {
+                conteudoQrCode += $" {string.Join(" ", subeventosIdsPessoa.Select(idSub => $"[{idSub}]"))}";
+            }
+
+            var qrCodeBase64 = GerarQrCodeSeguro(conteudoQrCode);
+            if (string.IsNullOrEmpty(qrCodeBase64))
+            {
+                qrCodeBase64 = GerarQrCodeSeguro($"[{ins.IdPessoa}] [{idEvento}] [{ins.Id}]");
+            }
+
+            return qrCodeBase64;
         }
 
         private static string MascararCpfParaExibicao(string? cpf)

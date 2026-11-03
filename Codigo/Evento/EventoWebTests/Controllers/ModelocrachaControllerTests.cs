@@ -9,6 +9,7 @@ using AutoMapper;
 using Core;
 using Core.DTO;
 using Core.Service;
+using EventoWeb.Helpers;
 using EventoWeb.Mappers;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Hosting;
@@ -1536,6 +1537,279 @@ namespace EventoWeb.Controllers.Tests
 
             var result = ctrl.EmitirCracha(1, null, null);
             Assert.IsInstanceOfType(result, typeof(ForbidResult));
+        }
+
+        [TestMethod]
+        public void EmitirCrachaTest_ParticipanteComFotoInvalidaDoDump_DegradaParaPlaceholderSemFoto()
+        {
+            var mockPessoaDumpAntigo = new Pessoa
+            {
+                Id = 15,
+                Nome = "João Vitor Sodré",
+                NomeCracha = "Sodre",
+                Cpf = "92023338077",
+                Foto = System.Text.Encoding.UTF8.GetBytes("foto3.jpg")
+            };
+
+            var mockInscricoes = new List<Inscricaopessoaevento>
+            {
+                new Inscricaopessoaevento
+                {
+                    Id = 30,
+                    IdPessoa = 15,
+                    IdEvento = 1,
+                    IdPapel = 2,
+                    NomeCracha = "Sodre",
+                    Status = "A",
+                    IdPessoaNavigation = mockPessoaDumpAntigo
+                }
+            };
+
+            var mockServiceInscricao = new Mock<IInscricaoService>();
+            mockServiceInscricao.Setup(s => s.GetByEvento(1)).Returns(mockInscricoes);
+            mockServiceInscricao.Setup(s => s.GetSubByEvento(1)).Returns(new List<Inscricaopessoasubevento>());
+            mockServiceInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 15, IdEvento = 1, IdPapel = 2 });
+
+            var mockService = new Mock<IModelocrachaService>();
+            mockService.Setup(s => s.GetByEvento(1)).Returns(GetTestModelocracha());
+            var mockServiceEvento = new Mock<IEventoService>();
+            mockServiceEvento.Setup(s => s.GetNomeById(1)).Returns("SEMINFO");
+            var mockServicePessoa = new Mock<IPessoaService>();
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+
+            var ctrl = new ModelocrachaController(mockService.Object, mockServiceEvento.Object, mockServicePessoa.Object, mockServiceInscricao.Object, mapper);
+            ctrl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            var result = ctrl.EmitirCracha(1, null, null);
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var viewResult = (ViewResult)result;
+            var model = (EmitirCrachaModel)viewResult.Model!;
+
+            Assert.AreEqual(1, model.Participantes.Count);
+            var participante = model.Participantes.First();
+            Assert.IsNull(participante.FotoDataUrl);
+            Assert.IsFalse(participante.StatusApto);
+            Assert.AreEqual("Pendente Foto", participante.StatusDescricao);
+        }
+
+        [TestMethod]
+        public void FotoHelperTest_ValidaFormatosERejeitaPayloadsCorrompidos()
+        {
+            Assert.IsFalse(FotoHelper.TryObterFotoDataUrl(null, out var urlNula));
+            Assert.IsNull(urlNula);
+
+            Assert.IsFalse(FotoHelper.TryObterFotoDataUrl(Array.Empty<byte>(), out _));
+            Assert.IsFalse(FotoHelper.TryObterFotoDataUrl(new byte[] { 0x01, 0x02 }, out _));
+
+            var bytesDumpString = System.Text.Encoding.UTF8.GetBytes("foto1.jpg");
+            Assert.IsFalse(FotoHelper.TryObterFotoDataUrl(bytesDumpString, out var urlDump));
+            Assert.IsNull(urlDump);
+
+            var jpegValido = new byte[] { 0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10 };
+            Assert.IsTrue(FotoHelper.TryObterFotoDataUrl(jpegValido, out var urlJpeg));
+            Assert.AreEqual($"data:image/jpeg;base64,{Convert.ToBase64String(jpegValido)}", urlJpeg);
+
+            var pngValido = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+            Assert.IsTrue(FotoHelper.TryObterFotoDataUrl(pngValido, out var urlPng));
+            Assert.AreEqual($"data:image/png;base64,{Convert.ToBase64String(pngValido)}", urlPng);
+
+            var webpValido = new byte[] { 0x52, 0x49, 0x46, 0x46, 0x24, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50 };
+            Assert.IsTrue(FotoHelper.TryObterFotoDataUrl(webpValido, out var urlWebp));
+            Assert.AreEqual($"data:image/webp;base64,{Convert.ToBase64String(webpValido)}", urlWebp);
+        }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task AtualizarNomeCrachaTest_ParticipanteValido_AtualizaPessoaEInscricaoERetornaJson()
+        {
+            var pessoa = new Pessoa
+            {
+                Id = 10,
+                Nome = "Ana Souza",
+                NomeCracha = "Ana",
+                Cpf = "12345678901",
+                Cidade = "Aracaju",
+                Estado = "SE"
+            };
+
+            var inscricao = new Inscricaopessoaevento
+            {
+                Id = 20,
+                IdPessoa = 10,
+                IdEvento = 1,
+                IdPapel = 4,
+                NomeCracha = "Ana",
+                IdPessoaNavigation = pessoa
+            };
+
+            var mockServiceInscricao = new Mock<IInscricaoService>();
+            mockServiceInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+            mockServiceInscricao.Setup(s => s.GetByEvento(1))
+                .Returns(new List<Inscricaopessoaevento> { inscricao });
+            mockServiceInscricao.Setup(s => s.GetSubByEvento(1))
+                .Returns(new List<Inscricaopessoasubevento>());
+
+            var mockServicePessoa = new Mock<IPessoaService>();
+            mockServicePessoa.Setup(s => s.Get(10)).Returns(pessoa);
+            mockServicePessoa.Setup(s => s.Edit(It.IsAny<Pessoa>())).Returns(System.Threading.Tasks.Task.CompletedTask);
+
+            var mockService = new Mock<IModelocrachaService>();
+            var mockServiceEvento = new Mock<IEventoService>();
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+
+            var ctrl = new ModelocrachaController(mockService.Object, mockServiceEvento.Object, mockServicePessoa.Object, mockServiceInscricao.Object, mapper);
+            ctrl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            var input = new AtualizarNomeCrachaModel
+            {
+                IdEvento = 1,
+                IdPessoa = 10,
+                Nome = "Ana Beatriz Souza",
+                NomeCracha = "ANA BEATRIZ"
+            };
+
+            var result = await ctrl.AtualizarNomeCracha(input);
+            Assert.IsInstanceOfType(result, typeof(JsonResult));
+
+            mockServicePessoa.Verify(s => s.Edit(It.Is<Pessoa>(p => p.Id == 10 && p.Nome == "Ana Beatriz Souza" && p.NomeCracha == "ANA BEATRIZ")), Times.Once);
+            mockServiceInscricao.Verify(s => s.UpdateNomeCracha(10, 1, "ANA BEATRIZ"), Times.Once);
+
+            var jsonResult = (JsonResult)result;
+            var jsonString = JsonSerializer.Serialize(jsonResult.Value);
+            using var doc = JsonDocument.Parse(jsonString);
+            var root = doc.RootElement;
+
+            Assert.IsTrue(root.GetProperty("sucesso").GetBoolean());
+            Assert.AreEqual("ANA BEATRIZ", root.GetProperty("nomeCracha").GetString());
+            Assert.AreEqual("Ana Beatriz Souza", root.GetProperty("nomeCompleto").GetString());
+            Assert.IsFalse(string.IsNullOrEmpty(root.GetProperty("qrCodeBase64").GetString()));
+        }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task AtualizarNomeCrachaTest_SemNomeCrachaInformado_TruncaNomeCompletoEm20Caracteres()
+        {
+            var pessoa = new Pessoa
+            {
+                Id = 10,
+                Nome = "Nome Antigo",
+                NomeCracha = "Antigo",
+                Cpf = "12345678901"
+            };
+
+            var mockServiceInscricao = new Mock<IInscricaoService>();
+            mockServiceInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+            mockServiceInscricao.Setup(s => s.GetByEvento(1))
+                .Returns(new List<Inscricaopessoaevento>
+                {
+                    new Inscricaopessoaevento { Id = 20, IdPessoa = 10, IdEvento = 1, IdPapel = 4, IdPessoaNavigation = pessoa }
+                });
+            mockServiceInscricao.Setup(s => s.GetSubByEvento(1))
+                .Returns(new List<Inscricaopessoasubevento>());
+
+            var mockServicePessoa = new Mock<IPessoaService>();
+            mockServicePessoa.Setup(s => s.Get(10)).Returns(pessoa);
+            mockServicePessoa.Setup(s => s.Edit(It.IsAny<Pessoa>())).Returns(System.Threading.Tasks.Task.CompletedTask);
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctrl = new ModelocrachaController(new Mock<IModelocrachaService>().Object, new Mock<IEventoService>().Object, mockServicePessoa.Object, mockServiceInscricao.Object, mapper);
+            ctrl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            var input = new AtualizarNomeCrachaModel
+            {
+                IdEvento = 1,
+                IdPessoa = 10,
+                Nome = "Carlos Eduardo Albuquerque de Menezes",
+                NomeCracha = ""
+            };
+
+            var result = await ctrl.AtualizarNomeCracha(input);
+            Assert.IsInstanceOfType(result, typeof(JsonResult));
+
+            mockServiceInscricao.Verify(s => s.UpdateNomeCracha(10, 1, "Carlos Eduardo Albuq"), Times.Once);
+        }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task AtualizarNomeCrachaTest_NomeCrachaMaiorQue20Caracteres_RetornaBadRequest()
+        {
+            var result = await controller.AtualizarNomeCracha(new AtualizarNomeCrachaModel
+            {
+                IdEvento = 1,
+                IdPessoa = 10,
+                Nome = "Participante Teste",
+                NomeCracha = "NOME MUITO LONGO QUE EXCEDE VINTE CARACTERES"
+            });
+
+            Assert.IsInstanceOfType(result, typeof(BadRequestObjectResult));
+        }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task AtualizarNomeCrachaTest_UsuarioNaoAutorizado_RetornaForbid()
+        {
+            var mockServiceInscricao = new Mock<IInscricaoService>();
+            mockServiceInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 999))
+                .Returns((Inscricaopessoaevento?)null);
+            mockServiceInscricao.Setup(s => s.GetColaboradorInEvent(It.IsAny<string>(), 999))
+                .Returns((Inscricaopessoaevento?)null);
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctrl = new ModelocrachaController(new Mock<IModelocrachaService>().Object, new Mock<IEventoService>().Object, new Mock<IPessoaService>().Object, mockServiceInscricao.Object, mapper);
+            ctrl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            var result = await ctrl.AtualizarNomeCracha(new AtualizarNomeCrachaModel
+            {
+                IdEvento = 999,
+                IdPessoa = 10,
+                Nome = "Participante Teste",
+                NomeCracha = "Teste"
+            });
+
+            Assert.IsInstanceOfType(result, typeof(ForbidResult));
+        }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task AtualizarNomeCrachaTest_ParticipanteDeOutroEvento_RetornaNotFound()
+        {
+            var mockServiceInscricao = new Mock<IInscricaoService>();
+            mockServiceInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+            mockServiceInscricao.Setup(s => s.GetByEvento(1))
+                .Returns(new List<Inscricaopessoaevento>
+                {
+                    new Inscricaopessoaevento { Id = 20, IdPessoa = 10, IdEvento = 1, IdPapel = 4 }
+                });
+
+            var mockServicePessoa = new Mock<IPessoaService>();
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctrl = new ModelocrachaController(new Mock<IModelocrachaService>().Object, new Mock<IEventoService>().Object, mockServicePessoa.Object, mockServiceInscricao.Object, mapper);
+            ctrl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            var result = await ctrl.AtualizarNomeCracha(new AtualizarNomeCrachaModel
+            {
+                IdEvento = 1,
+                IdPessoa = 999,
+                Nome = "Pessoa Inexistente no Evento",
+                NomeCracha = "Inexistente"
+            });
+
+            Assert.IsInstanceOfType(result, typeof(NotFoundObjectResult));
+            mockServicePessoa.Verify(s => s.Edit(It.IsAny<Pessoa>()), Times.Never);
         }
     }
 }

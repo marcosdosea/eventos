@@ -151,14 +151,20 @@
                                             <input type="checkbox" class="form-check-input custom-chk chk-participante-item" @(p.Selecionado ? "checked" : "") />
                                         </td>
                                         <td style="text-align: center;">
+                                            @{
+                                                var iniciaisThumb = !string.IsNullOrWhiteSpace(p.NomeCracha)
+                                                    ? p.NomeCracha.Trim().Substring(0, Math.Min(2, p.NomeCracha.Trim().Length)).ToUpperInvariant()
+                                                    : "PA";
+                                            }
                                             <div class="participant-thumb-box mx-auto">
                                                 @if (!string.IsNullOrEmpty(p.FotoDataUrl))
                                                 {
-                                                    <img src="@p.FotoDataUrl" alt="@p.NomeCracha" />
+                                                    <img src="@p.FotoDataUrl" alt="@p.NomeCracha" class="thumb-foto-participante" />
+                                                    <div class="avatar-iniciais" style="display: none;">@iniciaisThumb</div>
                                                 }
                                                 else
                                                 {
-                                                    <div class="avatar-iniciais">@p.NomeCracha.Substring(0, Math.Min(2, p.NomeCracha.Length)).ToUpperInvariant()</div>
+                                                    <div class="avatar-iniciais">@iniciaisThumb</div>
                                                 }
                                             </div>
                                         </td>
@@ -185,7 +191,7 @@
                                         </td>
                                         <td style="text-align: center; white-space: nowrap;">
                                             <a href="javascript:void(0)" class="action-link-edit btn-ver-previa me-2" data-index="@index" title="Exibir crachá deste participante na simulação 1:1">Prévia</a>
-                                            <a asp-controller="Evento" asp-action="EditParticipante" asp-route-idEvento="@eventoAtualId" asp-route-idPessoa="@p.IdPessoa" class="action-link-edit me-2" target="_blank" title="Editar dados cadastrais e crachá do participante">Editar</a>
+                                            <a href="javascript:void(0)" class="action-link-edit btn-abrir-modal-editar me-2" data-id-pessoa="@p.IdPessoa" data-id-evento="@eventoAtualId" data-nome="@p.NomeCracha" data-nome-completo="@p.NomeCompleto" title="Editar nome e crachá do participante">Editar</a>
                                             <a href="javascript:void(0)" class="action-link-delete btn-excluir-item" data-index="@index" title="Remover da lista de emissão">Excluir</a>
                                         </td>
                                     </tr>
@@ -363,10 +369,14 @@
                     </div>
                 </div>
 
-                <div class="d-flex align-items-center justify-content-center gap-3 mt-3 pt-3 border-top">
-                    <button type="button" id="btnExportarPng" class="btn btn-blue-normal color-white rounded-3 fw-semibold px-4 py-2 shadow-sm d-inline-flex align-items-center gap-2">
+                <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 mt-3 pt-3 border-top">
+                    <button type="button" id="btnExportarPng" class="btn btn-blue-normal color-white rounded-3 fw-semibold px-3 py-2 shadow-sm d-inline-flex align-items-center gap-2" title="Exportar crachá do participante em exibição como PNG">
                         <i class="bi bi-download"></i>
                         <span>Exportar PNG</span>
+                    </button>
+                    <button type="button" id="btnExportarLotePng" class="btn btn-outline-primary rounded-3 fw-semibold px-3 py-2 shadow-sm d-inline-flex align-items-center gap-2" title="Exportar crachás dos participantes selecionados em formato PNG (compactados em .ZIP)">
+                        <i class="bi bi-file-earmark-zip"></i>
+                        <span>Exportar Selecionados (ZIP)</span>
                     </button>
                 </div>
             </div>
@@ -390,6 +400,66 @@
 </div>
 
 <div id="containerImpressaoLoteA4" class="d-none"></div>
+
+<!-- Modal de Edição Rápida do Participante / Nome no Crachá (Issue #882) -->
+<div class="modal fade" id="modalEditarParticipanteCracha" tabindex="-1" aria-labelledby="modalEditarParticipanteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 shadow border-0">
+            <div class="modal-header border-bottom-0 pb-0">
+                <div class="d-flex align-items-center gap-2">
+                    <div style="background-color: #EEF2FF; color: #232ED0; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                        <i class="bi bi-pencil-square"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-dark fs-6 mb-0" id="modalEditarParticipanteLabel">Editar Nome no Crachá</h5>
+                        <span class="text-muted small">Atualização imediata na lista e na prévia 1:1</span>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <form id="formEditarParticipanteCracha">
+                @Html.AntiForgeryToken()
+                <input type="hidden" id="editModalIdEvento" name="IdEvento" value="@eventoAtualId" />
+                <input type="hidden" id="editModalIdPessoa" name="IdPessoa" value="0" />
+                <div class="modal-body py-3">
+                    <div class="mb-3">
+                        <label for="editModalNomeCompleto" class="form-label fw-semibold small text-dark mb-1">Nome Completo</label>
+                        <input type="text" class="form-control rounded-3" id="editModalNomeCompleto" name="Nome" required placeholder="Nome completo do participante" />
+                    </div>
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="editModalNomeCracha" class="form-label fw-semibold small text-dark mb-0">Nome no Crachá (Máx. 20 caracteres)</label>
+                            <span class="text-muted small font-monospace" id="contadorCaracteresCracha">0/20</span>
+                        </div>
+                        <input type="text" class="form-control rounded-3 font-monospace" id="editModalNomeCracha" name="NomeCracha" maxlength="20" placeholder="Ex.: MARIA SILVA" />
+                        <div class="form-text small">Nome exibido em destaque na credencial impressa e no PNG.</div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-outline-secondary rounded-3 px-3" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" id="btnSalvarEdicaoParticipante" class="btn btn-blue-normal color-white rounded-3 px-4 d-inline-flex align-items-center gap-2">
+                        <span class="spinner-border spinner-border-sm d-none" id="spinnerSalvarEdicao" role="status"></span>
+                        <i class="bi bi-check-lg" id="iconeSalvarEdicao"></i>
+                        <span>Salvar e Atualizar</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Toast de Notificação Rápida -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+    <div id="toastCrachaAviso" class="toast align-items-center text-white bg-dark border-0 rounded-3 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body d-flex align-items-center gap-2" id="toastCrachaTexto">
+                <i class="bi bi-check-circle-fill text-success fs-5" id="toastCrachaIcone"></i>
+                <span id="toastCrachaMensagem">Operação concluída com sucesso!</span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <script src="~/js/emitircracha.js" asp-append-version="true"></script>
