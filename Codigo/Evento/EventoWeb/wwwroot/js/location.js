@@ -4,10 +4,10 @@ const LOCATION_COOKIE_NAME = 'UserLocation';
 
 document.addEventListener('DOMContentLoaded', function () {
     initializeLocation();
-    
+
     const estadoSelect = document.getElementById('modalEstado');
     if (estadoSelect) {
-        estadoSelect.addEventListener('change', function() {
+        estadoSelect.addEventListener('change', function () {
             loadCitiesForState(this.value);
         });
     }
@@ -82,9 +82,8 @@ function extractLocationFromBigData(data) {
 
     let cidade = data.city || data.locality || "";
 
-    // Se a cidade não veio nos campos padrão, tentar achar em localityInfo.administrative
     if (!cidade && data.localityInfo && Array.isArray(data.localityInfo.administrative)) {
-        const adminCity = data.localityInfo.administrative.find(a => 
+        const adminCity = data.localityInfo.administrative.find(a =>
             a.adminLevel === 8 || (a.description && a.description.toLowerCase().includes('munic'))
         );
         if (adminCity && adminCity.name) {
@@ -140,13 +139,11 @@ function isSearchPage() {
 
 function initializeLocation() {
     if (isSearchPage()) {
-        // Na tela de busca, o cabeçalho reflete o filtro efetivo da busca vindo do servidor
         return;
     }
 
     const location = parseLocationCookie();
 
-    // Se temos cookie de localização aceito/definido
     if (location) {
         if (location.estado || location.manual) {
             updateHeaderLocationText(location);
@@ -154,9 +151,7 @@ function initializeLocation() {
         return;
     }
 
-    // Sem cookie: exibe inicialmente "Todo o Brasil" e solicita a permissão de localização nativa ao navegador.
-    // Se o usuário aceitar (ou já tiver permitido no navegador): detecta coordenadas, salva o cookie e atualiza a região.
-    // Se recusar, bloquear ou fechar: NÃO salva cookie nem força IP, permanecendo como "Todo o Brasil".
+
     updateHeaderLocationText({ cidade: "", estado: "", manual: false });
     requestGeolocation();
 }
@@ -170,8 +165,6 @@ function requestGeolocation() {
             },
             (error) => {
                 console.warn("Permissão de geolocalização não concedida pelo usuário:", error.message);
-                // Usuário não aceitou a permissão ou bloqueou:
-                // NÃO força localização por IP nem salva cookie. Permanece como "Todo o Brasil".
                 updateHeaderLocationText({ cidade: "", estado: "", manual: false });
             },
             { timeout: 10000, enableHighAccuracy: false, maximumAge: 60000 }
@@ -196,7 +189,7 @@ async function reverseGeocode(lat, lon) {
             }
             return;
         }
-        
+
         console.warn("Coordenadas não retornaram cidade/estado, tentando IP...");
         const ipLoc = await reverseGeocodeByIp();
         if (ipLoc) {
@@ -209,7 +202,7 @@ async function reverseGeocode(lat, lon) {
             }
             return;
         }
-        
+
         setDefaultLocation(false);
     } catch (e) {
         console.error("Erro na requisição de geolocalização:", e);
@@ -225,7 +218,6 @@ function setDefaultLocation(persist = true) {
     updateHeaderLocationText(locObj);
 }
 
-// Detecção sob demanda acionada pelo botão do modal
 async function detectCurrentLocation() {
     const btn = document.getElementById('btnDetectCurrentLocation');
     const btnText = document.getElementById('btnDetectCurrentLocationText');
@@ -314,7 +306,6 @@ function applyDetectedLocation(locObj) {
     setCookie(LOCATION_COOKIE_NAME, JSON.stringify(locObj));
     updateHeaderLocationText(locObj);
 
-    // Atualizar selects do modal se estiver aberto
     const estadoSelect = document.getElementById('modalEstado');
     if (estadoSelect && locObj.estado) {
         estadoSelect.value = locObj.estado;
@@ -362,20 +353,17 @@ function reloadLocationContext() {
     }
 }
 
-// Modal functions
 function openLocationModal() {
     const modalEl = document.getElementById('locationModal');
     if (!modalEl) return;
     const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
 
-    // Limpar mensagens de feedback de erro anteriores
     const feedback = document.getElementById('locationDetectFeedback');
     if (feedback) {
         feedback.textContent = '';
         feedback.classList.add('d-none');
     }
 
-    // Resetar estado do botão
     const btn = document.getElementById('btnDetectCurrentLocation');
     const btnText = document.getElementById('btnDetectCurrentLocationText');
     if (btn) btn.disabled = false;
@@ -383,7 +371,6 @@ function openLocationModal() {
         btnText.innerHTML = 'Usar minha localização atual';
     }
 
-    // Populate form with current cookie if exists, or fallback to server-resolved values
     const estadoSelect = document.getElementById('modalEstado');
     const headerBtnText = document.getElementById('headerLocationText');
     const serverResolvedUf = (
@@ -464,7 +451,6 @@ function saveManualLocation() {
         setCookie(LOCATION_COOKIE_NAME, JSON.stringify(locObj));
         updateHeaderLocationText(locObj);
     } else {
-        // Se o estado estiver vazio, assumir Todo o Brasil
         setDefaultLocation(true);
     }
 
@@ -491,31 +477,28 @@ function clearManualLocation() {
     reloadLocationContext();
 }
 
-// Ensure the header search form appends the location correctly when submitted
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const searchForm = document.getElementById('headerSearchForm');
     if (searchForm) {
-        searchForm.addEventListener('submit', function(e) {
-            // Check if user clicked 'clear filter' in the search results
+        searchForm.addEventListener('submit', function (e) {
             if (window.ignoreLocationCookie) {
                 return;
             }
 
             const location = parseLocationCookie();
             if (location && location.estado) {
-                // Remove existing ones inside the form if present to avoid duplication
                 const existingEstado = searchForm.querySelector('input[name="Estado"]');
                 const existingCidade = searchForm.querySelector('input[name="Cidade"]');
-                
+
                 if (existingEstado) existingEstado.remove();
                 if (existingCidade) existingCidade.remove();
-                
+
                 const estadoInput = document.createElement('input');
                 estadoInput.type = 'hidden';
                 estadoInput.name = 'Estado';
                 estadoInput.value = location.estado;
                 searchForm.appendChild(estadoInput);
-                
+
                 if (location.cidade && location.cidade.trim() !== '') {
                     const cidadeInput = document.createElement('input');
                     cidadeInput.type = 'hidden';
@@ -529,16 +512,15 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function clearSearchLocationFilter() {
-    // This is called from the badge in the search results
     window.ignoreLocationCookie = true;
     const searchForm = document.getElementById('headerSearchForm');
-    
+
     if (searchForm) {
         const existingEstado = searchForm.querySelector('input[name="Estado"]');
         const existingCidade = searchForm.querySelector('input[name="Cidade"]');
         if (existingEstado) existingEstado.remove();
         if (existingCidade) existingCidade.remove();
-        
+
         const todosInput = document.createElement('input');
         todosInput.type = 'hidden';
         todosInput.name = 'Estado';

@@ -105,8 +105,6 @@ namespace EventoWeb.Controllers
                 }
             }
 
-            // A localização só é carregada se a pessoa tiver o cookie UserLocation aceito/salvo.
-            // Sem cookie: NÃO carrega estado do perfil de Pessoa nem força geolocalização. Inicia como "Todo o Brasil".
             if (cookieLocation != null)
             {
                 if (!string.IsNullOrWhiteSpace(cookieLocation.Estado))
@@ -137,7 +135,6 @@ namespace EventoWeb.Controllers
                     }
                 }
 
-                // Cookie com estado vazio (ex: usuário escolheu "Ver Todo o Brasil")
                 return new LocalizacaoAtivaModel { Estado = null, Cidade = null, Manual = true, NomeExibicao = "Todo o Brasil" };
             }
 
@@ -233,7 +230,7 @@ namespace EventoWeb.Controllers
         [HttpGet]
         public IActionResult Buscar([FromQuery] Core.DTO.EventoFilterDTO filter, int pagina = 1)
         {
-            int tamanhoPagina = 16; // Garante máximo de 4 linhas x 4 colunas (16 eventos por página)
+            int tamanhoPagina = 16; 
             IEnumerable<Core.Evento> eventos = new List<Core.Evento>();
 
             string? estadoAtivo = null;
