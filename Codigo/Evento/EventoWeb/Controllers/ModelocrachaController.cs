@@ -1009,7 +1009,7 @@ namespace EventoWeb.Controllers
                         nomeCompleto,
                         nomeCracha,
                         qrCodeBase64 = GerarQrCodeSeguro($"[{model.IdPessoa}] [{nomeCracha}] [{model.IdEvento}]"),
-                        mensagem = "Nome no crachá atualizado com sucesso!"
+                        mensagem = "Dados do participante atualizados com sucesso!"
                     });
                 }
 
@@ -1045,7 +1045,7 @@ namespace EventoWeb.Controllers
                 nomeCompleto,
                 nomeCracha,
                 qrCodeBase64,
-                mensagem = "Nome no crachá atualizado com sucesso!"
+                mensagem = "Dados do participante atualizados com sucesso!"
             });
         }
 

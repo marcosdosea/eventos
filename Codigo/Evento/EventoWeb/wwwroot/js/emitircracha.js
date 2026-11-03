@@ -9,7 +9,7 @@
         const btnImprimirLote = document.getElementById("btnImprimirLotePdf");
 
         const chkMaster = document.getElementById("chkSelecionarTodosHeader");
-        const btnSelecionarTodosPagina = document.getElementById("btnSelecionarTodosPagina") || document.getElementById("btnSelecionarTodos");
+        const btnSelecionarTodosPagina = document.getElementById("btnSelecionarTodosPagina");
         const btnLimparSelecao = document.getElementById("btnLimparSelecao");
 
         const filtroInput = document.getElementById("filtroParticipantes");
@@ -64,45 +64,22 @@
         let paginaAtual = 1;
         let escalaAtual = 1;
 
-        function exibirMensagemFeedback(mensagem, tipo) {
-            tipo = tipo || "success";
+        function exibirMensagemFeedback(mensagem, tipo = "success", containerId = "alertaCrachaContainer") {
             const icone = tipo === "success"
                 ? "bi-check-circle-fill text-success"
                 : (tipo === "warning" ? "bi-exclamation-triangle-fill text-warning" : "bi-exclamation-octagon-fill text-danger");
 
-            const modalAberto = modalEditarEl && modalEditarEl.classList.contains("show");
-            const containerId = modalAberto ? "alertaModalCrachaContainer" : "alertaCrachaContainer";
-            let container = document.getElementById(containerId);
-
-            if (!container) {
-                container = document.createElement("div");
-                container.id = containerId;
-                const pageContainer = document.querySelector(".cracha-page-container");
-                if (pageContainer) {
-                    pageContainer.insertBefore(container, pageContainer.firstChild);
-                }
-            }
+            const container = document.getElementById(containerId) || document.getElementById("alertaCrachaContainer");
+            if (!container) return;
 
             const alertDiv = document.createElement("div");
             alertDiv.className = `alert alert-${tipo} alert-dismissible fade show d-flex align-items-center shadow-sm rounded-3 py-2 px-3 mb-3`;
             alertDiv.setAttribute("role", "alert");
-
-            const iconEl = document.createElement("i");
-            iconEl.className = `bi ${icone} fs-5 me-2`;
-
-            const spanEl = document.createElement("span");
-            spanEl.className = "fw-semibold small";
-            spanEl.textContent = mensagem;
-
-            const btnClose = document.createElement("button");
-            btnClose.type = "button";
-            btnClose.className = "btn-close ms-auto";
-            btnClose.setAttribute("data-bs-dismiss", "alert");
-            btnClose.setAttribute("aria-label", "Fechar");
-
-            alertDiv.appendChild(iconEl);
-            alertDiv.appendChild(spanEl);
-            alertDiv.appendChild(btnClose);
+            alertDiv.innerHTML = `
+                <i class="bi ${icone} fs-5 me-2"></i>
+                <span class="fw-semibold small">${mensagem}</span>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Fechar"></button>
+            `;
 
             container.innerHTML = "";
             container.appendChild(alertDiv);
@@ -410,7 +387,7 @@
             contadorCaracteresCracha.textContent = `${len}/20`;
         }
 
-        function abrirModalEdicaoParticipante(linha, btnEditar) {
+        function abrirModalEdicaoParticipante(linha) {
             if (!linha || !modalEditarEl) return;
 
             atualizarPreviewComLinha(linha);
@@ -420,8 +397,8 @@
                 containerAlertaModal.innerHTML = "";
             }
 
-            const idPessoa = linha.dataset.idPessoa || btnEditar?.dataset.idPessoa || "0";
-            const idEvento = selectEvento?.value || btnEditar?.dataset.idEvento || editModalIdEvento?.value || "0";
+            const idPessoa = linha.dataset.idPessoa || "0";
+            const idEvento = selectEvento?.value || editModalIdEvento?.value || "0";
             const nomeCrachaAtual = linha.dataset.nome || "";
             const nomeCompletoAtual = linha.dataset.nomeCompleto || nomeCrachaAtual;
 
@@ -487,7 +464,7 @@
                 let nomeCracha = (editModalNomeCracha?.value || "").trim();
 
                 if (!nomeCompleto || nomeCompleto.length < 2) {
-                    exibirMensagemFeedback("Informe o nome completo do participante (mínimo 2 caracteres).", "warning");
+                    exibirMensagemFeedback("Informe o nome completo do participante (mínimo 2 caracteres).", "warning", "alertaModalCrachaContainer");
                     editModalNomeCompleto?.focus();
                     return;
                 }
@@ -495,7 +472,7 @@
                 if (!nomeCracha) {
                     nomeCracha = nomeCompleto.substring(0, 20).trim();
                 } else if (nomeCracha.length > 20) {
-                    exibirMensagemFeedback("O nome no crachá deve ter no máximo 20 caracteres.", "warning");
+                    exibirMensagemFeedback("O nome no crachá deve ter no máximo 20 caracteres.", "warning", "alertaModalCrachaContainer");
                     editModalNomeCracha?.focus();
                     return;
                 }
@@ -526,7 +503,7 @@
 
                     if (!response.ok || !resultado || !resultado.sucesso) {
                         const msgErro = resultado?.mensagem || "Não foi possível atualizar os dados do participante. Tente novamente.";
-                        exibirMensagemFeedback(msgErro, "danger");
+                        exibirMensagemFeedback(msgErro, "danger", "alertaModalCrachaContainer");
                         return;
                     }
 
@@ -543,13 +520,12 @@
                     if (modalEditarEl && window.bootstrap && window.bootstrap.Modal) {
                         const modalInstance = window.bootstrap.Modal.getInstance(modalEditarEl);
                         modalInstance?.hide();
-                        modalEditarEl.classList.remove("show");
                     }
 
-                    exibirMensagemFeedback(resultado.mensagem || "Nome no crachá atualizado com sucesso!", "success");
+                    exibirMensagemFeedback(resultado.mensagem || "Dados do participante atualizados com sucesso!", "success");
                 } catch (err) {
                     console.error("Erro ao atualizar participante:", err);
-                    exibirMensagemFeedback("Erro de comunicação ao salvar alterações do participante.", "danger");
+                    exibirMensagemFeedback("Erro de comunicação ao salvar alterações do participante.", "danger", "alertaModalCrachaContainer");
                 } finally {
                     if (btnSalvarEdicao) btnSalvarEdicao.disabled = false;
                     if (spinnerSalvarEdicao) spinnerSalvarEdicao.classList.add("d-none");
@@ -571,7 +547,7 @@
                 if (btnEditar) {
                     e.preventDefault();
                     const linha = btnEditar.closest(".linha-participante");
-                    abrirModalEdicaoParticipante(linha, btnEditar);
+                    abrirModalEdicaoParticipante(linha);
                     return;
                 }
 
