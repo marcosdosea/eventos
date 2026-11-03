@@ -193,6 +193,7 @@ namespace EventoWeb.Areas.Identity.Pages.Account
                 if (_userManager.Options.SignIn.RequireConfirmedAccount)
                 {
                     TempData["Cpf"] = cpfSemFormatacao;
+                    TempData["SuccessMessage"] = "E-mail de confirmação enviado com sucesso!";
                     return RedirectToPage("RegisterConfirmation", new {email = Input.Email, cpf = cpfSemFormatacao, returnUrl = returnUrl });
                 }
                 else

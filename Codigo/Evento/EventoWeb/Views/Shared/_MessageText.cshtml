@@ -3,7 +3,7 @@
 {
    <div class="alert alert-success alert-dismissible fade show" role="alert">
     @TempData["SuccessMessage"]
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"> &times;</button>
    </div>
  }
 
@@ -11,7 +11,7 @@
 {
   <div class="alert alert-danger alert-dismissible fade show" role="alert">
     @TempData["ErrorMessage"]
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <button type="button" class="btn-close" data-bs-dismiss="alert">  &times; </button>
   </div>
 }
 ﻿@if (TempData["alertText"] != null && TempData["alertType"] != null)
@@ -24,6 +24,6 @@
    <div class="alert alert-@alertTypeSafe alert-dismissible fade show d-flex align-items-center" role="alert">
      <i class="@alertIconSafe fs-5"></i>
      <span class="ms-3">@TempData["alertText"]</span>
-     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"> &times;</button>
    </div>
 }

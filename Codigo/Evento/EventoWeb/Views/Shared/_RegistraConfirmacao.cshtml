@@ -1,22 +1,35 @@
 ﻿@model ConfirmaUserModel
+<div class="card-body p-5">
+         <div class="text-center mb-4">
+              <div class="bg-light-primary text-primary rounded-circle d-inline-flex p-3 mb-3" >
+               <i class="bi bi-envelope-check fs-2"></i>
+               </div>
+              <h4 class="fw-bold text-dark">Confirme o seu endereço de e-mail</h4>
+         </div>
 
-    <p>
-        Uma mensagem de confirmação de cadastro foi enviada para <strong>@Model.Email</strong>.
-    </p>
-    <p>
-        Por favor, verifique seu e-mail para confirmar sua conta.
-        Se não recebeu a mensagem, verifique sua caixa de spam ou solicite um novo e-mail de confirmação.
-    </p>
+        <p class="text-secondary text-center mb-4">
+          Enviamos uma mensagem para <strong class="text-dark">@Model.Email</strong>. Por favor, verifique seu e-mail para confirmar sua conta.
+        </p>
 
-    
-    <a id="btnReenviar"
-       class="btn btn-primary"
-       asp-action="EnviarConfirmacaoEmail"
-       asp-controller="Pessoa"
-       asp-route-email="@Model.Email"
-       asp-route-cpf="@Model.Cpf">Reenviar E-mail</a>
+        <div class="d-flex flex-column align-items-center justify-content-center gap-2">
+             <a id="btnReenviar"
+                class="btn btn-blue-normal"
+                asp-action="EnviarConfirmacaoEmail"
+                asp-controller="Pessoa"
+                asp-route-email="@Model.Email"
+                asp-route-cpf="@Model.Cpf">
+                Reenviar E-mail              
+             </a>
 
-    
-    <span id="tempoRestante" class="text-muted ms-2" style="display:none;"></span>
+            <span id="tempoRestante" class="text-muted small text-center" style="display:none;"></span>
+        </div>
 
+        <div class="text-center mt-4">
+          <small class="text-muted">Não recebeu a mensagem? Verifique a sua pasta de spam ou lixo eletrônico.</small>
+        </div>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="~/js/time_message.js"></script>
 <script src="~/js/Countdown.js"></script>
