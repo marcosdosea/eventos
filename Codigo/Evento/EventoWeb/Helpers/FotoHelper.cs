@@ -4,10 +4,6 @@ using Util;
 
 namespace EventoWeb.Helpers
 {
-    /// <summary>
-    /// Valida e converte bytes de fotos de participantes em Data URL,
-    /// descartando payloads inválidos ou corrompidos vindos de dumps.
-    /// </summary>
     public static class FotoHelper
     {
         public static bool TryObterFotoDataUrl(byte[]? fotoBytes, out string? dataUrl)

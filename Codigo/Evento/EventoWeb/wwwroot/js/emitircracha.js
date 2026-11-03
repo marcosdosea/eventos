@@ -23,7 +23,6 @@
         const btnPaginaAnt = document.getElementById("btnPaginaAnt");
         const btnPaginaProx = document.getElementById("btnPaginaProx");
 
-        // Elementos do Live Preview
         const crachaCardElement = document.getElementById("crachaCardElement");
         const previewFoto = document.getElementById("previewFotoElement");
         const previewAvatarPlaceholder = document.getElementById("previewAvatarPlaceholder");
@@ -47,7 +46,6 @@
 
         const containerImpressaoLote = document.getElementById("containerImpressaoLoteA4");
 
-        // Elementos do Modal de Edição Rápida (Issue #882)
         const modalEditarEl = document.getElementById("modalEditarParticipanteCracha");
         const formEditarParticipante = document.getElementById("formEditarParticipanteCracha");
         const editModalIdEvento = document.getElementById("editModalIdEvento");
@@ -66,29 +64,59 @@
         let paginaAtual = 1;
         let escalaAtual = 1;
 
-        function exibirAvisoToast(mensagem, tipo = "sucesso") {
-            const toastEl = document.getElementById("toastCrachaAviso");
-            const toastMsg = document.getElementById("toastCrachaMensagem");
-            const toastIcone = document.getElementById("toastCrachaIcone");
+        function exibirMensagemFeedback(mensagem, tipo) {
+            tipo = tipo || "success";
+            const icone = tipo === "success"
+                ? "bi-check-circle-fill text-success"
+                : (tipo === "warning" ? "bi-exclamation-triangle-fill text-warning" : "bi-exclamation-octagon-fill text-danger");
 
-            if (toastEl && toastMsg) {
-                toastMsg.textContent = mensagem;
-                if (toastIcone) {
-                    if (tipo === "erro") {
-                        toastIcone.className = "bi bi-exclamation-triangle-fill text-danger fs-5";
-                    } else if (tipo === "aviso") {
-                        toastIcone.className = "bi bi-info-circle-fill text-warning fs-5";
-                    } else {
-                        toastIcone.className = "bi bi-check-circle-fill text-success fs-5";
-                    }
-                }
-                if (window.bootstrap && window.bootstrap.Toast) {
-                    const toastInstance = window.bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 4500 });
-                    toastInstance.show();
-                    return;
+            const modalAberto = modalEditarEl && modalEditarEl.classList.contains("show");
+            const containerId = modalAberto ? "alertaModalCrachaContainer" : "alertaCrachaContainer";
+            let container = document.getElementById(containerId);
+
+            if (!container) {
+                container = document.createElement("div");
+                container.id = containerId;
+                const pageContainer = document.querySelector(".cracha-page-container");
+                if (pageContainer) {
+                    pageContainer.insertBefore(container, pageContainer.firstChild);
                 }
             }
-            alert(mensagem);
+
+            const alertDiv = document.createElement("div");
+            alertDiv.className = `alert alert-${tipo} alert-dismissible fade show d-flex align-items-center shadow-sm rounded-3 py-2 px-3 mb-3`;
+            alertDiv.setAttribute("role", "alert");
+
+            const iconEl = document.createElement("i");
+            iconEl.className = `bi ${icone} fs-5 me-2`;
+
+            const spanEl = document.createElement("span");
+            spanEl.className = "fw-semibold small";
+            spanEl.textContent = mensagem;
+
+            const btnClose = document.createElement("button");
+            btnClose.type = "button";
+            btnClose.className = "btn-close ms-auto";
+            btnClose.setAttribute("data-bs-dismiss", "alert");
+            btnClose.setAttribute("aria-label", "Fechar");
+
+            alertDiv.appendChild(iconEl);
+            alertDiv.appendChild(spanEl);
+            alertDiv.appendChild(btnClose);
+
+            container.innerHTML = "";
+            container.appendChild(alertDiv);
+
+            setTimeout(function () {
+                if (alertDiv && alertDiv.parentNode) {
+                    alertDiv.classList.remove("show");
+                    setTimeout(function () {
+                        if (alertDiv.parentNode) {
+                            alertDiv.remove();
+                        }
+                    }, 300);
+                }
+            }, 4000);
         }
 
         function obterIniciais(nome) {
@@ -110,16 +138,15 @@
                 const b64 = limpo.substring(idxVirgula + 1).trim();
                 if (b64.length < 4) return false;
 
-                // Valida os magic bytes em base64 dos formatos de imagem suportados
                 const prefixosValidos = [
-                    "/9j/",   // JPEG
-                    "iVBOR",  // PNG
-                    "UklGR",  // WebP
-                    "R0lGOD", // GIF
-                    "SUkq",   // TIFF little-endian
-                    "TU0A",   // TIFF big-endian
-                    "PHN2Zw", // SVG (<svg)
-                    "PD94bW"  // SVG (<?xml)
+                    "/9j/",
+                    "iVBOR",
+                    "UklGR",
+                    "R0lGOD",
+                    "SUkq",
+                    "TU0A",
+                    "PHN2Zw",
+                    "PD94bW"
                 ];
                 return prefixosValidos.some(prefixo => b64.startsWith(prefixo));
             }
@@ -207,7 +234,6 @@
             lblQtdSelecionados.textContent = selecionados.toString();
             lblQtdTotal.textContent = linhas.length.toString();
 
-            // Atualiza estado do checkbox master refletindo todos os participantes (todas as páginas)
             if (chkMaster) {
                 const alvoLinhas = (linhasFiltradas && linhasFiltradas.length > 0) ? linhasFiltradas : linhas;
                 if (alvoLinhas.length === 0) {
@@ -389,6 +415,11 @@
 
             atualizarPreviewComLinha(linha);
 
+            const containerAlertaModal = document.getElementById("alertaModalCrachaContainer");
+            if (containerAlertaModal) {
+                containerAlertaModal.innerHTML = "";
+            }
+
             const idPessoa = linha.dataset.idPessoa || btnEditar?.dataset.idPessoa || "0";
             const idEvento = selectEvento?.value || btnEditar?.dataset.idEvento || editModalIdEvento?.value || "0";
             const nomeCrachaAtual = linha.dataset.nome || "";
@@ -456,7 +487,7 @@
                 let nomeCracha = (editModalNomeCracha?.value || "").trim();
 
                 if (!nomeCompleto || nomeCompleto.length < 2) {
-                    exibirAvisoToast("Informe o nome completo do participante (mínimo 2 caracteres).", "aviso");
+                    exibirMensagemFeedback("Informe o nome completo do participante (mínimo 2 caracteres).", "warning");
                     editModalNomeCompleto?.focus();
                     return;
                 }
@@ -464,7 +495,7 @@
                 if (!nomeCracha) {
                     nomeCracha = nomeCompleto.substring(0, 20).trim();
                 } else if (nomeCracha.length > 20) {
-                    exibirAvisoToast("O nome no crachá deve ter no máximo 20 caracteres.", "aviso");
+                    exibirMensagemFeedback("O nome no crachá deve ter no máximo 20 caracteres.", "warning");
                     editModalNomeCracha?.focus();
                     return;
                 }
@@ -495,7 +526,7 @@
 
                     if (!response.ok || !resultado || !resultado.sucesso) {
                         const msgErro = resultado?.mensagem || "Não foi possível atualizar os dados do participante. Tente novamente.";
-                        exibirAvisoToast(msgErro, "erro");
+                        exibirMensagemFeedback(msgErro, "danger");
                         return;
                     }
 
@@ -512,12 +543,13 @@
                     if (modalEditarEl && window.bootstrap && window.bootstrap.Modal) {
                         const modalInstance = window.bootstrap.Modal.getInstance(modalEditarEl);
                         modalInstance?.hide();
+                        modalEditarEl.classList.remove("show");
                     }
 
-                    exibirAvisoToast(resultado.mensagem || "Nome no crachá atualizado com sucesso!", "sucesso");
+                    exibirMensagemFeedback(resultado.mensagem || "Nome no crachá atualizado com sucesso!", "success");
                 } catch (err) {
                     console.error("Erro ao atualizar participante:", err);
-                    exibirAvisoToast("Erro de comunicação ao salvar alterações do participante.", "erro");
+                    exibirMensagemFeedback("Erro de comunicação ao salvar alterações do participante.", "danger");
                 } finally {
                     if (btnSalvarEdicao) btnSalvarEdicao.disabled = false;
                     if (spinnerSalvarEdicao) spinnerSalvarEdicao.classList.add("d-none");
@@ -526,7 +558,6 @@
             });
         }
 
-        // Eventos da Tabela
         if (tabelaBody) {
             tabelaBody.addEventListener("click", function (e) {
                 const btnPrevia = e.target.closest(".btn-ver-previa");
@@ -641,7 +672,6 @@
             });
         }
 
-        // Alteração de Evento Vinculado
         if (selectEvento) {
             selectEvento.addEventListener("change", function () {
                 const idEvento = this.value;
@@ -681,12 +711,10 @@
             }
         }
 
-        // Alteração de Gabarito / Modelo
         if (selectModelo) {
             selectModelo.addEventListener("change", atualizarModeloSelecionado);
         }
 
-        // Zoom no Card
         if (btnZoomIn && crachaCardElement) {
             btnZoomIn.addEventListener("click", function () {
                 if (escalaAtual < 1.3) {
@@ -707,7 +735,6 @@
             });
         }
 
-        // Tela cheia
         if (btnFullscreen) {
             btnFullscreen.addEventListener("click", function () {
                 const container = document.getElementById("cardSimulacaoImpressao");
@@ -764,12 +791,10 @@
         function desenharAvatarPadraoCanvas(ctx, centroX, centroY) {
             ctx.fillStyle = "#E2E8F0";
             ctx.fillRect(centroX - 70, centroY - 70, 140, 140);
-            // Cabeça do avatar
             ctx.fillStyle = "#475569";
             ctx.beginPath();
             ctx.arc(centroX, centroY - 20, 30, 0, Math.PI * 2);
             ctx.fill();
-            // Ombros do avatar
             ctx.fillStyle = "#1E293B";
             ctx.beginPath();
             ctx.arc(centroX, centroY + 68, 52, Math.PI, 0, false);
@@ -837,31 +862,26 @@
             canvas.width = largura;
             canvas.height = altura;
 
-            // Fundo do Crachá
             ctx.fillStyle = "#FFFFFF";
             ctx.beginPath();
             ctx.roundRect(0, 0, largura, altura, 36);
             ctx.fill();
 
-            // Cabeçalho Azul
             ctx.fillStyle = "#232ed0";
             ctx.beginPath();
             ctx.roundRect(0, 0, largura, 205, [36, 36, 0, 0]);
             ctx.fill();
 
-            // Furo do crachá
             ctx.fillStyle = "#EEF2FA";
             ctx.beginPath();
             ctx.roundRect(largura / 2 - 40, 16, 80, 20, 10);
             ctx.fill();
 
-            // Título Institucional Superior
             ctx.fillStyle = "#FFFFFF";
             ctx.font = "bold 13px Segoe UI, sans-serif";
             ctx.textAlign = "center";
             ctx.fillText("BORA LÁ EVENTOS", largura / 2, 60);
 
-            // Logotipo Institucional se presente e válido
             const logoImg = document.getElementById("crachaLogoElement");
             const logoContainer = document.getElementById("crachaLogoContainer");
             let titleStartY = 96;
@@ -882,12 +902,10 @@
                         ctx.drawImage(logoCarregado, largura / 2 - logoW / 2, 68, logoW, logoH);
                         titleStartY = 118;
                     } catch {
-                        // Continua sem logotipo caso ocorra erro de decodificação
                     }
                 }
             }
 
-            // Nome do Evento (quebra automática de linhas e ajuste de fonte para nunca cortar)
             const nomeEvento = (document.getElementById("lblPreviewNomeEvento")?.textContent || "EVENTO").trim().toUpperCase();
             const elSub = document.getElementById("lblPreviewSubtituloEvento");
             const subEvento = (elSub && elSub.style.display !== "none" ? elSub.textContent.trim() : "").toUpperCase();
@@ -942,7 +960,6 @@
                 });
             }
 
-            // Foto ou Avatar com degradação graciosa para imagens corrompidas
             const centroY = 320;
             const imgFotoValida = await carregarImagemSegura(dadosParticipante.fotoUrl);
 
@@ -963,7 +980,6 @@
             }
             ctx.restore();
 
-            // Selo de verificado
             const aptoExport = Boolean(dadosParticipante.apto);
             ctx.fillStyle = aptoExport ? "#10B981" : "#F59E0B";
             ctx.beginPath();
@@ -974,7 +990,6 @@
             ctx.textAlign = "center";
             ctx.fillText(aptoExport ? "✓" : "!", largura / 2 + 50, centroY + 56);
 
-            // Nome do participante (auto-ajuste de tamanho de fonte para nomes extensos)
             const nomePart = (dadosParticipante.nome || "PARTICIPANTE").trim().toUpperCase();
             ctx.fillStyle = "#0F172A";
             let nomeFontSize = 30;
@@ -986,7 +1001,6 @@
             ctx.textAlign = "center";
             ctx.fillText(nomePart, largura / 2, 450);
 
-            // Organização ou Departamento
             const orgPart = (dadosParticipante.depto || "").trim();
             if (orgPart) {
                 ctx.fillStyle = "#64748B";
@@ -999,7 +1013,6 @@
                 ctx.fillText(orgPart, largura / 2, 485);
             }
 
-            // Pílula de Papel
             const papelTexto = (dadosParticipante.papel || "PARTICIPANTE").trim().toUpperCase();
             ctx.font = "bold 18px Segoe UI, sans-serif";
             const textPapelWidth = ctx.measureText(papelTexto).width;
@@ -1011,14 +1024,12 @@
             ctx.fillStyle = "#FFFFFF";
             ctx.fillText(papelTexto, largura / 2, 544);
 
-            // Metadados CPF e Credencial
             ctx.fillStyle = "#64748B";
             ctx.font = "15px Segoe UI, sans-serif";
             const cpfTexto = dadosParticipante.cpf || "";
             const credTexto = dadosParticipante.credencial || "";
             ctx.fillText(`CPF: ${cpfTexto}       Credencial: ${credTexto}`, largura / 2, 598);
 
-            // Caixa de QR Code e Código de Presença (somente se habilitado no modelo)
             const optModelo = selectModelo ? selectModelo.options[selectModelo.selectedIndex] : null;
             const qrCodeHabilitado = optModelo
                 ? (optModelo.dataset.qrcode !== "0" && optModelo.dataset.qrcode !== 0)
@@ -1064,7 +1075,6 @@
                 ctx.fillText("✓ Válido em todas salas", 225, 744);
             }
 
-            // Rodapé com quebra de linhas
             ctx.fillStyle = "#F8FAFC";
             ctx.beginPath();
             ctx.roundRect(0, altura - 75, largura, 75, [0, 0, 36, 36]);
@@ -1115,18 +1125,16 @@
                 link.click();
             } catch (err) {
                 console.error("Falha ao exportar imagem PNG do crachá:", err);
-                exibirAvisoToast(MENSAGEM_ERRO_EXPORTACAO_PNG, "erro");
+                exibirMensagemFeedback(MENSAGEM_ERRO_EXPORTACAO_PNG, "danger");
             }
         }
 
-        // Exportar PNG individual em Alta Resolução
         if (btnExportarPng && crachaCardElement) {
             btnExportarPng.addEventListener("click", function () {
                 renderizarEBaixarPng();
             });
         }
 
-        // Utilitários de Compactação ZIP (PKZIP STORE + CRC32) para Exportação em Lote
         const TABELA_CRC32 = (function () {
             const tabela = new Uint32Array(256);
             for (let n = 0; n < 256; n++) {
@@ -1174,13 +1182,12 @@
                 const dados = arq.bytes;
                 const crc = calcularCrc32(dados);
 
-                // Local File Header (30 bytes + nome)
                 const localHeader = new Uint8Array(30 + nomeBytes.length);
                 const localView = new DataView(localHeader.buffer);
                 localView.setUint32(0, 0x04034B50, true);
                 localView.setUint16(4, 20, true);
-                localView.setUint16(6, 0x0800, true); // UTF-8 filename flag
-                localView.setUint16(8, 0, true);      // STORE (0)
+                localView.setUint16(6, 0x0800, true);
+                localView.setUint16(8, 0, true);
                 localView.setUint16(10, dosTime, true);
                 localView.setUint16(12, dosDate, true);
                 localView.setUint32(14, crc, true);
@@ -1190,7 +1197,6 @@
                 localView.setUint16(28, 0, true);
                 localHeader.set(nomeBytes, 30);
 
-                // Central Directory File Header (46 bytes + nome)
                 const centralHeader = new Uint8Array(46 + nomeBytes.length);
                 const centralView = new DataView(centralHeader.buffer);
                 centralView.setUint32(0, 0x02014B50, true);
@@ -1220,7 +1226,6 @@
 
             const tamanhoCentral = partesCentral.reduce((acc, p) => acc + p.length, 0);
 
-            // End of Central Directory Record (22 bytes)
             const eocd = new Uint8Array(22);
             const eocdView = new DataView(eocd.buffer);
             eocdView.setUint32(0, 0x06054B50, true);
@@ -1238,7 +1243,7 @@
         async function exportarLotePngZip() {
             const linhasSelecionadas = linhas.filter(l => l.querySelector(".chk-participante-item")?.checked);
             if (linhasSelecionadas.length === 0) {
-                exibirAvisoToast("Por favor, selecione pelo menos um participante para exportar os crachás em PNG.", "aviso");
+                exibirMensagemFeedback("Por favor, selecione pelo menos um participante para exportar os crachás em PNG.", "warning");
                 return;
             }
 
@@ -1297,10 +1302,10 @@
                 link.remove();
 
                 setTimeout(() => URL.revokeObjectURL(urlZip), 5000);
-                exibirAvisoToast(`Exportação concluída! ${arquivosPng.length} crachá(s) PNG exportado(s) em ZIP.`, "sucesso");
+                exibirMensagemFeedback(`Exportação concluída! ${arquivosPng.length} crachá(s) PNG exportado(s) em ZIP.`, "success");
             } catch (err) {
                 console.error("Falha ao exportar lote de crachás PNG:", err);
-                exibirAvisoToast(MENSAGEM_ERRO_EXPORTACAO_PNG, "erro");
+                exibirMensagemFeedback(MENSAGEM_ERRO_EXPORTACAO_PNG, "danger");
             } finally {
                 if (btnExportarLotePng) btnExportarLotePng.disabled = false;
             }
@@ -1312,13 +1317,12 @@
             });
         }
 
-        // Impressão em Lote (PDF A4)
         if (btnImprimirLote && containerImpressaoLote) {
             btnImprimirLote.addEventListener("click", function () {
                 const linhasSelecionadas = linhas.filter(l => l.querySelector(".chk-participante-item")?.checked);
 
                 if (linhasSelecionadas.length === 0) {
-                    exibirAvisoToast("Por favor, selecione pelo menos um participante para impressão.", "aviso");
+                    exibirMensagemFeedback("Por favor, selecione pelo menos um participante para impressão.", "warning");
                     return;
                 }
 
@@ -1337,7 +1341,6 @@
                 const crachaLogoContainer = document.getElementById("crachaLogoContainer");
                 const logoVisivel = crachaLogoContainer && crachaLogoContainer.style.display !== "none" && ehPayloadImagemValido(logoSrc);
 
-                // SVG vetorial de QR Code para contingência e renderização determinística
                 const fallbackQrSvg = `<svg viewBox="0 0 100 100" width="70" height="70" style="display:block;margin:auto;"><rect width="100" height="100" fill="#FFFFFF"/><rect x="8" y="8" width="28" height="28" fill="#0F172A"/><rect x="14" y="14" width="16" height="16" fill="#FFFFFF"/><rect x="18" y="18" width="8" height="8" fill="#0F172A"/><rect x="64" y="8" width="28" height="28" fill="#0F172A"/><rect x="70" y="14" width="16" height="16" fill="#FFFFFF"/><rect x="74" y="18" width="8" height="8" fill="#0F172A"/><rect x="8" y="64" width="28" height="28" fill="#0F172A"/><rect x="14" y="70" width="16" height="16" fill="#FFFFFF"/><rect x="18" y="74" width="8" height="8" fill="#0F172A"/><rect x="44" y="12" width="10" height="10" fill="#0F172A"/><rect x="44" y="30" width="10" height="16" fill="#0F172A"/><rect x="12" y="44" width="16" height="10" fill="#0F172A"/><rect x="48" y="48" width="16" height="16" fill="#0F172A"/><rect x="72" y="44" width="14" height="10" fill="#0F172A"/><rect x="48" y="72" width="12" height="16" fill="#0F172A"/><rect x="70" y="70" width="18" height="18" fill="#0F172A"/></svg>`;
                 const placeholderAvatarSvg = `<div class="avatar-placeholder-svg"><svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" fill="#E2E8F0" /><circle cx="50" cy="38" r="20" fill="#475569" /><path d="M16 88C16 70 30 64 50 64C70 64 84 70 84 88" fill="#1E293B" /></svg></div>`;
 
@@ -1429,7 +1432,6 @@
                 containerImpressaoLote.classList.remove("d-none");
                 containerImpressaoLote.appendChild(grid);
 
-                // Aguarda a decodificação de todas as imagens antes de abrir a janela de impressão
                 const imagens = Array.from(grid.querySelectorAll("img"));
                 const promessasDecodificacao = imagens.map(img => {
                     if (typeof img.decode === "function") {
@@ -1463,7 +1465,6 @@
             });
         }
 
-        // Inicialização
         configurarResilienciaImagens();
         atualizarModeloSelecionado();
         filtrarParticipantes(false);

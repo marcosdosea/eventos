@@ -17,6 +17,8 @@
         </div>
     </div>
 
+    <div id="alertaCrachaContainer"></div>
+
     <div class="card-parametros mb-4">
         <div class="d-flex align-items-center gap-2 mb-3">
             <div class="card-header-icon">
@@ -401,13 +403,12 @@
 
 <div id="containerImpressaoLoteA4" class="d-none"></div>
 
-<!-- Modal de Edição Rápida do Participante / Nome no Crachá (Issue #882) -->
 <div class="modal fade" id="modalEditarParticipanteCracha" tabindex="-1" aria-labelledby="modalEditarParticipanteLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content rounded-4 shadow border-0">
             <div class="modal-header border-bottom-0 pb-0">
                 <div class="d-flex align-items-center gap-2">
-                    <div style="background-color: #EEF2FF; color: #232ED0; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                    <div class="card-header-icon">
                         <i class="bi bi-pencil-square"></i>
                     </div>
                     <div>
@@ -422,6 +423,7 @@
                 <input type="hidden" id="editModalIdEvento" name="IdEvento" value="@eventoAtualId" />
                 <input type="hidden" id="editModalIdPessoa" name="IdPessoa" value="0" />
                 <div class="modal-body py-3">
+                    <div id="alertaModalCrachaContainer"></div>
                     <div class="mb-3">
                         <label for="editModalNomeCompleto" class="form-label fw-semibold small text-dark mb-1">Nome Completo</label>
                         <input type="text" class="form-control rounded-3" id="editModalNomeCompleto" name="Nome" required placeholder="Nome completo do participante" />
@@ -444,19 +446,6 @@
                     </button>
                 </div>
             </form>
-        </div>
-    </div>
-</div>
-
-<!-- Toast de Notificação Rápida -->
-<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
-    <div id="toastCrachaAviso" class="toast align-items-center text-white bg-dark border-0 rounded-3 shadow" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="d-flex">
-            <div class="toast-body d-flex align-items-center gap-2" id="toastCrachaTexto">
-                <i class="bi bi-check-circle-fill text-success fs-5" id="toastCrachaIcone"></i>
-                <span id="toastCrachaMensagem">Operação concluída com sucesso!</span>
-            </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Fechar"></button>
         </div>
     </div>
 </div>
