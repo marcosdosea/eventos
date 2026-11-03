@@ -17,12 +17,15 @@
             </div>
         }
     </div>
-    <div class="col-md-4 text-md-end">
-        <a href="@Url.Action("ExportarFrequencia", "ParticipacaoPessoaEvento", new { idEvento = Model.Evento.Id, idSubEvento = Model.SubEvento?.Id })"
-           class="btn btn-blue-normal">
-            <i class="bi bi-download me-1"></i> Exportar CSV
-        </a>
-    </div>
+    @if (User.IsInRole("GESTOR"))
+    {
+        <div class="col-md-4 text-md-end">
+            <a href="@Url.Action("ExportarFrequencia", "ParticipacaoPessoaEvento", new { idEvento = Model.Evento.Id, idSubEvento = Model.SubEvento?.Id })"
+               class="btn btn-blue-normal">
+                <i class="bi bi-download me-1"></i> Exportar CSV
+            </a>
+        </div>
+    }
 </div>
 
 <div class="row mb-4">

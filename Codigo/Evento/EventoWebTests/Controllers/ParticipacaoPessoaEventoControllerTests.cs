@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Authorization;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Core;
 using Core.DTO;
@@ -565,5 +567,85 @@ namespace EventoWeb.Controllers.Tests
 
             Assert.IsInstanceOfType(result, typeof(NotFoundResult));
         }
+    
+        [TestMethod()]
+        public void ExportarFrequencia_ExigeApenasRoleGestor()
+        {
+            var metodo = typeof(ParticipacaoPessoaEventoController)
+                .GetMethod(nameof(ParticipacaoPessoaEventoController.ExportarFrequencia));
+            var autorizacao = metodo?.GetCustomAttributes(typeof(AuthorizeAttribute), false)
+                .Cast<AuthorizeAttribute>().FirstOrDefault();
+
+            Assert.IsNotNull(autorizacao);
+            Assert.AreEqual("GESTOR", autorizacao.Roles);
+        }
+
+        [TestMethod()]
+        public void Index_ExigeRolesGestorEColaborador()
+        {
+            var metodo = typeof(ParticipacaoPessoaEventoController)
+                .GetMethod(nameof(ParticipacaoPessoaEventoController.Index));
+            var autorizacao = metodo?.GetCustomAttributes(typeof(AuthorizeAttribute), false)
+                .Cast<AuthorizeAttribute>().FirstOrDefault();
+
+            Assert.IsNotNull(autorizacao);
+            Assert.AreEqual("GESTOR,COLABORADOR", autorizacao.Roles);
+        }
+
+        [TestMethod()]
+        public void Frequencia_ExigeRolesGestorEColaborador()
+        {
+            var metodo = typeof(ParticipacaoPessoaEventoController)
+                .GetMethod(nameof(ParticipacaoPessoaEventoController.Frequencia));
+            var autorizacao = metodo?.GetCustomAttributes(typeof(AuthorizeAttribute), false)
+                .Cast<AuthorizeAttribute>().FirstOrDefault();
+
+            Assert.IsNotNull(autorizacao);
+            Assert.AreEqual("GESTOR,COLABORADOR", autorizacao.Roles);
+        }
+
+        [TestMethod()]
+        public async Task ExportarFrequencia_Administrador_AcessoNegado()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "admin@teste.com"),
+                new Claim(ClaimTypes.Role, "ADMINISTRADOR")
+            };
+            controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(
+                new ClaimsIdentity(claims, "TestAuthType"));
+
+            var result = await controller.ExportarFrequencia(1, null) as RedirectToActionResult;
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual("GerenciarEvento", result.ActionName);
+            Assert.AreEqual("Evento", result.ControllerName);
+            Assert.AreEqual("Você não possui um evento vinculado para exportar a frequência!", controller.TempData["ErrorMessage"]);
+        }
+
+        [TestMethod()]
+        public async Task ExportarFrequencia_GestorSemVinculo_RedirecionaParaGerenciarEvento()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+            _mockInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
+                .Returns((Inscricaopessoaevento)null);
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "gestor@teste.com"),
+                new Claim(ClaimTypes.Role, "GESTOR")
+            };
+            controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(
+                new ClaimsIdentity(claims, "TestAuthType"));
+
+            var result = await controller.ExportarFrequencia(1, null) as RedirectToActionResult;
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual("GerenciarEvento", result.ActionName);
+            Assert.AreEqual("Evento", result.ControllerName);
+            Assert.AreEqual("Você não possui um evento vinculado para exportar a frequência!", controller.TempData["ErrorMessage"]);
+        }
+
     }
 }

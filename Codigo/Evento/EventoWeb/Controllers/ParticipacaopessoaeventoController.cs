@@ -42,7 +42,7 @@ namespace EventoWeb.Controllers
             _userManager = userManager;
         }
 
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
+        [Authorize(Roles = "GESTOR,COLABORADOR")]
         [HttpGet]
         [Route("ParticipacaoPessoaEvento/Index/{idEvento}/{idSubEvento?}")]
         [Route("ParticipacaoPessoaEvento/Index")]
@@ -113,7 +113,7 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
 
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
+        [Authorize(Roles = "GESTOR,COLABORADOR")]
         [HttpGet]
         [Route("ParticipacaoPessoaEvento/Frequencia/{idEvento}/{idSubEvento?}")]
         [Route("ParticipacaoPessoaEvento/Frequencia")]
@@ -185,7 +185,7 @@ namespace EventoWeb.Controllers
             return View(viewModel);
         }
 
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
+        [Authorize(Roles = "GESTOR")]
         [HttpGet]
         [Route("ParticipacaoPessoaEvento/ExportarFrequencia/{idEvento}/{idSubEvento?}")]
         [Route("ParticipacaoPessoaEvento/ExportarFrequencia")]
@@ -205,7 +205,7 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("GerenciarEventoListar", "Evento");
             }
 
-            var acessoNegado = ValidarPermissaoEvento(
+            var acessoNegado = ValidarPermissaoGestorEvento(
                 idEvento, username, cpfLimpo, "Você não possui um evento vinculado para exportar a frequência!");
             if (acessoNegado != null)
             {
@@ -234,6 +234,50 @@ namespace EventoWeb.Controllers
         }
 
         /// <summary>
+        /// Valida se o usuário logado tem papel GESTOR e vínculo ativo com o evento.
+        /// Apenas gestores do evento podem exportar a planilha de frequência em CSV.
+        /// Retorna null quando o acesso é permitido; caso contrário, redireciona com mensagem.
+        /// </summary>
+        private IActionResult? ValidarPermissaoGestorEvento(
+            uint idEvento, string username, string cpfLimpo, string mensagemSemVinculo)
+        {
+            if (!User.IsInRole("GESTOR"))
+            {
+                TempData.Clear();
+                TempData["ErrorMessage"] = mensagemSemVinculo;
+                if (User.IsInRole("COLABORADOR"))
+                {
+                    return RedirectToAction("GerenciarEventoListar", "Evento");
+                }
+                if (idEvento > 0)
+                {
+                    return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });
+                }
+                return RedirectToAction("Index", "Home");
+            }
+
+            var gestor = _inscricaoService.GetGestorInEvent(username, idEvento);
+            if (gestor == null)
+            {
+                gestor = _inscricaoService.GetGestorInEvent(cpfLimpo, idEvento);
+            }
+
+            if (gestor == null)
+            {
+                TempData.Clear();
+                TempData["ErrorMessage"] = mensagemSemVinculo;
+                if (idEvento > 0)
+                {
+                    return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });
+                }
+                return RedirectToAction("GerenciarEventoListar", "Evento");
+            }
+
+            ViewData["EventoId"] = idEvento;
+            return null;
+        }
+
+        /// <summary>
         /// Valida se o usuário logado é gestor ou colaborador do evento.
         /// Retorna null quando o acesso é permitido; caso contrário, o resultado
         /// que a action deve devolver.
@@ -254,7 +298,7 @@ namespace EventoWeb.Controllers
             {
                 TempData.Clear();
                 TempData["ErrorMessage"] = mensagemSemVinculo;
-                if (idEvento > 0 && (User.IsInRole("GESTOR") || User.IsInRole("ADMINISTRADOR")))
+                if (idEvento > 0 && User.IsInRole("GESTOR"))
                 {
                     return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });
                 }
