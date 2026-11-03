@@ -39,7 +39,7 @@ namespace EventoWeb.Models
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm}", ApplyFormatInEditMode = false)]
         public DateTime DataFim { get; set; }
 
-        [Display(Name = "Incrição gratuita")]
+        [Display(Name = "Inscrição gratuita")]
         public sbyte InscricaoGratuita { get; set; }
 
         /// <summary>
