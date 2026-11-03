@@ -1,4 +1,4 @@
-using AutoMapper;
+﻿using AutoMapper;
 using Core;
 using Core.Service;
 using EventoWeb.Controllers;
@@ -105,14 +105,14 @@ namespace EventoWeb.Controllers.Tests
             }, "TestAuth");
             httpContext.User = new ClaimsPrincipal(identity);
 
-            var cookieJson = "{\"cidade\":\"São Paulo\",\"estado\":\"SP\",\"manual\":true}";
+            var cookieJson = "{\"cidade\":\"SÃ£o Paulo\",\"estado\":\"SP\",\"manual\":true}";
             httpContext.Request.Headers.Append("Cookie", $"UserLocation={Uri.EscapeDataString(cookieJson)}");
 
             _mockPessoaService.Setup(s => s.GetByCpf(userCpf))
                 .Returns(new Pessoa { Cpf = userCpf, Estado = "SE" });
 
             _mockEstadosBrasilService.Setup(s => s.Get("SP"))
-                .Returns(new Estadosbrasil { Estado = "SP", Nome = "São Paulo" });
+                .Returns(new Estadosbrasil { Estado = "SP", Nome = "SÃ£o Paulo" });
 
             _mockEventoService.Setup(s => s.GetEventosVitrine("SP"))
                 .Returns(new List<Evento>
@@ -208,14 +208,14 @@ namespace EventoWeb.Controllers.Tests
             }, "TestAuth");
             httpContext.User = new ClaimsPrincipal(identity);
 
-            var cookieJson = "{\"cidade\":\"São Paulo\",\"estado\":\"SP\",\"manual\":false}";
+            var cookieJson = "{\"cidade\":\"SÃ£o Paulo\",\"estado\":\"SP\",\"manual\":false}";
             httpContext.Request.Headers.Append("Cookie", $"UserLocation={Uri.EscapeDataString(cookieJson)}");
 
             _mockPessoaService.Setup(s => s.GetByCpf(userCpf))
                 .Returns(new Pessoa { Cpf = userCpf, Estado = "SE" });
 
             _mockEstadosBrasilService.Setup(s => s.Get("SP"))
-                .Returns(new Estadosbrasil { Estado = "SP", Nome = "São Paulo" });
+                .Returns(new Estadosbrasil { Estado = "SP", Nome = "SÃ£o Paulo" });
 
             _mockEventoService.Setup(s => s.GetEventosVitrine("SP"))
                 .Returns(new List<Evento>
@@ -229,7 +229,7 @@ namespace EventoWeb.Controllers.Tests
 
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             Assert.AreEqual("SP", controller.ViewBag.EstadoAtivo);
-            Assert.AreEqual("São Paulo (SP)", controller.ViewBag.NomeEstadoAtivo);
+            Assert.AreEqual("SÃ£o Paulo (SP)", controller.ViewBag.NomeEstadoAtivo);
             _mockEventoService.Verify(s => s.GetEventosVitrine("SP"), Times.Once);
         }
 
@@ -268,7 +268,7 @@ namespace EventoWeb.Controllers.Tests
             }, "TestAuth");
             httpContext.User = new ClaimsPrincipal(identity);
 
-            var cookieJson = "{\"cidade\":\"São Paulo\",\"estado\":\"SP\",\"manual\":true}";
+            var cookieJson = "{\"cidade\":\"SÃ£o Paulo\",\"estado\":\"SP\",\"manual\":true}";
             httpContext.Request.Headers.Append("Cookie", $"UserLocation={Uri.EscapeDataString(cookieJson)}");
 
             _mockPessoaService.Setup(s => s.GetByCpf(userCpf))
@@ -296,7 +296,7 @@ namespace EventoWeb.Controllers.Tests
         {
             var httpContext = new DefaultHttpContext();
             _mockEstadosBrasilService.Setup(s => s.Get("SP"))
-                .Returns(new Estadosbrasil { Estado = "SP", Nome = "São Paulo" });
+                .Returns(new Estadosbrasil { Estado = "SP", Nome = "SÃ£o Paulo" });
 
             int totalRegistros = 0;
             _mockEventoService.Setup(s => s.Search(It.IsAny<Core.DTO.EventoFilterDTO>(), It.IsAny<int>(), It.IsAny<int>(), out totalRegistros))
@@ -312,7 +312,7 @@ namespace EventoWeb.Controllers.Tests
 
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             Assert.AreEqual("SP", controller.ViewBag.EstadoAtivo);
-            Assert.AreEqual("São Paulo (SP)", controller.ViewBag.NomeEstadoAtivo);
+            Assert.AreEqual("SÃ£o Paulo (SP)", controller.ViewBag.NomeEstadoAtivo);
         }
 
         [TestMethod]
@@ -334,6 +334,63 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             Assert.IsNull(controller.ViewBag.EstadoAtivo);
             Assert.AreEqual("Todo o Brasil", controller.ViewBag.NomeEstadoAtivo);
+        }
+        [TestMethod]
+        public void Buscar_ComIdTipoEvento_PassaFiltroParaServiceERetornaModel()
+        {
+            var httpContext = new DefaultHttpContext();
+            int totalRegistros = 1;
+            var eventoShow = new Evento { Id = 10, Nome = "Festival de Música", IdTipoEvento = 6, Status = "A" };
+
+            _mockEventoService.Setup(s => s.Search(It.Is<Core.DTO.EventoFilterDTO>(f => f.IdTipoEvento == 6), 1, 16, out totalRegistros))
+                .Returns(new List<Evento> { eventoShow });
+            _mockTipoEventoService.Setup(s => s.GetAll()).Returns(new List<Tipoevento> { new Tipoevento { Id = 6, Nome = "Show" } });
+            _mockAreaInteresseService.Setup(s => s.GetAll()).Returns(new List<Areainteresse>());
+            _mockEstadosBrasilService.Setup(s => s.GetAll()).Returns(new List<Estadosbrasil>());
+
+            var controller = CreateController(httpContext);
+            var filter = new Core.DTO.EventoFilterDTO { IdTipoEvento = 6 };
+
+            var result = controller.Buscar(filter);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var viewResult = (ViewResult)result;
+            Assert.IsInstanceOfType(viewResult.Model, typeof(List<EventoModel>));
+            var model = (List<EventoModel>)viewResult.Model!;
+            Assert.AreEqual(1, model.Count);
+            Assert.AreEqual("Festival de Música", model[0].Nome);
+            _mockEventoService.Verify(s => s.Search(It.Is<Core.DTO.EventoFilterDTO>(f => f.IdTipoEvento == 6), 1, 16, out It.Ref<int>.IsAny), Times.Once);
+        }
+
+        [TestMethod]
+        public void Buscar_ComIdTipoEventoEEstado_AplicaAmbosFiltrosEAlinhaEstadoAtivo()
+        {
+            var httpContext = new DefaultHttpContext();
+            _mockEstadosBrasilService.Setup(s => s.Get("SE"))
+                .Returns(new Estadosbrasil { Estado = "SE", Nome = "Sergipe" });
+
+            int totalRegistros = 1;
+            var eventoPalestra = new Evento { Id = 20, Nome = "Palestra de TI", IdTipoEvento = 1, Estado = "SE", Status = "A" };
+
+            _mockEventoService.Setup(s => s.Search(It.Is<Core.DTO.EventoFilterDTO>(f => f.IdTipoEvento == 1 && f.Estado == "SE"), 1, 16, out totalRegistros))
+                .Returns(new List<Evento> { eventoPalestra });
+            _mockTipoEventoService.Setup(s => s.GetAll()).Returns(new List<Tipoevento> { new Tipoevento { Id = 1, Nome = "Palestra" } });
+            _mockAreaInteresseService.Setup(s => s.GetAll()).Returns(new List<Areainteresse>());
+            _mockEstadosBrasilService.Setup(s => s.GetAll()).Returns(new List<Estadosbrasil>());
+
+            var controller = CreateController(httpContext);
+            var filter = new Core.DTO.EventoFilterDTO { IdTipoEvento = 1, Estado = "SE" };
+
+            var result = controller.Buscar(filter);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var viewResult = (ViewResult)result;
+            Assert.IsInstanceOfType(viewResult.Model, typeof(List<EventoModel>));
+            var model = (List<EventoModel>)viewResult.Model!;
+            Assert.AreEqual(1, model.Count);
+            Assert.AreEqual("SE", controller.ViewBag.EstadoAtivo);
+            Assert.AreEqual("Sergipe (SE)", controller.ViewBag.NomeEstadoAtivo);
+            _mockEventoService.Verify(s => s.Search(It.Is<Core.DTO.EventoFilterDTO>(f => f.IdTipoEvento == 1 && f.Estado == "SE"), 1, 16, out It.Ref<int>.IsAny), Times.Once);
         }
 
         [TestMethod]

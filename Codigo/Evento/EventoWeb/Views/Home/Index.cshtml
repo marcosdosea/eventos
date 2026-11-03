@@ -163,79 +163,130 @@
             else
             {
                 <section class="eventos">
-                    <h1>Recomendações</h1>
+                    <div class="section-header d-flex justify-content-between align-items-center">
+                        <h1>Recomendações</h1>
+                        <a asp-action="Buscar" asp-controller="Home" asp-route-Estado="@(string.IsNullOrWhiteSpace(estadoAtivo) ? null : estadoAtivo)" class="btn-ver-todos ver-todos-link">
+                            <span>Ver todos</span>
+                            <span class="btn-ver-todos-icon"><i class="bi bi-arrow-right"></i></span>
+                        </a>
+                    </div>
                     <div class="scroll-wrapper">
                         <div class="cards-container">
-                            @foreach (var evento in Model)
-                            {
-                                bool inscricaoAberta = (!evento.DataInicioInscricao.HasValue || evento.DataInicioInscricao <= DateTime.Now) && (!evento.DataFimInscricao.HasValue || evento.DataFimInscricao >= DateTime.Now);
-                                bool inscricaoFutura = evento.DataInicioInscricao.HasValue && evento.DataInicioInscricao > DateTime.Now;
-                                bool eventoGratuito = evento.InscricaoGratuita == 1 || evento.ValorInscricao == 0;
+                            @{
+                                var todosRecomendados = Model?.Where(e => e.Status == "A").ToList() ?? new List<EventoWeb.Models.EventoModel>();
+                                var eventosRecomendados = todosRecomendados.Take(10).ToList();
+                                bool temMaisRecomendados = todosRecomendados.Count > 10;
 
-                                <div class="card">
-                                    <div style="position: relative; line-height: 0;">
-                                        <img src="~/Imagens_Eventos/Evento-BoraLa.png" alt="Imagem do Evento" style="width: 100%;">
-                                        <div class="badges-container" style="position: absolute; bottom: 8px; left: 8px; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; margin: 0;">
-                                            @if (inscricaoAberta)
-                                            {
-                                                <span class="badge badge-open">Inscrições Abertas</span>
-                                            }
-                                            else if (inscricaoFutura)
-                                            {
-                                                <span class="badge badge-future">Em breve</span>
-                                            }
+                                if (eventosRecomendados.Count > 0)
+                                {
+                                    foreach (var evento in eventosRecomendados)
+                                    {
+                                        bool inscricaoAberta = (!evento.DataInicioInscricao.HasValue || evento.DataInicioInscricao <= DateTime.Now) && (!evento.DataFimInscricao.HasValue || evento.DataFimInscricao >= DateTime.Now);
+                                        bool inscricaoFutura = evento.DataInicioInscricao.HasValue && evento.DataInicioInscricao > DateTime.Now;
+                                        bool eventoGratuito = evento.InscricaoGratuita == 1 || evento.ValorInscricao == 0;
 
-                                            @if (eventoGratuito)
-                                            {
-                                                <span class="badge badge-free">Gratuito</span>
-                                            }
-                                            else
-                                            {
-                                                <span class="badge bg-warning text-dark border-0 rounded-pill px-2 py-1 shadow-sm" style="font-size: 0.8rem; font-weight: 600;">R$ @evento.ValorInscricao.ToString("F2")</span>
-                                            }
+                                        <div class="card">
+                                            <div style="position: relative; line-height: 0;">
+                                                <img src="~/Imagens_Eventos/Evento-BoraLa.png" alt="Imagem do Evento" style="width: 100%;">
+                                                <div class="badges-container" style="position: absolute; bottom: 8px; left: 8px; display: flex; flex-direction: column; gap: 4px; align-items: flex-start; margin: 0;">
+                                                    @if (inscricaoAberta)
+                                                    {
+                                                        <span class="badge badge-open">Inscrições Abertas</span>
+                                                    }
+                                                    else if (inscricaoFutura)
+                                                    {
+                                                        <span class="badge badge-future">Em breve</span>
+                                                    }
+
+                                                    @if (eventoGratuito)
+                                                    {
+                                                        <span class="badge badge-free">Gratuito</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-warning text-dark border-0 rounded-pill px-2 py-1 shadow-sm" style="font-size: 0.8rem; font-weight: 600;">R$ @evento.ValorInscricao.ToString("F2")</span>
+                                                    }
+                                                </div>
+                                            </div>
+                                            <div class="card-content">
+                                                <h2>@evento.Nome</h2>
+                                                @{
+                                                    var descricaoCompleta = string.IsNullOrWhiteSpace(evento.Descricao)
+                                                        ? "Descrição indisponível"
+                                                        : evento.Descricao;
+                                                }
+                                                <p class="card-description">@descricaoCompleta</p>
+                                                @if (eventosGerenciadosIds.Contains(evento.Id))
+                                                {
+                                                    <a asp-action="GerenciarEvento" asp-controller="Evento" asp-route-idEvento="@evento.Id">
+                                                        <button class="btn btn-blue-normal"><i class="bi bi-gear"></i> Gerenciar</button>
+                                                    </a>
+                                                }
+                                                else if (inscricaoAberta)
+                                                {
+                                                    <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@evento.Id">
+                                                        <button class="btn btn-blue-normal">Bora lá</button>
+                                                    </a>
+                                                }
+                                                else
+                                                {
+                                                    <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@evento.Id">
+                                                        <button class="btn btn-blue-normal">Ver Detalhes</button>
+                                                    </a>
+                                                }
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="card-content">
-                                        <h2>@evento.Nome</h2>
-                                        @{
-                                            var descricaoCompleta = string.IsNullOrWhiteSpace(evento.Descricao)
-                                                ? "Descrição indisponível"
-                                                : evento.Descricao;
-                                        }
-                                        <p class="card-description">@descricaoCompleta</p>
-                                        @if (eventosGerenciadosIds.Contains(evento.Id))
-                                        {
-                                            <a asp-action="GerenciarEvento" asp-controller="Evento" asp-route-idEvento="@evento.Id">
-                                                <button class="btn btn-blue-normal"><i class="bi bi-gear"></i> Gerenciar</button>
-                                            </a>
-                                        }
-                                        else if (inscricaoAberta)
-                                        {
-                                            <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@evento.Id">
-                                                <button class="btn btn-blue-normal">Bora lá</button>
-                                            </a>
-                                        }
-                                        else
-                                        {
-                                            <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@evento.Id">
-                                                <button class="btn btn-blue-normal">Ver Detalhes</button>
-                                            </a>
-                                        }
-                                    </div>
-                                </div>
+                                    }
+
+                                    if (temMaisRecomendados)
+                                    {
+                                        <a asp-action="Buscar" asp-controller="Home" asp-route-Estado="@(string.IsNullOrWhiteSpace(estadoAtivo) ? null : estadoAtivo)" class="card card-ver-mais text-decoration-none">
+                                            <div class="card-ver-mais-top">
+                                                <span class="card-ver-mais-badge">
+                                                    <i class="bi bi-stars"></i> Recomendações
+                                                </span>
+                                            </div>
+                                            <div class="card-ver-mais-center">
+                                                <div class="card-ver-mais-icon">
+                                                    <i class="bi bi-grid-fill"></i>
+                                                </div>
+                                                <h3 class="card-ver-mais-title">Ver mais eventos</h3>
+                                                <p class="card-ver-mais-text">Explore todas as opções recomendadas para você</p>
+                                            </div>
+                                            <div class="card-ver-mais-bottom">
+                                                <span class="card-ver-mais-action">
+                                                    <span>Explorar tudo</span>
+                                                    <i class="bi bi-arrow-right"></i>
+                                                </span>
+                                            </div>
+                                        </a>
+                                    }
+                                }
+                                else
+                                {
+                                    <p>Não há eventos para exibir.</p>
+                                }
                             }
                         </div>
                     </div>
                 </section>
 
                 <section class="eventos">
-                    <h1>Shows</h1>
+                    <div class="section-header d-flex justify-content-between align-items-center">
+                        <h1>Shows</h1>
+                        <a asp-action="Buscar" asp-controller="Home" asp-route-IdTipoEvento="6" asp-route-Estado="@(string.IsNullOrWhiteSpace(estadoAtivo) ? null : estadoAtivo)" class="btn-ver-todos ver-todos-link">
+                            <span>Ver todos</span>
+                            <span class="btn-ver-todos-icon"><i class="bi bi-arrow-right"></i></span>
+                        </a>
+                    </div>
                     <div class="scroll-wrapper">
                         <div class="cards-container">
                             @{
-                                var eventosShows = Model?.Where(e => e.IdTipoEvento == 6).ToList();
+                                var todosShows = Model?.Where(e => e.IdTipoEvento == 6 && e.Status == "A").ToList() ?? new List<EventoWeb.Models.EventoModel>();
+                                var eventosShows = todosShows.Take(10).ToList();
+                                bool temMaisShows = todosShows.Count > 10;
 
-                                if (eventosShows != null && eventosShows.Count > 0)
+                                if (eventosShows.Count > 0)
                                 {
                                     foreach (var evento in eventosShows)
                                     {
@@ -295,6 +346,30 @@
                                             </div>
                                         </div>
                                     }
+
+                                    if (temMaisShows)
+                                    {
+                                        <a asp-action="Buscar" asp-controller="Home" asp-route-IdTipoEvento="6" asp-route-Estado="@(string.IsNullOrWhiteSpace(estadoAtivo) ? null : estadoAtivo)" class="card card-ver-mais text-decoration-none">
+                                            <div class="card-ver-mais-top">
+                                                <span class="card-ver-mais-badge">
+                                                    <i class="bi bi-music-note-beamed"></i> Shows
+                                                </span>
+                                            </div>
+                                            <div class="card-ver-mais-center">
+                                                <div class="card-ver-mais-icon">
+                                                    <i class="bi bi-music-note-list"></i>
+                                                </div>
+                                                <h3 class="card-ver-mais-title">Ver mais shows</h3>
+                                                <p class="card-ver-mais-text">Explore todos os shows e festivais disponíveis</p>
+                                            </div>
+                                            <div class="card-ver-mais-bottom">
+                                                <span class="card-ver-mais-action">
+                                                    <span>Explorar tudo</span>
+                                                    <i class="bi bi-arrow-right"></i>
+                                                </span>
+                                            </div>
+                                        </a>
+                                    }
                                 }
                                 else
                                 {
@@ -306,13 +381,21 @@
                 </section>
 
                 <section class="eventos">
-                    <h1>Palestras</h1>
+                    <div class="section-header d-flex justify-content-between align-items-center">
+                        <h1>Palestras</h1>
+                        <a asp-action="Buscar" asp-controller="Home" asp-route-IdTipoEvento="1" asp-route-Estado="@(string.IsNullOrWhiteSpace(estadoAtivo) ? null : estadoAtivo)" class="btn-ver-todos ver-todos-link">
+                            <span>Ver todos</span>
+                            <span class="btn-ver-todos-icon"><i class="bi bi-arrow-right"></i></span>
+                        </a>
+                    </div>
                     <div class="scroll-wrapper">
                         <div class="cards-container">
                             @{
-                                var eventosPalestra = Model?.Where(e => e.IdTipoEvento == 1).ToList();
+                                var todosPalestra = Model?.Where(e => e.IdTipoEvento == 1 && e.Status == "A").ToList() ?? new List<EventoWeb.Models.EventoModel>();
+                                var eventosPalestra = todosPalestra.Take(10).ToList();
+                                bool temMaisPalestra = todosPalestra.Count > 10;
 
-                                if (eventosPalestra != null && eventosPalestra.Count > 0)
+                                if (eventosPalestra.Count > 0)
                                 {
                                     foreach (var evento in eventosPalestra)
                                     {
@@ -372,6 +455,30 @@
                                             </div>
                                         </div>
                                     }
+
+                                    if (temMaisPalestra)
+                                    {
+                                        <a asp-action="Buscar" asp-controller="Home" asp-route-IdTipoEvento="1" asp-route-Estado="@(string.IsNullOrWhiteSpace(estadoAtivo) ? null : estadoAtivo)" class="card card-ver-mais text-decoration-none">
+                                            <div class="card-ver-mais-top">
+                                                <span class="card-ver-mais-badge">
+                                                    <i class="bi bi-mic"></i> Palestras
+                                                </span>
+                                            </div>
+                                            <div class="card-ver-mais-center">
+                                                <div class="card-ver-mais-icon">
+                                                    <i class="bi bi-easel"></i>
+                                                </div>
+                                                <h3 class="card-ver-mais-title">Ver mais palestras</h3>
+                                                <p class="card-ver-mais-text">Explore todas as palestras e conferências</p>
+                                            </div>
+                                            <div class="card-ver-mais-bottom">
+                                                <span class="card-ver-mais-action">
+                                                    <span>Explorar tudo</span>
+                                                    <i class="bi bi-arrow-right"></i>
+                                                </span>
+                                            </div>
+                                        </a>
+                                    }
                                 }
                                 else
                                 {
@@ -383,13 +490,21 @@
                 </section>
 
                 <section class="eventos">
-                    <h1>Workshops</h1>
+                    <div class="section-header d-flex justify-content-between align-items-center">
+                        <h1>Workshops</h1>
+                        <a asp-action="Buscar" asp-controller="Home" asp-route-IdTipoEvento="5" asp-route-Estado="@(string.IsNullOrWhiteSpace(estadoAtivo) ? null : estadoAtivo)" class="btn-ver-todos ver-todos-link">
+                            <span>Ver todos</span>
+                            <span class="btn-ver-todos-icon"><i class="bi bi-arrow-right"></i></span>
+                        </a>
+                    </div>
                     <div class="scroll-wrapper">
                         <div class="cards-container">
                             @{
-                                var eventosWorkshop = Model?.Where(e => e.IdTipoEvento == 5).ToList();
+                                var todosWorkshop = Model?.Where(e => e.IdTipoEvento == 5 && e.Status == "A").ToList() ?? new List<EventoWeb.Models.EventoModel>();
+                                var eventosWorkshop = todosWorkshop.Take(10).ToList();
+                                bool temMaisWorkshop = todosWorkshop.Count > 10;
 
-                                if (eventosWorkshop != null && eventosWorkshop.Count > 0)
+                                if (eventosWorkshop.Count > 0)
                                 {
                                     foreach (var evento in eventosWorkshop)
                                     {
@@ -448,6 +563,30 @@
                                                 }
                                             </div>
                                         </div>
+                                    }
+
+                                    if (temMaisWorkshop)
+                                    {
+                                        <a asp-action="Buscar" asp-controller="Home" asp-route-IdTipoEvento="5" asp-route-Estado="@(string.IsNullOrWhiteSpace(estadoAtivo) ? null : estadoAtivo)" class="card card-ver-mais text-decoration-none">
+                                            <div class="card-ver-mais-top">
+                                                <span class="card-ver-mais-badge">
+                                                    <i class="bi bi-laptop"></i> Workshops
+                                                </span>
+                                            </div>
+                                            <div class="card-ver-mais-center">
+                                                <div class="card-ver-mais-icon">
+                                                    <i class="bi bi-tools"></i>
+                                                </div>
+                                                <h3 class="card-ver-mais-title">Ver mais workshops</h3>
+                                                <p class="card-ver-mais-text">Explore todos os cursos e oficinas práticas</p>
+                                            </div>
+                                            <div class="card-ver-mais-bottom">
+                                                <span class="card-ver-mais-action">
+                                                    <span>Explorar tudo</span>
+                                                    <i class="bi bi-arrow-right"></i>
+                                                </span>
+                                            </div>
+                                        </a>
                                     }
                                 }
                                 else
