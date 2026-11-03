@@ -106,6 +106,9 @@
                                                     <a class="nav-link opcao" asp-controller="Modelocracha" asp-action="Index" asp-route-idEvento="@eventoId">Modelo Crachá</a>
                                                 </li>
                                                 <li class="nav-item">
+                                                    <a class="nav-link opcao" asp-controller="Modelocracha" asp-action="EmitirCracha" asp-route-idEvento="@eventoId">Emitir Crachá</a>
+                                                </li>
+                                                <li class="nav-item">
                                                     <a class="nav-link opcao" asp-controller="Modelocertificado" asp-action="Index" asp-route-idEvento="@eventoId">Modelo Certificado</a>
                                                 </li>
                                             }
@@ -145,7 +148,7 @@
                         <div class="nav-item">
                             <button type="button" class="btn-location-header" onclick="openLocationModal()" aria-label="Localização">
                                 <i class="bi bi-geo-alt-fill"></i>
-                                <span id="headerLocationText" data-server-resolved="@ViewBag.EstadoAtivo">@(ViewBag.NomeEstadoAtivo as string ?? "Todo o Brasil")</span>
+                                <span id="headerLocationText" data-server-resolved="@ViewBag.EstadoAtivo" data-server-resolved-cidade="@ViewBag.CidadeAtiva">@(ViewBag.NomeEstadoAtivo as string ?? "Todo o Brasil")</span>
                             </button>
                         </div>
                     }
