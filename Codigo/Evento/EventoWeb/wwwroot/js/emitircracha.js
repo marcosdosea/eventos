@@ -60,7 +60,7 @@
         let linhas = tabelaBody ? Array.from(tabelaBody.querySelectorAll(".linha-participante")) : [];
         let linhasFiltradas = [...linhas];
 
-        const ITENS_POR_PAGINA = 5;
+        const ITENS_POR_PAGINA = 12;
         let paginaAtual = 1;
         let escalaAtual = 1;
 
@@ -281,11 +281,11 @@
                     const cpfPuro = (linha.dataset.cpfPuro || "").toLowerCase();
                     const credencial = (linha.dataset.credencial || "").toLowerCase();
                     return nome.includes(termo) ||
-                           nomeCompleto.includes(termo) ||
-                           depto.includes(termo) ||
-                           cpf.includes(termo) ||
-                           cpfPuro.includes(termo) ||
-                           credencial.includes(termo);
+                        nomeCompleto.includes(termo) ||
+                        depto.includes(termo) ||
+                        cpf.includes(termo) ||
+                        cpfPuro.includes(termo) ||
+                        credencial.includes(termo);
                 });
             }
 
@@ -1411,7 +1411,7 @@
                 const imagens = Array.from(grid.querySelectorAll("img"));
                 const promessasDecodificacao = imagens.map(img => {
                     if (typeof img.decode === "function") {
-                        return img.decode().catch(() => {});
+                        return img.decode().catch(() => { });
                     }
                     if (img.complete) {
                         return Promise.resolve();
