@@ -606,5 +606,260 @@ namespace Service.Tests
             var removidas2 = _inscricaoService.CancelarInscricaoParticipante(1, 1);
             Assert.AreEqual(0, removidas2);
         }
+        [TestMethod()]
+        public void TransferirIngressoTest_SucessoPessoaExistente()
+        {
+            // Arrange
+            var evento = _context.Eventos.Find((uint)1);
+            evento.DataFim = DateTime.Now.AddDays(10);
+
+            var amigoExistente = new Pessoa
+            {
+                Id = 100,
+                Nome = "Amigo Existente",
+                NomeCracha = "Amigo",
+                Cpf = "04026893057",
+                Email = "amigo@gmail.com",
+                Sexo = "M"
+            };
+            _context.Pessoas.Add(amigoExistente);
+
+            var inscricao = new Inscricaopessoaevento
+            {
+                Id = 50,
+                IdPessoa = 1,
+                IdEvento = 1,
+                IdPapel = 4,
+                Status = "A",
+                NomeCracha = "Origem",
+                DataInscricao = DateTime.Now,
+                ValorTotal = 50m
+            };
+            _context.Inscricaopessoaeventos.Add(inscricao);
+            _context.SaveChanges();
+
+            // Act
+            var resultado = _inscricaoService.TransferirIngresso(50, "040.268.930-57", "Amigo Existente", "amigoexistente@gmail.com", "12246232367");
+
+            // Assert
+            Assert.IsTrue(resultado);
+            var atualizada = _context.Inscricaopessoaeventos.Find((uint)50);
+            Assert.IsNotNull(atualizada);
+            Assert.AreEqual((uint)100, atualizada.IdPessoa);
+            Assert.AreEqual("Amigo", atualizada.NomeCracha);
+        }
+
+        [TestMethod()]
+        public void TransferirIngressoTest_SucessoPessoaNaoExistente_CadastraSilenciosamente()
+        {
+            // Arrange
+            var evento = _context.Eventos.Find((uint)1);
+            evento.DataFim = DateTime.Now.AddDays(10);
+
+            var inscricao = new Inscricaopessoaevento
+            {
+                Id = 51,
+                IdPessoa = 1,
+                IdEvento = 1,
+                IdPapel = 4,
+                Status = "A",
+                NomeCracha = "Origem",
+                DataInscricao = DateTime.Now,
+                ValorTotal = 50m
+            };
+            _context.Inscricaopessoaeventos.Add(inscricao);
+            _context.SaveChanges();
+
+            // Act
+            var resultado = _inscricaoService.TransferirIngresso(51, "917.091.250-55", "Novo Amigo da Silva", "novoamigo@gmail.com", "12246232367");
+
+            // Assert
+            Assert.IsTrue(resultado);
+            var novaPessoa = _context.Pessoas.FirstOrDefault(p => p.Cpf == "91709125055");
+            Assert.IsNotNull(novaPessoa);
+            Assert.AreEqual("Novo Amigo da Silva", novaPessoa.Nome);
+            Assert.AreEqual("novoamigo@gmail.com", novaPessoa.Email);
+            Assert.AreEqual("N", novaPessoa.Sexo);
+
+            var atualizada = _context.Inscricaopessoaeventos.Find((uint)51);
+            Assert.IsNotNull(atualizada);
+            Assert.AreEqual(novaPessoa.Id, atualizada.IdPessoa);
+        }
+
+        [TestMethod()]
+        public void TransferirIngressoTest_TransferenciaEventoNaoAfetaSubeventos_SaoSeparados()
+        {
+            // Arrange
+            var evento = _context.Eventos.Find((uint)1);
+            evento.DataFim = DateTime.Now.AddDays(10);
+
+            var amigo = new Pessoa
+            {
+                Id = 101,
+                Nome = "Amigo Sub",
+                NomeCracha = "Amigo Sub",
+                Cpf = "20601530004",
+                Email = "amigosub@gmail.com",
+                Sexo = "M"
+            };
+            _context.Pessoas.Add(amigo);
+
+            var subevento = new Subevento { Id = 30, IdEvento = 1, Nome = "Oficina", Descricao = "Descricao da Oficina", Status = "A", DataFim = DateTime.Now.AddDays(5) };
+            _context.Subeventos.Add(subevento);
+
+            var inscricaoEvento = new Inscricaopessoaevento
+            {
+                Id = 52,
+                IdPessoa = 1,
+                IdEvento = 1,
+                IdPapel = 4,
+                Status = "A",
+                NomeCracha = "Origem",
+                DataInscricao = DateTime.Now,
+                ValorTotal = 50m
+            };
+            _context.Inscricaopessoaeventos.Add(inscricaoEvento);
+
+            var inscricaoSub = new Inscricaopessoasubevento
+            {
+                IdPessoa = 1,
+                IdSubEvento = 30,
+                IdPapel = 4,
+                Status = "A",
+                DataInscricao = DateTime.Now,
+                Valor = 20m
+            };
+            _context.Inscricaopessoasubeventos.Add(inscricaoSub);
+            _context.SaveChanges();
+
+            // Act: transferir apenas o evento principal
+            var resultado = _inscricaoService.TransferirIngresso(52, "206.015.300-04", "Amigo Sub", "amigosub@gmail.com", "12246232367");
+
+            // Assert: evento principal transferido de forma separada; subevento permanece com a origem
+            Assert.IsTrue(resultado);
+            var evAtualizado = _context.Inscricaopessoaeventos.Find((uint)52);
+            Assert.IsNotNull(evAtualizado);
+            Assert.AreEqual((uint)101, evAtualizado.IdPessoa);
+            Assert.IsTrue(_context.Inscricaopessoasubeventos.Any(s => s.IdPessoa == 1 && s.IdSubEvento == 30));
+        }
+
+        [TestMethod()]
+        public void TransferirIngressoTest_TransfereApenasSubeventoEspecifico()
+        {
+            // Arrange
+            var amigo = new Pessoa
+            {
+                Id = 102,
+                Nome = "Amigo Apenas Sub",
+                NomeCracha = "Amigo",
+                Cpf = "20601530004",
+                Email = "amigosub2@gmail.com",
+                Sexo = "M"
+            };
+            _context.Pessoas.Add(amigo);
+
+            var subevento = new Subevento { Id = 31, IdEvento = 1, Nome = "Palestra", Descricao = "Descricao da Palestra", Status = "A", DataFim = DateTime.Now.AddDays(5) };
+            _context.Subeventos.Add(subevento);
+
+            var inscricaoSub = new Inscricaopessoasubevento
+            {
+                IdPessoa = 1,
+                IdSubEvento = 31,
+                IdPapel = 4,
+                Status = "A",
+                DataInscricao = DateTime.Now,
+                Valor = 15m
+            };
+            _context.Inscricaopessoasubeventos.Add(inscricaoSub);
+            _context.SaveChanges();
+
+            // Act: transferir com idInscricao = 0 e idSubevento = 31
+            var resultado = _inscricaoService.TransferirIngresso(0, "206.015.300-04", "Amigo Apenas Sub", "amigoapenas@gmail.com", "12246232367", idSubevento: 31);
+
+            // Assert
+            Assert.IsTrue(resultado);
+            Assert.IsFalse(_context.Inscricaopessoasubeventos.Any(s => s.IdPessoa == 1 && s.IdSubEvento == 31));
+            Assert.IsTrue(_context.Inscricaopessoasubeventos.Any(s => s.IdPessoa == 102 && s.IdSubEvento == 31));
+        }
+
+        [TestMethod()]
+        [ExpectedException(typeof(ArgumentException))]
+        public void TransferirIngressoTest_CpfInvalido_LancaArgumentException()
+        {
+            _inscricaoService.TransferirIngresso(1, "123456", "Nome Amigo", "amigo@gmail.com", "12246232367");
+        }
+
+        [TestMethod()]
+        [ExpectedException(typeof(ArgumentException))]
+        public void TransferirIngressoTest_MesmoUsuario_LancaArgumentException()
+        {
+            _inscricaoService.TransferirIngresso(1, "12246232367", "Mesmo Nome", "amigo@gmail.com", "12246232367");
+        }
+
+        [TestMethod()]
+        [ExpectedException(typeof(ArgumentException))]
+        public void TransferirIngressoTest_InscricaoNaoPertenceAoUsuario_LancaArgumentException()
+        {
+            var inscricao = new Inscricaopessoaevento
+            {
+                Id = 53,
+                IdPessoa = 2,
+                IdEvento = 1,
+                IdPapel = 4,
+                Status = "A",
+                NomeCracha = "Nagibe",
+                DataInscricao = DateTime.Now
+            };
+            _context.Inscricaopessoaeventos.Add(inscricao);
+            _context.SaveChanges();
+
+            _inscricaoService.TransferirIngresso(53, "04026893057", "Amigo", "amigo@gmail.com", "12246232367");
+        }
+
+        [TestMethod()]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void TransferirIngressoTest_IngressoCancelado_LancaInvalidOperationException()
+        {
+            var inscricao = new Inscricaopessoaevento
+            {
+                Id = 54,
+                IdPessoa = 1,
+                IdEvento = 1,
+                IdPapel = 4,
+                Status = "C",
+                NomeCracha = "Origem",
+                DataInscricao = DateTime.Now
+            };
+            _context.Inscricaopessoaeventos.Add(inscricao);
+            _context.SaveChanges();
+
+            _inscricaoService.TransferirIngresso(54, "04026893057", "Amigo", "amigo@gmail.com", "12246232367");
+        }
+
+        [TestMethod()]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void TransferirIngressoTest_EventoEncerrado_LancaInvalidOperationException()
+        {
+            var inscricao = new Inscricaopessoaevento
+            {
+                Id = 55,
+                IdPessoa = 1,
+                IdEvento = 2,
+                IdPapel = 4,
+                Status = "A",
+                NomeCracha = "Origem",
+                DataInscricao = DateTime.Now
+            };
+            _context.Inscricaopessoaeventos.Add(inscricao);
+            _context.SaveChanges();
+
+            _inscricaoService.TransferirIngresso(55, "04026893057", "Amigo", "amigo@gmail.com", "12246232367");
+        }
+        [TestMethod()]
+        [ExpectedException(typeof(ArgumentException))]
+        public void TransferirIngressoTest_EmailInvalido_LancaArgumentException()
+        {
+            _inscricaoService.TransferirIngresso(1, "04026893057", "Nome Amigo", "email_invalido", "12246232367");
+        }
     }
 }

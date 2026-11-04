@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="author" content="Boralá Eventos">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Você recebeu um ingresso no Boralá!</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            margin: auto;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+        }
+
+        .header {
+            font-family: 'Arial Black', Gadget, sans-serif;
+            font-size: 24px;
+            line-height: 1;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .logo-bora {
+            font-size: 22px;
+            font-weight: 900;
+            color: #0A2FE2;
+            letter-spacing: -1px;
+        }
+
+        .logo-la {
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: lowercase;
+        }
+
+        .logo-eventos {
+            display: block;
+            font-size: 10px;
+            color: #1132D9;
+            font-family: Arial, sans-serif;
+            text-transform: lowercase;
+            margin-top: -2px;
+        }
+
+        .highlight-box {
+            background-color: #f0f4ff;
+            border-left: 4px solid #0A2FE2;
+            padding: 15px 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+
+        .cred-item {
+            margin: 8px 0;
+            font-size: 15px;
+        }
+
+        .cred-item strong {
+            color: #222;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: #0A2FE2;
+            color: #ffffff !important;
+            padding: 12px 28px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        footer {
+            font-size: 12px;
+            color: #777777;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eeeeee;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="logo-bora">BORA<span class="logo-la">Lá</span></span>
+            <span class="logo-eventos">eventos</span>
+        </div>
+
+        <main>
+            <h2 style="color: #222; margin-top: 0;">Olá, {{Nome}}! 🎉</h2>
+            <p style="font-size: 16px; color: #444; line-height: 1.5;">
+                Boas notícias! <strong>{{NomeRemetente}}</strong> acabou de transferir um ingresso para você na plataforma <strong>Boralá</strong>.
+            </p>
+
+            <div class="highlight-box">
+                <div style="font-size: 12px; text-transform: uppercase; font-weight: bold; color: #0A2FE2; margin-bottom: 5px;">Detalhes do Ingresso</div>
+                <div style="font-size: 16px; font-weight: bold; color: #111;">{{DescricaoIngresso}}</div>
+            </div>
+
+            <p style="font-size: 15px; color: #444;">Para visualizar seu ingresso, QR Code e credencial, acesse a plataforma com as seguintes credenciais:</p>
+
+            <div style="background-color: #f9f9f9; border: 1px solid #e5e5e5; border-radius: 6px; padding: 15px 20px; margin: 15px 0;">
+                <div class="cred-item"><strong>Usuário (CPF):</strong> {{Cpf}}</div>
+                <div class="cred-item"><strong>Senha Provisória:</strong> <code style="background: #eef; padding: 2px 6px; border-radius: 3px; font-weight: bold; color: #0A2FE2;">{{Senha}}</code></div>
+                <small style="color: #666; display: block; margin-top: 8px;">* Caso você já tenha uma senha cadastrada no Boralá, sua senha pessoal continua a mesma.</small>
+            </div>
+
+            <div style="text-align: center; margin: 25px 0;">
+                <a href="{{LinkLogin}}" class="btn">Acessar Meus Ingressos</a>
+            </div>
+
+            <p style="font-size: 13px; color: #777; margin-top: 25px;">
+                💡 <em>Dica: No seu primeiro acesso, recomendamos que você altere sua senha para uma de sua preferência no menu de perfil.</em>
+            </p>
+        </main>
+
+        <footer>
+            <p>Se você não esperava por este ingresso ou acredita ter recebido por engano, entre em contato com nosso suporte.</p>
+            <p>© Boralá Eventos - Todos os direitos reservados.</p>
+        </footer>
+    </div>
+</body>
+
+</html>
+

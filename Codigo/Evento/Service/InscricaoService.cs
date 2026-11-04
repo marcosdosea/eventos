@@ -330,5 +330,159 @@ namespace Service
                 _context.SaveChanges();
             }
         }
+
+        /// <summary>
+        /// Transfere a titularidade de um ingresso de evento ou subevento para outro participante.
+        /// Caso o amigo de destino não possua cadastro, ele é cadastrado silenciosamente.
+        /// </summary>
+        public bool TransferirIngresso(uint idInscricao, string cpfDestino, string nomeDestino, string emailDestino, string cpfOrigem, uint? idSubevento = null)
+        {
+            if (string.IsNullOrWhiteSpace(cpfOrigem))
+                throw new ArgumentException("Usuário de origem não informado.");
+
+            var cpfOrigemLimpo = Methods.RemoveNaoNumericos(cpfOrigem);
+            var cpfOrigemFormatado = cpfOrigemLimpo.Length == 11 ? Methods.PatternCpf(cpfOrigemLimpo) : null;
+
+            var pessoaOrigem = _context.Pessoas.FirstOrDefault(p =>
+                p.Cpf == cpfOrigemLimpo || p.Cpf == cpfOrigem || (cpfOrigemFormatado != null && p.Cpf == cpfOrigemFormatado));
+
+            if (pessoaOrigem == null)
+                throw new ArgumentException("Usuário de origem não encontrado.");
+
+            if (string.IsNullOrWhiteSpace(nomeDestino))
+                throw new ArgumentException("O nome completo do destinatário é obrigatório.");
+
+            if (string.IsNullOrWhiteSpace(cpfDestino))
+                throw new ArgumentException("O CPF do destinatário é obrigatório.");
+
+            if (string.IsNullOrWhiteSpace(emailDestino) || !new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(emailDestino))
+                throw new ArgumentException("O e-mail do destinatário é inválido.");
+
+            var emailLimpo = emailDestino.Trim().ToLowerInvariant();
+            if (emailLimpo.Length > 100)
+                emailLimpo = emailLimpo.Substring(0, 100);
+
+            var cpfDestinoLimpo = Methods.RemoveNaoNumericos(cpfDestino);
+            if (cpfDestinoLimpo.Length != 11 || !Methods.ValidarCpf(cpfDestinoLimpo))
+                throw new ArgumentException("CPF do destinatário é inválido.");
+
+            if (cpfDestinoLimpo == cpfOrigemLimpo || cpfDestino == pessoaOrigem.Cpf)
+                throw new ArgumentException("Não é possível transferir um ingresso para você mesmo.");
+
+            var cpfDestinoFormatado = Methods.PatternCpf(cpfDestinoLimpo);
+            var amigo = _context.Pessoas.FirstOrDefault(p =>
+                p.Cpf == cpfDestinoLimpo || p.Cpf == cpfDestino || (cpfDestinoFormatado != null && p.Cpf == cpfDestinoFormatado));
+
+            if (amigo == null)
+            {
+                var nomeTrim = nomeDestino.Trim();
+                if (nomeTrim.Length > 50)
+                    nomeTrim = nomeTrim.Substring(0, 50);
+
+                var nomeCracha = nomeTrim.Length > 20 ? nomeTrim.Substring(0, 20) : nomeTrim;
+                if (string.IsNullOrWhiteSpace(nomeCracha))
+                    nomeCracha = "Participante";
+
+                amigo = new Pessoa
+                {
+                    Nome = nomeTrim,
+                    NomeCracha = nomeCracha,
+                    Cpf = cpfDestinoLimpo,
+                    Sexo = "N",
+                    Email = emailLimpo
+                };
+
+                _context.Pessoas.Add(amigo);
+                _context.SaveChanges();
+            }
+
+            if (_userManager != null)
+            {
+                var existingIdentity = _userManager.FindByNameAsync(cpfDestinoLimpo).GetAwaiter().GetResult();
+                if (existingIdentity == null)
+                {
+                    var novoUsuario = new UsuarioIdentity
+                    {
+                        UserName = cpfDestinoLimpo,
+                        NormalizedUserName = cpfDestinoLimpo.ToUpper(),
+                        Email = emailLimpo,
+                        EmailConfirmed = true
+                    };
+                    _userManager.CreateAsync(novoUsuario, "Temp@1234!").GetAwaiter().GetResult();
+                    _userManager.AddToRoleAsync(novoUsuario, "USUARIO").GetAwaiter().GetResult();
+                }
+                else if (string.IsNullOrWhiteSpace(existingIdentity.Email) || existingIdentity.Email.EndsWith("@borala.com.br"))
+                {
+                    existingIdentity.Email = emailLimpo;
+                    _userManager.UpdateAsync(existingIdentity).GetAwaiter().GetResult();
+                }
+            }
+
+            if (amigo.Id == pessoaOrigem.Id)
+                throw new ArgumentException("Não é possível transferir um ingresso para você mesmo.");
+
+            // Caso 1: Transferência de Inscrição em Evento
+            if (idInscricao > 0)
+            {
+                var inscricao = _context.Inscricaopessoaeventos
+                    .Include(i => i.IdEventoNavigation)
+                    .FirstOrDefault(i => i.Id == idInscricao && i.IdPessoa == pessoaOrigem.Id);
+
+                if (inscricao == null)
+                    throw new ArgumentException("Inscrição não encontrada ou não pertence ao usuário.");
+
+                if (inscricao.Status == "C")
+                    throw new InvalidOperationException("Não é possível transferir um ingresso cancelado.");
+
+                if (inscricao.IdEventoNavigation != null && inscricao.IdEventoNavigation.DataFim.HasValue && inscricao.IdEventoNavigation.DataFim.Value < DateTime.Now)
+                    throw new InvalidOperationException("Não é possível transferir ingresso de um evento já encerrado.");
+
+                inscricao.IdPessoa = amigo.Id;
+                inscricao.NomeCracha = amigo.NomeCracha;
+
+                if (idSubevento.HasValue && idSubevento.Value > 0)
+                {
+                    var subInscricao = _context.Inscricaopessoasubeventos
+                        .FirstOrDefault(s => s.IdPessoa == pessoaOrigem.Id && s.IdSubEvento == idSubevento.Value);
+
+                    if (subInscricao != null)
+                    {
+                        TransferirRegistroSubEvento(subInscricao, amigo.Id);
+                    }
+                }
+
+                _context.SaveChanges();
+                return true;
+            }
+            // Caso 2: Transferência apenas de Subevento
+            else if (idSubevento.HasValue && idSubevento.Value > 0)
+            {
+                var subInscricao = _context.Inscricaopessoasubeventos
+                    .Include(s => s.IdSubEventoNavigation)
+                    .FirstOrDefault(s => s.IdPessoa == pessoaOrigem.Id && s.IdSubEvento == idSubevento.Value);
+
+                if (subInscricao == null)
+                    throw new ArgumentException("Inscrição no subevento não encontrada ou não pertence ao usuário.");
+
+                if (subInscricao.Status == "C")
+                    throw new InvalidOperationException("Não é possível transferir um subevento cancelado.");
+
+                if (subInscricao.IdSubEventoNavigation != null && subInscricao.IdSubEventoNavigation.DataFim != DateTime.MinValue && subInscricao.IdSubEventoNavigation.DataFim < DateTime.Now)
+                    throw new InvalidOperationException("Não é possível transferir ingresso de um subevento já encerrado.");
+
+                TransferirRegistroSubEvento(subInscricao, amigo.Id);
+                _context.SaveChanges();
+                return true;
+            }
+            else
+            {
+                throw new ArgumentException("Nenhum ingresso selecionado para transferência.");
+            }
+        }
+
+        private void TransferirRegistroSubEvento(Inscricaopessoasubevento subInscricao, uint novoIdPessoa)
+        {
+            subInscricao.IdPessoa = novoIdPessoa;
+        }
     }
 }

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity.UI.Services;
 using AutoMapper;
 using Core;
 using Core.DTO;
@@ -2379,6 +2380,187 @@ namespace EventoWeb.Controllers.Tests
             cancelarController.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
 
             return (cancelarController, mockInscricaoService, mockEventoService, mockSubeventoService);
+        }
+        [TestMethod()]
+        public async Task TransferirIngressoTest_Sucesso_RedirecionaParaMinhasInscricoesComMensagemSucesso()
+        {
+            // Arrange
+            var mockInscricaoService = new Mock<IInscricaoService>();
+            mockInscricaoService.Setup(s => s.TransferirIngresso(10, "04026893057", "Maria Santos", "maria@email.com", UsernameTeste, null))
+                .Returns(true);
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new InscricaoProfile())).CreateMapper();
+            var testController = new InscricaoController(
+                null!,
+                Mock.Of<ITipoInscricaoService>(),
+                Mock.Of<IEventoService>(),
+                mapper,
+                mockInscricaoService.Object,
+                Mock.Of<IPessoaService>(),
+                Mock.Of<ISubeventoService>());
+
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, UsernameTeste) };
+            var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) };
+            testController.ControllerContext = new ControllerContext { HttpContext = httpContext };
+            testController.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
+
+            var model = new TransferirIngressoModel
+            {
+                IdInscricao = 10,
+                CpfAmigo = "04026893057",
+                NomeAmigo = "Maria Santos",
+                EmailAmigo = "maria@email.com"
+            };
+
+            // Act
+            var result = await testController.TransferirIngresso(model);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("minhasInscricoes", redirect.ActionName);
+            Assert.IsTrue(testController.TempData.ContainsKey("ParticipanteSuccessMessage"));
+            Assert.IsTrue(testController.TempData["ParticipanteSuccessMessage"]?.ToString()?.Contains("Maria Santos") == true);
+            mockInscricaoService.Verify(s => s.TransferirIngresso(10, "04026893057", "Maria Santos", "maria@email.com", UsernameTeste, null), Times.Once);
+        }
+
+        [TestMethod()]
+        public async Task TransferirIngressoTest_ModelInvalido_RedirecionaComMensagemErro()
+        {
+            // Arrange
+            var testController = new InscricaoController(
+                null!,
+                Mock.Of<ITipoInscricaoService>(),
+                Mock.Of<IEventoService>(),
+                Mock.Of<IMapper>(),
+                Mock.Of<IInscricaoService>(),
+                Mock.Of<IPessoaService>(),
+                Mock.Of<ISubeventoService>());
+
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, UsernameTeste) };
+            var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) };
+            testController.ControllerContext = new ControllerContext { HttpContext = httpContext };
+            testController.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
+            testController.ModelState.AddModelError("CpfAmigo", "O CPF do destinatário é obrigatório.");
+
+            var model = new TransferirIngressoModel();
+
+            // Act
+            var result = await testController.TransferirIngresso(model);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("minhasInscricoes", redirect.ActionName);
+            Assert.AreEqual("O CPF do destinatário é obrigatório.", testController.TempData["ParticipanteMessage"]);
+        }
+
+        [TestMethod()]
+        public async Task TransferirIngressoTest_SemUsuarioLogado_RedirecionaParaHome()
+        {
+            // Arrange
+            var testController = new InscricaoController(
+                null!,
+                Mock.Of<ITipoInscricaoService>(),
+                Mock.Of<IEventoService>(),
+                Mock.Of<IMapper>(),
+                Mock.Of<IInscricaoService>(),
+                Mock.Of<IPessoaService>(),
+                Mock.Of<ISubeventoService>());
+
+            var httpContext = new DefaultHttpContext();
+            testController.ControllerContext = new ControllerContext { HttpContext = httpContext };
+
+            // Act
+            var result = await testController.TransferirIngresso(new TransferirIngressoModel());
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirect.ActionName);
+            Assert.AreEqual("Home", redirect.ControllerName);
+        }
+
+        [TestMethod()]
+        public async Task TransferirIngressoTest_ServiceLancaArgumentException_CapturaERedirecionaComMensagem()
+        {
+            // Arrange
+            var mockInscricaoService = new Mock<IInscricaoService>();
+            mockInscricaoService.Setup(s => s.TransferirIngresso(It.IsAny<uint>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<uint?>()))
+                .Throws(new ArgumentException("CPF do destinatário é inválido."));
+
+            var testController = new InscricaoController(
+                null!,
+                Mock.Of<ITipoInscricaoService>(),
+                Mock.Of<IEventoService>(),
+                Mock.Of<IMapper>(),
+                mockInscricaoService.Object,
+                Mock.Of<IPessoaService>(),
+                Mock.Of<ISubeventoService>());
+
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, UsernameTeste) };
+            var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) };
+            testController.ControllerContext = new ControllerContext { HttpContext = httpContext };
+            testController.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
+
+            var model = new TransferirIngressoModel
+            {
+                IdInscricao = 10,
+                CpfAmigo = "123",
+                NomeAmigo = "Nome",
+                EmailAmigo = "amigo@email.com"
+            };
+
+            // Act
+            var result = await testController.TransferirIngresso(model);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("minhasInscricoes", redirect.ActionName);
+            Assert.AreEqual("CPF do destinatário é inválido.", testController.TempData["ParticipanteMessage"]);
+        }
+
+        [TestMethod()]
+        public async Task TransferirIngressoTest_ComEmailSender_DisparaEnvioDeEmail()
+        {
+            // Arrange
+            var mockInscricaoService = new Mock<IInscricaoService>();
+            mockInscricaoService.Setup(s => s.TransferirIngresso(10, "04026893057", "Maria Santos", "maria@email.com", UsernameTeste, null))
+                .Returns(true);
+            var mockEmailSender = new Mock<IEmailSender>();
+            mockEmailSender.Setup(e => e.SendEmailAsync("maria@email.com", It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(Task.CompletedTask);
+
+            var testController = new InscricaoController(
+                null!,
+                Mock.Of<ITipoInscricaoService>(),
+                Mock.Of<IEventoService>(),
+                Mock.Of<IMapper>(),
+                mockInscricaoService.Object,
+                Mock.Of<IPessoaService>(),
+                Mock.Of<ISubeventoService>(),
+                mockEmailSender.Object);
+
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, UsernameTeste) };
+            var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) };
+            testController.ControllerContext = new ControllerContext { HttpContext = httpContext };
+            testController.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
+
+            var model = new TransferirIngressoModel
+            {
+                IdInscricao = 10,
+                CpfAmigo = "04026893057",
+                NomeAmigo = "Maria Santos",
+                EmailAmigo = "maria@email.com"
+            };
+
+            // Act
+            var result = await testController.TransferirIngresso(model);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            mockEmailSender.Verify(e => e.SendEmailAsync("maria@email.com", It.IsAny<string>(), It.IsAny<string>()), Times.Once);
         }
     }
 }

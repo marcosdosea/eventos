@@ -208,12 +208,28 @@
                                     <ul>
                                         @foreach (var sub in subeventos)
                                         {
+                                            var subConfirmado = sub.Status == "A" || (sub.Status == "S" && sub.Valor <= 0);
                                             <li>
                                                 <i class="bi bi-arrow-return-right" aria-hidden="true"></i>
                                                 <div class="mi-sub-info">
                                                     <span class="mi-sub-nome">@(sub.IdSubEventoNavigation?.Nome ?? "Subevento")</span>
                                                     <span class="mi-sub-valor">@sub.Valor.ToString("C", culturaBr)</span>
                                                 </div>
+                                                @if (confirmado && subConfirmado)
+                                                {
+                                                    <button type="button" class="btn btn-sm btn-outline-secondary p-1 ms-auto text-nowrap btn-abrir-modal-transferir"
+                                                            style="font-size: 0.72rem; line-height: 1;"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#modalTransferirIngresso"
+                                                            data-id-inscricao=""
+                                                            data-id-subevento="@sub.IdSubEvento"
+                                                            data-nome-evento="@(evento?.Nome ?? "Evento")"
+                                                            data-nome-subevento="@(sub.IdSubEventoNavigation?.Nome ?? "Subevento")"
+                                                            data-protocolo="@protocolo"
+                                                            title="Transferir titularidade deste subevento">
+                                                        <i class="bi bi-arrow-left-right" aria-hidden="true"></i> Transferir
+                                                    </button>
+                                                }
                                             </li>
                                         }
                                     </ul>
@@ -288,6 +304,18 @@
                         <td>
                             <div class="mi-acoes">
                                 <div class="mi-acoes-botoes">
+                                    @if (confirmado && item.Id > 0)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-primary text-nowrap btn-abrir-modal-transferir"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalTransferirIngresso"
+                                                data-id-inscricao="@item.Id"
+                                                data-id-subevento=""
+                                                data-nome-evento="@(evento?.Nome ?? "Evento")"
+                                                data-protocolo="@protocolo">
+                                            <i class="bi bi-arrow-left-right" aria-hidden="true"></i> Transferir Titularidade
+                                        </button>
+                                    }
                                     @if (!confirmado && item.Id > 0)
                                     {
                                         <a asp-action="DetalhesInscricao" asp-controller="Inscricao" asp-route-id="@item.Id" class="mi-link-acao">
@@ -370,3 +398,113 @@
         Voltar para Início
     </a>
 </div>
+
+<!-- Modal Transferir Titularidade -->
+<div class="modal fade" id="modalTransferirIngresso" tabindex="-1" aria-labelledby="modalTransferirIngressoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title d-flex align-items-center gap-2" id="modalTransferirIngressoLabel">
+                    <i class="bi bi-arrow-left-right" aria-hidden="true"></i> Transferir Titularidade
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <form asp-action="TransferirIngresso" asp-controller="Inscricao" method="post" id="formTransferirIngresso">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="IdInscricao" id="transferirIdInscricao" value="" />
+                <input type="hidden" name="IdSubevento" id="transferirIdSubevento" value="" />
+
+                <div class="modal-body p-4">
+                    <div class="alert alert-light border mb-3">
+                        <div class="small text-muted text-uppercase fw-bold mb-1">Ingresso Selecionado</div>
+                        <div class="fw-bold text-dark" id="transferirDescricaoIngresso">-</div>
+                        <div class="small text-muted" id="transferirProtocolo">-</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="NomeAmigo" class="form-label fw-semibold">Nome Completo do Amigo <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="NomeAmigo" name="NomeAmigo" maxlength="50" required
+                               placeholder="Ex: Maria dos Santos" />
+                        <div class="form-text">Informe o nome completo do amigo que irá receber o ingresso.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="CpfAmigo" class="form-label fw-semibold">CPF do Amigo <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="CpfAmigo" name="CpfAmigo" maxlength="14" required
+                               placeholder="000.000.000-00" />
+                        <div class="form-text">Apenas números ou formato padrão com pontos e traço.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="EmailAmigo" class="form-label fw-semibold">E-mail do Amigo <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="EmailAmigo" name="EmailAmigo" maxlength="100" required
+                               placeholder="amigo@email.com" />
+                        <div class="form-text">Enviaremos a confirmação, o ingresso e as instruções de acesso para este e-mail.</div>
+                    </div>
+
+                    <div class="p-3 bg-light rounded-3 small text-muted border">
+                        <i class="bi bi-info-circle-fill text-primary me-1" aria-hidden="true"></i>
+                        Se o amigo ainda não possuir conta no Boralá, criaremos uma conta para ele com este CPF e enviaremos por e-mail as instruções e a senha de primeiro acesso (<code>Temp@1234!</code>).
+                        Após a confirmação, o ingresso será transferido e deixará de constar no seu painel.
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-check2-circle" aria-hidden="true"></i> Confirmar Transferência
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var modalElement = document.getElementById('modalTransferirIngresso');
+        if (modalElement) {
+            modalElement.addEventListener('show.bs.modal', function (event) {
+                var button = event.relatedTarget;
+                if (!button) return;
+
+                var idInscricao = button.getAttribute('data-id-inscricao') || '';
+                var idSubevento = button.getAttribute('data-id-subevento') || '';
+                var nomeEvento = button.getAttribute('data-nome-evento') || 'Evento';
+                var nomeSubevento = button.getAttribute('data-nome-subevento') || '';
+                var protocolo = button.getAttribute('data-protocolo') || '';
+
+                document.getElementById('transferirIdInscricao').value = idInscricao;
+                document.getElementById('transferirIdSubevento').value = idSubevento;
+
+                var descElement = document.getElementById('transferirDescricaoIngresso');
+                if (nomeSubevento) {
+                    descElement.textContent = 'Subevento: ' + nomeSubevento + ' (' + nomeEvento + ')';
+                } else {
+                    descElement.textContent = 'Evento: ' + nomeEvento;
+                }
+
+                document.getElementById('transferirProtocolo').textContent = protocolo ? 'Protocolo: ' + protocolo : '';
+                document.getElementById('NomeAmigo').value = '';
+                document.getElementById('CpfAmigo').value = '';
+                var emailInput = document.getElementById('EmailAmigo');
+                if (emailInput) emailInput.value = '';
+            });
+
+            var cpfInput = document.getElementById('CpfAmigo');
+            if (cpfInput) {
+                cpfInput.addEventListener('input', function (e) {
+                    var v = e.target.value.replace(/\D/g, '');
+                    if (v.length > 11) v = v.substring(0, 11);
+                    if (v.length > 9) {
+                        v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+                    } else if (v.length > 6) {
+                        v = v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+                    } else if (v.length > 3) {
+                        v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+                    }
+                    e.target.value = v;
+                });
+            }
+        }
+    });
+</script>
