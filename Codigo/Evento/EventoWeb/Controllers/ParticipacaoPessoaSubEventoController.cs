@@ -18,22 +18,44 @@ namespace EventoWeb.Controllers
         private readonly IPessoaService _pessoaService;
         private readonly ISubeventoService _subeventoService;
         private readonly IMapper _mapper;
+        private readonly IInscricaoService _inscricaoService;
 
         public ParticipacaoPessoaSubEventoController(
             IParticipacaoPessoaSubEventoService participacaoService,
             IPessoaService pessoaService,
             ISubeventoService subeventoService,
-            IMapper mapper)
+            IMapper mapper,
+            IInscricaoService inscricaoService)
         {
             _participacaoService = participacaoService;
             _pessoaService = pessoaService;
             _subeventoService = subeventoService;
             _mapper = mapper;
+            _inscricaoService = inscricaoService;
+        }
+
+        private IActionResult? ValidarAcesso(int idSubEvento)
+        {
+            if (idSubEvento <= 0) return NotFound();
+            var subevento = _subeventoService.Get((uint)idSubEvento);
+            if (subevento == null) return NotFound();
+            if (User.IsInRole("ADMINISTRADOR")) return null;
+
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username)) return Forbid();
+            if ((User.IsInRole("GESTOR") && _inscricaoService.GetGestorInEvent(username, subevento.IdEvento) != null) ||
+                (User.IsInRole("COLABORADOR") && _inscricaoService.GetColaboradorInEvent(username, subevento.IdEvento) != null))
+                return null;
+
+            return Forbid();
         }
 
         [HttpGet]
         public IActionResult Index(int idSubEvento)
         {
+            var acesso = ValidarAcesso(idSubEvento);
+            if (acesso != null) return acesso;
+
             var participacoes = _participacaoService.GetBySubEvento((uint)idSubEvento);
             var model = participacoes
                 .Select(p => _mapper.Map<ParticipacaoPessoaSubEventoModel>(p))
@@ -46,6 +68,9 @@ namespace EventoWeb.Controllers
         [HttpGet("{id:int}")]
         public IActionResult Details(int id, int idSubEvento)
         {
+            var acesso = ValidarAcesso(idSubEvento);
+            if (acesso != null) return acesso;
+
             var entity = _participacaoService
                 .GetBySubEvento((uint)idSubEvento)
                 .FirstOrDefault(p => p.Id == (uint)id);
@@ -58,6 +83,9 @@ namespace EventoWeb.Controllers
         [HttpGet("create")]
         public IActionResult Create(int idSubEvento)
         {
+            var acesso = ValidarAcesso(idSubEvento);
+            if (acesso != null) return acesso;
+
             var pessoas = _pessoaService.GetAll();
             var model = new ParticipacaoPessoaSubEventoModel
             {
@@ -70,8 +98,12 @@ namespace EventoWeb.Controllers
 
         [HttpPost("create")]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(ParticipacaoPessoaSubEventoModel model)
+        public IActionResult Create([FromRoute] int idSubEvento, ParticipacaoPessoaSubEventoModel model)
         {
+            var acesso = ValidarAcesso(idSubEvento);
+            if (acesso != null) return acesso;
+            if (model.IdSubEvento != (uint)idSubEvento) return BadRequest();
+
             if (!ModelState.IsValid)
             {
                 model.Pessoas = new SelectList(
@@ -87,6 +119,9 @@ namespace EventoWeb.Controllers
         [HttpGet("edit/{id:int}")]
         public IActionResult Edit(int id, int idSubEvento)
         {
+            var acesso = ValidarAcesso(idSubEvento);
+            if (acesso != null) return acesso;
+
             var entity = _participacaoService
                 .GetBySubEvento((uint)idSubEvento)
                 .FirstOrDefault(p => p.Id == (uint)id);
@@ -100,8 +135,16 @@ namespace EventoWeb.Controllers
 
         [HttpPost("edit/{id:int}")]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(ParticipacaoPessoaSubEventoModel model)
+        public IActionResult Edit([FromRoute] int idSubEvento, [FromRoute] int id, ParticipacaoPessoaSubEventoModel model)
         {
+            var acesso = ValidarAcesso(idSubEvento);
+            if (acesso != null) return acesso;
+            if (id <= 0 || model.Id != (uint)id || model.IdSubEvento != (uint)idSubEvento)
+                return BadRequest();
+            var existente = _participacaoService.GetBySubEvento((uint)idSubEvento)
+                .FirstOrDefault(p => p.Id == (uint)id);
+            if (existente == null) return NotFound();
+
             if (!ModelState.IsValid)
             {
                 model.Pessoas = new SelectList(
@@ -117,6 +160,9 @@ namespace EventoWeb.Controllers
         [HttpGet("delete/{id:int}")]
         public IActionResult Delete(int id, int idSubEvento)
         {
+            var acesso = ValidarAcesso(idSubEvento);
+            if (acesso != null) return acesso;
+
             var entity = _participacaoService
                 .GetBySubEvento((uint)idSubEvento)
                 .FirstOrDefault(p => p.Id == (uint)id);
@@ -132,6 +178,9 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult DeleteConfirmed(int id, int idSubEvento)
         {
+            var acesso = ValidarAcesso(idSubEvento);
+            if (acesso != null) return acesso;
+
             var entity = _participacaoService
                 .GetBySubEvento((uint)idSubEvento)
                 .FirstOrDefault(p => p.Id == (uint)id);
