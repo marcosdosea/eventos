@@ -81,6 +81,9 @@ namespace Service
         public void Edit(Subevento subevento)
         {
             _context.Update(subevento);
+            var evento = _context.Eventos.Find(subevento.IdEvento);
+            if (subevento.Status == "F" || evento?.Status == "F")
+                AtualizadorFrequencia.Subevento(_context, subevento);
             _context.SaveChanges();
         }
 

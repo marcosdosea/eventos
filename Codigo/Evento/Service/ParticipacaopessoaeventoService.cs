@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Core;
 using Microsoft.EntityFrameworkCore;
+using Service;
 
 namespace Core.Service
 {
@@ -40,7 +41,8 @@ namespace Core.Service
         public async Task<Participacaopessoaevento> AddAsync(Participacaopessoaevento entity)
         {
             var result = (await _context.Participacaopessoaeventos.AddAsync(entity)).Entity;
-            await _context.SaveChangesAsync();
+            await AtualizadorFrequencia.SalvarParticipacaoAsync(_context,
+                () => AtualizadorFrequencia.EventoSeFinalizado(_context, entity.IdEvento, entity.IdPessoa));
             return result;
         }
 
@@ -50,13 +52,19 @@ namespace Core.Service
             if (existing == null)
                 return false;
 
+            var eventoAnterior = _context.Entry(existing).Property(p => p.IdEvento).OriginalValue;
+            var pessoaAnterior = _context.Entry(existing).Property(p => p.IdPessoa).OriginalValue;
             existing.IdPessoa = entity.IdPessoa;
             existing.IdEvento = entity.IdEvento;
             existing.Entrada = entity.Entrada;
             existing.Saida = entity.Saida;
 
             _context.Participacaopessoaeventos.Update(existing);
-            await _context.SaveChangesAsync();
+            await AtualizadorFrequencia.SalvarParticipacaoAsync(_context, () => {
+                AtualizadorFrequencia.EventoSeFinalizado(_context, eventoAnterior, pessoaAnterior);
+                if (eventoAnterior != existing.IdEvento || pessoaAnterior != existing.IdPessoa)
+                    AtualizadorFrequencia.EventoSeFinalizado(_context, existing.IdEvento, existing.IdPessoa);
+            });
             return true;
         }
 
@@ -67,7 +75,8 @@ namespace Core.Service
                 return false;
 
             _context.Participacaopessoaeventos.Remove(existing);
-            await _context.SaveChangesAsync();
+            await AtualizadorFrequencia.SalvarParticipacaoAsync(_context,
+                () => AtualizadorFrequencia.EventoSeFinalizado(_context, existing.IdEvento, existing.IdPessoa));
             return true;
         }
     }

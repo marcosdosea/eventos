@@ -236,6 +236,12 @@ namespace Service
                 }
                 
 
+                if (evento.Status == "F")
+                {
+                    AtualizadorFrequencia.Evento(_context, eventoExistente);
+                    foreach (var subevento in _context.Subeventos.Where(s => s.IdEvento == evento.Id).ToList())
+                        AtualizadorFrequencia.Subevento(_context, subevento);
+                }
                 _context.SaveChanges();
                 return true;
             }
@@ -694,10 +700,30 @@ namespace Service
             // Aptos a certificado + frequência média (base: inscrições ativas)
             var ativas = inscricoes.Where(i => i.Status == "A").ToList();
             var baseCert = ativas.Count > 0 ? ativas : inscricoes;
-            resultado.AptosCertificado = baseCert.Count(i => i.FrequenciaFinal >= evento.FrequenciaMinimaCertificado);
-            resultado.FrequenciaMedia = baseCert.Count > 0
-                ? Math.Round(baseCert.Average(i => i.FrequenciaFinal), 2)
-                : 0;
+            if (filtros.IdSubevento.HasValue)
+            {
+                var idsBaseCert = baseCert.Select(i => i.IdPessoa).Distinct().ToList();
+                var subevento = _context.Subeventos.AsNoTracking()
+                    .FirstOrDefault(s => s.Id == filtros.IdSubevento.Value && s.IdEvento == idEvento);
+                var frequenciasSub = _context.Inscricaopessoasubeventos.AsNoTracking()
+                    .Where(s => s.IdSubEvento == filtros.IdSubevento.Value && s.IdPapel == 4 &&
+                                s.Status != "C" && idsBaseCert.Contains(s.IdPessoa))
+                    .ToList();
+                var ativasSub = frequenciasSub.Where(s => s.Status == "A").ToList();
+                var baseSub = ativasSub.Count > 0 ? ativasSub : frequenciasSub;
+                resultado.AptosCertificado = subevento == null ? 0 :
+                    baseSub.Count(s => s.FrequenciaFinal >= subevento.FrequenciaMinimaCertificado);
+                resultado.FrequenciaMedia = baseSub.Count > 0
+                    ? Math.Round(baseSub.Average(s => s.FrequenciaFinal), 2)
+                    : 0;
+            }
+            else
+            {
+                resultado.AptosCertificado = baseCert.Count(i => i.FrequenciaFinal >= evento.FrequenciaMinimaCertificado);
+                resultado.FrequenciaMedia = baseCert.Count > 0
+                    ? Math.Round(baseCert.Average(i => i.FrequenciaFinal), 2)
+                    : 0;
+            }
 
             // Ocupação por subevento (exclui canceladas)
             var subeventos = _context.Subeventos

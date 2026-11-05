@@ -18,7 +18,8 @@ namespace Service
         public uint Create(Participacaopessoasubevento participacao)
         {
             _context.Participacaopessoasubeventos.Add(participacao);
-            _context.SaveChanges();
+            AtualizadorFrequencia.SalvarParticipacao(_context,
+                () => AtualizadorFrequencia.SubeventoSeFinalizado(_context, participacao.IdSubEvento, participacao.IdPessoa));
             return participacao.Id;
         }
 
@@ -27,18 +28,25 @@ namespace Service
             var existing = _context.Participacaopessoasubeventos.Find(participacao.Id);
             if (existing != null)
             {
+                var subeventoAnterior = _context.Entry(existing).Property(p => p.IdSubEvento).OriginalValue;
+                var pessoaAnterior = _context.Entry(existing).Property(p => p.IdPessoa).OriginalValue;
                 existing.IdPessoa = participacao.IdPessoa;
                 existing.IdSubEvento = participacao.IdSubEvento;
                 existing.Entrada = participacao.Entrada;
                 existing.Saida = participacao.Saida;
-                _context.SaveChanges();
+                AtualizadorFrequencia.SalvarParticipacao(_context, () => {
+                    AtualizadorFrequencia.SubeventoSeFinalizado(_context, subeventoAnterior, pessoaAnterior);
+                    if (subeventoAnterior != existing.IdSubEvento || pessoaAnterior != existing.IdPessoa)
+                        AtualizadorFrequencia.SubeventoSeFinalizado(_context, existing.IdSubEvento, existing.IdPessoa);
+                });
             }
             else
             {
                 participacao.IdPessoaNavigation = null!;
                 participacao.IdSubEventoNavigation = null!;
                 _context.Participacaopessoasubeventos.Update(participacao);
-                _context.SaveChanges();
+                AtualizadorFrequencia.SalvarParticipacao(_context,
+                    () => AtualizadorFrequencia.SubeventoSeFinalizado(_context, participacao.IdSubEvento, participacao.IdPessoa));
             }
         }
 
@@ -48,7 +56,8 @@ namespace Service
             if (entity != null)
             {
                 _context.Participacaopessoasubeventos.Remove(entity);
-                _context.SaveChanges();
+                AtualizadorFrequencia.SalvarParticipacao(_context,
+                    () => AtualizadorFrequencia.SubeventoSeFinalizado(_context, entity.IdSubEvento, entity.IdPessoa));
             }
         }
 

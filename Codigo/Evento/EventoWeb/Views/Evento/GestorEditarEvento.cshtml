@@ -55,11 +55,11 @@
                     <div class="d-flex">
                         <div class="form-check">
                             <!-- Checkbox que marca se a Inscrição é Gratuita(valor 1) -->
-                            <input class="form-check-input" type="checkbox" value="1" id="InscricaoGratuita" name="Evento.InscricaoGratuita"
+                            <input class="form-check-input" type="checkbox" value="1" id="InscricaoGratuita" name="InscricaoGratuita"
                                    @(Model.InscricaoGratuita == 1 ? "checked" : "")>
                             <label class="form-check-label" for="InscricaoGratuita">Inscricao Gratuita</label>
                             <!-- Campo oculto para enviar valor 0 quando o checkbox não está marcado -->
-                            <input type="hidden" name="Evento.InscricaoGratuita" value="0">
+                            <input type="hidden" name="InscricaoGratuita" value="0">
                         </div>
                     </div>
                     <span asp-validation-for="EventoPublico" class="text-danger"></span>
@@ -70,11 +70,11 @@
                     <div class="d-flex">
                         <div class="form-check">
                             <!-- Checkbox que marca se o Evento é Público (valor 1) -->
-                            <input class="form-check-input" type="checkbox" value="1" id="EventoPublico" name="Evento.EventoPublico"
+                            <input class="form-check-input" type="checkbox" value="1" id="EventoPublico" name="EventoPublico"
                                    @(Model.EventoPublico == 1 ? "checked" : "")>
                             <label class="form-check-label" for="EventoPublico">Publicar no Portal</label>
                             <!-- Campo oculto para enviar valor 0 quando o checkbox não está marcado -->
-                            <input type="hidden" name="Evento.EventoPublico" value="0">
+                            <input type="hidden" name="EventoPublico" value="0">
                         </div>
                     </div>
                     <span asp-validation-for="EventoPublico" class="text-danger"></span>
@@ -85,11 +85,11 @@
                     <div class="d-flex ">
                         <div class="form-check">
                             <!-- Checkbox que marca se o evento Possui Certificado (valor 1) -->
-                            <input class="form-check-input" type="checkbox" value="1" id="PossuiCertificado" name="Evento.PossuiCertificado"
+                            <input class="form-check-input" type="checkbox" value="1" id="PossuiCertificado" name="PossuiCertificado"
                                    @(Model.PossuiCertificado == 1 ? "checked" : "")>
                             <label class="form-check-label" for="PossuiCertificado">Possui Certificado </label>
                             <!-- Campo oculto para enviar valor 0 quando o checkbox não está marcado -->
-                            <input type="hidden" name="Evento.PossuiCertificado" value="0">
+                            <input type="hidden" name="PossuiCertificado" value="0">
                         </div>
                     </div>
                     <span asp-validation-for="PossuiCertificado" class="text-danger"></span>
