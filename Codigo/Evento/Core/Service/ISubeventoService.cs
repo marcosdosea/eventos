@@ -12,6 +12,7 @@ namespace Core.Service
         IEnumerable<SubeventoDTO> GetByNome(string nome);
         IEnumerable<SubeventoEventoDTO> GetByIdEvento(uint idEvento);
         void AtualizarVagasDisponiveis(uint idSubevento, bool saveChanges = true);
+        void AtualizarFrequenciaFinal(uint idSubevento, uint? idPessoa = null, bool saveChanges = true);
     }
 }
 

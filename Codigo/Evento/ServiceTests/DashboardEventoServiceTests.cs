@@ -151,10 +151,23 @@ namespace Service.Tests
         [TestMethod()]
         public void GetDashboardOperacao_FiltroSubevento()
         {
+            var subevento = _context.Subeventos.Find((uint)10)!;
+            subevento.FrequenciaMinimaCertificado = 75;
+            _context.Inscricaopessoasubeventos.Find((uint)1, (uint)10)!.FrequenciaFinal = 50;
+            _context.Inscricaopessoasubeventos.Find((uint)2, (uint)10)!.FrequenciaFinal = 100;
+            _context.Inscricaopessoasubeventos.Add(new Inscricaopessoasubevento
+            {
+                IdPessoa = 4, IdSubEvento = 10, IdPapel = 4, Status = "A",
+                DataInscricao = new DateTime(2024, 9, 8), FrequenciaFinal = 100
+            });
+            _context.SaveChanges();
+
             var op = _eventoService.GetDashboardOperacao(1, new DashboardFiltrosDTO { IdSubevento = 10 });
 
             Assert.AreEqual(1, op.OcupacaoSubeventos.Count);
             Assert.AreEqual(1, op.Presentes);
+            Assert.AreEqual(75m, op.FrequenciaMedia);
+            Assert.AreEqual(1, op.AptosCertificado);
         }
 
         [TestMethod()]

@@ -28,6 +28,8 @@ namespace Core.Service
 
         void AtualizarVagasDisponiveis(uint idEvento, bool saveChanges = true);
 
+        void AtualizarFrequenciaFinal(uint idEvento, uint? idPessoa = null, bool saveChanges = true);
+
         IEnumerable<Evento> Search(EventoFilterDTO filter, int pagina, int tamanhoPagina, out int totalRegistros);
         
         public uint VerificarPerfilAtual(IList<string> roles, String perfilAtivo, uint idPapel);
