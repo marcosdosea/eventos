@@ -1,9 +1,11 @@
+using System.Linq;
 using System.Security.Claims;
 using AutoMapper;
 using Core;
 using Core.Service;
 using EventoWeb.Controllers;
 using EventoWeb.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -36,10 +38,23 @@ public class ParticipacaoPessoaSubEventoControllerTests
         controller.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(identity) } };
     }
 
+    [TestMethod]
+    public void Controller_ExigeApenasRolesGestorEColaborador()
+    {
+        var autorizacao = typeof(ParticipacaoPessoaSubEventoController)
+            .GetCustomAttributes(typeof(AuthorizeAttribute), false)
+            .Cast<AuthorizeAttribute>()
+            .FirstOrDefault();
+
+        Assert.IsNotNull(autorizacao);
+        Assert.AreEqual("GESTOR,COLABORADOR", autorizacao.Roles);
+    }
+
     [DataTestMethod]
+    [DataRow("ADMINISTRADOR")]
     [DataRow("GESTOR")]
     [DataRow("COLABORADOR")]
-    public void SemVinculo_TodasActionsNegadasSemConsultarParticipacoes(string role)
+    public void SemVinculoOuAdministrador_TodasActionsNegadasSemConsultarParticipacoes(string role)
     {
         Login(role);
         inscricoes.Setup(s => s.GetGestorInEvent("12345678900", 1)).Returns(new Inscricaopessoaevento());
@@ -57,10 +72,9 @@ public class ParticipacaoPessoaSubEventoControllerTests
     }
 
     [DataTestMethod]
-    [DataRow("ADMINISTRADOR")]
     [DataRow("GESTOR")]
     [DataRow("COLABORADOR")]
-    public void VinculadoOuAdministrador_PodeConsultar(string role)
+    public void Vinculado_PodeConsultar(string role)
     {
         Login(role);
         inscricoes.Setup(s => s.GetGestorInEvent("12345678900", 1)).Returns(new Inscricaopessoaevento());
@@ -72,7 +86,7 @@ public class ParticipacaoPessoaSubEventoControllerTests
     [TestMethod]
     public void SubeventoInexistente_RetornaNotFound()
     {
-        Login("ADMINISTRADOR");
+        Login("GESTOR");
         Assert.IsInstanceOfType(controller.Index(999), typeof(NotFoundResult));
         participacoes.Verify(s => s.GetBySubEvento(It.IsAny<uint>()), Times.Never);
     }
@@ -80,7 +94,8 @@ public class ParticipacaoPessoaSubEventoControllerTests
     [TestMethod]
     public void PostIdsDivergentes_NaoPersiste()
     {
-        Login("ADMINISTRADOR");
+        Login("GESTOR");
+        inscricoes.Setup(s => s.GetGestorInEvent("12345678900", 1)).Returns(new Inscricaopessoaevento());
         var model = new ParticipacaoPessoaSubEventoModel { Id = 3, IdSubEvento = 20 };
         Assert.IsInstanceOfType(controller.Create(10, model), typeof(BadRequestResult));
         Assert.IsInstanceOfType(controller.Edit(10, 3, model), typeof(BadRequestResult));
@@ -93,7 +108,8 @@ public class ParticipacaoPessoaSubEventoControllerTests
     [TestMethod]
     public void ParticipacaoDeOutroSubevento_NaoEditaNemExclui()
     {
-        Login("ADMINISTRADOR");
+        Login("GESTOR");
+        inscricoes.Setup(s => s.GetGestorInEvent("12345678900", 1)).Returns(new Inscricaopessoaevento());
         var model = new ParticipacaoPessoaSubEventoModel { Id = 3, IdSubEvento = 10 };
         Assert.IsInstanceOfType(controller.Edit(10, 3, model), typeof(NotFoundResult));
         Assert.IsInstanceOfType(controller.DeleteConfirmed(3, 10), typeof(NotFoundResult));
@@ -104,7 +120,6 @@ public class ParticipacaoPessoaSubEventoControllerTests
     [DataTestMethod]
     [DataRow("GESTOR")]
     [DataRow("COLABORADOR")]
-    [DataRow("ADMINISTRADOR")]
     public void PostValido_CriaEAtualizaParticipacaoDoSubevento(string role)
     {
         Login(role);

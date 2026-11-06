@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace EventoWeb.Controllers
 {
-    [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
+    [Authorize(Roles = "GESTOR,COLABORADOR")]
     [Route("subeventos/{idSubEvento:int}/participacoes")]
     public class ParticipacaoPessoaSubEventoController : Controller
     {
@@ -39,12 +39,19 @@ namespace EventoWeb.Controllers
             if (idSubEvento <= 0) return NotFound();
             var subevento = _subeventoService.Get((uint)idSubEvento);
             if (subevento == null) return NotFound();
-            if (User.IsInRole("ADMINISTRADOR")) return null;
 
             var username = User.Identity?.Name;
             if (string.IsNullOrEmpty(username)) return Forbid();
-            if ((User.IsInRole("GESTOR") && _inscricaoService.GetGestorInEvent(username, subevento.IdEvento) != null) ||
-                (User.IsInRole("COLABORADOR") && _inscricaoService.GetColaboradorInEvent(username, subevento.IdEvento) != null))
+            var cpfLimpo = username.Replace(".", "").Replace("-", "");
+
+            if (User.IsInRole("GESTOR") &&
+                (_inscricaoService.GetGestorInEvent(username, subevento.IdEvento) != null ||
+                 (cpfLimpo != username && _inscricaoService.GetGestorInEvent(cpfLimpo, subevento.IdEvento) != null)))
+                return null;
+
+            if (User.IsInRole("COLABORADOR") &&
+                (_inscricaoService.GetColaboradorInEvent(username, subevento.IdEvento) != null ||
+                 (cpfLimpo != username && _inscricaoService.GetColaboradorInEvent(cpfLimpo, subevento.IdEvento) != null)))
                 return null;
 
             return Forbid();
