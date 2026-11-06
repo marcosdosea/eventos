@@ -83,7 +83,7 @@ namespace Service
             _context.Update(subevento);
             var evento = _context.Eventos.Find(subevento.IdEvento);
             if (subevento.Status == "F" || evento?.Status == "F")
-                AtualizadorFrequencia.Subevento(_context, subevento);
+                AtualizarFrequenciaFinal(subevento.Id, saveChanges: false);
             _context.SaveChanges();
         }
 
@@ -190,6 +190,48 @@ namespace Service
                 {
                     _context.SaveChanges();
                 }
+            }
+        }
+
+        public void AtualizarFrequenciaFinal(uint idSubevento, uint? idPessoa = null, bool saveChanges = true)
+        {
+            var subevento = _context.Subeventos.FirstOrDefault(s => s.Id == idSubevento);
+            if (subevento == null)
+                return;
+
+            var inscricoes = _context.Inscricaopessoasubeventos
+                .Where(i => i.IdSubEvento == idSubevento && i.IdPapel == PapelParticipante && i.Status != "C" && (!idPessoa.HasValue || i.IdPessoa == idPessoa.Value))
+                .ToList();
+
+            var rastreadas = _context.ChangeTracker.Entries<Participacaopessoasubevento>().ToList();
+            var idsRastreados = rastreadas
+                .Where(e => e.State != EntityState.Added)
+                .Select(e => e.Entity.Id)
+                .ToHashSet();
+
+            var presencasBanco = _context.Participacaopessoasubeventos
+                .AsNoTracking()
+                .Where(p => p.IdSubEvento == idSubevento && (!idPessoa.HasValue || p.IdPessoa == idPessoa.Value) && !idsRastreados.Contains(p.Id))
+                .ToList();
+
+            var presencasMemoria = rastreadas
+                .Where(e => e.State != EntityState.Deleted && e.Entity.IdSubEvento == idSubevento && (!idPessoa.HasValue || e.Entity.IdPessoa == idPessoa.Value))
+                .Select(e => e.Entity);
+
+            var presencasPorPessoa = presencasBanco
+                .Concat(presencasMemoria)
+                .GroupBy(p => p.IdPessoa)
+                .ToDictionary(g => g.Key, g => g.Select(p => (p.Entrada, p.Saida)).ToList());
+
+            foreach (var inscricao in inscricoes)
+            {
+                presencasPorPessoa.TryGetValue(inscricao.IdPessoa, out var periodos);
+                inscricao.FrequenciaFinal = EventoService.CalcularFrequencia(subevento.DataInicio, subevento.DataFim, subevento.CargaHoraria, periodos ?? new());
+            }
+
+            if (saveChanges)
+            {
+                _context.SaveChanges();
             }
         }
     }

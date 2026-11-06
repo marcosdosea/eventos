@@ -10,10 +10,21 @@ namespace Core.Service
     public class ParticipacaoPessoaEventoService : IParticipacaoPessoaEventoService
     {
         private readonly EventoContext _context;
+        private readonly IEventoService _eventoService;
 
-        public ParticipacaoPessoaEventoService(EventoContext context)
+        public ParticipacaoPessoaEventoService(EventoContext context, IEventoService? eventoService = null)
         {
             _context = context;
+            _eventoService = eventoService ?? new EventoService(context);
+        }
+
+        private void RecalcularFrequenciaSeFinalizado(uint idEvento, uint idPessoa)
+        {
+            var evento = _context.Eventos.Find(idEvento);
+            if (evento?.Status == "F")
+            {
+                _eventoService.AtualizarFrequenciaFinal(idEvento, idPessoa, saveChanges: false);
+            }
         }
 
         public async Task<List<Participacaopessoaevento>> GetAllAsync()
@@ -41,8 +52,8 @@ namespace Core.Service
         public async Task<Participacaopessoaevento> AddAsync(Participacaopessoaevento entity)
         {
             var result = (await _context.Participacaopessoaeventos.AddAsync(entity)).Entity;
-            await AtualizadorFrequencia.SalvarParticipacaoAsync(_context,
-                () => AtualizadorFrequencia.EventoSeFinalizado(_context, entity.IdEvento, entity.IdPessoa));
+            RecalcularFrequenciaSeFinalizado(entity.IdEvento, entity.IdPessoa);
+            await _context.SaveChangesAsync();
             return result;
         }
 
@@ -60,11 +71,10 @@ namespace Core.Service
             existing.Saida = entity.Saida;
 
             _context.Participacaopessoaeventos.Update(existing);
-            await AtualizadorFrequencia.SalvarParticipacaoAsync(_context, () => {
-                AtualizadorFrequencia.EventoSeFinalizado(_context, eventoAnterior, pessoaAnterior);
-                if (eventoAnterior != existing.IdEvento || pessoaAnterior != existing.IdPessoa)
-                    AtualizadorFrequencia.EventoSeFinalizado(_context, existing.IdEvento, existing.IdPessoa);
-            });
+            RecalcularFrequenciaSeFinalizado(eventoAnterior, pessoaAnterior);
+            if (eventoAnterior != existing.IdEvento || pessoaAnterior != existing.IdPessoa)
+                RecalcularFrequenciaSeFinalizado(existing.IdEvento, existing.IdPessoa);
+            await _context.SaveChangesAsync();
             return true;
         }
 
@@ -75,8 +85,8 @@ namespace Core.Service
                 return false;
 
             _context.Participacaopessoaeventos.Remove(existing);
-            await AtualizadorFrequencia.SalvarParticipacaoAsync(_context,
-                () => AtualizadorFrequencia.EventoSeFinalizado(_context, existing.IdEvento, existing.IdPessoa));
+            RecalcularFrequenciaSeFinalizado(existing.IdEvento, existing.IdPessoa);
+            await _context.SaveChangesAsync();
             return true;
         }
     }

@@ -238,9 +238,12 @@ namespace Service
 
                 if (evento.Status == "F")
                 {
-                    AtualizadorFrequencia.Evento(_context, eventoExistente);
-                    foreach (var subevento in _context.Subeventos.Where(s => s.IdEvento == evento.Id).ToList())
-                        AtualizadorFrequencia.Subevento(_context, subevento);
+                    AtualizarFrequenciaFinal(evento.Id, saveChanges: false);
+                    var subeventoService = new SubeventoService(_context);
+                    foreach (var idSub in _context.Subeventos.Where(s => s.IdEvento == evento.Id).Select(s => s.Id).ToList())
+                    {
+                        subeventoService.AtualizarFrequenciaFinal(idSub, saveChanges: false);
+                    }
                 }
                 _context.SaveChanges();
                 return true;
@@ -411,6 +414,87 @@ namespace Service
                     _context.SaveChanges();
                 }
             }
+        }
+
+        public void AtualizarFrequenciaFinal(uint idEvento, uint? idPessoa = null, bool saveChanges = true)
+        {
+            var evento = _context.Eventos.FirstOrDefault(e => e.Id == idEvento);
+            if (evento == null)
+                return;
+
+            var inscricoes = _context.Inscricaopessoaeventos
+                .Where(i => i.IdEvento == idEvento && i.IdPapel == PapelParticipante && i.Status != "C" && (!idPessoa.HasValue || i.IdPessoa == idPessoa.Value))
+                .ToList();
+
+            var rastreadas = _context.ChangeTracker.Entries<Participacaopessoaevento>().ToList();
+            var idsRastreados = rastreadas
+                .Where(e => e.State != EntityState.Added)
+                .Select(e => e.Entity.Id)
+                .ToHashSet();
+
+            var presencasBanco = _context.Participacaopessoaeventos
+                .AsNoTracking()
+                .Where(p => p.IdEvento == idEvento && (!idPessoa.HasValue || p.IdPessoa == idPessoa.Value) && !idsRastreados.Contains(p.Id))
+                .ToList();
+
+            var presencasMemoria = rastreadas
+                .Where(e => e.State != EntityState.Deleted && e.Entity.IdEvento == idEvento && (!idPessoa.HasValue || e.Entity.IdPessoa == idPessoa.Value))
+                .Select(e => e.Entity);
+
+            var presencasPorPessoa = presencasBanco
+                .Concat(presencasMemoria)
+                .GroupBy(p => p.IdPessoa)
+                .ToDictionary(g => g.Key, g => g.Select(p => (p.Entrada, p.Saida)).ToList());
+
+            foreach (var inscricao in inscricoes)
+            {
+                presencasPorPessoa.TryGetValue(inscricao.IdPessoa, out var periodos);
+                inscricao.FrequenciaFinal = CalcularFrequencia(evento.DataInicio, evento.DataFim, evento.CargaHoraria, periodos ?? new());
+            }
+
+            if (saveChanges)
+            {
+                _context.SaveChanges();
+            }
+        }
+
+        public static decimal CalcularFrequencia(
+            DateTime? inicio, DateTime? fim, decimal cargaHoraria,
+            IEnumerable<(DateTime Entrada, DateTime? Saida)> participacoes)
+        {
+            if (!inicio.HasValue || !fim.HasValue || fim <= inicio || cargaHoraria <= 0)
+                return 0m;
+
+            var periodos = participacoes
+                .Where(p => p.Saida.HasValue && p.Saida.Value > p.Entrada)
+                .Select(p => (
+                    Inicio: p.Entrada < inicio.Value ? inicio.Value : p.Entrada,
+                    Fim: p.Saida!.Value > fim.Value ? fim.Value : p.Saida.Value))
+                .Where(p => p.Fim > p.Inicio)
+                .OrderBy(p => p.Inicio)
+                .ThenBy(p => p.Fim)
+                .ToList();
+
+            if (periodos.Count == 0) return 0m;
+
+            long ticks = 0;
+            var atual = periodos[0];
+            foreach (var proximo in periodos.Skip(1))
+            {
+                if (proximo.Inicio <= atual.Fim)
+                {
+                    if (proximo.Fim > atual.Fim) atual.Fim = proximo.Fim;
+                }
+                else
+                {
+                    ticks += (atual.Fim - atual.Inicio).Ticks;
+                    atual = proximo;
+                }
+            }
+            ticks += (atual.Fim - atual.Inicio).Ticks;
+
+            var percentual = (decimal)ticks * 100m / (cargaHoraria * (decimal)TimeSpan.TicksPerHour);
+            return Math.Round(Math.Min(100m, percentual), 2, MidpointRounding.AwayFromZero);
         }
 
         public IEnumerable<Evento> Search(EventoFilterDTO filter, int pagina, int tamanhoPagina, out int totalRegistros)
