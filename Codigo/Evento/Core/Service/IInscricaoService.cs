@@ -5,6 +5,7 @@ namespace Core.Service
 {
     public interface IInscricaoService
     {
+        Task<List<BipouParticipanteDTO>> GetParticipantesBipouAsync(uint idEvento, uint? idSubevento = null, CancellationToken cancellationToken = default);
         uint CreateInscricaoEvento(Inscricaopessoaevento inscricaopessoaevento);
 
         uint CreateInscricaoEventoLote(Inscricaopessoaevento inscricaopessoaevento);
