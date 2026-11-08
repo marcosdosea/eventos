@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using Microsoft.Extensions.Logging;
+using MySql.Data.MySqlClient;
 
 namespace EventoWebTests.Controllers;
 
@@ -301,7 +302,7 @@ public class BipouApiControllerTests
         var carga = (await JsonDocument.ParseAsync(gzip)).RootElement;
         Assert.AreEqual(5002, carga.GetProperty("participantes").GetArrayLength());
         Assert.IsTrue(tempo.Elapsed < TimeSpan.FromSeconds(2), $"Carga: {tempo.Elapsed.TotalMilliseconds:F0} ms");
-        Console.WriteLine($"Carga de 5002 participantes: {tempo.Elapsed.TotalMilliseconds:F0} ms, {bytes.Length} bytes (gzip), SQLite");
+        Console.WriteLine($"Carga de 5002 participantes: {tempo.Elapsed.TotalMilliseconds:F0} ms, {bytes.Length} bytes (gzip), {factory.Provider}");
     }
 
     private async Task Autenticar(string usuario)
@@ -341,12 +342,45 @@ public class BipouApiControllerTests
     {
         private readonly SqliteConnection connection = new("Data Source=:memory:");
         private readonly string identityDatabase = Guid.NewGuid().ToString();
+        // Opcional: conexão ao servidor MySQL local, sem banco selecionado.
+        private readonly string? mysqlServer = Environment.GetEnvironmentVariable("BORALA_TEST_MYSQL_SERVER");
+        private readonly string mysqlEvento = "borala_test_evento_" + Guid.NewGuid().ToString("N");
+        private readonly string mysqlIdentity = "borala_test_identity_" + Guid.NewGuid().ToString("N");
+        private string? eventoConnection;
+        private string? identityConnection;
         private bool disposed;
+        public string Provider => eventoConnection == null ? "SQLite" : "MySQL";
 
         public ApiFactory()
         {
-            connection.Open();
-            Service.Tests.SqliteSchemaEvento.Criar(connection);
+            if (mysqlServer == null)
+            {
+                connection.Open();
+                Service.Tests.SqliteSchemaEvento.Criar(connection);
+                return;
+            }
+            var builder = new MySqlConnectionStringBuilder(mysqlServer);
+            if ((builder.Server != "127.0.0.1" && builder.Server != "localhost") || !string.IsNullOrEmpty(builder.Database))
+                throw new InvalidOperationException("Informe um servidor MySQL local sem banco selecionado.");
+            using var server = new MySqlConnection(mysqlServer);
+            server.Open();
+            using var command = server.CreateCommand();
+            try
+            {
+                command.CommandText = $"CREATE DATABASE `{mysqlEvento}`; CREATE DATABASE `{mysqlIdentity}`;";
+                command.ExecuteNonQuery();
+                builder.Database = mysqlEvento; eventoConnection = builder.ConnectionString;
+                builder.Database = mysqlIdentity; identityConnection = builder.ConnectionString;
+                var options = new DbContextOptionsBuilder<IdentityContext>().UseMySQL(identityConnection).Options;
+                using var identity = new IdentityContext(options);
+                identity.Database.EnsureCreated();
+            }
+            catch
+            {
+                command.CommandText = $"DROP DATABASE IF EXISTS `{mysqlEvento}`; DROP DATABASE IF EXISTS `{mysqlIdentity}`;";
+                command.ExecuteNonQuery();
+                throw;
+            }
         }
 
         protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -356,8 +390,8 @@ public class BipouApiControllerTests
             {
                 services.RemoveAll<DbContextOptions<EventoContext>>();
                 services.RemoveAll<DbContextOptions<IdentityContext>>();
-                services.AddDbContext<EventoContext>(o => o.UseSqlite(connection));
-                services.AddDbContext<IdentityContext>(o => o.UseInMemoryDatabase(identityDatabase));
+                services.AddDbContext<EventoContext>(o => { if (eventoConnection == null) o.UseSqlite(connection); else o.UseMySQL(eventoConnection); });
+                services.AddDbContext<IdentityContext>(o => { if (identityConnection == null) o.UseInMemoryDatabase(identityDatabase); else o.UseMySQL(identityConnection); });
                 services.AddLogging(o => o.AddFilter("Microsoft", LogLevel.Warning));
             });
         }
@@ -369,6 +403,14 @@ public class BipouApiControllerTests
             base.Dispose(disposing);
             if (!disposing) return;
             connection.Dispose();
+            if (eventoConnection != null)
+            {
+                MySqlConnection.ClearAllPools();
+                using var server = new MySqlConnection(mysqlServer); server.Open();
+                using var command = server.CreateCommand();
+                command.CommandText = $"DROP DATABASE IF EXISTS `{mysqlEvento}`; DROP DATABASE IF EXISTS `{mysqlIdentity}`;";
+                command.ExecuteNonQuery();
+            }
         }
     }
 }
