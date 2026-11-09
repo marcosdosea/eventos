@@ -1,7 +1,3 @@
-/**
- * emitircracha-export.js
- * Módulo especializado em exportação PNG individual, lote compactado em ZIP e impressão em lote A4.
- */
 (function (global) {
     "use strict";
 
@@ -354,3 +350,4 @@
     }
     global.CrachaExport = CrachaExport;
 })(typeof window !== "undefined" ? window : this);
+

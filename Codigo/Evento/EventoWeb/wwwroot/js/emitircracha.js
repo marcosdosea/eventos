@@ -1,9 +1,3 @@
-/**
- * emitircracha.js
- * Orquestrador principal da interface de Emissão e Pré-visualização de Crachás.
- * Gerencia filtragem por texto e por cargo, paginação, seleção em lote,
- * simulação 1:1 e diálogo modal para edição rápida de participantes.
- */
 (function () {
     "use strict";
 
@@ -540,7 +534,6 @@
             }
         }
 
-        // Configuração do formulário de edição rápida
         if (editModalNomeCracha) {
             editModalNomeCracha.addEventListener("input", atualizarContadorCaracteresModal);
         }
@@ -624,7 +617,6 @@
             });
         }
 
-        // Delegação de eventos na tabela
         if (tabelaBody) {
             tabelaBody.addEventListener("click", function (e) {
                 const btnPrevia = e.target.closest(".btn-ver-previa");
@@ -664,7 +656,6 @@
             });
         }
 
-        // Seleção de linhas
         if (chkMaster) {
             chkMaster.addEventListener("change", function () {
                 const marcar = chkMaster.checked;
@@ -707,14 +698,12 @@
             });
         }
 
-        // Filtro por cargo de emissão
         if (filtroCargo) {
             filtroCargo.addEventListener("change", function () {
                 filtrarParticipantes(false);
             });
         }
 
-        // Filtro por texto (nome, CPF, etc)
         if (filtroInput) {
             filtroInput.addEventListener("input", function () {
                 filtrarParticipantes(false);
@@ -730,7 +719,6 @@
             });
         }
 
-        // Paginação
         if (btnPaginaAnt) {
             btnPaginaAnt.addEventListener("click", function () {
                 if (paginaAtual > 1) {
@@ -750,7 +738,6 @@
             });
         }
 
-        // Troca de Evento
         if (selectEvento) {
             selectEvento.addEventListener("change", function () {
                 const idEvento = this.value;
@@ -760,12 +747,10 @@
             });
         }
 
-        // Troca de Modelo de crachá
         if (selectModelo) {
             selectModelo.addEventListener("change", atualizarModeloSelecionado);
         }
 
-        // Zoom e tela cheia
         if (btnZoomIn && crachaCardElement) {
             btnZoomIn.addEventListener("click", function () {
                 if (escalaAtual < 1.3) {
@@ -797,7 +782,6 @@
             });
         }
 
-        // Exportação PNG individual
         if (btnExportarPng && crachaCardElement) {
             btnExportarPng.addEventListener("click", async function () {
                 try {
@@ -818,7 +802,6 @@
             });
         }
 
-        // Exportação Lote PNG compactado em ZIP
         if (btnExportarLotePng) {
             btnExportarLotePng.addEventListener("click", async function () {
                 const linhasSelecionadas = linhas.filter(l => l.querySelector(".chk-participante-item")?.checked);
@@ -849,7 +832,6 @@
             });
         }
 
-        // Impressão em lote A4
         if (btnImprimirLote && containerImpressaoLote) {
             btnImprimirLote.addEventListener("click", function () {
                 const linhasSelecionadas = linhas.filter(l => l.querySelector(".chk-participante-item")?.checked);
@@ -867,7 +849,6 @@
             });
         }
 
-        // Inicialização
         popularFiltroCargosSeNecessario();
         configurarResilienciaImagens();
         atualizarModeloSelecionado();

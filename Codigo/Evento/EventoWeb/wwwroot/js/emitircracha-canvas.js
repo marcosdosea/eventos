@@ -1,7 +1,3 @@
-/**
- * emitircracha-canvas.js
- * Módulo especializado em desenho e renderização gráfica de crachás em HTML5 Canvas.
- */
 (function (global) {
     "use strict";
 
@@ -393,3 +389,4 @@
     }
     global.CrachaCanvas = CrachaCanvas;
 })(typeof window !== "undefined" ? window : this);
+
