@@ -1,7 +1,11 @@
+/**
+ * emitircracha.js
+ * Orquestrador principal da interface de Emissão e Pré-visualização de Crachás.
+ * Gerencia filtragem por texto e por cargo, paginação, seleção em lote,
+ * simulação 1:1 e diálogo modal para edição rápida de participantes.
+ */
 (function () {
     "use strict";
-
-    const MENSAGEM_ERRO_EXPORTACAO_PNG = "Não foi possível exportar o PNG. Verifique se a imagem do participante está válida ou tente novamente.";
 
     document.addEventListener("DOMContentLoaded", function () {
         const selectEvento = document.getElementById("selectEventoEmitir");
@@ -12,6 +16,7 @@
         const btnSelecionarTodosPagina = document.getElementById("btnSelecionarTodosPagina");
         const btnLimparSelecao = document.getElementById("btnLimparSelecao");
 
+        const filtroCargo = document.getElementById("filtroCargoParticipante");
         const filtroInput = document.getElementById("filtroParticipantes");
         const btnLimparBusca = document.getElementById("btnLimparBusca");
         const tabelaBody = document.getElementById("tabelaParticipantesBody");
@@ -64,6 +69,9 @@
         let paginaAtual = 1;
         let escalaAtual = 1;
 
+        const CanvasModule = window.CrachaCanvas || {};
+        const ExportModule = window.CrachaExport || {};
+
         function exibirMensagemFeedback(mensagem, tipo = "success", containerId = "alertaCrachaContainer") {
             const icone = tipo === "success"
                 ? "bi-check-circle-fill text-success"
@@ -97,6 +105,9 @@
         }
 
         function obterIniciais(nome) {
+            if (CanvasModule.obterIniciais) {
+                return CanvasModule.obterIniciais(nome);
+            }
             if (!nome || typeof nome !== "string") return "PA";
             const limpo = nome.trim();
             if (!limpo) return "PA";
@@ -104,31 +115,33 @@
         }
 
         function ehPayloadImagemValido(src) {
+            if (CanvasModule.ehPayloadImagemValido) {
+                return CanvasModule.ehPayloadImagemValido(src);
+            }
             if (!src || typeof src !== "string") return false;
             const limpo = src.trim();
-            if (!limpo) return false;
+            return limpo.length > 0;
+        }
 
-            if (limpo.startsWith("data:")) {
-                if (!limpo.startsWith("data:image/")) return false;
-                const idxVirgula = limpo.indexOf(",");
-                if (idxVirgula < 0) return false;
-                const b64 = limpo.substring(idxVirgula + 1).trim();
-                if (b64.length < 4) return false;
+        function popularFiltroCargosSeNecessario() {
+            if (!filtroCargo) return;
+            const opcoesExistentes = new Set(
+                Array.from(filtroCargo.options).map(opt => opt.value.toLowerCase().trim())
+            );
 
-                const prefixosValidos = [
-                    "/9j/",
-                    "iVBOR",
-                    "UklGR",
-                    "R0lGOD",
-                    "SUkq",
-                    "TU0A",
-                    "PHN2Zw",
-                    "PD94bW"
-                ];
-                return prefixosValidos.some(prefixo => b64.startsWith(prefixo));
-            }
-
-            return limpo.startsWith("http://") || limpo.startsWith("https://") || limpo.startsWith("/") || limpo.startsWith("blob:");
+            const cargosEncontrados = new Set();
+            linhas.forEach(linha => {
+                const papel = (linha.dataset.papel || "").trim();
+                if (papel && !cargosEncontrados.has(papel.toLowerCase())) {
+                    cargosEncontrados.add(papel.toLowerCase());
+                    if (!opcoesExistentes.has(papel.toLowerCase())) {
+                        const opt = document.createElement("option");
+                        opt.value = papel;
+                        opt.textContent = papel;
+                        filtroCargo.appendChild(opt);
+                    }
+                }
+            });
         }
 
         function degradarFotoDaLinhaParaPlaceholder(linha) {
@@ -268,32 +281,50 @@
         }
 
         function filtrarParticipantes(preservarPagina = false) {
+            const cargoFiltro = (filtroCargo?.value || "").toLowerCase().trim();
             const termo = (filtroInput?.value || "").toLowerCase().trim();
 
-            if (!termo) {
-                linhasFiltradas = [...linhas];
-            } else {
-                linhasFiltradas = linhas.filter(linha => {
-                    const nome = (linha.dataset.nome || "").toLowerCase();
-                    const nomeCompleto = (linha.dataset.nomeCompleto || "").toLowerCase();
-                    const depto = (linha.dataset.depto || "").toLowerCase();
-                    const cpf = (linha.dataset.cpf || "").toLowerCase();
-                    const cpfPuro = (linha.dataset.cpfPuro || "").toLowerCase();
-                    const credencial = (linha.dataset.credencial || "").toLowerCase();
-                    return nome.includes(termo) ||
-                        nomeCompleto.includes(termo) ||
-                        depto.includes(termo) ||
-                        cpf.includes(termo) ||
-                        cpfPuro.includes(termo) ||
-                        credencial.includes(termo);
-                });
-            }
+            linhasFiltradas = linhas.filter(linha => {
+                if (cargoFiltro) {
+                    const papel = (linha.dataset.papel || "").toLowerCase().trim();
+                    if (papel !== cargoFiltro) {
+                        return false;
+                    }
+                }
+
+                if (!termo) {
+                    return true;
+                }
+
+                const nome = (linha.dataset.nome || "").toLowerCase();
+                const nomeCompleto = (linha.dataset.nomeCompleto || "").toLowerCase();
+                const depto = (linha.dataset.depto || "").toLowerCase();
+                const cpf = (linha.dataset.cpf || "").toLowerCase();
+                const cpfPuro = (linha.dataset.cpfPuro || "").toLowerCase();
+                const credencial = (linha.dataset.credencial || "").toLowerCase();
+                const papelLinha = (linha.dataset.papel || "").toLowerCase();
+
+                return nome.includes(termo) ||
+                    nomeCompleto.includes(termo) ||
+                    depto.includes(termo) ||
+                    cpf.includes(termo) ||
+                    cpfPuro.includes(termo) ||
+                    credencial.includes(termo) ||
+                    papelLinha.includes(termo);
+            });
 
             if (!preservarPagina) {
                 paginaAtual = 1;
             }
             aplicarPaginacao();
             atualizarContadores();
+
+            const linhaAtiva = document.querySelector(".linha-ativa-preview");
+            if (linhaAtiva && !linhasFiltradas.includes(linhaAtiva)) {
+                if (linhasFiltradas.length > 0) {
+                    atualizarPreviewComLinha(linhasFiltradas[0]);
+                }
+            }
         }
 
         function atualizarPreviewComLinha(linha) {
@@ -451,6 +482,65 @@
             }
         }
 
+        function extrairDadosDaLinha(linha) {
+            if (!linha) {
+                return {
+                    nome: (previewNome?.textContent || "PARTICIPANTE").trim(),
+                    depto: (previewOrg?.textContent || "").trim(),
+                    papel: (previewPapelTexto?.textContent || "PARTICIPANTE").trim(),
+                    cpf: (previewCpf?.textContent || "***.***.***-**").trim(),
+                    credencial: (previewCredencial?.textContent || "#00000").trim(),
+                    presenca: (previewCodigoPresenca?.textContent || "BL - EVT - 2025 - 00142").trim(),
+                    fotoUrl: (previewFoto && previewFoto.style.display !== "none" ? previewFoto.getAttribute("src") || "" : "").trim(),
+                    qrcodeB64: (previewQrCodeImg && previewQrCodeImg.style.display !== "none" ? previewQrCodeImg.getAttribute("src") || "" : "").trim(),
+                    apto: true
+                };
+            }
+
+            return {
+                nome: (linha.dataset.nome || linha.dataset.nomeCompleto || "PARTICIPANTE").trim(),
+                depto: (linha.dataset.depto || "").trim(),
+                papel: (linha.dataset.papel || "PARTICIPANTE").trim(),
+                cpf: (linha.dataset.cpf || "***.***.***-**").trim(),
+                credencial: (linha.dataset.credencial || "#00000").trim(),
+                presenca: (linha.dataset.presenca || "BL - EVT - 2025 - 00000").trim(),
+                fotoUrl: (linha.dataset.foto || "").trim(),
+                qrcodeB64: (linha.dataset.qrcode || "").trim(),
+                apto: (linha.dataset.apto === "true")
+            };
+        }
+
+        function atualizarModeloSelecionado() {
+            if (!selectModelo) return;
+            const opt = selectModelo.options[selectModelo.selectedIndex];
+            if (opt) {
+                const texto = opt.dataset.texto;
+                const qrcode = opt.dataset.qrcode;
+                const logo = opt.dataset.logo;
+
+                if (lblTextoCracha && texto) {
+                    lblTextoCracha.textContent = texto;
+                }
+
+                if (blocoQrCode) {
+                    blocoQrCode.style.display = (qrcode === "0" || qrcode === 0) ? "none" : "flex";
+                }
+
+                const crachaLogoElement = document.getElementById("crachaLogoElement");
+                const crachaLogoContainer = document.getElementById("crachaLogoContainer");
+                if (crachaLogoElement && crachaLogoContainer) {
+                    if (logo && ehPayloadImagemValido(logo)) {
+                        crachaLogoElement.src = logo;
+                        crachaLogoContainer.style.display = "";
+                    } else {
+                        crachaLogoElement.removeAttribute("src");
+                        crachaLogoContainer.style.display = "none";
+                    }
+                }
+            }
+        }
+
+        // Configuração do formulário de edição rápida
         if (editModalNomeCracha) {
             editModalNomeCracha.addEventListener("input", atualizarContadorCaracteresModal);
         }
@@ -534,6 +624,7 @@
             });
         }
 
+        // Delegação de eventos na tabela
         if (tabelaBody) {
             tabelaBody.addEventListener("click", function (e) {
                 const btnPrevia = e.target.closest(".btn-ver-previa");
@@ -573,6 +664,7 @@
             });
         }
 
+        // Seleção de linhas
         if (chkMaster) {
             chkMaster.addEventListener("change", function () {
                 const marcar = chkMaster.checked;
@@ -615,20 +707,30 @@
             });
         }
 
+        // Filtro por cargo de emissão
+        if (filtroCargo) {
+            filtroCargo.addEventListener("change", function () {
+                filtrarParticipantes(false);
+            });
+        }
+
+        // Filtro por texto (nome, CPF, etc)
         if (filtroInput) {
             filtroInput.addEventListener("input", function () {
                 filtrarParticipantes(false);
             });
         }
 
-        if (btnLimparBusca && filtroInput) {
+        if (btnLimparBusca) {
             btnLimparBusca.addEventListener("click", function () {
-                filtroInput.value = "";
+                if (filtroInput) filtroInput.value = "";
+                if (filtroCargo) filtroCargo.value = "";
                 filtrarParticipantes(false);
-                filtroInput.focus();
+                filtroInput?.focus();
             });
         }
 
+        // Paginação
         if (btnPaginaAnt) {
             btnPaginaAnt.addEventListener("click", function () {
                 if (paginaAtual > 1) {
@@ -648,6 +750,7 @@
             });
         }
 
+        // Troca de Evento
         if (selectEvento) {
             selectEvento.addEventListener("change", function () {
                 const idEvento = this.value;
@@ -657,40 +760,12 @@
             });
         }
 
-        function atualizarModeloSelecionado() {
-            if (!selectModelo) return;
-            const opt = selectModelo.options[selectModelo.selectedIndex];
-            if (opt) {
-                const texto = opt.dataset.texto;
-                const qrcode = opt.dataset.qrcode;
-                const logo = opt.dataset.logo;
-
-                if (lblTextoCracha && texto) {
-                    lblTextoCracha.textContent = texto;
-                }
-
-                if (blocoQrCode) {
-                    blocoQrCode.style.display = (qrcode === "0" || qrcode === 0) ? "none" : "flex";
-                }
-
-                const crachaLogoElement = document.getElementById("crachaLogoElement");
-                const crachaLogoContainer = document.getElementById("crachaLogoContainer");
-                if (crachaLogoElement && crachaLogoContainer) {
-                    if (logo && ehPayloadImagemValido(logo)) {
-                        crachaLogoElement.src = logo;
-                        crachaLogoContainer.style.display = "";
-                    } else {
-                        crachaLogoElement.removeAttribute("src");
-                        crachaLogoContainer.style.display = "none";
-                    }
-                }
-            }
-        }
-
+        // Troca de Modelo de crachá
         if (selectModelo) {
             selectModelo.addEventListener("change", atualizarModeloSelecionado);
         }
 
+        // Zoom e tela cheia
         if (btnZoomIn && crachaCardElement) {
             btnZoomIn.addEventListener("click", function () {
                 if (escalaAtual < 1.3) {
@@ -722,725 +797,78 @@
             });
         }
 
-        function quebrarTextoEmLinhas(context, text, maxWidth) {
-            if (!text) return [];
-            const words = text.toString().trim().split(/\s+/);
-            const lines = [];
-            let currentLine = "";
-
-            for (let i = 0; i < words.length; i++) {
-                const testLine = currentLine ? `${currentLine} ${words[i]}` : words[i];
-                if (context.measureText(testLine).width > maxWidth && currentLine) {
-                    lines.push(currentLine);
-                    currentLine = words[i];
-                } else {
-                    currentLine = testLine;
+        // Exportação PNG individual
+        if (btnExportarPng && crachaCardElement) {
+            btnExportarPng.addEventListener("click", async function () {
+                try {
+                    const linhaAtiva = document.querySelector(".linha-ativa-preview");
+                    const dados = extrairDadosDaLinha(linhaAtiva);
+                    if (ExportModule.exportarCrachaIndividualPng) {
+                        await ExportModule.exportarCrachaIndividualPng(dados);
+                    } else {
+                        throw new Error("Módulo de exportação indisponível.");
+                    }
+                } catch (err) {
+                    console.error("Falha ao exportar imagem PNG do crachá:", err);
+                    exibirMensagemFeedback(
+                        ExportModule.MENSAGEM_ERRO_EXPORTACAO_PNG || "Não foi possível exportar o PNG do crachá.",
+                        "danger"
+                    );
                 }
-            }
-            if (currentLine) {
-                lines.push(currentLine);
-            }
-            return lines;
+            });
         }
 
-        function carregarImagemSegura(src) {
-            return new Promise(resolve => {
-                if (!ehPayloadImagemValido(src)) {
-                    resolve(null);
+        // Exportação Lote PNG compactado em ZIP
+        if (btnExportarLotePng) {
+            btnExportarLotePng.addEventListener("click", async function () {
+                const linhasSelecionadas = linhas.filter(l => l.querySelector(".chk-participante-item")?.checked);
+                if (linhasSelecionadas.length === 0) {
+                    exibirMensagemFeedback("Por favor, selecione pelo menos um participante para exportar os crachás em PNG.", "warning");
                     return;
                 }
-                const img = new Image();
-                img.onload = function () {
-                    if (img.naturalWidth > 0 && img.naturalHeight > 0) {
-                        resolve(img);
-                    } else {
-                        resolve(null);
-                    }
-                };
-                img.onerror = function () {
-                    resolve(null);
-                };
-                img.src = src;
-            });
-        }
 
-        function desenharAvatarPadraoCanvas(ctx, centroX, centroY) {
-            ctx.fillStyle = "#E2E8F0";
-            ctx.fillRect(centroX - 70, centroY - 70, 140, 140);
-            ctx.fillStyle = "#475569";
-            ctx.beginPath();
-            ctx.arc(centroX, centroY - 20, 30, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = "#1E293B";
-            ctx.beginPath();
-            ctx.arc(centroX, centroY + 68, 52, Math.PI, 0, false);
-            ctx.fill();
-        }
-
-        function desenharQrCodeFallbackCanvas(ctx, x, y, tamanho) {
-            const escala = tamanho / 100;
-            ctx.save();
-            ctx.translate(x, y);
-            ctx.scale(escala, escala);
-            ctx.fillStyle = "#FFFFFF";
-            ctx.fillRect(0, 0, 100, 100);
-            ctx.fillStyle = "#0F172A";
-            const blocos = [
-                [8, 8, 28, 28], [64, 8, 28, 28], [8, 64, 28, 28],
-                [44, 12, 10, 10], [44, 30, 10, 16], [12, 44, 16, 10],
-                [48, 48, 16, 16], [72, 44, 14, 10], [48, 72, 12, 16], [70, 70, 18, 18]
-            ];
-            blocos.forEach(([bx, by, bw, bh]) => ctx.fillRect(bx, by, bw, bh));
-            ctx.fillStyle = "#FFFFFF";
-            [[14, 14, 16, 16], [70, 14, 16, 16], [14, 70, 16, 16]].forEach(([bx, by, bw, bh]) => ctx.fillRect(bx, by, bw, bh));
-            ctx.fillStyle = "#0F172A";
-            [[18, 18, 8, 8], [74, 18, 8, 8], [18, 74, 8, 8]].forEach(([bx, by, bw, bh]) => ctx.fillRect(bx, by, bw, bh));
-            ctx.restore();
-        }
-
-        function extrairDadosDaLinha(linha) {
-            if (!linha) {
-                return {
-                    nome: (previewNome?.textContent || "PARTICIPANTE").trim(),
-                    depto: (previewOrg?.textContent || "").trim(),
-                    papel: (previewPapelTexto?.textContent || "PARTICIPANTE").trim(),
-                    cpf: (previewCpf?.textContent || "***.***.***-**").trim(),
-                    credencial: (previewCredencial?.textContent || "#00000").trim(),
-                    presenca: (previewCodigoPresenca?.textContent || "BL - EVT - 2025 - 00142").trim(),
-                    fotoUrl: (previewFoto && previewFoto.style.display !== "none" ? previewFoto.getAttribute("src") || "" : "").trim(),
-                    qrcodeB64: (previewQrCodeImg && previewQrCodeImg.style.display !== "none" ? previewQrCodeImg.getAttribute("src") || "" : "").trim(),
-                    apto: true
-                };
-            }
-
-            return {
-                nome: (linha.dataset.nome || linha.dataset.nomeCompleto || "PARTICIPANTE").trim(),
-                depto: (linha.dataset.depto || "").trim(),
-                papel: (linha.dataset.papel || "PARTICIPANTE").trim(),
-                cpf: (linha.dataset.cpf || "***.***.***-**").trim(),
-                credencial: (linha.dataset.credencial || "#00000").trim(),
-                presenca: (linha.dataset.presenca || "BL - EVT - 2025 - 00000").trim(),
-                fotoUrl: (linha.dataset.foto || "").trim(),
-                qrcodeB64: (linha.dataset.qrcode || "").trim(),
-                apto: (linha.dataset.apto === "true")
-            };
-        }
-
-        async function renderizarCrachaParaCanvas(dadosParticipante) {
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
-            if (!ctx) {
-                throw new Error("Contexto 2D do Canvas indisponível.");
-            }
-
-            const largura = 640;
-            const altura = 920;
-            canvas.width = largura;
-            canvas.height = altura;
-
-            ctx.fillStyle = "#FFFFFF";
-            ctx.beginPath();
-            ctx.roundRect(0, 0, largura, altura, 36);
-            ctx.fill();
-
-            ctx.fillStyle = "#232ed0";
-            ctx.beginPath();
-            ctx.roundRect(0, 0, largura, 205, [36, 36, 0, 0]);
-            ctx.fill();
-
-            ctx.fillStyle = "#EEF2FA";
-            ctx.beginPath();
-            ctx.roundRect(largura / 2 - 40, 16, 80, 20, 10);
-            ctx.fill();
-
-            ctx.fillStyle = "#FFFFFF";
-            ctx.font = "bold 13px Segoe UI, sans-serif";
-            ctx.textAlign = "center";
-            ctx.fillText("BORA LÁ EVENTOS", largura / 2, 60);
-
-            const logoImg = document.getElementById("crachaLogoElement");
-            const logoContainer = document.getElementById("crachaLogoContainer");
-            let titleStartY = 96;
-            if (logoImg && logoContainer && logoContainer.style.display !== "none" && logoImg.src) {
-                const logoCarregado = (logoImg.complete && logoImg.naturalWidth > 0)
-                    ? logoImg
-                    : await carregarImagemSegura(logoImg.src);
-
-                if (logoCarregado && logoCarregado.naturalWidth > 0) {
-                    try {
-                        const logoMaxW = 160;
-                        const logoMaxH = 34;
-                        let logoW = logoCarregado.naturalWidth;
-                        let logoH = logoCarregado.naturalHeight;
-                        const scale = Math.min(logoMaxW / logoW, logoMaxH / logoH);
-                        logoW *= scale;
-                        logoH *= scale;
-                        ctx.drawImage(logoCarregado, largura / 2 - logoW / 2, 68, logoW, logoH);
-                        titleStartY = 118;
-                    } catch {
-                    }
-                }
-            }
-
-            const nomeEvento = (document.getElementById("lblPreviewNomeEvento")?.textContent || "EVENTO").trim().toUpperCase();
-            const elSub = document.getElementById("lblPreviewSubtituloEvento");
-            const subEvento = (elSub && elSub.style.display !== "none" ? elSub.textContent.trim() : "").toUpperCase();
-
-            let fontSizeTitle = 22;
-            let lineHeightTitle = 26;
-            let titleLines = [];
-            const maxTitleWidth = 540;
-
-            while (fontSizeTitle >= 14) {
-                ctx.font = `bold ${fontSizeTitle}px Segoe UI, sans-serif`;
-                titleLines = quebrarTextoEmLinhas(ctx, nomeEvento, maxTitleWidth);
-                const nenhumEstouro = !titleLines.some(l => ctx.measureText(l).width > maxTitleWidth);
-                if (nenhumEstouro && titleLines.length <= 2) {
-                    break;
-                }
-                if (fontSizeTitle <= 15) {
-                    break;
-                }
-                fontSizeTitle -= 1;
-                lineHeightTitle = Math.round(fontSizeTitle * 1.25);
-            }
-
-            ctx.fillStyle = "#FFFFFF";
-            ctx.font = `bold ${fontSizeTitle}px Segoe UI, sans-serif`;
-            ctx.textAlign = "center";
-
-            const subLines = subEvento ? quebrarTextoEmLinhas(ctx, subEvento, maxTitleWidth) : [];
-            const totalSubHeight = subLines.length > 0 ? (subLines.length * 18 + 6) : 0;
-            const totalTitleHeight = (titleLines.length - 1) * lineHeightTitle + fontSizeTitle;
-            const totalBlockHeight = totalTitleHeight + totalSubHeight;
-
-            const topAvailableY = titleStartY;
-            const bottomAvailableY = 196;
-            const availableHeight = bottomAvailableY - topAvailableY;
-            const espacoSobra = Math.max(0, (availableHeight - totalBlockHeight) / 2);
-
-            let currentY = topAvailableY + espacoSobra + (fontSizeTitle * 0.75);
-
-            titleLines.forEach(line => {
-                ctx.fillText(line, largura / 2, currentY);
-                currentY += lineHeightTitle;
-            });
-
-            if (subLines.length > 0) {
-                ctx.font = "bold 13px Segoe UI, sans-serif";
-                ctx.fillStyle = "#E0E7FF";
-                currentY += 4;
-                subLines.forEach(line => {
-                    ctx.fillText(line, largura / 2, currentY);
-                    currentY += 18;
-                });
-            }
-
-            const centroY = 320;
-            const imgFotoValida = await carregarImagemSegura(dadosParticipante.fotoUrl);
-
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(largura / 2, centroY, 70, 0, Math.PI * 2, true);
-            ctx.closePath();
-            ctx.clip();
-
-            if (imgFotoValida) {
+                btnExportarLotePng.disabled = true;
                 try {
-                    ctx.drawImage(imgFotoValida, largura / 2 - 70, centroY - 70, 140, 140);
-                } catch {
-                    desenharAvatarPadraoCanvas(ctx, largura / 2, centroY);
-                }
-            } else {
-                desenharAvatarPadraoCanvas(ctx, largura / 2, centroY);
-            }
-            ctx.restore();
-
-            const aptoExport = Boolean(dadosParticipante.apto);
-            ctx.fillStyle = aptoExport ? "#10B981" : "#F59E0B";
-            ctx.beginPath();
-            ctx.arc(largura / 2 + 50, centroY + 50, 18, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = "#FFFFFF";
-            ctx.font = "bold 18px Segoe UI, sans-serif";
-            ctx.textAlign = "center";
-            ctx.fillText(aptoExport ? "✓" : "!", largura / 2 + 50, centroY + 56);
-
-            const nomePart = (dadosParticipante.nome || "PARTICIPANTE").trim().toUpperCase();
-            ctx.fillStyle = "#0F172A";
-            let nomeFontSize = 30;
-            ctx.font = `bold ${nomeFontSize}px Segoe UI, sans-serif`;
-            while (ctx.measureText(nomePart).width > 540 && nomeFontSize > 18) {
-                nomeFontSize -= 2;
-                ctx.font = `bold ${nomeFontSize}px Segoe UI, sans-serif`;
-            }
-            ctx.textAlign = "center";
-            ctx.fillText(nomePart, largura / 2, 450);
-
-            const orgPart = (dadosParticipante.depto || "").trim();
-            if (orgPart) {
-                ctx.fillStyle = "#64748B";
-                let orgFontSize = 19;
-                ctx.font = `500 ${orgFontSize}px Segoe UI, sans-serif`;
-                while (ctx.measureText(orgPart).width > 540 && orgFontSize > 13) {
-                    orgFontSize -= 1.5;
-                    ctx.font = `500 ${orgFontSize}px Segoe UI, sans-serif`;
-                }
-                ctx.fillText(orgPart, largura / 2, 485);
-            }
-
-            const papelTexto = (dadosParticipante.papel || "PARTICIPANTE").trim().toUpperCase();
-            ctx.font = "bold 18px Segoe UI, sans-serif";
-            const textPapelWidth = ctx.measureText(papelTexto).width;
-            const pillWidth = Math.max(220, Math.min(360, textPapelWidth + 50));
-            ctx.fillStyle = "#232ed0";
-            ctx.beginPath();
-            ctx.roundRect(largura / 2 - pillWidth / 2, 516, pillWidth, 42, 21);
-            ctx.fill();
-            ctx.fillStyle = "#FFFFFF";
-            ctx.fillText(papelTexto, largura / 2, 544);
-
-            ctx.fillStyle = "#64748B";
-            ctx.font = "15px Segoe UI, sans-serif";
-            const cpfTexto = dadosParticipante.cpf || "";
-            const credTexto = dadosParticipante.credencial || "";
-            ctx.fillText(`CPF: ${cpfTexto}       Credencial: ${credTexto}`, largura / 2, 598);
-
-            const optModelo = selectModelo ? selectModelo.options[selectModelo.selectedIndex] : null;
-            const qrCodeHabilitado = optModelo
-                ? (optModelo.dataset.qrcode !== "0" && optModelo.dataset.qrcode !== 0)
-                : (blocoQrCode ? blocoQrCode.style.display !== "none" : true);
-
-            if (qrCodeHabilitado) {
-                ctx.fillStyle = "#FFFFFF";
-                ctx.strokeStyle = "#E2E8F0";
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.roundRect(50, 625, largura - 100, 165, 16);
-                ctx.fill();
-                ctx.stroke();
-
-                const qrRaw = (dadosParticipante.qrcodeB64 || "").trim();
-                const qrSrc = qrRaw
-                    ? (qrRaw.startsWith("data:") ? qrRaw : `data:image/png;base64,${qrRaw}`)
-                    : "";
-                const qrImg = await carregarImagemSegura(qrSrc);
-
-                if (qrImg) {
-                    try {
-                        ctx.drawImage(qrImg, 70, 640, 135, 135);
-                    } catch {
-                        desenharQrCodeFallbackCanvas(ctx, 70, 640, 135);
+                    if (ExportModule.exportarLotePngZip) {
+                        const qtd = await ExportModule.exportarLotePngZip(linhasSelecionadas, {
+                            extrairDados: extrairDadosDaLinha
+                        });
+                        exibirMensagemFeedback(`Exportação concluída! ${qtd} crachá(s) PNG exportado(s) em ZIP.`, "success");
+                    } else {
+                        throw new Error("Módulo de exportação ZIP indisponível.");
                     }
-                } else {
-                    desenharQrCodeFallbackCanvas(ctx, 70, 640, 135);
+                } catch (err) {
+                    console.error("Falha ao exportar lote de crachás PNG:", err);
+                    exibirMensagemFeedback(
+                        ExportModule.MENSAGEM_ERRO_EXPORTACAO_PNG || "Não foi possível exportar os crachás em PNG.",
+                        "danger"
+                    );
+                } finally {
+                    btnExportarLotePng.disabled = false;
                 }
-
-                ctx.textAlign = "left";
-                ctx.fillStyle = "#64748B";
-                ctx.font = "bold 13px Segoe UI, sans-serif";
-                ctx.fillText("CÓDIGO DE PRESENÇA", 225, 672);
-
-                const presencaTexto = dadosParticipante.presenca || "BL - EVT - 2025 - 00142";
-                ctx.fillStyle = "#0F172A";
-                ctx.font = "bold 18px Consolas, monospace";
-                ctx.fillText(presencaTexto, 225, 706);
-
-                ctx.fillStyle = "#232ed0";
-                ctx.font = "bold 14px Segoe UI, sans-serif";
-                ctx.fillText("✓ Válido em todas salas", 225, 744);
-            }
-
-            ctx.fillStyle = "#F8FAFC";
-            ctx.beginPath();
-            ctx.roundRect(0, altura - 75, largura, 75, [0, 0, 36, 36]);
-            ctx.fill();
-
-            ctx.fillStyle = "#475569";
-            ctx.textAlign = "center";
-            const textoFooter = (lblTextoCracha?.textContent || "Uso obrigatório e intransferível nas dependências do evento.").trim();
-
-            let footerFontSize = 13;
-            let footerLines = [];
-            while (footerFontSize >= 10) {
-                ctx.font = `italic ${footerFontSize}px Segoe UI, sans-serif`;
-                footerLines = quebrarTextoEmLinhas(ctx, textoFooter, 560);
-                if (footerLines.length <= 2 || footerFontSize <= 10) {
-                    break;
-                }
-                footerFontSize -= 1;
-            }
-            ctx.font = `italic ${footerFontSize}px Segoe UI, sans-serif`;
-            const footerLineHeight = footerFontSize + 5;
-            const footerTotalHeight = (footerLines.length - 1) * footerLineHeight;
-            let footerY = (altura - 75) + (75 - footerTotalHeight) / 2 + (footerFontSize * 0.35);
-
-            footerLines.forEach(line => {
-                ctx.fillText(line, largura / 2, footerY);
-                footerY += footerLineHeight;
-            });
-
-            return canvas;
-        }
-
-        async function renderizarEBaixarPng() {
-            try {
-                const linhaAtiva = document.querySelector(".linha-ativa-preview");
-                const dados = extrairDadosDaLinha(linhaAtiva);
-                const canvas = await renderizarCrachaParaCanvas(dados);
-
-                const dataUrl = canvas.toDataURL("image/png");
-                if (!dataUrl || !dataUrl.startsWith("data:image/png")) {
-                    throw new Error("Falha ao serializar imagem PNG do canvas.");
-                }
-
-                const link = document.createElement("a");
-                const nomeLimpo = (dados.nome || "participante").replace(/[^a-zA-Z0-9]/g, "_").toLowerCase();
-                link.download = `cracha_${nomeLimpo}.png`;
-                link.href = dataUrl;
-                link.click();
-            } catch (err) {
-                console.error("Falha ao exportar imagem PNG do crachá:", err);
-                exibirMensagemFeedback(MENSAGEM_ERRO_EXPORTACAO_PNG, "danger");
-            }
-        }
-
-        if (btnExportarPng && crachaCardElement) {
-            btnExportarPng.addEventListener("click", function () {
-                renderizarEBaixarPng();
             });
         }
 
-        const TABELA_CRC32 = (function () {
-            const tabela = new Uint32Array(256);
-            for (let n = 0; n < 256; n++) {
-                let c = n;
-                for (let k = 0; k < 8; k++) {
-                    c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
-                }
-                tabela[n] = c >>> 0;
-            }
-            return tabela;
-        })();
-
-        function calcularCrc32(bytes) {
-            let crc = 0xFFFFFFFF;
-            for (let i = 0; i < bytes.length; i++) {
-                crc = TABELA_CRC32[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
-            }
-            return (crc ^ 0xFFFFFFFF) >>> 0;
-        }
-
-        function dataUrlParaUint8Array(dataUrl) {
-            const idxVirgula = dataUrl.indexOf(",");
-            const base64 = idxVirgula >= 0 ? dataUrl.substring(idxVirgula + 1) : dataUrl;
-            const binStr = atob(base64);
-            const len = binStr.length;
-            const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) {
-                bytes[i] = binStr.charCodeAt(i);
-            }
-            return bytes;
-        }
-
-        function gerarArquivoZip(arquivos) {
-            const encoder = new TextEncoder();
-            const partesLocais = [];
-            const partesCentral = [];
-            let offsetAtual = 0;
-
-            const agora = new Date();
-            const dosTime = ((agora.getHours() & 0x1F) << 11) | ((agora.getMinutes() & 0x3F) << 5) | ((agora.getSeconds() >> 1) & 0x1F);
-            const dosDate = (((Math.max(1980, agora.getFullYear()) - 1980) & 0x7F) << 9) | (((agora.getMonth() + 1) & 0x0F) << 5) | (agora.getDate() & 0x1F);
-
-            arquivos.forEach(arq => {
-                const nomeBytes = encoder.encode(arq.nome);
-                const dados = arq.bytes;
-                const crc = calcularCrc32(dados);
-
-                const localHeader = new Uint8Array(30 + nomeBytes.length);
-                const localView = new DataView(localHeader.buffer);
-                localView.setUint32(0, 0x04034B50, true);
-                localView.setUint16(4, 20, true);
-                localView.setUint16(6, 0x0800, true);
-                localView.setUint16(8, 0, true);
-                localView.setUint16(10, dosTime, true);
-                localView.setUint16(12, dosDate, true);
-                localView.setUint32(14, crc, true);
-                localView.setUint32(18, dados.length, true);
-                localView.setUint32(22, dados.length, true);
-                localView.setUint16(26, nomeBytes.length, true);
-                localView.setUint16(28, 0, true);
-                localHeader.set(nomeBytes, 30);
-
-                const centralHeader = new Uint8Array(46 + nomeBytes.length);
-                const centralView = new DataView(centralHeader.buffer);
-                centralView.setUint32(0, 0x02014B50, true);
-                centralView.setUint16(4, 20, true);
-                centralView.setUint16(6, 20, true);
-                centralView.setUint16(8, 0x0800, true);
-                centralView.setUint16(10, 0, true);
-                centralView.setUint16(12, dosTime, true);
-                centralView.setUint16(14, dosDate, true);
-                centralView.setUint32(16, crc, true);
-                centralView.setUint32(20, dados.length, true);
-                centralView.setUint32(24, dados.length, true);
-                centralView.setUint16(28, nomeBytes.length, true);
-                centralView.setUint16(30, 0, true);
-                centralView.setUint16(32, 0, true);
-                centralView.setUint16(34, 0, true);
-                centralView.setUint16(36, 0, true);
-                centralView.setUint32(38, 0, true);
-                centralView.setUint32(42, offsetAtual, true);
-                centralHeader.set(nomeBytes, 46);
-
-                partesLocais.push(localHeader, dados);
-                partesCentral.push(centralHeader);
-
-                offsetAtual += localHeader.length + dados.length;
-            });
-
-            const tamanhoCentral = partesCentral.reduce((acc, p) => acc + p.length, 0);
-
-            const eocd = new Uint8Array(22);
-            const eocdView = new DataView(eocd.buffer);
-            eocdView.setUint32(0, 0x06054B50, true);
-            eocdView.setUint16(4, 0, true);
-            eocdView.setUint16(6, 0, true);
-            eocdView.setUint16(8, arquivos.length, true);
-            eocdView.setUint16(10, arquivos.length, true);
-            eocdView.setUint32(12, tamanhoCentral, true);
-            eocdView.setUint32(16, offsetAtual, true);
-            eocdView.setUint16(20, 0, true);
-
-            return new Blob([...partesLocais, ...partesCentral, eocd], { type: "application/zip" });
-        }
-
-        async function exportarLotePngZip() {
-            const linhasSelecionadas = linhas.filter(l => l.querySelector(".chk-participante-item")?.checked);
-            if (linhasSelecionadas.length === 0) {
-                exibirMensagemFeedback("Por favor, selecione pelo menos um participante para exportar os crachás em PNG.", "warning");
-                return;
-            }
-
-            if (btnExportarLotePng) btnExportarLotePng.disabled = true;
-
-            try {
-                const arquivosPng = [];
-                const nomesUsados = new Set();
-                const total = linhasSelecionadas.length;
-
-                for (let i = 0; i < total; i++) {
-                    const linha = linhasSelecionadas[i];
-                    const dados = extrairDadosDaLinha(linha);
-
-                    const canvas = await renderizarCrachaParaCanvas(dados);
-                    const dataUrl = canvas.toDataURL("image/png");
-                    const pngBytes = dataUrlParaUint8Array(dataUrl);
-
-                    const credLimpa = (dados.credencial || `${i + 1}`).replace(/[^a-zA-Z0-9]/g, "");
-                    const nomeLimpo = (dados.nome || `participante_${i + 1}`)
-                        .normalize("NFD")
-                        .replace(/[\u0300-\u036f]/g, "")
-                        .replace(/[^a-zA-Z0-9]/g, "_")
-                        .replace(/_+/g, "_")
-                        .replace(/^_|_$/g, "")
-                        .toLowerCase();
-
-                    let nomeArquivo = `cracha_${credLimpa}_${nomeLimpo || (i + 1)}.png`;
-                    if (nomesUsados.has(nomeArquivo)) {
-                        nomeArquivo = `cracha_${credLimpa}_${nomeLimpo}_${i + 1}.png`;
-                    }
-                    nomesUsados.add(nomeArquivo);
-
-                    arquivosPng.push({
-                        nome: nomeArquivo,
-                        bytes: pngBytes
-                    });
-                }
-
-                const zipBlob = gerarArquivoZip(arquivosPng);
-                const urlZip = URL.createObjectURL(zipBlob);
-                const nomeEventoBruto = document.getElementById("lblPreviewNomeEvento")?.textContent || "evento";
-                const nomeEventoLimpo = nomeEventoBruto
-                    .normalize("NFD")
-                    .replace(/[\u0300-\u036f]/g, "")
-                    .replace(/[^a-zA-Z0-9]/g, "_")
-                    .replace(/_+/g, "_")
-                    .replace(/^_|_$/g, "")
-                    .toLowerCase();
-
-                const link = document.createElement("a");
-                link.href = urlZip;
-                link.download = `crachas_${nomeEventoLimpo || "lote"}.zip`;
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-
-                setTimeout(() => URL.revokeObjectURL(urlZip), 5000);
-                exibirMensagemFeedback(`Exportação concluída! ${arquivosPng.length} crachá(s) PNG exportado(s) em ZIP.`, "success");
-            } catch (err) {
-                console.error("Falha ao exportar lote de crachás PNG:", err);
-                exibirMensagemFeedback(MENSAGEM_ERRO_EXPORTACAO_PNG, "danger");
-            } finally {
-                if (btnExportarLotePng) btnExportarLotePng.disabled = false;
-            }
-        }
-
-        if (btnExportarLotePng) {
-            btnExportarLotePng.addEventListener("click", function () {
-                exportarLotePngZip();
-            });
-        }
-
+        // Impressão em lote A4
         if (btnImprimirLote && containerImpressaoLote) {
             btnImprimirLote.addEventListener("click", function () {
                 const linhasSelecionadas = linhas.filter(l => l.querySelector(".chk-participante-item")?.checked);
-
                 if (linhasSelecionadas.length === 0) {
                     exibirMensagemFeedback("Por favor, selecione pelo menos um participante para impressão.", "warning");
                     return;
                 }
 
-                const optModelo = selectModelo ? selectModelo.options[selectModelo.selectedIndex] : null;
-                const modeloQrcodeHabilitado = optModelo ? (optModelo.dataset.qrcode !== "0" && optModelo.dataset.qrcode !== 0) : true;
-
-                containerImpressaoLote.innerHTML = "";
-                const grid = document.createElement("div");
-                grid.className = "print-grid-lote";
-
-                const nomeEvento = document.getElementById("lblPreviewNomeEvento")?.textContent || "EVENTO";
-                const elSubPrint = document.getElementById("lblPreviewSubtituloEvento");
-                const subEvento = (elSubPrint && elSubPrint.style.display !== "none" ? elSubPrint.textContent.trim() : "");
-                const textoRodape = lblTextoCracha?.textContent || "Uso pessoal e intransferível.";
-                const logoSrc = document.getElementById("crachaLogoElement")?.src || "";
-                const crachaLogoContainer = document.getElementById("crachaLogoContainer");
-                const logoVisivel = crachaLogoContainer && crachaLogoContainer.style.display !== "none" && ehPayloadImagemValido(logoSrc);
-
-                const fallbackQrSvg = `<svg viewBox="0 0 100 100" width="70" height="70" style="display:block;margin:auto;"><rect width="100" height="100" fill="#FFFFFF"/><rect x="8" y="8" width="28" height="28" fill="#0F172A"/><rect x="14" y="14" width="16" height="16" fill="#FFFFFF"/><rect x="18" y="18" width="8" height="8" fill="#0F172A"/><rect x="64" y="8" width="28" height="28" fill="#0F172A"/><rect x="70" y="14" width="16" height="16" fill="#FFFFFF"/><rect x="74" y="18" width="8" height="8" fill="#0F172A"/><rect x="8" y="64" width="28" height="28" fill="#0F172A"/><rect x="14" y="70" width="16" height="16" fill="#FFFFFF"/><rect x="18" y="74" width="8" height="8" fill="#0F172A"/><rect x="44" y="12" width="10" height="10" fill="#0F172A"/><rect x="44" y="30" width="10" height="16" fill="#0F172A"/><rect x="12" y="44" width="16" height="10" fill="#0F172A"/><rect x="48" y="48" width="16" height="16" fill="#0F172A"/><rect x="72" y="44" width="14" height="10" fill="#0F172A"/><rect x="48" y="72" width="12" height="16" fill="#0F172A"/><rect x="70" y="70" width="18" height="18" fill="#0F172A"/></svg>`;
-                const placeholderAvatarSvg = `<div class="avatar-placeholder-svg"><svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50" fill="#E2E8F0" /><circle cx="50" cy="38" r="20" fill="#475569" /><path d="M16 88C16 70 30 64 50 64C70 64 84 70 84 88" fill="#1E293B" /></svg></div>`;
-
-                linhasSelecionadas.forEach(linha => {
-                    const card = document.createElement("div");
-                    card.className = "cracha-print-item";
-
-                    const nome = (linha.dataset.nome || linha.dataset.nomeCompleto || "").toUpperCase();
-                    const depto = linha.dataset.depto || "";
-                    const papel = (linha.dataset.papel || "PARTICIPANTE").toUpperCase();
-                    const cpf = linha.dataset.cpf || "";
-                    const cred = linha.dataset.credencial || "";
-                    const presenca = linha.dataset.presenca || "";
-                    const qrcodeData = (linha.dataset.qrcode || "").trim();
-                    const fotoUrl = (linha.dataset.foto || "").trim();
-                    const temFotoValida = ehPayloadImagemValido(fotoUrl);
-                    const apto = (linha.dataset.apto === "true");
-                    const statusDesc = linha.dataset.statusDesc || (apto ? "Apto" : "Pendente Foto");
-
-                    let avatarHtml = `
-                        <div class="participant-avatar-wrapper">
-                            ${temFotoValida ? `<img src="${fotoUrl}" class="participant-avatar-img" alt="Foto de ${nome}" />` : placeholderAvatarSvg}
-                            <div class="participant-verified-badge" style="background-color: ${apto ? '#10B981' : '#F59E0B'};" title="${statusDesc}">
-                                <i class="bi ${apto ? 'bi-check-lg' : 'bi-clock-history'}"></i>
-                            </div>
-                        </div>
-                    `;
-
-                    let qrcodeHtml = "";
-                    if (modeloQrcodeHabilitado) {
-                        if (qrcodeData) {
-                            const qrcodeSrc = qrcodeData.startsWith("data:") ? qrcodeData : `data:image/png;base64,${qrcodeData}`;
-                            qrcodeHtml = `<img src="${qrcodeSrc}" alt="QR Code" style="width:100%;height:100%;object-fit:contain;display:block;" />`;
-                        } else {
-                            qrcodeHtml = fallbackQrSvg;
-                        }
-                    }
-
-                    card.innerHTML = `
-                        <div class="cracha-physical-card">
-                            <div class="cracha-hole"></div>
-                            <div class="cracha-header">
-                                <div class="cracha-header-sub"><span>BORA LÁ EVENTOS</span></div>
-                                ${logoVisivel ? `<div class="cracha-logo-institucional-container"><img src="${logoSrc}" class="cracha-logo-institucional-img" alt="Logo"/></div>` : ''}
-                                <h6 class="cracha-evento-title">${nomeEvento}</h6>
-                                ${subEvento ? `<div class="cracha-evento-subtitle">${subEvento}</div>` : ''}
-                            </div>
-                            <div class="cracha-body">
-                                ${avatarHtml}
-                                <div class="participant-name">${nome}</div>
-                                <div class="participant-org">${depto}</div>
-                                <div class="badge-role-pill">${papel}</div>
-                                <div class="cracha-meta-info-row">
-                                    <div>CPF: <strong>${cpf}</strong></div>
-                                    <div>Credencial: <strong>${cred}</strong></div>
-                                </div>
-                                <div class="cracha-presenca-box" style="${!modeloQrcodeHabilitado ? 'display:none;' : ''}">
-                                    <div class="cracha-qrcode-box">
-                                        ${qrcodeHtml}
-                                    </div>
-                                    <div class="cracha-presenca-text">
-                                        <div class="presenca-label">CÓDIGO DE PRESENÇA</div>
-                                        <div class="presenca-code">${presenca}</div>
-                                        <div class="presenca-status"><span>Válido em todas salas</span></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="cracha-footer">
-                                <p class="cracha-footer-text">${textoRodape}</p>
-                            </div>
-                        </div>
-                    `;
-
-                    const imgPrintAvatar = card.querySelector(".participant-avatar-img");
-                    if (imgPrintAvatar) {
-                        imgPrintAvatar.addEventListener("error", function () {
-                            const wrapper = imgPrintAvatar.closest(".participant-avatar-wrapper");
-                            imgPrintAvatar.remove();
-                            if (wrapper && !wrapper.querySelector(".avatar-placeholder-svg")) {
-                                wrapper.insertAdjacentHTML("afterbegin", placeholderAvatarSvg);
-                            }
-                        });
-                    }
-
-                    grid.appendChild(card);
-                });
-
-                document.body.classList.add("imprimindo-lote");
-                containerImpressaoLote.classList.remove("d-none");
-                containerImpressaoLote.appendChild(grid);
-
-                const imagens = Array.from(grid.querySelectorAll("img"));
-                const promessasDecodificacao = imagens.map(img => {
-                    if (typeof img.decode === "function") {
-                        return img.decode().catch(() => { });
-                    }
-                    if (img.complete) {
-                        return Promise.resolve();
-                    }
-                    return new Promise(resolve => {
-                        img.onload = resolve;
-                        img.onerror = resolve;
+                if (ExportModule.executarImpressaoLoteA4) {
+                    ExportModule.executarImpressaoLoteA4(linhasSelecionadas, {
+                        container: containerImpressaoLote,
+                        selectModelo
                     });
-                });
-
-                const finalizarImpressao = () => {
-                    window.removeEventListener("afterprint", finalizarImpressao);
-                    document.body.classList.remove("imprimindo-lote");
-                    containerImpressaoLote.classList.add("d-none");
-                    containerImpressaoLote.innerHTML = "";
-                };
-
-                window.addEventListener("afterprint", finalizarImpressao);
-
-                Promise.all(promessasDecodificacao).then(() => {
-                    requestAnimationFrame(() => {
-                        setTimeout(() => {
-                            window.print();
-                        }, 250);
-                    });
-                });
+                }
             });
         }
 
+        // Inicialização
+        popularFiltroCargosSeNecessario();
         configurarResilienciaImagens();
         atualizarModeloSelecionado();
         filtrarParticipantes(false);

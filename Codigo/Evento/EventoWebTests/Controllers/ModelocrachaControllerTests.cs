@@ -1811,5 +1811,79 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(result, typeof(NotFoundObjectResult));
             mockServicePessoa.Verify(s => s.Edit(It.IsAny<Pessoa>()), Times.Never);
         }
+
+        [TestMethod]
+        public void EmitirCrachaModel_CargosDisponiveis_RetornaListaDistintaEOrdenadaSemNulosOuVazios()
+        {
+            var model = new EmitirCrachaModel
+            {
+                Participantes = new List<ParticipanteCrachaItemModel>
+                {
+                    new ParticipanteCrachaItemModel { Papel = "PARTICIPANTE" },
+                    new ParticipanteCrachaItemModel { Papel = "GESTOR" },
+                    new ParticipanteCrachaItemModel { Papel = "COLABORADOR" },
+                    new ParticipanteCrachaItemModel { Papel = "participante" },
+                    new ParticipanteCrachaItemModel { Papel = "PALESTRANTE" },
+                    new ParticipanteCrachaItemModel { Papel = "" },
+                    new ParticipanteCrachaItemModel { Papel = "   " }
+                }
+            };
+
+            var cargos = model.CargosDisponiveis;
+
+            Assert.IsNotNull(cargos);
+            Assert.AreEqual(4, cargos.Count);
+            CollectionAssert.AreEqual(new List<string> { "COLABORADOR", "GESTOR", "PALESTRANTE", "PARTICIPANTE" }, cargos);
+        }
+
+        [TestMethod]
+        public void EmitirCrachaTest_RetornaCargosDisponiveisNoModel()
+        {
+            var mockServiceInscricao = new Mock<IInscricaoService>();
+            mockServiceInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+            mockServiceInscricao.Setup(s => s.GetByEvento(1))
+                .Returns(new List<Inscricaopessoaevento>
+                {
+                    new Inscricaopessoaevento
+                    {
+                        Id = 10,
+                        IdPessoa = 1,
+                        IdEvento = 1,
+                        IdPapel = 2,
+                        IdPapelNavigation = new Papel { Id = 2, Nome = "Gestor" },
+                        IdPessoaNavigation = new Pessoa { Id = 1, Nome = "Gestor do Evento", Cpf = "12345678901" }
+                    },
+                    new Inscricaopessoaevento
+                    {
+                        Id = 11,
+                        IdPessoa = 2,
+                        IdEvento = 1,
+                        IdPapel = 4,
+                        IdPapelNavigation = new Papel { Id = 4, Nome = "Participante" },
+                        IdPessoaNavigation = new Pessoa { Id = 2, Nome = "Participante Comum", Cpf = "98765432100" }
+                    }
+                });
+
+            var mockServiceEvento = new Mock<IEventoService>();
+            mockServiceEvento.Setup(s => s.GetEventoSimpleDto(1))
+                .Returns(new EventoSimpleDTO { Id = 1, Nome = "Workshop .NET" });
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctrl = new ModelocrachaController(new Mock<IModelocrachaService>().Object, mockServiceEvento.Object, new Mock<IPessoaService>().Object, mockServiceInscricao.Object, mapper);
+            ctrl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            var result = ctrl.EmitirCracha(1, null, null);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var viewResult = (ViewResult)result;
+            var model = (EmitirCrachaModel)viewResult.Model!;
+            Assert.IsNotNull(model.CargosDisponiveis);
+            Assert.IsTrue(model.CargosDisponiveis.Contains("GESTOR"));
+            Assert.IsTrue(model.CargosDisponiveis.Contains("PARTICIPANTE"));
+        }
     }
 }
