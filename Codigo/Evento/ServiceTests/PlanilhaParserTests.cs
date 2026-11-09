@@ -123,6 +123,33 @@ namespace ServiceTests
         }
 
         [TestMethod]
+        public void ParseCsv_ExemploRealSigaaComNomeESobrenome_DeveComporNomeCompletoEExtrairInscritos()
+        {
+            var csv = "\"TÍTULO: DSI 20 Anos - Nossa História, Nosso Futuro\",,,,\n" +
+                      ",,,,\n" +
+                      "CPF,NOME,SOBRENOME,E-MAIL,TIPO DA PARTICIPAÇÃO\n" +
+                      "08673629527,ADOMAK, SILVA OLIVEIRA,adomak6@gmail.com,PARTICIPANTE\n" +
+                      "08789829573,ALAN, FERNANDES BISPO DO NASCIMENTO,alan99964691@gmail.com,PARTICIPANTE\n" +
+                      "86204930516,LUIZ, GUILHERME ANDRADE FERREIRA,ziulguilherme0@gmail.com,PARTICIPANTE";
+
+            var resultado = _parser.ParseCsv(csv);
+
+            Assert.AreEqual(3, resultado.ListaSucesso.Count);
+            Assert.AreEqual(0, resultado.ListaErros.Count);
+
+            var adomak = resultado.ListaSucesso[0];
+            Assert.AreEqual("08673629527", adomak.Cpf);
+            Assert.AreEqual("ADOMAK SILVA OLIVEIRA", adomak.Nome);
+            Assert.AreEqual("adomak6@gmail.com", adomak.Email);
+            Assert.AreEqual("PARTICIPANTE", adomak.TipoParticipacao);
+
+            var ziul = resultado.ListaSucesso[2];
+            Assert.AreEqual("86204930516", ziul.Cpf);
+            Assert.AreEqual("LUIZ GUILHERME ANDRADE FERREIRA", ziul.Nome);
+            Assert.AreEqual("ziulguilherme0@gmail.com", ziul.Email);
+        }
+
+        [TestMethod]
         public void ParseCsv_ComMetadadosDeEmissaoSIGAA_DeveIgnorarLinhasAdicionais()
         {
             var csv = @"UNIVERSIDADE FEDERAL DE SERGIPE

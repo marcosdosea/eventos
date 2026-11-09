@@ -371,6 +371,7 @@ namespace EventoWeb.Helpers
             int headerIndex = -1;
             int cpfCol = -1;
             int nomeCol = -1;
+            int sobrenomeCol = -1;
             int emailCol = -1;
             int tipoCol = -1;
 
@@ -379,6 +380,7 @@ namespace EventoWeb.Helpers
                 var fields = rawRows[r].Fields;
                 int potentialCpf = -1;
                 int potentialNome = -1;
+                int potentialSobrenome = -1;
                 int potentialEmail = -1;
                 int potentialTipo = -1;
 
@@ -392,7 +394,11 @@ namespace EventoWeb.Helpers
                     {
                         potentialCpf = c;
                     }
-                    else if (potentialNome == -1 && (norm == "nome" || norm == "nomecompleto" || norm == "nomedoinscrito" ||
+                    else if (potentialSobrenome == -1 && (norm == "sobrenome" || norm.Contains("sobrenome")))
+                    {
+                        potentialSobrenome = c;
+                    }
+                    else if (potentialNome == -1 && !norm.Contains("sobrenome") && (norm == "nome" || norm == "nomecompleto" || norm == "nomedoinscrito" ||
                              norm == "nomedoparticipante" || (norm.Contains("nome") && !norm.Contains("evento")) ||
                              norm == "participante" || norm == "inscrito" || norm == "aluno"))
                     {
@@ -416,6 +422,7 @@ namespace EventoWeb.Helpers
                     headerIndex = r;
                     cpfCol = potentialCpf;
                     nomeCol = potentialNome;
+                    sobrenomeCol = potentialSobrenome;
                     emailCol = potentialEmail;
                     tipoCol = potentialTipo;
                     break;
@@ -446,8 +453,13 @@ namespace EventoWeb.Helpers
 
                 string rawCpf = cpfCol < fields.Length ? fields[cpfCol].Trim() : string.Empty;
                 string rawNome = nomeCol < fields.Length ? fields[nomeCol].Trim() : string.Empty;
+                string rawSobrenome = sobrenomeCol >= 0 && sobrenomeCol < fields.Length ? fields[sobrenomeCol].Trim() : string.Empty;
                 string rawEmail = emailCol >= 0 && emailCol < fields.Length ? fields[emailCol].Trim() : string.Empty;
                 string rawTipo = tipoCol >= 0 && tipoCol < fields.Length ? fields[tipoCol].Trim() : string.Empty;
+
+                string nomeCompleto = string.IsNullOrEmpty(rawSobrenome)
+                    ? rawNome
+                    : $"{rawNome} {rawSobrenome}".Trim();
 
                 bool linhaValida = true;
 
@@ -474,7 +486,7 @@ namespace EventoWeb.Helpers
                 }
 
                 // Validação de Nome
-                if (string.IsNullOrWhiteSpace(rawNome))
+                if (string.IsNullOrWhiteSpace(nomeCompleto))
                 {
                     resultado.ListaErros.Add(new ErroParsingSigaaDto
                     {
@@ -490,7 +502,7 @@ namespace EventoWeb.Helpers
                     resultado.ListaSucesso.Add(new PessoaInscritaDto
                     {
                         Cpf = CpfValidator.Normalizar(rawCpf),
-                        Nome = rawNome,
+                        Nome = nomeCompleto,
                         Email = rawEmail,
                         TipoParticipacao = string.IsNullOrWhiteSpace(rawTipo) ? null : rawTipo
                     });
