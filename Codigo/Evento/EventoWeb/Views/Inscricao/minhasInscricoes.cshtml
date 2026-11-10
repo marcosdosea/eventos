@@ -451,9 +451,9 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
-            <form asp-action="TransferirIngresso" asp-controller="Inscricao" method="post" id="formTransferirIngresso">
+            <form asp-action="TransferirIngresso" asp-controller="Inscricao" method="post" id="formTransferirIngresso" novalidate>
                 @Html.AntiForgeryToken()
-                <input type="hidden" name="IdInscricao" id="transferirIdInscricao" value="" />
+                <input type="hidden" name="IdInscricao" id="transferirIdInscricao" value="0" />
                 <input type="hidden" name="IdSubevento" id="transferirIdSubevento" value="" />
 
                 <div class="modal-body p-4">
@@ -464,37 +464,55 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="NomeAmigo" class="form-label fw-semibold">Nome Completo do Amigo <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="NomeAmigo" name="NomeAmigo" maxlength="50" required
-                               placeholder="Ex: Maria dos Santos" />
-                        <div class="form-text">Informe o nome completo do amigo que irá receber o ingresso.</div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="CpfAmigo" class="form-label fw-semibold">CPF do Amigo <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="CpfAmigo" name="CpfAmigo" maxlength="14" required
-                               placeholder="000.000.000-00" />
-                        <div class="form-text">Apenas números ou formato padrão com pontos e traço.</div>
+                        <label for="CpfAmigo" class="form-label fw-semibold">CPF do Destinatário <span class="text-danger">*</span></label>
+                        <div class="input-group has-validation">
+                            <span class="input-group-text"><i class="bi bi-person-vcard" aria-hidden="true"></i></span>
+                            <input type="text" class="form-control" id="CpfAmigo" name="CpfAmigo" maxlength="14" required
+                                   placeholder="000.000.000-00" autocomplete="off" />
+                            <div class="invalid-feedback" id="feedbackCpfAmigo">
+                                Informe um CPF válido com 11 dígitos.
+                            </div>
+                        </div>
+                        <div class="form-text">Digite os 11 números do CPF. Buscaremos o cadastro automaticamente.</div>
                     </div>
 
                     <div id="alertaDestinatarioCpf" class="alert d-none mb-3 py-2 px-3 small" role="alert"></div>
 
                     <div class="mb-3">
-                        <label for="EmailAmigo" class="form-label fw-semibold">E-mail do Amigo <span class="text-danger">*</span></label>
-                        <input type="email" class="form-control" id="EmailAmigo" name="EmailAmigo" maxlength="100" required
-                               placeholder="amigo@email.com" />
+                        <label for="NomeAmigo" class="form-label fw-semibold">Nome Completo do Destinatário <span class="text-danger">*</span></label>
+                        <div class="input-group has-validation">
+                            <span class="input-group-text"><i class="bi bi-person" aria-hidden="true"></i></span>
+                            <input type="text" class="form-control" id="NomeAmigo" name="NomeAmigo" maxlength="50" required
+                                   placeholder="Ex: Maria dos Santos" autocomplete="off" />
+                            <div class="invalid-feedback" id="feedbackNomeAmigo">
+                                Informe o nome completo (entre 2 e 50 caracteres).
+                            </div>
+                        </div>
+                        <div class="form-text">Nome a constar na credencial/crachá do amigo.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="EmailAmigo" class="form-label fw-semibold">E-mail do Destinatário <span class="text-danger">*</span></label>
+                        <div class="input-group has-validation">
+                            <span class="input-group-text"><i class="bi bi-envelope" aria-hidden="true"></i></span>
+                            <input type="email" class="form-control" id="EmailAmigo" name="EmailAmigo" maxlength="100" required
+                                   placeholder="amigo@email.com" autocomplete="off" />
+                            <div class="invalid-feedback" id="feedbackEmailAmigo">
+                                Informe um endereço de e-mail válido (ex: amigo@email.com).
+                            </div>
+                        </div>
                         <div class="form-text">Enviaremos a confirmação, o ingresso e as instruções de acesso para este e-mail.</div>
                     </div>
 
                     <div class="p-3 bg-light rounded-3 small text-muted border">
                         <i class="bi bi-info-circle-fill text-primary me-1" aria-hidden="true"></i>
-                        Se o amigo ainda não possuir conta no Boralá, criaremos uma conta para ele com este CPF e enviaremos por e-mail as instruções e a senha de primeiro acesso (<code>Temp@1234!</code>).
+                        Se o amigo ainda não possuir conta no Boralá, criaremos uma conta para ele com este CPF e enviaremos por e-mail as instruções de primeiro acesso.
                         Após a confirmação, o ingresso será transferido e deixará de constar no seu painel.
                     </div>
                 </div>
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary d-inline-flex align-items-center gap-2">
+                    <button type="submit" class="btn btn-primary d-inline-flex align-items-center gap-2" id="btnConfirmarTransferencia">
                         <i class="bi bi-check2-circle" aria-hidden="true"></i> Confirmar Transferência
                     </button>
                 </div>
@@ -506,107 +524,306 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         var modalElement = document.getElementById('modalTransferirIngresso');
-        if (modalElement) {
-            modalElement.addEventListener('show.bs.modal', function (event) {
-                var button = event.relatedTarget;
-                if (!button) return;
+        if (!modalElement) return;
 
-                var idInscricao = button.getAttribute('data-id-inscricao') || '';
-                var idSubevento = button.getAttribute('data-id-subevento') || '';
-                var nomeEvento = button.getAttribute('data-nome-evento') || 'Evento';
-                var nomeSubevento = button.getAttribute('data-nome-subevento') || '';
-                var protocolo = button.getAttribute('data-protocolo') || '';
+        var form = document.getElementById('formTransferirIngresso');
+        var cpfInput = document.getElementById('CpfAmigo');
+        var nomeInput = document.getElementById('NomeAmigo');
+        var emailInput = document.getElementById('EmailAmigo');
+        var alertaDest = document.getElementById('alertaDestinatarioCpf');
+        var btnSubmit = document.getElementById('btnConfirmarTransferencia');
+        var feedbackCpf = document.getElementById('feedbackCpfAmigo');
+        var feedbackNome = document.getElementById('feedbackNomeAmigo');
+        var feedbackEmail = document.getElementById('feedbackEmailAmigo');
 
-                document.getElementById('transferirIdInscricao').value = idInscricao || '0';
-                document.getElementById('transferirIdSubevento').value = idSubevento || '';
+        var ultimoCpfConsultado = '';
+        var destinatarioEhMesmoUsuario = false;
+        var destinatarioExiste = false;
 
-                var descElement = document.getElementById('transferirDescricaoIngresso');
-                if (nomeSubevento) {
-                    descElement.textContent = 'Subevento: ' + nomeSubevento + ' (' + nomeEvento + ')';
-                } else {
-                    descElement.textContent = 'Evento: ' + nomeEvento;
-                }
+        function validarCpf(cpf) {
+            if (!cpf) return false;
+            var strCPF = cpf.replace(/\D/g, '');
+            if (strCPF.length !== 11) return false;
+            if (/^(\d)\1{10}$/.test(strCPF)) return false;
 
-                document.getElementById('transferirProtocolo').textContent = protocolo ? 'Protocolo: ' + protocolo : '';
-                document.getElementById('NomeAmigo').value = '';
-                document.getElementById('CpfAmigo').value = '';
-                var emailInput = document.getElementById('EmailAmigo');
-                if (emailInput) emailInput.value = '';
+            var soma = 0;
+            var resto;
+            for (var i = 1; i <= 9; i++) {
+                soma += parseInt(strCPF.substring(i - 1, i)) * (11 - i);
+            }
+            resto = (soma * 10) % 11;
+            if (resto === 10 || resto === 11) resto = 0;
+            if (resto !== parseInt(strCPF.substring(9, 10))) return false;
 
-                var alertaDest = document.getElementById('alertaDestinatarioCpf');
-                if (alertaDest) {
-                    alertaDest.className = 'alert d-none mb-3 py-2 px-3 small';
-                    alertaDest.innerHTML = '';
-                }
-            });
+            soma = 0;
+            for (var i = 1; i <= 10; i++) {
+                soma += parseInt(strCPF.substring(i - 1, i)) * (12 - i);
+            }
+            resto = (soma * 10) % 11;
+            if (resto === 10 || resto === 11) resto = 0;
+            if (resto !== parseInt(strCPF.substring(10, 11))) return false;
 
-            var alertaDest = document.getElementById('alertaDestinatarioCpf');
-            var ultimoCpfConsultado = '';
+            return true;
+        }
 
-            function consultarDestinatario(cpfNumeros) {
-                if (!cpfNumeros || cpfNumeros.length !== 11 || cpfNumeros === ultimoCpfConsultado) return;
-                ultimoCpfConsultado = cpfNumeros;
+        function validarEmail(email) {
+            if (!email) return false;
+            var trimmed = email.trim();
+            var regex = /^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/;
+            return regex.test(trimmed);
+        }
 
-                fetch('/Inscricao/ConsultarDestinatarioTransferencia?cpf=' + encodeURIComponent(cpfNumeros))
-                    .then(function (r) { return r.json(); })
-                    .then(function (data) {
-                        if (!alertaDest) return;
-                        if (data.sucesso && data.existe) {
-                            alertaDest.className = 'alert alert-info border mb-3 py-2 px-3 small';
-                            alertaDest.innerHTML = '<i class="bi bi-person-check-fill text-primary me-1"></i> Participante cadastrado: <strong>' + data.nome + '</strong>.<br/>Aviso: O e-mail informado abaixo <strong>deve coincidir com o cadastro existente (' + data.emailMascarado + ')</strong>.';
-                            alertaDest.classList.remove('d-none');
-                            var nomeInput = document.getElementById('NomeAmigo');
-                            if (nomeInput && !nomeInput.value.trim()) {
-                                nomeInput.value = data.nome;
-                            }
-                        } else if (data.sucesso && !data.existe) {
-                            alertaDest.className = 'alert alert-secondary border mb-3 py-2 px-3 small';
-                            alertaDest.innerHTML = '<i class="bi bi-person-plus-fill me-1"></i> Novo usuário: Uma conta provisória será criada para este CPF e as instruções de acesso enviadas para o e-mail informado.';
-                            alertaDest.classList.remove('d-none');
-                        } else if (!data.sucesso && data.mesmoUsuario) {
-                            alertaDest.className = 'alert alert-danger border mb-3 py-2 px-3 small';
-                            alertaDest.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i> ' + data.mensagem;
-                            alertaDest.classList.remove('d-none');
-                        } else {
-                            alertaDest.className = 'alert d-none mb-3 py-2 px-3 small';
-                            alertaDest.innerHTML = '';
-                        }
-                    })
-                    .catch(function () {
-                        if (alertaDest) alertaDest.classList.add('d-none');
-                    });
+        function validarNome(nome) {
+            if (!nome) return false;
+            var trimmed = nome.trim();
+            return trimmed.length >= 2 && trimmed.length <= 50;
+        }
+
+        function checarCampoCpf() {
+            var raw = cpfInput.value.replace(/\D/g, '');
+            if (!raw) {
+                cpfInput.classList.remove('is-valid');
+                cpfInput.classList.add('is-invalid');
+                if (feedbackCpf) feedbackCpf.textContent = 'O CPF do destinatário é obrigatório.';
+                return false;
+            }
+            if (raw.length !== 11 || !validarCpf(raw)) {
+                cpfInput.classList.remove('is-valid');
+                cpfInput.classList.add('is-invalid');
+                if (feedbackCpf) feedbackCpf.textContent = 'Informe um CPF válido com 11 dígitos.';
+                return false;
+            }
+            if (destinatarioEhMesmoUsuario) {
+                cpfInput.classList.remove('is-valid');
+                cpfInput.classList.add('is-invalid');
+                if (feedbackCpf) feedbackCpf.textContent = 'Você não pode transferir um ingresso para você mesmo.';
+                return false;
+            }
+            cpfInput.classList.remove('is-invalid');
+            cpfInput.classList.add('is-valid');
+            return true;
+        }
+
+        function checarCampoNome() {
+            var v = nomeInput.value;
+            if (!v || !v.trim()) {
+                nomeInput.classList.remove('is-valid');
+                nomeInput.classList.add('is-invalid');
+                if (feedbackNome) feedbackNome.textContent = 'O nome completo é obrigatório.';
+                return false;
+            }
+            if (!validarNome(v)) {
+                nomeInput.classList.remove('is-valid');
+                nomeInput.classList.add('is-invalid');
+                if (feedbackNome) feedbackNome.textContent = 'O nome deve ter entre 2 e 50 caracteres.';
+                return false;
+            }
+            nomeInput.classList.remove('is-invalid');
+            nomeInput.classList.add('is-valid');
+            return true;
+        }
+
+        function checarCampoEmail() {
+            var v = emailInput.value;
+            if (!v || !v.trim()) {
+                emailInput.classList.remove('is-valid');
+                emailInput.classList.add('is-invalid');
+                if (feedbackEmail) feedbackEmail.textContent = 'O e-mail é obrigatório.';
+                return false;
+            }
+            if (!validarEmail(v)) {
+                emailInput.classList.remove('is-valid');
+                emailInput.classList.add('is-invalid');
+                if (feedbackEmail) feedbackEmail.textContent = 'Informe um e-mail válido (ex: amigo@email.com).';
+                return false;
+            }
+            emailInput.classList.remove('is-invalid');
+            emailInput.classList.add('is-valid');
+            return true;
+        }
+
+        modalElement.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            if (!button) return;
+
+            var idInscricao = button.getAttribute('data-id-inscricao') || '0';
+            var idSubevento = button.getAttribute('data-id-subevento') || '';
+            var nomeEvento = button.getAttribute('data-nome-evento') || 'Evento';
+            var nomeSubevento = button.getAttribute('data-nome-subevento') || '';
+            var protocolo = button.getAttribute('data-protocolo') || '';
+
+            document.getElementById('transferirIdInscricao').value = idInscricao || '0';
+            document.getElementById('transferirIdSubevento').value = idSubevento || '';
+
+            var descElement = document.getElementById('transferirDescricaoIngresso');
+            if (nomeSubevento) {
+                descElement.textContent = 'Subevento: ' + nomeSubevento + ' (' + nomeEvento + ')';
+            } else {
+                descElement.textContent = 'Evento: ' + nomeEvento;
             }
 
-            var cpfInput = document.getElementById('CpfAmigo');
-            if (cpfInput) {
-                cpfInput.addEventListener('input', function (e) {
-                    var v = e.target.value.replace(/\D/g, '');
-                    if (v.length > 11) v = v.substring(0, 11);
-                    if (v.length > 9) {
-                        v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
-                    } else if (v.length > 6) {
-                        v = v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
-                    } else if (v.length > 3) {
-                        v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
-                    }
-                    e.target.value = v;
+            document.getElementById('transferirProtocolo').textContent = protocolo ? 'Protocolo: ' + protocolo : '';
+            nomeInput.value = '';
+            cpfInput.value = '';
+            emailInput.value = '';
 
-                    var raw = v.replace(/\D/g, '');
-                    if (raw.length === 11) {
+            [cpfInput, nomeInput, emailInput].forEach(function (el) {
+                el.classList.remove('is-invalid', 'is-valid');
+            });
+
+            if (alertaDest) {
+                alertaDest.className = 'alert d-none mb-3 py-2 px-3 small';
+                alertaDest.innerHTML = '';
+            }
+
+            ultimoCpfConsultado = '';
+            destinatarioEhMesmoUsuario = false;
+            destinatarioExiste = false;
+            if (btnSubmit) {
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = '<i class="bi bi-check2-circle" aria-hidden="true"></i> Confirmar Transferência';
+            }
+        });
+
+        function consultarDestinatario(cpfNumeros) {
+            if (!cpfNumeros || cpfNumeros.length !== 11 || cpfNumeros === ultimoCpfConsultado) return;
+            if (!validarCpf(cpfNumeros)) return;
+            ultimoCpfConsultado = cpfNumeros;
+
+            fetch('/Inscricao/ConsultarDestinatarioTransferencia?cpf=' + encodeURIComponent(cpfNumeros))
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (!alertaDest) return;
+                    if (data.sucesso && data.existe) {
+                        destinatarioExiste = true;
+                        destinatarioEhMesmoUsuario = false;
+                        alertaDest.className = 'alert alert-info border mb-3 py-2 px-3 small';
+                        alertaDest.innerHTML = '<i class="bi bi-person-check-fill text-primary me-1"></i> Participante cadastrado: <strong>' + data.nome + '</strong>.<br/>Aviso: O e-mail informado abaixo <strong>deve coincidir com o cadastro existente (' + data.emailMascarado + ')</strong>.';
+                        alertaDest.classList.remove('d-none');
+                        if (!nomeInput.value.trim()) {
+                            nomeInput.value = data.nome;
+                            checarCampoNome();
+                        }
+                        checarCampoCpf();
+                    } else if (data.sucesso && !data.existe) {
+                        destinatarioExiste = false;
+                        destinatarioEhMesmoUsuario = false;
+                        alertaDest.className = 'alert alert-secondary border mb-3 py-2 px-3 small';
+                        alertaDest.innerHTML = '<i class="bi bi-person-plus-fill me-1"></i> Novo usuário: Uma conta de acesso será criada para este CPF e as instruções enviadas para o e-mail informado.';
+                        alertaDest.classList.remove('d-none');
+                        checarCampoCpf();
+                    } else if (!data.sucesso && data.mesmoUsuario) {
+                        destinatarioEhMesmoUsuario = true;
+                        alertaDest.className = 'alert alert-danger border mb-3 py-2 px-3 small';
+                        alertaDest.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i> ' + data.mensagem;
+                        alertaDest.classList.remove('d-none');
+                        checarCampoCpf();
+                    } else {
+                        alertaDest.className = 'alert d-none mb-3 py-2 px-3 small';
+                        alertaDest.innerHTML = '';
+                        destinatarioEhMesmoUsuario = false;
+                    }
+                })
+                .catch(function () {
+                    if (alertaDest) alertaDest.classList.add('d-none');
+                });
+        }
+
+        if (cpfInput) {
+            cpfInput.addEventListener('input', function (e) {
+                var v = e.target.value.replace(/\D/g, '');
+                if (v.length > 11) v = v.substring(0, 11);
+                if (v.length > 9) {
+                    v = v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, '$1.$2.$3-$4');
+                } else if (v.length > 6) {
+                    v = v.replace(/(\d{3})(\d{3})(\d{1,3})/, '$1.$2.$3');
+                } else if (v.length > 3) {
+                    v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
+                }
+                e.target.value = v;
+
+                var raw = v.replace(/\D/g, '');
+                if (raw.length === 11) {
+                    if (validarCpf(raw)) {
                         consultarDestinatario(raw);
-                    } else if (alertaDest) {
+                        checarCampoCpf();
+                    } else {
+                        cpfInput.classList.remove('is-valid');
+                        cpfInput.classList.add('is-invalid');
+                        if (feedbackCpf) feedbackCpf.textContent = 'Número de CPF inválido.';
+                        if (alertaDest) alertaDest.classList.add('d-none');
+                    }
+                } else {
+                    cpfInput.classList.remove('is-valid', 'is-invalid');
+                    if (alertaDest) {
                         alertaDest.classList.add('d-none');
                         ultimoCpfConsultado = '';
                     }
-                });
+                    destinatarioEhMesmoUsuario = false;
+                }
+            });
 
-                cpfInput.addEventListener('blur', function (e) {
-                    var raw = e.target.value.replace(/\D/g, '');
-                    if (raw.length === 11) {
-                        consultarDestinatario(raw);
+            cpfInput.addEventListener('blur', function () {
+                checarCampoCpf();
+            });
+        }
+
+        if (nomeInput) {
+            nomeInput.addEventListener('blur', function () {
+                checarCampoNome();
+            });
+            nomeInput.addEventListener('input', function () {
+                if (nomeInput.classList.contains('is-invalid')) {
+                    checarCampoNome();
+                }
+            });
+        }
+
+        if (emailInput) {
+            emailInput.addEventListener('blur', function () {
+                checarCampoEmail();
+            });
+            emailInput.addEventListener('input', function () {
+                if (emailInput.classList.contains('is-invalid')) {
+                    checarCampoEmail();
+                }
+            });
+        }
+
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                var cpfValido = checarCampoCpf();
+                var nomeValido = checarCampoNome();
+                var emailValido = checarCampoEmail();
+
+                var idInscricao = document.getElementById('transferirIdInscricao').value;
+                var idSubevento = document.getElementById('transferirIdSubevento').value;
+                var temIngresso = (idInscricao && idInscricao !== '0') || (idSubevento && idSubevento !== '0');
+
+                if (!temIngresso) {
+                    alert('Erro: nenhum ingresso ou subevento selecionado para transferência.');
+                    e.preventDefault();
+                    return;
+                }
+
+                if (!cpfValido || !nomeValido || !emailValido || destinatarioEhMesmoUsuario) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!cpfValido || destinatarioEhMesmoUsuario) {
+                        cpfInput.focus();
+                    } else if (!nomeValido) {
+                        nomeInput.focus();
+                    } else if (!emailValido) {
+                        emailInput.focus();
                     }
-                });
-            }
+                    return;
+                }
+
+                if (btnSubmit) {
+                    btnSubmit.disabled = true;
+                    btnSubmit.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Transferindo...';
+                }
+            });
         }
     });
 </script>
