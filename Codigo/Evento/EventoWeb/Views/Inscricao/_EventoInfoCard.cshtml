@@ -1,0 +1,82 @@
+@model EventoWeb.Models.EventoModel
+
+<article class="card-inscricao">
+    <div class="inscricao-header">
+        @if (!string.IsNullOrEmpty(Model.ImagemPortalBase64) && Model.ImagemPortalBase64.Length > 100)
+        {
+            <img src="data:image/jpeg;base64,@Model.ImagemPortalBase64" alt="Imagem do Evento" class="inscricao-header-img" onclick="openImageModal(this.src)" style="cursor: zoom-in;" title="Clique para ampliar" />
+        }
+        else
+        {
+            <img src="@Url.Content("~/Imagens_Eventos/Evento-BoraLa.png")" alt="Imagem Padrão do Evento" class="inscricao-header-img" onclick="openImageModal(this.src)" style="cursor: zoom-in;" title="Clique para ampliar" />
+        }
+        <div>
+            <h1 class="inscricao-header-title">@Model.Nome</h1>
+            <p class="inscricao-header-subtitle">Detalhes e Inscrição</p>
+        </div>
+    </div>
+    <h2 class="section-title">Informações do Evento</h2>
+    
+    <section class="info-grid">
+        <div class="info-item">
+            <div class="info-icon" aria-hidden="true"><i class="bi bi-calendar3"></i></div>
+            <div class="info-text">
+                <h3>Data</h3>
+                <p>@(Model.DataInicio?.ToString("dd/MM/yyyy") ?? "A definir") a @(Model.DataFim?.ToString("dd/MM/yyyy") ?? "A definir")</p>
+            </div>
+        </div>
+        <div class="info-item">
+            <div class="info-icon" aria-hidden="true"><i class="bi bi-geo-alt-fill"></i></div>
+            <div class="info-text">
+                <h3>Local</h3>
+                @{
+                    string local = "Local não informado";
+                    if (!string.IsNullOrEmpty(Model.Cidade) && !string.IsNullOrEmpty(Model.Estado))
+                    {
+                        local = $"{Model.Cidade}, {Model.Estado}";
+                    }
+                    else if (!string.IsNullOrEmpty(Model.Estado))
+                    {
+                        local = Model.Estado;
+                    }
+                }
+                <p>@local</p>
+            </div>
+        </div>
+        <div class="info-item">
+            <div class="info-icon" aria-hidden="true"><i class="bi bi-clock-fill"></i></div>
+            <div class="info-text">
+                <h3>Carga Horária</h3>
+                <p>@Model.CargaHoraria Horas @(Model.PossuiCertificado == 1 ? "(Com Certificado)" : "")</p>
+            </div>
+        </div>
+        <div class="info-item">
+            <div class="info-icon" aria-hidden="true"><i class="bi bi-ticket-perforated-fill"></i></div>
+            <div class="info-text">
+                <h3>Entrada</h3>
+                @if (Model.InscricaoGratuita == 1 || Model.ValorInscricao == 0)
+                {
+                    <p class="entry-free">Gratuita</p>
+                }
+                else
+                {
+                    <p>R$ @Model.ValorInscricao.ToString("N2")</p>
+                }
+            </div>
+        </div>
+        <div class="info-item">
+            <div class="info-icon" aria-hidden="true"><i class="bi bi-people-fill"></i></div>
+            <div class="info-text">
+                <h3>Vagas Disponíveis</h3>
+                <p>@Model.VagasDisponiveis de @Model.VagasOfertadas</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="evento-sobre">
+        <h2 class="section-title mt-20">Sobre o Evento</h2>
+        <p class="evento-sobre-text">
+            @(string.IsNullOrWhiteSpace(Model.Descricao) ? "Nenhuma descrição disponível para este evento." : Model.Descricao)
+        </p>
+    </section>
+</article>

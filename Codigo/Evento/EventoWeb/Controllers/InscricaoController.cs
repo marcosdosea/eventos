@@ -307,7 +307,7 @@ namespace EventoWeb.Controllers
                 foreach (var idSubevento in inscricaoEvento.SelectedSubeventos)
                 {
                     var subevento = _subeventoService.Get(idSubevento);
-                    if (subevento == null || subevento.Status != "A" || (subevento.DataFimInscricao != DateTime.MinValue && subevento.DataFimInscricao < DateTime.Now))
+                    if (subevento == null || (subevento.Status != "A" && subevento.Status != "C") || (subevento.DataFimInscricao != DateTime.MinValue && subevento.DataFimInscricao < DateTime.Now))
                     {
                         continue;
                     }
@@ -432,7 +432,7 @@ namespace EventoWeb.Controllers
                         (subevento.DataFim != DateTime.MinValue && subevento.DataFim < DateTime.Now) ||
                         (subevento.DataInicio != DateTime.MinValue && subevento.DataInicio < DateTime.Now && subevento.DataFim != DateTime.MinValue && subevento.DataFim <= subevento.DataInicio)
                     );
-                    if (subevento == null || subevento.Status != "A" || (subevento.DataInicioInscricao != DateTime.MinValue && subevento.DataInicioInscricao > DateTime.Now) || (subevento.DataFimInscricao != DateTime.MinValue && subevento.DataFimInscricao < DateTime.Now) || subeventoPassou || (subevento.IdEvento != 0 && subevento.IdEvento != idEvento))
+                    if (subevento == null || (subevento.Status != "A" && subevento.Status != "C") || (subevento.DataInicioInscricao != DateTime.MinValue && subevento.DataInicioInscricao > DateTime.Now) || (subevento.DataFimInscricao != DateTime.MinValue && subevento.DataFimInscricao < DateTime.Now) || subeventoPassou || (subevento.IdEvento != 0 && subevento.IdEvento != idEvento))
                     {
                         continue;
                     }
