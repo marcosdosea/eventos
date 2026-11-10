@@ -6,7 +6,7 @@ using EventoWeb.Models;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Util;
 
-namespace ServiceTests
+namespace Service.Tests
 {
     [TestClass]
     public class PlanilhaParserTests
