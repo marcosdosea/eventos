@@ -830,7 +830,8 @@ namespace EventoWeb.Controllers
 
         [Authorize]
         [HttpGet]
-        [Route("Inscricao/ConsultarDestinatarioTransferencia")]
+        [Route("ConsultarDestinatarioTransferencia")]
+        [Route("/Inscricao/ConsultarDestinatarioTransferencia")]
         public IActionResult ConsultarDestinatarioTransferencia([FromQuery] string cpf)
         {
             if (string.IsNullOrWhiteSpace(cpf))
@@ -846,12 +847,16 @@ namespace EventoWeb.Controllers
 
             var usernameLogado = User.Identity?.Name ?? string.Empty;
             var usernameLogadoLimpo = Util.Methods.RemoveNaoNumericos(usernameLogado);
-            if (cpfLimpo == usernameLogadoLimpo || cpf == usernameLogado)
+            var pessoaLogada = _pessoaService?.GetByCpf(usernameLogadoLimpo) ?? _pessoaService?.GetByCpf(usernameLogado);
+            var cpfPessoaLogadaLimpo = pessoaLogada != null ? Util.Methods.RemoveNaoNumericos(pessoaLogada.Cpf ?? string.Empty) : string.Empty;
+
+            if (cpfLimpo == usernameLogadoLimpo || cpf == usernameLogado || (!string.IsNullOrEmpty(cpfPessoaLogadaLimpo) && cpfLimpo == cpfPessoaLogadaLimpo))
             {
                 return Json(new { sucesso = false, mesmoUsuario = true, mensagem = "Você não pode transferir um ingresso para você mesmo." });
             }
 
-            var pessoa = _pessoaService?.GetByCpf(cpfLimpo);
+            var cpfFormatado = Util.Methods.PatternCpf(cpfLimpo);
+            var pessoa = _pessoaService?.GetByCpf(cpfLimpo) ?? _pessoaService?.GetByCpf(cpfFormatado);
             if (pessoa != null)
             {
                 string emailMascarado = string.Empty;
@@ -872,8 +877,9 @@ namespace EventoWeb.Controllers
                     sucesso = true,
                     existe = true,
                     nome = pessoa.Nome,
+                    email = pessoa.Email,
                     emailMascarado,
-                    mensagem = $"Participante já cadastrado: {pessoa.Nome}. O e-mail informado deve coincidir com o cadastro existente."
+                    mensagem = $"Participante já cadastrado: {pessoa.Nome}."
                 });
             }
 
@@ -881,7 +887,7 @@ namespace EventoWeb.Controllers
             {
                 sucesso = true,
                 existe = false,
-                mensagem = "Novo usuário: Será criada uma conta no primeiro acesso e as instruções serão enviadas para o e-mail informado."
+                mensagem = "Novo participante: Nenhuma conta encontrada para este CPF no sistema."
             });
         }
 

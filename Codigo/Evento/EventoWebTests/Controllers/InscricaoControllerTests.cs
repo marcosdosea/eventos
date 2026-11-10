@@ -2562,5 +2562,131 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             mockEmailSender.Verify(e => e.SendEmailAsync("maria@email.com", It.IsAny<string>(), It.IsAny<string>()), Times.Once);
         }
+
+        [TestMethod()]
+        public void ConsultarDestinatarioTransferencia_CpfVazio_RetornaSucessoFalse()
+        {
+            // Arrange
+            var testController = new InscricaoController(
+                null!,
+                Mock.Of<ITipoInscricaoService>(),
+                Mock.Of<IEventoService>(),
+                Mock.Of<IMapper>(),
+                Mock.Of<IInscricaoService>(),
+                Mock.Of<IPessoaService>(),
+                Mock.Of<ISubeventoService>());
+
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, UsernameTeste) };
+            var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) };
+            testController.ControllerContext = new ControllerContext { HttpContext = httpContext };
+
+            // Act
+            var result = testController.ConsultarDestinatarioTransferencia("") as JsonResult;
+
+            // Assert
+            Assert.IsNotNull(result);
+            var json = Newtonsoft.Json.Linq.JObject.FromObject(result.Value!);
+            Assert.IsFalse((bool)json["sucesso"]!);
+        }
+
+        [TestMethod()]
+        public void ConsultarDestinatarioTransferencia_MesmoUsuario_RetornaMesmoUsuarioTrue()
+        {
+            // Arrange
+            var cpfLogado = "04026893057";
+            var mockPessoa = new Mock<IPessoaService>();
+            mockPessoa.Setup(p => p.GetByCpf(UsernameTeste))
+                .Returns(new Pessoa { Cpf = cpfLogado, Nome = "Proprio Usuario" });
+            mockPessoa.Setup(p => p.GetByCpf(cpfLogado))
+                .Returns(new Pessoa { Cpf = cpfLogado, Nome = "Proprio Usuario" });
+
+            var testController = new InscricaoController(
+                null!,
+                Mock.Of<ITipoInscricaoService>(),
+                Mock.Of<IEventoService>(),
+                Mock.Of<IMapper>(),
+                Mock.Of<IInscricaoService>(),
+                mockPessoa.Object,
+                Mock.Of<ISubeventoService>());
+
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, UsernameTeste) };
+            var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) };
+            testController.ControllerContext = new ControllerContext { HttpContext = httpContext };
+
+            // Act
+            var result = testController.ConsultarDestinatarioTransferencia(cpfLogado) as JsonResult;
+
+            // Assert
+            Assert.IsNotNull(result);
+            var json = Newtonsoft.Json.Linq.JObject.FromObject(result.Value!);
+            Assert.IsFalse((bool)json["sucesso"]!);
+            Assert.IsTrue((bool)json["mesmoUsuario"]!);
+        }
+
+        [TestMethod()]
+        public void ConsultarDestinatarioTransferencia_PessoaCadastrada_RetornaExisteTrueComDados()
+        {
+            // Arrange
+            var mockPessoa = new Mock<IPessoaService>();
+            var cpfAmigo = "04026893057";
+            mockPessoa.Setup(p => p.GetByCpf(cpfAmigo))
+                .Returns(new Pessoa { Cpf = cpfAmigo, Nome = "Amigo Teste", Email = "amigo@gmail.com" });
+
+            var testController = new InscricaoController(
+                null!,
+                Mock.Of<ITipoInscricaoService>(),
+                Mock.Of<IEventoService>(),
+                Mock.Of<IMapper>(),
+                Mock.Of<IInscricaoService>(),
+                mockPessoa.Object,
+                Mock.Of<ISubeventoService>());
+
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, UsernameTeste) };
+            var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) };
+            testController.ControllerContext = new ControllerContext { HttpContext = httpContext };
+
+            // Act
+            var result = testController.ConsultarDestinatarioTransferencia(cpfAmigo) as JsonResult;
+
+            // Assert
+            Assert.IsNotNull(result);
+            var json = Newtonsoft.Json.Linq.JObject.FromObject(result.Value!);
+            Assert.IsTrue((bool)json["sucesso"]!);
+            Assert.IsTrue((bool)json["existe"]!);
+            Assert.AreEqual("Amigo Teste", (string)json["nome"]!);
+            Assert.AreEqual("amigo@gmail.com", (string)json["email"]!);
+        }
+
+        [TestMethod()]
+        public void ConsultarDestinatarioTransferencia_PessoaNaoCadastrada_RetornaExisteFalse()
+        {
+            // Arrange
+            var mockPessoa = new Mock<IPessoaService>();
+            var cpfNovo = "04026893057";
+            mockPessoa.Setup(p => p.GetByCpf(It.IsAny<string>()))
+                .Returns((Pessoa)null!);
+
+            var testController = new InscricaoController(
+                null!,
+                Mock.Of<ITipoInscricaoService>(),
+                Mock.Of<IEventoService>(),
+                Mock.Of<IMapper>(),
+                Mock.Of<IInscricaoService>(),
+                mockPessoa.Object,
+                Mock.Of<ISubeventoService>());
+
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, UsernameTeste) };
+            var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) };
+            testController.ControllerContext = new ControllerContext { HttpContext = httpContext };
+
+            // Act
+            var result = testController.ConsultarDestinatarioTransferencia(cpfNovo) as JsonResult;
+
+            // Assert
+            Assert.IsNotNull(result);
+            var json = Newtonsoft.Json.Linq.JObject.FromObject(result.Value!);
+            Assert.IsTrue((bool)json["sucesso"]!);
+            Assert.IsFalse((bool)json["existe"]!);
+        }
     }
 }
