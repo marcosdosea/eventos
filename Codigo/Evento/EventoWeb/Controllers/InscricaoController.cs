@@ -788,10 +788,16 @@ namespace EventoWeb.Controllers
                 return RedirectToAction(nameof(minhasInscricoes));
             }
 
+            if ((!model.IdInscricao.HasValue || model.IdInscricao.Value == 0) && (!model.IdSubevento.HasValue || model.IdSubevento.Value == 0))
+            {
+                TempData["ParticipanteMessage"] = "Nenhum ingresso ou subevento selecionado para transferência.";
+                return RedirectToAction(nameof(minhasInscricoes));
+            }
+
             try
             {
                 _inscricaoService.TransferirIngresso(
-                    model.IdInscricao,
+                    model.IdInscricao ?? 0,
                     model.CpfAmigo,
                     model.NomeAmigo,
                     model.EmailAmigo,
@@ -904,10 +910,10 @@ namespace EventoWeb.Controllers
                         var sub = _subeventoService?.Get(model.IdSubevento.Value);
                         descricaoIngresso = sub != null ? $"Subevento: {sub.Nome}" : "Subevento";
                     }
-                    else if (model.IdInscricao > 0)
+                    else if (model.IdInscricao.HasValue && model.IdInscricao.Value > 0)
                     {
                         var inscricoes = _inscricaoService?.GetAllEventsByUserId(usernameOrigem);
-                        var inscricao = inscricoes?.FirstOrDefault(i => i.Id == model.IdInscricao);
+                        var inscricao = inscricoes?.FirstOrDefault(i => i.Id == model.IdInscricao.Value);
                         if (inscricao?.IdEventoNavigation != null)
                         {
                             descricaoIngresso = $"Evento: {inscricao.IdEventoNavigation.Nome}";

@@ -5,7 +5,7 @@ namespace EventoWeb.Models
 {
     public class TransferirIngressoModel
     {
-        public uint IdInscricao { get; set; }
+        public uint? IdInscricao { get; set; }
 
         public uint? IdSubevento { get; set; }
 

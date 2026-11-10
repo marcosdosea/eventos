@@ -509,13 +509,18 @@ namespace Service
                         bool subJaOcorreu = (sub != null) && (
                             (sub.DataFim != DateTime.MinValue && sub.DataFim < DateTime.Now) ||
                             (sub.DataFim == DateTime.MinValue && sub.DataInicio != DateTime.MinValue && sub.DataInicio < DateTime.Now) ||
-                            sub.Status != "A"
+                            sub.Status == "F" || sub.Status == "I"
                         );
 
                         if (subJaOcorreu)
                             throw new InvalidOperationException("Não é possível transferir ingresso de um subevento que já aconteceu ou foi encerrado.");
 
-                        TransferirRegistroSubEvento(subInscricao, amigo.Id);
+                        var amigoJaTemSub = _context.Inscricaopessoasubeventos
+                            .Any(s => s.IdPessoa == amigo.Id && s.IdSubEvento == idSubevento.Value && s.Status != "C");
+                        if (!amigoJaTemSub)
+                        {
+                            TransferirRegistroSubEvento(subInscricao, amigo.Id);
+                        }
                     }
                 }
 
@@ -539,11 +544,16 @@ namespace Service
                 bool subeventoJaOcorreu = (sub != null) && (
                     (sub.DataFim != DateTime.MinValue && sub.DataFim < DateTime.Now) ||
                     (sub.DataFim == DateTime.MinValue && sub.DataInicio != DateTime.MinValue && sub.DataInicio < DateTime.Now) ||
-                    sub.Status != "A"
+                    sub.Status == "F" || sub.Status == "I"
                 );
 
                 if (subeventoJaOcorreu)
                     throw new InvalidOperationException("Não é possível transferir ingresso de um subevento que já aconteceu ou foi encerrado.");
+
+                var amigoJaInscrito = _context.Inscricaopessoasubeventos
+                    .Any(s => s.IdPessoa == amigo.Id && s.IdSubEvento == idSubevento.Value && s.Status != "C");
+                if (amigoJaInscrito)
+                    throw new InvalidOperationException("O destinatário já possui uma inscrição ativa neste subevento.");
 
                 TransferirRegistroSubEvento(subInscricao, amigo.Id);
                 _context.SaveChanges();

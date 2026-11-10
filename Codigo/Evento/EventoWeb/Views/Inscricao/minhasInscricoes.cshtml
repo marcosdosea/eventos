@@ -229,7 +229,7 @@
                                                     var subJaOcorreu = (sub.IdSubEventoNavigation != null) && (
                                                         (sub.IdSubEventoNavigation.DataFim != DateTime.MinValue && sub.IdSubEventoNavigation.DataFim < DateTime.Now) ||
                                                         (sub.IdSubEventoNavigation.DataFim == DateTime.MinValue && sub.IdSubEventoNavigation.DataInicio != DateTime.MinValue && sub.IdSubEventoNavigation.DataInicio < DateTime.Now) ||
-                                                        sub.IdSubEventoNavigation.Status != "A"
+                                                        sub.IdSubEventoNavigation.Status == "F" || sub.IdSubEventoNavigation.Status == "I"
                                                     );
 
                                                     @if (subJaOcorreu)
@@ -246,7 +246,7 @@
                                                                 style="font-size: 0.72rem; line-height: 1;"
                                                                 data-bs-toggle="modal"
                                                                 data-bs-target="#modalTransferirIngresso"
-                                                                data-id-inscricao=""
+                                                                data-id-inscricao="0"
                                                                 data-id-subevento="@sub.IdSubEvento"
                                                                 data-nome-evento="@(evento?.Nome ?? "Evento")"
                                                                 data-nome-subevento="@(sub.IdSubEventoNavigation?.Nome ?? "Subevento")"
@@ -517,8 +517,8 @@
                 var nomeSubevento = button.getAttribute('data-nome-subevento') || '';
                 var protocolo = button.getAttribute('data-protocolo') || '';
 
-                document.getElementById('transferirIdInscricao').value = idInscricao;
-                document.getElementById('transferirIdSubevento').value = idSubevento;
+                document.getElementById('transferirIdInscricao').value = idInscricao || '0';
+                document.getElementById('transferirIdSubevento').value = idSubevento || '';
 
                 var descElement = document.getElementById('transferirDescricaoIngresso');
                 if (nomeSubevento) {
