@@ -109,5 +109,53 @@ namespace Service.Tests
             Assert.IsNotNull(lista[0].IdPessoaNavigation);
             Assert.AreEqual("João Vitor Sodré", lista[0].IdPessoaNavigation.Nome);
         }
+
+        [TestMethod()]
+        public async Task AlterarOuExcluirPresencaFinalizada_RecalculaEventoESubevento()
+        {
+            var inicio = new DateTime(2024, 10, 2, 8, 0, 0);
+            _context.Eventos.Add(new Evento
+            {
+                Id = 1, Nome = "Evento Finalizado", Descricao = "Desc", Status = "F",
+                DataInicio = inicio, DataFim = inicio.AddHours(4), CargaHoraria = 4, IdTipoEvento = 1
+            });
+            _context.Subeventos.Add(new Subevento
+            {
+                Id = 1, IdEvento = 1, Nome = "Sub", Descricao = "Sub", Status = "F",
+                DataInicio = inicio, DataFim = inicio.AddHours(2),
+                DataInicioInscricao = inicio.AddDays(-2), DataFimInscricao = inicio.AddDays(-1),
+                CargaHoraria = 2, IdTipoEvento = 1
+            });
+            _context.Inscricaopessoaeventos.Add(new Inscricaopessoaevento
+            {
+                Id = 1, IdEvento = 1, IdPessoa = 1, IdPapel = 4, Status = "A", DataInscricao = inicio
+            });
+            _context.Inscricaopessoasubeventos.Add(new Inscricaopessoasubevento
+            {
+                IdPessoa = 1, IdSubEvento = 1, IdPapel = 4, Status = "A", DataInscricao = inicio
+            });
+            _context.Participacaopessoasubeventos.Add(new Participacaopessoasubevento
+            {
+                Id = 1, IdPessoa = 1, IdSubEvento = 1, Entrada = inicio, Saida = inicio.AddHours(1)
+            });
+            _context.SaveChanges();
+
+            var presencaEvento = await _participacaoService.GetByIdAsync(1);
+            presencaEvento.Saida = inicio.AddHours(2);
+            Assert.IsTrue(await _participacaoService.UpdateAsync(presencaEvento));
+            Assert.AreEqual(50m, _context.Inscricaopessoaeventos.Find((uint)1)!.FrequenciaFinal);
+
+            Assert.IsTrue(await _participacaoService.DeleteAsync(1));
+            Assert.AreEqual(0m, _context.Inscricaopessoaeventos.Find((uint)1)!.FrequenciaFinal);
+
+            var serviceSub = new ParticipacaoPessoaSubEventoService(_context);
+            var presencaSub = _context.Participacaopessoasubeventos.Find((uint)1)!;
+            presencaSub.Saida = inicio.AddHours(2);
+            serviceSub.Update(presencaSub);
+            Assert.AreEqual(100m, _context.Inscricaopessoasubeventos.Find((uint)1, (uint)1)!.FrequenciaFinal);
+
+            serviceSub.Delete(1);
+            Assert.AreEqual(0m, _context.Inscricaopessoasubeventos.Find((uint)1, (uint)1)!.FrequenciaFinal);
+        }
     }
 }

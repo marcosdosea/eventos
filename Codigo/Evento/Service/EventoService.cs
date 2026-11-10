@@ -236,6 +236,15 @@ namespace Service
                 }
                 
 
+                if (evento.Status == "F")
+                {
+                    AtualizarFrequenciaFinal(evento.Id, saveChanges: false);
+                    var subeventoService = new SubeventoService(_context);
+                    foreach (var idSub in _context.Subeventos.Where(s => s.IdEvento == evento.Id).Select(s => s.Id).ToList())
+                    {
+                        subeventoService.AtualizarFrequenciaFinal(idSub, saveChanges: false);
+                    }
+                }
                 _context.SaveChanges();
                 return true;
             }
@@ -405,6 +414,87 @@ namespace Service
                     _context.SaveChanges();
                 }
             }
+        }
+
+        public void AtualizarFrequenciaFinal(uint idEvento, uint? idPessoa = null, bool saveChanges = true)
+        {
+            var evento = _context.Eventos.FirstOrDefault(e => e.Id == idEvento);
+            if (evento == null)
+                return;
+
+            var inscricoes = _context.Inscricaopessoaeventos
+                .Where(i => i.IdEvento == idEvento && i.IdPapel == PapelParticipante && i.Status != "C" && (!idPessoa.HasValue || i.IdPessoa == idPessoa.Value))
+                .ToList();
+
+            var rastreadas = _context.ChangeTracker.Entries<Participacaopessoaevento>().ToList();
+            var idsRastreados = rastreadas
+                .Where(e => e.State != EntityState.Added)
+                .Select(e => e.Entity.Id)
+                .ToHashSet();
+
+            var presencasBanco = _context.Participacaopessoaeventos
+                .AsNoTracking()
+                .Where(p => p.IdEvento == idEvento && (!idPessoa.HasValue || p.IdPessoa == idPessoa.Value) && !idsRastreados.Contains(p.Id))
+                .ToList();
+
+            var presencasMemoria = rastreadas
+                .Where(e => e.State != EntityState.Deleted && e.Entity.IdEvento == idEvento && (!idPessoa.HasValue || e.Entity.IdPessoa == idPessoa.Value))
+                .Select(e => e.Entity);
+
+            var presencasPorPessoa = presencasBanco
+                .Concat(presencasMemoria)
+                .GroupBy(p => p.IdPessoa)
+                .ToDictionary(g => g.Key, g => g.Select(p => (p.Entrada, p.Saida)).ToList());
+
+            foreach (var inscricao in inscricoes)
+            {
+                presencasPorPessoa.TryGetValue(inscricao.IdPessoa, out var periodos);
+                inscricao.FrequenciaFinal = CalcularFrequencia(evento.DataInicio, evento.DataFim, evento.CargaHoraria, periodos ?? new());
+            }
+
+            if (saveChanges)
+            {
+                _context.SaveChanges();
+            }
+        }
+
+        public static decimal CalcularFrequencia(
+            DateTime? inicio, DateTime? fim, decimal cargaHoraria,
+            IEnumerable<(DateTime Entrada, DateTime? Saida)> participacoes)
+        {
+            if (!inicio.HasValue || !fim.HasValue || fim <= inicio || cargaHoraria <= 0)
+                return 0m;
+
+            var periodos = participacoes
+                .Where(p => p.Saida.HasValue && p.Saida.Value > p.Entrada)
+                .Select(p => (
+                    Inicio: p.Entrada < inicio.Value ? inicio.Value : p.Entrada,
+                    Fim: p.Saida!.Value > fim.Value ? fim.Value : p.Saida.Value))
+                .Where(p => p.Fim > p.Inicio)
+                .OrderBy(p => p.Inicio)
+                .ThenBy(p => p.Fim)
+                .ToList();
+
+            if (periodos.Count == 0) return 0m;
+
+            long ticks = 0;
+            var atual = periodos[0];
+            foreach (var proximo in periodos.Skip(1))
+            {
+                if (proximo.Inicio <= atual.Fim)
+                {
+                    if (proximo.Fim > atual.Fim) atual.Fim = proximo.Fim;
+                }
+                else
+                {
+                    ticks += (atual.Fim - atual.Inicio).Ticks;
+                    atual = proximo;
+                }
+            }
+            ticks += (atual.Fim - atual.Inicio).Ticks;
+
+            var percentual = (decimal)ticks * 100m / (cargaHoraria * (decimal)TimeSpan.TicksPerHour);
+            return Math.Round(Math.Min(100m, percentual), 2, MidpointRounding.AwayFromZero);
         }
 
         public IEnumerable<Evento> Search(EventoFilterDTO filter, int pagina, int tamanhoPagina, out int totalRegistros)
@@ -694,10 +784,30 @@ namespace Service
             // Aptos a certificado + frequência média (base: inscrições ativas)
             var ativas = inscricoes.Where(i => i.Status == "A").ToList();
             var baseCert = ativas.Count > 0 ? ativas : inscricoes;
-            resultado.AptosCertificado = baseCert.Count(i => i.FrequenciaFinal >= evento.FrequenciaMinimaCertificado);
-            resultado.FrequenciaMedia = baseCert.Count > 0
-                ? Math.Round(baseCert.Average(i => i.FrequenciaFinal), 2)
-                : 0;
+            if (filtros.IdSubevento.HasValue)
+            {
+                var idsBaseCert = baseCert.Select(i => i.IdPessoa).Distinct().ToList();
+                var subevento = _context.Subeventos.AsNoTracking()
+                    .FirstOrDefault(s => s.Id == filtros.IdSubevento.Value && s.IdEvento == idEvento);
+                var frequenciasSub = _context.Inscricaopessoasubeventos.AsNoTracking()
+                    .Where(s => s.IdSubEvento == filtros.IdSubevento.Value && s.IdPapel == 4 &&
+                                s.Status != "C" && idsBaseCert.Contains(s.IdPessoa))
+                    .ToList();
+                var ativasSub = frequenciasSub.Where(s => s.Status == "A").ToList();
+                var baseSub = ativasSub.Count > 0 ? ativasSub : frequenciasSub;
+                resultado.AptosCertificado = subevento == null ? 0 :
+                    baseSub.Count(s => s.FrequenciaFinal >= subevento.FrequenciaMinimaCertificado);
+                resultado.FrequenciaMedia = baseSub.Count > 0
+                    ? Math.Round(baseSub.Average(s => s.FrequenciaFinal), 2)
+                    : 0;
+            }
+            else
+            {
+                resultado.AptosCertificado = baseCert.Count(i => i.FrequenciaFinal >= evento.FrequenciaMinimaCertificado);
+                resultado.FrequenciaMedia = baseCert.Count > 0
+                    ? Math.Round(baseCert.Average(i => i.FrequenciaFinal), 2)
+                    : 0;
+            }
 
             // Ocupação por subevento (exclui canceladas)
             var subeventos = _context.Subeventos
