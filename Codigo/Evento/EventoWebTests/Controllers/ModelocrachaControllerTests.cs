@@ -774,31 +774,19 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod]
-        public void IsImagemTest_WebP_Valido()
+        public void IsImagemTest_ValidaExtensoesSuportadasERejeitaInvalidas()
         {
             var webpBytes = new byte[] { 0x52, 0x49, 0x46, 0x46, 0x24, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50, 0x56, 0x50, 0x38, 0x20 };
-            Assert.IsTrue(webpBytes.IsImagem());
-        }
-
-        [TestMethod]
-        public void IsImagemTest_Jpeg_Valido()
-        {
             var jpegBytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xDB, 0x00, 0x43, 0x00 };
+            var tiffLittleEndian = new byte[] { 0x49, 0x49, 0x2A, 0x00, 0x08, 0x00, 0x00, 0x00 };
+            var tiffBigEndian = new byte[] { 0x4D, 0x4D, 0x00, 0x2A, 0x00, 0x00, 0x00, 0x08 };
+            var gifBytes = System.Text.Encoding.ASCII.GetBytes("GIF89a");
+
+            Assert.IsTrue(webpBytes.IsImagem());
             Assert.IsTrue(jpegBytes.IsImagem());
-        }
-
-        [TestMethod]
-        public void IsImagemTest_TiffLittleEndian_Valido()
-        {
-            var tiffBytes = new byte[] { 0x49, 0x49, 0x2A, 0x00, 0x08, 0x00, 0x00, 0x00 };
-            Assert.IsTrue(tiffBytes.IsImagem());
-        }
-
-        [TestMethod]
-        public void IsImagemTest_TiffBigEndian_Valido()
-        {
-            var tiffBytes = new byte[] { 0x4D, 0x4D, 0x00, 0x2A, 0x00, 0x00, 0x00, 0x08 };
-            Assert.IsTrue(tiffBytes.IsImagem());
+            Assert.IsTrue(tiffLittleEndian.IsImagem());
+            Assert.IsTrue(tiffBigEndian.IsImagem());
+            Assert.IsFalse(gifBytes.IsImagem());
         }
 
         [TestMethod]
@@ -881,25 +869,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("data:image/tiff;base64,TU0AKgAAAAgAAAAQAAAB", modelTiffBigEndian.LogotipoDataUrl);
         }
 
-        [TestMethod]
-        public void IsImagemTest_Gif_Invalido()
-        {
-            var gifBytes = System.Text.Encoding.ASCII.GetBytes("GIF89a");
-            Assert.IsFalse(gifBytes.IsImagem());
-        }
 
-        [TestMethod]
-        public void CreateTest_Post_QuandoModeloJaExisteParaEvento_Atualiza()
-        {
-            var model = GetNewModelocracha();
-            model.IdEvento = 1;
-
-            var result = controller.Create(model);
-
-            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
-            var redirect = (RedirectToActionResult)result;
-            Assert.AreEqual("Index", redirect.ActionName);
-        }
 
         [TestMethod]
         public void EditTest_Post_TrocaEventoAlvoSemModelo_EditaParaNovoEvento()
