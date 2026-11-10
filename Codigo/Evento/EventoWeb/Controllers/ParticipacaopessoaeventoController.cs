@@ -233,6 +233,197 @@ namespace EventoWeb.Controllers
             return File(csv, "text/csv; charset=utf-8", nomeArquivo);
         }
 
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Route("ParticipacaoPessoaEvento/ImportarCsv")]
+        [Route("Frequencia/ImportarCsv")]
+        public async Task<IActionResult> ImportarCsv(uint idEvento, uint? idSubEvento, IFormFile? arquivoPlanilha, string actionRetorno = "Frequencia")
+        {
+            var destino = actionRetorno == "Frequencia" ? nameof(Frequencia) : nameof(Index);
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+            {
+                TempData.Clear();
+                TempData["ErrorMessage"] = "Usuário não autenticado.";
+                if (actionRetorno == "Frequencia" || !(User.IsInRole("GESTOR") || User.IsInRole("ADMINISTRADOR")))
+                {
+                    return RedirectToAction("Index", "Home");
+                }
+                return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });
+            }
+
+            var gestor = _inscricaoService.GetGestorInEvent(username, idEvento);
+            var colaborador = _inscricaoService.GetColaboradorInEvent(username, idEvento);
+
+            if (gestor == null && colaborador == null && !User.IsInRole("ADMINISTRADOR"))
+            {
+                var cpfUsuario = username.Replace(".", "").Replace("-", "");
+                gestor = _inscricaoService.GetGestorInEvent(cpfUsuario, idEvento);
+                colaborador = _inscricaoService.GetColaboradorInEvent(cpfUsuario, idEvento);
+            }
+
+            if (gestor == null && colaborador == null && !User.IsInRole("ADMINISTRADOR"))
+            {
+                TempData.Clear();
+                TempData["ErrorMessage"] = "Você não possui um evento vinculado para importar participantes!";
+                if (actionRetorno == "Frequencia" || !(User.IsInRole("GESTOR") || User.IsInRole("ADMINISTRADOR")))
+                {
+                    return RedirectToAction("Index", "Home");
+                }
+                return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });
+            }
+
+            if (idSubEvento.HasValue && idSubEvento.Value > 0)
+            {
+                var subEvento = _subeventoService.Get(idSubEvento.Value);
+                if (subEvento == null || subEvento.IdEvento != idEvento)
+                {
+                    return NotFound();
+                }
+            }
+
+            if (arquivoPlanilha == null || arquivoPlanilha.Length == 0)
+            {
+                TempData["ErrorMessage"] = "Selecione um arquivo de planilha (.csv, .xlsx ou .xls) válido para importar.";
+                return RedirectToAction(destino, new { idEvento, idSubEvento });
+            }
+
+            var parser = new PlanilhaParser();
+            var resultado = parser.Parse(arquivoPlanilha);
+
+            if (resultado.ListaSucesso.Count == 0)
+            {
+                if (resultado.ListaErros.Count > 0)
+                {
+                    var primeiroErro = resultado.ListaErros[0];
+                    TempData["ErrorMessage"] = $"Nenhum participante importado. Erro: Linha {primeiroErro.NumeroLinha} - {primeiroErro.MotivoRecusa}.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Nenhum participante válido foi encontrado no arquivo.";
+                }
+                return RedirectToAction(destino, new { idEvento, idSubEvento });
+            }
+
+            int importadosComSucesso = 0;
+
+            foreach (var inscritoDto in resultado.ListaSucesso)
+            {
+                var cpf = inscritoDto.Cpf;
+                if (string.IsNullOrWhiteSpace(cpf))
+                    continue;
+
+                var pessoa = _pessoaService.GetByCpf(cpf);
+                if (pessoa == null)
+                {
+                    var novaPessoa = new Pessoa
+                    {
+                        Cpf = cpf,
+                        Nome = inscritoDto.Nome,
+                        NomeCracha = inscritoDto.Nome.Length > 20 ? inscritoDto.Nome.Substring(0, 20) : inscritoDto.Nome,
+                        Email = string.IsNullOrWhiteSpace(inscritoDto.Email) ? $"{cpf}@evento.com" : inscritoDto.Email,
+                        Sexo = "N"
+                    };
+
+                    try
+                    {
+                        _pessoaService.Create(novaPessoa);
+                        pessoa = _pessoaService.GetByCpf(cpf);
+                    }
+                    catch
+                    {
+                        continue;
+                    }
+                }
+
+                if (pessoa == null)
+                    continue;
+
+                var inscricao = _inscricaoService.GetByEventoAndPapel(idEvento, 4)
+                    .FirstOrDefault(i => i.IdPessoa == pessoa.Id);
+
+                if (inscricao == null)
+                {
+                    if (!_inscricaoService.IsInscrito(pessoa.Id, idEvento))
+                    {
+                        var novaInscricao = new Inscricaopessoaevento
+                        {
+                            IdPessoa = pessoa.Id,
+                            IdEvento = idEvento,
+                            IdPapel = 4,
+                            DataInscricao = DateTime.Now,
+                            NomeCracha = !string.IsNullOrWhiteSpace(pessoa.NomeCracha) ? pessoa.NomeCracha : pessoa.Nome,
+                            Status = "S"
+                        };
+                        try
+                        {
+                            _inscricaoService.CreateInscricaoEvento(novaInscricao);
+                            _eventoService.AtualizarVagasDisponiveis(idEvento);
+                        }
+                        catch { }
+                    }
+                }
+
+                if (idSubEvento.HasValue && idSubEvento.Value > 0)
+                {
+                    var inscricoesSub = _inscricaoService.GetSubByEvento(idEvento);
+                    var inscricaoSub = inscricoesSub?.FirstOrDefault(i => i.IdPessoa == pessoa.Id && i.IdSubEvento == idSubEvento.Value);
+                    if (inscricaoSub == null)
+                    {
+                        var novaInscricaoSub = new Inscricaopessoasubevento
+                        {
+                            IdPessoa = pessoa.Id,
+                            IdSubEvento = idSubEvento.Value,
+                            IdPapel = 4,
+                            DataInscricao = DateTime.Now,
+                            Status = "S",
+                            FrequenciaFinal = 0m,
+                            Valor = 0m
+                        };
+                        try
+                        {
+                            _inscricaoService.CreateInscricaoSubEvento(novaInscricaoSub);
+                            _subeventoService.AtualizarVagasDisponiveis(idSubEvento.Value);
+                        }
+                        catch { }
+                    }
+
+                    var novaParticipacaoSub = new Participacaopessoasubevento
+                    {
+                        IdPessoa = pessoa.Id,
+                        IdSubEvento = idSubEvento.Value,
+                        Entrada = DateTime.Now
+                    };
+                    _participacaoSubEventoService.Create(novaParticipacaoSub);
+                }
+                else
+                {
+                    var novaParticipacao = new Participacaopessoaevento
+                    {
+                        IdPessoa = pessoa.Id,
+                        IdEvento = idEvento,
+                        Entrada = DateTime.Now
+                    };
+                    await _participacaoService.AddAsync(novaParticipacao);
+                }
+
+                importadosComSucesso++;
+            }
+
+            int totalErros = resultado.ListaErros.Count;
+            if (totalErros == 0)
+            {
+                TempData["Message"] = $"{importadosComSucesso} participante(s) importado(s) com sucesso a partir da planilha.";
+            }
+            else
+            {
+                TempData["Message"] = $"{importadosComSucesso} participante(s) importado(s) com sucesso. {totalErros} linha(s) continham inconsistências e foram ignoradas.";
+            }
+
+            return RedirectToAction(destino, new { idEvento, idSubEvento });
+        }
+
         /// <summary>
         /// Valida se o usuário logado tem papel GESTOR e vínculo ativo com o evento.
         /// Apenas gestores do evento podem exportar a planilha de frequência em CSV.
