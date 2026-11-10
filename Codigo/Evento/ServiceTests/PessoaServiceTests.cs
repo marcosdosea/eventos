@@ -1,4 +1,4 @@
-﻿using Core;
+using Core;
 using Core.Service;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -866,6 +866,48 @@ namespace Service.Tests
             );
 
             return (pessoaServiceLocal, userManagerLocal);
+        }
+
+        [TestMethod]
+        public void Preferencias_PersistemValidamEPermitemRemocaoNoMySql()
+        {
+            var conexao = Environment.GetEnvironmentVariable("BORALA_TEST_MYSQL_EVENTO");
+            if (string.IsNullOrWhiteSpace(conexao)) Assert.Inconclusive("Defina BORALA_TEST_MYSQL_EVENTO para executar no banco do projeto.");
+            using var db = new EventoContext(new DbContextOptionsBuilder<EventoContext>().UseMySQL(conexao!).Options);
+            using var transacao = db.Database.BeginTransaction();
+            var par = (from pessoa in db.Pessoas from area in db.Areainteresses
+                       where !db.Pessoaareainteresses.Any(p => p.IdPessoa == pessoa.Id && p.IdAreaInteresse == area.Id)
+                       select new { Pessoa = pessoa.Id, Area = area.Id }).First();
+            var ufs = db.Estadosbrasils.OrderBy(e => e.Estado).Select(e => e.Estado).Take(2).ToArray();
+            Assert.AreEqual(2, ufs.Length);
+            var service = new PessoaService(null!, db, null!, null!);
+
+            Assert.IsNotNull(service.SalvarPreferenciaInteresse(par.Pessoa, par.Area, true, ufs));
+            Assert.IsNotNull(service.SalvarPreferenciaInteresse(par.Pessoa, par.Area, false, []));
+            Assert.IsNotNull(service.SalvarPreferenciaInteresse(par.Pessoa, par.Area, false, [ufs[0], ufs[0]]));
+            Assert.IsNotNull(service.SalvarPreferenciaInteresse(par.Pessoa, par.Area, false, ["ZZ"]));
+            Assert.IsNotNull(service.SalvarPreferenciaInteresse(par.Pessoa, uint.MaxValue, true, []));
+            Assert.IsNull(service.SalvarPreferenciaInteresse(par.Pessoa, par.Area, false, ufs));
+            db.ChangeTracker.Clear();
+            var salvo = service.GetPreferenciasInteresse(par.Pessoa).Single(p => p.IdAreaInteresse == par.Area);
+            Assert.AreEqual((sbyte)0, salvo.TodosEstados);
+            CollectionAssert.AreEquivalent(ufs, salvo.EstadoEstadosBrasils.Select(e => e.Estado).ToArray());
+
+            Assert.IsNull(service.SalvarPreferenciaInteresse(par.Pessoa, par.Area, true, []));
+            db.ChangeTracker.Clear();
+            salvo = service.GetPreferenciasInteresse(par.Pessoa).Single(p => p.IdAreaInteresse == par.Area);
+            Assert.AreEqual((sbyte)1, salvo.TodosEstados);
+            Assert.AreEqual(0, salvo.EstadoEstadosBrasils.Count);
+            Assert.IsNull(service.SalvarPreferenciaInteresse(par.Pessoa, par.Area, false, [ufs[0]]));
+            var outraPessoa = db.Pessoas.Where(p => p.Id != par.Pessoa &&
+                !db.Pessoaareainteresses.Any(i => i.IdPessoa == p.Id && i.IdAreaInteresse == par.Area))
+                .Select(p => p.Id).First();
+            Assert.IsFalse(service.RemoverPreferenciaInteresse(outraPessoa, par.Area));
+            Assert.IsTrue(service.GetPreferenciasInteresse(par.Pessoa).Any(p => p.IdAreaInteresse == par.Area));
+            Assert.IsTrue(service.RemoverPreferenciaInteresse(par.Pessoa, par.Area));
+            db.ChangeTracker.Clear();
+            Assert.IsFalse(service.GetPreferenciasInteresse(par.Pessoa).Any(p => p.IdAreaInteresse == par.Area));
+            transacao.Rollback();
         }
     }
 }

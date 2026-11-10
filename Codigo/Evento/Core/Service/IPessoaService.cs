@@ -6,6 +6,10 @@ namespace Core.Service
     public interface IPessoaService
     {
 
+        IReadOnlyList<Pessoaareainteresse> GetPreferenciasInteresse(uint idPessoa);
+        string? SalvarPreferenciaInteresse(uint idPessoa, uint idArea, bool todosEstados, IReadOnlyList<string> estados);
+        bool RemoverPreferenciaInteresse(uint idPessoa, uint idArea);
+
         uint Create(Pessoa pessoa);
         Task Edit(Pessoa pessoa);
         Task<bool> Delete(uint id);

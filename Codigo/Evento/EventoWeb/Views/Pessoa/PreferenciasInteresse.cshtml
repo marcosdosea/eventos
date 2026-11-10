@@ -1,0 +1,100 @@
+@model EventoWeb.Models.PreferenciasInteresseModel
+@{
+    ViewData["Title"] = "Áreas de interesse";
+}
+
+<div class="container py-4" style="max-width: 960px">
+    <a asp-area="Identity" asp-page="/Account/Manage/Index" class="text-decoration-none">← Voltar para minha conta</a>
+    <h1 class="h2 mt-3">Áreas de interesse</h1>
+    <p class="text-muted">Escolha os assuntos e os estados em que você quer acompanhar eventos.</p>
+
+    @if (TempData["PreferenciasMensagem"] is string mensagem)
+    {
+        <div class="alert alert-success" role="status">@mensagem</div>
+    }
+
+    <section class="card shadow-sm mb-4" aria-labelledby="preferencias-titulo">
+        <div class="card-body p-4">
+            <h2 class="h4" id="preferencias-titulo">Minhas preferências</h2>
+            @if (!Model.Preferencias.Any())
+            {
+                <p class="text-muted mb-0">Você ainda não adicionou nenhuma área de interesse.</p>
+            }
+            else
+            {
+                <ul class="list-group list-group-flush">
+                    @foreach (var item in Model.Preferencias)
+                    {
+                        <li class="list-group-item px-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                            <div><strong>@item.IdAreaInteresseNavigation.Nome</strong><br />
+                                <span class="text-muted">@(item.TodosEstados == 1 ? "Todo o Brasil" : string.Join(", ", item.EstadoEstadosBrasils.OrderBy(e => e.Nome).Select(e => e.Nome)))</span>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a asp-action="PreferenciasInteresse" asp-route-areaId="@item.IdAreaInteresse" class="btn btn-outline-primary btn-sm" aria-label="Editar @item.IdAreaInteresseNavigation.Nome">Editar</a>
+                                <form asp-action="RemoverPreferenciaInteresse" method="post">
+                                    <input type="hidden" name="areaId" value="@item.IdAreaInteresse" />
+                                    <button class="btn btn-outline-danger btn-sm" type="submit" aria-label="Remover @item.IdAreaInteresseNavigation.Nome">Remover</button>
+                                </form>
+                            </div>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+    </section>
+
+    <section class="card shadow-sm" aria-labelledby="form-titulo">
+        <div class="card-body p-4">
+            <h2 class="h4" id="form-titulo">@(Model.Editando ? "Editar preferência" : "Adicionar preferência")</h2>
+            <form asp-action="SalvarPreferenciaInteresse" method="post">
+                <input type="hidden" asp-for="Editando" />
+                <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+                <div class="mb-3">
+                    <label asp-for="AreaId" class="form-label">Área de interesse</label>
+                    @if (Model.Editando) { <input type="hidden" name="AreaId" value="@Model.AreaId" /> }
+                    <select asp-for="AreaId" class="form-select" required disabled="@Model.Editando">
+                        <option value="">Selecione uma área</option>
+                        @foreach (var area in Model.Areas)
+                        {
+                            <option value="@area.Id">@area.Nome</option>
+                        }
+                    </select>
+                </div>
+                <fieldset class="mb-3">
+                    <legend class="fs-6 fw-semibold">Onde acompanhar eventos?</legend>
+                    <div class="form-check"><input class="form-check-input" type="radio" asp-for="Abrangencia" value="brasil" id="abrangencia-brasil" /><label class="form-check-label" for="abrangencia-brasil">Todo o Brasil</label></div>
+                    <div class="form-check"><input class="form-check-input" type="radio" asp-for="Abrangencia" value="estados" id="abrangencia-estados" /><label class="form-check-label" for="abrangencia-estados">Estados específicos</label></div>
+                </fieldset>
+                <fieldset class="mb-4" id="lista-estados">
+                    <legend class="fs-6">Selecione os estados</legend>
+                    <div class="row row-cols-2 row-cols-md-3 g-2">
+                        @foreach (var estado in Model.EstadosDisponiveis)
+                        {
+                            <div class="col"><div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="Estados" id="estado-@estado.Estado" value="@estado.Estado" checked="@Model.Estados.Contains(estado.Estado)" />
+                                <label class="form-check-label" for="estado-@estado.Estado">@estado.Nome</label>
+                            </div></div>
+                        }
+                    </div>
+                </fieldset>
+                <button type="submit" class="btn btn-primary">Salvar preferência</button>
+                @if (Model.Editando) { <a asp-action="PreferenciasInteresse" class="btn btn-link">Cancelar edição</a> }
+            </form>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const brasil = document.getElementById('abrangencia-brasil');
+            const lista = document.getElementById('lista-estados');
+            function atualizar() {
+                lista.hidden = brasil.checked;
+                lista.disabled = brasil.checked;
+            }
+            document.querySelectorAll('input[name="Abrangencia"]').forEach(radio => radio.addEventListener('change', atualizar));
+            atualizar();
+        })();
+    </script>
+}

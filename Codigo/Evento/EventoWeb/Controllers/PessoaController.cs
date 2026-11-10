@@ -18,6 +18,7 @@ namespace EventoWeb.Controllers
     [Authorize]
     public class PessoaController : Controller
     {
+        private readonly IAreaInteresseService _areaInteresseService;
         private readonly IPessoaService _pessoaService;
         private readonly IEstadosbrasilService _estadosbrasilService;
         private readonly IMapper _mapper;
@@ -27,9 +28,10 @@ namespace EventoWeb.Controllers
         public PessoaController(
             IPessoaService pessoaService,
             IEstadosbrasilService estadosbrasilService,
-            IMapper mapper, IEmailService emailService)   
+            IMapper mapper, IEmailService emailService, IAreaInteresseService areaInteresseService)
         {
             _pessoaService = pessoaService;
+            _areaInteresseService = areaInteresseService;
             _estadosbrasilService = estadosbrasilService;
             _mapper = mapper;
             _emailService = emailService;
@@ -537,6 +539,78 @@ namespace EventoWeb.Controllers
                 return null;
             }
             return ms.ToArray();
+        }
+
+        private Pessoa? PessoaAutenticadaPreferencias()
+        {
+            var nome = User.Identity?.Name;
+            if (string.IsNullOrWhiteSpace(nome)) return null;
+            var cpf = Methods.RemoveNaoNumericos(nome);
+            return _pessoaService.GetByCpf(nome) ?? (cpf.Length == 11 ? _pessoaService.GetByCpf(cpf) ?? _pessoaService.GetByCpf(Methods.PatternCpf(cpf)) : null);
+        }
+
+        private void CarregarPreferencias(PreferenciasInteresseModel model, uint idPessoa)
+        {
+            model.Preferencias = _pessoaService.GetPreferenciasInteresse(idPessoa);
+            model.Areas = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
+            model.EstadosDisponiveis = _estadosbrasilService.GetAll().OrderBy(e => e.Nome).ToList();
+        }
+
+        [HttpGet("PreferenciasInteresse")]
+        public IActionResult PreferenciasInteresse(uint? areaId)
+        {
+            var pessoa = PessoaAutenticadaPreferencias();
+            if (pessoa == null) return Forbid();
+            var model = new PreferenciasInteresseModel();
+            CarregarPreferencias(model, pessoa.Id);
+            if (areaId.HasValue)
+            {
+                var item = model.Preferencias.SingleOrDefault(p => p.IdAreaInteresse == areaId);
+                if (item == null) return NotFound();
+                model.AreaId = item.IdAreaInteresse;
+                model.Abrangencia = item.TodosEstados == 1 ? "brasil" : "estados";
+                model.Estados = item.EstadoEstadosBrasils.Select(e => e.Estado).ToList();
+                model.Editando = true;
+            }
+            return View("PreferenciasInteresse", model);
+        }
+
+        [HttpPost("SalvarPreferenciaInteresse"), ValidateAntiForgeryToken]
+        public IActionResult SalvarPreferenciaInteresse(PreferenciasInteresseModel model)
+        {
+            var pessoa = PessoaAutenticadaPreferencias();
+            if (pessoa == null) return Forbid();
+            model.Estados ??= [];
+            if (model.Abrangencia != "brasil" && model.Abrangencia != "estados")
+                ModelState.AddModelError("Abrangencia", "Selecione a abrangência desejada.");
+            if (ModelState.IsValid)
+            {
+                var existe = _pessoaService.GetPreferenciasInteresse(pessoa.Id).Any(p => p.IdAreaInteresse == model.AreaId);
+                if (existe && !model.Editando) ModelState.AddModelError("AreaId", "Essa área já está nas suas preferências. Use a opção Editar.");
+                if (!existe && model.Editando) return NotFound();
+            }
+            if (ModelState.IsValid)
+            {
+                var erro = _pessoaService.SalvarPreferenciaInteresse(pessoa.Id, model.AreaId, model.Abrangencia == "brasil", model.Estados);
+                if (erro == null)
+                {
+                    TempData["PreferenciasMensagem"] = "Preferência salva com sucesso.";
+                    return RedirectToAction(nameof(PreferenciasInteresse));
+                }
+                ModelState.AddModelError(string.Empty, erro);
+            }
+            CarregarPreferencias(model, pessoa.Id);
+            return View("PreferenciasInteresse", model);
+        }
+
+        [HttpPost("RemoverPreferenciaInteresse"), ValidateAntiForgeryToken]
+        public IActionResult RemoverPreferenciaInteresse(uint areaId)
+        {
+            var pessoa = PessoaAutenticadaPreferencias();
+            if (pessoa == null) return Forbid();
+            if (!_pessoaService.RemoverPreferenciaInteresse(pessoa.Id, areaId)) return NotFound();
+            TempData["PreferenciasMensagem"] = "Preferência removida.";
+            return RedirectToAction(nameof(PreferenciasInteresse));
         }
     }
 }

@@ -460,4 +460,47 @@ public class PessoaService : IPessoaService
         return (token, user);
     }
     
+    public IReadOnlyList<Pessoaareainteresse> GetPreferenciasInteresse(uint idPessoa) => _context.Pessoaareainteresses
+        .AsNoTracking().Where(p => p.IdPessoa == idPessoa)
+        .Include(p => p.IdAreaInteresseNavigation).Include(p => p.EstadoEstadosBrasils)
+        .OrderBy(p => p.IdAreaInteresseNavigation.Nome).ToList();
+
+    public string? SalvarPreferenciaInteresse(uint idPessoa, uint idArea, bool todosEstados, IReadOnlyList<string> estados)
+    {
+        if (!_context.Areainteresses.Any(a => a.Id == idArea)) return "Selecione uma área de interesse válida.";
+        if (estados.Any(string.IsNullOrWhiteSpace) || estados.Distinct(StringComparer.OrdinalIgnoreCase).Count() != estados.Count)
+            return "Selecione cada estado apenas uma vez.";
+        if (todosEstados && estados.Count != 0) return "Escolha Todo o Brasil ou estados específicos.";
+        if (!todosEstados && estados.Count == 0) return "Selecione pelo menos um estado.";
+
+        var selecionados = _context.Estadosbrasils.Where(e => estados.Contains(e.Estado)).ToList();
+        if (selecionados.Count != estados.Count) return "Selecione estados válidos.";
+
+        var preferencia = _context.Pessoaareainteresses.Include(p => p.EstadoEstadosBrasils)
+            .SingleOrDefault(p => p.IdPessoa == idPessoa && p.IdAreaInteresse == idArea);
+        if (preferencia == null)
+        {
+            preferencia = new Pessoaareainteresse { IdPessoa = idPessoa, IdAreaInteresse = idArea };
+            _context.Pessoaareainteresses.Add(preferencia);
+        }
+        preferencia.TodosEstados = todosEstados ? (sbyte)1 : (sbyte)0;
+        foreach (var estado in preferencia.EstadoEstadosBrasils.ToList())
+            if (!selecionados.Any(s => s.Estado == estado.Estado)) preferencia.EstadoEstadosBrasils.Remove(estado);
+        foreach (var estado in selecionados)
+            if (!preferencia.EstadoEstadosBrasils.Any(s => s.Estado == estado.Estado)) preferencia.EstadoEstadosBrasils.Add(estado);
+        _context.SaveChanges();
+        return null;
+    }
+
+    public bool RemoverPreferenciaInteresse(uint idPessoa, uint idArea)
+    {
+        var preferencia = _context.Pessoaareainteresses.Include(p => p.EstadoEstadosBrasils)
+            .SingleOrDefault(p => p.IdPessoa == idPessoa && p.IdAreaInteresse == idArea);
+        if (preferencia == null) return false;
+        preferencia.EstadoEstadosBrasils.Clear();
+        _context.Pessoaareainteresses.Remove(preferencia);
+        _context.SaveChanges();
+        return true;
+    }
+
 }
