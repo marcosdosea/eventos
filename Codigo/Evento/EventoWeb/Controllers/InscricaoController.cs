@@ -804,18 +804,79 @@ namespace EventoWeb.Controllers
             }
             catch (ArgumentException ex)
             {
+                TempData["ParticipanteErrorMessage"] = ex.Message;
                 TempData["ParticipanteMessage"] = ex.Message;
             }
             catch (InvalidOperationException ex)
             {
+                TempData["ParticipanteErrorMessage"] = ex.Message;
                 TempData["ParticipanteMessage"] = ex.Message;
             }
             catch (Exception)
             {
-                TempData["ParticipanteMessage"] = "Não foi possível concluir a transferência do ingresso. Tente novamente.";
+                const string msg = "Não foi possível concluir a transferência do ingresso. Tente novamente.";
+                TempData["ParticipanteErrorMessage"] = msg;
+                TempData["ParticipanteMessage"] = msg;
             }
 
             return RedirectToAction(nameof(minhasInscricoes));
+        }
+
+        [Authorize]
+        [HttpGet]
+        [Route("Inscricao/ConsultarDestinatarioTransferencia")]
+        public IActionResult ConsultarDestinatarioTransferencia([FromQuery] string cpf)
+        {
+            if (string.IsNullOrWhiteSpace(cpf))
+            {
+                return Json(new { sucesso = false, mensagem = "CPF não informado." });
+            }
+
+            var cpfLimpo = Util.Methods.RemoveNaoNumericos(cpf);
+            if (cpfLimpo.Length != 11 || !Util.Methods.ValidarCpf(cpfLimpo))
+            {
+                return Json(new { sucesso = false, mensagem = "CPF inválido." });
+            }
+
+            var usernameLogado = User.Identity?.Name ?? string.Empty;
+            var usernameLogadoLimpo = Util.Methods.RemoveNaoNumericos(usernameLogado);
+            if (cpfLimpo == usernameLogadoLimpo || cpf == usernameLogado)
+            {
+                return Json(new { sucesso = false, mesmoUsuario = true, mensagem = "Você não pode transferir um ingresso para você mesmo." });
+            }
+
+            var pessoa = _pessoaService?.GetByCpf(cpfLimpo);
+            if (pessoa != null)
+            {
+                string emailMascarado = string.Empty;
+                if (!string.IsNullOrWhiteSpace(pessoa.Email))
+                {
+                    var partes = pessoa.Email.Split('@');
+                    if (partes.Length == 2)
+                    {
+                        var user = partes[0];
+                        var dom = partes[1];
+                        var userMasc = user.Length > 2 ? user[0] + new string('*', Math.Max(1, user.Length - 2)) + user[^1] : user[0] + "*";
+                        emailMascarado = $"{userMasc}@{dom}";
+                    }
+                }
+
+                return Json(new
+                {
+                    sucesso = true,
+                    existe = true,
+                    nome = pessoa.Nome,
+                    emailMascarado,
+                    mensagem = $"Participante já cadastrado: {pessoa.Nome}. O e-mail informado deve coincidir com o cadastro existente."
+                });
+            }
+
+            return Json(new
+            {
+                sucesso = true,
+                existe = false,
+                mensagem = "Novo usuário: Será criada uma conta no primeiro acesso e as instruções serão enviadas para o e-mail informado."
+            });
         }
 
         private async Task EnviarEmailTransferenciaAsync(TransferirIngressoModel model, string usernameOrigem)

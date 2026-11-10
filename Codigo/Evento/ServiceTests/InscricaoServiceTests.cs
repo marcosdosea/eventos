@@ -619,7 +619,7 @@ namespace Service.Tests
                 Nome = "Amigo Existente",
                 NomeCracha = "Amigo",
                 Cpf = "04026893057",
-                Email = "amigo@gmail.com",
+                Email = "amigoexistente@gmail.com",
                 Sexo = "M"
             };
             _context.Pessoas.Add(amigoExistente);
@@ -752,8 +752,8 @@ namespace Service.Tests
                 Id = 102,
                 Nome = "Amigo Apenas Sub",
                 NomeCracha = "Amigo",
-                Cpf = "20601530004",
-                Email = "amigosub2@gmail.com",
+                Cpf = "91709125055",
+                Email = "amigoapenas@gmail.com",
                 Sexo = "M"
             };
             _context.Pessoas.Add(amigo);
@@ -774,7 +774,7 @@ namespace Service.Tests
             _context.SaveChanges();
 
             // Act: transferir com idInscricao = 0 e idSubevento = 31
-            var resultado = _inscricaoService.TransferirIngresso(0, "206.015.300-04", "Amigo Apenas Sub", "amigoapenas@gmail.com", "12246232367", idSubevento: 31);
+            var resultado = _inscricaoService.TransferirIngresso(0, "917.091.250-55", "Amigo Apenas Sub", "amigoapenas@gmail.com", "12246232367", idSubevento: 31);
 
             // Assert
             Assert.IsTrue(resultado);
@@ -860,6 +860,141 @@ namespace Service.Tests
         public void TransferirIngressoTest_EmailInvalido_LancaArgumentException()
         {
             _inscricaoService.TransferirIngresso(1, "04026893057", "Nome Amigo", "email_invalido", "12246232367");
+        }
+
+        [TestMethod()]
+        [ExpectedException(typeof(ArgumentException))]
+        public void TransferirIngressoTest_EmailNaoConfereComBanco_LancaArgumentException()
+        {
+            var evento = _context.Eventos.Find((uint)1);
+            evento.DataFim = DateTime.Now.AddDays(10);
+
+            var amigo = new Pessoa
+            {
+                Id = 103,
+                Nome = "Lucas Oliveira",
+                NomeCracha = "Lucas",
+                Cpf = "41523678900",
+                Email = "lucas.oficial@gmail.com",
+                Sexo = "M"
+            };
+            _context.Pessoas.Add(amigo);
+
+            var inscricao = new Inscricaopessoaevento
+            {
+                Id = 56,
+                IdPessoa = 1,
+                IdEvento = 1,
+                IdPapel = 4,
+                Status = "A",
+                NomeCracha = "Origem",
+                DataInscricao = DateTime.Now
+            };
+            _context.Inscricaopessoaeventos.Add(inscricao);
+            _context.SaveChanges();
+
+            // Act: passa email diferente do que consta no banco para este CPF
+            _inscricaoService.TransferirIngresso(56, "415.236.789-00", "Lucas Oliveira", "email.errado@gmail.com", "12246232367");
+        }
+
+        [TestMethod()]
+        [ExpectedException(typeof(ArgumentException))]
+        public void TransferirIngressoTest_EmailJaCadastradoOutroCpf_LancaArgumentException()
+        {
+            var evento = _context.Eventos.Find((uint)1);
+            evento.DataFim = DateTime.Now.AddDays(10);
+
+            var pessoaExistente = new Pessoa
+            {
+                Id = 104,
+                Nome = "Renata Costa",
+                NomeCracha = "Renata",
+                Cpf = "55566677788",
+                Email = "renata@gmail.com",
+                Sexo = "F"
+            };
+            _context.Pessoas.Add(pessoaExistente);
+
+            var inscricao = new Inscricaopessoaevento
+            {
+                Id = 57,
+                IdPessoa = 1,
+                IdEvento = 1,
+                IdPapel = 4,
+                Status = "A",
+                NomeCracha = "Origem",
+                DataInscricao = DateTime.Now
+            };
+            _context.Inscricaopessoaeventos.Add(inscricao);
+            _context.SaveChanges();
+
+            // Act: tenta transferir para um novo CPF usando o email que já é da Renata
+            _inscricaoService.TransferirIngresso(57, "987.654.321-00", "Novo Participante", "renata@gmail.com", "12246232367");
+        }
+
+        [TestMethod()]
+        [ExpectedException(typeof(ArgumentException))]
+        public void TransferirIngressoTest_NomeNaoConfereComBanco_LancaArgumentException()
+        {
+            var evento = _context.Eventos.Find((uint)1);
+            evento.DataFim = DateTime.Now.AddDays(10);
+
+            var amigo = new Pessoa
+            {
+                Id = 105,
+                Nome = "Gabriel Santos",
+                NomeCracha = "Gabriel",
+                Cpf = "66677788899",
+                Email = "gabriel@gmail.com",
+                Sexo = "M"
+            };
+            _context.Pessoas.Add(amigo);
+
+            var inscricao = new Inscricaopessoaevento
+            {
+                Id = 58,
+                IdPessoa = 1,
+                IdEvento = 1,
+                IdPapel = 4,
+                Status = "A",
+                NomeCracha = "Origem",
+                DataInscricao = DateTime.Now
+            };
+            _context.Inscricaopessoaeventos.Add(inscricao);
+            _context.SaveChanges();
+
+            // Act: nome digitado totalmente divergente do titular cadastrado
+            _inscricaoService.TransferirIngresso(58, "666.777.888-99", "Fernanda Lima", "gabriel@gmail.com", "12246232367");
+        }
+
+        [TestMethod()]
+        [ExpectedException(typeof(InvalidOperationException))]
+        public void TransferirIngressoTest_SubeventoEncerrado_LancaInvalidOperationException()
+        {
+            var subEncerrado = new Subevento
+            {
+                Id = 32,
+                IdEvento = 1,
+                Nome = "Minicurso Encerrado",
+                Descricao = "Descricao",
+                Status = "A",
+                DataFim = DateTime.Now.AddDays(-2)
+            };
+            _context.Subeventos.Add(subEncerrado);
+
+            var inscricaoSub = new Inscricaopessoasubevento
+            {
+                IdPessoa = 1,
+                IdSubEvento = 32,
+                IdPapel = 4,
+                Status = "A",
+                DataInscricao = DateTime.Now,
+                Valor = 10m
+            };
+            _context.Inscricaopessoasubeventos.Add(inscricaoSub);
+            _context.SaveChanges();
+
+            _inscricaoService.TransferirIngresso(0, "040.268.930-57", "Amigo Existente", "amigoexistente@gmail.com", "12246232367", idSubevento: 32);
         }
     }
 }

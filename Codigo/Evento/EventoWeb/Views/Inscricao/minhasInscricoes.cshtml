@@ -103,16 +103,25 @@
 {
     <div class="alert alert-success alert-dismissible fade show position-relative" role="alert" style="padding-right: 2rem;">
         <div class="text-success m-0">
-            @TempData["ParticipanteSuccessMessage"]
+            <i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i> @TempData["ParticipanteSuccessMessage"]
         </div>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
     </div>
 }
-@if (TempData["ParticipanteMessage"] != null)
+@if (TempData["ParticipanteErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show position-relative" role="alert" style="padding-right: 2rem;">
+        <div class="text-danger m-0 fw-semibold">
+            <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i> @TempData["ParticipanteErrorMessage"]
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+    </div>
+}
+@if (TempData["ParticipanteMessage"] != null && TempData["ParticipanteErrorMessage"] == null)
 {
     <div class="alert alert-info alert-dismissible fade show position-relative" role="alert" style="padding-right: 2rem;">
         <div class="m-0">
-            @TempData["ParticipanteMessage"]
+            <i class="bi bi-info-circle me-1" aria-hidden="true"></i> @TempData["ParticipanteMessage"]
         </div>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
     </div>
@@ -217,18 +226,35 @@
                                                 </div>
                                                 @if (confirmado && subConfirmado)
                                                 {
-                                                    <button type="button" class="btn btn-sm btn-outline-secondary p-1 ms-auto text-nowrap btn-abrir-modal-transferir"
-                                                            style="font-size: 0.72rem; line-height: 1;"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#modalTransferirIngresso"
-                                                            data-id-inscricao=""
-                                                            data-id-subevento="@sub.IdSubEvento"
-                                                            data-nome-evento="@(evento?.Nome ?? "Evento")"
-                                                            data-nome-subevento="@(sub.IdSubEventoNavigation?.Nome ?? "Subevento")"
-                                                            data-protocolo="@protocolo"
-                                                            title="Transferir titularidade deste subevento">
-                                                        <i class="bi bi-arrow-left-right" aria-hidden="true"></i> Transferir
-                                                    </button>
+                                                    var subJaOcorreu = (sub.IdSubEventoNavigation != null) && (
+                                                        (sub.IdSubEventoNavigation.DataFim != DateTime.MinValue && sub.IdSubEventoNavigation.DataFim < DateTime.Now) ||
+                                                        (sub.IdSubEventoNavigation.DataFim == DateTime.MinValue && sub.IdSubEventoNavigation.DataInicio != DateTime.MinValue && sub.IdSubEventoNavigation.DataInicio < DateTime.Now) ||
+                                                        sub.IdSubEventoNavigation.Status != "A"
+                                                    );
+
+                                                    @if (subJaOcorreu)
+                                                    {
+                                                        <span class="badge bg-secondary-subtle text-secondary p-1 ms-auto text-nowrap"
+                                                              style="font-size: 0.72rem; line-height: 1;"
+                                                              title="Não é possível transferir a titularidade de um subevento que já aconteceu ou foi encerrado.">
+                                                            <i class="bi bi-clock-history" aria-hidden="true"></i> Encerrado
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <button type="button" class="btn btn-sm btn-outline-secondary p-1 ms-auto text-nowrap btn-abrir-modal-transferir"
+                                                                style="font-size: 0.72rem; line-height: 1;"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#modalTransferirIngresso"
+                                                                data-id-inscricao=""
+                                                                data-id-subevento="@sub.IdSubEvento"
+                                                                data-nome-evento="@(evento?.Nome ?? "Evento")"
+                                                                data-nome-subevento="@(sub.IdSubEventoNavigation?.Nome ?? "Subevento")"
+                                                                data-protocolo="@protocolo"
+                                                                title="Transferir titularidade deste subevento">
+                                                            <i class="bi bi-arrow-left-right" aria-hidden="true"></i> Transferir
+                                                        </button>
+                                                    }
                                                 }
                                             </li>
                                         }
@@ -306,15 +332,31 @@
                                 <div class="mi-acoes-botoes">
                                     @if (confirmado && item.Id > 0)
                                     {
-                                        <button type="button" class="btn btn-sm btn-outline-primary text-nowrap btn-abrir-modal-transferir"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#modalTransferirIngresso"
-                                                data-id-inscricao="@item.Id"
-                                                data-id-subevento=""
-                                                data-nome-evento="@(evento?.Nome ?? "Evento")"
-                                                data-protocolo="@protocolo">
-                                            <i class="bi bi-arrow-left-right" aria-hidden="true"></i> Transferir Titularidade
-                                        </button>
+                                        var eventoJaOcorreu = (evento != null) && (
+                                            (evento.DataFim.HasValue && evento.DataFim.Value < DateTime.Now) ||
+                                            (!evento.DataFim.HasValue && evento.DataInicio.HasValue && evento.DataInicio.Value < DateTime.Now) ||
+                                            evento.Status == "F" || evento.Status == "C"
+                                        );
+
+                                        @if (eventoJaOcorreu)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-secondary text-nowrap" disabled
+                                                    title="Não é possível transferir a titularidade de um evento que já aconteceu ou foi encerrado.">
+                                                <i class="bi bi-clock-history" aria-hidden="true"></i> Evento Encerrado
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-primary text-nowrap btn-abrir-modal-transferir"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#modalTransferirIngresso"
+                                                    data-id-inscricao="@item.Id"
+                                                    data-id-subevento=""
+                                                    data-nome-evento="@(evento?.Nome ?? "Evento")"
+                                                    data-protocolo="@protocolo">
+                                                <i class="bi bi-arrow-left-right" aria-hidden="true"></i> Transferir Titularidade
+                                            </button>
+                                        }
                                     }
                                     @if (!confirmado && item.Id > 0)
                                     {
@@ -435,6 +477,8 @@
                         <div class="form-text">Apenas números ou formato padrão com pontos e traço.</div>
                     </div>
 
+                    <div id="alertaDestinatarioCpf" class="alert d-none mb-3 py-2 px-3 small" role="alert"></div>
+
                     <div class="mb-3">
                         <label for="EmailAmigo" class="form-label fw-semibold">E-mail do Amigo <span class="text-danger">*</span></label>
                         <input type="email" class="form-control" id="EmailAmigo" name="EmailAmigo" maxlength="100" required
@@ -488,7 +532,50 @@
                 document.getElementById('CpfAmigo').value = '';
                 var emailInput = document.getElementById('EmailAmigo');
                 if (emailInput) emailInput.value = '';
+
+                var alertaDest = document.getElementById('alertaDestinatarioCpf');
+                if (alertaDest) {
+                    alertaDest.className = 'alert d-none mb-3 py-2 px-3 small';
+                    alertaDest.innerHTML = '';
+                }
             });
+
+            var alertaDest = document.getElementById('alertaDestinatarioCpf');
+            var ultimoCpfConsultado = '';
+
+            function consultarDestinatario(cpfNumeros) {
+                if (!cpfNumeros || cpfNumeros.length !== 11 || cpfNumeros === ultimoCpfConsultado) return;
+                ultimoCpfConsultado = cpfNumeros;
+
+                fetch('/Inscricao/ConsultarDestinatarioTransferencia?cpf=' + encodeURIComponent(cpfNumeros))
+                    .then(function (r) { return r.json(); })
+                    .then(function (data) {
+                        if (!alertaDest) return;
+                        if (data.sucesso && data.existe) {
+                            alertaDest.className = 'alert alert-info border mb-3 py-2 px-3 small';
+                            alertaDest.innerHTML = '<i class="bi bi-person-check-fill text-primary me-1"></i> Participante cadastrado: <strong>' + data.nome + '</strong>.<br/>Aviso: O e-mail informado abaixo <strong>deve coincidir com o cadastro existente (' + data.emailMascarado + ')</strong>.';
+                            alertaDest.classList.remove('d-none');
+                            var nomeInput = document.getElementById('NomeAmigo');
+                            if (nomeInput && !nomeInput.value.trim()) {
+                                nomeInput.value = data.nome;
+                            }
+                        } else if (data.sucesso && !data.existe) {
+                            alertaDest.className = 'alert alert-secondary border mb-3 py-2 px-3 small';
+                            alertaDest.innerHTML = '<i class="bi bi-person-plus-fill me-1"></i> Novo usuário: Uma conta provisória será criada para este CPF e as instruções de acesso enviadas para o e-mail informado.';
+                            alertaDest.classList.remove('d-none');
+                        } else if (!data.sucesso && data.mesmoUsuario) {
+                            alertaDest.className = 'alert alert-danger border mb-3 py-2 px-3 small';
+                            alertaDest.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i> ' + data.mensagem;
+                            alertaDest.classList.remove('d-none');
+                        } else {
+                            alertaDest.className = 'alert d-none mb-3 py-2 px-3 small';
+                            alertaDest.innerHTML = '';
+                        }
+                    })
+                    .catch(function () {
+                        if (alertaDest) alertaDest.classList.add('d-none');
+                    });
+            }
 
             var cpfInput = document.getElementById('CpfAmigo');
             if (cpfInput) {
@@ -503,6 +590,21 @@
                         v = v.replace(/(\d{3})(\d{1,3})/, '$1.$2');
                     }
                     e.target.value = v;
+
+                    var raw = v.replace(/\D/g, '');
+                    if (raw.length === 11) {
+                        consultarDestinatario(raw);
+                    } else if (alertaDest) {
+                        alertaDest.classList.add('d-none');
+                        ultimoCpfConsultado = '';
+                    }
+                });
+
+                cpfInput.addEventListener('blur', function (e) {
+                    var raw = e.target.value.replace(/\D/g, '');
+                    if (raw.length === 11) {
+                        consultarDestinatario(raw);
+                    }
                 });
             }
         }
