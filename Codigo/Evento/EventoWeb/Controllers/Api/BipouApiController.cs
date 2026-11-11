@@ -21,16 +21,20 @@ public class BipouApiController : ControllerBase
     private readonly IEventoService eventos;
     private readonly ISubeventoService subeventos;
     private readonly IInscricaoService inscricoes;
+    private readonly ISincronizacaoFrequenciaService sincronizacaoFrequencia;
     private readonly UserManager<UsuarioIdentity> usuarios;
     private readonly SignInManager<UsuarioIdentity> login;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private const int MaximoLeiturasPorLote = 500;
 
     public BipouApiController(IEventoService eventos, ISubeventoService subeventos, IInscricaoService inscricoes,
+        ISincronizacaoFrequenciaService sincronizacaoFrequencia,
         UserManager<UsuarioIdentity> usuarios, SignInManager<UsuarioIdentity> login)
     {
         this.eventos = eventos;
         this.subeventos = subeventos;
         this.inscricoes = inscricoes;
+        this.sincronizacaoFrequencia = sincronizacaoFrequencia;
         this.usuarios = usuarios;
         this.login = login;
     }
@@ -92,6 +96,38 @@ public class BipouApiController : ControllerBase
             await subeventos.GetSubeventosBipouAsync(idEvento, cancellationToken),
             await inscricoes.GetParticipantesBipouAsync(idEvento, cancellationToken: cancellationToken));
         return Responder(carga, $"bipou-evento-{idEvento}.json.gz");
+    }
+
+    [HttpPost("frequencias/lote")]
+    public async Task<IActionResult> SincronizarFrequenciasLote(
+        [FromBody] BipouLoteFrequenciaRequestDTO? request,
+        CancellationToken cancellationToken)
+    {
+        if (request?.Leituras == null || request.Leituras.Count == 0)
+            return BadRequest(new { mensagem = "Informe ao menos uma leitura de frequência para sincronização." });
+
+        if (request.Leituras.Count > MaximoLeiturasPorLote)
+            return BadRequest(new { mensagem = $"O lote excede o limite máximo de {MaximoLeiturasPorLote} leituras por requisição." });
+
+        var permitidos = await EventosPermitidos(cancellationToken);
+        if (permitidos == null)
+            return Forbid(IdentityConstants.BearerScheme);
+
+        var eventosPermitidosIds = permitidos.Select(e => e.IdEvento).ToHashSet();
+        var idsEventosInformados = request.Leituras
+            .Where(l => l != null && l.IdEvento > 0)
+            .Select(l => l.IdEvento)
+            .ToList();
+
+        if (idsEventosInformados.Count > 0 && idsEventosInformados.All(id => !eventosPermitidosIds.Contains(id)))
+            return Forbid(IdentityConstants.BearerScheme);
+
+        var resultado = await sincronizacaoFrequencia.SincronizarLoteAsync(
+            request.Leituras,
+            eventosPermitidosIds,
+            cancellationToken);
+
+        return Ok(resultado);
     }
 
     private async Task<List<BipouEventoDTO>?> EventosPermitidos(CancellationToken cancellationToken)

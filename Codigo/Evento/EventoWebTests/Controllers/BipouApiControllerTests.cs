@@ -305,6 +305,87 @@ public class BipouApiControllerTests
         Console.WriteLine($"Carga de 5002 participantes: {tempo.Elapsed.TotalMilliseconds:F0} ms, {bytes.Length} bytes (gzip), {factory.Provider}");
     }
 
+    [TestMethod]
+    public async Task FrequenciasLote_RejeitaAnonimoLoteVazioESemPermissaoNoEvento()
+    {
+        var payload = new
+        {
+            leituras = new[]
+            {
+                new { leituraId = "l-1", idPessoa = 3, idEvento = 2, idSubEvento = (uint?)null, tipoAcao = "ENTRADA", dataHoraLida = "2026-11-06T08:00:00-03:00", dispositivoId = "dev-1" }
+            }
+        };
+
+        Assert.AreEqual(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync(Api + "/frequencias/lote", payload)).StatusCode);
+
+        await Autenticar("93541134780");
+        Assert.AreEqual(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync(Api + "/frequencias/lote", new { leituras = Array.Empty<object>() })).StatusCode);
+        Assert.AreEqual(HttpStatusCode.Forbidden, (await client.PostAsJsonAsync(Api + "/frequencias/lote", payload)).StatusCode);
+    }
+
+    [TestMethod]
+    public async Task FrequenciasLote_RegistraPresencasRecalculaFrequenciaEGaranteIdempotencia()
+    {
+        await Alterar(db =>
+        {
+            var evento = db.Eventos.Find((uint)1)!;
+            evento.DataInicio = new DateTime(2026, 11, 6, 8, 0, 0);
+            evento.DataFim = new DateTime(2026, 11, 6, 12, 0, 0);
+            evento.CargaHoraria = 4;
+            db.Subeventos.Find((uint)1)!.CargaHoraria = 2;
+            db.Pessoas.Add(Pessoa(5, "99988877766"));
+            db.Inscricaopessoaeventos.Add(Inscricao(5, 1, 4));
+        });
+
+        await Autenticar("11144477735");
+        var payload = new
+        {
+            leituras = new[]
+            {
+                new { leituraId = "ev-1", idPessoa = 3, idEvento = 1, idSubEvento = (uint?)null, tipoAcao = "ENTRADA", dataHoraLida = "2026-11-06T08:00:00-03:00", dispositivoId = "dev-1" },
+                new { leituraId = "ev-2", idPessoa = 3, idEvento = 1, idSubEvento = (uint?)null, tipoAcao = "SAIDA", dataHoraLida = "2026-11-06T10:00:00-03:00", dispositivoId = "dev-1" },
+                new { leituraId = "sub-1", idPessoa = 3, idEvento = 1, idSubEvento = (uint?)1, tipoAcao = "ENTRADA", dataHoraLida = "2026-11-06T08:00:00-03:00", dispositivoId = "dev-1" },
+                new { leituraId = "sub-2", idPessoa = 3, idEvento = 1, idSubEvento = (uint?)1, tipoAcao = "SAIDA", dataHoraLida = "2026-11-06T10:00:00-03:00", dispositivoId = "dev-1" },
+                new { leituraId = "err-saida", idPessoa = 5, idEvento = 1, idSubEvento = (uint?)null, tipoAcao = "SAIDA", dataHoraLida = "2026-11-06T09:00:00-03:00", dispositivoId = "dev-1" },
+                new { leituraId = "err-pendente", idPessoa = 4, idEvento = 1, idSubEvento = (uint?)null, tipoAcao = "ENTRADA", dataHoraLida = "2026-11-06T09:00:00-03:00", dispositivoId = "dev-1" }
+            }
+        };
+
+        var response = await client.PostAsJsonAsync(Api + "/frequencias/lote", payload);
+        Assert.AreEqual(HttpStatusCode.OK, response.StatusCode, await response.Content.ReadAsStringAsync());
+
+        var json = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var confirmados = json.GetProperty("confirmados").EnumerateArray().Select(e => e.GetString()).ToArray();
+        CollectionAssert.AreEquivalent(new[] { "ev-1", "ev-2", "sub-1", "sub-2" }, confirmados);
+        var rejeitados = json.GetProperty("rejeitados").EnumerateArray().ToList();
+        Assert.AreEqual(2, rejeitados.Count);
+        Assert.AreEqual("ENTRADA_ABERTA_NAO_ENCONTRADA", rejeitados.Single(r => r.GetProperty("leituraId").GetString() == "err-saida").GetProperty("codigo").GetString());
+        Assert.AreEqual("PARTICIPANTE_NAO_INSCRITO", rejeitados.Single(r => r.GetProperty("leituraId").GetString() == "err-pendente").GetProperty("codigo").GetString());
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<EventoContext>();
+            Assert.AreEqual(1, await db.Participacaopessoaeventos.CountAsync(p => p.IdEvento == 1 && p.IdPessoa == 3));
+            Assert.AreEqual(1, await db.Participacaopessoasubeventos.CountAsync(p => p.IdSubEvento == 1 && p.IdPessoa == 3));
+            Assert.AreEqual(50m, (await db.Inscricaopessoaeventos.FirstAsync(i => i.IdEvento == 1 && i.IdPessoa == 3)).FrequenciaFinal);
+            Assert.AreEqual(100m, (await db.Inscricaopessoasubeventos.SingleAsync(i => i.IdSubEvento == 1 && i.IdPessoa == 3)).FrequenciaFinal);
+        }
+
+        // Reenvio idempotente das leituras confirmadas não gera duplicidade.
+        var reenvio = await client.PostAsJsonAsync(Api + "/frequencias/lote", new { leituras = payload.leituras.Take(4).ToArray() });
+        Assert.AreEqual(HttpStatusCode.OK, reenvio.StatusCode);
+        var jsonReenvio = await reenvio.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.AreEqual(4, jsonReenvio.GetProperty("confirmados").GetArrayLength());
+        Assert.AreEqual(0, jsonReenvio.GetProperty("rejeitados").GetArrayLength());
+
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<EventoContext>();
+            Assert.AreEqual(1, await db.Participacaopessoaeventos.CountAsync(p => p.IdEvento == 1 && p.IdPessoa == 3));
+            Assert.AreEqual(1, await db.Participacaopessoasubeventos.CountAsync(p => p.IdSubEvento == 1 && p.IdPessoa == 3));
+        }
+    }
+
     private async Task Autenticar(string usuario)
     {
         var response = await client.PostAsJsonAsync(Api + "/sessao", new { usuario, senha = Senha });
