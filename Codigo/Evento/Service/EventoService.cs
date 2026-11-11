@@ -17,6 +17,24 @@ namespace Service
             _context = context;
         }
 
+        public Task<List<BipouEventoDTO>> GetEventosBipouAsync(string cpf, bool gestor, bool colaborador, CancellationToken cancellationToken = default)
+        {
+            var limpo = Util.Methods.RemoveNaoNumericos(cpf);
+            if (limpo.Length != 11 || (!gestor && !colaborador))
+                return Task.FromResult(new List<BipouEventoDTO>());
+            var formatado = Util.Methods.PatternCpf(limpo);
+            // A atribuição de gestor/colaborador pelo sistema grava S, apesar de já conceder acesso ao evento.
+            // Somente vínculos ativos ou solicitados autorizam a consulta.
+            return _context.Eventos.AsNoTracking()
+                .Where(e => e.Status == "A" && e.Inscricaopessoaeventos.Any(i =>
+                    (i.Status == "A" || i.Status == "S") &&
+                    ((gestor && i.IdPapel == 2) || (colaborador && i.IdPapel == 3)) &&
+                    (i.IdPessoaNavigation.Cpf == limpo || i.IdPessoaNavigation.Cpf == formatado)))
+                .OrderBy(e => e.Id)
+                .Select(e => new BipouEventoDTO(e.Id, e.Nome, e.DataInicio, e.DataFim))
+                .ToListAsync(cancellationToken);
+        }
+
         /// <summary>
         /// Cria um novo evento
         /// </summary>

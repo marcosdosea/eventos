@@ -4,6 +4,7 @@ namespace Core.Service
 {
     public interface ISubeventoService
     {
+        Task<List<BipouSubeventoDTO>> GetSubeventosBipouAsync(uint idEvento, CancellationToken cancellationToken = default);
         uint Create(Subevento subevento);
         void Edit(Subevento subevento);
         void Delete(uint id);
