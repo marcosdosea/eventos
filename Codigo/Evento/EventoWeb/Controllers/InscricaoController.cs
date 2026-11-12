@@ -855,8 +855,7 @@ namespace EventoWeb.Controllers
                 return Json(new { sucesso = false, mesmoUsuario = true, mensagem = "Você não pode transferir um ingresso para você mesmo." });
             }
 
-            var cpfFormatado = Util.Methods.PatternCpf(cpfLimpo);
-            var pessoa = _pessoaService?.GetByCpf(cpfLimpo) ?? _pessoaService?.GetByCpf(cpfFormatado);
+            var pessoa = _pessoaService?.GetByCpf(cpfLimpo);
             if (pessoa != null)
             {
                 string emailMascarado = string.Empty;

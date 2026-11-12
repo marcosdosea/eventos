@@ -263,15 +263,22 @@ public class PessoaService : IPessoaService
     }
     public Pessoa GetByCpf(string cpf)
     {
-        var pessoa = _context.Pessoas.FirstOrDefault(p => p.Cpf == cpf);
-        if (pessoa == null && !string.IsNullOrWhiteSpace(cpf))
+        if (string.IsNullOrWhiteSpace(cpf))
+            return null!;
+
+        // Remove qualquer máscara (. e -) para comparar com o CPF puro conforme armazenado no banco de dados
+        var cpfLimpo = Util.Methods.RemoveNaoNumericos(cpf.Trim());
+        var pessoa = _context.Pessoas.FirstOrDefault(p => p.Cpf == cpfLimpo);
+
+        // Fallback caso algum registro específico de teste contenha máscara
+        if (pessoa == null)
         {
-            var limpo = Util.Methods.RemoveNaoNumericos(cpf);
-            if (limpo.Length == 11)
+            var cpfOriginal = cpf.Trim();
+            pessoa = _context.Pessoas.FirstOrDefault(p => p.Cpf == cpfOriginal);
+            if (pessoa == null && cpfLimpo.Length == 11)
             {
-                var formatado = Util.Methods.PatternCpf(limpo);
-                var alternativo = (cpf == limpo) ? formatado : limpo;
-                pessoa = _context.Pessoas.FirstOrDefault(p => p.Cpf == alternativo);
+                var formatado = Util.Methods.PatternCpf(cpfLimpo);
+                pessoa = _context.Pessoas.FirstOrDefault(p => p.Cpf == formatado);
             }
         }
         return pessoa;
