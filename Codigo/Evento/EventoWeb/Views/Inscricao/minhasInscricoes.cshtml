@@ -486,16 +486,16 @@
                     <div id="alertaDestinatarioCpf" class="alert d-none mb-3 py-2 px-3 small" role="alert"></div>
 
                     <div class="mb-3">
-                        <label for="NomeAmigo" class="form-label fw-semibold">Nome Completo do Destinatário <span class="text-danger">*</span></label>
+                        <label for="NomeAmigo" class="form-label fw-semibold">Nome no Crachá / Destinatário <span class="text-danger">*</span></label>
                         <div class="input-group has-validation">
                             <span class="input-group-text"><i class="bi bi-person" aria-hidden="true"></i></span>
-                            <input type="text" class="form-control" id="NomeAmigo" name="NomeAmigo" maxlength="50" required
-                                   placeholder="Ex: Maria dos Santos" autocomplete="off" />
+                            <input type="text" class="form-control" id="NomeAmigo" name="NomeAmigo" maxlength="20" required
+                                   placeholder="Nome no crachá (máx. 20)" autocomplete="off" />
                             <div class="invalid-feedback" id="feedbackNomeAmigo">
-                                Informe o nome completo (entre 2 e 50 caracteres).
+                                Informe o nome no crachá (entre 2 e 20 caracteres).
                             </div>
                         </div>
-                        <div class="form-text">Nome a constar na credencial/crachá do amigo.</div>
+                        <div class="form-text">Nome a constar na credencial/crachá do amigo (máximo de 20 caracteres).</div>
                     </div>
 
                     <div class="mb-3">
@@ -585,7 +585,7 @@
         function validarNome(nome) {
             if (!nome) return false;
             var trimmed = nome.trim();
-            return trimmed.length >= 2 && trimmed.length <= 50;
+            return trimmed.length >= 2 && trimmed.length <= 20;
         }
 
         function checarCampoCpf() {
@@ -618,13 +618,13 @@
             if (!v || !v.trim()) {
                 nomeInput.classList.remove('is-valid');
                 nomeInput.classList.add('is-invalid');
-                if (feedbackNome) feedbackNome.textContent = 'O nome completo é obrigatório.';
+                if (feedbackNome) feedbackNome.textContent = 'O nome no crachá é obrigatório.';
                 return false;
             }
             if (!validarNome(v)) {
                 nomeInput.classList.remove('is-valid');
                 nomeInput.classList.add('is-invalid');
-                if (feedbackNome) feedbackNome.textContent = 'O nome deve ter entre 2 e 50 caracteres.';
+                if (feedbackNome) feedbackNome.textContent = 'O nome no crachá deve ter entre 2 e 20 caracteres.';
                 return false;
             }
             nomeInput.classList.remove('is-invalid');
@@ -724,7 +724,12 @@
                 alertaDest.classList.remove('d-none');
             }
 
-            var url = '@Url.Action("ConsultarDestinatarioTransferencia", "Inscricao")?cpf=' + encodeURIComponent(cpfNumeros);
+            var baseUrl = '@Url.Action("ConsultarDestinatarioTransferencia", "Inscricao")';
+            if (!baseUrl || baseUrl === '') {
+                baseUrl = '/Inscricao/ConsultarDestinatarioTransferencia';
+            }
+            var url = baseUrl + (baseUrl.indexOf('?') >= 0 ? '&' : '?') + 'cpf=' + encodeURIComponent(cpfNumeros);
+
             fetch(url, {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             })
@@ -742,15 +747,20 @@
                         emailCadastradoDestinatario = (data.email || '').trim().toLowerCase();
                         emailMascaradoCadastrado = data.emailMascarado || '';
 
+                        var nomeCracha = (data.nomeCracha || data.nome || '').trim();
+                        if (nomeCracha.length > 20) {
+                            nomeCracha = nomeCracha.substring(0, 20);
+                        }
+
                         alertaDest.className = 'alert alert-info border mb-3 py-2 px-3 small';
-                        alertaDest.innerHTML = '<i class="bi bi-person-check-fill text-primary me-1"></i> Participante cadastrado: <strong>' + data.nome + '</strong>.<br/>Os dados foram identificados e preenchidos automaticamente.';
+                        alertaDest.innerHTML = '<i class="bi bi-person-check-fill text-primary me-1"></i> Participante cadastrado: <strong>' + (data.nomeCompleto || nomeCracha) + '</strong>.<br/>Nome no crachá e e-mail preenchidos automaticamente.';
                         alertaDest.classList.remove('d-none');
 
-                        if (data.nome) {
-                            nomeInput.value = data.nome;
+                        if (nomeInput && nomeCracha) {
+                            nomeInput.value = nomeCracha;
                             checarCampoNome();
                         }
-                        if (data.email) {
+                        if (emailInput && data.email) {
                             emailInput.value = data.email;
                             checarCampoEmail();
                         }
@@ -762,7 +772,7 @@
                         emailMascaradoCadastrado = '';
 
                         alertaDest.className = 'alert alert-secondary border mb-3 py-2 px-3 small';
-                        alertaDest.innerHTML = '<i class="bi bi-person-plus-fill me-1"></i> <strong>Novo participante:</strong> Nenhuma conta encontrada para este CPF no sistema. Preencha o nome e e-mail abaixo para enviarmos as instruções de primeiro acesso.';
+                        alertaDest.innerHTML = '<i class="bi bi-person-plus-fill me-1"></i> <strong>Novo participante:</strong> Nenhuma conta encontrada para este CPF no sistema. Preencha o nome no crachá e e-mail abaixo para enviarmos as instruções de primeiro acesso.';
                         alertaDest.classList.remove('d-none');
                         checarCampoCpf();
                     } else if (!data.sucesso && data.mesmoUsuario) {
@@ -775,8 +785,9 @@
                         alertaDest.classList.remove('d-none');
                         checarCampoCpf();
                     } else {
-                        alertaDest.className = 'alert d-none mb-3 py-2 px-3 small';
-                        alertaDest.innerHTML = '';
+                        alertaDest.className = 'alert alert-warning border mb-3 py-2 px-3 small';
+                        alertaDest.innerHTML = '<i class="bi bi-exclamation-circle me-1"></i> ' + (data.mensagem || 'Não foi possível consultar o cadastro.');
+                        alertaDest.classList.remove('d-none');
                         destinatarioEhMesmoUsuario = false;
                         emailCadastradoDestinatario = '';
                         emailMascaradoCadastrado = '';
@@ -826,6 +837,16 @@
                     emailCadastradoDestinatario = '';
                     emailMascaradoCadastrado = '';
                 }
+            });
+
+            cpfInput.addEventListener('paste', function () {
+                setTimeout(function () {
+                    var raw = cpfInput.value.replace(/\D/g, '');
+                    if (raw.length === 11 && validarCpf(raw)) {
+                        consultarDestinatario(raw);
+                        checarCampoCpf();
+                    }
+                }, 50);
             });
 
             cpfInput.addEventListener('blur', function () {

@@ -13,9 +13,9 @@ namespace EventoWeb.Models
         [Display(Name = "CPF do Destinatário")]
         public string CpfAmigo { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "O nome completo do destinatário é obrigatório.")]
-        [StringLength(50, MinimumLength = 2, ErrorMessage = "O nome completo deve ter entre 2 e 50 caracteres.")]
-        [Display(Name = "Nome Completo do Destinatário")]
+        [Required(ErrorMessage = "O nome no crachá do destinatário é obrigatório.")]
+        [StringLength(20, MinimumLength = 2, ErrorMessage = "O nome no crachá deve ter entre 2 e 20 caracteres.")]
+        [Display(Name = "Nome no Crachá")]
         public string NomeAmigo { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "O e-mail do destinatário é obrigatório.")]

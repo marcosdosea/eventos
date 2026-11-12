@@ -829,9 +829,7 @@ namespace EventoWeb.Controllers
         }
 
         [Authorize]
-        [HttpGet]
-        [Route("ConsultarDestinatarioTransferencia")]
-        [Route("/Inscricao/ConsultarDestinatarioTransferencia")]
+        [HttpGet("ConsultarDestinatarioTransferencia")]
         public IActionResult ConsultarDestinatarioTransferencia([FromQuery] string cpf)
         {
             if (string.IsNullOrWhiteSpace(cpf))
@@ -845,49 +843,68 @@ namespace EventoWeb.Controllers
                 return Json(new { sucesso = false, mensagem = "CPF inválido." });
             }
 
-            var usernameLogado = User.Identity?.Name ?? string.Empty;
-            var usernameLogadoLimpo = Util.Methods.RemoveNaoNumericos(usernameLogado);
-            var pessoaLogada = _pessoaService?.GetByCpf(usernameLogadoLimpo) ?? _pessoaService?.GetByCpf(usernameLogado);
-            var cpfPessoaLogadaLimpo = pessoaLogada != null ? Util.Methods.RemoveNaoNumericos(pessoaLogada.Cpf ?? string.Empty) : string.Empty;
-
-            if (cpfLimpo == usernameLogadoLimpo || cpf == usernameLogado || (!string.IsNullOrEmpty(cpfPessoaLogadaLimpo) && cpfLimpo == cpfPessoaLogadaLimpo))
+            try
             {
-                return Json(new { sucesso = false, mesmoUsuario = true, mensagem = "Você não pode transferir um ingresso para você mesmo." });
-            }
+                var usernameLogado = User.Identity?.Name ?? string.Empty;
+                var usernameLogadoLimpo = Util.Methods.RemoveNaoNumericos(usernameLogado);
+                var pessoaLogada = _pessoaService?.GetByCpf(usernameLogadoLimpo) ?? _pessoaService?.GetByCpf(usernameLogado);
+                var cpfPessoaLogadaLimpo = pessoaLogada != null ? Util.Methods.RemoveNaoNumericos(pessoaLogada.Cpf ?? string.Empty) : string.Empty;
 
-            var pessoa = _pessoaService?.GetByCpf(cpfLimpo);
-            if (pessoa != null)
-            {
-                string emailMascarado = string.Empty;
-                if (!string.IsNullOrWhiteSpace(pessoa.Email))
+                if (cpfLimpo == usernameLogadoLimpo || cpf == usernameLogado || (!string.IsNullOrEmpty(cpfPessoaLogadaLimpo) && cpfLimpo == cpfPessoaLogadaLimpo))
                 {
-                    var partes = pessoa.Email.Split('@');
-                    if (partes.Length == 2)
+                    return Json(new { sucesso = false, mesmoUsuario = true, mensagem = "Você não pode transferir um ingresso para você mesmo." });
+                }
+
+                var pessoa = _pessoaService?.GetByCpf(cpfLimpo);
+                if (pessoa != null)
+                {
+                    string emailMascarado = string.Empty;
+                    if (!string.IsNullOrWhiteSpace(pessoa.Email))
                     {
-                        var user = partes[0];
-                        var dom = partes[1];
-                        var userMasc = user.Length > 2 ? user[0] + new string('*', Math.Max(1, user.Length - 2)) + user[^1] : user[0] + "*";
-                        emailMascarado = $"{userMasc}@{dom}";
+                        var partes = pessoa.Email.Split('@');
+                        if (partes.Length == 2)
+                        {
+                            var user = partes[0];
+                            var dom = partes[1];
+                            var userMasc = user.Length > 2 ? user[0] + new string('*', Math.Max(1, user.Length - 2)) + user[^1] : user[0] + "*";
+                            emailMascarado = $"{userMasc}@{dom}";
+                        }
                     }
+
+                    // Regra de tamanho do nome no crachá: limite máximo de 20 caracteres
+                    var nomeCracha = !string.IsNullOrWhiteSpace(pessoa.NomeCracha)
+                        ? pessoa.NomeCracha.Trim()
+                        : (pessoa.Nome ?? string.Empty).Trim();
+
+                    if (nomeCracha.Length > 20)
+                    {
+                        nomeCracha = nomeCracha.Substring(0, 20);
+                    }
+
+                    return Json(new
+                    {
+                        sucesso = true,
+                        existe = true,
+                        nome = nomeCracha,
+                        nomeCracha = nomeCracha,
+                        nomeCompleto = pessoa.Nome,
+                        email = pessoa.Email,
+                        emailMascarado,
+                        mensagem = $"Participante já cadastrado: {pessoa.Nome}."
+                    });
                 }
 
                 return Json(new
                 {
                     sucesso = true,
-                    existe = true,
-                    nome = pessoa.Nome,
-                    email = pessoa.Email,
-                    emailMascarado,
-                    mensagem = $"Participante já cadastrado: {pessoa.Nome}."
+                    existe = false,
+                    mensagem = "Novo participante: Nenhuma conta encontrada para este CPF no sistema."
                 });
             }
-
-            return Json(new
+            catch (Exception ex)
             {
-                sucesso = true,
-                existe = false,
-                mensagem = "Novo participante: Nenhuma conta encontrada para este CPF no sistema."
-            });
+                return Json(new { sucesso = false, mensagem = "Erro ao consultar destinatário: " + ex.Message });
+            }
         }
 
         private async Task EnviarEmailTransferenciaAsync(TransferirIngressoModel model, string usernameOrigem)

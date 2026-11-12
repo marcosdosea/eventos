@@ -238,6 +238,7 @@ namespace Service
                 .Include(s => s.IdTipoInscricaoNavigation)
                 .Include(s => s.IdPessoaNavigation)
                 .Where(s => s.IdPessoaNavigation != null && (s.IdPessoaNavigation.Cpf == cpfParaBusca || s.IdPessoaNavigation.Cpf == username || (cpfFormatado != null && s.IdPessoaNavigation.Cpf == cpfFormatado)))
+                .OrderBy(s => s.Id)
                 .AsNoTracking()
                 .ToList();
 
@@ -268,19 +269,29 @@ namespace Service
                 .Include(i => i.IdPessoaNavigation)
                 .Include(i => i.IdTipoInscricaoNavigation)
                 .Where(i => i.IdPessoaNavigation != null && (i.IdPessoaNavigation.Cpf == cpfParaBusca || i.IdPessoaNavigation.Cpf == username || (cpfFormatado != null && i.IdPessoaNavigation.Cpf == cpfFormatado)))
+                .OrderByDescending(i => i.DataInscricao)
+                .ThenByDescending(i => i.Id)
                 .ToList();
 
+            var subeventosAlocados = new HashSet<uint>();
             foreach (var inscricao in query)
             {
                 inscricao.Inscricaopessoasubeventos = subeventosUsuario
-                    .Where(s => (s.IdSubEventoNavigation?.IdEvento ?? _context.Subeventos.FirstOrDefault(sub => sub.Id == s.IdSubEvento)?.IdEvento) == inscricao.IdEvento)
+                    .Where(s => !subeventosAlocados.Contains(s.Id) &&
+                                (s.IdSubEventoNavigation?.IdEvento ?? _context.Subeventos.FirstOrDefault(sub => sub.Id == s.IdSubEvento)?.IdEvento) == inscricao.IdEvento)
+                    .OrderBy(s => s.Id)
                     .ToList();
+
+                foreach (var s in inscricao.Inscricaopessoasubeventos)
+                {
+                    subeventosAlocados.Add(s.Id);
+                }
             }
 
             // Garante que subeventos cujo evento principal não pertence ao usuário (ex: transferido separadamente) continuem aparecendo no painel
             var idsEventosComInscricao = query.Select(i => i.IdEvento).ToHashSet();
             var subeventosSemEventoPrincipal = subeventosUsuario
-                .Where(s => !idsEventosComInscricao.Contains(s.IdSubEventoNavigation?.IdEvento ?? _context.Subeventos.FirstOrDefault(sub => sub.Id == s.IdSubEvento)?.IdEvento ?? 0))
+                .Where(s => !subeventosAlocados.Contains(s.Id) && !idsEventosComInscricao.Contains(s.IdSubEventoNavigation?.IdEvento ?? _context.Subeventos.FirstOrDefault(sub => sub.Id == s.IdSubEvento)?.IdEvento ?? 0))
                 .GroupBy(s => s.IdSubEventoNavigation?.IdEvento ?? _context.Subeventos.FirstOrDefault(sub => sub.Id == s.IdSubEvento)?.IdEvento ?? 0);
 
             foreach (var grupo in subeventosSemEventoPrincipal)
@@ -466,12 +477,27 @@ namespace Service
                 if (!string.IsNullOrWhiteSpace(amigo.Nome))
                 {
                     var primeiroNomeBanco = amigo.Nome.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
+                    var primeiroNomeCracha = amigo.NomeCracha?.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
                     var primeiroNomeDigitado = nomeDestino.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault();
-                    if (!string.IsNullOrWhiteSpace(primeiroNomeBanco) && !string.IsNullOrWhiteSpace(primeiroNomeDigitado) &&
-                        !string.Equals(primeiroNomeBanco, primeiroNomeDigitado, StringComparison.OrdinalIgnoreCase))
+
+                    bool confereNome = !string.IsNullOrWhiteSpace(primeiroNomeBanco) && !string.IsNullOrWhiteSpace(primeiroNomeDigitado) &&
+                        string.Equals(primeiroNomeBanco, primeiroNomeDigitado, StringComparison.OrdinalIgnoreCase);
+
+                    bool confereCracha = !string.IsNullOrWhiteSpace(primeiroNomeCracha) && !string.IsNullOrWhiteSpace(primeiroNomeDigitado) &&
+                        string.Equals(primeiroNomeCracha, primeiroNomeDigitado, StringComparison.OrdinalIgnoreCase);
+
+                    if (!confereNome && !confereCracha)
                     {
                         throw new ArgumentException("O nome informado não confere com o cadastro existente deste CPF. Verifique os dados do destinatário.");
                     }
+                }
+
+                // Atualiza o nome do crachá do amigo se ainda não possuir ou se informado
+                var nomeTrim = nomeDestino.Trim();
+                var nomeCrachaFinal = nomeTrim.Length > 20 ? nomeTrim.Substring(0, 20) : nomeTrim;
+                if (!string.IsNullOrWhiteSpace(nomeCrachaFinal) && string.IsNullOrWhiteSpace(amigo.NomeCracha))
+                {
+                    amigo.NomeCracha = nomeCrachaFinal;
                 }
             }
 
@@ -563,7 +589,9 @@ namespace Service
 
                 // Transfere EXCLUSIVAMENTE o evento principal, NUNCA transferindo os subeventos (filhos)
                 inscricao.IdPessoa = amigo.Id;
-                inscricao.NomeCracha = amigo.NomeCracha;
+                inscricao.NomeCracha = !string.IsNullOrWhiteSpace(amigo.NomeCracha)
+                    ? amigo.NomeCracha
+                    : (amigo.Nome != null && amigo.Nome.Length > 20 ? amigo.Nome.Substring(0, 20) : amigo.Nome ?? "Participante");
 
                 _context.SaveChanges();
                 return true;
