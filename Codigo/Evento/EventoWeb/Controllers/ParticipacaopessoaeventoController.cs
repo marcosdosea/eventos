@@ -21,6 +21,7 @@ namespace EventoWeb.Controllers
         private readonly IInscricaoService _inscricaoService;
         private readonly IMapper _mapper;
         private readonly UserManager<UsuarioIdentity> _userManager;
+        private readonly IPlanilhaParser _planilhaParser;
 
         public ParticipacaoPessoaEventoController(
             IParticipacaoPessoaEventoService participacaoService,
@@ -30,7 +31,8 @@ namespace EventoWeb.Controllers
             IPessoaService pessoaService,
             IInscricaoService inscricaoService,
             IMapper mapper,
-            UserManager<UsuarioIdentity> userManager)
+            UserManager<UsuarioIdentity> userManager,
+            IPlanilhaParser? planilhaParser = null)
         {
             _participacaoService = participacaoService;
             _participacaoSubEventoService = participacaoSubEventoService;
@@ -40,6 +42,7 @@ namespace EventoWeb.Controllers
             _inscricaoService = inscricaoService;
             _mapper = mapper;
             _userManager = userManager;
+            _planilhaParser = planilhaParser ?? new PlanilhaParser();
         }
 
         [Authorize(Roles = "GESTOR,COLABORADOR")]
@@ -289,8 +292,7 @@ namespace EventoWeb.Controllers
                 return RedirectToAction(destino, new { idEvento, idSubEvento });
             }
 
-            var parser = new PlanilhaParser();
-            var resultado = parser.Parse(arquivoPlanilha);
+            var resultado = _planilhaParser.Parse(arquivoPlanilha);
 
             if (resultado.ListaSucesso.Count == 0)
             {
@@ -306,120 +308,42 @@ namespace EventoWeb.Controllers
                 return RedirectToAction(destino, new { idEvento, idSubEvento });
             }
 
-            int importadosComSucesso = 0;
+            var resultadoImportacao = await _participacaoService.ImportarParticipantesAsync(
+                idEvento,
+                idSubEvento,
+                resultado.ListaSucesso);
 
-            foreach (var inscritoDto in resultado.ListaSucesso)
+            int totalErros = resultado.ListaErros.Count + resultadoImportacao.TotalFalhas;
+
+            if (resultadoImportacao.TotalImportados == 0 && resultadoImportacao.TotalJaRegistrados == 0 && totalErros > 0)
             {
-                var cpf = inscritoDto.Cpf;
-                if (string.IsNullOrWhiteSpace(cpf))
-                    continue;
-
-                var pessoa = _pessoaService.GetByCpf(cpf);
-                if (pessoa == null)
-                {
-                    var novaPessoa = new Pessoa
-                    {
-                        Cpf = cpf,
-                        Nome = inscritoDto.Nome,
-                        NomeCracha = inscritoDto.Nome.Length > 20 ? inscritoDto.Nome.Substring(0, 20) : inscritoDto.Nome,
-                        Email = string.IsNullOrWhiteSpace(inscritoDto.Email) ? $"{cpf}@evento.com" : inscritoDto.Email,
-                        Sexo = "N"
-                    };
-
-                    try
-                    {
-                        _pessoaService.Create(novaPessoa);
-                        pessoa = _pessoaService.GetByCpf(cpf);
-                    }
-                    catch
-                    {
-                        continue;
-                    }
-                }
-
-                if (pessoa == null)
-                    continue;
-
-                var inscricao = _inscricaoService.GetByEventoAndPapel(idEvento, 4)
-                    .FirstOrDefault(i => i.IdPessoa == pessoa.Id);
-
-                if (inscricao == null)
-                {
-                    if (!_inscricaoService.IsInscrito(pessoa.Id, idEvento))
-                    {
-                        var novaInscricao = new Inscricaopessoaevento
-                        {
-                            IdPessoa = pessoa.Id,
-                            IdEvento = idEvento,
-                            IdPapel = 4,
-                            DataInscricao = DateTime.Now,
-                            NomeCracha = !string.IsNullOrWhiteSpace(pessoa.NomeCracha) ? pessoa.NomeCracha : pessoa.Nome,
-                            Status = "S"
-                        };
-                        try
-                        {
-                            _inscricaoService.CreateInscricaoEvento(novaInscricao);
-                            _eventoService.AtualizarVagasDisponiveis(idEvento);
-                        }
-                        catch { }
-                    }
-                }
-
-                if (idSubEvento.HasValue && idSubEvento.Value > 0)
-                {
-                    var inscricoesSub = _inscricaoService.GetSubByEvento(idEvento);
-                    var inscricaoSub = inscricoesSub?.FirstOrDefault(i => i.IdPessoa == pessoa.Id && i.IdSubEvento == idSubEvento.Value);
-                    if (inscricaoSub == null)
-                    {
-                        var novaInscricaoSub = new Inscricaopessoasubevento
-                        {
-                            IdPessoa = pessoa.Id,
-                            IdSubEvento = idSubEvento.Value,
-                            IdPapel = 4,
-                            DataInscricao = DateTime.Now,
-                            Status = "S",
-                            FrequenciaFinal = 0m,
-                            Valor = 0m
-                        };
-                        try
-                        {
-                            _inscricaoService.CreateInscricaoSubEvento(novaInscricaoSub);
-                            _subeventoService.AtualizarVagasDisponiveis(idSubEvento.Value);
-                        }
-                        catch { }
-                    }
-
-                    var novaParticipacaoSub = new Participacaopessoasubevento
-                    {
-                        IdPessoa = pessoa.Id,
-                        IdSubEvento = idSubEvento.Value,
-                        Entrada = DateTime.Now
-                    };
-                    _participacaoSubEventoService.Create(novaParticipacaoSub);
-                }
-                else
-                {
-                    var novaParticipacao = new Participacaopessoaevento
-                    {
-                        IdPessoa = pessoa.Id,
-                        IdEvento = idEvento,
-                        Entrada = DateTime.Now
-                    };
-                    await _participacaoService.AddAsync(novaParticipacao);
-                }
-
-                importadosComSucesso++;
+                var detalheErro = resultadoImportacao.Inconsistencias.FirstOrDefault()
+                    ?? (resultado.ListaErros.Count > 0 ? $"Linha {resultado.ListaErros[0].NumeroLinha} - {resultado.ListaErros[0].MotivoRecusa}." : "Inconsistências encontradas.");
+                TempData["ErrorMessage"] = $"Nenhum participante importado. {detalheErro}";
+                return RedirectToAction(destino, new { idEvento, idSubEvento });
             }
 
-            int totalErros = resultado.ListaErros.Count;
-            if (totalErros == 0)
+            var partesMensagem = new List<string>();
+            if (resultadoImportacao.TotalImportados > 0)
             {
-                TempData["Message"] = $"{importadosComSucesso} participante(s) importado(s) com sucesso a partir da planilha.";
+                partesMensagem.Add($"{resultadoImportacao.TotalImportados} participante(s) importado(s) com sucesso a partir da planilha.");
             }
-            else
+            else if (resultadoImportacao.TotalJaRegistrados > 0)
             {
-                TempData["Message"] = $"{importadosComSucesso} participante(s) importado(s) com sucesso. {totalErros} linha(s) continham inconsistências e foram ignoradas.";
+                partesMensagem.Add($"Nenhum novo registro criado: {resultadoImportacao.TotalJaRegistrados} participante(s) da planilha já possuíam presença registrada neste evento.");
             }
+
+            if (resultadoImportacao.TotalImportados > 0 && resultadoImportacao.TotalJaRegistrados > 0)
+            {
+                partesMensagem.Add($"{resultadoImportacao.TotalJaRegistrados} participante(s) já possuíam presença registrada.");
+            }
+
+            if (totalErros > 0)
+            {
+                partesMensagem.Add($"{totalErros} linha(s) continham inconsistências e foram ignoradas.");
+            }
+
+            TempData["Message"] = string.Join(" ", partesMensagem);
 
             return RedirectToAction(destino, new { idEvento, idSubEvento });
         }

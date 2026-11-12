@@ -1,4 +1,5 @@
 using Core;
+using Core.DTO;
 using Core.Service;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -156,6 +157,122 @@ namespace Service.Tests
 
             serviceSub.Delete(1);
             Assert.AreEqual(0m, _context.Inscricaopessoasubeventos.Find((uint)1, (uint)1)!.FrequenciaFinal);
+        }
+
+        [TestMethod()]
+        public async Task ImportarParticipantesAsync_CriaPessoasInscricoesEPresencasEAtualizaVagas()
+        {
+            _context.Eventos.Add(new Evento
+            {
+                Id = 10,
+                Nome = "Evento Importação",
+                Descricao = "Desc",
+                Status = "A",
+                VagasOfertadas = 50,
+                VagasDisponiveis = 50,
+                IdTipoEvento = 1
+            });
+            _context.SaveChanges();
+
+            var inscritos = new List<PessoaInscritaDto>
+            {
+                new PessoaInscritaDto { Cpf = "52998224725", Nome = "Participante Um", Email = "p1@teste.com" },
+                new PessoaInscritaDto { Cpf = "11144477735", Nome = "Participante Dois", Email = "p2@teste.com" }
+            };
+
+            var resultado = await _participacaoService.ImportarParticipantesAsync(10, null, inscritos);
+
+            Assert.AreEqual(2, resultado.TotalLidos);
+            Assert.AreEqual(2, resultado.TotalImportados);
+            Assert.AreEqual(0, resultado.TotalJaRegistrados);
+            Assert.AreEqual(0, resultado.TotalFalhas);
+
+            Assert.AreEqual(2, _context.Inscricaopessoaeventos.Count(i => i.IdEvento == 10 && i.IdPapel == 4));
+            Assert.AreEqual(2, _context.Participacaopessoaeventos.Count(p => p.IdEvento == 10));
+            Assert.AreEqual(48, _context.Eventos.Find((uint)10)!.VagasDisponiveis);
+        }
+
+        [TestMethod()]
+        public async Task ImportarParticipantesAsync_ReimportarMesmaPlanilha_EhIdempotenteENaoDuplicaPresenca()
+        {
+            _context.Eventos.Add(new Evento
+            {
+                Id = 20,
+                Nome = "Evento Idempotente",
+                Descricao = "Desc",
+                Status = "A",
+                VagasOfertadas = 30,
+                VagasDisponiveis = 30,
+                IdTipoEvento = 1
+            });
+            _context.SaveChanges();
+
+            var inscritos = new List<PessoaInscritaDto>
+            {
+                new PessoaInscritaDto { Cpf = "52998224725", Nome = "Participante Um", Email = "p1@teste.com" },
+                new PessoaInscritaDto { Cpf = "11144477735", Nome = "Participante Dois", Email = "p2@teste.com" }
+            };
+
+            var primeiraImportacao = await _participacaoService.ImportarParticipantesAsync(20, null, inscritos);
+            var segundaImportacao = await _participacaoService.ImportarParticipantesAsync(20, null, inscritos);
+            var terceiraImportacao = await _participacaoService.ImportarParticipantesAsync(20, null, inscritos);
+
+            Assert.AreEqual(2, primeiraImportacao.TotalImportados);
+            Assert.AreEqual(0, primeiraImportacao.TotalJaRegistrados);
+
+            Assert.AreEqual(0, segundaImportacao.TotalImportados);
+            Assert.AreEqual(2, segundaImportacao.TotalJaRegistrados);
+
+            Assert.AreEqual(0, terceiraImportacao.TotalImportados);
+            Assert.AreEqual(2, terceiraImportacao.TotalJaRegistrados);
+
+            Assert.AreEqual(2, _context.Participacaopessoaeventos.Count(p => p.IdEvento == 20));
+            Assert.AreEqual(28, _context.Eventos.Find((uint)20)!.VagasDisponiveis);
+        }
+
+        [TestMethod()]
+        public async Task ImportarParticipantesAsync_PessoaEmPapelConflitante_RegistraFalhaENaoCriaPresenca()
+        {
+            _context.Eventos.Add(new Evento
+            {
+                Id = 30,
+                Nome = "Evento Conflito",
+                Descricao = "Desc",
+                Status = "A",
+                VagasOfertadas = 10,
+                VagasDisponiveis = 10,
+                IdTipoEvento = 1
+            });
+            _context.Pessoas.Add(new Pessoa
+            {
+                Id = 99,
+                Cpf = "52998224725",
+                Nome = "Gestor Evento",
+                NomeCracha = "Gestor",
+                Email = "gestor@teste.com",
+                Sexo = "N"
+            });
+            _context.Inscricaopessoaeventos.Add(new Inscricaopessoaevento
+            {
+                Id = 50,
+                IdEvento = 30,
+                IdPessoa = 99,
+                IdPapel = 2, // Gestor
+                Status = "A",
+                DataInscricao = DateTime.Now
+            });
+            _context.SaveChanges();
+
+            var inscritos = new List<PessoaInscritaDto>
+            {
+                new PessoaInscritaDto { Cpf = "52998224725", Nome = "Gestor Evento", Email = "gestor@teste.com" }
+            };
+
+            var resultado = await _participacaoService.ImportarParticipantesAsync(30, null, inscritos);
+
+            Assert.AreEqual(0, resultado.TotalImportados);
+            Assert.AreEqual(1, resultado.TotalFalhas);
+            Assert.AreEqual(0, _context.Participacaopessoaeventos.Count(p => p.IdEvento == 30));
         }
     }
 }

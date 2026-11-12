@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Core;
+using Core.DTO;
 
 namespace Core.Service
 {
@@ -12,5 +13,9 @@ namespace Core.Service
         Task<Participacaopessoaevento> AddAsync(Participacaopessoaevento entity);
         Task<bool> UpdateAsync(Participacaopessoaevento entity);
         Task<bool> DeleteAsync(uint id);
+        Task<ResultadoImportacaoParticipantesDTO> ImportarParticipantesAsync(
+            uint idEvento,
+            uint? idSubEvento,
+            IEnumerable<PessoaInscritaDto> participantes);
     }
 }
