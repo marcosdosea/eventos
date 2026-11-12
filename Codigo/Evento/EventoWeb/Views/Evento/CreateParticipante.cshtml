@@ -5,12 +5,11 @@
 
 <h1 class="blue-normal">Cadastrar Participantes do Evento</h1>
 <hr />
-
 <div class="row">
     <div>
         <form asp-action="CreateParticipante" method="post" onsubmit="removerMascara()">
-            <div class="row">
-                <div class="col-lg-3">
+            <div class="row mb-4 align-items-start">
+                <div class="col-md-8">
                     <div class="form-group">
                         <label for="IdEvento" class="control-label">Evento</label>
                         <select id="IdEvento" name="IdEvento" class="form-control" readonly>
@@ -26,8 +25,18 @@
                         @Html.HiddenFor(model => model.Evento.Id)
                         @Html.HiddenFor(model => model.Evento.Nome)
                     </div>
+                  
                 </div>
+                <div class="col-md-4 text-md-end">
+                    <button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#modalImportarCsv">
+                        <i class="bi bi-upload me-1"></i> Importar CSV
+                    </button>
+                    <a href="/ParticipacaoPessoaEvento/ExportarFrequencia/4" class="btn btn-blue-normal">
+                        <i class="bi bi-download me-1"></i> Exportar CSV
+                    </a>
+                  </div>
             </div>
+
             <br />
             <h4 class="blue-normal">
                 Dados do participante
