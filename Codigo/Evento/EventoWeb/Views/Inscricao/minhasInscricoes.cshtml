@@ -176,7 +176,7 @@
                     var evento = item.IdEventoNavigation;
                     var subeventos = item.Inscricaopessoasubeventos?.ToList() ?? new List<Core.Inscricaopessoasubevento>();
                     var valorTotalGeral = item.ValorTotal + subeventos.Sum(s => s.Valor);
-                    var protocolo = item.Id > 0 ? $"#INS-{item.DataInscricao.Year}-{item.Id:D4}" : "-";
+                    var protocolo = item.Id > 0 ? $"#INS-{item.DataInscricao.Year}-{item.Id:D4}" : (subeventos.Any() ? $"#SUB-{subeventos.First().DataInscricao.Year}-{subeventos.First().Id:D4}" : "-");
                     var semCusto = valorTotalGeral <= 0;
                     var confirmado = item.Status == "A" || (item.Status == "S" && semCusto);
                     var pendente = item.Status == "S" && !semCusto;
@@ -358,6 +358,12 @@
                                             </button>
                                         }
                                     }
+                                    @if (item.Id == 0 && subeventos.Any())
+                                    {
+                                        <span class="badge bg-light text-secondary border p-2" title="Você não possui o ingresso do evento principal, apenas inscrições em subeventos.">
+                                            <i class="bi bi-diagram-2 me-1" aria-hidden="true"></i> Apenas Subevento(s)
+                                        </span>
+                                    }
                                     @if (!confirmado && item.Id > 0)
                                     {
                                         <a asp-action="DetalhesInscricao" asp-controller="Inscricao" asp-route-id="@item.Id" class="mi-link-acao">
@@ -461,6 +467,7 @@
                         <div class="small text-muted text-uppercase fw-bold mb-1">Ingresso Selecionado</div>
                         <div class="fw-bold text-dark" id="transferirDescricaoIngresso">-</div>
                         <div class="small text-muted" id="transferirProtocolo">-</div>
+                        <div class="small text-primary mt-1 fw-semibold" id="transferirAlertaSeparacao">A transferência de evento e subevento ocorre separadamente.</div>
                     </div>
 
                     <div class="mb-3">
@@ -668,10 +675,17 @@
             document.getElementById('transferirIdSubevento').value = idSubevento || '';
 
             var descElement = document.getElementById('transferirDescricaoIngresso');
+            var separacaoElement = document.getElementById('transferirAlertaSeparacao');
             if (nomeSubevento) {
                 descElement.textContent = 'Subevento: ' + nomeSubevento + ' (' + nomeEvento + ')';
+                if (separacaoElement) {
+                    separacaoElement.textContent = 'Apenas este subevento será transferido. O evento principal e demais subeventos permanecerão com você.';
+                }
             } else {
-                descElement.textContent = 'Evento: ' + nomeEvento;
+                descElement.textContent = 'Evento Principal: ' + nomeEvento;
+                if (separacaoElement) {
+                    separacaoElement.textContent = 'Apenas o ingresso do evento principal será transferido. Os seus subeventos permanecerão com você.';
+                }
             }
 
             document.getElementById('transferirProtocolo').textContent = protocolo ? 'Protocolo: ' + protocolo : '';

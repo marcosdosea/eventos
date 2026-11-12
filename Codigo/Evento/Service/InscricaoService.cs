@@ -277,6 +277,35 @@ namespace Service
                     .ToList();
             }
 
+            // Garante que subeventos cujo evento principal não pertence ao usuário (ex: transferido separadamente) continuem aparecendo no painel
+            var idsEventosComInscricao = query.Select(i => i.IdEvento).ToHashSet();
+            var subeventosSemEventoPrincipal = subeventosUsuario
+                .Where(s => !idsEventosComInscricao.Contains(s.IdSubEventoNavigation?.IdEvento ?? _context.Subeventos.FirstOrDefault(sub => sub.Id == s.IdSubEvento)?.IdEvento ?? 0))
+                .GroupBy(s => s.IdSubEventoNavigation?.IdEvento ?? _context.Subeventos.FirstOrDefault(sub => sub.Id == s.IdSubEvento)?.IdEvento ?? 0);
+
+            foreach (var grupo in subeventosSemEventoPrincipal)
+            {
+                var idEv = grupo.Key;
+                if (idEv == 0) continue;
+
+                var evNav = _context.Eventos.FirstOrDefault(e => e.Id == idEv);
+                if (evNav == null) continue;
+
+                var primeiroSub = grupo.First();
+                query.Add(new Inscricaopessoaevento
+                {
+                    Id = 0, // Id = 0 indica que não possui ingresso de evento principal ativo (apenas subeventos)
+                    IdEvento = idEv,
+                    IdEventoNavigation = evNav,
+                    IdPessoa = primeiroSub.IdPessoa,
+                    IdPessoaNavigation = primeiroSub.IdPessoaNavigation,
+                    DataInscricao = primeiroSub.DataInscricao,
+                    Status = grupo.Any(s => s.Status == "A") ? "A" : grupo.First().Status,
+                    ValorTotal = grupo.Sum(s => s.Valor),
+                    Inscricaopessoasubeventos = grupo.ToList()
+                });
+            }
+
             return query;
         }
 
@@ -471,64 +500,8 @@ namespace Service
             if (amigo.Id == pessoaOrigem.Id)
                 throw new ArgumentException("Não é possível transferir um ingresso para você mesmo.");
 
-            // Caso 1: Transferência de Inscrição em Evento
-            if (idInscricao > 0)
-            {
-                var inscricao = _context.Inscricaopessoaeventos
-                    .Include(i => i.IdEventoNavigation)
-                    .FirstOrDefault(i => i.Id == idInscricao && i.IdPessoa == pessoaOrigem.Id);
-
-                if (inscricao == null)
-                    throw new ArgumentException("Inscrição não encontrada ou não pertence ao usuário.");
-
-                if (inscricao.Status == "C")
-                    throw new InvalidOperationException("Não é possível transferir um ingresso cancelado.");
-
-                var ev = inscricao.IdEventoNavigation;
-                bool eventoJaOcorreu = (ev != null) && (
-                    (ev.DataFim.HasValue && ev.DataFim.Value < DateTime.Now) ||
-                    (!ev.DataFim.HasValue && ev.DataInicio.HasValue && ev.DataInicio.Value < DateTime.Now) ||
-                    ev.Status == "F"
-                );
-
-                if (eventoJaOcorreu)
-                    throw new InvalidOperationException("Não é possível transferir ingresso de um evento que já aconteceu ou foi encerrado.");
-
-                inscricao.IdPessoa = amigo.Id;
-                inscricao.NomeCracha = amigo.NomeCracha;
-
-                if (idSubevento.HasValue && idSubevento.Value > 0)
-                {
-                    var subInscricao = _context.Inscricaopessoasubeventos
-                        .Include(s => s.IdSubEventoNavigation)
-                        .FirstOrDefault(s => s.IdPessoa == pessoaOrigem.Id && s.IdSubEvento == idSubevento.Value);
-
-                    if (subInscricao != null)
-                    {
-                        var sub = subInscricao.IdSubEventoNavigation;
-                        bool subJaOcorreu = (sub != null) && (
-                            (sub.DataFim != DateTime.MinValue && sub.DataFim < DateTime.Now) ||
-                            (sub.DataFim == DateTime.MinValue && sub.DataInicio != DateTime.MinValue && sub.DataInicio < DateTime.Now) ||
-                            sub.Status == "F" || sub.Status == "I"
-                        );
-
-                        if (subJaOcorreu)
-                            throw new InvalidOperationException("Não é possível transferir ingresso de um subevento que já aconteceu ou foi encerrado.");
-
-                        var amigoJaTemSub = _context.Inscricaopessoasubeventos
-                            .Any(s => s.IdPessoa == amigo.Id && s.IdSubEvento == idSubevento.Value && s.Status != "C");
-                        if (!amigoJaTemSub)
-                        {
-                            TransferirRegistroSubEvento(subInscricao, amigo.Id);
-                        }
-                    }
-                }
-
-                _context.SaveChanges();
-                return true;
-            }
-            // Caso 2: Transferência apenas de Subevento
-            else if (idSubevento.HasValue && idSubevento.Value > 0)
+            // Caso 1: Transferência EXCLUSIVA de Subevento (se idSubevento informado)
+            if (idSubevento.HasValue && idSubevento.Value > 0)
             {
                 var subInscricao = _context.Inscricaopessoasubeventos
                     .Include(s => s.IdSubEventoNavigation)
@@ -555,7 +528,43 @@ namespace Service
                 if (amigoJaInscrito)
                     throw new InvalidOperationException("O destinatário já possui uma inscrição ativa neste subevento.");
 
+                // Transfere EXCLUSIVAMENTE o subevento selecionado. Não transfere o evento principal nem outros subeventos.
                 TransferirRegistroSubEvento(subInscricao, amigo.Id);
+                _context.SaveChanges();
+                return true;
+            }
+            // Caso 2: Transferência EXCLUSIVA de Inscrição em Evento Principal (sem transferir os subeventos)
+            else if (idInscricao > 0)
+            {
+                var inscricao = _context.Inscricaopessoaeventos
+                    .Include(i => i.IdEventoNavigation)
+                    .FirstOrDefault(i => i.Id == idInscricao && i.IdPessoa == pessoaOrigem.Id);
+
+                if (inscricao == null)
+                    throw new ArgumentException("Inscrição não encontrada ou não pertence ao usuário.");
+
+                if (inscricao.Status == "C")
+                    throw new InvalidOperationException("Não é possível transferir um ingresso cancelado.");
+
+                var ev = inscricao.IdEventoNavigation;
+                bool eventoJaOcorreu = (ev != null) && (
+                    (ev.DataFim.HasValue && ev.DataFim.Value < DateTime.Now) ||
+                    (!ev.DataFim.HasValue && ev.DataInicio.HasValue && ev.DataInicio.Value < DateTime.Now) ||
+                    ev.Status == "F" || ev.Status == "C"
+                );
+
+                if (eventoJaOcorreu)
+                    throw new InvalidOperationException("Não é possível transferir ingresso de um evento que já aconteceu ou foi encerrado.");
+
+                var amigoJaTemEvento = _context.Inscricaopessoaeventos
+                    .Any(i => i.IdPessoa == amigo.Id && i.IdEvento == inscricao.IdEvento && i.Status != "C");
+                if (amigoJaTemEvento)
+                    throw new InvalidOperationException("O destinatário já possui uma inscrição ativa neste evento.");
+
+                // Transfere EXCLUSIVAMENTE o evento principal, NUNCA transferindo os subeventos (filhos)
+                inscricao.IdPessoa = amigo.Id;
+                inscricao.NomeCracha = amigo.NomeCracha;
+
                 _context.SaveChanges();
                 return true;
             }
