@@ -12,8 +12,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Service;
 using System.Globalization;
-using System.Threading.RateLimiting;
-using Microsoft.AspNetCore.RateLimiting;
 
 namespace EventoWeb
 {
@@ -124,22 +122,6 @@ namespace EventoWeb
             });
 
             builder.Services.AddDistributedMemoryCache();
-            builder.Services.AddAuthentication().AddBearerToken(IdentityConstants.BearerScheme,
-                options => options.BearerTokenExpiration = TimeSpan.FromHours(1));
-            builder.Services.AddAuthorization(options => options.AddPolicy("BipouOperador", policy =>
-                policy.AddAuthenticationSchemes(IdentityConstants.BearerScheme)
-                    .RequireAuthenticatedUser().RequireRole("GESTOR", "COLABORADOR")));
-            builder.Services.AddResponseCompression(options => options.EnableForHttps = true);
-            builder.Services.AddRateLimiter(options =>
-            {
-                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-                options.AddPolicy("bipou-sessao", context => RateLimitPartition.GetFixedWindowLimiter(
-                    context.Connection.RemoteIpAddress?.ToString() ?? "local",
-                    _ => new FixedWindowRateLimiterOptions
-                    {
-                        PermitLimit = 10, Window = TimeSpan.FromMinutes(1), QueueLimit = 0
-                    }));
-            });
             builder.Services.AddSession(options =>
             {
                 options.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -162,10 +144,6 @@ namespace EventoWeb
             app.UseStaticFiles();
 
             app.UseRouting();
-            app.UseRateLimiter();
-            // Compressão apenas nas cargas da API; telas MVC e emissão de tokens ficam fora.
-            app.UseWhen(context => context.Request.Path.StartsWithSegments("/api/bipou/v1/eventos"),
-                pipeline => pipeline.UseResponseCompression());
 
             app.UseRequestLocalization(app.Services.GetRequiredService<IOptions<RequestLocalizationOptions>>().Value);
             app.UseSession();

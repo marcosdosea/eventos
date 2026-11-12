@@ -4,14 +4,14 @@ using System.Text.Json;
 using Core;
 using Core.DTO;
 using Core.Service;
-using EventoWeb.Models;
+using EventoApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Net.Http.Headers;
 
-namespace EventoWeb.Controllers.Api;
+namespace EventoApi.Controllers;
 
 [ApiController]
 [Route("api/bipou/v1")]
@@ -154,7 +154,7 @@ public class BipouApiController : ControllerBase
         Response.Headers.ETag = etag.ToString();
         Response.Headers.CacheControl = "private, no-cache";
         Response.Headers.Vary = "Authorization, Accept-Encoding";
-        if (EntityTagHeaderValue.TryParseList(Request.Headers.IfNoneMatch.ToArray(), out var tags) &&
+        if (EntityTagHeaderValue.TryParseList(Request.Headers.IfNoneMatch.Where(t => t != null).Select(t => t!).ToList(), out var tags) &&
             tags.Any(t => t.Tag == "*" || t.Compare(etag, useStrongComparison: false)))
             return StatusCode(StatusCodes.Status304NotModified);
         if (arquivo == null) return File(json, "application/json; charset=utf-8");
@@ -163,3 +163,4 @@ public class BipouApiController : ControllerBase
         return File(saida.ToArray(), "application/gzip", arquivo);
     }
 }
+

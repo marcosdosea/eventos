@@ -5,7 +5,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Core;
-using EventoWeb;
+using EventoApi;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -21,7 +21,7 @@ using System.Security.Claims;
 using Microsoft.Extensions.Logging;
 using MySql.Data.MySqlClient;
 
-namespace EventoWebTests.Controllers;
+namespace EventoApiTests.Controllers;
 
 [TestClass]
 public class BipouApiControllerTests
@@ -495,3 +495,4 @@ public class BipouApiControllerTests
         }
     }
 }
+

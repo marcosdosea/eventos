@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace EventoWeb.Models;
+namespace EventoApi.Models;
 
 public class BipouSessaoModel
 {
@@ -10,3 +10,4 @@ public class BipouSessaoModel
     [Required, StringLength(256)]
     public string Senha { get; set; } = string.Empty;
 }
+
