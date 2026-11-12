@@ -42,6 +42,7 @@ namespace Core.Service
         bool IsInscrito(uint idPessoa, uint idEvento);
 
         void UpdateNomeCracha(uint idPessoa, uint idEvento, string nomeCracha);
+
+        bool TransferirIngresso(uint idInscricao, string cpfDestino, string nomeDestino, string emailDestino, string cpfOrigem, uint? idSubevento = null);
     }
 }
-

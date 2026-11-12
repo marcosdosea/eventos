@@ -374,14 +374,14 @@
                                             bool isJaInscrito = subInscritos != null && subInscritos.Contains(sub.Id);
                                             bool subeventoJaPassou = (sub.DataFim.HasValue && sub.DataFim.Value < DateTime.Now) || (!sub.DataFim.HasValue && sub.DataInicio.HasValue && sub.DataInicio.Value < DateTime.Now);
                                             bool isEncerrado = sub.Status == "F" || sub.Status == "I" || (sub.DataFimInscricao != DateTime.MinValue && sub.DataFimInscricao < DateTime.Now) || subeventoJaPassou;
-                                            bool isEmCadastro = sub.Status == "C";
-                                            bool isEmBreve = (sub.DataInicioInscricao != DateTime.MinValue && sub.DataInicioInscricao > DateTime.Now);
-                                            bool isEsgotado = sub.VagasDisponiveis <= 0;
-                                            bool isInscricaoAberta = (sub.Status == "A")
-                                                && (sub.DataInicioInscricao <= DateTime.Now)
-                                                && (sub.DataFimInscricao >= DateTime.Now)
-                                                && !subeventoJaPassou
-                                                && (sub.VagasDisponiveis > 0);
+                                            bool isEmBreve = !isEncerrado && (sub.DataInicioInscricao != DateTime.MinValue && sub.DataInicioInscricao > DateTime.Now);
+                                            bool isEsgotado = !isEncerrado && !isEmBreve && (sub.VagasDisponiveis <= 0);
+                                            bool isInscricaoAberta = (sub.Status == "A" || sub.Status == "C")
+                                                && !isEncerrado
+                                                && !isEmBreve
+                                                && !isEsgotado
+                                                && (sub.DataInicioInscricao == DateTime.MinValue || sub.DataInicioInscricao <= DateTime.Now)
+                                                && (sub.DataFimInscricao == DateTime.MinValue || sub.DataFimInscricao >= DateTime.Now);
                                             bool isDisabled = !isInscricaoAberta;
                                             var tipos = subOpcao.TiposInscricao?.ToList() ?? new List<Core.DTO.TipoInscricaoDTO>();
 
@@ -402,17 +402,17 @@
                                                         {
                                                             <span class="badge bg-secondary ms-1">Encerrado</span>
                                                         }
-                                                        else if (isEmBreve || isEmCadastro)
+                                                        else if (isEmBreve)
                                                         {
-                                                            <span class="badge bg-warning text-dark ms-1">Em Breve</span>
+                                                            <span class="badge bg-warning text-dark ms-1"><i class="bi bi-clock-history me-1"></i>Em Breve</span>
                                                         }
                                                         else if (isEsgotado)
                                                         {
                                                             <span class="badge bg-danger ms-1">Esgotado</span>
                                                         }
-                                                        else if (!isInscricaoAberta)
+                                                        else if (isInscricaoAberta)
                                                         {
-                                                            <span class="badge bg-secondary ms-1">Indisponível</span>
+                                                            <span class="badge bg-success-subtle text-success border border-success ms-1"><i class="bi bi-check2 me-1"></i>Inscrições Abertas</span>
                                                         }
                                                     </div>
                                                 </td>
@@ -431,7 +431,7 @@
                                                             <i class="bi bi-x-circle-fill"></i> Encerrado
                                                         </span>
                                                     }
-                                                    else if (isEmBreve || isEmCadastro)
+                                                    else if (isEmBreve)
                                                     {
                                                         <span class="badge-vagas badge-vagas-em-breve">
                                                             <i class="bi bi-clock-history"></i> Em Breve

@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Util;
 using AutoMapper;
 using Core.Service;
 using Core;
@@ -23,8 +25,19 @@ namespace EventoWeb.Controllers
         private readonly UserManager<UsuarioIdentity> _userManager;
         private readonly ITipoInscricaoService _tipoinscricaoService;
         private readonly IMapper _mapper;
+        private readonly IEmailSender? _emailSender;
+        private readonly IWebHostEnvironment? _environment;
 
-        public InscricaoController(UserManager<UsuarioIdentity> userManager, ITipoInscricaoService tipoinscricaoService, IEventoService eventoService, IMapper mapper, IInscricaoService inscricaoService, IPessoaService pessoaService, ISubeventoService subeventoService)
+        public InscricaoController(
+            UserManager<UsuarioIdentity> userManager,
+            ITipoInscricaoService tipoinscricaoService,
+            IEventoService eventoService,
+            IMapper mapper,
+            IInscricaoService inscricaoService,
+            IPessoaService pessoaService,
+            ISubeventoService subeventoService,
+            IEmailSender? emailSender = null,
+            IWebHostEnvironment? environment = null)
         {
             _tipoinscricaoService = tipoinscricaoService;
             _eventoService = eventoService;
@@ -33,6 +46,8 @@ namespace EventoWeb.Controllers
             _pessoaService = pessoaService;
             _subeventoService = subeventoService;
             _userManager = userManager;
+            _emailSender = emailSender;
+            _environment = environment;
         }
 
         [AllowAnonymous]
@@ -292,7 +307,7 @@ namespace EventoWeb.Controllers
                 foreach (var idSubevento in inscricaoEvento.SelectedSubeventos)
                 {
                     var subevento = _subeventoService.Get(idSubevento);
-                    if (subevento == null || subevento.Status != "A" || (subevento.DataFimInscricao != DateTime.MinValue && subevento.DataFimInscricao < DateTime.Now))
+                    if (subevento == null || (subevento.Status != "A" && subevento.Status != "C") || (subevento.DataFimInscricao != DateTime.MinValue && subevento.DataFimInscricao < DateTime.Now))
                     {
                         continue;
                     }
@@ -417,7 +432,7 @@ namespace EventoWeb.Controllers
                         (subevento.DataFim != DateTime.MinValue && subevento.DataFim < DateTime.Now) ||
                         (subevento.DataInicio != DateTime.MinValue && subevento.DataInicio < DateTime.Now && subevento.DataFim != DateTime.MinValue && subevento.DataFim <= subevento.DataInicio)
                     );
-                    if (subevento == null || subevento.Status != "A" || (subevento.DataInicioInscricao != DateTime.MinValue && subevento.DataInicioInscricao > DateTime.Now) || (subevento.DataFimInscricao != DateTime.MinValue && subevento.DataFimInscricao < DateTime.Now) || subeventoPassou || (subevento.IdEvento != 0 && subevento.IdEvento != idEvento))
+                    if (subevento == null || (subevento.Status != "A" && subevento.Status != "C") || (subevento.DataInicioInscricao != DateTime.MinValue && subevento.DataInicioInscricao > DateTime.Now) || (subevento.DataFimInscricao != DateTime.MinValue && subevento.DataFimInscricao < DateTime.Now) || subeventoPassou || (subevento.IdEvento != 0 && subevento.IdEvento != idEvento))
                     {
                         continue;
                     }
@@ -753,5 +768,235 @@ namespace EventoWeb.Controllers
             return RedirectToAction(nameof(minhasInscricoes));
         }
 
+        [Authorize]
+        [HttpPost]
+        [Route("TransferirIngresso")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TransferirIngresso(TransferirIngressoModel model)
+        {
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                var erro = ModelState.Values.SelectMany(v => v.Errors).FirstOrDefault()?.ErrorMessage
+                    ?? "Dados inválidos para transferência.";
+                TempData["ParticipanteMessage"] = erro;
+                return RedirectToAction(nameof(minhasInscricoes));
+            }
+
+            if ((!model.IdInscricao.HasValue || model.IdInscricao.Value == 0) && (!model.IdSubevento.HasValue || model.IdSubevento.Value == 0))
+            {
+                TempData["ParticipanteMessage"] = "Nenhum ingresso ou subevento selecionado para transferência.";
+                return RedirectToAction(nameof(minhasInscricoes));
+            }
+
+            try
+            {
+                _inscricaoService.TransferirIngresso(
+                    model.IdInscricao ?? 0,
+                    model.CpfAmigo,
+                    model.NomeAmigo,
+                    model.EmailAmigo,
+                    username,
+                    model.IdSubevento);
+
+                TempData["ParticipanteSuccessMessage"] = $"Ingresso transferido com sucesso para {model.NomeAmigo.Trim()}! Um e-mail com as instruções de acesso foi enviado para {model.EmailAmigo.Trim()}.";
+
+                await EnviarEmailTransferenciaAsync(model, username);
+            }
+            catch (ArgumentException ex)
+            {
+                TempData["ParticipanteErrorMessage"] = ex.Message;
+                TempData["ParticipanteMessage"] = ex.Message;
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["ParticipanteErrorMessage"] = ex.Message;
+                TempData["ParticipanteMessage"] = ex.Message;
+            }
+            catch (Exception)
+            {
+                const string msg = "Não foi possível concluir a transferência do ingresso. Tente novamente.";
+                TempData["ParticipanteErrorMessage"] = msg;
+                TempData["ParticipanteMessage"] = msg;
+            }
+
+            return RedirectToAction(nameof(minhasInscricoes));
+        }
+
+        [Authorize]
+        [HttpGet("ConsultarDestinatarioTransferencia")]
+        public IActionResult ConsultarDestinatarioTransferencia([FromQuery] string cpf)
+        {
+            if (string.IsNullOrWhiteSpace(cpf))
+            {
+                return Json(new { sucesso = false, mensagem = "CPF não informado." });
+            }
+
+            var cpfLimpo = Util.Methods.RemoveNaoNumericos(cpf);
+            if (cpfLimpo.Length != 11 || !Util.Methods.ValidarCpf(cpfLimpo))
+            {
+                return Json(new { sucesso = false, mensagem = "CPF inválido." });
+            }
+
+            try
+            {
+                var usernameLogado = User.Identity?.Name ?? string.Empty;
+                var usernameLogadoLimpo = Util.Methods.RemoveNaoNumericos(usernameLogado);
+                var pessoaLogada = _pessoaService?.GetByCpf(usernameLogadoLimpo) ?? _pessoaService?.GetByCpf(usernameLogado);
+                var cpfPessoaLogadaLimpo = pessoaLogada != null ? Util.Methods.RemoveNaoNumericos(pessoaLogada.Cpf ?? string.Empty) : string.Empty;
+
+                if (cpfLimpo == usernameLogadoLimpo || cpf == usernameLogado || (!string.IsNullOrEmpty(cpfPessoaLogadaLimpo) && cpfLimpo == cpfPessoaLogadaLimpo))
+                {
+                    return Json(new { sucesso = false, mesmoUsuario = true, mensagem = "Você não pode transferir um ingresso para você mesmo." });
+                }
+
+                var pessoa = _pessoaService?.GetByCpf(cpfLimpo);
+                if (pessoa != null)
+                {
+                    string emailMascarado = string.Empty;
+                    if (!string.IsNullOrWhiteSpace(pessoa.Email))
+                    {
+                        var partes = pessoa.Email.Split('@');
+                        if (partes.Length == 2)
+                        {
+                            var user = partes[0];
+                            var dom = partes[1];
+                            var userMasc = user.Length > 2 ? user[0] + new string('*', Math.Max(1, user.Length - 2)) + user[^1] : user[0] + "*";
+                            emailMascarado = $"{userMasc}@{dom}";
+                        }
+                    }
+
+                    var nomeCracha = !string.IsNullOrWhiteSpace(pessoa.NomeCracha)
+                        ? pessoa.NomeCracha.Trim()
+                        : (pessoa.Nome ?? string.Empty).Trim();
+
+                    if (nomeCracha.Length > 20)
+                    {
+                        nomeCracha = nomeCracha.Substring(0, 20);
+                    }
+
+                    return Json(new
+                    {
+                        sucesso = true,
+                        existe = true,
+                        nome = nomeCracha,
+                        nomeCracha = nomeCracha,
+                        nomeCompleto = pessoa.Nome,
+                        email = pessoa.Email,
+                        emailMascarado,
+                        mensagem = $"Participante já cadastrado: {pessoa.Nome}."
+                    });
+                }
+
+                return Json(new
+                {
+                    sucesso = true,
+                    existe = false,
+                    mensagem = "Novo participante: Nenhuma conta encontrada para este CPF no sistema."
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { sucesso = false, mensagem = "Erro ao consultar destinatário: " + ex.Message });
+            }
+        }
+
+        private async Task EnviarEmailTransferenciaAsync(TransferirIngressoModel model, string usernameOrigem)
+        {
+            if (_emailSender == null) return;
+
+            try
+            {
+                string nomeRemetente = "Um participante do Boralá";
+                try
+                {
+                    var pessoaOrigem = _pessoaService?.GetByCpf(usernameOrigem);
+                    if (!string.IsNullOrWhiteSpace(pessoaOrigem?.Nome))
+                    {
+                        nomeRemetente = pessoaOrigem.Nome;
+                    }
+                }
+                catch { }
+
+                string descricaoIngresso = "Ingresso Boralá";
+                try
+                {
+                    if (model.IdSubevento.HasValue && model.IdSubevento.Value > 0)
+                    {
+                        var sub = _subeventoService?.Get(model.IdSubevento.Value);
+                        descricaoIngresso = sub != null ? $"Subevento: {sub.Nome}" : "Subevento";
+                    }
+                    else if (model.IdInscricao.HasValue && model.IdInscricao.Value > 0)
+                    {
+                        var inscricoes = _inscricaoService?.GetAllEventsByUserId(usernameOrigem);
+                        var inscricao = inscricoes?.FirstOrDefault(i => i.Id == model.IdInscricao.Value);
+                        if (inscricao?.IdEventoNavigation != null)
+                        {
+                            descricaoIngresso = $"Evento: {inscricao.IdEventoNavigation.Nome}";
+                        }
+                        else if (inscricao != null && _eventoService != null)
+                        {
+                            var evento = _eventoService.Get(inscricao.IdEvento);
+                            descricaoIngresso = evento != null ? $"Evento: {evento.Nome}" : "Evento";
+                        }
+                    }
+                }
+                catch { }
+
+                var cpfDestinoLimpo = Methods.RemoveNaoNumericos(model.CpfAmigo);
+                var cpfFormatado = cpfDestinoLimpo.Length == 11 ? Methods.PatternCpf(cpfDestinoLimpo) : model.CpfAmigo;
+
+                string linkLogin = "https://borala.com.br";
+                try
+                {
+                    if (Url != null && Request != null)
+                    {
+                        linkLogin = Url.Action("Index", "Home", null, Request.Scheme) ?? "https://borala.com.br";
+                    }
+                }
+                catch { }
+
+                string html = "";
+                string caminhoTemplate = _environment != null && !string.IsNullOrEmpty(_environment.WebRootPath)
+                    ? Path.Combine(_environment.WebRootPath, "templates", "EmailTransferenciaIngresso.html")
+                    : "";
+
+                if (!string.IsNullOrEmpty(caminhoTemplate) && System.IO.File.Exists(caminhoTemplate))
+                {
+                    html = await System.IO.File.ReadAllTextAsync(caminhoTemplate);
+                    html = html
+                        .Replace("{{Nome}}", model.NomeAmigo.Trim())
+                        .Replace("{{NomeRemetente}}", nomeRemetente)
+                        .Replace("{{DescricaoIngresso}}", descricaoIngresso)
+                        .Replace("{{Cpf}}", cpfFormatado)
+                        .Replace("{{Senha}}", "Temp@1234!")
+                        .Replace("{{LinkLogin}}", linkLogin);
+                }
+                else
+                {
+                    html = $@"
+                        <div style='font-family: Arial, sans-serif; padding: 20px;'>
+                            <h2>Olá, {model.NomeAmigo.Trim()}! 🎉</h2>
+                            <p><strong>{nomeRemetente}</strong> transferiu um ingresso para você no <strong>Boralá</strong>!</p>
+                            <p><strong>Ingresso:</strong> {descricaoIngresso}</p>
+                            <div style='background: #f4f4f4; padding: 15px; border-radius: 5px; margin: 15px 0;'>
+                                <p><strong>Usuário (CPF):</strong> {cpfFormatado}</p>
+                                <p><strong>Senha Provisória:</strong> Temp@1234!</p>
+                            </div>
+                            <p><a href='{linkLogin}' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;'>Acessar Meus Ingressos</a></p>
+                        </div>";
+                }
+
+                await _emailSender.SendEmailAsync(model.EmailAmigo.Trim(), "Você recebeu um ingresso no Boralá! 🎉", html);
+            }
+            catch
+            {
+            }
+        }
     }
 }

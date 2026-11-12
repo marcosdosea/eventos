@@ -1,0 +1,317 @@
+@model EventoWeb.Models.InscricaoEventoViewModel
+
+@{
+    bool isForm = ViewData["IsForm"] as bool? ?? false;
+}
+
+<section class="card-inscricao mt-4">
+    <div class="subeventos-header-wrapper mb-3">
+        <span class="text-uppercase fw-bold text-muted small" style="letter-spacing: 0.5px;">Subevento • Atividades Opcionais</span>
+        <h2 class="section-title mb-1" style="display: block; width: fit-content;">Programação & Atividades Científicas</h2>
+        <p class="section-description mb-0">
+            @if (isForm)
+            {
+                @:Selecione os minicursos e workshops dos quais deseja participar e escolha o tipo de inscrição para cada um:
+            }
+            else
+            {
+                @:Confira abaixo as atividades científicas, palestras e minicursos deste evento:
+            }
+        </p>
+    </div>
+
+    <div class="subeventos-table-card">
+        <div class="table-responsive">
+            <table class="subeventos-table">
+                <thead>
+                    <tr>
+                        <th class="col-sel" style="width: 5%; text-align: center;">SEL.</th>
+                        <th style="width: 30%; text-align: left;">SUBEVENTO / ATIVIDADE</th>
+                        <th style="width: 17%; text-align: center;">DATA & CARGA</th>
+                        <th style="width: 13%; text-align: center;">VAGAS</th>
+                        <th style="width: 25%; text-align: center;">TIPO & VALOR</th>
+                        <th style="width: 10%; text-align: center;">AÇÕES</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var subOpcao in Model.SubeventosOpcoes)
+                    {
+                        var sub = subOpcao.Subevento;
+                        var subInscritos = ViewBag.SubeventosInscritos as HashSet<uint>;
+                        bool isJaInscrito = subInscritos != null && subInscritos.Contains(sub.Id);
+
+                        bool subeventoJaPassou = (sub.DataFim.HasValue && sub.DataFim.Value < DateTime.Now) 
+                            || (!sub.DataFim.HasValue && sub.DataInicio.HasValue && sub.DataInicio.Value < DateTime.Now);
+
+                        bool isEncerrado = sub.Status == "F" 
+                            || sub.Status == "I" 
+                            || (sub.DataFimInscricao != DateTime.MinValue && sub.DataFimInscricao < DateTime.Now) 
+                            || subeventoJaPassou;
+
+                        bool isEmBreve = !isEncerrado 
+                            && (sub.DataInicioInscricao != DateTime.MinValue && sub.DataInicioInscricao > DateTime.Now);
+
+                        bool isEsgotado = !isEncerrado && !isEmBreve && (sub.VagasDisponiveis <= 0);
+
+                        bool isInscricaoAberta = !isJaInscrito 
+                            && !isEncerrado 
+                            && !isEmBreve 
+                            && !isEsgotado 
+                            && (sub.Status == "A" || sub.Status == "C");
+
+                        var tipos = subOpcao.TiposInscricao?.ToList() ?? new List<Core.DTO.TipoInscricaoDTO>();
+
+                        string rowClass = "";
+                        if (isJaInscrito)
+                        {
+                            rowClass = "row-subevento-inscrito";
+                        }
+                        else if (isEncerrado || isEsgotado)
+                        {
+                            rowClass = "subevento-disabled";
+                        }
+                        else if (isEmBreve)
+                        {
+                            rowClass = "subevento-em-breve";
+                        }
+
+                        <tr id="row-subevento-@sub.Id" class="@rowClass">
+                            <td class="col-sel">
+                                @if (isJaInscrito)
+                                {
+                                    <input type="checkbox" checked disabled title="Você já está inscrito neste subevento" aria-label="@sub.Nome (Já inscrito)" />
+                                }
+                                else if (isForm && isInscricaoAberta)
+                                {
+                                    <input type="checkbox" name="SelectedSubeventos" value="@sub.Id" class="subevento-checkbox" onchange="toggleSubeventoSelect(this, @sub.Id)" aria-label="Selecionar @sub.Nome" />
+                                }
+                                else if (isEmBreve)
+                                {
+                                    <input type="checkbox" disabled title="Inscrições em breve a partir de @sub.DataInicioInscricao.ToString("dd/MM/yyyy HH:mm")" aria-label="@sub.Nome (Em breve)" />
+                                }
+                                else
+                                {
+                                    <input type="checkbox" disabled title="Inscrição indisponível" aria-label="@sub.Nome (Indisponível)" />
+                                }
+                            </td>
+                            <td>
+                                <div class="subevento-titulo">@sub.Nome</div>
+                                <div class="subevento-subtitulo">
+                                    <i class="bi bi-tag-fill text-muted"></i>
+                                    <span>@sub.NomeTipoEvento</span>
+                                    @if (isJaInscrito)
+                                    {
+                                        <span class="badge bg-success ms-1"><i class="bi bi-check-circle me-1"></i>Inscrito</span>
+                                    }
+                                    else if (isEncerrado)
+                                    {
+                                        <span class="badge bg-secondary ms-1">Encerrado</span>
+                                    }
+                                    else if (isEmBreve)
+                                    {
+                                        <span class="badge bg-warning text-dark ms-1"><i class="bi bi-clock-history me-1"></i>Em Breve</span>
+                                    }
+                                    else if (isEsgotado)
+                                    {
+                                        <span class="badge bg-danger ms-1">Esgotado</span>
+                                    }
+                                    else if (isInscricaoAberta)
+                                    {
+                                        <span class="badge bg-success-subtle text-success border border-success ms-1"><i class="bi bi-check2 me-1"></i>Inscrições Abertas</span>
+                                    }
+                                </div>
+                            </td>
+                            <td style="text-align: center;">
+                                <div class="fw-semibold text-dark" style="font-size: 0.84rem;">
+                                    @(sub.DataInicio.HasValue ? sub.DataInicio.Value.ToString("dd/MM/yyyy • HH:mm") : "A definir")
+                                </div>
+                                <div class="text-muted small">
+                                    Carga: @(sub.CargaHoraria > 0 ? $"{sub.CargaHoraria}h" : "Livre")
+                                </div>
+                            </td>
+                            <td style="text-align: center;">
+                                @if (isJaInscrito)
+                                {
+                                    <span class="badge-vagas badge-vagas-aberto" style="background: rgba(46, 125, 50, 0.12); color: #2e7d32; border-color: rgba(46, 125, 50, 0.25);">
+                                        <i class="bi bi-check-circle-fill"></i> Inscrito
+                                    </span>
+                                }
+                                else if (isEncerrado)
+                                {
+                                    <span class="badge-vagas badge-vagas-esgotado">
+                                        <i class="bi bi-x-circle-fill"></i> Encerrado
+                                    </span>
+                                }
+                                else if (isEmBreve)
+                                {
+                                    <span class="badge-vagas badge-vagas-em-breve">
+                                        <i class="bi bi-clock-history"></i> Em Breve
+                                    </span>
+                                }
+                                else if (isEsgotado)
+                                {
+                                    <span class="badge-vagas badge-vagas-esgotado">
+                                        <i class="bi bi-x-circle-fill"></i> Esgotado
+                                    </span>
+                                }
+                                else if (sub.VagasDisponiveis > 10)
+                                {
+                                    <span class="badge-vagas badge-vagas-alta">
+                                        <i class="bi bi-check-circle-fill"></i> @sub.VagasDisponiveis vagas
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge-vagas badge-vagas-baixa">
+                                        <i class="bi bi-exclamation-triangle-fill"></i> @sub.VagasDisponiveis vagas
+                                    </span>
+                                }
+                            </td>
+                            <td style="text-align: center;">
+                                @if (isJaInscrito)
+                                {
+                                    <span class="badge bg-success-subtle text-success border border-success px-2 py-1 small">
+                                        <i class="bi bi-check2 text-success me-1"></i>Já cadastrado
+                                    </span>
+                                }
+                                else if (isEncerrado)
+                                {
+                                    <div class="subevento-tipo-preview text-center">
+                                        @if (tipos.Any())
+                                        {
+                                            <span class="badge bg-light text-muted border">
+                                                @(tipos.Min(t => t.Valor) == 0 ? "Gratuito" : $"R$ {tipos.Min(t => t.Valor):N2}")
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            var val = (sub.InscricaoGratuita == 1 || sub.ValorInscricao == 0) ? 0m : sub.ValorInscricao;
+                                            <span class="badge bg-light text-muted border">
+                                                @(val == 0 ? "Gratuito" : $"R$ {val:N2}")
+                                            </span>
+                                        }
+                                        <div class="text-muted small mt-1">Inscrições encerradas</div>
+                                    </div>
+                                }
+                                else if (isEsgotado)
+                                {
+                                    <div class="subevento-tipo-preview text-center">
+                                        @if (tipos.Any())
+                                        {
+                                            <span class="badge bg-light text-muted border">
+                                                @(tipos.Min(t => t.Valor) == 0 ? "Gratuito" : $"R$ {tipos.Min(t => t.Valor):N2}")
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            var val = (sub.InscricaoGratuita == 1 || sub.ValorInscricao == 0) ? 0m : sub.ValorInscricao;
+                                            <span class="badge bg-light text-muted border">
+                                                @(val == 0 ? "Gratuito" : $"R$ {val:N2}")
+                                            </span>
+                                        }
+                                        <div class="text-danger small mt-1">Lotação esgotada</div>
+                                    </div>
+                                }
+                                else if (isEmBreve)
+                                {
+                                    <div class="subevento-tipo-preview text-center">
+                                        @if (tipos.Any())
+                                        {
+                                            if (tipos.Count > 1)
+                                            {
+                                                <span class="badge bg-light text-dark border">
+                                                    <i class="bi bi-tags me-1 text-primary"></i>@(tipos.Count) tipos a partir de @(tipos.Min(t => t.Valor) == 0 ? "Gratuito" : $"R$ {tipos.Min(t => t.Valor):N2}")
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                var unico = tipos.First();
+                                                <span class="badge bg-light text-dark border">
+                                                    @unico.Nome • @(unico.Valor == 0 ? "Gratuito" : $"R$ {unico.Valor:N2}")
+                                                </span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            var val = (sub.InscricaoGratuita == 1 || sub.ValorInscricao == 0) ? 0m : sub.ValorInscricao;
+                                            <span class="badge bg-light text-dark border">
+                                                @(val == 0 ? "Gratuito" : $"R$ {val:N2}")
+                                            </span>
+                                        }
+                                        <div class="text-warning-emphasis small mt-1 fw-semibold">
+                                            <i class="bi bi-clock me-1"></i>Abertura em @sub.DataInicioInscricao.ToString("dd/MM/yyyy 'às' HH:mm")
+                                        </div>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div id="preview-tipo-@sub.Id" class="subevento-tipo-preview text-center">
+                                        @if (tipos.Any())
+                                        {
+                                            if (tipos.Count > 1)
+                                            {
+                                                <span class="badge bg-light text-dark border">
+                                                    <i class="bi bi-tags me-1 text-primary"></i>@(tipos.Count) tipos a partir de @(tipos.Min(t => t.Valor) == 0 ? "Gratuito" : $"R$ {tipos.Min(t => t.Valor):N2}")
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                var unico = tipos.First();
+                                                <span class="badge bg-light text-dark border">
+                                                    @unico.Nome • @(unico.Valor == 0 ? "Gratuito" : $"R$ {unico.Valor:N2}")
+                                                </span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            var val = (sub.InscricaoGratuita == 1 || sub.ValorInscricao == 0) ? 0m : sub.ValorInscricao;
+                                            <span class="badge bg-light text-dark border">
+                                                @(val == 0 ? "Gratuito" : $"R$ {val:N2}")
+                                            </span>
+                                        }
+                                    </div>
+
+                                    @if (isForm)
+                                    {
+                                        <div id="wrapper-tipo-@sub.Id" class="subevento-tipo-wrapper text-center" style="display: none;">
+                                            <select name="TipoInscricaoSubevento_@sub.Id" id="select-tipo-@sub.Id" class="form-select form-select-sm subevento-select-tipo subevento-tipo-select mx-auto" onchange="calcularValorTotal()" disabled>
+                                                @if (tipos.Any())
+                                                {
+                                                    @foreach (var tipo in tipos)
+                                                    {
+                                                        <option value="@tipo.Id" data-valor="@tipo.Valor.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+                                                            @tipo.Nome - @(tipo.Valor == 0 ? "Gratuito" : $"R$ {tipo.Valor:N2}")
+                                                        </option>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    var valorPadrao = (sub.InscricaoGratuita == 1 || sub.ValorInscricao == 0) ? 0m : sub.ValorInscricao;
+                                                    <option value="" data-valor="@valorPadrao.ToString(System.Globalization.CultureInfo.InvariantCulture)" selected>
+                                                        Inscrição Padrão - @(valorPadrao == 0 ? "Gratuito" : $"R$ {valorPadrao:N2}")
+                                                    </option>
+                                                }
+                                            </select>
+                                        </div>
+                                    }
+                                }
+                            </td>
+                            <td style="text-align: center;">
+                                <button type="button" class="btn-ver-ementa mx-auto"
+                                        data-nome="@sub.Nome"
+                                        data-descricao="@(string.IsNullOrWhiteSpace(sub.Descricao) ? "Nenhuma ementa detalhada cadastrada para este subevento." : sub.Descricao)"
+                                        data-tipo="@sub.NomeTipoEvento"
+                                        data-carga="@(sub.CargaHoraria > 0 ? $"{sub.CargaHoraria} Horas" : "Não informada")"
+                                        onclick="abrirEmentaModalFromButton(this)">
+                                    <i class="bi bi-eye"></i>
+                                    <span>Ementa</span>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+

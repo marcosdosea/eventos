@@ -262,7 +262,25 @@ public class PessoaService : IPessoaService
         return false;
     }
     public Pessoa GetByCpf(string cpf)
-        => _context.Pessoas.SingleOrDefault(p => p.Cpf == cpf);
+    {
+        if (string.IsNullOrWhiteSpace(cpf))
+            return null!;
+
+        var cpfLimpo = Util.Methods.RemoveNaoNumericos(cpf.Trim());
+        var pessoa = _context.Pessoas.FirstOrDefault(p => p.Cpf == cpfLimpo);
+
+        if (pessoa == null)
+        {
+            var cpfOriginal = cpf.Trim();
+            pessoa = _context.Pessoas.FirstOrDefault(p => p.Cpf == cpfOriginal);
+            if (pessoa == null && cpfLimpo.Length == 11)
+            {
+                var formatado = Util.Methods.PatternCpf(cpfLimpo);
+                pessoa = _context.Pessoas.FirstOrDefault(p => p.Cpf == formatado);
+            }
+        }
+        return pessoa;
+    }
 
     public async Task<bool>IsAdmAsync(Pessoa pessoa)
     {
