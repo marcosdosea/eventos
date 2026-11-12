@@ -29,6 +29,13 @@ namespace EventoWeb.Models
 
         public List<ParticipanteCrachaItemModel> Participantes { get; set; } = new();
 
+        public List<string> CargosDisponiveis => Participantes?
+            .Select(p => p.Papel)
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(p => p)
+            .ToList() ?? new List<string>();
+
         public int TotalParticipantes => Participantes.Count;
 
         public int TotalAptos => Participantes.Count(p => p.StatusApto);

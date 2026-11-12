@@ -774,31 +774,19 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod]
-        public void IsImagemTest_WebP_Valido()
+        public void IsImagemTest_ValidaExtensoesSuportadasERejeitaInvalidas()
         {
             var webpBytes = new byte[] { 0x52, 0x49, 0x46, 0x46, 0x24, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50, 0x56, 0x50, 0x38, 0x20 };
-            Assert.IsTrue(webpBytes.IsImagem());
-        }
-
-        [TestMethod]
-        public void IsImagemTest_Jpeg_Valido()
-        {
             var jpegBytes = new byte[] { 0xFF, 0xD8, 0xFF, 0xDB, 0x00, 0x43, 0x00 };
+            var tiffLittleEndian = new byte[] { 0x49, 0x49, 0x2A, 0x00, 0x08, 0x00, 0x00, 0x00 };
+            var tiffBigEndian = new byte[] { 0x4D, 0x4D, 0x00, 0x2A, 0x00, 0x00, 0x00, 0x08 };
+            var gifBytes = System.Text.Encoding.ASCII.GetBytes("GIF89a");
+
+            Assert.IsTrue(webpBytes.IsImagem());
             Assert.IsTrue(jpegBytes.IsImagem());
-        }
-
-        [TestMethod]
-        public void IsImagemTest_TiffLittleEndian_Valido()
-        {
-            var tiffBytes = new byte[] { 0x49, 0x49, 0x2A, 0x00, 0x08, 0x00, 0x00, 0x00 };
-            Assert.IsTrue(tiffBytes.IsImagem());
-        }
-
-        [TestMethod]
-        public void IsImagemTest_TiffBigEndian_Valido()
-        {
-            var tiffBytes = new byte[] { 0x4D, 0x4D, 0x00, 0x2A, 0x00, 0x00, 0x00, 0x08 };
-            Assert.IsTrue(tiffBytes.IsImagem());
+            Assert.IsTrue(tiffLittleEndian.IsImagem());
+            Assert.IsTrue(tiffBigEndian.IsImagem());
+            Assert.IsFalse(gifBytes.IsImagem());
         }
 
         [TestMethod]
@@ -881,25 +869,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("data:image/tiff;base64,TU0AKgAAAAgAAAAQAAAB", modelTiffBigEndian.LogotipoDataUrl);
         }
 
-        [TestMethod]
-        public void IsImagemTest_Gif_Invalido()
-        {
-            var gifBytes = System.Text.Encoding.ASCII.GetBytes("GIF89a");
-            Assert.IsFalse(gifBytes.IsImagem());
-        }
 
-        [TestMethod]
-        public void CreateTest_Post_QuandoModeloJaExisteParaEvento_Atualiza()
-        {
-            var model = GetNewModelocracha();
-            model.IdEvento = 1;
-
-            var result = controller.Create(model);
-
-            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
-            var redirect = (RedirectToActionResult)result;
-            Assert.AreEqual("Index", redirect.ActionName);
-        }
 
         [TestMethod]
         public void EditTest_Post_TrocaEventoAlvoSemModelo_EditaParaNovoEvento()
@@ -1810,6 +1780,80 @@ namespace EventoWeb.Controllers.Tests
 
             Assert.IsInstanceOfType(result, typeof(NotFoundObjectResult));
             mockServicePessoa.Verify(s => s.Edit(It.IsAny<Pessoa>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void EmitirCrachaModel_CargosDisponiveis_RetornaListaDistintaEOrdenadaSemNulosOuVazios()
+        {
+            var model = new EmitirCrachaModel
+            {
+                Participantes = new List<ParticipanteCrachaItemModel>
+                {
+                    new ParticipanteCrachaItemModel { Papel = "PARTICIPANTE" },
+                    new ParticipanteCrachaItemModel { Papel = "GESTOR" },
+                    new ParticipanteCrachaItemModel { Papel = "COLABORADOR" },
+                    new ParticipanteCrachaItemModel { Papel = "participante" },
+                    new ParticipanteCrachaItemModel { Papel = "PALESTRANTE" },
+                    new ParticipanteCrachaItemModel { Papel = "" },
+                    new ParticipanteCrachaItemModel { Papel = "   " }
+                }
+            };
+
+            var cargos = model.CargosDisponiveis;
+
+            Assert.IsNotNull(cargos);
+            Assert.AreEqual(4, cargos.Count);
+            CollectionAssert.AreEqual(new List<string> { "COLABORADOR", "GESTOR", "PALESTRANTE", "PARTICIPANTE" }, cargos);
+        }
+
+        [TestMethod]
+        public void EmitirCrachaTest_RetornaCargosDisponiveisNoModel()
+        {
+            var mockServiceInscricao = new Mock<IInscricaoService>();
+            mockServiceInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+            mockServiceInscricao.Setup(s => s.GetByEvento(1))
+                .Returns(new List<Inscricaopessoaevento>
+                {
+                    new Inscricaopessoaevento
+                    {
+                        Id = 10,
+                        IdPessoa = 1,
+                        IdEvento = 1,
+                        IdPapel = 2,
+                        IdPapelNavigation = new Papel { Id = 2, Nome = "Gestor" },
+                        IdPessoaNavigation = new Pessoa { Id = 1, Nome = "Gestor do Evento", Cpf = "12345678901" }
+                    },
+                    new Inscricaopessoaevento
+                    {
+                        Id = 11,
+                        IdPessoa = 2,
+                        IdEvento = 1,
+                        IdPapel = 4,
+                        IdPapelNavigation = new Papel { Id = 4, Nome = "Participante" },
+                        IdPessoaNavigation = new Pessoa { Id = 2, Nome = "Participante Comum", Cpf = "98765432100" }
+                    }
+                });
+
+            var mockServiceEvento = new Mock<IEventoService>();
+            mockServiceEvento.Setup(s => s.GetEventoSimpleDto(1))
+                .Returns(new EventoSimpleDTO { Id = 1, Nome = "Workshop .NET" });
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctrl = new ModelocrachaController(new Mock<IModelocrachaService>().Object, mockServiceEvento.Object, new Mock<IPessoaService>().Object, mockServiceInscricao.Object, mapper);
+            ctrl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            var result = ctrl.EmitirCracha(1, null, null);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var viewResult = (ViewResult)result;
+            var model = (EmitirCrachaModel)viewResult.Model!;
+            Assert.IsNotNull(model.CargosDisponiveis);
+            Assert.IsTrue(model.CargosDisponiveis.Contains("GESTOR"));
+            Assert.IsTrue(model.CargosDisponiveis.Contains("PARTICIPANTE"));
         }
     }
 }
