@@ -5,14 +5,19 @@
 <h1 class="blue-normal">Participação do Participante</h1>
 <hr />
 
-<div class="row mb-4">
-    <div class="col-md-12">
+<div class="row mb-4 align-items-start">
+    <div class="col-md-8">
         <div class="mb-3">
             <strong>Nome:</strong> @Model.Evento.Nome
         </div>
         <div class="mb-3">
             <strong>Sub evento:</strong> @Model.SubEvento?.Nome
         </div>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalImportarCsv">
+            <i class="bi bi-upload me-1"></i> Importar CSV
+        </button>
     </div>
 </div>
 
@@ -146,6 +151,38 @@
                 <button type="button" class="btn btn-primary px-4 me-2" data-bs-dismiss="modal">Não</button>
                 <button type="button" class="btn btn-danger px-4" id="confirmRemovalButton">Sim</button>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Importar CSV -->
+<div class="modal fade" id="modalImportarCsv" tabindex="-1" aria-labelledby="modalImportarCsvLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="ImportarCsv" asp-controller="ParticipacaoPessoaEvento" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="idEvento" value="@Model.Evento.Id" />
+                @if (Model.SubEvento != null)
+                {
+                    <input type="hidden" name="idSubEvento" value="@Model.SubEvento.Id" />
+                }
+                <input type="hidden" name="actionRetorno" value="Index" />
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalImportarCsvLabel">Importar Planilha de Participantes</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">Selecione o arquivo de planilha (formatos <code>.csv</code>, <code>.xlsx</code> ou <code>.xls</code>, como o relatório do SIGAA) para importar os participantes e registrar a presença.</p>
+                    <div class="mb-3">
+                        <label for="arquivoPlanilha" class="form-label">Arquivo de Planilha</label>
+                        <input type="file" id="arquivoPlanilha" name="arquivoPlanilha" class="form-control" accept=".csv,.xlsx,.xls" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Importar</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
