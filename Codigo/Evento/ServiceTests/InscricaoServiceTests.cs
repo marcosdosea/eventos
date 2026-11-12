@@ -732,10 +732,8 @@ namespace Service.Tests
             _context.Inscricaopessoasubeventos.Add(inscricaoSub);
             _context.SaveChanges();
 
-            // Act: transferir apenas o evento principal
             var resultado = _inscricaoService.TransferirIngresso(52, "206.015.300-04", "Amigo Sub", "amigosub@gmail.com", "12246232367");
 
-            // Assert: evento principal transferido de forma separada; subevento permanece com a origem
             Assert.IsTrue(resultado);
             var evAtualizado = _context.Inscricaopessoaeventos.Find((uint)52);
             Assert.IsNotNull(evAtualizado);
@@ -773,10 +771,8 @@ namespace Service.Tests
             _context.Inscricaopessoasubeventos.Add(inscricaoSub);
             _context.SaveChanges();
 
-            // Act: transferir com idInscricao = 0 e idSubevento = 31
             var resultado = _inscricaoService.TransferirIngresso(0, "917.091.250-55", "Amigo Apenas Sub", "amigoapenas@gmail.com", "12246232367", idSubevento: 31);
 
-            // Assert
             Assert.IsTrue(resultado);
             Assert.IsFalse(_context.Inscricaopessoasubeventos.Any(s => s.IdPessoa == 1 && s.IdSubEvento == 31));
             Assert.IsTrue(_context.Inscricaopessoasubeventos.Any(s => s.IdPessoa == 102 && s.IdSubEvento == 31));
@@ -893,7 +889,6 @@ namespace Service.Tests
             _context.Inscricaopessoaeventos.Add(inscricao);
             _context.SaveChanges();
 
-            // Act: passa email diferente do que consta no banco para este CPF
             _inscricaoService.TransferirIngresso(56, "415.236.789-00", "Lucas Oliveira", "email.errado@gmail.com", "12246232367");
         }
 
@@ -928,7 +923,6 @@ namespace Service.Tests
             _context.Inscricaopessoaeventos.Add(inscricao);
             _context.SaveChanges();
 
-            // Act: tenta transferir para um novo CPF usando o email que já é da Renata
             _inscricaoService.TransferirIngresso(57, "987.654.321-00", "Novo Participante", "renata@gmail.com", "12246232367");
         }
 
@@ -963,7 +957,6 @@ namespace Service.Tests
             _context.Inscricaopessoaeventos.Add(inscricao);
             _context.SaveChanges();
 
-            // Act: nome digitado totalmente divergente do titular cadastrado
             _inscricaoService.TransferirIngresso(58, "666.777.888-99", "Fernanda Lima", "gabriel@gmail.com", "12246232367");
         }
 

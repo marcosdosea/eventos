@@ -266,11 +266,9 @@ public class PessoaService : IPessoaService
         if (string.IsNullOrWhiteSpace(cpf))
             return null!;
 
-        // Remove qualquer máscara (. e -) para comparar com o CPF puro conforme armazenado no banco de dados
         var cpfLimpo = Util.Methods.RemoveNaoNumericos(cpf.Trim());
         var pessoa = _context.Pessoas.FirstOrDefault(p => p.Cpf == cpfLimpo);
 
-        // Fallback caso algum registro específico de teste contenha máscara
         if (pessoa == null)
         {
             var cpfOriginal = cpf.Trim();

@@ -871,7 +871,6 @@ namespace EventoWeb.Controllers
                         }
                     }
 
-                    // Regra de tamanho do nome no crachá: limite máximo de 20 caracteres
                     var nomeCracha = !string.IsNullOrWhiteSpace(pessoa.NomeCracha)
                         ? pessoa.NomeCracha.Trim()
                         : (pessoa.Nome ?? string.Empty).Trim();
@@ -997,7 +996,6 @@ namespace EventoWeb.Controllers
             }
             catch
             {
-                // Falha de envio de e-mail não deve interromper a transferência
             }
         }
     }

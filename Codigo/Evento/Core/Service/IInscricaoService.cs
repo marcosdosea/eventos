@@ -43,10 +43,6 @@ namespace Core.Service
 
         void UpdateNomeCracha(uint idPessoa, uint idEvento, string nomeCracha);
 
-        /// <summary>
-        /// Transfere a titularidade de um ingresso de evento ou subevento para outro participante.
-        /// Caso o participante de destino não exista na base, ele é cadastrado silenciosamente com o e-mail informado.
-        /// </summary>
         bool TransferirIngresso(uint idInscricao, string cpfDestino, string nomeDestino, string emailDestino, string cpfOrigem, uint? idSubevento = null);
     }
 }

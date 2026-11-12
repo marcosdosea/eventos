@@ -288,7 +288,6 @@ namespace Service
                 }
             }
 
-            // Garante que subeventos cujo evento principal não pertence ao usuário (ex: transferido separadamente) continuem aparecendo no painel
             var idsEventosComInscricao = query.Select(i => i.IdEvento).ToHashSet();
             var subeventosSemEventoPrincipal = subeventosUsuario
                 .Where(s => !subeventosAlocados.Contains(s.Id) && !idsEventosComInscricao.Contains(s.IdSubEventoNavigation?.IdEvento ?? _context.Subeventos.FirstOrDefault(sub => sub.Id == s.IdSubEvento)?.IdEvento ?? 0))
@@ -305,7 +304,7 @@ namespace Service
                 var primeiroSub = grupo.First();
                 query.Add(new Inscricaopessoaevento
                 {
-                    Id = 0, // Id = 0 indica que não possui ingresso de evento principal ativo (apenas subeventos)
+                    Id = 0,
                     IdEvento = idEv,
                     IdEventoNavigation = evNav,
                     IdPessoa = primeiroSub.IdPessoa,
@@ -371,10 +370,6 @@ namespace Service
             }
         }
 
-        /// <summary>
-        /// Transfere a titularidade de um ingresso de evento ou subevento para outro participante.
-        /// Caso o amigo de destino não possua cadastro, ele é cadastrado silenciosamente.
-        /// </summary>
         public bool TransferirIngresso(uint idInscricao, string cpfDestino, string nomeDestino, string emailDestino, string cpfOrigem, uint? idSubevento = null)
         {
             if (string.IsNullOrWhiteSpace(cpfOrigem))
@@ -415,7 +410,6 @@ namespace Service
 
             if (amigo == null)
             {
-                // Verifica se o e-mail informado já está vinculado a outra pessoa no sistema
                 var pessoaOutroCpf = _context.Pessoas.FirstOrDefault(p =>
                     p.Email != null && p.Email.ToLower() == emailLimpo &&
                     p.Cpf != cpfDestinoLimpo && (cpfDestinoFormatado == null || p.Cpf != cpfDestinoFormatado));
@@ -452,7 +446,6 @@ namespace Service
             }
             else
             {
-                // Amigo já existe no banco: valida se o e-mail digitado confere com o cadastro existente
                 if (!string.IsNullOrWhiteSpace(amigo.Email))
                 {
                     var emailCadastrado = amigo.Email.Trim().ToLowerInvariant();
@@ -492,7 +485,6 @@ namespace Service
                     }
                 }
 
-                // Atualiza o nome do crachá do amigo se ainda não possuir ou se informado
                 var nomeTrim = nomeDestino.Trim();
                 var nomeCrachaFinal = nomeTrim.Length > 20 ? nomeTrim.Substring(0, 20) : nomeTrim;
                 if (!string.IsNullOrWhiteSpace(nomeCrachaFinal) && string.IsNullOrWhiteSpace(amigo.NomeCracha))
@@ -526,7 +518,6 @@ namespace Service
             if (amigo.Id == pessoaOrigem.Id)
                 throw new ArgumentException("Não é possível transferir um ingresso para você mesmo.");
 
-            // Caso 1: Transferência EXCLUSIVA de Subevento (se idSubevento informado)
             if (idSubevento.HasValue && idSubevento.Value > 0)
             {
                 var subInscricao = _context.Inscricaopessoasubeventos
@@ -554,12 +545,10 @@ namespace Service
                 if (amigoJaInscrito)
                     throw new InvalidOperationException("O destinatário já possui uma inscrição ativa neste subevento.");
 
-                // Transfere EXCLUSIVAMENTE o subevento selecionado. Não transfere o evento principal nem outros subeventos.
                 TransferirRegistroSubEvento(subInscricao, amigo.Id);
                 _context.SaveChanges();
                 return true;
             }
-            // Caso 2: Transferência EXCLUSIVA de Inscrição em Evento Principal (sem transferir os subeventos)
             else if (idInscricao > 0)
             {
                 var inscricao = _context.Inscricaopessoaeventos
@@ -587,7 +576,6 @@ namespace Service
                 if (amigoJaTemEvento)
                     throw new InvalidOperationException("O destinatário já possui uma inscrição ativa neste evento.");
 
-                // Transfere EXCLUSIVAMENTE o evento principal, NUNCA transferindo os subeventos (filhos)
                 inscricao.IdPessoa = amigo.Id;
                 inscricao.NomeCracha = !string.IsNullOrWhiteSpace(amigo.NomeCracha)
                     ? amigo.NomeCracha

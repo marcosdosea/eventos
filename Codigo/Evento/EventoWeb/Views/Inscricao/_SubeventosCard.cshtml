@@ -48,7 +48,6 @@
                             || (sub.DataFimInscricao != DateTime.MinValue && sub.DataFimInscricao < DateTime.Now) 
                             || subeventoJaPassou;
 
-                        // Em breve SÓ quando a data de início da inscrição for futura e não estiver encerrado
                         bool isEmBreve = !isEncerrado 
                             && (sub.DataInicioInscricao != DateTime.MinValue && sub.DataInicioInscricao > DateTime.Now);
 
@@ -246,7 +245,6 @@
                                 }
                                 else
                                 {
-                                    <!-- Aberto para inscrição -->
                                     <div id="preview-tipo-@sub.Id" class="subevento-tipo-preview text-center">
                                         @if (tipos.Any())
                                         {

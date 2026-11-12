@@ -2384,7 +2384,6 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public async Task TransferirIngressoTest_Sucesso_RedirecionaParaMinhasInscricoesComMensagemSucesso()
         {
-            // Arrange
             var mockInscricaoService = new Mock<IInscricaoService>();
             mockInscricaoService.Setup(s => s.TransferirIngresso(10, "04026893057", "Maria Santos", "maria@email.com", UsernameTeste, null))
                 .Returns(true);
@@ -2412,10 +2411,8 @@ namespace EventoWeb.Controllers.Tests
                 EmailAmigo = "maria@email.com"
             };
 
-            // Act
             var result = await testController.TransferirIngresso(model);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             var redirect = (RedirectToActionResult)result;
             Assert.AreEqual("minhasInscricoes", redirect.ActionName);
@@ -2427,7 +2424,6 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public async Task TransferirIngressoTest_ModelInvalido_RedirecionaComMensagemErro()
         {
-            // Arrange
             var testController = new InscricaoController(
                 null!,
                 Mock.Of<ITipoInscricaoService>(),
@@ -2445,10 +2441,8 @@ namespace EventoWeb.Controllers.Tests
 
             var model = new TransferirIngressoModel();
 
-            // Act
             var result = await testController.TransferirIngresso(model);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             var redirect = (RedirectToActionResult)result;
             Assert.AreEqual("minhasInscricoes", redirect.ActionName);
@@ -2458,7 +2452,6 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public async Task TransferirIngressoTest_SemUsuarioLogado_RedirecionaParaHome()
         {
-            // Arrange
             var testController = new InscricaoController(
                 null!,
                 Mock.Of<ITipoInscricaoService>(),
@@ -2471,10 +2464,8 @@ namespace EventoWeb.Controllers.Tests
             var httpContext = new DefaultHttpContext();
             testController.ControllerContext = new ControllerContext { HttpContext = httpContext };
 
-            // Act
             var result = await testController.TransferirIngresso(new TransferirIngressoModel());
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             var redirect = (RedirectToActionResult)result;
             Assert.AreEqual("Index", redirect.ActionName);
@@ -2484,7 +2475,6 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public async Task TransferirIngressoTest_ServiceLancaArgumentException_CapturaERedirecionaComMensagem()
         {
-            // Arrange
             var mockInscricaoService = new Mock<IInscricaoService>();
             mockInscricaoService.Setup(s => s.TransferirIngresso(It.IsAny<uint>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<uint?>()))
                 .Throws(new ArgumentException("CPF do destinatário é inválido."));
@@ -2511,10 +2501,8 @@ namespace EventoWeb.Controllers.Tests
                 EmailAmigo = "amigo@email.com"
             };
 
-            // Act
             var result = await testController.TransferirIngresso(model);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             var redirect = (RedirectToActionResult)result;
             Assert.AreEqual("minhasInscricoes", redirect.ActionName);
@@ -2524,7 +2512,6 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public async Task TransferirIngressoTest_ComEmailSender_DisparaEnvioDeEmail()
         {
-            // Arrange
             var mockInscricaoService = new Mock<IInscricaoService>();
             mockInscricaoService.Setup(s => s.TransferirIngresso(10, "04026893057", "Maria Santos", "maria@email.com", UsernameTeste, null))
                 .Returns(true);
@@ -2555,10 +2542,8 @@ namespace EventoWeb.Controllers.Tests
                 EmailAmigo = "maria@email.com"
             };
 
-            // Act
             var result = await testController.TransferirIngresso(model);
 
-            // Assert
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             mockEmailSender.Verify(e => e.SendEmailAsync("maria@email.com", It.IsAny<string>(), It.IsAny<string>()), Times.Once);
         }
@@ -2566,7 +2551,6 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         public void ConsultarDestinatarioTransferencia_CpfVazio_RetornaSucessoFalse()
         {
-            // Arrange
             var testController = new InscricaoController(
                 null!,
                 Mock.Of<ITipoInscricaoService>(),
