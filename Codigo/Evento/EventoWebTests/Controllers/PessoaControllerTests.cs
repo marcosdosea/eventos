@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Core;
 using Core.Service;
 using EventoWeb.Mappers;
@@ -79,7 +79,7 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.CreatePessoaIdentityComPapelAsync(GetTargetPessoa(),1,1));
             mockService.Setup(service => service.Edit(It.IsAny<Pessoa>()))
                 .Returns(Task.CompletedTask);
-            controller = new PessoaController(mockService.Object, mockEstadosbrasilService.Object, mapper, IEmailServiceMock.Object);
+            controller = new PessoaController(mockService.Object, mockEstadosbrasilService.Object, mapper, IEmailServiceMock.Object, Mock.Of<IAreaInteresseService>());
         }
 
         [TestMethod()]
@@ -140,7 +140,7 @@ namespace EventoWeb.Controllers.Tests
                 .ReturnsAsync(true);
             var IEmailServiceMock = new Mock<IEmailService>();
             controller = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object,
-            new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper(), IEmailServiceMock.Object);
+            new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper(), IEmailServiceMock.Object, Mock.Of<IAreaInteresseService>());
 
             var result = await controller.Create(GetNewPessoa(), returnUrl);
 
@@ -160,7 +160,7 @@ namespace EventoWeb.Controllers.Tests
             var IEmailServiceMock = new Mock<IEmailService>();
 
             controller = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object,
-            new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper(), IEmailServiceMock.Object);
+            new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper(), IEmailServiceMock.Object, Mock.Of<IAreaInteresseService>());
 
             controller.ModelState.AddModelError("Nome", "Campo requerido");
             controller.ModelState.AddModelError("NomeCracha", "Campo requerido");
@@ -187,7 +187,7 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.Get(pessoa.Id)).Returns(pessoa);
             var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object, Mock.Of<IAreaInteresseService>());
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -221,7 +221,7 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.Edit(It.IsAny<Pessoa>())).Verifiable();
             var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, mapper, IEmailServiceMock.Object);
+            var localController = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, mapper, IEmailServiceMock.Object, Mock.Of<IAreaInteresseService>());
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -337,7 +337,7 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.DeleteRole(1)).ReturnsAsync((true, ""));
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
             var IEmailServiceMock = new Mock<IEmailService>();
-            var localController = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, mapper, IEmailServiceMock.Object);
+            var localController = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, mapper, IEmailServiceMock.Object, Mock.Of<IAreaInteresseService>());
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new[]
             {
@@ -392,7 +392,7 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.GetAllAdmAsync()).ReturnsAsync(admins);
             var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object, Mock.Of<IAreaInteresseService>());
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -441,7 +441,7 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.GetAllAdmAsync()).ReturnsAsync(new List<Pessoa> { GetTargetPessoa() });
             var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object, Mock.Of<IAreaInteresseService>());
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -495,7 +495,7 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.GetAllAdmAsync()).ReturnsAsync(new List<Pessoa> { GetTargetPessoa() });
             var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object, Mock.Of<IAreaInteresseService>());
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -549,7 +549,7 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.GetAllAdmAsync()).ReturnsAsync(new List<Pessoa> { GetTargetPessoa() });
             var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object, Mock.Of<IAreaInteresseService>());
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -604,7 +604,7 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.GetAllAdmAsync()).ReturnsAsync(new List<Pessoa> { GetTargetPessoa() });
             var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object, Mock.Of<IAreaInteresseService>());
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -653,7 +653,7 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.GetAllAdmAsync()).ReturnsAsync(new List<Pessoa> { GetTargetPessoa() });
             var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object, Mock.Of<IAreaInteresseService>());
 
             localController.ControllerContext = new ControllerContext()
             {
@@ -699,7 +699,7 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.VerificaEdit(It.IsAny<Pessoa>())).ReturnsAsync(false);
             var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object, Mock.Of<IAreaInteresseService>());
 
             localController.ControllerContext = new ControllerContext()
             {
@@ -741,7 +741,7 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), 0, 1)).ReturnsAsync(false);
             var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object, Mock.Of<IAreaInteresseService>());
 
             localController.ControllerContext = new ControllerContext()
             {
@@ -784,7 +784,7 @@ namespace EventoWeb.Controllers.Tests
             var IEmailServiceMock = new Mock<IEmailService>();
             IEmailServiceMock.Setup(sender => sender.ModeloEmailReset(It.IsAny<string>(), It.IsAny<Pessoa>(), It.IsAny<string>())).ReturnsAsync(true);
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object, Mock.Of<IAreaInteresseService>());
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -826,7 +826,7 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.Get(999)).Returns((Pessoa?)null);
             var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object, Mock.Of<IAreaInteresseService>());
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -866,7 +866,7 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.GerarTokenAsync(pessoa.Cpf)).ReturnsAsync("test-token");
             var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object, Mock.Of<IAreaInteresseService>());
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -906,7 +906,7 @@ namespace EventoWeb.Controllers.Tests
             mockService.Setup(service => service.EmailConfirmado(pessoa.Email)).Returns(Task.FromResult(false));
             var IEmailServiceMock = new Mock<IEmailService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object);
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, IEmailServiceMock.Object, Mock.Of<IAreaInteresseService>());
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -963,7 +963,7 @@ namespace EventoWeb.Controllers.Tests
             var mockService = new Mock<IPessoaService>();
             mockService.Setup(service => service.GetByCpf(It.IsAny<string>())).Returns(pessoa);
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, mapper, new Mock<IEmailService>().Object);
+            var localController = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, mapper, new Mock<IEmailService>().Object, Mock.Of<IAreaInteresseService>());
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -991,7 +991,7 @@ namespace EventoWeb.Controllers.Tests
             var mockService = new Mock<IPessoaService>();
             mockService.Setup(service => service.GetByCpf(It.IsAny<string>())).Returns(pessoa);
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, mapper, new Mock<IEmailService>().Object);
+            var localController = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, mapper, new Mock<IEmailService>().Object, Mock.Of<IAreaInteresseService>());
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -1027,7 +1027,7 @@ namespace EventoWeb.Controllers.Tests
             var mockService = new Mock<IPessoaService>();
             mockService.Setup(service => service.GetByCpf("04026893057")).Returns(pessoa);
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, mapper, new Mock<IEmailService>().Object);
+            var localController = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, mapper, new Mock<IEmailService>().Object, Mock.Of<IAreaInteresseService>());
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -1053,7 +1053,7 @@ namespace EventoWeb.Controllers.Tests
         {
             var mockService = new Mock<IPessoaService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, mapper, new Mock<IEmailService>().Object);
+            var localController = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, mapper, new Mock<IEmailService>().Object, Mock.Of<IAreaInteresseService>());
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -1079,7 +1079,7 @@ namespace EventoWeb.Controllers.Tests
         {
             var mockService = new Mock<IPessoaService>();
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, mapper, new Mock<IEmailService>().Object);
+            var localController = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, mapper, new Mock<IEmailService>().Object, Mock.Of<IAreaInteresseService>());
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -1106,7 +1106,7 @@ namespace EventoWeb.Controllers.Tests
             var mockService = new Mock<IPessoaService>();
             mockService.Setup(service => service.GetByCpf(It.IsAny<string>())).Returns((Pessoa)null!);
             var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
-            var localController = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, mapper, new Mock<IEmailService>().Object);
+            var localController = new PessoaController(mockService.Object, new Mock<IEstadosbrasilService>().Object, mapper, new Mock<IEmailService>().Object, Mock.Of<IAreaInteresseService>());
 
             var user = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
             {
@@ -1229,6 +1229,123 @@ namespace EventoWeb.Controllers.Tests
                     Telefone2 = "NULL",
                 },
             };
+        }
+
+        [TestMethod]
+        public void Alteracoes_UsamSomentePessoaAutenticada()
+        {
+            var pessoas = new Mock<IPessoaService>();
+            pessoas.Setup(p => p.GetByCpf("12345678901")).Returns(new Pessoa { Id = 7, Cpf = "12345678901" });
+            var preferencias = pessoas;
+            preferencias.Setup(p => p.GetPreferenciasInteresse(7)).Returns(Array.Empty<Pessoaareainteresse>());
+            preferencias.Setup(p => p.RemoverPreferenciaInteresse(7, 3)).Returns(true);
+            var controller = new PessoaController(pessoas.Object, Mock.Of<IEstadosbrasilService>(), Mock.Of<IMapper>(), Mock.Of<IEmailService>(), Mock.Of<IAreaInteresseService>())
+            {
+                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.Name, "12345678901")], "teste")) } },
+                TempData = new TempDataDictionary(new DefaultHttpContext(), Mock.Of<ITempDataProvider>())
+            };
+            Assert.IsInstanceOfType(controller.SalvarPreferenciaInteresse(new PreferenciasInteresseModel { AreaIds = [3], Abrangencia = "brasil" }), typeof(RedirectToActionResult));
+            Assert.IsInstanceOfType(controller.RemoverPreferenciaInteresse(3), typeof(RedirectToActionResult));
+            preferencias.Verify(p => p.SalvarPreferenciasInteresse(7, It.Is<IReadOnlyList<uint>>(a => a.SequenceEqual(new uint[] { 3 })), true, It.IsAny<IReadOnlyList<string>>()), Times.Once);
+            preferencias.Verify(p => p.RemoverPreferenciaInteresse(7, 3), Times.Once);
+            preferencias.Setup(p => p.GetPreferenciasInteresse(7)).Returns([new Pessoaareainteresse { IdPessoa = 7, IdAreaInteresse = 3 }]);
+            Assert.IsInstanceOfType(controller.SalvarPreferenciaInteresse(new PreferenciasInteresseModel { AreaIds = [3], Abrangencia = "brasil" }), typeof(ViewResult));
+            preferencias.Verify(p => p.SalvarPreferenciasInteresse(7, It.IsAny<IReadOnlyList<uint>>(), true, It.IsAny<IReadOnlyList<string>>()), Times.Once);
+            controller.ControllerContext.HttpContext.User = new ClaimsPrincipal();
+            Assert.IsInstanceOfType(controller.RemoverPreferenciaInteresse(3), typeof(ForbidResult));
+            Assert.IsTrue(Attribute.IsDefined(typeof(PessoaController), typeof(AuthorizeAttribute)));
+            Assert.IsTrue(Attribute.IsDefined(typeof(PessoaController).GetMethod("SalvarPreferenciaInteresse")!, typeof(ValidateAntiForgeryTokenAttribute)));
+            Assert.IsTrue(Attribute.IsDefined(typeof(PessoaController).GetMethod("RemoverPreferenciaInteresse")!, typeof(ValidateAntiForgeryTokenAttribute)));
+        }
+
+        [TestMethod]
+        public void SalvarPreferenciaInteresse_VariasAreasEVariosEstados_SalvaLoteNParaN()
+        {
+            var pessoas = new Mock<IPessoaService>();
+            pessoas.Setup(p => p.GetByCpf("12345678901")).Returns(new Pessoa { Id = 7, Cpf = "12345678901" });
+            pessoas.Setup(p => p.GetPreferenciasInteresse(7)).Returns(Array.Empty<Pessoaareainteresse>());
+            pessoas.Setup(p => p.SalvarPreferenciasInteresse(7, It.IsAny<IReadOnlyList<uint>>(), false, It.IsAny<IReadOnlyList<string>>()))
+                .Returns((string?)null);
+
+            var controller = new PessoaController(pessoas.Object, Mock.Of<IEstadosbrasilService>(), Mock.Of<IMapper>(), Mock.Of<IEmailService>(), Mock.Of<IAreaInteresseService>())
+            {
+                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.Name, "12345678901")], "teste")) } },
+                TempData = new TempDataDictionary(new DefaultHttpContext(), Mock.Of<ITempDataProvider>())
+            };
+
+            var model = new PreferenciasInteresseModel
+            {
+                AreaIds = [2, 5],
+                Abrangencia = "estados",
+                Estados = ["SE", "BA"]
+            };
+
+            var result = controller.SalvarPreferenciaInteresse(model);
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            Assert.AreEqual("Preferências salvas com sucesso.", controller.TempData["PreferenciasMensagem"]);
+            pessoas.Verify(p => p.SalvarPreferenciasInteresse(
+                7,
+                It.Is<IReadOnlyList<uint>>(a => a.SequenceEqual(new uint[] { 2, 5 })),
+                false,
+                It.Is<IReadOnlyList<string>>(e => e.SequenceEqual(new[] { "SE", "BA" }))), Times.Once);
+        }
+
+        [TestMethod]
+        public void SalvarPreferenciaInteresse_SemAreasSelecionadas_RetornaViewComErro()
+        {
+            var pessoas = new Mock<IPessoaService>();
+            pessoas.Setup(p => p.GetByCpf("12345678901")).Returns(new Pessoa { Id = 7, Cpf = "12345678901" });
+            pessoas.Setup(p => p.GetPreferenciasInteresse(7)).Returns(Array.Empty<Pessoaareainteresse>());
+
+            var controller = new PessoaController(pessoas.Object, Mock.Of<IEstadosbrasilService>(), Mock.Of<IMapper>(), Mock.Of<IEmailService>(), Mock.Of<IAreaInteresseService>())
+            {
+                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.Name, "12345678901")], "teste")) } },
+                TempData = new TempDataDictionary(new DefaultHttpContext(), Mock.Of<ITempDataProvider>())
+            };
+
+            var result = controller.SalvarPreferenciaInteresse(new PreferenciasInteresseModel
+            {
+                AreaIds = [],
+                Abrangencia = "estados",
+                Estados = ["SE"]
+            });
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            Assert.IsFalse(controller.ModelState.IsValid);
+            Assert.IsTrue(controller.ModelState.ContainsKey("AreaIds"));
+            pessoas.Verify(p => p.SalvarPreferenciasInteresse(It.IsAny<uint>(), It.IsAny<IReadOnlyList<uint>>(), It.IsAny<bool>(), It.IsAny<IReadOnlyList<string>>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void SalvarPreferenciaInteresse_EdicaoAreaExistente_SalvaAlteracao()
+        {
+            var pessoas = new Mock<IPessoaService>();
+            pessoas.Setup(p => p.GetByCpf("12345678901")).Returns(new Pessoa { Id = 7, Cpf = "12345678901" });
+            pessoas.Setup(p => p.GetPreferenciasInteresse(7)).Returns([new Pessoaareainteresse { IdPessoa = 7, IdAreaInteresse = 4 }]);
+            pessoas.Setup(p => p.SalvarPreferenciasInteresse(7, It.IsAny<IReadOnlyList<uint>>(), false, It.IsAny<IReadOnlyList<string>>()))
+                .Returns((string?)null);
+
+            var controller = new PessoaController(pessoas.Object, Mock.Of<IEstadosbrasilService>(), Mock.Of<IMapper>(), Mock.Of<IEmailService>(), Mock.Of<IAreaInteresseService>())
+            {
+                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.Name, "12345678901")], "teste")) } },
+                TempData = new TempDataDictionary(new DefaultHttpContext(), Mock.Of<ITempDataProvider>())
+            };
+
+            var result = controller.SalvarPreferenciaInteresse(new PreferenciasInteresseModel
+            {
+                Editando = true,
+                AreaId = 4,
+                Abrangencia = "estados",
+                Estados = ["SE", "SP"]
+            });
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            pessoas.Verify(p => p.SalvarPreferenciasInteresse(
+                7,
+                It.Is<IReadOnlyList<uint>>(a => a.SequenceEqual(new uint[] { 4 })),
+                false,
+                It.Is<IReadOnlyList<string>>(e => e.SequenceEqual(new[] { "SE", "SP" }))), Times.Once);
         }
     }
 }
