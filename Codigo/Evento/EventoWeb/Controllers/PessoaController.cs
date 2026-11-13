@@ -568,6 +568,7 @@ namespace EventoWeb.Controllers
                 var item = model.Preferencias.SingleOrDefault(p => p.IdAreaInteresse == areaId);
                 if (item == null) return NotFound();
                 model.AreaId = item.IdAreaInteresse;
+                model.AreaIds = [item.IdAreaInteresse];
                 model.Abrangencia = item.TodosEstados == 1 ? "brasil" : "estados";
                 model.Estados = item.EstadoEstadosBrasils.Select(e => e.Estado).ToList();
                 model.Editando = true;
@@ -581,20 +582,62 @@ namespace EventoWeb.Controllers
             var pessoa = PessoaAutenticadaPreferencias();
             if (pessoa == null) return Forbid();
             model.Estados ??= [];
+            model.AreaIds ??= [];
+
             if (model.Abrangencia != "brasil" && model.Abrangencia != "estados")
                 ModelState.AddModelError("Abrangencia", "Selecione a abrangência desejada.");
-            if (ModelState.IsValid)
+
+            var idsAreas = new List<uint>();
+            if (model.Editando)
             {
-                var existe = _pessoaService.GetPreferenciasInteresse(pessoa.Id).Any(p => p.IdAreaInteresse == model.AreaId);
-                if (existe && !model.Editando) ModelState.AddModelError("AreaId", "Essa área já está nas suas preferências. Use a opção Editar.");
-                if (!existe && model.Editando) return NotFound();
+                var idAreaEdit = model.AreaId > 0 ? model.AreaId : model.AreaIds.FirstOrDefault();
+                if (idAreaEdit == 0)
+                {
+                    ModelState.AddModelError("AreaId", "Selecione uma área de interesse válida.");
+                }
+                else
+                {
+                    var existe = _pessoaService.GetPreferenciasInteresse(pessoa.Id).Any(p => p.IdAreaInteresse == idAreaEdit);
+                    if (!existe) return NotFound();
+                    idsAreas.Add(idAreaEdit);
+                }
             }
+            else
+            {
+                idsAreas = model.AreaIds.Where(id => id > 0).Distinct().ToList();
+                if (idsAreas.Count == 0 && model.AreaId > 0)
+                    idsAreas.Add(model.AreaId);
+
+                if (idsAreas.Count == 0)
+                {
+                    ModelState.AddModelError("AreaIds", "Selecione pelo menos uma área de interesse.");
+                }
+                else
+                {
+                    var preferenciasAtuais = _pessoaService.GetPreferenciasInteresse(pessoa.Id);
+                    var jaExistentes = preferenciasAtuais
+                        .Where(p => idsAreas.Contains(p.IdAreaInteresse))
+                        .Select(p => p.IdAreaInteresseNavigation?.Nome ?? p.IdAreaInteresse.ToString())
+                        .ToList();
+                    if (jaExistentes.Count == 1)
+                    {
+                        ModelState.AddModelError("AreaIds", $"A área \"{jaExistentes[0]}\" já está nas suas preferências. Use a opção Editar.");
+                    }
+                    else if (jaExistentes.Count > 1)
+                    {
+                        ModelState.AddModelError("AreaIds", $"As áreas {string.Join(", ", jaExistentes.Select(n => $"\"{n}\""))} já estão nas suas preferências. Use a opção Editar.");
+                    }
+                }
+            }
+
             if (ModelState.IsValid)
             {
-                var erro = _pessoaService.SalvarPreferenciaInteresse(pessoa.Id, model.AreaId, model.Abrangencia == "brasil", model.Estados);
+                var erro = _pessoaService.SalvarPreferenciasInteresse(pessoa.Id, idsAreas, model.Abrangencia == "brasil", model.Estados);
                 if (erro == null)
                 {
-                    TempData["PreferenciasMensagem"] = "Preferência salva com sucesso.";
+                    TempData["PreferenciasMensagem"] = idsAreas.Count > 1
+                        ? "Preferências salvas com sucesso."
+                        : "Preferência salva com sucesso.";
                     return RedirectToAction(nameof(PreferenciasInteresse));
                 }
                 ModelState.AddModelError(string.Empty, erro);

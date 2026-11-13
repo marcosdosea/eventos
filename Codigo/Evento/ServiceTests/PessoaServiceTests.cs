@@ -869,44 +869,95 @@ namespace Service.Tests
         }
 
         [TestMethod]
+        public void SalvarPreferenciasInteresse_NParaN_PersisteEValida()
+        {
+            _context.Areainteresses.AddRange(
+                new Areainteresse { Id = 10, Nome = "Tecnologia" },
+                new Areainteresse { Id = 11, Nome = "Música" },
+                new Areainteresse { Id = 12, Nome = "Esporte" });
+            _context.Estadosbrasils.AddRange(
+                new Estadosbrasil { Estado = "SE", Nome = "Sergipe" },
+                new Estadosbrasil { Estado = "BA", Nome = "Bahia" });
+            _context.SaveChanges();
+            _context.ChangeTracker.Clear();
+
+            Assert.IsNotNull(_pessoaService.SalvarPreferenciasInteresse(1, Array.Empty<uint>(), false, new[] { "SE" }));
+            Assert.IsNotNull(_pessoaService.SalvarPreferenciasInteresse(1, new uint[] { 10, 10 }, false, new[] { "SE" }));
+            Assert.IsNotNull(_pessoaService.SalvarPreferenciasInteresse(1, new uint[] { 10, 999 }, false, new[] { "SE" }));
+            Assert.IsNotNull(_pessoaService.SalvarPreferenciasInteresse(1, new uint[] { 10, 11 }, true, new[] { "SE" }));
+            Assert.IsNotNull(_pessoaService.SalvarPreferenciasInteresse(1, new uint[] { 10, 11 }, false, Array.Empty<string>()));
+            Assert.IsNotNull(_pessoaService.SalvarPreferenciasInteresse(1, new uint[] { 10, 11 }, false, new[] { "SE", "ZZ" }));
+
+            Assert.IsNull(_pessoaService.SalvarPreferenciasInteresse(1, new uint[] { 10, 11 }, false, new[] { "SE", "BA" }));
+            _context.ChangeTracker.Clear();
+
+            var preferencias = _pessoaService.GetPreferenciasInteresse(1);
+            Assert.AreEqual(2, preferencias.Count);
+            foreach (var pref in preferencias)
+            {
+                Assert.AreEqual((sbyte)0, pref.TodosEstados);
+                CollectionAssert.AreEquivalent(new[] { "SE", "BA" }, pref.EstadoEstadosBrasils.Select(e => e.Estado).ToArray());
+            }
+
+            Assert.IsNull(_pessoaService.SalvarPreferenciasInteresse(1, new uint[] { 12 }, true, Array.Empty<string>()));
+            _context.ChangeTracker.Clear();
+
+            var pref12 = _pessoaService.GetPreferenciasInteresse(1).Single(p => p.IdAreaInteresse == 12);
+            Assert.AreEqual((sbyte)1, pref12.TodosEstados);
+            Assert.AreEqual(0, pref12.EstadoEstadosBrasils.Count);
+
+            Assert.IsTrue(_pessoaService.RemoverPreferenciaInteresse(1, 10));
+            Assert.AreEqual(2, _pessoaService.GetPreferenciasInteresse(1).Count);
+        }
+
+        [TestMethod]
         public void Preferencias_PersistemValidamEPermitemRemocaoNoMySql()
         {
             var conexao = Environment.GetEnvironmentVariable("BORALA_TEST_MYSQL_EVENTO");
             if (string.IsNullOrWhiteSpace(conexao)) Assert.Inconclusive("Defina BORALA_TEST_MYSQL_EVENTO para executar no banco do projeto.");
             using var db = new EventoContext(new DbContextOptionsBuilder<EventoContext>().UseMySQL(conexao!).Options);
             using var transacao = db.Database.BeginTransaction();
-            var par = (from pessoa in db.Pessoas from area in db.Areainteresses
-                       where !db.Pessoaareainteresses.Any(p => p.IdPessoa == pessoa.Id && p.IdAreaInteresse == area.Id)
-                       select new { Pessoa = pessoa.Id, Area = area.Id }).First();
+            var pessoaId = db.Pessoas.Select(p => p.Id).First();
+            var areas = db.Areainteresses
+                .Where(a => !db.Pessoaareainteresses.Any(p => p.IdPessoa == pessoaId && p.IdAreaInteresse == a.Id))
+                .Select(a => a.Id)
+                .Take(2)
+                .ToArray();
+            Assert.IsTrue(areas.Length >= 1);
+            var area = areas[0];
             var ufs = db.Estadosbrasils.OrderBy(e => e.Estado).Select(e => e.Estado).Take(2).ToArray();
             Assert.AreEqual(2, ufs.Length);
             var service = new PessoaService(null!, db, null!, null!);
 
-            Assert.IsNotNull(service.SalvarPreferenciaInteresse(par.Pessoa, par.Area, true, ufs));
-            Assert.IsNotNull(service.SalvarPreferenciaInteresse(par.Pessoa, par.Area, false, []));
-            Assert.IsNotNull(service.SalvarPreferenciaInteresse(par.Pessoa, par.Area, false, [ufs[0], ufs[0]]));
-            Assert.IsNotNull(service.SalvarPreferenciaInteresse(par.Pessoa, par.Area, false, ["ZZ"]));
-            Assert.IsNotNull(service.SalvarPreferenciaInteresse(par.Pessoa, uint.MaxValue, true, []));
-            Assert.IsNull(service.SalvarPreferenciaInteresse(par.Pessoa, par.Area, false, ufs));
+            Assert.IsNotNull(service.SalvarPreferenciaInteresse(pessoaId, area, true, ufs));
+            Assert.IsNotNull(service.SalvarPreferenciaInteresse(pessoaId, area, false, []));
+            Assert.IsNotNull(service.SalvarPreferenciaInteresse(pessoaId, area, false, [ufs[0], ufs[0]]));
+            Assert.IsNotNull(service.SalvarPreferenciaInteresse(pessoaId, area, false, ["ZZ"]));
+            Assert.IsNotNull(service.SalvarPreferenciaInteresse(pessoaId, uint.MaxValue, true, []));
+            Assert.IsNull(service.SalvarPreferenciasInteresse(pessoaId, areas, false, ufs));
             db.ChangeTracker.Clear();
-            var salvo = service.GetPreferenciasInteresse(par.Pessoa).Single(p => p.IdAreaInteresse == par.Area);
-            Assert.AreEqual((sbyte)0, salvo.TodosEstados);
-            CollectionAssert.AreEquivalent(ufs, salvo.EstadoEstadosBrasils.Select(e => e.Estado).ToArray());
+            foreach (var a in areas)
+            {
+                var salvo = service.GetPreferenciasInteresse(pessoaId).Single(p => p.IdAreaInteresse == a);
+                Assert.AreEqual((sbyte)0, salvo.TodosEstados);
+                CollectionAssert.AreEquivalent(ufs, salvo.EstadoEstadosBrasils.Select(e => e.Estado).ToArray());
+            }
 
-            Assert.IsNull(service.SalvarPreferenciaInteresse(par.Pessoa, par.Area, true, []));
+            Assert.IsNull(service.SalvarPreferenciaInteresse(pessoaId, area, true, []));
             db.ChangeTracker.Clear();
-            salvo = service.GetPreferenciasInteresse(par.Pessoa).Single(p => p.IdAreaInteresse == par.Area);
-            Assert.AreEqual((sbyte)1, salvo.TodosEstados);
-            Assert.AreEqual(0, salvo.EstadoEstadosBrasils.Count);
-            Assert.IsNull(service.SalvarPreferenciaInteresse(par.Pessoa, par.Area, false, [ufs[0]]));
-            var outraPessoa = db.Pessoas.Where(p => p.Id != par.Pessoa &&
-                !db.Pessoaareainteresses.Any(i => i.IdPessoa == p.Id && i.IdAreaInteresse == par.Area))
+            var salvoBrasil = service.GetPreferenciasInteresse(pessoaId).Single(p => p.IdAreaInteresse == area);
+            Assert.AreEqual((sbyte)1, salvoBrasil.TodosEstados);
+            Assert.AreEqual(0, salvoBrasil.EstadoEstadosBrasils.Count);
+            Assert.IsNull(service.SalvarPreferenciaInteresse(pessoaId, area, false, [ufs[0]]));
+            var outraPessoa = db.Pessoas.Where(p => p.Id != pessoaId &&
+                !db.Pessoaareainteresses.Any(i => i.IdPessoa == p.Id && i.IdAreaInteresse == area))
                 .Select(p => p.Id).First();
-            Assert.IsFalse(service.RemoverPreferenciaInteresse(outraPessoa, par.Area));
-            Assert.IsTrue(service.GetPreferenciasInteresse(par.Pessoa).Any(p => p.IdAreaInteresse == par.Area));
-            Assert.IsTrue(service.RemoverPreferenciaInteresse(par.Pessoa, par.Area));
+            Assert.IsFalse(service.RemoverPreferenciaInteresse(outraPessoa, area));
+            Assert.IsTrue(service.GetPreferenciasInteresse(pessoaId).Any(p => p.IdAreaInteresse == area));
+            foreach (var a in areas)
+                Assert.IsTrue(service.RemoverPreferenciaInteresse(pessoaId, a));
             db.ChangeTracker.Clear();
-            Assert.IsFalse(service.GetPreferenciasInteresse(par.Pessoa).Any(p => p.IdAreaInteresse == par.Area));
+            Assert.IsFalse(service.GetPreferenciasInteresse(pessoaId).Any(p => areas.Contains(p.IdAreaInteresse)));
             transacao.Rollback();
         }
     }

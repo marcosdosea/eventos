@@ -1,100 +1,474 @@
 @model EventoWeb.Models.PreferenciasInteresseModel
 @{
-    ViewData["Title"] = "Áreas de interesse";
+    ViewData["Title"] = "Áreas de Interesse";
+    var areasAdicionadas = Model.Preferencias.Select(p => p.IdAreaInteresse).ToHashSet();
+    var qtdPreferencias = Model.Preferencias.Count;
+    var areaEmEdicaoNome = Model.Editando
+        ? Model.Areas.FirstOrDefault(a => a.Id == Model.AreaId)?.Nome
+        : null;
 }
 
-<div class="container py-4" style="max-width: 960px">
-    <a asp-area="Identity" asp-page="/Account/Manage/Index" class="text-decoration-none">← Voltar para minha conta</a>
-    <h1 class="h2 mt-3">Áreas de interesse</h1>
-    <p class="text-muted">Escolha os assuntos e os estados em que você quer acompanhar eventos.</p>
+<link rel="stylesheet" href="~/css/preferenciasInteresse.css" asp-append-version="true" />
+
+<div class="container pref-page-container" style="max-width: 1140px;">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="pref-title">Áreas de Interesse</h1>
+            <p class="text-muted small mb-0 mt-1">Escolha os assuntos e os estados em que você quer acompanhar eventos.</p>
+        </div>
+
+        <a asp-controller="Home" asp-action="Index" class="pref-back-btn">
+            <i class="bi bi-arrow-left"></i>
+            <span>Voltar para a página inicial</span>
+        </a>
+    </div>
 
     @if (TempData["PreferenciasMensagem"] is string mensagem)
     {
-        <div class="alert alert-success" role="status">@mensagem</div>
+        <div class="alert pref-alert-success alert-dismissible fade show d-flex align-items-center gap-2 mb-4" role="status">
+            <i class="bi bi-check-circle-fill fs-5 flex-shrink-0"></i>
+            <span class="fw-semibold">@mensagem</span>
+            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Fechar"></button>
+        </div>
     }
 
-    <section class="card shadow-sm mb-4" aria-labelledby="preferencias-titulo">
-        <div class="card-body p-4">
-            <h2 class="h4" id="preferencias-titulo">Minhas preferências</h2>
-            @if (!Model.Preferencias.Any())
-            {
-                <p class="text-muted mb-0">Você ainda não adicionou nenhuma área de interesse.</p>
-            }
-            else
-            {
-                <ul class="list-group list-group-flush">
-                    @foreach (var item in Model.Preferencias)
-                    {
-                        <li class="list-group-item px-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
-                            <div><strong>@item.IdAreaInteresseNavigation.Nome</strong><br />
-                                <span class="text-muted">@(item.TodosEstados == 1 ? "Todo o Brasil" : string.Join(", ", item.EstadoEstadosBrasils.OrderBy(e => e.Nome).Select(e => e.Nome)))</span>
-                            </div>
-                            <div class="d-flex gap-2">
-                                <a asp-action="PreferenciasInteresse" asp-route-areaId="@item.IdAreaInteresse" class="btn btn-outline-primary btn-sm" aria-label="Editar @item.IdAreaInteresseNavigation.Nome">Editar</a>
-                                <form asp-action="RemoverPreferenciaInteresse" method="post">
-                                    <input type="hidden" name="areaId" value="@item.IdAreaInteresse" />
-                                    <button class="btn btn-outline-danger btn-sm" type="submit" aria-label="Remover @item.IdAreaInteresseNavigation.Nome">Remover</button>
-                                </form>
-                            </div>
-                        </li>
-                    }
-                </ul>
-            }
-        </div>
-    </section>
+    <div class="row g-4 align-items-start">
+        <div class="col-lg-7">
+            <section class="pref-card" aria-labelledby="form-titulo">
+                <div class="pref-card-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="pref-card-icon">
+                            <i class="bi @(Model.Editando ? "bi-pencil-square" : "bi-sliders")"></i>
+                        </div>
+                        <div>
+                            <h2 class="h5 fw-bold text-dark mb-0" id="form-titulo">
+                                @(Model.Editando ? "Editar preferência" : "Adicionar preferência")
+                            </h2>
+                            <span class="text-muted small">
+                                @(Model.Editando
+                                    ? "Atualize os estados para a área selecionada"
+                                    : "Combine múltiplas áreas com um ou mais estados")
+                            </span>
+                        </div>
+                    </div>
 
-    <section class="card shadow-sm" aria-labelledby="form-titulo">
-        <div class="card-body p-4">
-            <h2 class="h4" id="form-titulo">@(Model.Editando ? "Editar preferência" : "Adicionar preferência")</h2>
-            <form asp-action="SalvarPreferenciaInteresse" method="post">
-                <input type="hidden" asp-for="Editando" />
-                <div asp-validation-summary="All" class="text-danger" role="alert"></div>
-                <div class="mb-3">
-                    <label asp-for="AreaId" class="form-label">Área de interesse</label>
-                    @if (Model.Editando) { <input type="hidden" name="AreaId" value="@Model.AreaId" /> }
-                    <select asp-for="AreaId" class="form-select" required disabled="@Model.Editando">
-                        <option value="">Selecione uma área</option>
-                        @foreach (var area in Model.Areas)
-                        {
-                            <option value="@area.Id">@area.Nome</option>
-                        }
-                    </select>
+                    @if (Model.Editando && !string.IsNullOrEmpty(areaEmEdicaoNome))
+                    {
+                        <span class="pref-count-badge">
+                            <i class="bi bi-tag-fill"></i>
+                            <span>@areaEmEdicaoNome</span>
+                        </span>
+                    }
                 </div>
-                <fieldset class="mb-3">
-                    <legend class="fs-6 fw-semibold">Onde acompanhar eventos?</legend>
-                    <div class="form-check"><input class="form-check-input" type="radio" asp-for="Abrangencia" value="brasil" id="abrangencia-brasil" /><label class="form-check-label" for="abrangencia-brasil">Todo o Brasil</label></div>
-                    <div class="form-check"><input class="form-check-input" type="radio" asp-for="Abrangencia" value="estados" id="abrangencia-estados" /><label class="form-check-label" for="abrangencia-estados">Estados específicos</label></div>
-                </fieldset>
-                <fieldset class="mb-4" id="lista-estados">
-                    <legend class="fs-6">Selecione os estados</legend>
-                    <div class="row row-cols-2 row-cols-md-3 g-2">
-                        @foreach (var estado in Model.EstadosDisponiveis)
+
+                <form asp-action="SalvarPreferenciaInteresse" method="post" id="formPreferenciasInteresse">
+                    <input type="hidden" asp-for="Editando" />
+                    <div asp-validation-summary="All" class="pref-validation-summary" role="alert"></div>
+
+                    @if (Model.Editando)
+                    {
+                        <div class="mb-4">
+                            <label asp-for="AreaId" class="form-label fw-bold text-dark small d-flex align-items-center gap-2 mb-2">
+                                <i class="bi bi-bookmark-check blue-normal"></i>
+                                <span>Área de interesse</span>
+                            </label>
+                            <input type="hidden" name="AreaId" value="@Model.AreaId" />
+                            <select asp-for="AreaId" class="form-select rounded-3 py-2" style="border-color: #CBD5E1; background-color: #F8FAFC;" disabled>
+                                @foreach (var area in Model.Areas)
+                                {
+                                    <option value="@area.Id">@area.Nome</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                    else
+                    {
+                        <fieldset class="mb-4" id="lista-areas">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <legend class="fs-6 fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                                        <i class="bi bi-tags blue-normal"></i>
+                                        <span>Áreas de interesse</span>
+                                    </legend>
+                                    <span class="pref-count-badge" id="contadorAreasSelecionadas">
+                                        0 de @Model.Areas.Count() selecionadas
+                                    </span>
+                                </div>
+
+                                <label class="pref-toggle-all mb-0" for="selecionar-todas-areas">
+                                    <input class="form-check-input pref-chk" type="checkbox" id="selecionar-todas-areas" />
+                                    <span>Selecionar todas</span>
+                                </label>
+                            </div>
+
+                            <div class="row row-cols-1 row-cols-sm-2 g-2">
+                                @foreach (var area in Model.Areas)
+                                {
+                                    var jaAdicionada = areasAdicionadas.Contains(area.Id);
+                                    var selecionada = Model.AreaIds.Contains(area.Id);
+                                    <div class="col">
+                                        <label class="pref-select-tile @(selecionada ? "is-selected" : "")" for="area-@area.Id">
+                                            <span class="d-flex align-items-center gap-2">
+                                                <input class="form-check-input pref-chk check-area" type="checkbox" name="AreaIds" id="area-@area.Id" value="@area.Id" checked="@selecionada" />
+                                                <span class="pref-select-tile-label">@area.Nome</span>
+                                            </span>
+                                            @if (jaAdicionada)
+                                            {
+                                                <span class="pref-badge-added">
+                                                    <i class="bi bi-check2"></i>
+                                                    <span>Já adicionada</span>
+                                                </span>
+                                            }
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                        </fieldset>
+                    }
+
+                    <fieldset class="mb-4">
+                        <legend class="fs-6 fw-bold text-dark mb-2 d-flex align-items-center gap-2">
+                            <i class="bi bi-compass blue-normal"></i>
+                            <span>Onde acompanhar eventos?</span>
+                        </legend>
+
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label class="pref-scope-card @(Model.Abrangencia == "brasil" ? "is-selected" : "")" for="abrangencia-brasil">
+                                    <div class="pref-scope-icon">
+                                        <i class="bi bi-globe-americas"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center justify-content-between gap-2">
+                                            <span class="fw-bold text-dark small">Todo o Brasil</span>
+                                            <input class="form-check-input pref-chk" type="radio" asp-for="Abrangencia" value="brasil" id="abrangencia-brasil" />
+                                        </div>
+                                        <span class="text-muted d-block mt-1" style="font-size: 0.78rem;">Receber eventos de todos os estados</span>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="pref-scope-card @(Model.Abrangencia == "estados" ? "is-selected" : "")" for="abrangencia-estados">
+                                    <div class="pref-scope-icon">
+                                        <i class="bi bi-geo-alt-fill"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center justify-content-between gap-2">
+                                            <span class="fw-bold text-dark small">Estados específicos</span>
+                                            <input class="form-check-input pref-chk" type="radio" asp-for="Abrangencia" value="estados" id="abrangencia-estados" />
+                                        </div>
+                                        <span class="text-muted d-block mt-1" style="font-size: 0.78rem;">Escolher uma ou mais UFs</span>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="pref-states-panel mb-2" id="lista-estados">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <legend class="fs-6 fw-bold text-dark mb-0">Selecione os estados</legend>
+                                <span class="pref-count-badge" id="contadorEstadosSelecionados">
+                                    0 de @Model.EstadosDisponiveis.Count() estados
+                                </span>
+                            </div>
+
+                            <label class="pref-toggle-all mb-0" for="selecionar-todos-estados">
+                                <input class="form-check-input pref-chk" type="checkbox" id="selecionar-todos-estados" />
+                                <span>Selecionar todos</span>
+                            </label>
+                        </div>
+
+                        <div class="pref-search-box mb-3">
+                            <i class="bi bi-search text-muted me-2"></i>
+                            <input type="text" id="filtroEstados" class="pref-search-input" placeholder="Filtrar estado por nome ou sigla..." autocomplete="off" />
+                            <button type="button" id="btnLimparFiltroEstados" class="btn btn-link btn-sm p-0 text-muted d-none" title="Limpar filtro" aria-label="Limpar filtro de estados">
+                                <i class="bi bi-x-circle-fill"></i>
+                            </button>
+                        </div>
+
+                        <div class="pref-states-grid-scroll">
+                            <div class="row row-cols-2 row-cols-md-3 g-2" id="gradeEstados">
+                                @foreach (var estado in Model.EstadosDisponiveis)
+                                {
+                                    var selecionado = Model.Estados.Contains(estado.Estado);
+                                    <div class="col pref-state-col" data-estado-texto="@($"{estado.Nome} {estado.Estado}".ToLowerInvariant())">
+                                        <label class="pref-state-chip @(selecionado ? "is-selected" : "")" for="estado-@estado.Estado">
+                                            <input class="form-check-input pref-chk check-estado" type="checkbox" name="Estados" id="estado-@estado.Estado" value="@estado.Estado" checked="@selecionado" />
+                                            <span class="text-truncate" title="@estado.Nome">@estado.Nome</span>
+                                        </label>
+                                    </div>
+                                }
+                            </div>
+                            <div id="nenhumEstadoEncontrado" class="text-center text-muted small py-3 d-none">
+                                Nenhum estado encontrado para esse filtro.
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <div class="pref-form-footer">
+                        <div class="pref-summary-hint" id="resumoCombinacao">
+                            <i class="bi bi-info-circle blue-normal"></i>
+                            <span>Selecione as opções desejadas para salvar.</span>
+                        </div>
+
+                        <div class="d-flex flex-wrap align-items-center gap-2 ms-auto">
+                            @if (Model.Editando)
+                            {
+                                <a asp-action="PreferenciasInteresse" class="btn btn-outline-secondary rounded-3 px-3 py-2 fw-semibold">
+                                    Cancelar edição
+                                </a>
+                            }
+                            <button type="submit" class="btn btn-blue-normal color-white rounded-3 px-4 py-2 fw-semibold shadow-sm d-inline-flex align-items-center gap-2">
+                                <i class="bi bi-check2-circle"></i>
+                                <span>@(Model.Editando ? "Salvar preferência" : "Salvar preferências")</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </section>
+        </div>
+
+        <div class="col-lg-5">
+            <section class="pref-card pref-sticky-panel" aria-labelledby="preferencias-titulo">
+                <div class="pref-card-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="pref-card-icon">
+                            <i class="bi bi-bookmark-heart"></i>
+                        </div>
+                        <h2 class="h5 fw-bold text-dark mb-0" id="preferencias-titulo">Minhas preferências</h2>
+                    </div>
+                    <span class="pref-count-badge">
+                        <span>@qtdPreferencias</span>
+                        <span>@(qtdPreferencias == 1 ? "área" : "áreas")</span>
+                    </span>
+                </div>
+
+                @if (!Model.Preferencias.Any())
+                {
+                    <div class="pref-empty-box">
+                        <div class="pref-empty-icon">
+                            <i class="bi bi-compass"></i>
+                        </div>
+                        <p class="fw-semibold text-dark mb-1">Você ainda não adicionou nenhuma área de interesse.</p>
+                        <p class="text-muted small mb-0">Marque uma ou mais áreas e estados ao lado para receber recomendações personalizadas.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="pref-saved-list">
+                        @foreach (var item in Model.Preferencias)
                         {
-                            <div class="col"><div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="Estados" id="estado-@estado.Estado" value="@estado.Estado" checked="@Model.Estados.Contains(estado.Estado)" />
-                                <label class="form-check-label" for="estado-@estado.Estado">@estado.Nome</label>
-                            </div></div>
+                            var estadosOrdenados = item.EstadoEstadosBrasils.OrderBy(e => e.Nome).ToList();
+                            var emEdicao = Model.Editando && Model.AreaId == item.IdAreaInteresse;
+                            <div class="pref-saved-item @(emEdicao ? "is-editing" : "")">
+                                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                    <div class="fw-bold text-dark">@item.IdAreaInteresseNavigation.Nome</div>
+                                    @if (item.TodosEstados == 1)
+                                    {
+                                        <span class="pref-badge-brasil">
+                                            <span class="dot">●</span>
+                                            <span>Todo o Brasil</span>
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="pref-count-badge">
+                                            @estadosOrdenados.Count @(estadosOrdenados.Count == 1 ? "estado" : "estados")
+                                        </span>
+                                    }
+                                </div>
+
+                                @if (item.TodosEstados != 1)
+                                {
+                                    var nomesCompletos = string.Join(", ", estadosOrdenados.Select(e => e.Nome));
+                                    var limiteChips = 6;
+                                    <div class="d-flex flex-wrap gap-1 mb-3" title="@nomesCompletos">
+                                        @foreach (var uf in estadosOrdenados.Take(limiteChips))
+                                        {
+                                            <span class="pref-state-pill">@uf.Nome</span>
+                                        }
+                                        @if (estadosOrdenados.Count > limiteChips)
+                                        {
+                                            <span class="pref-state-pill fw-semibold">+@(estadosOrdenados.Count - limiteChips)</span>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="mb-3"></div>
+                                }
+
+                                <div class="d-flex justify-content-end align-items-center gap-2">
+                                    <a asp-action="PreferenciasInteresse" asp-route-areaId="@item.IdAreaInteresse" class="pref-action-edit" aria-label="Editar @item.IdAreaInteresseNavigation.Nome">
+                                        <i class="bi bi-pencil"></i>
+                                        <span>Editar</span>
+                                    </a>
+                                    <form asp-action="RemoverPreferenciaInteresse" method="post" class="m-0">
+                                        <input type="hidden" name="areaId" value="@item.IdAreaInteresse" />
+                                        <button class="pref-action-delete" type="submit" aria-label="Remover @item.IdAreaInteresseNavigation.Nome">
+                                            <i class="bi bi-trash"></i>
+                                            <span>Remover</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
                         }
                     </div>
-                </fieldset>
-                <button type="submit" class="btn btn-primary">Salvar preferência</button>
-                @if (Model.Editando) { <a asp-action="PreferenciasInteresse" class="btn btn-link">Cancelar edição</a> }
-            </form>
+                }
+            </section>
         </div>
-    </section>
+    </div>
 </div>
 
 @section Scripts {
     <script>
         (() => {
+            const editando = @Model.Editando.ToString().ToLowerInvariant();
             const brasil = document.getElementById('abrangencia-brasil');
+            const estadosRadio = document.getElementById('abrangencia-estados');
             const lista = document.getElementById('lista-estados');
-            function atualizar() {
-                lista.hidden = brasil.checked;
-                lista.disabled = brasil.checked;
+            const areasCheckboxes = Array.from(document.querySelectorAll('.check-area'));
+            const estadosCheckboxes = Array.from(document.querySelectorAll('.check-estado'));
+            const contadorAreas = document.getElementById('contadorAreasSelecionadas');
+            const contadorEstados = document.getElementById('contadorEstadosSelecionados');
+            const resumo = document.getElementById('resumoCombinacao');
+
+            function atualizarEstadoVisualCards() {
+                document.querySelectorAll('.pref-scope-card').forEach(card => {
+                    const input = card.querySelector('input[type="radio"]');
+                    card.classList.toggle('is-selected', Boolean(input && input.checked));
+                });
+                areasCheckboxes.forEach(chk => {
+                    const tile = chk.closest('.pref-select-tile');
+                    if (tile) tile.classList.toggle('is-selected', chk.checked);
+                });
+                estadosCheckboxes.forEach(chk => {
+                    const chip = chk.closest('.pref-state-chip');
+                    if (chip) chip.classList.toggle('is-selected', chk.checked);
+                });
             }
-            document.querySelectorAll('input[name="Abrangencia"]').forEach(radio => radio.addEventListener('change', atualizar));
-            atualizar();
+
+            function atualizarContadoresEResumo() {
+                const qtdAreas = editando ? 1 : areasCheckboxes.filter(c => c.checked).length;
+                const qtdEstados = estadosCheckboxes.filter(c => c.checked).length;
+
+                if (contadorAreas) {
+                    contadorAreas.textContent = `${qtdAreas} de ${areasCheckboxes.length} ${qtdAreas === 1 ? 'selecionada' : 'selecionadas'}`;
+                }
+                if (contadorEstados) {
+                    contadorEstados.textContent = `${qtdEstados} de ${estadosCheckboxes.length} ${qtdEstados === 1 ? 'estado' : 'estados'}`;
+                }
+
+                if (!resumo) return;
+
+                if (!editando && qtdAreas === 0) {
+                    resumo.innerHTML = '<i class="bi bi-info-circle blue-normal"></i><span>Selecione ao menos uma área de interesse.</span>';
+                    return;
+                }
+
+                if (brasil && brasil.checked) {
+                    const labelArea = editando ? '1 área selecionada' : `${qtdAreas} ${qtdAreas === 1 ? 'área' : 'áreas'}`;
+                    resumo.innerHTML = `<i class="bi bi-globe-americas blue-normal"></i><span>Pronto para salvar: <strong>${labelArea}</strong> para <strong>Todo o Brasil</strong>.</span>`;
+                    return;
+                }
+
+                if (qtdEstados === 0) {
+                    resumo.innerHTML = '<i class="bi bi-geo-alt blue-normal"></i><span>Selecione ao menos um estado abaixo.</span>';
+                    return;
+                }
+
+                if (editando) {
+                    resumo.innerHTML = `<i class="bi bi-check2-all blue-normal"></i><span>Atualizando para <strong>${qtdEstados} ${qtdEstados === 1 ? 'estado' : 'estados'}</strong>.</span>`;
+                    return;
+                }
+
+                const total = qtdAreas * qtdEstados;
+                resumo.innerHTML = `<i class="bi bi-layers blue-normal"></i><span>Combinação: <strong>${qtdAreas} ${qtdAreas === 1 ? 'área' : 'áreas'} × ${qtdEstados} ${qtdEstados === 1 ? 'estado' : 'estados'}</strong> (${total} ${total === 1 ? 'preferência' : 'preferências'}).</span>`;
+            }
+
+            function atualizarAbrangencia() {
+                const todoBrasil = Boolean(brasil && brasil.checked);
+                if (lista) {
+                    lista.hidden = todoBrasil;
+                    lista.disabled = todoBrasil;
+                }
+                atualizarEstadoVisualCards();
+                atualizarContadoresEResumo();
+            }
+
+            document.querySelectorAll('input[name="Abrangencia"]').forEach(radio => {
+                radio.addEventListener('change', atualizarAbrangencia);
+            });
+            if (estadosRadio && !brasil.checked && !estadosRadio.checked) {
+                brasil.checked = true;
+            }
+
+            function configurarSelecionarTodos(toggleId, itens, somenteVisiveisAoMarcar) {
+                const toggle = document.getElementById(toggleId);
+                if (!toggle) return;
+
+                function sincronizarToggle() {
+                    toggle.checked = itens.length > 0 && itens.every(c => c.checked);
+                }
+
+                toggle.addEventListener('change', () => {
+                    const alvos = somenteVisiveisAoMarcar
+                        ? itens.filter(c => {
+                            const col = c.closest('.pref-state-col');
+                            return !col || !col.classList.contains('d-none');
+                        })
+                        : itens;
+                    alvos.forEach(c => { c.checked = toggle.checked; });
+                    atualizarEstadoVisualCards();
+                    atualizarContadoresEResumo();
+                });
+
+                itens.forEach(c => c.addEventListener('change', () => {
+                    sincronizarToggle();
+                    atualizarEstadoVisualCards();
+                    atualizarContadoresEResumo();
+                }));
+                sincronizarToggle();
+            }
+
+            configurarSelecionarTodos('selecionar-todas-areas', areasCheckboxes, false);
+            configurarSelecionarTodos('selecionar-todos-estados', estadosCheckboxes, true);
+
+            const filtroInput = document.getElementById('filtroEstados');
+            const btnLimparFiltro = document.getElementById('btnLimparFiltroEstados');
+            const colsEstados = Array.from(document.querySelectorAll('.pref-state-col'));
+            const msgNenhumEstado = document.getElementById('nenhumEstadoEncontrado');
+
+            function aplicarFiltroEstados() {
+                if (!filtroInput) return;
+                const termo = filtroInput.value.trim().toLowerCase();
+                let visiveis = 0;
+
+                colsEstados.forEach(col => {
+                    const texto = col.getAttribute('data-estado-texto') || '';
+                    const corresponde = termo === '' || texto.includes(termo);
+                    col.classList.toggle('d-none', !corresponde);
+                    if (corresponde) visiveis++;
+                });
+
+                if (btnLimparFiltro) btnLimparFiltro.classList.toggle('d-none', termo === '');
+                if (msgNenhumEstado) msgNenhumEstado.classList.toggle('d-none', visiveis > 0);
+            }
+
+            if (filtroInput) {
+                filtroInput.addEventListener('input', aplicarFiltroEstados);
+            }
+            if (btnLimparFiltro && filtroInput) {
+                btnLimparFiltro.addEventListener('click', () => {
+                    filtroInput.value = '';
+                    aplicarFiltroEstados();
+                    filtroInput.focus();
+                });
+            }
+
+            atualizarAbrangencia();
         })();
     </script>
 }

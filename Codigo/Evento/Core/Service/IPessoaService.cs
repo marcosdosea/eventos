@@ -8,6 +8,7 @@ namespace Core.Service
 
         IReadOnlyList<Pessoaareainteresse> GetPreferenciasInteresse(uint idPessoa);
         string? SalvarPreferenciaInteresse(uint idPessoa, uint idArea, bool todosEstados, IReadOnlyList<string> estados);
+        string? SalvarPreferenciasInteresse(uint idPessoa, IReadOnlyList<uint> idsAreas, bool todosEstados, IReadOnlyList<string> estados);
         bool RemoverPreferenciaInteresse(uint idPessoa, uint idArea);
 
         uint Create(Pessoa pessoa);

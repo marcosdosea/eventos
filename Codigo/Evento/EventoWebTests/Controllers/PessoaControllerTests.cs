@@ -1244,18 +1244,108 @@ namespace EventoWeb.Controllers.Tests
                 ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.Name, "12345678901")], "teste")) } },
                 TempData = new TempDataDictionary(new DefaultHttpContext(), Mock.Of<ITempDataProvider>())
             };
-            Assert.IsInstanceOfType(controller.SalvarPreferenciaInteresse(new PreferenciasInteresseModel { AreaId = 3, Abrangencia = "brasil" }), typeof(RedirectToActionResult));
+            Assert.IsInstanceOfType(controller.SalvarPreferenciaInteresse(new PreferenciasInteresseModel { AreaIds = [3], Abrangencia = "brasil" }), typeof(RedirectToActionResult));
             Assert.IsInstanceOfType(controller.RemoverPreferenciaInteresse(3), typeof(RedirectToActionResult));
-            preferencias.Verify(p => p.SalvarPreferenciaInteresse(7, 3, true, It.IsAny<IReadOnlyList<string>>()), Times.Once);
+            preferencias.Verify(p => p.SalvarPreferenciasInteresse(7, It.Is<IReadOnlyList<uint>>(a => a.SequenceEqual(new uint[] { 3 })), true, It.IsAny<IReadOnlyList<string>>()), Times.Once);
             preferencias.Verify(p => p.RemoverPreferenciaInteresse(7, 3), Times.Once);
             preferencias.Setup(p => p.GetPreferenciasInteresse(7)).Returns([new Pessoaareainteresse { IdPessoa = 7, IdAreaInteresse = 3 }]);
-            Assert.IsInstanceOfType(controller.SalvarPreferenciaInteresse(new PreferenciasInteresseModel { AreaId = 3, Abrangencia = "brasil" }), typeof(ViewResult));
-            preferencias.Verify(p => p.SalvarPreferenciaInteresse(7, 3, true, It.IsAny<IReadOnlyList<string>>()), Times.Once);
+            Assert.IsInstanceOfType(controller.SalvarPreferenciaInteresse(new PreferenciasInteresseModel { AreaIds = [3], Abrangencia = "brasil" }), typeof(ViewResult));
+            preferencias.Verify(p => p.SalvarPreferenciasInteresse(7, It.IsAny<IReadOnlyList<uint>>(), true, It.IsAny<IReadOnlyList<string>>()), Times.Once);
             controller.ControllerContext.HttpContext.User = new ClaimsPrincipal();
             Assert.IsInstanceOfType(controller.RemoverPreferenciaInteresse(3), typeof(ForbidResult));
             Assert.IsTrue(Attribute.IsDefined(typeof(PessoaController), typeof(AuthorizeAttribute)));
             Assert.IsTrue(Attribute.IsDefined(typeof(PessoaController).GetMethod("SalvarPreferenciaInteresse")!, typeof(ValidateAntiForgeryTokenAttribute)));
             Assert.IsTrue(Attribute.IsDefined(typeof(PessoaController).GetMethod("RemoverPreferenciaInteresse")!, typeof(ValidateAntiForgeryTokenAttribute)));
+        }
+
+        [TestMethod]
+        public void SalvarPreferenciaInteresse_VariasAreasEVariosEstados_SalvaLoteNParaN()
+        {
+            var pessoas = new Mock<IPessoaService>();
+            pessoas.Setup(p => p.GetByCpf("12345678901")).Returns(new Pessoa { Id = 7, Cpf = "12345678901" });
+            pessoas.Setup(p => p.GetPreferenciasInteresse(7)).Returns(Array.Empty<Pessoaareainteresse>());
+            pessoas.Setup(p => p.SalvarPreferenciasInteresse(7, It.IsAny<IReadOnlyList<uint>>(), false, It.IsAny<IReadOnlyList<string>>()))
+                .Returns((string?)null);
+
+            var controller = new PessoaController(pessoas.Object, Mock.Of<IEstadosbrasilService>(), Mock.Of<IMapper>(), Mock.Of<IEmailService>(), Mock.Of<IAreaInteresseService>())
+            {
+                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.Name, "12345678901")], "teste")) } },
+                TempData = new TempDataDictionary(new DefaultHttpContext(), Mock.Of<ITempDataProvider>())
+            };
+
+            var model = new PreferenciasInteresseModel
+            {
+                AreaIds = [2, 5],
+                Abrangencia = "estados",
+                Estados = ["SE", "BA"]
+            };
+
+            var result = controller.SalvarPreferenciaInteresse(model);
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            Assert.AreEqual("Preferências salvas com sucesso.", controller.TempData["PreferenciasMensagem"]);
+            pessoas.Verify(p => p.SalvarPreferenciasInteresse(
+                7,
+                It.Is<IReadOnlyList<uint>>(a => a.SequenceEqual(new uint[] { 2, 5 })),
+                false,
+                It.Is<IReadOnlyList<string>>(e => e.SequenceEqual(new[] { "SE", "BA" }))), Times.Once);
+        }
+
+        [TestMethod]
+        public void SalvarPreferenciaInteresse_SemAreasSelecionadas_RetornaViewComErro()
+        {
+            var pessoas = new Mock<IPessoaService>();
+            pessoas.Setup(p => p.GetByCpf("12345678901")).Returns(new Pessoa { Id = 7, Cpf = "12345678901" });
+            pessoas.Setup(p => p.GetPreferenciasInteresse(7)).Returns(Array.Empty<Pessoaareainteresse>());
+
+            var controller = new PessoaController(pessoas.Object, Mock.Of<IEstadosbrasilService>(), Mock.Of<IMapper>(), Mock.Of<IEmailService>(), Mock.Of<IAreaInteresseService>())
+            {
+                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.Name, "12345678901")], "teste")) } },
+                TempData = new TempDataDictionary(new DefaultHttpContext(), Mock.Of<ITempDataProvider>())
+            };
+
+            var result = controller.SalvarPreferenciaInteresse(new PreferenciasInteresseModel
+            {
+                AreaIds = [],
+                Abrangencia = "estados",
+                Estados = ["SE"]
+            });
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            Assert.IsFalse(controller.ModelState.IsValid);
+            Assert.IsTrue(controller.ModelState.ContainsKey("AreaIds"));
+            pessoas.Verify(p => p.SalvarPreferenciasInteresse(It.IsAny<uint>(), It.IsAny<IReadOnlyList<uint>>(), It.IsAny<bool>(), It.IsAny<IReadOnlyList<string>>()), Times.Never);
+        }
+
+        [TestMethod]
+        public void SalvarPreferenciaInteresse_EdicaoAreaExistente_SalvaAlteracao()
+        {
+            var pessoas = new Mock<IPessoaService>();
+            pessoas.Setup(p => p.GetByCpf("12345678901")).Returns(new Pessoa { Id = 7, Cpf = "12345678901" });
+            pessoas.Setup(p => p.GetPreferenciasInteresse(7)).Returns([new Pessoaareainteresse { IdPessoa = 7, IdAreaInteresse = 4 }]);
+            pessoas.Setup(p => p.SalvarPreferenciasInteresse(7, It.IsAny<IReadOnlyList<uint>>(), false, It.IsAny<IReadOnlyList<string>>()))
+                .Returns((string?)null);
+
+            var controller = new PessoaController(pessoas.Object, Mock.Of<IEstadosbrasilService>(), Mock.Of<IMapper>(), Mock.Of<IEmailService>(), Mock.Of<IAreaInteresseService>())
+            {
+                ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity([new Claim(ClaimTypes.Name, "12345678901")], "teste")) } },
+                TempData = new TempDataDictionary(new DefaultHttpContext(), Mock.Of<ITempDataProvider>())
+            };
+
+            var result = controller.SalvarPreferenciaInteresse(new PreferenciasInteresseModel
+            {
+                Editando = true,
+                AreaId = 4,
+                Abrangencia = "estados",
+                Estados = ["SE", "SP"]
+            });
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            pessoas.Verify(p => p.SalvarPreferenciasInteresse(
+                7,
+                It.Is<IReadOnlyList<uint>>(a => a.SequenceEqual(new uint[] { 4 })),
+                false,
+                It.Is<IReadOnlyList<string>>(e => e.SequenceEqual(new[] { "SE", "SP" }))), Times.Once);
         }
     }
 }
