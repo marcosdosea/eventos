@@ -208,14 +208,23 @@ namespace EventoWeb.Controllers
                                 ? inscricao.IdPessoaNavigation.NomeCracha
                                 : (inscricao.IdPessoaNavigation?.Nome ?? "Participante"));
 
-                        var conteudoQrCode = $"[{inscricao.IdPessoa}] [{nomeCracha}] [{modelocracha.IdEvento}]";
-                        if (subeventosIdsPessoa.Any())
-                        {
-                            conteudoQrCode += $" {string.Join(" ", subeventosIdsPessoa.Select(idSubEvento => $"[{idSubEvento}]"))}";
-                        }
+                        var cpf = inscricao.IdPessoaNavigation?.Cpf;
+                        var qrCodeBase64 = CrachaQrCodeHelper.GerarQrCodeBase64(
+                            inscricao.IdPessoa,
+                            cpf,
+                            nomeCracha,
+                            modelocracha.IdEvento,
+                            subeventosIdsPessoa);
 
-                        var qrCodeBytes = QrCodeGenerator.GenerateQr(conteudoQrCode);
-                        var qrCodeBase64 = Convert.ToBase64String(qrCodeBytes);
+                        if (string.IsNullOrEmpty(qrCodeBase64))
+                        {
+                            var conteudoQrCode = $"[{inscricao.IdPessoa}] [{nomeCracha}] [{modelocracha.IdEvento}]";
+                            if (subeventosIdsPessoa.Any())
+                            {
+                                conteudoQrCode += $" {string.Join(" ", subeventosIdsPessoa.Select(idSubEvento => $"[{idSubEvento}]"))}";
+                            }
+                            qrCodeBase64 = GerarQrCodeSeguro(conteudoQrCode);
+                        }
 
                         qrCodes.Add(qrCodeBase64);
                         crachas.Add(new CrachaParticipanteModel
@@ -1061,13 +1070,25 @@ namespace EventoWeb.Controllers
                 .Distinct()
                 .ToList() ?? new List<uint>();
 
-            var conteudoQrCode = $"[{ins.IdPessoa}] [{nomeCracha}] [{idEvento}] [{ins.Id}]";
-            if (subeventosIdsPessoa.Any())
+            var cpf = ins.IdPessoaNavigation?.Cpf;
+            var qrCodeBase64 = CrachaQrCodeHelper.GerarQrCodeBase64(
+                ins.IdPessoa,
+                cpf,
+                nomeCracha,
+                idEvento,
+                subeventosIdsPessoa);
+
+            if (string.IsNullOrEmpty(qrCodeBase64))
             {
-                conteudoQrCode += $" {string.Join(" ", subeventosIdsPessoa.Select(idSub => $"[{idSub}]"))}";
+                var conteudoQrCode = $"[{ins.IdPessoa}] [{nomeCracha}] [{idEvento}] [{ins.Id}]";
+                if (subeventosIdsPessoa.Any())
+                {
+                    conteudoQrCode += $" {string.Join(" ", subeventosIdsPessoa.Select(idSub => $"[{idSub}]"))}";
+                }
+
+                qrCodeBase64 = GerarQrCodeSeguro(conteudoQrCode);
             }
 
-            var qrCodeBase64 = GerarQrCodeSeguro(conteudoQrCode);
             if (string.IsNullOrEmpty(qrCodeBase64))
             {
                 qrCodeBase64 = GerarQrCodeSeguro($"[{ins.IdPessoa}] [{idEvento}] [{ins.Id}]");
