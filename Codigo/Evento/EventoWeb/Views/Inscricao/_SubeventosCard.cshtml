@@ -57,7 +57,7 @@
                             && !isEncerrado 
                             && !isEmBreve 
                             && !isEsgotado 
-                            && (sub.Status == "A" || sub.Status == "C");
+                            && sub.Status == "A";
 
                         var tipos = subOpcao.TiposInscricao?.ToList() ?? new List<Core.DTO.TipoInscricaoDTO>();
 
@@ -66,7 +66,7 @@
                         {
                             rowClass = "row-subevento-inscrito";
                         }
-                        else if (isEncerrado || isEsgotado)
+                        else if (isEncerrado || isEsgotado || sub.Status != "A")
                         {
                             rowClass = "subevento-disabled";
                         }
@@ -118,6 +118,10 @@
                                     else if (isInscricaoAberta)
                                     {
                                         <span class="badge bg-success-subtle text-success border border-success ms-1"><i class="bi bi-check2 me-1"></i>Inscrições Abertas</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary ms-1">Indisponível</span>
                                     }
                                 </div>
                             </td>

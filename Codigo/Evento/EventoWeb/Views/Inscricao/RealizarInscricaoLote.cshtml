@@ -376,7 +376,7 @@
                                             bool isEncerrado = sub.Status == "F" || sub.Status == "I" || (sub.DataFimInscricao != DateTime.MinValue && sub.DataFimInscricao < DateTime.Now) || subeventoJaPassou;
                                             bool isEmBreve = !isEncerrado && (sub.DataInicioInscricao != DateTime.MinValue && sub.DataInicioInscricao > DateTime.Now);
                                             bool isEsgotado = !isEncerrado && !isEmBreve && (sub.VagasDisponiveis <= 0);
-                                            bool isInscricaoAberta = (sub.Status == "A" || sub.Status == "C")
+                                            bool isInscricaoAberta = sub.Status == "A"
                                                 && !isEncerrado
                                                 && !isEmBreve
                                                 && !isEsgotado

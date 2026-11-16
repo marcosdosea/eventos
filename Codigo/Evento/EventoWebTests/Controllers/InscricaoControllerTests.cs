@@ -1456,6 +1456,51 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
+        public async Task RealizarInscricaoTest_Post_SubeventoStatusCadastro_NaoCriaInscricaoSub()
+        {
+            // Arrange
+            var tipos = new Dictionary<uint, Tipoinscricao>
+            {
+                { 1, new Tipoinscricao { Id = 1, IdEvento = 1, Nome = "Geral", Valor = 10m } },
+                { 2, new Tipoinscricao { Id = 2, IdEvento = 1, Nome = "Sub Rascunho", Valor = 15m } }
+            };
+            var mockSubeventoService = new Mock<ISubeventoService>();
+            mockSubeventoService.Setup(s => s.Get(10))
+                .Returns(new Subevento
+                {
+                    Id = 10,
+                    IdEvento = 1,
+                    Nome = "Minicurso Rascunho",
+                    Status = "C",
+                    DataFimInscricao = DateTime.Now.AddDays(1),
+                    VagasDisponiveis = 10
+                });
+
+            var (postController, criadas, criadasSub) = CreatePostController(
+                tipos,
+                new Dictionary<string, string>
+                {
+                    { "QuantidadeTipoInscricao_1", "1" },
+                    { "QuantidadeTipoInscricaoSubevento_10_2", "1" }
+                },
+                customSubeventoService: mockSubeventoService);
+
+            var input = new InscricaoEventoModel
+            {
+                IdTipoInscricao = 1,
+                SelectedSubeventos = new List<uint> { 10 }
+            };
+
+            // Act
+            var result = await postController.realizarInscricao(1, input);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            Assert.AreEqual(1, criadas.Count, "Inscrição no evento principal deve ser criada.");
+            Assert.AreEqual(0, criadasSub.Count, "Subevento em cadastro/rascunho (Status 'C') não deve gerar inscrição.");
+        }
+
+        [TestMethod()]
         public async Task RealizarInscricaoTest_Post_EventoSemCertificado_UsuarioJaInscrito_PermiteComprarIngressosAdicionais()
         {
             // Arrange
@@ -2446,7 +2491,43 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             var redirect = (RedirectToActionResult)result;
             Assert.AreEqual("minhasInscricoes", redirect.ActionName);
+            Assert.AreEqual("O CPF do destinatário é obrigatório.", testController.TempData["ParticipanteErrorMessage"]);
             Assert.AreEqual("O CPF do destinatário é obrigatório.", testController.TempData["ParticipanteMessage"]);
+        }
+
+        [TestMethod()]
+        public async Task TransferirIngressoTest_SemSelecaoIngressoNemSubevento_DefineParticipanteErrorMessageERedireciona()
+        {
+            var testController = new InscricaoController(
+                null!,
+                Mock.Of<ITipoInscricaoService>(),
+                Mock.Of<IEventoService>(),
+                Mock.Of<IMapper>(),
+                Mock.Of<IInscricaoService>(),
+                Mock.Of<IPessoaService>(),
+                Mock.Of<ISubeventoService>());
+
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, UsernameTeste) };
+            var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) };
+            testController.ControllerContext = new ControllerContext { HttpContext = httpContext };
+            testController.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
+
+            var model = new TransferirIngressoModel
+            {
+                IdInscricao = null,
+                IdSubevento = null,
+                CpfAmigo = "04026893057",
+                NomeAmigo = "Amigo Teste",
+                EmailAmigo = "amigo@teste.com"
+            };
+
+            var result = await testController.TransferirIngresso(model);
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("minhasInscricoes", redirect.ActionName);
+            Assert.AreEqual("Nenhum ingresso ou subevento selecionado para transferência.", testController.TempData["ParticipanteErrorMessage"]);
+            Assert.AreEqual("Nenhum ingresso ou subevento selecionado para transferência.", testController.TempData["ParticipanteMessage"]);
         }
 
         [TestMethod()]

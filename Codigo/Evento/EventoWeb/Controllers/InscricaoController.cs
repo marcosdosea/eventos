@@ -307,7 +307,7 @@ namespace EventoWeb.Controllers
                 foreach (var idSubevento in inscricaoEvento.SelectedSubeventos)
                 {
                     var subevento = _subeventoService.Get(idSubevento);
-                    if (subevento == null || (subevento.Status != "A" && subevento.Status != "C") || (subevento.DataFimInscricao != DateTime.MinValue && subevento.DataFimInscricao < DateTime.Now))
+                    if (subevento == null || subevento.Status != "A" || (subevento.DataFimInscricao != DateTime.MinValue && subevento.DataFimInscricao < DateTime.Now))
                     {
                         continue;
                     }
@@ -432,7 +432,7 @@ namespace EventoWeb.Controllers
                         (subevento.DataFim != DateTime.MinValue && subevento.DataFim < DateTime.Now) ||
                         (subevento.DataInicio != DateTime.MinValue && subevento.DataInicio < DateTime.Now && subevento.DataFim != DateTime.MinValue && subevento.DataFim <= subevento.DataInicio)
                     );
-                    if (subevento == null || (subevento.Status != "A" && subevento.Status != "C") || (subevento.DataInicioInscricao != DateTime.MinValue && subevento.DataInicioInscricao > DateTime.Now) || (subevento.DataFimInscricao != DateTime.MinValue && subevento.DataFimInscricao < DateTime.Now) || subeventoPassou || (subevento.IdEvento != 0 && subevento.IdEvento != idEvento))
+                    if (subevento == null || subevento.Status != "A" || (subevento.DataInicioInscricao != DateTime.MinValue && subevento.DataInicioInscricao > DateTime.Now) || (subevento.DataFimInscricao != DateTime.MinValue && subevento.DataFimInscricao < DateTime.Now) || subeventoPassou || (subevento.IdEvento != 0 && subevento.IdEvento != idEvento))
                     {
                         continue;
                     }
@@ -784,13 +784,16 @@ namespace EventoWeb.Controllers
             {
                 var erro = ModelState.Values.SelectMany(v => v.Errors).FirstOrDefault()?.ErrorMessage
                     ?? "Dados inválidos para transferência.";
+                TempData["ParticipanteErrorMessage"] = erro;
                 TempData["ParticipanteMessage"] = erro;
                 return RedirectToAction(nameof(minhasInscricoes));
             }
 
             if ((!model.IdInscricao.HasValue || model.IdInscricao.Value == 0) && (!model.IdSubevento.HasValue || model.IdSubevento.Value == 0))
             {
-                TempData["ParticipanteMessage"] = "Nenhum ingresso ou subevento selecionado para transferência.";
+                const string msgSemSelecao = "Nenhum ingresso ou subevento selecionado para transferência.";
+                TempData["ParticipanteErrorMessage"] = msgSemSelecao;
+                TempData["ParticipanteMessage"] = msgSemSelecao;
                 return RedirectToAction(nameof(minhasInscricoes));
             }
 
