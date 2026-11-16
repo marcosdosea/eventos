@@ -507,7 +507,7 @@
                                 Informe um endereço de e-mail válido (ex: amigo@email.com).
                             </div>
                         </div>
-                        <div class="form-text">Enviaremos a confirmação, o ingresso e as instruções de acesso para este e-mail.</div>
+                        <div class="form-text" id="helpEmailAmigo">Enviaremos a confirmação, o ingresso e as instruções de acesso para este e-mail.</div>
                     </div>
 
                     <div class="p-3 bg-light rounded-3 small text-muted border">
@@ -541,6 +541,7 @@
         var feedbackCpf = document.getElementById('feedbackCpfAmigo');
         var feedbackNome = document.getElementById('feedbackNomeAmigo');
         var feedbackEmail = document.getElementById('feedbackEmailAmigo');
+        var helpEmail = document.getElementById('helpEmailAmigo');
 
         var ultimoCpfConsultado = '';
         var destinatarioEhMesmoUsuario = false;
@@ -645,16 +646,6 @@
                 if (feedbackEmail) feedbackEmail.textContent = 'Informe um e-mail válido (ex: amigo@email.com).';
                 return false;
             }
-            if (destinatarioExiste && emailCadastradoDestinatario && !emailCadastradoDestinatario.endsWith('@@borala.com.br')) {
-                if (v.trim().toLowerCase() !== emailCadastradoDestinatario) {
-                    emailInput.classList.remove('is-valid');
-                    emailInput.classList.add('is-invalid');
-                    if (feedbackEmail) {
-                        feedbackEmail.textContent = 'O e-mail deve ser o mesmo cadastrado (' + (emailMascaradoCadastrado || emailCadastradoDestinatario) + ').';
-                    }
-                    return false;
-                }
-            }
             emailInput.classList.remove('is-invalid');
             emailInput.classList.add('is-valid');
             return true;
@@ -706,6 +697,9 @@
             destinatarioExiste = false;
             emailCadastradoDestinatario = '';
             emailMascaradoCadastrado = '';
+            if (helpEmail) {
+                helpEmail.textContent = 'Enviaremos a confirmação, o ingresso e as instruções de acesso para este e-mail.';
+            }
             if (btnSubmit) {
                 btnSubmit.disabled = false;
                 btnSubmit.innerHTML = '<i class="bi bi-check2-circle" aria-hidden="true"></i> Confirmar Transferência';
@@ -743,7 +737,7 @@
                     if (data.sucesso && data.existe) {
                         destinatarioExiste = true;
                         destinatarioEhMesmoUsuario = false;
-                        emailCadastradoDestinatario = (data.email || '').trim().toLowerCase();
+                        emailCadastradoDestinatario = '';
                         emailMascaradoCadastrado = data.emailMascarado || '';
 
                         var nomeCracha = (data.nomeCracha || data.nome || '').trim();
@@ -751,16 +745,24 @@
                             nomeCracha = nomeCracha.substring(0, 20);
                         }
 
+                        var msgAlerta = '<i class="bi bi-person-check-fill text-primary me-1"></i> Participante cadastrado: <strong>' + (data.nomeCompleto || nomeCracha) + '</strong>';
+                        if (emailMascaradoCadastrado) {
+                            msgAlerta += ' (' + emailMascaradoCadastrado + ')';
+                        }
+                        msgAlerta += '.<br/>Nome no crachá preenchido automaticamente. Confirme o e-mail do destinatário abaixo.';
+
                         alertaDest.className = 'alert alert-info border mb-3 py-2 px-3 small';
-                        alertaDest.innerHTML = '<i class="bi bi-person-check-fill text-primary me-1"></i> Participante cadastrado: <strong>' + (data.nomeCompleto || nomeCracha) + '</strong>.<br/>Nome no crachá e e-mail preenchidos automaticamente.';
+                        alertaDest.innerHTML = msgAlerta;
                         alertaDest.classList.remove('d-none');
 
                         if (nomeInput && nomeCracha) {
                             nomeInput.value = nomeCracha;
                             checarCampoNome();
                         }
-                        if (emailInput && data.email) {
-                            emailInput.value = data.email;
+                        if (helpEmail && emailMascaradoCadastrado) {
+                            helpEmail.textContent = 'Confirme o e-mail cadastrado deste participante (' + emailMascaradoCadastrado + ').';
+                        }
+                        if (emailInput && emailInput.value) {
                             checarCampoEmail();
                         }
                         checarCampoCpf();
@@ -770,6 +772,9 @@
                         emailCadastradoDestinatario = '';
                         emailMascaradoCadastrado = '';
 
+                        if (helpEmail) {
+                            helpEmail.textContent = 'Enviaremos a confirmação, o ingresso e as instruções de acesso para este e-mail.';
+                        }
                         alertaDest.className = 'alert alert-secondary border mb-3 py-2 px-3 small';
                         alertaDest.innerHTML = '<i class="bi bi-person-plus-fill me-1"></i> <strong>Novo participante:</strong> Nenhuma conta encontrada para este CPF no sistema. Preencha o nome no crachá e e-mail abaixo para enviarmos as instruções de primeiro acesso.';
                         alertaDest.classList.remove('d-none');
@@ -779,11 +784,17 @@
                         emailCadastradoDestinatario = '';
                         emailMascaradoCadastrado = '';
 
+                        if (helpEmail) {
+                            helpEmail.textContent = 'Enviaremos a confirmação, o ingresso e as instruções de acesso para este e-mail.';
+                        }
                         alertaDest.className = 'alert alert-danger border mb-3 py-2 px-3 small';
                         alertaDest.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i> ' + data.mensagem;
                         alertaDest.classList.remove('d-none');
                         checarCampoCpf();
                     } else {
+                        if (helpEmail) {
+                            helpEmail.textContent = 'Enviaremos a confirmação, o ingresso e as instruções de acesso para este e-mail.';
+                        }
                         alertaDest.className = 'alert alert-warning border mb-3 py-2 px-3 small';
                         alertaDest.innerHTML = '<i class="bi bi-exclamation-circle me-1"></i> ' + (data.mensagem || 'Não foi possível consultar o cadastro.');
                         alertaDest.classList.remove('d-none');
@@ -835,6 +846,9 @@
                     destinatarioEhMesmoUsuario = false;
                     emailCadastradoDestinatario = '';
                     emailMascaradoCadastrado = '';
+                    if (helpEmail) {
+                        helpEmail.textContent = 'Enviaremos a confirmação, o ingresso e as instruções de acesso para este e-mail.';
+                    }
                 }
             });
 

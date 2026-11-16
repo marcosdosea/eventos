@@ -2638,7 +2638,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsTrue((bool)json["sucesso"]!);
             Assert.IsTrue((bool)json["existe"]!);
             Assert.AreEqual("Amigo Teste", (string)json["nome"]!);
-            Assert.AreEqual("amigo@gmail.com", (string)json["email"]!);
+            Assert.IsNull(json["email"]);
+            Assert.AreEqual("a***o@gmail.com", (string)json["emailMascarado"]!);
         }
 
         [TestMethod()]

@@ -887,7 +887,6 @@ namespace EventoWeb.Controllers
                         nome = nomeCracha,
                         nomeCracha = nomeCracha,
                         nomeCompleto = pessoa.Nome,
-                        email = pessoa.Email,
                         emailMascarado,
                         mensagem = $"Participante já cadastrado: {pessoa.Nome}."
                     });
