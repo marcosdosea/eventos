@@ -113,21 +113,7 @@
                 <div style="font-size: 16px; font-weight: bold; color: #111;">{{DescricaoIngresso}}</div>
             </div>
 
-            <p style="font-size: 15px; color: #444;">Para visualizar seu ingresso, QR Code e credencial, acesse a plataforma com as seguintes credenciais:</p>
-
-            <div style="background-color: #f9f9f9; border: 1px solid #e5e5e5; border-radius: 6px; padding: 15px 20px; margin: 15px 0;">
-                <div class="cred-item"><strong>Usuário (CPF):</strong> {{Cpf}}</div>
-                <div class="cred-item"><strong>Senha Provisória:</strong> <code style="background: #eef; padding: 2px 6px; border-radius: 3px; font-weight: bold; color: #0A2FE2;">{{Senha}}</code></div>
-                <small style="color: #666; display: block; margin-top: 8px;">* Caso você já tenha uma senha cadastrada no Boralá, sua senha pessoal continua a mesma.</small>
-            </div>
-
-            <div style="text-align: center; margin: 25px 0;">
-                <a href="{{LinkLogin}}" class="btn">Acessar Meus Ingressos</a>
-            </div>
-
-            <p style="font-size: 13px; color: #777; margin-top: 25px;">
-                💡 <em>Dica: No seu primeiro acesso, recomendamos que você altere sua senha para uma de sua preferência no menu de perfil.</em>
-            </p>
+            {{BlocoAcesso}}
         </main>
 
         <footer>

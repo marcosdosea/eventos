@@ -796,6 +796,10 @@ namespace EventoWeb.Controllers
 
             try
             {
+                var cpfAmigoLimpo = Methods.RemoveNaoNumericos(model.CpfAmigo);
+                var destinatarioExistente = _pessoaService?.GetByCpf(cpfAmigoLimpo) ?? _pessoaService?.GetByCpf(model.CpfAmigo);
+                bool ehNovoUsuario = (destinatarioExistente == null);
+
                 _inscricaoService.TransferirIngresso(
                     model.IdInscricao ?? 0,
                     model.CpfAmigo,
@@ -804,9 +808,15 @@ namespace EventoWeb.Controllers
                     username,
                     model.IdSubevento);
 
-                TempData["ParticipanteSuccessMessage"] = $"Ingresso transferido com sucesso para {model.NomeAmigo.Trim()}! Um e-mail com as instruções de acesso foi enviado para {model.EmailAmigo.Trim()}.";
-
-                await EnviarEmailTransferenciaAsync(model, username);
+                bool emailEnviado = await EnviarEmailTransferenciaAsync(model, username, ehNovoUsuario);
+                if (emailEnviado)
+                {
+                    TempData["ParticipanteSuccessMessage"] = $"Ingresso transferido com sucesso para {model.NomeAmigo.Trim()}! Um e-mail com as instruções de acesso foi enviado para {model.EmailAmigo.Trim()}.";
+                }
+                else
+                {
+                    TempData["ParticipanteSuccessMessage"] = $"Ingresso transferido com sucesso para {model.NomeAmigo.Trim()}! Porém, não foi possível enviar o e-mail de notificação neste momento.";
+                }
             }
             catch (ArgumentException ex)
             {
@@ -905,9 +915,9 @@ namespace EventoWeb.Controllers
             }
         }
 
-        private async Task EnviarEmailTransferenciaAsync(TransferirIngressoModel model, string usernameOrigem)
+        private async Task<bool> EnviarEmailTransferenciaAsync(TransferirIngressoModel model, string usernameOrigem, bool ehNovoUsuario)
         {
-            if (_emailSender == null) return;
+            if (_emailSender == null) return false;
 
             try
             {
@@ -960,6 +970,32 @@ namespace EventoWeb.Controllers
                 }
                 catch { }
 
+                string blocoAcesso;
+                if (ehNovoUsuario)
+                {
+                    blocoAcesso = $@"
+                        <p style='font-size: 15px; color: #444;'>Para visualizar seu ingresso, QR Code e credencial, acesse a plataforma com as seguintes credenciais provisórias:</p>
+                        <div style='background-color: #f9f9f9; border: 1px solid #e5e5e5; border-radius: 6px; padding: 15px 20px; margin: 15px 0;'>
+                            <div class='cred-item'><strong>Usuário (CPF):</strong> {cpfFormatado}</div>
+                            <div class='cred-item'><strong>Senha Provisória:</strong> <code style='background: #eef; padding: 2px 6px; border-radius: 3px; font-weight: bold; color: #0A2FE2;'>Temp@1234!</code></div>
+                            <small style='color: #666; display: block; margin-top: 8px;'>No seu primeiro acesso, recomendamos alterar sua senha no menu de perfil.</small>
+                        </div>
+                        <div style='text-align: center; margin: 25px 0;'>
+                            <a href='{linkLogin}' class='btn'>Acessar Meus Ingressos</a>
+                        </div>";
+                }
+                else
+                {
+                    blocoAcesso = $@"
+                        <p style='font-size: 15px; color: #444;'>O ingresso já foi vinculado à sua conta!</p>
+                        <div style='background-color: #f0f4ff; border: 1px solid #d0d7de; border-radius: 6px; padding: 15px 20px; margin: 15px 0;'>
+                            <p style='margin: 0; font-size: 15px; color: #333;'>Como você já possui cadastro no Boralá, basta entrar com seu <strong>CPF ({cpfFormatado})</strong> e sua <strong>senha habitual</strong> para visualizar seu ingresso, QR Code e credencial.</p>
+                        </div>
+                        <div style='text-align: center; margin: 25px 0;'>
+                            <a href='{linkLogin}' class='btn'>Acessar Meus Ingressos</a>
+                        </div>";
+                }
+
                 string html = "";
                 string caminhoTemplate = _environment != null && !string.IsNullOrEmpty(_environment.WebRootPath)
                     ? Path.Combine(_environment.WebRootPath, "templates", "EmailTransferenciaIngresso.html")
@@ -973,8 +1009,9 @@ namespace EventoWeb.Controllers
                         .Replace("{{NomeRemetente}}", nomeRemetente)
                         .Replace("{{DescricaoIngresso}}", descricaoIngresso)
                         .Replace("{{Cpf}}", cpfFormatado)
-                        .Replace("{{Senha}}", "Temp@1234!")
-                        .Replace("{{LinkLogin}}", linkLogin);
+                        .Replace("{{Senha}}", ehNovoUsuario ? "Temp@1234!" : "")
+                        .Replace("{{LinkLogin}}", linkLogin)
+                        .Replace("{{BlocoAcesso}}", blocoAcesso);
                 }
                 else
                 {
@@ -983,18 +1020,17 @@ namespace EventoWeb.Controllers
                             <h2>Olá, {model.NomeAmigo.Trim()}! 🎉</h2>
                             <p><strong>{nomeRemetente}</strong> transferiu um ingresso para você no <strong>Boralá</strong>!</p>
                             <p><strong>Ingresso:</strong> {descricaoIngresso}</p>
-                            <div style='background: #f4f4f4; padding: 15px; border-radius: 5px; margin: 15px 0;'>
-                                <p><strong>Usuário (CPF):</strong> {cpfFormatado}</p>
-                                <p><strong>Senha Provisória:</strong> Temp@1234!</p>
-                            </div>
-                            <p><a href='{linkLogin}' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;'>Acessar Meus Ingressos</a></p>
+                            {blocoAcesso}
                         </div>";
                 }
 
                 await _emailSender.SendEmailAsync(model.EmailAmigo.Trim(), "Você recebeu um ingresso no Boralá! 🎉", html);
+                return true;
             }
-            catch
+            catch (Exception ex)
             {
+                System.Diagnostics.Trace.TraceError($"Erro ao enviar e-mail de transferência: {ex.Message}");
+                return false;
             }
         }
     }

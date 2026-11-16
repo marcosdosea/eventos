@@ -989,5 +989,23 @@ namespace Service.Tests
 
             _inscricaoService.TransferirIngresso(0, "040.268.930-57", "Amigo Existente", "amigoexistente@gmail.com", "12246232367", idSubevento: 32);
         }
+
+        [TestMethod()]
+        public void TransferirIngressoTest_IngressoInvalido_NaoCriaPessoaOrfaNoBanco()
+        {
+            var cpfNovoInexistente = "86204930516";
+            Assert.IsFalse(_context.Pessoas.Any(p => p.Cpf == cpfNovoInexistente));
+
+            try
+            {
+                _inscricaoService.TransferirIngresso(99999, cpfNovoInexistente, "Novo Destinatario", "novo.destinatario@email.com", "12246232367");
+                Assert.Fail("Deveria ter lançado ArgumentException para ingresso inexistente.");
+            }
+            catch (ArgumentException)
+            {
+            }
+
+            Assert.IsFalse(_context.Pessoas.Any(p => p.Cpf == cpfNovoInexistente), "Pessoa não deve ser criada no banco quando a validação do ingresso falhar.");
+        }
     }
 }

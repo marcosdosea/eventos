@@ -404,48 +404,83 @@ namespace Service
             if (cpfDestinoLimpo == cpfOrigemLimpo || cpfDestino == pessoaOrigem.Cpf)
                 throw new ArgumentException("Não é possível transferir um ingresso para você mesmo.");
 
+            Inscricaopessoasubevento? subInscricao = null;
+            Inscricaopessoaevento? inscricao = null;
+
+            if (idSubevento.HasValue && idSubevento.Value > 0)
+            {
+                subInscricao = _context.Inscricaopessoasubeventos
+                    .Include(s => s.IdSubEventoNavigation)
+                    .FirstOrDefault(s => s.IdPessoa == pessoaOrigem.Id && s.IdSubEvento == idSubevento.Value);
+
+                if (subInscricao == null)
+                    throw new ArgumentException("Inscrição no subevento não encontrada ou não pertence ao usuário.");
+
+                if (subInscricao.Status == "C")
+                    throw new InvalidOperationException("Não é possível transferir um subevento cancelado.");
+
+                var sub = subInscricao.IdSubEventoNavigation;
+                bool subeventoJaOcorreu = (sub != null) && (
+                    (sub.DataFim != DateTime.MinValue && sub.DataFim < DateTime.Now) ||
+                    (sub.DataFim == DateTime.MinValue && sub.DataInicio != DateTime.MinValue && sub.DataInicio < DateTime.Now) ||
+                    sub.Status == "F" || sub.Status == "I"
+                );
+
+                if (subeventoJaOcorreu)
+                    throw new InvalidOperationException("Não é possível transferir ingresso de um subevento que já aconteceu ou foi encerrado.");
+            }
+            else if (idInscricao > 0)
+            {
+                inscricao = _context.Inscricaopessoaeventos
+                    .Include(i => i.IdEventoNavigation)
+                    .FirstOrDefault(i => i.Id == idInscricao && i.IdPessoa == pessoaOrigem.Id);
+
+                if (inscricao == null)
+                    throw new ArgumentException("Inscrição não encontrada ou não pertence ao usuário.");
+
+                if (inscricao.Status == "C")
+                    throw new InvalidOperationException("Não é possível transferir um ingresso cancelado.");
+
+                var ev = inscricao.IdEventoNavigation;
+                bool eventoJaOcorreu = (ev != null) && (
+                    (ev.DataFim.HasValue && ev.DataFim.Value < DateTime.Now) ||
+                    (!ev.DataFim.HasValue && ev.DataInicio.HasValue && ev.DataInicio.Value < DateTime.Now) ||
+                    ev.Status == "F" || ev.Status == "C"
+                );
+
+                if (eventoJaOcorreu)
+                    throw new InvalidOperationException("Não é possível transferir ingresso de um evento que já aconteceu ou foi encerrado.");
+            }
+            else
+            {
+                throw new ArgumentException("Nenhum ingresso selecionado para transferência.");
+            }
+
             var cpfDestinoFormatado = Methods.PatternCpf(cpfDestinoLimpo);
             var amigo = _context.Pessoas.FirstOrDefault(p =>
                 p.Cpf == cpfDestinoLimpo || p.Cpf == cpfDestino || (cpfDestinoFormatado != null && p.Cpf == cpfDestinoFormatado));
 
-            if (amigo == null)
+            if (amigo != null)
             {
-                var pessoaOutroCpf = _context.Pessoas.FirstOrDefault(p =>
-                    p.Email != null && p.Email.ToLower() == emailLimpo &&
-                    p.Cpf != cpfDestinoLimpo && (cpfDestinoFormatado == null || p.Cpf != cpfDestinoFormatado));
+                if (amigo.Id == pessoaOrigem.Id)
+                    throw new ArgumentException("Não é possível transferir um ingresso para você mesmo.");
 
-                if (pessoaOutroCpf != null)
-                    throw new ArgumentException("O e-mail informado já está cadastrado para outro CPF no sistema. Verifique os dados do destinatário.");
-
-                if (_userManager != null)
+                if (subInscricao != null)
                 {
-                    var userComEmail = _userManager.FindByEmailAsync(emailLimpo).GetAwaiter().GetResult();
-                    if (userComEmail != null && userComEmail.UserName != cpfDestinoLimpo)
-                        throw new ArgumentException("O e-mail informado já está vinculado a outro CPF no sistema. Verifique os dados do destinatário.");
+                    var amigoJaInscrito = _context.Inscricaopessoasubeventos
+                        .Any(s => s.IdPessoa == amigo.Id && s.IdSubEvento == idSubevento!.Value && s.Status != "C");
+                    if (amigoJaInscrito)
+                        throw new InvalidOperationException("O destinatário já possui uma inscrição ativa neste subevento.");
                 }
 
-                var nomeTrim = nomeDestino.Trim();
-                if (nomeTrim.Length > 50)
-                    nomeTrim = nomeTrim.Substring(0, 50);
-
-                var nomeCracha = nomeTrim.Length > 20 ? nomeTrim.Substring(0, 20) : nomeTrim;
-                if (string.IsNullOrWhiteSpace(nomeCracha))
-                    nomeCracha = "Participante";
-
-                amigo = new Pessoa
+                if (inscricao != null)
                 {
-                    Nome = nomeTrim,
-                    NomeCracha = nomeCracha,
-                    Cpf = cpfDestinoLimpo,
-                    Sexo = "N",
-                    Email = emailLimpo
-                };
+                    var amigoJaTemEvento = _context.Inscricaopessoaeventos
+                        .Any(i => i.IdPessoa == amigo.Id && i.IdEvento == inscricao.IdEvento && i.Status != "C");
+                    if (amigoJaTemEvento)
+                        throw new InvalidOperationException("O destinatário já possui uma inscrição ativa neste evento.");
+                }
 
-                _context.Pessoas.Add(amigo);
-                _context.SaveChanges();
-            }
-            else
-            {
                 if (!string.IsNullOrWhiteSpace(amigo.Email))
                 {
                     var emailCadastrado = amigo.Email.Trim().ToLowerInvariant();
@@ -491,91 +526,95 @@ namespace Service
                 {
                     amigo.NomeCracha = nomeCrachaFinal;
                 }
-            }
 
-            if (_userManager != null)
-            {
-                var existingIdentity = _userManager.FindByNameAsync(cpfDestinoLimpo).GetAwaiter().GetResult();
-                if (existingIdentity == null)
+                if (_userManager != null)
                 {
-                    var novoUsuario = new UsuarioIdentity
+                    var existingIdentity = _userManager.FindByNameAsync(cpfDestinoLimpo).GetAwaiter().GetResult();
+                    if (existingIdentity != null && (string.IsNullOrWhiteSpace(existingIdentity.Email) || existingIdentity.Email.EndsWith("@borala.com.br")))
                     {
-                        UserName = cpfDestinoLimpo,
-                        NormalizedUserName = cpfDestinoLimpo.ToUpper(),
-                        Email = emailLimpo,
-                        EmailConfirmed = true
-                    };
-                    _userManager.CreateAsync(novoUsuario, "Temp@1234!").GetAwaiter().GetResult();
-                    _userManager.AddToRoleAsync(novoUsuario, "USUARIO").GetAwaiter().GetResult();
+                        existingIdentity.Email = emailLimpo;
+                        existingIdentity.NormalizedEmail = emailLimpo.ToUpper();
+                        _userManager.UpdateAsync(existingIdentity).GetAwaiter().GetResult();
+                    }
                 }
-                else if (string.IsNullOrWhiteSpace(existingIdentity.Email) || existingIdentity.Email.EndsWith("@borala.com.br"))
+            }
+            else
+            {
+                var pessoaOutroCpf = _context.Pessoas.FirstOrDefault(p =>
+                    p.Email != null && p.Email.ToLower() == emailLimpo &&
+                    p.Cpf != cpfDestinoLimpo && (cpfDestinoFormatado == null || p.Cpf != cpfDestinoFormatado));
+
+                if (pessoaOutroCpf != null)
+                    throw new ArgumentException("O e-mail informado já está cadastrado para outro CPF no sistema. Verifique os dados do destinatário.");
+
+                if (_userManager != null)
                 {
-                    existingIdentity.Email = emailLimpo;
-                    _userManager.UpdateAsync(existingIdentity).GetAwaiter().GetResult();
+                    var userComEmail = _userManager.FindByEmailAsync(emailLimpo).GetAwaiter().GetResult();
+                    if (userComEmail != null && userComEmail.UserName != cpfDestinoLimpo)
+                        throw new ArgumentException("O e-mail informado já está vinculado a outro CPF no sistema. Verifique os dados do destinatário.");
+                }
+
+                var nomeTrim = nomeDestino.Trim();
+                if (nomeTrim.Length > 50)
+                    nomeTrim = nomeTrim.Substring(0, 50);
+
+                var nomeCracha = nomeTrim.Length > 20 ? nomeTrim.Substring(0, 20) : nomeTrim;
+                if (string.IsNullOrWhiteSpace(nomeCracha))
+                    nomeCracha = "Participante";
+
+                amigo = new Pessoa
+                {
+                    Nome = nomeTrim,
+                    NomeCracha = nomeCracha,
+                    Cpf = cpfDestinoLimpo,
+                    Sexo = "N",
+                    Email = emailLimpo
+                };
+
+                _context.Pessoas.Add(amigo);
+                _context.SaveChanges();
+
+                if (_userManager != null)
+                {
+                    var existingIdentity = _userManager.FindByNameAsync(cpfDestinoLimpo).GetAwaiter().GetResult();
+                    if (existingIdentity == null)
+                    {
+                        var novoUsuario = new UsuarioIdentity
+                        {
+                            UserName = cpfDestinoLimpo,
+                            NormalizedUserName = cpfDestinoLimpo.ToUpper(),
+                            Email = emailLimpo,
+                            NormalizedEmail = emailLimpo.ToUpper(),
+                            EmailConfirmed = true
+                        };
+                        var createResult = _userManager.CreateAsync(novoUsuario, "Temp@1234!").GetAwaiter().GetResult();
+                        if (!createResult.Succeeded)
+                        {
+                            _context.Pessoas.Remove(amigo);
+                            _context.SaveChanges();
+                            var errors = string.Join("; ", createResult.Errors.Select(e => e.Description));
+                            throw new InvalidOperationException($"Não foi possível criar o usuário no sistema: {errors}");
+                        }
+
+                        var roleResult = _userManager.AddToRoleAsync(novoUsuario, "USUARIO").GetAwaiter().GetResult();
+                        if (!roleResult.Succeeded)
+                        {
+                            var errors = string.Join("; ", roleResult.Errors.Select(e => e.Description));
+                            System.Diagnostics.Trace.TraceWarning($"Aviso ao atribuir papel USUARIO para {cpfDestinoLimpo}: {errors}");
+                        }
+                    }
                 }
             }
 
-            if (amigo.Id == pessoaOrigem.Id)
-                throw new ArgumentException("Não é possível transferir um ingresso para você mesmo.");
-
-            if (idSubevento.HasValue && idSubevento.Value > 0)
+            if (subInscricao != null)
             {
-                var subInscricao = _context.Inscricaopessoasubeventos
-                    .Include(s => s.IdSubEventoNavigation)
-                    .FirstOrDefault(s => s.IdPessoa == pessoaOrigem.Id && s.IdSubEvento == idSubevento.Value);
-
-                if (subInscricao == null)
-                    throw new ArgumentException("Inscrição no subevento não encontrada ou não pertence ao usuário.");
-
-                if (subInscricao.Status == "C")
-                    throw new InvalidOperationException("Não é possível transferir um subevento cancelado.");
-
-                var sub = subInscricao.IdSubEventoNavigation;
-                bool subeventoJaOcorreu = (sub != null) && (
-                    (sub.DataFim != DateTime.MinValue && sub.DataFim < DateTime.Now) ||
-                    (sub.DataFim == DateTime.MinValue && sub.DataInicio != DateTime.MinValue && sub.DataInicio < DateTime.Now) ||
-                    sub.Status == "F" || sub.Status == "I"
-                );
-
-                if (subeventoJaOcorreu)
-                    throw new InvalidOperationException("Não é possível transferir ingresso de um subevento que já aconteceu ou foi encerrado.");
-
-                var amigoJaInscrito = _context.Inscricaopessoasubeventos
-                    .Any(s => s.IdPessoa == amigo.Id && s.IdSubEvento == idSubevento.Value && s.Status != "C");
-                if (amigoJaInscrito)
-                    throw new InvalidOperationException("O destinatário já possui uma inscrição ativa neste subevento.");
-
                 TransferirRegistroSubEvento(subInscricao, amigo.Id);
                 _context.SaveChanges();
                 return true;
             }
-            else if (idInscricao > 0)
+
+            if (inscricao != null)
             {
-                var inscricao = _context.Inscricaopessoaeventos
-                    .Include(i => i.IdEventoNavigation)
-                    .FirstOrDefault(i => i.Id == idInscricao && i.IdPessoa == pessoaOrigem.Id);
-
-                if (inscricao == null)
-                    throw new ArgumentException("Inscrição não encontrada ou não pertence ao usuário.");
-
-                if (inscricao.Status == "C")
-                    throw new InvalidOperationException("Não é possível transferir um ingresso cancelado.");
-
-                var ev = inscricao.IdEventoNavigation;
-                bool eventoJaOcorreu = (ev != null) && (
-                    (ev.DataFim.HasValue && ev.DataFim.Value < DateTime.Now) ||
-                    (!ev.DataFim.HasValue && ev.DataInicio.HasValue && ev.DataInicio.Value < DateTime.Now) ||
-                    ev.Status == "F" || ev.Status == "C"
-                );
-
-                if (eventoJaOcorreu)
-                    throw new InvalidOperationException("Não é possível transferir ingresso de um evento que já aconteceu ou foi encerrado.");
-
-                var amigoJaTemEvento = _context.Inscricaopessoaeventos
-                    .Any(i => i.IdPessoa == amigo.Id && i.IdEvento == inscricao.IdEvento && i.Status != "C");
-                if (amigoJaTemEvento)
-                    throw new InvalidOperationException("O destinatário já possui uma inscrição ativa neste evento.");
-
                 inscricao.IdPessoa = amigo.Id;
                 inscricao.NomeCracha = !string.IsNullOrWhiteSpace(amigo.NomeCracha)
                     ? amigo.NomeCracha
@@ -584,10 +623,8 @@ namespace Service
                 _context.SaveChanges();
                 return true;
             }
-            else
-            {
-                throw new ArgumentException("Nenhum ingresso selecionado para transferência.");
-            }
+
+            return false;
         }
 
         private void TransferirRegistroSubEvento(Inscricaopessoasubevento subInscricao, uint novoIdPessoa)
