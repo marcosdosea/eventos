@@ -13,5 +13,9 @@ public interface ParticipanteService {
 
     ParticipanteResponseDTO buscarPorCpf(String cpf);
 
+    ParticipanteResponseDTO buscarPorCpf(String cpf, Long eventoId);
+
     List<ParticipanteResponseDTO> listar();
+
+    List<ParticipanteResponseDTO> listar(Long eventoId, Long subeventoId);
 }

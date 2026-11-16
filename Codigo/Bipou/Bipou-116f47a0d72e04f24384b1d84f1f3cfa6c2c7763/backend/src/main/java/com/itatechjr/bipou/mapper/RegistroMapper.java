@@ -19,10 +19,13 @@ public class RegistroMapper {
         return Registro.builder()
                 .leituraId(dto.leituraId())
                 .participante(participante)
+                .eventoId(dto.eventoId())
+                .subeventoId(dto.subeventoId())
                 .tipoAcao(dto.tipoAcao())
                 .dataHora(dataHoraServidor)
                 .dataHoraLidaNoCelular(dto.dataHoraLidaNoCelular())
                 .dispositivoId(dto.dispositivoId().strip())
+                .operadorUsuario(normalizarOperador(dto.operadorUsuario()))
                 .build();
     }
 
@@ -32,10 +35,21 @@ public class RegistroMapper {
                 registro.getLeituraId(),
                 registro.getParticipante().getId(),
                 registro.getParticipante().getNome(),
+                registro.getEventoId(),
+                registro.getSubeventoId(),
                 registro.getTipoAcao(),
                 registro.getDataHora(),
                 registro.getDataHoraLidaNoCelular(),
-                registro.getDispositivoId()
+                registro.getDispositivoId(),
+                registro.getOperadorUsuario()
         );
+    }
+
+    public static String normalizarOperador(String operadorUsuario) {
+        if (operadorUsuario == null) {
+            return null;
+        }
+        String tratado = operadorUsuario.strip();
+        return tratado.isEmpty() ? null : tratado;
     }
 }

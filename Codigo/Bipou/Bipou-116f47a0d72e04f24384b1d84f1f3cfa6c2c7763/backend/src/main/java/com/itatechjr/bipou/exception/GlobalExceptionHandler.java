@@ -21,7 +21,10 @@ public class GlobalExceptionHandler {
 
     private final Clock clock;
 
-    @ExceptionHandler(CpfJaCadastradoException.class)
+    @ExceptionHandler({
+            CpfJaCadastradoException.class,
+            PessoaBoralaJaCadastradaException.class
+    })
     public ResponseEntity<ErroResponseDTO> tratarCadastroDuplicado(
             RuntimeException exception,
             HttpServletRequest request
@@ -49,9 +52,12 @@ public class GlobalExceptionHandler {
         return criarResposta(HttpStatus.CONFLICT, exception.getMessage(), request, Map.of());
     }
 
-    @ExceptionHandler(TransicaoAcaoInvalidaException.class)
+    @ExceptionHandler({
+            TransicaoAcaoInvalidaException.class,
+            ParticipanteNaoInscritoException.class
+    })
     public ResponseEntity<ErroResponseDTO> tratarTransicaoInvalida(
-            TransicaoAcaoInvalidaException exception,
+            RuntimeException exception,
             HttpServletRequest request
     ) {
         return criarResposta(HttpStatus.UNPROCESSABLE_CONTENT, exception.getMessage(), request, Map.of());

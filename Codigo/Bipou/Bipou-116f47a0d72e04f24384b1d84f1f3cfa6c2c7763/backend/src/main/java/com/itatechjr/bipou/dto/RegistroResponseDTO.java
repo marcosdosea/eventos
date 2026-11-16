@@ -10,9 +10,12 @@ public record RegistroResponseDTO(
         UUID leituraId,
         UUID participanteId,
         String participanteNome,
+        Long eventoId,
+        Long subeventoId,
         TipoAcao tipoAcao,
         OffsetDateTime dataHora,
         OffsetDateTime dataHoraLidaNoCelular,
-        String dispositivoId
+        String dispositivoId,
+        String operadorUsuario
 ) {
 }

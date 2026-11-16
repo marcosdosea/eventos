@@ -30,6 +30,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 class RegistroConcorrenciaIntegrationTests {
 
+    private static final Long EVENTO_ID = 15L;
+
     @Autowired
     private RegistroService registroService;
 
@@ -48,6 +50,7 @@ class RegistroConcorrenciaIntegrationTests {
         participante = participanteRepository.saveAndFlush(Participante.builder()
                 .nome("Participante Concorrência")
                 .cpf(new Cpf(cpf))
+                .eventoId(EVENTO_ID)
                 .build());
     }
 
@@ -134,8 +137,11 @@ class RegistroConcorrenciaIntegrationTests {
         return new LeituraQrCodeDTO(
                 leituraId,
                 participante.getId(),
+                EVENTO_ID,
+                null,
                 TipoAcao.ENTRADA,
                 dispositivoId,
+                "operador.portaria",
                 OffsetDateTime.now(ZoneOffset.UTC)
         );
     }
