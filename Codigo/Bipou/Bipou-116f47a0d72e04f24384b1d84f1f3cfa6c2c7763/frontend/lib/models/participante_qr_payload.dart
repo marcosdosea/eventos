@@ -35,24 +35,22 @@ final class ParticipanteQrPayload {
     String? hash,
     String? secretKey,
   }) {
-    final cpfLimpo = cpf.replaceAll(RegExp(r'\D'), '');
-    if (cpfLimpo.length != 11) {
-      throw ArgumentError.value(cpf, 'cpf', 'CPF deve conter 11 digitos');
-    }
-
+    final cpfLimpo = sanitizarCpf(cpf);
     final sidOrdenado = sid.toSet().toList()..sort();
-    final hashFinal = hash ??
-        (secretKey != null
-            ? calcularHash(
-                v: 1,
-                pid: pid,
-                cpf: cpfLimpo,
-                nome: nome.trim(),
-                eid: eid,
-                sid: sidOrdenado,
-                secretKey: secretKey,
-              )
-            : '');
+    final chave = (secretKey == null || secretKey.trim().isEmpty)
+        ? obterChavePadraoEvento(eid)
+        : secretKey;
+    final hashFinal = (hash != null && hash.trim().isNotEmpty)
+        ? hash.trim().toLowerCase()
+        : calcularHash(
+            v: 1,
+            pid: pid,
+            cpf: cpfLimpo,
+            nome: nome.trim(),
+            eid: eid,
+            sid: sidOrdenado,
+            secretKey: chave,
+          );
 
     final deterministicId = _gerarUuidV5(pid);
 
@@ -104,7 +102,7 @@ final class ParticipanteQrPayload {
             nome: nome,
             eid: eid,
             sid: sids,
-            hash: '',
+            secretKey: secretKey,
           );
         }
       }
@@ -126,6 +124,10 @@ final class ParticipanteQrPayload {
     if ((decoded.containsKey('v') && decoded['v'] == 1) ||
         (decoded.containsKey('pid') && decoded.containsKey('eid'))) {
       final v = decoded['v'] is int ? decoded['v'] as int : 1;
+      if (v != 1) {
+        throw const FormatException('Versao do QR Code nao suportada.');
+      }
+
       final rawPid = decoded['pid'];
       final rawCpf = decoded['cpf'];
       final rawNome = decoded['nome'];
@@ -139,16 +141,16 @@ final class ParticipanteQrPayload {
 
       final pid = rawPid.toInt();
       final eid = rawEid.toInt();
+      if (pid <= 0 || eid <= 0) {
+        throw const FormatException('QR Code invalido: identificadores invalidos.');
+      }
+
       final nome = rawNome.trim();
       if (nome.isEmpty || nome.length > 150) {
         throw const FormatException('QR Code invalido: nome invalido.');
       }
 
-      final cpfStr = rawCpf is String ? rawCpf : '';
-      final cpfLimpo = cpfStr.replaceAll(RegExp(r'\D'), '');
-      if (cpfLimpo.length != 11) {
-        throw const FormatException('QR Code invalido: CPF deve conter 11 digitos.');
-      }
+      final cpfLimpo = sanitizarCpf(rawCpf is String ? rawCpf : null);
 
       final sids = <int>[];
       if (rawSid is List) {
@@ -158,22 +160,24 @@ final class ParticipanteQrPayload {
           }
         }
       }
+      final sidOrdenado = sids.toSet().toList()..sort();
 
       final hashStr = rawHash is String ? rawHash.trim() : '';
+      final chave = (secretKey == null || secretKey.trim().isEmpty)
+          ? obterChavePadraoEvento(eid)
+          : secretKey;
 
-      if (secretKey != null) {
-        final hashEsperado = calcularHash(
-          v: v,
-          pid: pid,
-          cpf: cpfLimpo,
-          nome: nome,
-          eid: eid,
-          sid: sids,
-          secretKey: secretKey,
-        );
-        if (hashStr.toLowerCase() != hashEsperado.toLowerCase()) {
-          throw const FormatException('Assinatura do QR Code (hash) invalida.');
-        }
+      final hashEsperado = calcularHash(
+        v: v,
+        pid: pid,
+        cpf: cpfLimpo,
+        nome: nome,
+        eid: eid,
+        sid: sidOrdenado,
+        secretKey: chave,
+      );
+      if (hashStr.isEmpty || hashStr.toLowerCase() != hashEsperado.toLowerCase()) {
+        throw const FormatException('Assinatura do QR Code (hash) invalida.');
       }
 
       return ParticipanteQrPayload.v1(
@@ -181,8 +185,9 @@ final class ParticipanteQrPayload {
         cpf: cpfLimpo,
         nome: nome,
         eid: eid,
-        sid: sids,
-        hash: hashStr,
+        sid: sidOrdenado,
+        hash: hashEsperado,
+        secretKey: chave,
       );
     }
 
@@ -209,6 +214,20 @@ final class ParticipanteQrPayload {
     return uuid.v5(Uuid.NAMESPACE_URL, 'borala:pessoa:$pid');
   }
 
+  /// Sanitiza o CPF mantendo exatamente 11 dígitos numéricos (alinhado ao Boralá)
+  static String sanitizarCpf(String? cpf) {
+    if (cpf == null || cpf.trim().isEmpty) {
+      return '00000000000';
+    }
+    var apenasDigitos = cpf.replaceAll(RegExp(r'\D'), '');
+    if (apenasDigitos.length > 11) {
+      apenasDigitos = apenasDigitos.substring(0, 11);
+    } else if (apenasDigitos.length < 11) {
+      apenasDigitos = apenasDigitos.padLeft(11, '0');
+    }
+    return apenasDigitos;
+  }
+
   /// Gera a chave padrão derivada para o evento
   static String obterChavePadraoEvento(int idEvento, [String? salt]) {
     final prefixo = (salt == null || salt.trim().isEmpty) ? 'borala:evento' : salt.trim();
@@ -225,7 +244,7 @@ final class ParticipanteQrPayload {
     required List<int> sid,
   }) {
     final sidOrdenado = sid.toSet().toList()..sort();
-    final cpfLimpo = cpf.replaceAll(RegExp(r'\D'), '').padLeft(11, '0');
+    final cpfLimpo = sanitizarCpf(cpf);
     return '$v|$pid|$cpfLimpo|${nome.trim()}|$eid|${sidOrdenado.join(',')}';
   }
 
@@ -237,8 +256,11 @@ final class ParticipanteQrPayload {
     required String nome,
     required int eid,
     required List<int> sid,
-    required String secretKey,
+    String? secretKey,
   }) {
+    final chave = (secretKey == null || secretKey.trim().isEmpty)
+        ? obterChavePadraoEvento(eid)
+        : secretKey;
     final canonical = obterStringCanonizada(
       v: v,
       pid: pid,
@@ -247,7 +269,7 @@ final class ParticipanteQrPayload {
       eid: eid,
       sid: sid,
     );
-    final keyBytes = utf8.encode(secretKey);
+    final keyBytes = utf8.encode(chave);
     final dataBytes = utf8.encode(canonical);
     final hmac = Hmac(sha256, keyBytes);
     final digest = hmac.convert(dataBytes);
@@ -255,11 +277,14 @@ final class ParticipanteQrPayload {
     return hex.length >= 8 ? hex.substring(0, 8) : hex;
   }
 
-  /// Valida se o hash bate com a chave secreta informada
-  bool validarHash(String secretKey) {
+  /// Valida se o hash bate com a chave secreta informada (ou chave padrão do evento)
+  bool validarHash([String? secretKey]) {
     if (!isV1 || hash == null || hash!.isEmpty || pid == null || eid == null || cpf == null) {
       return false;
     }
+    final chave = (secretKey == null || secretKey.trim().isEmpty)
+        ? obterChavePadraoEvento(eid!)
+        : secretKey;
     final esperado = calcularHash(
       v: v ?? 1,
       pid: pid!,
@@ -267,7 +292,7 @@ final class ParticipanteQrPayload {
       nome: nome,
       eid: eid!,
       sid: sid,
-      secretKey: secretKey,
+      secretKey: chave,
     );
     return hash!.toLowerCase() == esperado.toLowerCase();
   }

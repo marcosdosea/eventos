@@ -199,39 +199,20 @@ namespace EventoWebTests.Helpers
         }
 
         [TestMethod]
-        public void GerarArquivosDeImagemQrCodeParaTesteVisual()
+        public void ValidarPayload_NormalizaCpfEOrdenaDesduplicaSid()
         {
-            var pastaArtifacts = @"C:\Users\SANDRO\.gemini\antigravity\brain\e36ee904-d8f5-42df-b112-309e4c456830";
-            if (!System.IO.Directory.Exists(pastaArtifacts))
-            {
-                System.IO.Directory.CreateDirectory(pastaArtifacts);
-            }
+            const string jsonBruto = "{\"v\":1,\"pid\":1042,\"cpf\":\"123.456.789-01\",\"nome\":\"  Maria Santos  \",\"eid\":15,\"sid\":[43,42,42],\"hash\":\"58663eab\"}";
 
-            // 1. QR Code Válido (Golden Vector - Maria Santos)
-            var jsonValido = CrachaQrCodeHelper.GerarPayloadJson(
-                idPessoa: 1042,
-                cpf: "12345678901",
-                nome: "Maria Santos",
-                idEvento: 15,
-                subeventosIds: new List<uint> { 42, 43 },
-                secretKey: "chave_teste_123");
-            var bytesValido = Util.QrCodeGenerator.GenerateQr(jsonValido);
-            System.IO.File.WriteAllBytes(System.IO.Path.Combine(pastaArtifacts, "qrcode_valido_maria_santos.png"), bytesValido);
+            var sucesso = CrachaQrCodeHelper.ValidarPayload(jsonBruto, ChaveTeste, out var payload, out var erro);
 
-            // 2. QR Code Adulterado (Tentativa de Fraude - ID alterado para 9999 mantendo hash antigo)
-            const string jsonAdulterado = "{\"v\":1,\"pid\":9999,\"cpf\":\"12345678901\",\"nome\":\"Maria Santos\",\"eid\":15,\"sid\":[42,43],\"hash\":\"58663eab\"}";
-            var bytesAdulterado = Util.QrCodeGenerator.GenerateQr(jsonAdulterado);
-            System.IO.File.WriteAllBytes(System.IO.Path.Combine(pastaArtifacts, "qrcode_adulterado_fraude.png"), bytesAdulterado);
-
-            // 3. QR Code Demo Boralá (Cassiano Menezes - Evento 1)
-            var jsonCassiano = CrachaQrCodeHelper.GerarPayloadJson(
-                idPessoa: 1,
-                cpf: "04299988818",
-                nome: "Cassiano Menezes",
-                idEvento: 1,
-                subeventosIds: new List<uint>());
-            var bytesCassiano = Util.QrCodeGenerator.GenerateQr(jsonCassiano);
-            System.IO.File.WriteAllBytes(System.IO.Path.Combine(pastaArtifacts, "qrcode_borala_cassiano.png"), bytesCassiano);
+            Assert.IsTrue(sucesso);
+            Assert.IsNull(erro);
+            Assert.IsNotNull(payload);
+            Assert.AreEqual("12345678901", payload.Cpf);
+            Assert.AreEqual("Maria Santos", payload.Nome);
+            Assert.AreEqual(2, payload.Sid.Count);
+            Assert.AreEqual((uint)42, payload.Sid[0]);
+            Assert.AreEqual((uint)43, payload.Sid[1]);
         }
     }
 }

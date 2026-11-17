@@ -197,7 +197,7 @@ namespace EventoWeb.Controllers
                     foreach (var inscricao in inscricoesFiltradas)
                     {
                         var subeventosIdsPessoa = inscricoessub
-                            .Where(sub => sub.IdPessoa == inscricao.IdPessoa)
+                            .Where(sub => sub.IdPessoa == inscricao.IdPessoa && sub.Status != "C")
                             .Select(sub => sub.IdSubEvento)
                             .Distinct()
                             .ToList();
@@ -1011,13 +1011,24 @@ namespace EventoWeb.Controllers
             {
                 if (!inscricoes.Any())
                 {
+                    var demoParticipante = ObterParticipantesDemonstracao(model.IdEvento)
+                        .FirstOrDefault(d => d.IdPessoa == model.IdPessoa);
+                    var qrDemo = CrachaQrCodeHelper.GerarQrCodeBase64(
+                        model.IdPessoa,
+                        demoParticipante?.CpfPuro,
+                        nomeCracha,
+                        model.IdEvento,
+                        Enumerable.Empty<uint>());
+
                     return Json(new
                     {
                         sucesso = true,
                         idPessoa = model.IdPessoa,
                         nomeCompleto,
                         nomeCracha,
-                        qrCodeBase64 = GerarQrCodeSeguro($"[{model.IdPessoa}] [{nomeCracha}] [{model.IdEvento}]"),
+                        qrCodeBase64 = !string.IsNullOrEmpty(qrDemo)
+                            ? qrDemo
+                            : GerarQrCodeSeguro($"[{model.IdPessoa}] [{nomeCracha}] [{model.IdEvento}]"),
                         mensagem = "Dados do participante atualizados com sucesso!"
                     });
                 }
@@ -1065,7 +1076,7 @@ namespace EventoWeb.Controllers
             IEnumerable<Inscricaopessoasubevento>? subeventos)
         {
             var subeventosIdsPessoa = subeventos?
-                .Where(sub => sub.IdPessoa == ins.IdPessoa)
+                .Where(sub => sub.IdPessoa == ins.IdPessoa && sub.Status != "C")
                 .Select(sub => sub.IdSubEvento)
                 .Distinct()
                 .ToList() ?? new List<uint>();
@@ -1156,7 +1167,7 @@ namespace EventoWeb.Controllers
                     CodigoPresenca = $"BL - EVT - {ano} - 00142",
                     StatusApto = true,
                     StatusDescricao = "Apto",
-                    QrCodeBase64 = GerarQrCodeSeguro($"[1] [Cassiano Menezes] [{idEvento}] [#00142]"),
+                    QrCodeBase64 = CrachaQrCodeHelper.GerarQrCodeBase64(1, "04299988818", "Cassiano Menezes", idEvento, Enumerable.Empty<uint>()),
                     Selecionado = true
                 },
                 new ParticipanteCrachaItemModel
@@ -1174,7 +1185,7 @@ namespace EventoWeb.Controllers
                     CodigoPresenca = $"BL - EVT - {ano} - 00143",
                     StatusApto = true,
                     StatusDescricao = "Apto",
-                    QrCodeBase64 = GerarQrCodeSeguro($"[2] [Carlos E. M. Santos] [{idEvento}] [#00143]"),
+                    QrCodeBase64 = CrachaQrCodeHelper.GerarQrCodeBase64(2, "11988877745", "Carlos E. M. Santos", idEvento, Enumerable.Empty<uint>()),
                     Selecionado = true
                 },
                 new ParticipanteCrachaItemModel
@@ -1192,7 +1203,7 @@ namespace EventoWeb.Controllers
                     CodigoPresenca = $"BL - EVT - {ano} - 00144",
                     StatusApto = true,
                     StatusDescricao = "Apto",
-                    QrCodeBase64 = GerarQrCodeSeguro($"[3] [Mariana Silveira Rocha] [{idEvento}] [#00144]"),
+                    QrCodeBase64 = CrachaQrCodeHelper.GerarQrCodeBase64(3, "83277766601", "Mariana Silveira Rocha", idEvento, Enumerable.Empty<uint>()),
                     Selecionado = true
                 },
                 new ParticipanteCrachaItemModel
@@ -1210,7 +1221,7 @@ namespace EventoWeb.Controllers
                     CodigoPresenca = $"BL - EVT - {ano} - 00145",
                     StatusApto = true,
                     StatusDescricao = "Apto",
-                    QrCodeBase64 = GerarQrCodeSeguro($"[4] [Rafael Lima Mendes] [{idEvento}] [#00145]"),
+                    QrCodeBase64 = CrachaQrCodeHelper.GerarQrCodeBase64(4, "55466655590", "Rafael Lima Mendes", idEvento, Enumerable.Empty<uint>()),
                     Selecionado = true
                 },
                 new ParticipanteCrachaItemModel
@@ -1228,7 +1239,7 @@ namespace EventoWeb.Controllers
                     CodigoPresenca = $"BL - EVT - {ano} - 00146",
                     StatusApto = false,
                     StatusDescricao = "Pendente Foto",
-                    QrCodeBase64 = GerarQrCodeSeguro($"[5] [Júlia Prado Fontes] [{idEvento}] [#00146]"),
+                    QrCodeBase64 = CrachaQrCodeHelper.GerarQrCodeBase64(5, "90155544422", "Júlia Prado Fontes", idEvento, Enumerable.Empty<uint>()),
                     Selecionado = false
                 }
             };

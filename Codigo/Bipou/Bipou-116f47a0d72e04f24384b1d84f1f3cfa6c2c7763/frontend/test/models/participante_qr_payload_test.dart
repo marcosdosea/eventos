@@ -56,7 +56,28 @@ void main() {
       expect(hash, '58663eab');
     });
 
-    test('serializa e interpreta payload v1 completo com sucesso', () {
+    test('serializa e interpreta payload v1 completo com sucesso (chave padrao e chave customizada)', () {
+      // 1. Com chave padrão derivada do evento 15 ("borala:evento:15:secret" -> hash "0ec02205")
+      final padrao = ParticipanteQrPayload.v1(
+        pid: 1042,
+        cpf: '12345678901',
+        nome: 'Maria Santos',
+        eid: 15,
+        sid: [42, 43],
+      );
+
+      expect(padrao.isV1, isTrue);
+      expect(padrao.hash, '0ec02205');
+
+      final lidoPadrao = ParticipanteQrPayload.fromRawJson(padrao.toRawJson());
+      expect(lidoPadrao.pid, 1042);
+      expect(lidoPadrao.nome, 'Maria Santos');
+      expect(lidoPadrao.eid, 15);
+      expect(lidoPadrao.sid, [42, 43]);
+      expect(lidoPadrao.hash, '0ec02205');
+      expect(lidoPadrao.validarHash(), isTrue);
+
+      // 2. Com chave customizada
       final original = ParticipanteQrPayload.v1(
         pid: 1042,
         cpf: '12345678901',
@@ -66,44 +87,27 @@ void main() {
         secretKey: chaveTeste,
       );
 
-      expect(original.isV1, isTrue);
-      expect(original.v, 1);
-      expect(original.pid, 1042);
-      expect(original.cpf, '12345678901');
-      expect(original.nome, 'Maria Santos');
-      expect(original.eid, 15);
-      expect(original.sid, [42, 43]);
       expect(original.hash, '58663eab');
 
-      // Parsing sem validação de chave
-      final rawJson = original.toRawJson();
-      final lido = ParticipanteQrPayload.fromRawJson(rawJson);
-      expect(lido.pid, 1042);
-      expect(lido.nome, 'Maria Santos');
-      expect(lido.eid, 15);
-      expect(lido.sid, [42, 43]);
-      expect(lido.hash, '58663eab');
-      expect(lido.id.isNotEmpty, isTrue);
-
-      // Parsing com validação de chave secreta
       final lidoValidado = ParticipanteQrPayload.fromRawJson(
-        rawJson,
+        original.toRawJson(),
         secretKey: chaveTeste,
       );
+      expect(lidoValidado.pid, 1042);
       expect(lidoValidado.validarHash(chaveTeste), isTrue);
     });
 
-    test('rejeita QR Code com dados adulterados (hash mismatch)', () {
+    test('rejeita QR Code com dados adulterados (hash mismatch) mesmo sem informar secretKey', () {
       const jsonAdulterado =
-          '{"v":1,"pid":9999,"cpf":"12345678901","nome":"Maria Santos","eid":15,"sid":[42,43],"hash":"58663eab"}';
+          '{"v":1,"pid":9999,"cpf":"12345678901","nome":"Maria Santos","eid":15,"sid":[42,43],"hash":"0ec02205"}';
 
-      // Sem informar a chave, apenas lê os dados
-      final payload = ParticipanteQrPayload.fromRawJson(jsonAdulterado);
-      expect(payload.pid, 9999);
-      // Validando a chave separadamente, acusa adulteração
-      expect(payload.validarHash(chaveTeste), isFalse);
+      // Sem informar a chave, valida contra a chave padrão do evento 15 e lança FormatException
+      expect(
+        () => ParticipanteQrPayload.fromRawJson(jsonAdulterado),
+        throwsFormatException,
+      );
 
-      // Passando secretKey no parser, acusa FormatException
+      // Passando secretKey customizada também lança FormatException
       expect(
         () => ParticipanteQrPayload.fromRawJson(
           jsonAdulterado,
@@ -113,11 +117,11 @@ void main() {
       );
     });
 
-    test('ordena e remove duplicatas de subeventos na canonizacao', () {
+    test('ordena e remove duplicatas de subeventos e sanitiza CPF na canonizacao', () {
       final hash1 = ParticipanteQrPayload.calcularHash(
         v: 1,
         pid: 1042,
-        cpf: '123.456.789-01',
+        cpf: '123.456.789-01999',
         nome: 'Maria Santos',
         eid: 15,
         sid: [43, 42, 42],
@@ -136,6 +140,8 @@ void main() {
 
       expect(hash1, hash2);
       expect(hash1, '58663eab');
+      expect(ParticipanteQrPayload.sanitizarCpf('123'), '00000000123');
+      expect(ParticipanteQrPayload.sanitizarCpf(''), '00000000000');
     });
 
     test('interpreta formato textual legado do Borala por compatibilidade', () {
@@ -147,6 +153,7 @@ void main() {
       expect(payload.nome, 'Maria Santos');
       expect(payload.eid, 15);
       expect(payload.sid, [42, 43]);
+      expect(payload.validarHash(), isTrue);
     });
   });
 }

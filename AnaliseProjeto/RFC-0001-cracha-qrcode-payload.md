@@ -5,7 +5,7 @@
 - **Data de Aprovação:** 16 de Novembro de 2026
 - **Sistemas Afetados:** Boralá (Web/Backend) e Bipou (Mobile/Frontend)
 
-Consulte o documento completo em [docs/rfcs/RFC-0001-cracha-qrcode-payload.md](file:///c:/Users/SANDRO/OneDrive%20-%20ufs.br/UFS/7ºperiodo/Boralá/eventos/docs/rfcs/RFC-0001-cracha-qrcode-payload.md).
+Consulte o documento completo em [docs/rfcs/RFC-0001-cracha-qrcode-payload.md](../docs/rfcs/RFC-0001-cracha-qrcode-payload.md).
 
 ---
 
@@ -26,4 +26,3 @@ Consulte o documento completo em [docs/rfcs/RFC-0001-cracha-qrcode-payload.md](f
 - **String Canônica:** `{v}|{pid}|{cpf}|{nome}|{eid}|{sid_ordenados}` (ex: `"1|1042|12345678901|Maria Santos|15|42,43"`)
 - **Hash:** HMAC-SHA256 truncado em 8 caracteres hexadecimais em caixa baixa.
 - **Chave Secreta Padrão:** `borala:evento:{idEvento}:secret`
-

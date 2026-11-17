@@ -210,6 +210,14 @@ namespace EventoWeb.Helpers
                     return false;
                 }
 
+                parsed.Cpf = SanitizarCpf(parsed.Cpf);
+                parsed.Nome = parsed.Nome.Trim();
+                parsed.Sid = (parsed.Sid ?? new List<uint>())
+                    .Distinct()
+                    .OrderBy(id => id)
+                    .ToList();
+                parsed.Hash = hashEsperado;
+
                 payload = parsed;
                 return true;
             }
