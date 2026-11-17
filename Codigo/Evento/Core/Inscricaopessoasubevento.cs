@@ -5,6 +5,8 @@ namespace Core;
 
 public partial class Inscricaopessoasubevento
 {
+    public uint Id { get; set; }
+
     public uint IdPessoa { get; set; }
 
     public uint IdSubEvento { get; set; }

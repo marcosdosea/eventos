@@ -283,7 +283,7 @@ public partial class EventoContext : DbContext
 
         modelBuilder.Entity<Inscricaopessoasubevento>(entity =>
         {
-            entity.HasKey(e => new { e.IdPessoa, e.IdSubEvento }).HasName("PRIMARY");
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
 
             entity.ToTable("inscricaopessoasubevento");
 
@@ -295,6 +295,7 @@ public partial class EventoContext : DbContext
 
             entity.HasIndex(e => e.IdSubEvento, "fk_PessoaSubEvento_SubEvento1_idx");
 
+            entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.IdPessoa).HasColumnName("idPessoa");
             entity.Property(e => e.IdSubEvento).HasColumnName("idSubEvento");
             entity.Property(e => e.DataInscricao)

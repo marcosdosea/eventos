@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Identity.UI.Services;
+using Util;
 using AutoMapper;
 using Core.Service;
 using Core;
@@ -23,8 +25,19 @@ namespace EventoWeb.Controllers
         private readonly UserManager<UsuarioIdentity> _userManager;
         private readonly ITipoInscricaoService _tipoinscricaoService;
         private readonly IMapper _mapper;
+        private readonly IEmailSender? _emailSender;
+        private readonly IWebHostEnvironment? _environment;
 
-        public InscricaoController(UserManager<UsuarioIdentity> userManager, ITipoInscricaoService tipoinscricaoService, IEventoService eventoService, IMapper mapper, IInscricaoService inscricaoService, IPessoaService pessoaService, ISubeventoService subeventoService)
+        public InscricaoController(
+            UserManager<UsuarioIdentity> userManager,
+            ITipoInscricaoService tipoinscricaoService,
+            IEventoService eventoService,
+            IMapper mapper,
+            IInscricaoService inscricaoService,
+            IPessoaService pessoaService,
+            ISubeventoService subeventoService,
+            IEmailSender? emailSender = null,
+            IWebHostEnvironment? environment = null)
         {
             _tipoinscricaoService = tipoinscricaoService;
             _eventoService = eventoService;
@@ -33,6 +46,8 @@ namespace EventoWeb.Controllers
             _pessoaService = pessoaService;
             _subeventoService = subeventoService;
             _userManager = userManager;
+            _emailSender = emailSender;
+            _environment = environment;
         }
 
         [AllowAnonymous]
@@ -753,5 +768,273 @@ namespace EventoWeb.Controllers
             return RedirectToAction(nameof(minhasInscricoes));
         }
 
+        [Authorize]
+        [HttpPost]
+        [Route("TransferirIngresso")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TransferirIngresso(TransferirIngressoModel model)
+        {
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+
+            if (!ModelState.IsValid)
+            {
+                var erro = ModelState.Values.SelectMany(v => v.Errors).FirstOrDefault()?.ErrorMessage
+                    ?? "Dados inválidos para transferência.";
+                TempData["ParticipanteErrorMessage"] = erro;
+                TempData["ParticipanteMessage"] = erro;
+                return RedirectToAction(nameof(minhasInscricoes));
+            }
+
+            if ((!model.IdInscricao.HasValue || model.IdInscricao.Value == 0) && (!model.IdSubevento.HasValue || model.IdSubevento.Value == 0))
+            {
+                const string msgSemSelecao = "Nenhum ingresso ou subevento selecionado para transferência.";
+                TempData["ParticipanteErrorMessage"] = msgSemSelecao;
+                TempData["ParticipanteMessage"] = msgSemSelecao;
+                return RedirectToAction(nameof(minhasInscricoes));
+            }
+
+            try
+            {
+                var cpfAmigoLimpo = Methods.RemoveNaoNumericos(model.CpfAmigo);
+                var destinatarioExistente = _pessoaService?.GetByCpf(cpfAmigoLimpo) ?? _pessoaService?.GetByCpf(model.CpfAmigo);
+                bool ehNovoUsuario = (destinatarioExistente == null);
+
+                _inscricaoService.TransferirIngresso(
+                    model.IdInscricao ?? 0,
+                    model.CpfAmigo,
+                    model.NomeAmigo,
+                    model.EmailAmigo,
+                    username,
+                    model.IdSubevento);
+
+                bool emailEnviado = await EnviarEmailTransferenciaAsync(model, username, ehNovoUsuario);
+                if (emailEnviado)
+                {
+                    TempData["ParticipanteSuccessMessage"] = $"Ingresso transferido com sucesso para {model.NomeAmigo.Trim()}! Um e-mail com as instruções de acesso foi enviado para {model.EmailAmigo.Trim()}.";
+                }
+                else
+                {
+                    TempData["ParticipanteSuccessMessage"] = $"Ingresso transferido com sucesso para {model.NomeAmigo.Trim()}! Porém, não foi possível enviar o e-mail de notificação neste momento.";
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                TempData["ParticipanteErrorMessage"] = ex.Message;
+                TempData["ParticipanteMessage"] = ex.Message;
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["ParticipanteErrorMessage"] = ex.Message;
+                TempData["ParticipanteMessage"] = ex.Message;
+            }
+            catch (Exception)
+            {
+                const string msg = "Não foi possível concluir a transferência do ingresso. Tente novamente.";
+                TempData["ParticipanteErrorMessage"] = msg;
+                TempData["ParticipanteMessage"] = msg;
+            }
+
+            return RedirectToAction(nameof(minhasInscricoes));
+        }
+
+        [Authorize]
+        [HttpGet("ConsultarDestinatarioTransferencia")]
+        public IActionResult ConsultarDestinatarioTransferencia([FromQuery] string cpf)
+        {
+            if (string.IsNullOrWhiteSpace(cpf))
+            {
+                return Json(new { sucesso = false, mensagem = "CPF não informado." });
+            }
+
+            var cpfLimpo = Util.Methods.RemoveNaoNumericos(cpf);
+            if (cpfLimpo.Length != 11 || !Util.Methods.ValidarCpf(cpfLimpo))
+            {
+                return Json(new { sucesso = false, mensagem = "CPF inválido." });
+            }
+
+            try
+            {
+                var usernameLogado = User.Identity?.Name ?? string.Empty;
+                var usernameLogadoLimpo = Util.Methods.RemoveNaoNumericos(usernameLogado);
+                var pessoaLogada = _pessoaService?.GetByCpf(usernameLogadoLimpo) ?? _pessoaService?.GetByCpf(usernameLogado);
+                var cpfPessoaLogadaLimpo = pessoaLogada != null ? Util.Methods.RemoveNaoNumericos(pessoaLogada.Cpf ?? string.Empty) : string.Empty;
+
+                if (cpfLimpo == usernameLogadoLimpo || cpf == usernameLogado || (!string.IsNullOrEmpty(cpfPessoaLogadaLimpo) && cpfLimpo == cpfPessoaLogadaLimpo))
+                {
+                    return Json(new { sucesso = false, mesmoUsuario = true, mensagem = "Você não pode transferir um ingresso para você mesmo." });
+                }
+
+                var pessoa = _pessoaService?.GetByCpf(cpfLimpo);
+                if (pessoa != null)
+                {
+                    string emailMascarado = string.Empty;
+                    if (!string.IsNullOrWhiteSpace(pessoa.Email))
+                    {
+                        var partes = pessoa.Email.Split('@');
+                        if (partes.Length == 2)
+                        {
+                            var user = partes[0];
+                            var dom = partes[1];
+                            var userMasc = user.Length > 2 ? user[0] + new string('*', Math.Max(1, user.Length - 2)) + user[^1] : user[0] + "*";
+                            emailMascarado = $"{userMasc}@{dom}";
+                        }
+                    }
+
+                    var nomeCracha = !string.IsNullOrWhiteSpace(pessoa.NomeCracha)
+                        ? pessoa.NomeCracha.Trim()
+                        : (pessoa.Nome ?? string.Empty).Trim();
+
+                    if (nomeCracha.Length > 20)
+                    {
+                        nomeCracha = nomeCracha.Substring(0, 20);
+                    }
+
+                    return Json(new
+                    {
+                        sucesso = true,
+                        existe = true,
+                        nome = nomeCracha,
+                        nomeCracha = nomeCracha,
+                        nomeCompleto = pessoa.Nome,
+                        emailMascarado,
+                        mensagem = $"Participante já cadastrado: {pessoa.Nome}."
+                    });
+                }
+
+                return Json(new
+                {
+                    sucesso = true,
+                    existe = false,
+                    mensagem = "Novo participante: Nenhuma conta encontrada para este CPF no sistema."
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { sucesso = false, mensagem = "Erro ao consultar destinatário: " + ex.Message });
+            }
+        }
+
+        private async Task<bool> EnviarEmailTransferenciaAsync(TransferirIngressoModel model, string usernameOrigem, bool ehNovoUsuario)
+        {
+            if (_emailSender == null) return false;
+
+            try
+            {
+                string nomeRemetente = "Um participante do Boralá";
+                try
+                {
+                    var pessoaOrigem = _pessoaService?.GetByCpf(usernameOrigem);
+                    if (!string.IsNullOrWhiteSpace(pessoaOrigem?.Nome))
+                    {
+                        nomeRemetente = pessoaOrigem.Nome;
+                    }
+                }
+                catch { }
+
+                string descricaoIngresso = "Ingresso Boralá";
+                try
+                {
+                    if (model.IdSubevento.HasValue && model.IdSubevento.Value > 0)
+                    {
+                        var sub = _subeventoService?.Get(model.IdSubevento.Value);
+                        descricaoIngresso = sub != null ? $"Subevento: {sub.Nome}" : "Subevento";
+                    }
+                    else if (model.IdInscricao.HasValue && model.IdInscricao.Value > 0)
+                    {
+                        var inscricoes = _inscricaoService?.GetAllEventsByUserId(usernameOrigem);
+                        var inscricao = inscricoes?.FirstOrDefault(i => i.Id == model.IdInscricao.Value);
+                        if (inscricao?.IdEventoNavigation != null)
+                        {
+                            descricaoIngresso = $"Evento: {inscricao.IdEventoNavigation.Nome}";
+                        }
+                        else if (inscricao != null && _eventoService != null)
+                        {
+                            var evento = _eventoService.Get(inscricao.IdEvento);
+                            descricaoIngresso = evento != null ? $"Evento: {evento.Nome}" : "Evento";
+                        }
+                    }
+                }
+                catch { }
+
+                var cpfDestinoLimpo = Methods.RemoveNaoNumericos(model.CpfAmigo);
+                var cpfFormatado = cpfDestinoLimpo.Length == 11 ? Methods.PatternCpf(cpfDestinoLimpo) : model.CpfAmigo;
+
+                string linkLogin = "https://borala.com.br";
+                try
+                {
+                    if (Url != null && Request != null)
+                    {
+                        linkLogin = Url.Action("Index", "Home", null, Request.Scheme) ?? "https://borala.com.br";
+                    }
+                }
+                catch { }
+
+                string blocoAcesso;
+                if (ehNovoUsuario)
+                {
+                    blocoAcesso = $@"
+                        <p style='font-size: 15px; color: #444;'>Para visualizar seu ingresso, QR Code e credencial, acesse a plataforma com as seguintes credenciais provisórias:</p>
+                        <div style='background-color: #f9f9f9; border: 1px solid #e5e5e5; border-radius: 6px; padding: 15px 20px; margin: 15px 0;'>
+                            <div class='cred-item'><strong>Usuário (CPF):</strong> {cpfFormatado}</div>
+                            <div class='cred-item'><strong>Senha Provisória:</strong> <code style='background: #eef; padding: 2px 6px; border-radius: 3px; font-weight: bold; color: #0A2FE2;'>Temp@1234!</code></div>
+                            <small style='color: #666; display: block; margin-top: 8px;'>No seu primeiro acesso, recomendamos alterar sua senha no menu de perfil.</small>
+                        </div>
+                        <div style='text-align: center; margin: 25px 0;'>
+                            <a href='{linkLogin}' class='btn'>Acessar Meus Ingressos</a>
+                        </div>";
+                }
+                else
+                {
+                    blocoAcesso = $@"
+                        <p style='font-size: 15px; color: #444;'>O ingresso já foi vinculado à sua conta!</p>
+                        <div style='background-color: #f0f4ff; border: 1px solid #d0d7de; border-radius: 6px; padding: 15px 20px; margin: 15px 0;'>
+                            <p style='margin: 0; font-size: 15px; color: #333;'>Como você já possui cadastro no Boralá, basta entrar com seu <strong>CPF ({cpfFormatado})</strong> e sua <strong>senha habitual</strong> para visualizar seu ingresso, QR Code e credencial.</p>
+                        </div>
+                        <div style='text-align: center; margin: 25px 0;'>
+                            <a href='{linkLogin}' class='btn'>Acessar Meus Ingressos</a>
+                        </div>";
+                }
+
+                string html = "";
+                string caminhoTemplate = _environment != null && !string.IsNullOrEmpty(_environment.WebRootPath)
+                    ? Path.Combine(_environment.WebRootPath, "templates", "EmailTransferenciaIngresso.html")
+                    : "";
+
+                if (!string.IsNullOrEmpty(caminhoTemplate) && System.IO.File.Exists(caminhoTemplate))
+                {
+                    html = await System.IO.File.ReadAllTextAsync(caminhoTemplate);
+                    html = html
+                        .Replace("{{Nome}}", model.NomeAmigo.Trim())
+                        .Replace("{{NomeRemetente}}", nomeRemetente)
+                        .Replace("{{DescricaoIngresso}}", descricaoIngresso)
+                        .Replace("{{Cpf}}", cpfFormatado)
+                        .Replace("{{Senha}}", ehNovoUsuario ? "Temp@1234!" : "")
+                        .Replace("{{LinkLogin}}", linkLogin)
+                        .Replace("{{BlocoAcesso}}", blocoAcesso);
+                }
+                else
+                {
+                    html = $@"
+                        <div style='font-family: Arial, sans-serif; padding: 20px;'>
+                            <h2>Olá, {model.NomeAmigo.Trim()}! 🎉</h2>
+                            <p><strong>{nomeRemetente}</strong> transferiu um ingresso para você no <strong>Boralá</strong>!</p>
+                            <p><strong>Ingresso:</strong> {descricaoIngresso}</p>
+                            {blocoAcesso}
+                        </div>";
+                }
+
+                await _emailSender.SendEmailAsync(model.EmailAmigo.Trim(), "Você recebeu um ingresso no Boralá! 🎉", html);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.TraceError($"Erro ao enviar e-mail de transferência: {ex.Message}");
+                return false;
+            }
+        }
     }
 }

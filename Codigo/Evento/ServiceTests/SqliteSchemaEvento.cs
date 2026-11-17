@@ -171,6 +171,7 @@ CREATE TABLE inscricaopessoaevento (
 );
 
 CREATE TABLE inscricaopessoasubevento (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     idPessoa INTEGER NOT NULL,
     idSubEvento INTEGER NOT NULL,
     idPapel INTEGER NOT NULL,
@@ -179,7 +180,6 @@ CREATE TABLE inscricaopessoasubevento (
     valor decimal(10,2) NOT NULL DEFAULT 0,
     status TEXT NOT NULL DEFAULT 'S',
     frequenciaFinal decimal(10,2) NOT NULL DEFAULT 0,
-    PRIMARY KEY (idPessoa, idSubEvento),
     CONSTRAINT fk_InscricaoPessoaSubEvento_Papel1 FOREIGN KEY (idPapel) REFERENCES papel (id) ON DELETE RESTRICT,
     CONSTRAINT fk_InscricaoPessoaSubEvento_Pessoa1 FOREIGN KEY (idPessoa) REFERENCES pessoa (id) ON DELETE RESTRICT,
     CONSTRAINT fk_InscricaoPessoaSubEvento_SubEvento1 FOREIGN KEY (idSubEvento) REFERENCES subevento (id) ON DELETE RESTRICT,
