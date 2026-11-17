@@ -52,6 +52,30 @@ void main() {
     expect(feedbacks.single.message, contains('Participante Teste'));
   });
 
+  test('processa payload unificado v1 gerado pelo Borala e credencia com sucesso', () async {
+    const v1Payload =
+        '{"v":1,"pid":1042,"cpf":"12345678901","nome":"Maria Santos","eid":15,"sid":[42,43],"hash":"0ec02205"}';
+
+    await viewModel.processarPayload(v1Payload);
+
+    expect(credenciamento.calls, 1);
+    expect(credenciamento.lastParticipanteNome, 'Maria Santos');
+    expect(credenciamento.lastParticipanteId, isNotNull);
+    expect(feedbacks.single.type, ScannerFeedbackType.sucesso);
+    expect(feedbacks.single.message, contains('Maria Santos'));
+  });
+
+  test('rejeita payload v1 com hash adulterado no scanner', () async {
+    const v1Adulterado =
+        '{"v":1,"pid":9999,"cpf":"12345678901","nome":"Maria Santos","eid":15,"sid":[42,43],"hash":"0ec02205"}';
+
+    await viewModel.processarPayload(v1Adulterado);
+
+    expect(credenciamento.calls, 0);
+    expect(feedbacks.single.type, ScannerFeedbackType.erro);
+    expect(feedbacks.single.message, 'QR Code invalido');
+  });
+
   test(
     'ignora o mesmo participante durante o cooldown de cinco segundos',
     () async {

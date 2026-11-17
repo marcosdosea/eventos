@@ -1,9 +1,19 @@
 import 'dart:convert';
+import 'package:crypto/crypto.dart';
+import 'package:uuid/uuid.dart';
 
 final class ParticipanteQrPayload {
-  ParticipanteQrPayload({required this.id, required String nome})
-    : nome = nome.trim() {
-    if (!_uuidPattern.hasMatch(id)) {
+  ParticipanteQrPayload({
+    required this.id,
+    required String nome,
+    this.v,
+    this.pid,
+    this.cpf,
+    this.eid,
+    this.sid = const <int>[],
+    this.hash,
+  }) : nome = nome.trim() {
+    if (!isV1 && !_uuidPattern.hasMatch(id)) {
       throw ArgumentError.value(id, 'id', 'UUID invalido');
     }
     if (this.nome.isEmpty || this.nome.length > 150) {
@@ -15,16 +25,173 @@ final class ParticipanteQrPayload {
     }
   }
 
-  factory ParticipanteQrPayload.fromRawJson(String? rawJson) {
-    if (rawJson == null || rawJson.isEmpty) {
+  /// Construtor para o formato unificado v1
+  factory ParticipanteQrPayload.v1({
+    required int pid,
+    required String cpf,
+    required String nome,
+    required int eid,
+    List<int> sid = const <int>[],
+    String? hash,
+    String? secretKey,
+  }) {
+    final cpfLimpo = sanitizarCpf(cpf);
+    final sidOrdenado = sid.toSet().toList()..sort();
+    final chave = (secretKey == null || secretKey.trim().isEmpty)
+        ? obterChavePadraoEvento(eid)
+        : secretKey;
+    final hashFinal = (hash != null && hash.trim().isNotEmpty)
+        ? hash.trim().toLowerCase()
+        : calcularHash(
+            v: 1,
+            pid: pid,
+            cpf: cpfLimpo,
+            nome: nome.trim(),
+            eid: eid,
+            sid: sidOrdenado,
+            secretKey: chave,
+          );
+
+    final deterministicId = _gerarUuidV5(pid);
+
+    return ParticipanteQrPayload(
+      id: deterministicId,
+      nome: nome,
+      v: 1,
+      pid: pid,
+      cpf: cpfLimpo,
+      eid: eid,
+      sid: sidOrdenado,
+      hash: hashFinal,
+    );
+  }
+
+  /// Parser com suporte ao novo formato JSON v1, formato legado JSON com UUID,
+  /// e fallback para o formato textual legado com colchetes do Boralá.
+  factory ParticipanteQrPayload.fromRawJson(
+    String? rawJson, {
+    String? secretKey,
+  }) {
+    if (rawJson == null || rawJson.trim().isEmpty) {
       throw const FormatException('QR Code vazio.');
     }
 
-    final decoded = jsonDecode(rawJson);
+    final trimmed = rawJson.trim();
+
+    // Fallback: formato textual legado do Boralá "[1042] [Maria Santos] [15] [42] [43]"
+    if (trimmed.startsWith('[')) {
+      final matches = RegExp(r'\[(.*?)\]')
+          .allMatches(trimmed)
+          .map((m) => m.group(1)?.trim() ?? '')
+          .toList();
+      if (matches.length >= 3) {
+        final pid = int.tryParse(matches[0]);
+        final nome = matches[1];
+        final eid = int.tryParse(matches[2]);
+        if (pid != null && eid != null && nome.isNotEmpty) {
+          final sids = <int>[];
+          for (var i = 3; i < matches.length; i++) {
+            final sid = int.tryParse(matches[i]);
+            if (sid != null) {
+              sids.add(sid);
+            }
+          }
+          return ParticipanteQrPayload.v1(
+            pid: pid,
+            cpf: '00000000000',
+            nome: nome,
+            eid: eid,
+            sid: sids,
+            secretKey: secretKey,
+          );
+        }
+      }
+      throw const FormatException('QR Code invalido.');
+    }
+
+    dynamic decoded;
+    try {
+      decoded = jsonDecode(trimmed);
+    } on Object catch (e) {
+      throw FormatException('QR Code invalido.', e);
+    }
+
     if (decoded is! Map<String, dynamic>) {
       throw const FormatException('QR Code invalido.');
     }
 
+    // Formato Unificado v1: contém "v" (ou "pid" e "eid")
+    if ((decoded.containsKey('v') && decoded['v'] == 1) ||
+        (decoded.containsKey('pid') && decoded.containsKey('eid'))) {
+      final v = decoded['v'] is int ? decoded['v'] as int : 1;
+      if (v != 1) {
+        throw const FormatException('Versao do QR Code nao suportada.');
+      }
+
+      final rawPid = decoded['pid'];
+      final rawCpf = decoded['cpf'];
+      final rawNome = decoded['nome'];
+      final rawEid = decoded['eid'];
+      final rawSid = decoded['sid'];
+      final rawHash = decoded['hash'];
+
+      if (rawPid is! num || rawNome is! String || rawEid is! num) {
+        throw const FormatException('QR Code invalido: campos obrigatorios ausentes.');
+      }
+
+      final pid = rawPid.toInt();
+      final eid = rawEid.toInt();
+      if (pid <= 0 || eid <= 0) {
+        throw const FormatException('QR Code invalido: identificadores invalidos.');
+      }
+
+      final nome = rawNome.trim();
+      if (nome.isEmpty || nome.length > 150) {
+        throw const FormatException('QR Code invalido: nome invalido.');
+      }
+
+      final cpfLimpo = sanitizarCpf(rawCpf is String ? rawCpf : null);
+
+      final sids = <int>[];
+      if (rawSid is List) {
+        for (final item in rawSid) {
+          if (item is num) {
+            sids.add(item.toInt());
+          }
+        }
+      }
+      final sidOrdenado = sids.toSet().toList()..sort();
+
+      final hashStr = rawHash is String ? rawHash.trim() : '';
+      final chave = (secretKey == null || secretKey.trim().isEmpty)
+          ? obterChavePadraoEvento(eid)
+          : secretKey;
+
+      final hashEsperado = calcularHash(
+        v: v,
+        pid: pid,
+        cpf: cpfLimpo,
+        nome: nome,
+        eid: eid,
+        sid: sidOrdenado,
+        secretKey: chave,
+      );
+      if (hashStr.isEmpty || hashStr.toLowerCase() != hashEsperado.toLowerCase()) {
+        throw const FormatException('Assinatura do QR Code (hash) invalida.');
+      }
+
+      return ParticipanteQrPayload.v1(
+        pid: pid,
+        cpf: cpfLimpo,
+        nome: nome,
+        eid: eid,
+        sid: sidOrdenado,
+        hash: hashEsperado,
+        secretKey: chave,
+      );
+    }
+
+    // Formato Legado JSON: {"id": "UUID", "nome": "Nome"}
     final id = decoded['id'];
     final nome = decoded['nome'];
     if (id is! String || nome is! String) {
@@ -42,10 +209,119 @@ final class ParticipanteQrPayload {
     r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$',
   );
 
+  static String _gerarUuidV5(int pid) {
+    const uuid = Uuid();
+    return uuid.v5(Uuid.NAMESPACE_URL, 'borala:pessoa:$pid');
+  }
+
+  /// Sanitiza o CPF mantendo exatamente 11 dígitos numéricos (alinhado ao Boralá)
+  static String sanitizarCpf(String? cpf) {
+    if (cpf == null || cpf.trim().isEmpty) {
+      return '00000000000';
+    }
+    var apenasDigitos = cpf.replaceAll(RegExp(r'\D'), '');
+    if (apenasDigitos.length > 11) {
+      apenasDigitos = apenasDigitos.substring(0, 11);
+    } else if (apenasDigitos.length < 11) {
+      apenasDigitos = apenasDigitos.padLeft(11, '0');
+    }
+    return apenasDigitos;
+  }
+
+  /// Gera a chave padrão derivada para o evento
+  static String obterChavePadraoEvento(int idEvento, [String? salt]) {
+    final prefixo = (salt == null || salt.trim().isEmpty) ? 'borala:evento' : salt.trim();
+    return '$prefixo:$idEvento:secret';
+  }
+
+  /// String canônica determinística para assinatura HMAC-SHA256
+  static String obterStringCanonizada({
+    required int v,
+    required int pid,
+    required String cpf,
+    required String nome,
+    required int eid,
+    required List<int> sid,
+  }) {
+    final sidOrdenado = sid.toSet().toList()..sort();
+    final cpfLimpo = sanitizarCpf(cpf);
+    return '$v|$pid|$cpfLimpo|${nome.trim()}|$eid|${sidOrdenado.join(',')}';
+  }
+
+  /// Calcula a assinatura HMAC-SHA256 truncada em 8 hex minúsculos
+  static String calcularHash({
+    required int v,
+    required int pid,
+    required String cpf,
+    required String nome,
+    required int eid,
+    required List<int> sid,
+    String? secretKey,
+  }) {
+    final chave = (secretKey == null || secretKey.trim().isEmpty)
+        ? obterChavePadraoEvento(eid)
+        : secretKey;
+    final canonical = obterStringCanonizada(
+      v: v,
+      pid: pid,
+      cpf: cpf,
+      nome: nome,
+      eid: eid,
+      sid: sid,
+    );
+    final keyBytes = utf8.encode(chave);
+    final dataBytes = utf8.encode(canonical);
+    final hmac = Hmac(sha256, keyBytes);
+    final digest = hmac.convert(dataBytes);
+    final hex = digest.toString().toLowerCase();
+    return hex.length >= 8 ? hex.substring(0, 8) : hex;
+  }
+
+  /// Valida se o hash bate com a chave secreta informada (ou chave padrão do evento)
+  bool validarHash([String? secretKey]) {
+    if (!isV1 || hash == null || hash!.isEmpty || pid == null || eid == null || cpf == null) {
+      return false;
+    }
+    final chave = (secretKey == null || secretKey.trim().isEmpty)
+        ? obterChavePadraoEvento(eid!)
+        : secretKey;
+    final esperado = calcularHash(
+      v: v ?? 1,
+      pid: pid!,
+      cpf: cpf!,
+      nome: nome,
+      eid: eid!,
+      sid: sid,
+      secretKey: chave,
+    );
+    return hash!.toLowerCase() == esperado.toLowerCase();
+  }
+
   final String id;
   final String nome;
+  final int? v;
+  final int? pid;
+  final String? cpf;
+  final int? eid;
+  final List<int> sid;
+  final String? hash;
 
-  Map<String, String> toJson() => <String, String>{'id': id, 'nome': nome};
+  bool get isV1 => v == 1 || pid != null;
+
+  Map<String, dynamic> toJson() {
+    if (isV1) {
+      return <String, dynamic>{
+        'v': v ?? 1,
+        'pid': pid,
+        'cpf': cpf,
+        'nome': nome,
+        'eid': eid,
+        'sid': sid,
+        'hash': hash ?? '',
+      };
+    }
+    return <String, String>{'id': id, 'nome': nome};
+  }
 
   String toRawJson() => jsonEncode(toJson());
 }
