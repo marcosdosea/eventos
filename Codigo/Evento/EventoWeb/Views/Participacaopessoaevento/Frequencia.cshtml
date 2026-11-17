@@ -5,9 +5,9 @@
 <h1 class="blue-normal">Frequência do Participante</h1>
 <hr />
 
-<div class="row mb-4 align-items-start">
-    <div class="col-md-8">
-        <div class="mb-3">
+<div class="row mb-4 align-items-end">
+    <div class="col-lg-8 col-12 mb-3 mb-lg-0">
+        <div class="form-group">
             <strong>Nome:</strong> @Model.Evento.Nome
         </div>
         @if (Model.SubEvento != null)
@@ -17,17 +17,19 @@
             </div>
         }
     </div>
-    <div class="col-md-4 text-md-end">
-        <button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#modalImportarCsv">
-            <i class="bi bi-upload me-1"></i> Importar CSV
-        </button>
-        @if (User.IsInRole("GESTOR"))
-        {
-            <a href="@Url.Action("ExportarFrequencia", "ParticipacaoPessoaEvento", new { idEvento = Model.Evento.Id, idSubEvento = Model.SubEvento?.Id })"
-               class="btn btn-blue-normal">
-                <i class="bi bi-download me-1"></i> Exportar CSV
-            </a>
-        }
+    <div class="col-lg-4 col-12 text-lg-end">
+        <div class="d-flex flex-column flex-sm-row justify-content-lg-end gap-2">
+            <button type="button" class="btn btn-outline-primary flex-fill" data-bs-toggle="modal" data-bs-target="#modalImportarCsv">
+                <i class="bi bi-upload me-1"></i> Importar CSV
+            </button>
+            @if (User.IsInRole("GESTOR"))
+            {
+                <a href="@Url.Action("ExportarFrequencia", "ParticipacaoPessoaEvento", new { idEvento = Model.Evento.Id, idSubEvento = Model.SubEvento?.Id })"
+                   class="btn btn-blue-normal">
+                    <i class="bi bi-download me-1"></i> Exportar CSV
+                </a>
+            }
+        </div>
     </div>
 </div>
 

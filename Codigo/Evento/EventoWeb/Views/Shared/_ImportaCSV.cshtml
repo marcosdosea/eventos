@@ -1,0 +1,32 @@
+﻿@model dynamic
+
+<div class="modal fade" id="modalImportarCsv" tabindex="-1" aria-labelledby="modalImportarCsvLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="ImportarCsv" asp-controller="ParticipacaoPessoaEvento" method="post" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="idEvento" value="@Model.IdEvento" />
+                @if (Model.IdSubEvento != null)
+                {
+                    <input type="hidden" name="idSubEvento" value="@Model.IdSubEvento" />
+                }
+                <input type="hidden" name="actionRetorno" value="Index" />
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalImportarCsvLabel">Importar Planilha de Participantes</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small">Selecione o arquivo de planilha (formatos <code>.csv</code>, <code>.xlsx</code> ou <code>.xls</code>, como o relatório do SIGAA) para importar os participantes e registrar a presença.</p>
+                    <div class="mb-3">
+                        <label for="arquivoPlanilha" class="form-label">Arquivo de Planilha</label>
+                        <input type="file" id="arquivoPlanilha" name="arquivoPlanilha" class="form-control" accept=".csv,.xlsx,.xls" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Importar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

@@ -8,8 +8,8 @@
 <div class="row">
     <div>
         <form asp-action="CreateParticipante" method="post" onsubmit="removerMascara()">
-            <div class="row mb-4 align-items-start">
-                <div class="col-md-8">
+            <div class="row mb-4 align-items-end">
+                <div class="col-lg-8 col-12 mb-3 mb-lg-0">
                     <div class="form-group">
                         <label for="IdEvento" class="control-label">Evento</label>
                         <select id="IdEvento" name="IdEvento" class="form-control" readonly>
@@ -27,13 +27,18 @@
                     </div>
                   
                 </div>
-                <div class="col-md-4 text-md-end">
-                    <button type="button" class="btn btn-outline-primary me-2" data-bs-toggle="modal" data-bs-target="#modalImportarCsv">
-                        <i class="bi bi-upload me-1"></i> Importar CSV
-                    </button>
-                    <a href="/ParticipacaoPessoaEvento/ExportarFrequencia/4" class="btn btn-blue-normal">
-                        <i class="bi bi-download me-1"></i> Exportar CSV
-                    </a>
+                <div class="col-lg-4 col-12 text-lg-end">
+                    <div class="d-flex flex-column flex-sm-row justify-content-lg-end gap-2">
+                        <button type="button" class="btn btn-outline-primary flex-fill" data-bs-toggle="modal" data-bs-target="#modalImportarCsv">
+                            <i class="bi bi-upload me-1"></i> Importar CSV
+                        </button>
+                         @if (User.IsInRole("GESTOR"))
+                         {
+                            <a href="@Url.Action("ExportarFrequencia", "ParticipacaoPessoaEvento", new { idEvento = Model.Evento?.Id})" class="btn btn-blue-normal flex-fill text-center">
+                                <i class="bi bi-download me-1"></i> Exportar CSV
+                            </a>
+                         }
+                    </div>
                   </div>
             </div>
 
@@ -159,6 +164,7 @@
 </div>
 
 
+<partial name="_ImportaCSV" model="new { IdEvento = Model.Evento.Id, IdSubEvento = 0 }" />
 
 
 @await Html.PartialAsync("_DeleteModal", new EventoWeb.Models.DeleteModel
