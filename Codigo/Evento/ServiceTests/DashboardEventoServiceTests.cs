@@ -153,8 +153,8 @@ namespace Service.Tests
         {
             var subevento = _context.Subeventos.Find((uint)10)!;
             subevento.FrequenciaMinimaCertificado = 75;
-            _context.Inscricaopessoasubeventos.Find((uint)1, (uint)10)!.FrequenciaFinal = 50;
-            _context.Inscricaopessoasubeventos.Find((uint)2, (uint)10)!.FrequenciaFinal = 100;
+            _context.Inscricaopessoasubeventos.FirstOrDefault(s => s.IdPessoa == 1 && s.IdSubEvento == 10)!.FrequenciaFinal = 50;
+            _context.Inscricaopessoasubeventos.FirstOrDefault(s => s.IdPessoa == 2 && s.IdSubEvento == 10)!.FrequenciaFinal = 100;
             _context.Inscricaopessoasubeventos.Add(new Inscricaopessoasubevento
             {
                 IdPessoa = 4, IdSubEvento = 10, IdPapel = 4, Status = "A",

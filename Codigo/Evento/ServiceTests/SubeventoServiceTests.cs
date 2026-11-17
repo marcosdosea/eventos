@@ -313,7 +313,7 @@ namespace Service.Tests
             subevento.Status = "F";
             _subeventoService.Edit(subevento);
 
-            Assert.AreEqual(50m, _context.Inscricaopessoasubeventos.Find((uint)1, (uint)1)!.FrequenciaFinal);
+            Assert.AreEqual(50m, _context.Inscricaopessoasubeventos.FirstOrDefault(s => s.IdPessoa == 1 && s.IdSubEvento == 1)!.FrequenciaFinal);
             Assert.AreEqual(0m, _context.Inscricaopessoaeventos.Find((uint)10)!.FrequenciaFinal);
         }
     }

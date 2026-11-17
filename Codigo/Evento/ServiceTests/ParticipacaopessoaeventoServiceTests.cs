@@ -152,10 +152,10 @@ namespace Service.Tests
             var presencaSub = _context.Participacaopessoasubeventos.Find((uint)1)!;
             presencaSub.Saida = inicio.AddHours(2);
             serviceSub.Update(presencaSub);
-            Assert.AreEqual(100m, _context.Inscricaopessoasubeventos.Find((uint)1, (uint)1)!.FrequenciaFinal);
+            Assert.AreEqual(100m, _context.Inscricaopessoasubeventos.FirstOrDefault(s => s.IdPessoa == 1 && s.IdSubEvento == 1)!.FrequenciaFinal);
 
             serviceSub.Delete(1);
-            Assert.AreEqual(0m, _context.Inscricaopessoasubeventos.Find((uint)1, (uint)1)!.FrequenciaFinal);
+            Assert.AreEqual(0m, _context.Inscricaopessoasubeventos.FirstOrDefault(s => s.IdPessoa == 1 && s.IdSubEvento == 1)!.FrequenciaFinal);
         }
     }
 }

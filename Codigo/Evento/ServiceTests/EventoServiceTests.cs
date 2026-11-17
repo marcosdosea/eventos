@@ -991,7 +991,7 @@ namespace Service.Tests
             Assert.IsTrue(_eventoService.Edit(evento, new List<uint>()));
 
             Assert.AreEqual(75m, _context.Inscricaopessoaeventos.Find((uint)401)!.FrequenciaFinal);
-            Assert.AreEqual(50m, _context.Inscricaopessoasubeventos.Find((uint)1, (uint)410)!.FrequenciaFinal);
+            Assert.AreEqual(50m, _context.Inscricaopessoasubeventos.FirstOrDefault(s => s.IdPessoa == 1 && s.IdSubEvento == 410)!.FrequenciaFinal);
             Assert.AreEqual(12m, _context.Inscricaopessoaeventos.Find((uint)402)!.FrequenciaFinal);
             Assert.AreEqual(27m, _context.Inscricaopessoaeventos.Find((uint)403)!.FrequenciaFinal);
         }

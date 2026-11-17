@@ -411,7 +411,10 @@ namespace Service
             {
                 subInscricao = _context.Inscricaopessoasubeventos
                     .Include(s => s.IdSubEventoNavigation)
-                    .FirstOrDefault(s => s.IdPessoa == pessoaOrigem.Id && s.IdSubEvento == idSubevento.Value);
+                    .FirstOrDefault(s => s.IdPessoa == pessoaOrigem.Id && s.IdSubEvento == idSubevento.Value && s.Status != "C")
+                    ?? _context.Inscricaopessoasubeventos
+                        .Include(s => s.IdSubEventoNavigation)
+                        .FirstOrDefault(s => s.IdPessoa == pessoaOrigem.Id && s.IdSubEvento == idSubevento.Value);
 
                 if (subInscricao == null)
                     throw new ArgumentException("Inscrição no subevento não encontrada ou não pertence ao usuário.");
