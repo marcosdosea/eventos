@@ -7,12 +7,15 @@ import com.itatechjr.bipou.service.RegistroService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/registros")
@@ -20,6 +23,15 @@ import java.net.URI;
 public class RegistroController {
 
     private final RegistroService registroService;
+
+    @GetMapping
+    public List<RegistroResponseDTO> listar(
+            @RequestParam(required = false) Long eventoId,
+            @RequestParam(required = false) Long subeventoId,
+            @RequestParam(required = false, defaultValue = "false") boolean apenasEventoGeral
+    ) {
+        return registroService.listar(eventoId, subeventoId, apenasEventoGeral);
+    }
 
     @PostMapping
     public ResponseEntity<RegistroResponseDTO> registrar(

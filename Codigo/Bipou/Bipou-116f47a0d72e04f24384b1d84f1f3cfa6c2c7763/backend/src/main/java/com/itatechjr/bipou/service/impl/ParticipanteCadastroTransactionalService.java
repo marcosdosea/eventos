@@ -2,6 +2,7 @@ package com.itatechjr.bipou.service.impl;
 
 import com.itatechjr.bipou.dto.ParticipanteRequestDTO;
 import com.itatechjr.bipou.exception.CpfJaCadastradoException;
+import com.itatechjr.bipou.exception.PessoaBoralaJaCadastradaException;
 import com.itatechjr.bipou.mapper.ParticipanteMapper;
 import com.itatechjr.bipou.model.entity.Participante;
 import com.itatechjr.bipou.model.valueobject.Cpf;
@@ -23,8 +24,19 @@ public class ParticipanteCadastroTransactionalService {
     @Transactional
     public Participante cadastrarNovo(ParticipanteRequestDTO participanteDTO) {
         Cpf cpf = Cpf.paraNovoCadastro(participanteDTO.cpf().strip());
-        if (participanteRepository.existsByCpf(cpf)) {
+        if (participanteRepository.existsByEventoIdAndCpf(participanteDTO.eventoId(), cpf)) {
             throw new CpfJaCadastradoException(cpf.valor());
+        }
+
+        if (participanteDTO.idPessoaBorala() != null
+                && participanteRepository.existsByEventoIdAndIdPessoaBorala(
+                        participanteDTO.eventoId(),
+                        participanteDTO.idPessoaBorala()
+                )) {
+            throw new PessoaBoralaJaCadastradaException(
+                    participanteDTO.idPessoaBorala(),
+                    participanteDTO.eventoId()
+            );
         }
 
         return participanteRepository.saveAndFlush(participanteMapper.toEntity(participanteDTO));

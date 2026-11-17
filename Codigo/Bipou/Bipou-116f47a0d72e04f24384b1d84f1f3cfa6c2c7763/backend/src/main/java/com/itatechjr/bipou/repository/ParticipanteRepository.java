@@ -17,11 +17,41 @@ public interface ParticipanteRepository extends JpaRepository<Participante, UUID
 
     List<Participante> findAllByOrderByNomeAsc();
 
-    boolean existsByCpf(Cpf cpf);
+    List<Participante> findAllByEventoIdOrderByNomeAsc(Long eventoId);
 
-    Optional<Participante> findByCpf(Cpf cpf);
+    @Query("""
+            SELECT DISTINCT participante
+              FROM Participante participante
+              JOIN participante.subeventoIds subeventoId
+             WHERE participante.eventoId = :eventoId
+               AND subeventoId = :subeventoId
+             ORDER BY participante.nome ASC
+            """)
+    List<Participante> findAllByEventoIdAndSubeventoIdOrderByNomeAsc(
+            @Param("eventoId") Long eventoId,
+            @Param("subeventoId") Long subeventoId
+    );
 
-    List<Participante> findAllByCpfIn(Collection<Cpf> cpfs);
+    @Query("""
+            SELECT DISTINCT participante
+              FROM Participante participante
+              JOIN participante.subeventoIds subeventoId
+             WHERE subeventoId = :subeventoId
+             ORDER BY participante.nome ASC
+            """)
+    List<Participante> findAllBySubeventoIdOrderByNomeAsc(@Param("subeventoId") Long subeventoId);
+
+    boolean existsByEventoIdAndCpf(Long eventoId, Cpf cpf);
+
+    boolean existsByEventoIdAndIdPessoaBorala(Long eventoId, Long idPessoaBorala);
+
+    Optional<Participante> findByEventoIdAndCpf(Long eventoId, Cpf cpf);
+
+    Optional<Participante> findFirstByCpfOrderByEventoIdAsc(Cpf cpf);
+
+    List<Participante> findAllByEventoIdAndCpfIn(Long eventoId, Collection<Cpf> cpfs);
+
+    List<Participante> findAllByEventoIdAndIdPessoaBoralaIn(Long eventoId, Collection<Long> idsPessoaBorala);
 
     Optional<Participante> findByCadastroId(UUID cadastroId);
 
