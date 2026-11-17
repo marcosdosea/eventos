@@ -281,5 +281,40 @@ namespace Service.Tests
             Assert.AreEqual((uint)65, firstSubevento.VagasDisponiveis);
             Assert.AreEqual((uint)4, firstSubevento.CargaHoraria);
         }
+
+        [TestMethod()]
+        public void Edit_FinalizarSubevento_CalculaFrequenciaSemFinalizarEvento()
+        {
+            var inicio = new DateTime(2024, 9, 2, 8, 0, 0);
+            _context.Eventos.Add(new Evento
+            {
+                Id = 10, Nome = "Evento Pai", Descricao = "Desc", Status = "A",
+                DataInicio = inicio, DataFim = inicio.AddHours(4), CargaHoraria = 4, IdTipoEvento = 1
+            });
+            var subevento = _subeventoService.Get(1);
+            subevento.IdEvento = 10;
+            subevento.DataInicio = inicio;
+            subevento.DataFim = inicio.AddHours(2);
+            subevento.CargaHoraria = 2;
+            _context.Inscricaopessoaeventos.Add(new Inscricaopessoaevento
+            {
+                Id = 10, IdEvento = 10, IdPessoa = 1, IdPapel = 4, Status = "A", DataInscricao = inicio
+            });
+            _context.Inscricaopessoasubeventos.Add(new Inscricaopessoasubevento
+            {
+                IdPessoa = 1, IdSubEvento = 1, IdPapel = 4, Status = "A", DataInscricao = inicio
+            });
+            _context.Participacaopessoasubeventos.Add(new Participacaopessoasubevento
+            {
+                Id = 10, IdPessoa = 1, IdSubEvento = 1, Entrada = inicio, Saida = inicio.AddHours(1)
+            });
+            _context.SaveChanges();
+
+            subevento.Status = "F";
+            _subeventoService.Edit(subevento);
+
+            Assert.AreEqual(50m, _context.Inscricaopessoasubeventos.Find((uint)1, (uint)1)!.FrequenciaFinal);
+            Assert.AreEqual(0m, _context.Inscricaopessoaeventos.Find((uint)10)!.FrequenciaFinal);
+        }
     }
 }

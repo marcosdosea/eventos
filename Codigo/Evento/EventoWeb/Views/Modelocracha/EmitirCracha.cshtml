@@ -101,12 +101,24 @@
                         </span>
                     </div>
 
-                    <div class="d-flex align-items-center gap-2 flex-grow-1 justify-content-end" style="max-width: 380px;">
+                    <div class="d-flex align-items-center gap-2 flex-grow-1 justify-content-end" style="max-width: 520px;">
+                        <div style="min-width: 160px;">
+                            <select id="filtroCargoParticipante" class="form-select rounded-3 py-1 fw-semibold text-secondary" style="border-color: #CBD5E1; font-size: 0.88rem;" title="Filtrar por cargo" aria-label="Filtrar por cargo">
+                                <option value="">Todos os Cargos</option>
+                                @if (Model.CargosDisponiveis != null)
+                                {
+                                    foreach (var cargo in Model.CargosDisponiveis)
+                                    {
+                                        <option value="@cargo">@cargo</option>
+                                    }
+                                }
+                            </select>
+                        </div>
                         <div class="cracha-search-box w-100">
                             <i class="bi bi-search text-muted me-2"></i>
                             <input type="text" id="filtroParticipantes" class="cracha-search-input" placeholder="Filtrar por nome ou CPF..." />
                         </div>
-                        <button type="button" class="cracha-filter-btn" id="btnLimparBusca" title="Limpar busca">
+                        <button type="button" class="cracha-filter-btn" id="btnLimparBusca" title="Limpar busca e filtros">
                             <i class="bi bi-x-lg"></i>
                         </button>
                     </div>
@@ -171,7 +183,10 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <div class="fw-bold text-dark participante-nome-tabela">@p.NomeCracha</div>
+                                            <div class="d-flex align-items-center gap-2 mb-1">
+                                                <span class="fw-bold text-dark participante-nome-tabela">@p.NomeCracha</span>
+                                                <span class="badge rounded-pill bg-light text-primary border border-primary-subtle small py-1 px-2" style="font-size: 0.72rem;">@p.Papel</span>
+                                            </div>
                                             <div class="text-muted small participante-sub-tabela">@(p.OrganizacaoOuDepto ?? p.TipoInscricao)</div>
                                         </td>
                                         <td>
@@ -450,5 +465,7 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/emitircracha-canvas.js" asp-append-version="true"></script>
+    <script src="~/js/emitircracha-export.js" asp-append-version="true"></script>
     <script src="~/js/emitircracha.js" asp-append-version="true"></script>
 }

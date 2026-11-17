@@ -927,5 +927,73 @@ namespace Service.Tests
             Assert.IsTrue(vitrineTodos.Any(e => e.Id == 330));
             Assert.IsTrue(vitrineTodos.Any(e => e.Id == 331));
         }
+
+        [TestMethod()]
+        public void CalcularFrequencia_CalculaProporcaoUnificaSobreposicoesETrataLimites()
+        {
+            var inicio = new DateTime(2026, 11, 5, 8, 0, 0);
+            var fim = inicio.AddHours(8);
+
+            Assert.AreEqual(75m, EventoService.CalcularFrequencia(
+                inicio, fim, 4, new[] { (inicio, (DateTime?)inicio.AddHours(3)) }));
+
+            var sobrepostas = new[]
+            {
+                (inicio.AddHours(-1), (DateTime?)inicio.AddHours(2)),
+                (inicio.AddHours(1), (DateTime?)inicio.AddHours(3)),
+                (inicio.AddHours(7), (DateTime?)fim.AddHours(2))
+            };
+            Assert.AreEqual(50m, EventoService.CalcularFrequencia(inicio, fim, 8, sobrepostas));
+
+            var invalidas = new[]
+            {
+                (inicio, (DateTime?)null),
+                (inicio.AddHours(2), (DateTime?)inicio.AddHours(1)),
+                (fim.AddHours(1), (DateTime?)fim.AddHours(2))
+            };
+            Assert.AreEqual(0m, EventoService.CalcularFrequencia(inicio, fim, 4, invalidas));
+
+            var completas = new[] { (inicio, (DateTime?)fim) };
+            Assert.AreEqual(100m, EventoService.CalcularFrequencia(inicio, fim, 4, completas));
+            Assert.AreEqual(0m, EventoService.CalcularFrequencia(inicio, fim, 0, completas));
+            Assert.AreEqual(0m, EventoService.CalcularFrequencia(null, fim, 4, completas));
+            Assert.AreEqual(0m, EventoService.CalcularFrequencia(fim, inicio, 4, completas));
+        }
+
+        [TestMethod()]
+        public void Edit_FinalizarEvento_CalculaFrequenciaDoEventoESubeventos()
+        {
+            var inicio = new DateTime(2026, 11, 5, 8, 0, 0);
+            _context.Eventos.AddRange(
+                new Evento { Id = 400, Nome = "Evento Freq", Descricao = "Desc", Status = "A", DataInicio = inicio, DataFim = inicio.AddHours(4), CargaHoraria = 4, IdTipoEvento = 1 },
+                new Evento { Id = 401, Nome = "Outro Freq", Descricao = "Desc", Status = "F", DataInicio = inicio, DataFim = inicio.AddHours(4), CargaHoraria = 4, IdTipoEvento = 1 });
+            _context.Subeventos.Add(new Subevento
+            {
+                Id = 410, IdEvento = 400, Nome = "Sub Freq", Descricao = "Sub", Status = "A",
+                DataInicio = inicio, DataFim = inicio.AddHours(2),
+                DataInicioInscricao = inicio.AddDays(-2), DataFimInscricao = inicio.AddDays(-1),
+                CargaHoraria = 2, IdTipoEvento = 1
+            });
+            _context.Inscricaopessoaeventos.AddRange(
+                new Inscricaopessoaevento { Id = 401, IdEvento = 400, IdPessoa = 1, IdPapel = 4, Status = "A", DataInscricao = inicio },
+                new Inscricaopessoaevento { Id = 402, IdEvento = 400, IdPessoa = 2, IdPapel = 4, Status = "C", DataInscricao = inicio, FrequenciaFinal = 12 },
+                new Inscricaopessoaevento { Id = 403, IdEvento = 401, IdPessoa = 1, IdPapel = 4, Status = "A", DataInscricao = inicio, FrequenciaFinal = 27 });
+            _context.Inscricaopessoasubeventos.Add(
+                new Inscricaopessoasubevento { IdPessoa = 1, IdSubEvento = 410, IdPapel = 4, Status = "A", DataInscricao = inicio });
+            _context.Participacaopessoaeventos.Add(
+                new Participacaopessoaevento { Id = 401, IdPessoa = 1, IdEvento = 400, Entrada = inicio, Saida = inicio.AddHours(3) });
+            _context.Participacaopessoasubeventos.Add(
+                new Participacaopessoasubevento { Id = 401, IdPessoa = 1, IdSubEvento = 410, Entrada = inicio, Saida = inicio.AddHours(1) });
+            _context.SaveChanges();
+
+            var evento = _eventoService.Get(400);
+            evento.Status = "F";
+            Assert.IsTrue(_eventoService.Edit(evento, new List<uint>()));
+
+            Assert.AreEqual(75m, _context.Inscricaopessoaeventos.Find((uint)401)!.FrequenciaFinal);
+            Assert.AreEqual(50m, _context.Inscricaopessoasubeventos.Find((uint)1, (uint)410)!.FrequenciaFinal);
+            Assert.AreEqual(12m, _context.Inscricaopessoaeventos.Find((uint)402)!.FrequenciaFinal);
+            Assert.AreEqual(27m, _context.Inscricaopessoaeventos.Find((uint)403)!.FrequenciaFinal);
+        }
     }
 }
