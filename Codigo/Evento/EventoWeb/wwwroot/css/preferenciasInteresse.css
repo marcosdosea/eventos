@@ -3,8 +3,18 @@
    ========================================================================== */
 
 .pref-page-container {
+    max-width: 1140px;
     padding: 1.5rem 0 3rem 0;
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+.pref-select-disabled {
+    border-color: #CBD5E1;
+    background-color: #F8FAFC;
+}
+
+.pref-scope-subtitle {
+    font-size: 0.78rem;
 }
 
 .pref-title {

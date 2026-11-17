@@ -543,10 +543,8 @@ namespace EventoWeb.Controllers
 
         private Pessoa? PessoaAutenticadaPreferencias()
         {
-            var nome = User.Identity?.Name;
-            if (string.IsNullOrWhiteSpace(nome)) return null;
-            var cpf = Methods.RemoveNaoNumericos(nome);
-            return _pessoaService.GetByCpf(nome) ?? (cpf.Length == 11 ? _pessoaService.GetByCpf(cpf) ?? _pessoaService.GetByCpf(Methods.PatternCpf(cpf)) : null);
+            var cpf = Methods.RemoveNaoNumericos(User.Identity?.Name ?? string.Empty);
+            return cpf.Length == 11 ? _pessoaService.GetByCpf(cpf) : null;
         }
 
         private void CarregarPreferencias(PreferenciasInteresseModel model, uint idPessoa)
