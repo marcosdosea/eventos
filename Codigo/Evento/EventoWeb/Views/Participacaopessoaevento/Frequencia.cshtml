@@ -172,10 +172,10 @@
 </div>
 
 <!-- Modal Importar CSV -->
-<div class="modal fade" id="modalImportarCsv" tabindex="-1" aria-labelledby="modalImportarCsvLabel" aria-hidden="true">
+<div class="modal fade" id="modalImportarCsv" tabindex="-1" aria-labelledby="modalImportarCsvLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog">
         <div class="modal-content">
-            <form asp-action="ImportarCsv" asp-controller="ParticipacaoPessoaEvento" method="post" enctype="multipart/form-data">
+            <form id="formImportarCsv" asp-action="ImportarCsv" asp-controller="ParticipacaoPessoaEvento" method="post" enctype="multipart/form-data">
                 @Html.AntiForgeryToken()
                 <input type="hidden" name="idEvento" value="@Model.Evento.Id" />
                 @if (Model.SubEvento != null)
@@ -185,7 +185,7 @@
                 <input type="hidden" name="actionRetorno" value="Frequencia" />
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalImportarCsvLabel">Importar Planilha de Frequência</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    <button type="button" id="btnFecharModalImportarCsv" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
                 </div>
                 <div class="modal-body">
                     <p class="text-muted small">Selecione o arquivo de planilha (formatos <code>.csv</code>, <code>.xlsx</code> ou <code>.xls</code>, como o relatório do SIGAA) para importar os participantes e registrar a frequência.</p>
@@ -193,10 +193,16 @@
                         <label for="arquivoPlanilha" class="form-label">Arquivo de Planilha</label>
                         <input type="file" id="arquivoPlanilha" name="arquivoPlanilha" class="form-control" accept=".csv,.xlsx,.xls" required />
                     </div>
+                    <div id="statusCarregamentoImportacao" class="d-none text-center py-3">
+                        <div class="spinner-border text-primary mb-2" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                        <div class="small text-muted fw-semibold">Processando planilha e registrando frequência, aguarde...</div>
+                    </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Importar</button>
+                    <button type="button" id="btnCancelarImportarCsv" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" id="btnSubmitImportarCsv" class="btn btn-primary">Importar</button>
                 </div>
             </form>
         </div>
@@ -241,6 +247,19 @@
                 if (formExcluirAtual) {
                     formExcluirAtual.submit();
                 }
+            });
+
+            // Animação de carregamento e prevenção de duplo envio na importação de planilha
+            $('#formImportarCsv').on('submit', function () {
+                var fileInput = document.getElementById('arquivoPlanilha');
+                if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                    return;
+                }
+                $('#btnSubmitImportarCsv')
+                    .prop('disabled', true)
+                    .html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Importando...');
+                $('#btnCancelarImportarCsv, #btnFecharModalImportarCsv').prop('disabled', true);
+                $('#statusCarregamentoImportacao').removeClass('d-none');
             });
         });
     </script>
