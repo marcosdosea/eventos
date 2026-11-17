@@ -593,6 +593,7 @@ public partial class EventoContext : DbContext
             entity.Property(e => e.IdAreaInteresse).HasColumnName("idAreaInteresse");
             entity.Property(e => e.TodosEstados)
                 .HasDefaultValueSql("'1'")
+                .ValueGeneratedNever()
                 .HasColumnName("todosEstados");
 
             entity.HasOne(d => d.IdAreaInteresseNavigation).WithMany(p => p.Pessoaareainteresses)

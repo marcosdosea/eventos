@@ -87,6 +87,9 @@
                             <li>
                                 <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Gerenciar Conta</a>
                             </li>
+                            <li>
+                                <a class="dropdown-item" asp-area="" asp-controller="Pessoa" asp-action="PreferenciasInteresse" title="Áreas de Interesse">Áreas de Interesse</a>
+                            </li>
                             @if (User.IsInRole("ADMINISTRADOR") && (User.IsInRole("COLABORADOR") || User.IsInRole("GESTOR") || User.IsInRole("USUARIO") || User.IsInRole("PARTICIPANTE")))
                             {
                                 <li>
