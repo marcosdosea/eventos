@@ -4,6 +4,7 @@ namespace Core.Service
 {
     public interface IEventoService
     {
+        Task<List<BipouEventoDTO>> GetEventosBipouAsync(string cpf, bool gestor, bool colaborador, CancellationToken cancellationToken = default);
         uint Create(Evento evento, List<uint> idsAreaInteresse = null);
         bool Edit(Evento evento, List<uint> idsAreaInteresse);
         void Delete(uint Id);

@@ -1,5 +1,6 @@
 using Core;
 using Core.Service;
+using Core.DTO;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Util;
@@ -14,12 +15,51 @@ namespace Service
         private readonly ISubeventoService _subeventoService;
 
         private const int PapelParticipante = 4;
+
         public InscricaoService(EventoContext context, UserManager<UsuarioIdentity> userManager, IEventoService eventoService, ISubeventoService subeventoService)
         {
             _userManager = userManager;
             _context = context;
             _eventoService = eventoService;
             _subeventoService = subeventoService;
+        }
+
+        public async Task<List<BipouParticipanteDTO>> GetParticipantesBipouAsync(uint idEvento, uint? idSubevento = null, CancellationToken cancellationToken = default)
+        {
+            var inscricoes = await _context.Inscricaopessoaeventos.AsNoTracking()
+                .Where(i => i.IdEvento == idEvento && i.IdPapel == PapelParticipante &&
+                    (i.Status == "A" || i.Status == "S"))
+                .OrderBy(i => i.IdPessoa).ThenBy(i => i.Id)
+                .Select(i => new { i.IdPessoa, i.IdPessoaNavigation.Nome, i.NomeCracha,
+                    NomeCrachaPessoa = i.IdPessoaNavigation.NomeCracha, i.IdPessoaNavigation.Cpf,
+                    i.Status, i.ValorTotal })
+                .ToListAsync(cancellationToken);
+
+            // O total deve seguir o mesmo critério usado em Minhas Inscrições.
+            // As consultas projetam só os campos necessários, sem carregar fotos ou pagamentos.
+            var subinscricoes = await _context.Inscricaopessoasubeventos.AsNoTracking()
+                .Where(s => s.IdSubEventoNavigation.IdEvento == idEvento)
+                .Select(s => new { s.IdPessoa, s.IdSubEvento, s.IdPapel, s.Status, s.Valor,
+                    StatusSubevento = s.IdSubEventoNavigation.Status })
+                .ToListAsync(cancellationToken);
+            var porPessoa = subinscricoes.ToLookup(s => s.IdPessoa);
+
+            var autorizadas = inscricoes.Where(i => i.Status == "A" ||
+                (i.Status == "S" && i.ValorTotal + porPessoa[i.IdPessoa].Sum(s => s.Valor) <= 0));
+            return autorizadas.GroupBy(i => i.IdPessoa).Select(g =>
+            {
+                // Quando há mais de um ingresso, prioriza o ativo e mantém o status real.
+                var inscricao = g.OrderByDescending(i => i.Status == "A").First();
+                var cracha = string.IsNullOrWhiteSpace(inscricao.NomeCracha)
+                    ? inscricao.NomeCrachaPessoa : inscricao.NomeCracha;
+                var idsSubeventos = porPessoa[inscricao.IdPessoa]
+                    .Where(s => s.IdPapel == PapelParticipante && s.StatusSubevento == "A" &&
+                        (s.Status == "A" || (s.Status == "S" && s.Valor <= 0)))
+                    .Select(s => s.IdSubEvento).Distinct().OrderBy(id => id).ToArray();
+                return new BipouParticipanteDTO(inscricao.IdPessoa, inscricao.Nome,
+                    string.IsNullOrWhiteSpace(cracha) ? inscricao.Nome : cracha,
+                    Methods.RemoveNaoNumericos(inscricao.Cpf), inscricao.Status, idsSubeventos);
+            }).Where(p => !idSubevento.HasValue || p.SubeventosInscritos.Contains(idSubevento.Value)).ToList();
         }
 
         public bool IsInscrito(uint idPessoa, uint idEvento)
