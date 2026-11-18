@@ -238,6 +238,7 @@ namespace EventoWeb.Controllers
                     existente.IdTipoEvento = subeventoModel.IdTipoEvento;
                     existente.IdEvento = idEvento;
                     _subeventoService.Edit(existente);
+                    _subeventoService.AtualizarVagasDisponiveis(existente.Id);
                     TempData["SuccessMessage"] = $"Subevento \"{existente.Nome}\" alterado com sucesso!";
                 }
                 else
