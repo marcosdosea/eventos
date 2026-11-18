@@ -12,6 +12,14 @@ public enum StatusCertificadoInscricao
     Cancelada
 }
 
+public enum StatusPagamentoInscricao
+{
+    Pendente,
+    AguardandoConfirmacao,
+    Confirmado,
+    Cancelado
+}
+
 public class InscricaoEventoModel
 {
     public uint Id { get; set; }
@@ -59,6 +67,22 @@ public class InscricaoEventoModel
     public int QuantidadeIngressos { get; set; } = 1;
 
     public virtual ICollection<Inscricaopessoasubevento> Inscricaopessoasubeventos { get; set; } = new List<Inscricaopessoasubevento>();
+
+    public decimal ValorTotalGeral => ValorTotal + (Inscricaopessoasubeventos?.Sum(s => s.Valor) ?? 0m);
+
+    public StatusPagamentoInscricao StatusPagamento
+    {
+        get
+        {
+            if (Status == "C")
+                return StatusPagamentoInscricao.Cancelado;
+            if (Status == "A" || ValorTotalGeral <= 0)
+                return StatusPagamentoInscricao.Confirmado;
+            if (Pagamentos != null && Pagamentos.Any())
+                return StatusPagamentoInscricao.AguardandoConfirmacao;
+            return StatusPagamentoInscricao.Pendente;
+        }
+    }
 
     public StatusCertificadoInscricao StatusCertificado
     {

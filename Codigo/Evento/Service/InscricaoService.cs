@@ -308,6 +308,7 @@ namespace Service
                 .Include(i => i.IdEventoNavigation)
                 .Include(i => i.IdPessoaNavigation)
                 .Include(i => i.IdTipoInscricaoNavigation)
+                .Include(i => i.Pagamentos)
                 .Where(i => i.IdPessoaNavigation != null && (i.IdPessoaNavigation.Cpf == cpfParaBusca || i.IdPessoaNavigation.Cpf == username || (cpfFormatado != null && i.IdPessoaNavigation.Cpf == cpfFormatado)))
                 .OrderByDescending(i => i.DataInscricao)
                 .ThenByDescending(i => i.Id)
