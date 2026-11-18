@@ -6,8 +6,11 @@ using EventoWeb.Helpers;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Concurrent;
 using System.IO;
+using System.Net;
 using Util;
 
 namespace EventoWeb.Controllers
@@ -17,8 +20,13 @@ namespace EventoWeb.Controllers
     public class ModelocrachaController : Controller
     {
         private const string TextoPadraoCracha = "Acesso pessoal e intransferível. Obrigatório porte visível em todas as atividades do congresso e catracas credenciadas.";
+        private const string AvatarPadraoDataUrl = "data:image/png;base64,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";
         private const int MaxLogotipoBytes = 64 * 1024;
         private const int MaxLogotipoBase64Chars = ((MaxLogotipoBytes + 2) / 3) * 4;
+
+        private static readonly object _arquivoHistoricoLock = new();
+        private static bool _modoTesteEmMemoria = false;
+        private static readonly ConcurrentDictionary<(uint IdEvento, uint IdPessoa), DateTime> _crachasEnviadosPorEmail = CarregarHistoricoPersistido();
 
         private readonly IModelocrachaService _modelocrachaService;
         private readonly IEventoService _eventoService;
@@ -26,6 +34,7 @@ namespace EventoWeb.Controllers
         private readonly IInscricaoService _inscricaoService;
         private readonly IMapper _mapper;
         private readonly IWebHostEnvironment? _environment;
+        private readonly IEmailSender? _emailSender;
 
         public ModelocrachaController(
             IModelocrachaService modelocrachaService,
@@ -33,7 +42,8 @@ namespace EventoWeb.Controllers
             IPessoaService pessoaSevice,
             IInscricaoService inscricaoService,
             IMapper mapper,
-            IWebHostEnvironment? environment = null)
+            IWebHostEnvironment? environment = null,
+            IEmailSender? emailSender = null)
         {
             _modelocrachaService = modelocrachaService;
             _eventoService = eventoService;
@@ -41,6 +51,106 @@ namespace EventoWeb.Controllers
             _inscricaoService = inscricaoService;
             _mapper = mapper;
             _environment = environment;
+            _emailSender = emailSender;
+        }
+
+        private static string ObterCaminhoArquivoHistoricoEnvio()
+        {
+            var baseDir = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            if (string.IsNullOrWhiteSpace(baseDir))
+            {
+                baseDir = AppContext.BaseDirectory;
+            }
+            return Path.Combine(baseDir, "BoralaEvento", "crachas-enviados-email.json");
+        }
+
+        private static ConcurrentDictionary<(uint IdEvento, uint IdPessoa), DateTime> CarregarHistoricoPersistido()
+        {
+            var dict = new ConcurrentDictionary<(uint IdEvento, uint IdPessoa), DateTime>();
+            try
+            {
+                var caminho = ObterCaminhoArquivoHistoricoEnvio();
+                if (!System.IO.File.Exists(caminho))
+                {
+                    return dict;
+                }
+
+                var json = System.IO.File.ReadAllText(caminho, System.Text.Encoding.UTF8);
+                var dados = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, DateTime>>(json);
+                if (dados != null)
+                {
+                    foreach (var kvp in dados)
+                    {
+                        var partes = kvp.Key.Split(':');
+                        if (partes.Length == 2 &&
+                            uint.TryParse(partes[0], out var idEvento) &&
+                            uint.TryParse(partes[1], out var idPessoa))
+                        {
+                            dict[(idEvento, idPessoa)] = kvp.Value;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Ignora falhas de leitura do cache local
+            }
+            return dict;
+        }
+
+        private static void SalvarHistoricoPersistido()
+        {
+            if (_modoTesteEmMemoria)
+            {
+                return;
+            }
+
+            try
+            {
+                lock (_arquivoHistoricoLock)
+                {
+                    var caminho = ObterCaminhoArquivoHistoricoEnvio();
+                    var pasta = Path.GetDirectoryName(caminho);
+                    if (!string.IsNullOrWhiteSpace(pasta) && !Directory.Exists(pasta))
+                    {
+                        Directory.CreateDirectory(pasta);
+                    }
+
+                    var serializavel = _crachasEnviadosPorEmail.ToDictionary(
+                        kvp => $"{kvp.Key.IdEvento}:{kvp.Key.IdPessoa}",
+                        kvp => kvp.Value);
+
+                    var json = System.Text.Json.JsonSerializer.Serialize(serializavel);
+                    System.IO.File.WriteAllText(caminho, json, System.Text.Encoding.UTF8);
+                }
+            }
+            catch
+            {
+                // Ignora falhas de gravação do cache local
+            }
+        }
+
+        public static void RegistrarEnvioEmail(uint idEvento, uint idPessoa, DateTime? dataHora = null)
+        {
+            _crachasEnviadosPorEmail[(idEvento, idPessoa)] = dataHora ?? DateTime.Now;
+            SalvarHistoricoPersistido();
+        }
+
+        public static void RemoverRegistroEnvioEmail(uint idEvento, uint idPessoa)
+        {
+            _crachasEnviadosPorEmail.TryRemove((idEvento, idPessoa), out _);
+            SalvarHistoricoPersistido();
+        }
+
+        public static DateTime? ObterDataEnvioEmail(uint idEvento, uint idPessoa)
+        {
+            return _crachasEnviadosPorEmail.TryGetValue((idEvento, idPessoa), out var dt) ? dt : null;
+        }
+
+        public static void LimparHistoricoEnvioEmail()
+        {
+            _modoTesteEmMemoria = true;
+            _crachasEnviadosPorEmail.Clear();
         }
 
         private bool IsAuthorized(uint idEvento)
@@ -915,6 +1025,7 @@ namespace EventoWeb.Controllers
                         bool inscricaoAtiva = ins.Status == "A" || ins.Status == "1" || string.IsNullOrEmpty(ins.Status);
                         bool statusApto = inscricaoAtiva && temFoto;
                         string statusDescricao = statusApto ? "Apto" : (!temFoto ? "Pendente Foto" : "Inscrição Pendente");
+                        var dataEnvio = ObterDataEnvioEmail(idEventoAlvo, ins.IdPessoa);
 
                         participantes.Add(new ParticipanteCrachaItemModel
                         {
@@ -933,7 +1044,10 @@ namespace EventoWeb.Controllers
                             StatusDescricao = statusDescricao,
                             FotoDataUrl = fotoDataUrl,
                             QrCodeBase64 = qrCodeBase64,
-                            Selecionado = true
+                            Selecionado = true,
+                            Email = pessoa?.Email,
+                            CrachaEnviadoEmail = dataEnvio.HasValue,
+                            DataEnvioEmail = dataEnvio
                         });
                     }
                 }
@@ -1011,6 +1125,7 @@ namespace EventoWeb.Controllers
             {
                 if (!inscricoes.Any())
                 {
+                    RemoverRegistroEnvioEmail(model.IdEvento, model.IdPessoa);
                     var demoParticipante = ObterParticipantesDemonstracao(model.IdEvento)
                         .FirstOrDefault(d => d.IdPessoa == model.IdPessoa);
                     var qrDemo = CrachaQrCodeHelper.GerarQrCodeBase64(
@@ -1029,6 +1144,7 @@ namespace EventoWeb.Controllers
                         qrCodeBase64 = !string.IsNullOrEmpty(qrDemo)
                             ? qrDemo
                             : GerarQrCodeSeguro($"[{model.IdPessoa}] [{nomeCracha}] [{model.IdEvento}]"),
+                        crachaEnviadoEmail = false,
                         mensagem = "Dados do participante atualizados com sucesso!"
                     });
                 }
@@ -1055,6 +1171,7 @@ namespace EventoWeb.Controllers
                 return BadRequest(new { sucesso = false, mensagem = "Não foi possível salvar as alterações do participante. Tente novamente." });
             }
 
+            RemoverRegistroEnvioEmail(model.IdEvento, model.IdEvento == 0 ? pessoa.Id : model.IdPessoa);
             var subeventos = _inscricaoService.GetSubByEvento(model.IdEvento);
             var qrCodeBase64 = GerarQrCodeInscricao(inscricao, nomeCracha, model.IdEvento, subeventos);
 
@@ -1065,8 +1182,325 @@ namespace EventoWeb.Controllers
                 nomeCompleto,
                 nomeCracha,
                 qrCodeBase64,
+                crachaEnviadoEmail = false,
                 mensagem = "Dados do participante atualizados com sucesso!"
             });
+        }
+
+        [HttpPost]
+        [Route("EnviarCrachaEmail")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EnviarCrachaEmail([FromForm] EnviarCrachaEmailModel model)
+        {
+            if (model == null || model.IdEvento == 0)
+            {
+                return BadRequest(new { sucesso = false, mensagem = "Dados inválidos para envio de crachá por e-mail." });
+            }
+
+            if (!IsAuthorizedParaEmissao(model.IdEvento))
+            {
+                return Forbid();
+            }
+
+            if (_emailSender == null)
+            {
+                return BadRequest(new { sucesso = false, mensagem = "Serviço de envio de e-mail não configurado." });
+            }
+
+            var idsAlvo = new List<uint>();
+            if (model.IdPessoa.HasValue && model.IdPessoa.Value > 0)
+            {
+                idsAlvo.Add(model.IdPessoa.Value);
+            }
+            if (model.IdsPessoas != null && model.IdsPessoas.Any())
+            {
+                idsAlvo.AddRange(model.IdsPessoas.Where(id => id > 0));
+            }
+            idsAlvo = idsAlvo.Distinct().ToList();
+
+            if (!idsAlvo.Any())
+            {
+                return BadRequest(new { sucesso = false, mensagem = "Nenhum participante selecionado para envio do crachá." });
+            }
+
+            var evento = _eventoService.Get(model.IdEvento);
+            var nomeEvento = evento?.Nome ?? $"Evento #{model.IdEvento}";
+            var periodoEvento = evento?.DataInicio.HasValue == true
+                ? (evento.DataFim.HasValue
+                    ? $"{evento.DataInicio.Value:dd/MM/yyyy HH:mm} até {evento.DataFim.Value:dd/MM/yyyy HH:mm}"
+                    : evento.DataInicio.Value.ToString("dd/MM/yyyy HH:mm"))
+                : "A definir";
+            var localEvento = (evento != null && !string.IsNullOrWhiteSpace(evento.Cidade) && !string.IsNullOrWhiteSpace(evento.Estado))
+                ? $"{evento.Cidade} - {evento.Estado}"
+                : (evento?.Estado ?? "Local a definir");
+
+            var modelosDoEvento = _modelocrachaService.GetByEvento(model.IdEvento)?.ToList() ?? new List<Modelocracha>();
+            Modelocracha? modeloSelecionado = null;
+            if (model.IdModelo.HasValue && model.IdModelo.Value > 0)
+            {
+                modeloSelecionado = modelosDoEvento.FirstOrDefault(m => m.Id == model.IdModelo.Value);
+            }
+            modeloSelecionado ??= modelosDoEvento.FirstOrDefault();
+            var textoModelo = !string.IsNullOrWhiteSpace(modeloSelecionado?.Texto)
+                ? modeloSelecionado.Texto
+                : TextoPadraoCracha;
+            bool qrcodeHabilitado = modeloSelecionado == null || modeloSelecionado.Qrcode != 0;
+
+            var inscricoes = _inscricaoService.GetByEvento(model.IdEvento)?.ToList() ?? new List<Inscricaopessoaevento>();
+            var subeventos = _inscricaoService.GetSubByEvento(model.IdEvento)?.ToList() ?? new List<Inscricaopessoasubevento>();
+            var participantesDemo = !inscricoes.Any()
+                ? ObterParticipantesDemonstracao(model.IdEvento)
+                : new List<ParticipanteCrachaItemModel>();
+
+            int enviados = 0;
+            int ignorados = 0;
+            int falhas = 0;
+            var detalhesEnviados = new List<object>();
+            var erros = new List<string>();
+
+            foreach (var idPessoaAlvo in idsAlvo)
+            {
+                if (model.ApenasNaoEnviados && ObterDataEnvioEmail(model.IdEvento, idPessoaAlvo).HasValue)
+                {
+                    ignorados++;
+                    continue;
+                }
+
+                string? emailDestino = null;
+                string nomeCompleto = "Participante";
+                string nomeCracha = "Participante";
+                string papel = "PARTICIPANTE";
+                string organizacao = "Participante Homologado";
+                string cpfMascarado = "***.***.***-**";
+                string codigoCredencial = $"#{idPessoaAlvo:D5}";
+                string codigoPresenca = $"BL - EVT - {DateTime.Now.Year} - {idPessoaAlvo:D5}";
+                string qrCodeBase64 = string.Empty;
+                string? fotoDataUrl = null;
+                string? imagemCrachaRenderizada = null;
+
+                if (model.ImagensCrachaBase64 != null && model.ImagensCrachaBase64.TryGetValue(idPessoaAlvo, out var imgCracha) && !string.IsNullOrWhiteSpace(imgCracha))
+                {
+                    imagemCrachaRenderizada = imgCracha.Trim();
+                }
+
+                var ins = inscricoes.FirstOrDefault(i => i.IdPessoa == idPessoaAlvo);
+                if (ins != null)
+                {
+                    var pessoa = _pessoaService.Get(idPessoaAlvo) ?? ins.IdPessoaNavigation;
+                    emailDestino = pessoa?.Email?.Trim();
+                    nomeCompleto = (pessoa?.Nome ?? "Participante").Trim();
+                    nomeCracha = !string.IsNullOrWhiteSpace(ins.NomeCracha)
+                        ? ins.NomeCracha.Trim()
+                        : (!string.IsNullOrWhiteSpace(pessoa?.NomeCracha)
+                            ? pessoa.NomeCracha.Trim()
+                            : nomeCompleto);
+                    papel = ObterDescricaoPapel(ins.IdPapel, ins.IdPapelNavigation?.Nome);
+                    organizacao = ObterOrganizacaoOuDepto(ins);
+                    cpfMascarado = MascararCpfParaExibicao(pessoa?.Cpf);
+                    codigoCredencial = $"#{ins.Id:D5}";
+                    codigoPresenca = $"BL - EVT - {DateTime.Now.Year} - {ins.Id:D5}";
+                    FotoHelper.TryObterFotoDataUrl(pessoa?.Foto, out fotoDataUrl);
+                    if (qrcodeHabilitado)
+                    {
+                        qrCodeBase64 = GerarQrCodeInscricao(ins, nomeCracha, model.IdEvento, subeventos);
+                    }
+                }
+                else if (participantesDemo.Any())
+                {
+                    var demo = participantesDemo.FirstOrDefault(d => d.IdPessoa == idPessoaAlvo);
+                    if (demo != null)
+                    {
+                        emailDestino = demo.Email?.Trim();
+                        nomeCompleto = demo.NomeCompleto;
+                        nomeCracha = demo.NomeCracha;
+                        papel = demo.Papel;
+                        organizacao = demo.OrganizacaoOuDepto ?? demo.TipoInscricao;
+                        cpfMascarado = demo.CpfMascarado;
+                        codigoCredencial = demo.CodigoCredencial;
+                        codigoPresenca = demo.CodigoPresenca;
+                        fotoDataUrl = demo.FotoDataUrl;
+                        if (qrcodeHabilitado)
+                        {
+                            qrCodeBase64 = demo.QrCodeBase64;
+                        }
+                    }
+                    else
+                    {
+                        falhas++;
+                        erros.Add($"Participante #{idPessoaAlvo} não encontrado no evento.");
+                        continue;
+                    }
+                }
+                else
+                {
+                    falhas++;
+                    erros.Add($"Participante #{idPessoaAlvo} não encontrado no evento.");
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(emailDestino) || !emailDestino.Contains("@"))
+                {
+                    falhas++;
+                    erros.Add($"O participante {nomeCracha} não possui um e-mail válido cadastrado.");
+                    continue;
+                }
+
+                try
+                {
+                    var htmlBody = MontarCorpoEmailCracha(
+                        nomeCompleto,
+                        nomeEvento,
+                        periodoEvento,
+                        localEvento,
+                        nomeCracha,
+                        papel,
+                        organizacao,
+                        cpfMascarado,
+                        codigoCredencial,
+                        codigoPresenca,
+                        qrCodeBase64,
+                        textoModelo,
+                        fotoDataUrl,
+                        imagemCrachaRenderizada);
+
+                    var assunto = $"Boralá - Sua Credencial Digital ({nomeEvento})";
+                    await _emailSender.SendEmailAsync(emailDestino, assunto, htmlBody);
+
+                    var agora = DateTime.Now;
+                    RegistrarEnvioEmail(model.IdEvento, idPessoaAlvo, agora);
+                    enviados++;
+                    detalhesEnviados.Add(new
+                    {
+                        idPessoa = idPessoaAlvo,
+                        email = emailDestino,
+                        enviado = true,
+                        dataEnvio = agora.ToString("dd/MM/yyyy HH:mm")
+                    });
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Trace.TraceError($"Falha ao enviar crachá por e-mail para {emailDestino}: {ex}");
+                    falhas++;
+                    erros.Add($"Não foi possível enviar o e-mail para {nomeCracha}.");
+                }
+            }
+
+            if (enviados == 0 && falhas > 0)
+            {
+                var msgFalha = erros.FirstOrDefault() ?? "Não foi possível enviar o(s) crachá(s) por e-mail.";
+                return BadRequest(new
+                {
+                    sucesso = false,
+                    enviados,
+                    ignorados,
+                    falhas,
+                    detalhesEnviados,
+                    mensagem = msgFalha
+                });
+            }
+
+            string mensagemResumo;
+            if (enviados == 0 && ignorados > 0)
+            {
+                mensagemResumo = $"Nenhum novo envio necessário: {ignorados} participante(s) selecionado(s) já haviam recebido o crachá.";
+            }
+            else if (falhas > 0)
+            {
+                mensagemResumo = $"{enviados} crachá(s) enviado(s) por e-mail com sucesso ({falhas} falha(s) e {ignorados} já enviado(s)).";
+            }
+            else if (ignorados > 0)
+            {
+                mensagemResumo = $"{enviados} crachá(s) enviado(s) com sucesso ({ignorados} já enviado(s) anteriormente foram ignorados).";
+            }
+            else
+            {
+                mensagemResumo = enviados == 1
+                    ? "Crachá enviado por e-mail com sucesso!"
+                    : $"{enviados} crachás enviados por e-mail com sucesso!";
+            }
+
+            return Json(new
+            {
+                sucesso = true,
+                enviados,
+                ignorados,
+                falhas,
+                detalhesEnviados,
+                mensagem = mensagemResumo
+            });
+        }
+
+        private string MontarCorpoEmailCracha(
+            string nomeParticipante,
+            string nomeEvento,
+            string periodoEvento,
+            string localEvento,
+            string nomeCracha,
+            string papel,
+            string organizacao,
+            string cpfMascarado,
+            string codigoCredencial,
+            string codigoPresenca,
+            string qrCodeBase64,
+            string textoModelo,
+            string? fotoDataUrl = null,
+            string? imagemCrachaRenderizada = null)
+        {
+            string? templateHtml = null;
+            if (_environment != null && !string.IsNullOrWhiteSpace(_environment.WebRootPath))
+            {
+                var caminhoTemplate = Path.Combine(_environment.WebRootPath, "templates", "EmailCrachaParticipante.html");
+                if (System.IO.File.Exists(caminhoTemplate))
+                {
+                    templateHtml = System.IO.File.ReadAllText(caminhoTemplate);
+                }
+            }
+
+            var qrSrc = !string.IsNullOrWhiteSpace(qrCodeBase64)
+                ? (qrCodeBase64.Trim().StartsWith("data:", StringComparison.OrdinalIgnoreCase)
+                    ? qrCodeBase64.Trim()
+                    : $"data:image/png;base64,{qrCodeBase64.Trim()}")
+                : string.Empty;
+
+            var blocoQrCode = !string.IsNullOrWhiteSpace(qrSrc)
+                ? $"<div class=\"qrcode-box\"><img src=\"{qrSrc}\" alt=\"QR Code de Presença\" width=\"160\" height=\"160\" style=\"display:block;margin:0 auto;\" /></div>"
+                : string.Empty;
+
+            var avatarSrc = !string.IsNullOrWhiteSpace(fotoDataUrl) && fotoDataUrl.Trim().StartsWith("data:image/", StringComparison.OrdinalIgnoreCase)
+                ? fotoDataUrl.Trim()
+                : AvatarPadraoDataUrl;
+
+            var blocoFoto = $"<div style=\"margin-bottom:10px;\"><img src=\"{avatarSrc}\" alt=\"Foto do Participante\" width=\"78\" height=\"78\" style=\"border-radius:50%;object-fit:cover;border:3px solid #E2E8F0;box-shadow:0 2px 8px rgba(15,23,42,0.12);display:inline-block;\" /></div>";
+
+            if (string.IsNullOrWhiteSpace(templateHtml))
+            {
+                return $@"<html><body>
+                    <h2>Olá, {WebUtility.HtmlEncode(nomeParticipante)}!</h2>
+                    <p>Sua credencial para o evento <strong>{WebUtility.HtmlEncode(nomeEvento)}</strong>:</p>
+                    {blocoFoto}
+                    <div><strong>Nome no Crachá:</strong> {WebUtility.HtmlEncode(nomeCracha)}</div>
+                    <div><strong>Papel:</strong> {WebUtility.HtmlEncode(papel)}</div>
+                    <div><strong>Credencial:</strong> {WebUtility.HtmlEncode(codigoCredencial)}</div>
+                    <div><strong>Código de Presença:</strong> {WebUtility.HtmlEncode(codigoPresenca)}</div>
+                    {blocoQrCode}
+                </body></html>";
+            }
+
+            return templateHtml
+                .Replace("{{NomeParticipante}}", WebUtility.HtmlEncode(nomeParticipante))
+                .Replace("{{NomeEvento}}", WebUtility.HtmlEncode(nomeEvento))
+                .Replace("{{PeriodoEvento}}", WebUtility.HtmlEncode(periodoEvento))
+                .Replace("{{LocalEvento}}", WebUtility.HtmlEncode(localEvento))
+                .Replace("{{BlocoFotoParticipante}}", blocoFoto)
+                .Replace("{{NomeCracha}}", WebUtility.HtmlEncode(nomeCracha))
+                .Replace("{{Papel}}", WebUtility.HtmlEncode(papel))
+                .Replace("{{Organizacao}}", WebUtility.HtmlEncode(organizacao))
+                .Replace("{{CpfMascarado}}", WebUtility.HtmlEncode(cpfMascarado))
+                .Replace("{{CodigoCredencial}}", WebUtility.HtmlEncode(codigoCredencial))
+                .Replace("{{CodigoPresenca}}", WebUtility.HtmlEncode(codigoPresenca))
+                .Replace("{{BlocoQrCode}}", blocoQrCode)
+                .Replace("{{TextoModelo}}", WebUtility.HtmlEncode(textoModelo))
+                .Replace("{{AnoAtual}}", DateTime.Now.Year.ToString());
         }
 
         private static string GerarQrCodeInscricao(
@@ -1168,7 +1602,10 @@ namespace EventoWeb.Controllers
                     StatusApto = true,
                     StatusDescricao = "Apto",
                     QrCodeBase64 = CrachaQrCodeHelper.GerarQrCodeBase64(1, "04299988818", "Cassiano Menezes", idEvento, Enumerable.Empty<uint>()),
-                    Selecionado = true
+                    Selecionado = true,
+                    Email = "cassiano@borala.com",
+                    CrachaEnviadoEmail = ObterDataEnvioEmail(idEvento, 1).HasValue,
+                    DataEnvioEmail = ObterDataEnvioEmail(idEvento, 1)
                 },
                 new ParticipanteCrachaItemModel
                 {
@@ -1186,7 +1623,10 @@ namespace EventoWeb.Controllers
                     StatusApto = true,
                     StatusDescricao = "Apto",
                     QrCodeBase64 = CrachaQrCodeHelper.GerarQrCodeBase64(2, "11988877745", "Carlos E. M. Santos", idEvento, Enumerable.Empty<uint>()),
-                    Selecionado = true
+                    Selecionado = true,
+                    Email = "carlos@borala.com",
+                    CrachaEnviadoEmail = ObterDataEnvioEmail(idEvento, 2).HasValue,
+                    DataEnvioEmail = ObterDataEnvioEmail(idEvento, 2)
                 },
                 new ParticipanteCrachaItemModel
                 {
@@ -1204,7 +1644,10 @@ namespace EventoWeb.Controllers
                     StatusApto = true,
                     StatusDescricao = "Apto",
                     QrCodeBase64 = CrachaQrCodeHelper.GerarQrCodeBase64(3, "83277766601", "Mariana Silveira Rocha", idEvento, Enumerable.Empty<uint>()),
-                    Selecionado = true
+                    Selecionado = true,
+                    Email = "mariana@borala.com",
+                    CrachaEnviadoEmail = ObterDataEnvioEmail(idEvento, 3).HasValue,
+                    DataEnvioEmail = ObterDataEnvioEmail(idEvento, 3)
                 },
                 new ParticipanteCrachaItemModel
                 {
@@ -1222,7 +1665,10 @@ namespace EventoWeb.Controllers
                     StatusApto = true,
                     StatusDescricao = "Apto",
                     QrCodeBase64 = CrachaQrCodeHelper.GerarQrCodeBase64(4, "55466655590", "Rafael Lima Mendes", idEvento, Enumerable.Empty<uint>()),
-                    Selecionado = true
+                    Selecionado = true,
+                    Email = "rafael@borala.com",
+                    CrachaEnviadoEmail = ObterDataEnvioEmail(idEvento, 4).HasValue,
+                    DataEnvioEmail = ObterDataEnvioEmail(idEvento, 4)
                 },
                 new ParticipanteCrachaItemModel
                 {
@@ -1240,7 +1686,10 @@ namespace EventoWeb.Controllers
                     StatusApto = false,
                     StatusDescricao = "Pendente Foto",
                     QrCodeBase64 = CrachaQrCodeHelper.GerarQrCodeBase64(5, "90155544422", "Júlia Prado Fontes", idEvento, Enumerable.Empty<uint>()),
-                    Selecionado = false
+                    Selecionado = false,
+                    Email = "julia@borala.com",
+                    CrachaEnviadoEmail = ObterDataEnvioEmail(idEvento, 5).HasValue,
+                    DataEnvioEmail = ObterDataEnvioEmail(idEvento, 5)
                 }
             };
             return demo;

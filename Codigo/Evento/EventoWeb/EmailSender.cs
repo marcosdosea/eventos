@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 using System.Net;
 using System.Net.Mail;
+using System.Text;
+using System.Text.RegularExpressions;
 using static QRCoder.PayloadGenerator.SwissQrCode;
 
 namespace EventoWeb
@@ -46,24 +48,91 @@ namespace EventoWeb
             }
         }
    
-        public Task SendEmailAsync(string email, string subject, string htmlMessage)
+        public async Task SendEmailAsync(string email, string subject, string htmlMessage)
         {
             if (_client == null || string.IsNullOrWhiteSpace(_from))
             {
                 _logger.LogWarning("Configuração SMTP ausente. E-mail para {Email} ({Subject}) não pôde ser enviado.", email, subject);
-                return Task.CompletedTask;
+                return;
             }
 
-            var mailMessage = new MailMessage
+            using var mailMessage = new MailMessage
             {
                 From = new MailAddress(_from),
                 Subject = subject,
-                Body = htmlMessage,
                 IsBodyHtml = true
             };
             mailMessage.To.Add(email);
 
-            return _client.SendMailAsync(mailMessage);
+            var streamsParaDispor = new List<MemoryStream>();
+            try
+            {
+                var linkedResources = new List<LinkedResource>();
+                int index = 0;
+
+                string htmlProcessado = Regex.Replace(
+                    htmlMessage ?? string.Empty,
+                    @"src\s*=\s*[""']data:(?<mime>image/[a-zA-Z0-9.+-]+);base64,(?<data>[A-Za-z0-9+/=\s]+)[""']",
+                    match =>
+                    {
+                        var mime = match.Groups["mime"].Value.Trim().ToLowerInvariant();
+                        var base64 = Regex.Replace(match.Groups["data"].Value, @"\s+", "");
+                        try
+                        {
+                            var bytes = Convert.FromBase64String(base64);
+                            var msInline = new MemoryStream(bytes);
+                            streamsParaDispor.Add(msInline);
+
+                            index++;
+                            var ext = (mime.Contains("jpeg") || mime.Contains("jpg")) ? "jpg" : "png";
+                            var cid = $"borala_img_{index}_{Guid.NewGuid():N}";
+                            var resource = new LinkedResource(msInline, mime)
+                            {
+                                ContentId = cid,
+                                TransferEncoding = System.Net.Mime.TransferEncoding.Base64
+                            };
+                            resource.ContentType.MediaType = mime;
+                            resource.ContentType.Name = $"credencial_{index}.{ext}";
+                            linkedResources.Add(resource);
+
+                            return $"src=\"cid:{cid}\"";
+                        }
+                        catch
+                        {
+                            return match.Value;
+                        }
+                    },
+                    RegexOptions.IgnoreCase);
+
+                if (linkedResources.Any())
+                {
+                    var htmlView = AlternateView.CreateAlternateViewFromString(
+                        htmlProcessado,
+                        Encoding.UTF8,
+                        System.Net.Mime.MediaTypeNames.Text.Html);
+
+                    foreach (var res in linkedResources)
+                    {
+                        htmlView.LinkedResources.Add(res);
+                    }
+
+                    mailMessage.AlternateViews.Add(htmlView);
+                    mailMessage.Body = htmlProcessado;
+                }
+                else
+                {
+                    mailMessage.Body = htmlMessage;
+                }
+
+                await _client.SendMailAsync(mailMessage);
+            }
+            finally
+            {
+                foreach (var ms in streamsParaDispor)
+                {
+                    ms.Dispose();
+                }
+            }
         }
         public async Task<bool> ModeloEmailReset(String token,Pessoa pessoa, String callbackUrl)
         {
