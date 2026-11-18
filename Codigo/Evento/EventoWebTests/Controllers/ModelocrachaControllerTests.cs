@@ -1855,5 +1855,276 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsTrue(model.CargosDisponiveis.Contains("GESTOR"));
             Assert.IsTrue(model.CargosDisponiveis.Contains("PARTICIPANTE"));
         }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task EnviarCrachaEmailTest_EnvioIndividualValido_EnviaEmailEMarcaComoEnviado()
+        {
+            ModelocrachaController.LimparHistoricoEnvioEmail();
+
+            var pessoa = new Pessoa
+            {
+                Id = 10,
+                Nome = "Ana Beatriz Souza",
+                NomeCracha = "ANA BEATRIZ",
+                Cpf = "12345678901",
+                Email = "ana@email.com",
+                Cidade = "Aracaju",
+                Estado = "SE"
+            };
+
+            var mockServiceInscricao = new Mock<IInscricaoService>();
+            mockServiceInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+            mockServiceInscricao.Setup(s => s.GetByEvento(1))
+                .Returns(new List<Inscricaopessoaevento>
+                {
+                    new Inscricaopessoaevento
+                    {
+                        Id = 20,
+                        IdPessoa = 10,
+                        IdEvento = 1,
+                        IdPapel = 4,
+                        NomeCracha = "ANA BEATRIZ",
+                        IdPessoaNavigation = pessoa
+                    }
+                });
+            mockServiceInscricao.Setup(s => s.GetSubByEvento(1))
+                .Returns(new List<Inscricaopessoasubevento>());
+
+            var mockServiceEvento = new Mock<IEventoService>();
+            mockServiceEvento.Setup(s => s.Get(1))
+                .Returns(new Evento
+                {
+                    Id = 1,
+                    Nome = "SEMAC 2026",
+                    Cidade = "São Cristóvão",
+                    Estado = "SE",
+                    DataInicio = new DateTime(2026, 11, 20, 8, 0, 0),
+                    DataFim = new DateTime(2026, 11, 22, 18, 0, 0)
+                });
+
+            var mockServicePessoa = new Mock<IPessoaService>();
+            mockServicePessoa.Setup(s => s.Get(10)).Returns(pessoa);
+
+            string? emailEnviadoPara = null;
+            string? assuntoEnviado = null;
+            string? corpoHtmlEnviado = null;
+            var mockEmailSender = new Mock<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender>();
+            mockEmailSender.Setup(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Callback<string, string, string>((to, subj, body) =>
+                {
+                    emailEnviadoPara = to;
+                    assuntoEnviado = subj;
+                    corpoHtmlEnviado = body;
+                })
+                .Returns(System.Threading.Tasks.Task.CompletedTask);
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctrl = new ModelocrachaController(
+                new Mock<IModelocrachaService>().Object,
+                mockServiceEvento.Object,
+                mockServicePessoa.Object,
+                mockServiceInscricao.Object,
+                mapper,
+                null,
+                mockEmailSender.Object);
+            ctrl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            var result = await ctrl.EnviarCrachaEmail(new EnviarCrachaEmailModel
+            {
+                IdEvento = 1,
+                IdPessoa = 10,
+                ApenasNaoEnviados = false
+            });
+
+            Assert.IsInstanceOfType(result, typeof(JsonResult));
+            var jsonResult = (JsonResult)result;
+            var jsonString = JsonSerializer.Serialize(jsonResult.Value);
+            using var doc = JsonDocument.Parse(jsonString);
+            var root = doc.RootElement;
+
+            Assert.IsTrue(root.GetProperty("sucesso").GetBoolean());
+            Assert.AreEqual(1, root.GetProperty("enviados").GetInt32());
+            Assert.AreEqual(0, root.GetProperty("falhas").GetInt32());
+
+            Assert.AreEqual("ana@email.com", emailEnviadoPara);
+            Assert.IsTrue(assuntoEnviado?.Contains("SEMAC 2026") == true);
+            Assert.IsTrue(corpoHtmlEnviado?.Contains("ANA BEATRIZ") == true);
+            Assert.IsTrue(corpoHtmlEnviado?.Contains("data:image/png;base64,") == true);
+            Assert.IsNotNull(ModelocrachaController.ObterDataEnvioEmail(1, 10));
+        }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task EnviarCrachaEmailTest_EnvioEmLoteApenasNaoEnviados_EnviaSomenteParaPendentes()
+        {
+            ModelocrachaController.LimparHistoricoEnvioEmail();
+            ModelocrachaController.RegistrarEnvioEmail(1, 10, DateTime.Now.AddMinutes(-30));
+
+            var pessoaEnviada = new Pessoa { Id = 10, Nome = "Já Enviado", Cpf = "11122233344", Email = "jaenviado@email.com" };
+            var pessoaPendente = new Pessoa { Id = 20, Nome = "Novo Inscrito", Cpf = "55566677788", Email = "novoinscrito@email.com" };
+
+            var mockServiceInscricao = new Mock<IInscricaoService>();
+            mockServiceInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+            mockServiceInscricao.Setup(s => s.GetByEvento(1))
+                .Returns(new List<Inscricaopessoaevento>
+                {
+                    new Inscricaopessoaevento { Id = 101, IdPessoa = 10, IdEvento = 1, IdPapel = 4, IdPessoaNavigation = pessoaEnviada },
+                    new Inscricaopessoaevento { Id = 102, IdPessoa = 20, IdEvento = 1, IdPapel = 4, IdPessoaNavigation = pessoaPendente }
+                });
+            mockServiceInscricao.Setup(s => s.GetSubByEvento(1))
+                .Returns(new List<Inscricaopessoasubevento>());
+
+            var mockServicePessoa = new Mock<IPessoaService>();
+            mockServicePessoa.Setup(s => s.Get(10)).Returns(pessoaEnviada);
+            mockServicePessoa.Setup(s => s.Get(20)).Returns(pessoaPendente);
+
+            var mockEmailSender = new Mock<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender>();
+            mockEmailSender.Setup(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(System.Threading.Tasks.Task.CompletedTask);
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctrl = new ModelocrachaController(
+                new Mock<IModelocrachaService>().Object,
+                new Mock<IEventoService>().Object,
+                mockServicePessoa.Object,
+                mockServiceInscricao.Object,
+                mapper,
+                null,
+                mockEmailSender.Object);
+            ctrl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            var result = await ctrl.EnviarCrachaEmail(new EnviarCrachaEmailModel
+            {
+                IdEvento = 1,
+                IdsPessoas = new List<uint> { 10, 20 },
+                ApenasNaoEnviados = true
+            });
+
+            Assert.IsInstanceOfType(result, typeof(JsonResult));
+            var jsonResult = (JsonResult)result;
+            var jsonString = JsonSerializer.Serialize(jsonResult.Value);
+            using var doc = JsonDocument.Parse(jsonString);
+            var root = doc.RootElement;
+
+            Assert.IsTrue(root.GetProperty("sucesso").GetBoolean());
+            Assert.AreEqual(1, root.GetProperty("enviados").GetInt32());
+            Assert.AreEqual(1, root.GetProperty("ignorados").GetInt32());
+            Assert.AreEqual(0, root.GetProperty("falhas").GetInt32());
+
+            mockEmailSender.Verify(e => e.SendEmailAsync("jaenviado@email.com", It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            mockEmailSender.Verify(e => e.SendEmailAsync("novoinscrito@email.com", It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+            Assert.IsNotNull(ModelocrachaController.ObterDataEnvioEmail(1, 20));
+        }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task EnviarCrachaEmailTest_ParticipanteSemEmailOuSmtpFalha_RetornaBadRequest()
+        {
+            ModelocrachaController.LimparHistoricoEnvioEmail();
+
+            var pessoaSemEmail = new Pessoa { Id = 10, Nome = "Sem Email", Cpf = "11122233344", Email = "" };
+            var pessoaComEmail = new Pessoa { Id = 20, Nome = "Com Email", Cpf = "55566677788", Email = "comemail@email.com" };
+
+            var mockServiceInscricao = new Mock<IInscricaoService>();
+            mockServiceInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+            mockServiceInscricao.Setup(s => s.GetByEvento(1))
+                .Returns(new List<Inscricaopessoaevento>
+                {
+                    new Inscricaopessoaevento { Id = 101, IdPessoa = 10, IdEvento = 1, IdPapel = 4, IdPessoaNavigation = pessoaSemEmail },
+                    new Inscricaopessoaevento { Id = 102, IdPessoa = 20, IdEvento = 1, IdPapel = 4, IdPessoaNavigation = pessoaComEmail }
+                });
+
+            var mockServicePessoa = new Mock<IPessoaService>();
+            mockServicePessoa.Setup(s => s.Get(10)).Returns(pessoaSemEmail);
+            mockServicePessoa.Setup(s => s.Get(20)).Returns(pessoaComEmail);
+
+            var mockEmailSender = new Mock<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender>();
+            mockEmailSender.Setup(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+                .ThrowsAsync(new InvalidOperationException("Falha no servidor SMTP"));
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctrl = new ModelocrachaController(
+                new Mock<IModelocrachaService>().Object,
+                new Mock<IEventoService>().Object,
+                mockServicePessoa.Object,
+                mockServiceInscricao.Object,
+                mapper,
+                null,
+                mockEmailSender.Object);
+            ctrl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            var resSemEmail = await ctrl.EnviarCrachaEmail(new EnviarCrachaEmailModel
+            {
+                IdEvento = 1,
+                IdPessoa = 10
+            });
+            Assert.IsInstanceOfType(resSemEmail, typeof(BadRequestObjectResult));
+
+            var resFalhaSmtp = await ctrl.EnviarCrachaEmail(new EnviarCrachaEmailModel
+            {
+                IdEvento = 1,
+                IdPessoa = 20
+            });
+            Assert.IsInstanceOfType(resFalhaSmtp, typeof(BadRequestObjectResult));
+            Assert.IsNull(ModelocrachaController.ObterDataEnvioEmail(1, 20));
+        }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task AtualizarNomeCrachaTest_AposEdicao_ResetaStatusEnvioEmailParaPermitirReenvio()
+        {
+            ModelocrachaController.LimparHistoricoEnvioEmail();
+            ModelocrachaController.RegistrarEnvioEmail(1, 10, DateTime.Now);
+            Assert.IsNotNull(ModelocrachaController.ObterDataEnvioEmail(1, 10));
+
+            var pessoa = new Pessoa { Id = 10, Nome = "Ana Beatriz", NomeCracha = "ANA", Cpf = "12345678901" };
+
+            var mockServiceInscricao = new Mock<IInscricaoService>();
+            mockServiceInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+            mockServiceInscricao.Setup(s => s.GetByEvento(1))
+                .Returns(new List<Inscricaopessoaevento>
+                {
+                    new Inscricaopessoaevento { Id = 20, IdPessoa = 10, IdEvento = 1, IdPapel = 4, IdPessoaNavigation = pessoa }
+                });
+            mockServiceInscricao.Setup(s => s.GetSubByEvento(1))
+                .Returns(new List<Inscricaopessoasubevento>());
+
+            var mockServicePessoa = new Mock<IPessoaService>();
+            mockServicePessoa.Setup(s => s.Get(10)).Returns(pessoa);
+            mockServicePessoa.Setup(s => s.Edit(It.IsAny<Pessoa>())).Returns(System.Threading.Tasks.Task.CompletedTask);
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var ctrl = new ModelocrachaController(
+                new Mock<IModelocrachaService>().Object,
+                new Mock<IEventoService>().Object,
+                mockServicePessoa.Object,
+                mockServiceInscricao.Object,
+                mapper);
+            ctrl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+
+            var result = await ctrl.AtualizarNomeCracha(new AtualizarNomeCrachaModel
+            {
+                IdEvento = 1,
+                IdPessoa = 10,
+                Nome = "Ana Beatriz Atualizada",
+                NomeCracha = "ANA ATUALIZADA"
+            });
+
+            Assert.IsInstanceOfType(result, typeof(JsonResult));
+            Assert.IsNull(ModelocrachaController.ObterDataEnvioEmail(1, 10));
+        }
     }
 }

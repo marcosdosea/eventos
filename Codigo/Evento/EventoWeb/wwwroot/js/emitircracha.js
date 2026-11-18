@@ -10,10 +10,20 @@
         const btnSelecionarTodosPagina = document.getElementById("btnSelecionarTodosPagina");
         const btnLimparSelecao = document.getElementById("btnLimparSelecao");
 
+        const filtroEnvioEmail = document.getElementById("filtroEnvioEmail");
         const filtroCargo = document.getElementById("filtroCargoParticipante");
         const filtroInput = document.getElementById("filtroParticipantes");
         const btnLimparBusca = document.getElementById("btnLimparBusca");
         const tabelaBody = document.getElementById("tabelaParticipantesBody");
+
+        const btnEnviarEmailLote = document.getElementById("btnEnviarEmailLote");
+        const spinnerEnviarEmailLote = document.getElementById("spinnerEnviarEmailLote");
+        const iconeEnviarEmailLote = document.getElementById("iconeEnviarEmailLote");
+        const chkEnviarApenasNaoEnviados = document.getElementById("chkEnviarApenasNaoEnviados");
+
+        const btnEnviarEmailPreview = document.getElementById("btnEnviarEmailPreview");
+        const spinnerEnviarEmailPreview = document.getElementById("spinnerEnviarEmailPreview");
+        const iconeEnviarEmailPreview = document.getElementById("iconeEnviarEmailPreview");
 
         const lblQtdSelecionados = document.getElementById("lblQtdSelecionados");
         const lblQtdTotal = document.getElementById("lblQtdTotal");
@@ -275,10 +285,18 @@
         }
 
         function filtrarParticipantes(preservarPagina = false) {
+            const envioFiltro = (filtroEnvioEmail?.value || "").toLowerCase().trim();
             const cargoFiltro = (filtroCargo?.value || "").toLowerCase().trim();
             const termo = (filtroInput?.value || "").toLowerCase().trim();
 
             linhasFiltradas = linhas.filter(linha => {
+                if (envioFiltro === "enviado" && linha.dataset.enviado !== "true") {
+                    return false;
+                }
+                if (envioFiltro === "nao-enviado" && linha.dataset.enviado === "true") {
+                    return false;
+                }
+
                 if (cargoFiltro) {
                     const papel = (linha.dataset.papel || "").toLowerCase().trim();
                     if (papel !== cargoFiltro) {
@@ -404,6 +422,27 @@
                     badgeVerified.innerHTML = '<i class="bi bi-clock-history"></i>';
                 }
             }
+
+            atualizarStatusEnvioNoPreview(linha.dataset.enviado === "true", linha.dataset.dataEnvio || "");
+        }
+
+        function atualizarStatusEnvioNoPreview(enviado, dataEnvio) {
+            const previewBadge = document.getElementById("previewBadgeEnvioEmail");
+            const lblBtnPreview = document.getElementById("lblBtnEnviarEmailPreview");
+
+            if (previewBadge) {
+                if (enviado) {
+                    previewBadge.className = "badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3 py-2";
+                    previewBadge.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i>Crachá enviado por e-mail${dataEnvio ? ` em ${dataEnvio}` : ""}`;
+                } else {
+                    previewBadge.className = "badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle px-3 py-2";
+                    previewBadge.innerHTML = '<i class="bi bi-circle me-1"></i>Crachá ainda não enviado por e-mail';
+                }
+            }
+
+            if (lblBtnPreview) {
+                lblBtnPreview.textContent = enviado ? "Reenviar E-mail" : "Enviar E-mail";
+            }
         }
 
         function atualizarContadorCaracteresModal() {
@@ -473,6 +512,127 @@
             if (btnEditar) {
                 btnEditar.dataset.nome = novoNomeCracha;
                 btnEditar.dataset.nomeCompleto = novoNomeCompleto;
+            }
+
+            if (dados.crachaEnviadoEmail === false || dados.CrachaEnviadoEmail === false) {
+                atualizarBadgeEnvioEmailNaLinha(linha, false, "");
+            }
+        }
+
+        function atualizarBadgeEnvioEmailNaLinha(linha, enviado, dataEnvio) {
+            if (!linha) return;
+            linha.dataset.enviado = enviado ? "true" : "false";
+            linha.dataset.dataEnvio = dataEnvio || "";
+
+            const badge = linha.querySelector(".badge-envio-email");
+            if (badge) {
+                if (enviado) {
+                    badge.className = "badge rounded-pill bg-success-subtle text-success border border-success-subtle px-2 py-1 badge-envio-email";
+                    badge.title = dataEnvio ? `Enviado por e-mail em ${dataEnvio}` : "Crachá enviado por e-mail";
+                    badge.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i>Enviado';
+                } else {
+                    badge.className = "badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1 badge-envio-email";
+                    badge.title = "Crachá ainda não enviado por e-mail (ou atualizado recentemente)";
+                    badge.innerHTML = '<i class="bi bi-circle me-1"></i>Não Enviado';
+                }
+            }
+
+            const lblData = linha.querySelector(".lbl-data-envio-email");
+            if (lblData) {
+                if (enviado && dataEnvio) {
+                    lblData.textContent = dataEnvio;
+                    lblData.classList.remove("d-none");
+                } else {
+                    lblData.textContent = "";
+                    lblData.classList.add("d-none");
+                }
+            }
+
+            const btnEmailItem = linha.querySelector(".btn-enviar-email-item");
+            if (btnEmailItem) {
+                btnEmailItem.textContent = enviado ? "Reenviar" : "E-mail";
+            }
+
+            if (linha.classList.contains("linha-ativa-preview")) {
+                atualizarStatusEnvioNoPreview(enviado, dataEnvio);
+            }
+        }
+
+        async function enviarCrachaPorEmail(idsPessoas, apenasNaoEnviados = false, uiFeedback = {}) {
+            const idEvento = selectEvento?.value || editModalIdEvento?.value || "0";
+            const idModelo = selectModelo?.value || "0";
+
+            if (!idEvento || idEvento === "0") {
+                exibirMensagemFeedback("Evento inválido para envio de crachá.", "warning");
+                return;
+            }
+
+            if (!idsPessoas || idsPessoas.length === 0) {
+                exibirMensagemFeedback("Selecione pelo menos um participante para enviar o crachá por e-mail.", "warning");
+                return;
+            }
+
+            const { botao, spinner, icone } = uiFeedback;
+            if (botao) botao.disabled = true;
+            if (spinner) spinner.classList.remove("d-none");
+            if (icone) icone.classList.add("d-none");
+
+            try {
+                const formData = new FormData();
+                const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+                if (tokenInput && tokenInput.value) {
+                    formData.append("__RequestVerificationToken", tokenInput.value);
+                }
+                formData.append("IdEvento", idEvento);
+                if (idModelo && idModelo !== "0") {
+                    formData.append("IdModelo", idModelo);
+                }
+                formData.append("ApenasNaoEnviados", apenasNaoEnviados ? "true" : "false");
+                idsPessoas.forEach(id => formData.append("IdsPessoas", String(id)));
+
+                const response = await fetch("/Modelocracha/EnviarCrachaEmail", {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                });
+
+                let resultado = null;
+                try {
+                    resultado = await response.json();
+                } catch {
+                    resultado = null;
+                }
+
+                if (!response.ok || !resultado || !resultado.sucesso) {
+                    const msgErro = resultado?.mensagem || "Não foi possível enviar o(s) crachá(s) por e-mail.";
+                    exibirMensagemFeedback(msgErro, "danger");
+                    return;
+                }
+
+                const detalhes = resultado.detalhesEnviados || [];
+                detalhes.forEach(item => {
+                    const idPessoaItem = String(item.idPessoa || item.IdPessoa || "");
+                    const dataEnvioItem = item.dataEnvio || item.DataEnvio || "";
+                    linhas.forEach(l => {
+                        if (l.dataset.idPessoa === idPessoaItem) {
+                            atualizarBadgeEnvioEmailNaLinha(l, true, dataEnvioItem);
+                        }
+                    });
+                });
+
+                filtrarParticipantes(true);
+
+                const tipoAlerta = (resultado.enviados === 0 && resultado.ignorados > 0) ? "warning" : "success";
+                exibirMensagemFeedback(resultado.mensagem || "Crachá(s) enviado(s) por e-mail com sucesso!", tipoAlerta);
+            } catch (err) {
+                console.error("Erro ao enviar crachá por e-mail:", err);
+                exibirMensagemFeedback("Erro de comunicação ao tentar enviar o(s) crachá(s) por e-mail.", "danger");
+            } finally {
+                if (botao) botao.disabled = false;
+                if (spinner) spinner.classList.add("d-none");
+                if (icone) icone.classList.remove("d-none");
             }
         }
 
@@ -634,6 +794,17 @@
                     return;
                 }
 
+                const btnEnviarItem = e.target.closest(".btn-enviar-email-item");
+                if (btnEnviarItem) {
+                    e.preventDefault();
+                    const linha = btnEnviarItem.closest(".linha-participante");
+                    const idPessoa = linha?.dataset.idPessoa || btnEnviarItem.dataset.idPessoa;
+                    if (idPessoa && idPessoa !== "0") {
+                        enviarCrachaPorEmail([idPessoa], false, { botao: btnEnviarItem });
+                    }
+                    return;
+                }
+
                 const btnExcluir = e.target.closest(".btn-excluir-item");
                 if (btnExcluir) {
                     const linha = btnExcluir.closest(".linha-participante");
@@ -698,6 +869,12 @@
             });
         }
 
+        if (filtroEnvioEmail) {
+            filtroEnvioEmail.addEventListener("change", function () {
+                filtrarParticipantes(false);
+            });
+        }
+
         if (filtroCargo) {
             filtroCargo.addEventListener("change", function () {
                 filtrarParticipantes(false);
@@ -714,6 +891,7 @@
             btnLimparBusca.addEventListener("click", function () {
                 if (filtroInput) filtroInput.value = "";
                 if (filtroCargo) filtroCargo.value = "";
+                if (filtroEnvioEmail) filtroEnvioEmail.value = "";
                 filtrarParticipantes(false);
                 filtroInput?.focus();
             });
@@ -829,6 +1007,43 @@
                 } finally {
                     btnExportarLotePng.disabled = false;
                 }
+            });
+        }
+
+        if (btnEnviarEmailPreview) {
+            btnEnviarEmailPreview.addEventListener("click", function () {
+                const linhaAtiva = document.querySelector(".linha-ativa-preview") || linhasFiltradas[0] || linhas[0];
+                const idPessoa = linhaAtiva?.dataset.idPessoa;
+                if (!idPessoa || idPessoa === "0") {
+                    exibirMensagemFeedback("Nenhum participante em pré-visualização para envio por e-mail.", "warning");
+                    return;
+                }
+                enviarCrachaPorEmail([idPessoa], false, {
+                    botao: btnEnviarEmailPreview,
+                    spinner: spinnerEnviarEmailPreview,
+                    icone: iconeEnviarEmailPreview
+                });
+            });
+        }
+
+        if (btnEnviarEmailLote) {
+            btnEnviarEmailLote.addEventListener("click", function () {
+                const linhasSelecionadas = linhas.filter(l => l.querySelector(".chk-participante-item")?.checked);
+                if (linhasSelecionadas.length === 0) {
+                    exibirMensagemFeedback("Por favor, selecione pelo menos um participante para enviar os crachás por e-mail.", "warning");
+                    return;
+                }
+
+                const apenasNaoEnviados = chkEnviarApenasNaoEnviados?.checked === true;
+                const idsPessoas = linhasSelecionadas
+                    .map(l => l.dataset.idPessoa)
+                    .filter(id => id && id !== "0");
+
+                enviarCrachaPorEmail(idsPessoas, apenasNaoEnviados, {
+                    botao: btnEnviarEmailLote,
+                    spinner: spinnerEnviarEmailLote,
+                    icone: iconeEnviarEmailLote
+                });
             });
         }
 
