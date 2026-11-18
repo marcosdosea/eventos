@@ -658,7 +658,7 @@ namespace EventoWeb.Controllers
         [Authorize]
         [HttpGet]
         [Route("DetalhesInscricao/{id?}")]
-        public async Task<IActionResult> DetalhesInscricao(uint? id, uint? idEvento)
+        public async Task<IActionResult> DetalhesInscricao(uint? id, uint? idEvento, bool imprimir = false)
         {
             var username = User.Identity?.Name;
             if (string.IsNullOrEmpty(username))
@@ -691,6 +691,7 @@ namespace EventoWeb.Controllers
                 model.Inscricaopessoasubeventos = inscricao.Inscricaopessoasubeventos.ToList();
             }
 
+            ViewBag.Imprimir = imprimir;
             return View(model);
         }
 

@@ -2104,6 +2104,115 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
+        public async Task DetalhesInscricaoTest_Imprimir_SinalizaImpressaoNaView()
+        {
+            // Act
+            var result = await controller.DetalhesInscricao(1, null, true);
+
+            // Assert
+            var viewResult = (ViewResult)result;
+            Assert.AreEqual(true, viewResult.ViewData["Imprimir"]);
+        }
+
+        [TestMethod()]
+        public async Task DetalhesInscricaoTest_SemImprimir_NaoSinalizaImpressao()
+        {
+            // Act
+            var result = await controller.DetalhesInscricao(1, null);
+
+            // Assert
+            var viewResult = (ViewResult)result;
+            Assert.AreEqual(false, viewResult.ViewData["Imprimir"]);
+        }
+
+        [TestMethod()]
+        public async Task MinhasInscricoesTest_PagamentoRegistrado_ExibeAguardandoConfirmacao()
+        {
+            // Arrange
+            var inscricoes = new List<Inscricaopessoaevento>
+            {
+                new Inscricaopessoaevento
+                {
+                    Id = 1,
+                    IdEvento = 1,
+                    IdPapel = 4,
+                    Status = "S",
+                    ValorTotal = 80m,
+                    IdEventoNavigation = new Evento { Id = 1, Status = "F" },
+                    Pagamentos = new List<Pagamento> { new Pagamento { Id = 1, Valor = 80m, Status = "S", Forma = "C" } }
+                }
+            };
+            var minhasController = CriarControllerMinhasInscricoes(inscricoes, Mock.Of<IEventoService>());
+
+            // Act
+            var result = await minhasController.minhasInscricoes(null);
+
+            // Assert
+            var model = ((IEnumerable<InscricaoEventoModel>)((ViewResult)result).Model!).Single();
+            Assert.AreEqual(1, model.Pagamentos.Count);
+            Assert.AreEqual(StatusPagamentoInscricao.AguardandoConfirmacao, model.StatusPagamento);
+        }
+
+        [TestMethod()]
+        public void StatusPagamento_InscricaoCancelada_RetornaCancelado()
+        {
+            var model = new InscricaoEventoModel { Status = "C", ValorTotal = 50m };
+
+            Assert.AreEqual(StatusPagamentoInscricao.Cancelado, model.StatusPagamento);
+        }
+
+        [TestMethod()]
+        public void StatusPagamento_InscricaoAtiva_RetornaConfirmado()
+        {
+            var model = new InscricaoEventoModel { Status = "A", ValorTotal = 50m };
+
+            Assert.AreEqual(StatusPagamentoInscricao.Confirmado, model.StatusPagamento);
+        }
+
+        [TestMethod()]
+        public void StatusPagamento_SolicitadaSemCusto_RetornaConfirmado()
+        {
+            var model = new InscricaoEventoModel { Status = "S", ValorTotal = 0m };
+
+            Assert.AreEqual(StatusPagamentoInscricao.Confirmado, model.StatusPagamento);
+        }
+
+        [TestMethod()]
+        public void StatusPagamento_SolicitadaComCustoSemPagamento_RetornaPendente()
+        {
+            var model = new InscricaoEventoModel { Status = "S", ValorTotal = 50m };
+
+            Assert.AreEqual(StatusPagamentoInscricao.Pendente, model.StatusPagamento);
+        }
+
+        [TestMethod()]
+        public void StatusPagamento_ValorSomenteEmSubevento_SemPagamento_RetornaPendente()
+        {
+            var model = new InscricaoEventoModel
+            {
+                Status = "S",
+                ValorTotal = 0m,
+                Inscricaopessoasubeventos = new List<Inscricaopessoasubevento> { new Inscricaopessoasubevento { Valor = 30m, Status = "S" } }
+            };
+
+            Assert.AreEqual(30m, model.ValorTotalGeral);
+            Assert.AreEqual(StatusPagamentoInscricao.Pendente, model.StatusPagamento);
+        }
+
+        [TestMethod()]
+        public void StatusPagamento_SolicitadaComPagamentoRegistrado_RetornaAguardandoConfirmacao()
+        {
+            var model = new InscricaoEventoModel
+            {
+                Status = "S",
+                ValorTotal = 50m,
+                Pagamentos = new List<Pagamento> { new Pagamento { Valor = 50m, Status = "S", Forma = "C" } }
+            };
+
+            Assert.AreEqual(StatusPagamentoInscricao.AguardandoConfirmacao, model.StatusPagamento);
+        }
+
+        [TestMethod()]
         public async Task DetalhesInscricaoTest_NotFound_RedirectsToMinhasInscricoes()
         {
             // Act - id inexistente
