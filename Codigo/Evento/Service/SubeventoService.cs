@@ -89,7 +89,17 @@ namespace Service
         /// <exception cref="NotImplementedException"></exception>
         public void Edit(Subevento subevento)
         {
+            var entry = _context.Entry(subevento);
+            bool vagasOfertadasAlteradas = entry.State != EntityState.Detached
+                ? entry.Property(s => s.VagasOfertadas).OriginalValue != subevento.VagasOfertadas
+                : _context.Subeventos.AsNoTracking()
+                    .Where(s => s.Id == subevento.Id)
+                    .Select(s => (uint?)s.VagasOfertadas)
+                    .FirstOrDefault() != subevento.VagasOfertadas;
+
             _context.Update(subevento);
+            if (vagasOfertadasAlteradas)
+                AtualizarVagasDisponiveis(subevento.Id, saveChanges: false);
             var evento = _context.Eventos.Find(subevento.IdEvento);
             if (subevento.Status == "F" || evento?.Status == "F")
                 AtualizarFrequenciaFinal(subevento.Id, saveChanges: false);
