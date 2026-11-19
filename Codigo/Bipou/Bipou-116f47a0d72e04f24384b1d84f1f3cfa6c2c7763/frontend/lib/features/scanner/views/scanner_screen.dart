@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:bipou_frontend/core/validation/cpf_validator.dart';
 import 'package:bipou_frontend/features/scanner/models/scanner_feedback.dart';
 import 'package:bipou_frontend/features/scanner/view_models/scanner_view_model.dart';
+import 'package:bipou_frontend/models/portaria_session.dart';
 import 'package:bipou_frontend/models/tipo_acao.dart';
 import 'package:bipou_frontend/services/credenciamento_service.dart';
+import 'package:bipou_frontend/services/local_participant_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -14,12 +16,16 @@ final class ScannerScreen extends StatefulWidget {
     required this.tipoAcao,
     required this.credenciamento,
     required this.dispositivoId,
+    this.sessaoAtiva,
+    this.localParticipants,
     super.key,
   });
 
   final TipoAcao tipoAcao;
   final CredenciamentoGateway credenciamento;
   final String dispositivoId;
+  final PortariaSession? sessaoAtiva;
+  final LocalParticipantLookup? localParticipants;
 
   @override
   State<ScannerScreen> createState() => _ScannerScreenState();
@@ -46,6 +52,8 @@ final class _ScannerScreenState extends State<ScannerScreen>
       credenciamento: widget.credenciamento,
       tipoAcao: widget.tipoAcao,
       dispositivoId: widget.dispositivoId,
+      sessaoAtiva: widget.sessaoAtiva,
+      localParticipants: widget.localParticipants,
     );
     _cameraController = MobileScannerController(
       autoStart: false,
@@ -108,7 +116,6 @@ final class _ScannerScreenState extends State<ScannerScreen>
     }
 
     _feedbackTimer?.cancel();
-    _cpfController.dispose();
     setState(() {
       _feedback = feedback;
       _feedbackSequence++;
@@ -127,7 +134,7 @@ final class _ScannerScreenState extends State<ScannerScreen>
         _capturaAceita = false;
         unawaited(SystemSound.play(SystemSoundType.alert));
         unawaited(HapticFeedback.vibrate());
-        _feedbackTimer = Timer(const Duration(milliseconds: 1600), () {
+        _feedbackTimer = Timer(const Duration(milliseconds: 2200), () {
           if (mounted) {
             setState(() => _feedback = null);
           }
@@ -140,7 +147,7 @@ final class _ScannerScreenState extends State<ScannerScreen>
     unawaited(_barcodeSubscription?.cancel());
     _barcodeSubscription = null;
     unawaited(_cameraController.stop());
-    _feedbackTimer = Timer(const Duration(milliseconds: 700), () {
+    _feedbackTimer = Timer(const Duration(milliseconds: 1200), () {
       if (mounted) {
         Navigator.of(context).pop();
       }
@@ -151,6 +158,7 @@ final class _ScannerScreenState extends State<ScannerScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _feedbackTimer?.cancel();
+    _cpfController.dispose();
     unawaited(_barcodeSubscription?.cancel());
     unawaited(_feedbackSubscription?.cancel());
     _viewModel.dispose();
@@ -160,6 +168,7 @@ final class _ScannerScreenState extends State<ScannerScreen>
 
   @override
   Widget build(BuildContext context) {
+    final sessao = widget.sessaoAtiva;
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -185,21 +194,28 @@ final class _ScannerScreenState extends State<ScannerScreen>
           ),
         ],
       ),
-      body: Stack(
-        fit: StackFit.expand,
+      body: Column(
         children: <Widget>[
-          MobileScanner(
-            controller: _cameraController,
-            fit: BoxFit.cover,
-            tapToFocus: true,
-            errorBuilder: _cameraErrorBuilder,
-          ),
-          const _ScannerFrame(),
-          _ProcessingIndicator(viewModel: _viewModel),
-          _ManualEntryButton(onPressed: _abrirEntradaManual),
-          _FeedbackToast(
-            key: ValueKey<int>(_feedbackSequence),
-            feedback: _feedback,
+          if (sessao != null) _ActiveSessionBanner(sessao: sessao),
+          Expanded(
+            child: Stack(
+              fit: StackFit.expand,
+              children: <Widget>[
+                MobileScanner(
+                  controller: _cameraController,
+                  fit: BoxFit.cover,
+                  tapToFocus: true,
+                  errorBuilder: _cameraErrorBuilder,
+                ),
+                const _ScannerFrame(),
+                _ProcessingIndicator(viewModel: _viewModel),
+                _ManualEntryButton(onPressed: _abrirEntradaManual),
+                _FeedbackToast(
+                  key: ValueKey<int>(_feedbackSequence),
+                  feedback: _feedback,
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -314,6 +330,60 @@ final class _ScannerScreenState extends State<ScannerScreen>
   }
 }
 
+final class _ActiveSessionBanner extends StatelessWidget {
+  const _ActiveSessionBanner({required this.sessao});
+
+  final PortariaSession sessao;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const Key('scanner-context-banner'),
+      width: double.infinity,
+      color: const Color(0xFF175CD3),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      child: Row(
+        children: <Widget>[
+          Icon(
+            sessao.isEventoGeral ? Icons.event : Icons.school,
+            color: Colors.white,
+            size: 18,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              sessao.contextoBanner,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              '${sessao.totalParticipantesCarregados} offline',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 final class _ScannerFrame extends StatelessWidget {
   const _ScannerFrame();
 
@@ -413,7 +483,7 @@ final class _FeedbackToast extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      top: 20,
+      top: 16,
       left: 20,
       right: 20,
       child: SafeArea(

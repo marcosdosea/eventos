@@ -24,6 +24,9 @@ abstract interface class CredenciamentoGateway {
     required String participanteNome,
     required TipoAcao tipoAcao,
     required String dispositivoId,
+    int? eventoId,
+    int? subeventoId,
+    String? operadorUsuario,
   });
 
   Future<OperationResult<ParticipanteResponse>> cadastrarParticipante({
@@ -98,6 +101,9 @@ final class CredenciamentoService
     required String participanteNome,
     required TipoAcao tipoAcao,
     required String dispositivoId,
+    int? eventoId,
+    int? subeventoId,
+    String? operadorUsuario,
   }) async {
     final dataHora = _clock().toUtc();
     final request = LeituraQrCodeRequest(
@@ -106,6 +112,9 @@ final class CredenciamentoService
       tipoAcao: tipoAcao,
       dispositivoId: dispositivoId,
       dataHoraLidaNoCelular: dataHora,
+      eventoId: eventoId,
+      subeventoId: subeventoId,
+      operadorUsuario: operadorUsuario,
     );
 
     await _auditLog.append(
