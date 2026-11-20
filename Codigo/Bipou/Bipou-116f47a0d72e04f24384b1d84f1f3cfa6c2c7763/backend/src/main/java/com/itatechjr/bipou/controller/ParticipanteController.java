@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
@@ -25,8 +26,11 @@ public class ParticipanteController {
     private final ParticipanteService participanteService;
 
     @GetMapping
-    public List<ParticipanteResponseDTO> listar() {
-        return participanteService.listar();
+    public List<ParticipanteResponseDTO> listar(
+            @RequestParam(required = false) Long eventoId,
+            @RequestParam(required = false) Long subeventoId
+    ) {
+        return participanteService.listar(eventoId, subeventoId);
     }
 
     @PostMapping
@@ -53,6 +57,6 @@ public class ParticipanteController {
     public ParticipanteResponseDTO buscarPorCpf(
             @Valid @RequestBody ConsultaParticipanteCpfDTO consulta
     ) {
-        return participanteService.buscarPorCpf(consulta.cpf());
+        return participanteService.buscarPorCpf(consulta.cpf(), consulta.eventoId());
     }
 }

@@ -2,6 +2,7 @@ using Core;
 using Core.DTO;
 using Core.Service;
 using EventoWeb.Filters;
+using EventoWeb.Helpers;
 using EventoWeb.Mappers;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -60,7 +61,9 @@ namespace EventoWeb
             builder.Services.AddTransient<IParticipacaoPessoaEventoService, ParticipacaoPessoaEventoService>();
             builder.Services.AddTransient<IParticipacaoPessoaSubEventoService, ParticipacaoPessoaSubEventoService>();
             builder.Services.AddTransient<IInscricaopessoaeventoService, InscricaopessoaeventoService>();
+            builder.Services.AddTransient<ISincronizacaoFrequenciaService, SincronizacaoFrequenciaService>();
             builder.Services.AddTransient<IEmailService, EmailSender>();
+            builder.Services.AddScoped<IPlanilhaParser, PlanilhaParser>();
             builder.Services.AddDbContext<EventoContext>(
                 options => options.UseMySQL(builder.Configuration.GetConnectionString("EventoDatabase")));
 

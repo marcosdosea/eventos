@@ -331,6 +331,7 @@ ENGINE = InnoDB;
 -- Table `evento`.`InscricaoPessoaSubEvento`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `evento`.`InscricaoPessoaSubEvento` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `idPessoa` INT UNSIGNED NOT NULL,
   `idSubEvento` INT UNSIGNED NOT NULL,
   `idPapel` INT NOT NULL,
@@ -339,7 +340,7 @@ CREATE TABLE IF NOT EXISTS `evento`.`InscricaoPessoaSubEvento` (
   `valor` DECIMAL(10,2) NOT NULL DEFAULT 0,
   `status` ENUM('A', 'C', 'S') NOT NULL DEFAULT 'S' COMMENT 'A - ATIVA\nC - CANCELADA\nS - SOLICITADA\n',
   `frequenciaFinal` DECIMAL(10,2) NOT NULL DEFAULT 0,
-  PRIMARY KEY (`idPessoa`, `idSubEvento`),
+  PRIMARY KEY (`id`),
   INDEX `fk_PessoaSubEvento_SubEvento1_idx` (`idSubEvento` ASC),
   INDEX `fk_PessoaSubEvento_Pessoa1_idx` (`idPessoa` ASC),
   INDEX `fk_InscricaoPessoaSubEvento_Papel1_idx` (`idPapel` ASC),

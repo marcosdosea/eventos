@@ -765,22 +765,24 @@ body {
 .badge-vagas-em-breve {
     background-color: #FEF3C7;
     color: #92400E;
+    border: 1px solid #FCD34D;
+}
+
+.subeventos-table tbody tr.row-subevento-inscrito {
+    background-color: rgba(46, 125, 50, 0.04);
+}
+
+.subeventos-table tbody tr.subevento-em-breve {
+    background-color: #FFFDF7;
 }
 
 .subeventos-table tr.subevento-disabled {
-    opacity: 0.55;
+    opacity: 0.7;
     background-color: #F8FAFC !important;
 }
 
-.subeventos-table tr.subevento-disabled td:not(:last-child) {
-    cursor: not-allowed;
-    pointer-events: none;
-}
-
-.subeventos-table tr.subevento-disabled input,
-.subeventos-table tr.subevento-disabled select,
-.subeventos-table tr.subevento-disabled button:not(.btn-ver-ementa) {
+.subeventos-table tr.subevento-disabled input:disabled,
+.subeventos-table tr.subevento-disabled select:disabled {
     cursor: not-allowed !important;
-    pointer-events: none !important;
 }
 

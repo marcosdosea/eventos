@@ -53,4 +53,13 @@ public class Registro {
 
     @Column(name = "dispositivo_id", nullable = false, length = 100)
     private String dispositivoId;
+
+    @Column(name = "evento_id", nullable = false)
+    private Long eventoId;
+
+    @Column(name = "subevento_id")
+    private Long subeventoId;
+
+    @Column(name = "operador_usuario", length = 100)
+    private String operadorUsuario;
 }

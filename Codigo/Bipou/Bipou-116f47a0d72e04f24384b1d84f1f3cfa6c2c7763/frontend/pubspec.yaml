@@ -9,6 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  crypto: ^3.0.3
   dio: ^5.11.0
   mobile_scanner: ^7.4.0
   path_provider: ^2.1.6

@@ -54,7 +54,10 @@ class ParticipanteServiceImplTests {
         ParticipanteRequestDTO request = new ParticipanteRequestDTO(
                 "  Participante Teste  ",
                 "52998224725",
-                UUID.randomUUID()
+                UUID.randomUUID(),
+                1042L,
+                15L,
+                List.of(43L, 42L)
         );
         Participante participante = new ParticipanteMapper().toEntity(request);
         participante.setId(UUID.randomUUID());
@@ -67,25 +70,28 @@ class ParticipanteServiceImplTests {
         assertThat(response.id()).isNotNull();
         assertThat(response.nome()).isEqualTo("Participante Teste");
         assertThat(response.cpf()).isEqualTo("52998224725");
+        assertThat(response.idPessoaBorala()).isEqualTo(1042L);
+        assertThat(response.eventoId()).isEqualTo(15L);
+        assertThat(response.subeventoIds()).containsExactly(42L, 43L);
     }
 
     @Test
     void deveRejeitarCpfJaCadastrado() {
-        ParticipanteRequestDTO request = new ParticipanteRequestDTO("Participante", "52998224725");
+        ParticipanteRequestDTO request = new ParticipanteRequestDTO("Participante", "52998224725", 15L);
         when(cadastroTransactionalService.cadastrarNovo(request))
                 .thenThrow(new CpfJaCadastradoException(request.cpf()));
 
         assertThatThrownBy(() -> participanteService.cadastrar(request))
                 .isInstanceOf(CpfJaCadastradoException.class);
 
-        verify(participanteRepository, never()).saveAndFlush(any());
+        verify(participanteRepository, never()).saveAllAndFlush(any());
     }
 
     @Test
     void deveTraduzirCorridaDeCpfParaExcecaoDeNegocio() {
-        ParticipanteRequestDTO request = new ParticipanteRequestDTO("Participante", "52998224725");
+        ParticipanteRequestDTO request = new ParticipanteRequestDTO("Participante", "52998224725", 15L);
         when(cadastroTransactionalService.cadastrarNovo(request))
-                .thenThrow(new DataIntegrityViolationException("participante_cpf_key"));
+                .thenThrow(new DataIntegrityViolationException("uk_participante_evento_cpf"));
 
         assertThatThrownBy(() -> participanteService.cadastrar(request))
                 .isInstanceOf(CpfJaCadastradoException.class);
@@ -97,7 +103,10 @@ class ParticipanteServiceImplTests {
         ParticipanteRequestDTO request = new ParticipanteRequestDTO(
                 "Participante",
                 "52998224725",
-                cadastroId
+                cadastroId,
+                1042L,
+                15L,
+                List.of(42L)
         );
         Participante existente = new ParticipanteMapper().toEntity(request);
         existente.setId(UUID.randomUUID());
@@ -116,12 +125,18 @@ class ParticipanteServiceImplTests {
         ParticipanteRequestDTO original = new ParticipanteRequestDTO(
                 "Participante Original",
                 "52998224725",
-                cadastroId
+                cadastroId,
+                1042L,
+                15L,
+                List.of(42L)
         );
         ParticipanteRequestDTO alterado = new ParticipanteRequestDTO(
-                "Participante Alterado",
+                "Participante Original",
                 "52998224725",
-                cadastroId
+                cadastroId,
+                1042L,
+                16L,
+                List.of(42L)
         );
         Participante existente = new ParticipanteMapper().toEntity(original);
         existente.setId(UUID.randomUUID());
@@ -133,26 +148,31 @@ class ParticipanteServiceImplTests {
     }
 
     @Test
-    void deveBuscarParticipantePorCpf() {
+    void deveBuscarParticipantePorCpfNoContextoDoEvento() {
         ParticipanteRequestDTO request = new ParticipanteRequestDTO(
                 "Participante",
-                "52998224725"
+                "52998224725",
+                null,
+                1042L,
+                15L,
+                List.of(42L)
         );
         Participante participante = new ParticipanteMapper().toEntity(request);
         participante.setId(UUID.randomUUID());
-        when(participanteRepository.findByCpf(new Cpf("52998224725")))
+        when(participanteRepository.findByEventoIdAndCpf(15L, new Cpf("52998224725")))
                 .thenReturn(Optional.of(participante));
 
-        ParticipanteResponseDTO response = participanteService.buscarPorCpf("52998224725");
+        ParticipanteResponseDTO response = participanteService.buscarPorCpf("52998224725", 15L);
 
         assertThat(response.id()).isEqualTo(participante.getId());
         assertThat(response.nome()).isEqualTo("Participante");
         assertThat(response.cpf()).isEqualTo("52998224725");
+        assertThat(response.eventoId()).isEqualTo(15L);
     }
 
     @Test
     void deveInformarQuandoCpfNaoPertenceAParticipante() {
-        when(participanteRepository.findByCpf(new Cpf("52998224725")))
+        when(participanteRepository.findFirstByCpfOrderByEventoIdAsc(new Cpf("52998224725")))
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> participanteService.buscarPorCpf("52998224725"))
@@ -160,12 +180,12 @@ class ParticipanteServiceImplTests {
     }
 
     @Test
-    void deveCadastrarParticipantesEmUmUnicoLote() {
+    void deveCadastrarParticipantesEmUmUnicoLoteEPermitirMesmoCpfEmEventosDiferentes() {
         List<ParticipanteRequestDTO> requests = List.of(
-                new ParticipanteRequestDTO("Participante Um", "52998224725"),
-                new ParticipanteRequestDTO("Participante Dois", "11144477735")
+                new ParticipanteRequestDTO("Participante Evento 1", "52998224725", 15L),
+                new ParticipanteRequestDTO("Participante Evento 2", "52998224725", 16L)
         );
-        when(participanteRepository.findAllByCpfIn(any())).thenReturn(List.of());
+        when(participanteRepository.findAllByEventoIdAndCpfIn(any(), any())).thenReturn(List.of());
         when(participanteRepository.saveAllAndFlush(any())).thenAnswer(invocacao -> {
             List<Participante> participantes = invocacao.getArgument(0);
             participantes.forEach(participante -> participante.setId(UUID.randomUUID()));
@@ -175,20 +195,41 @@ class ParticipanteServiceImplTests {
         List<ParticipanteResponseDTO> responses = participanteService.cadastrarEmLote(requests);
 
         assertThat(responses).hasSize(2);
-        assertThat(responses).extracting(ParticipanteResponseDTO::nome)
-                .containsExactly("Participante Um", "Participante Dois");
+        assertThat(responses).extracting(ParticipanteResponseDTO::eventoId)
+                .containsExactly(15L, 16L);
     }
 
     @Test
-    void deveRejeitarLoteComCpfRepetidoAntesDeSalvar() {
+    void deveRejeitarLoteComCpfRepetidoNoMesmoEventoAntesDeSalvar() {
         List<ParticipanteRequestDTO> requests = List.of(
-                new ParticipanteRequestDTO("Participante Um", "52998224725"),
-                new ParticipanteRequestDTO("Participante Dois", "52998224725")
+                new ParticipanteRequestDTO("Participante Um", "52998224725", 15L),
+                new ParticipanteRequestDTO("Participante Dois", "52998224725", 15L)
         );
 
         assertThatThrownBy(() -> participanteService.cadastrarEmLote(requests))
                 .isInstanceOf(CpfJaCadastradoException.class);
 
         verify(participanteRepository, never()).saveAllAndFlush(any());
+    }
+
+    @Test
+    void deveFiltrarParticipantesPorEventoESubevento() {
+        Participante p1 = new ParticipanteMapper().toEntity(
+                new ParticipanteRequestDTO("Ana", "52998224725", null, 100L, 15L, List.of(42L)));
+        p1.setId(UUID.randomUUID());
+
+        when(participanteRepository.findAllByEventoIdAndSubeventoIdOrderByNomeAsc(15L, 42L))
+                .thenReturn(List.of(p1));
+        when(participanteRepository.findAllByEventoIdOrderByNomeAsc(15L))
+                .thenReturn(List.of(p1));
+
+        assertThat(participanteService.listar(15L, 42L))
+                .singleElement()
+                .satisfies(dto -> {
+                    assertThat(dto.eventoId()).isEqualTo(15L);
+                    assertThat(dto.subeventoIds()).containsExactly(42L);
+                });
+
+        assertThat(participanteService.listar(15L, null)).hasSize(1);
     }
 }

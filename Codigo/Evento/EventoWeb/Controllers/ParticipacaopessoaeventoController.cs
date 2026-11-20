@@ -23,6 +23,7 @@ namespace EventoWeb.Controllers
         private readonly IInscricaoService _inscricaoService;
         private readonly IMapper _mapper;
         private readonly UserManager<UsuarioIdentity> _userManager;
+        private readonly IPlanilhaParser _planilhaParser;
 
         public ParticipacaoPessoaEventoController(
             IParticipacaoPessoaEventoService participacaoService,
@@ -32,7 +33,8 @@ namespace EventoWeb.Controllers
             IPessoaService pessoaService,
             IInscricaoService inscricaoService,
             IMapper mapper,
-            UserManager<UsuarioIdentity> userManager)
+            UserManager<UsuarioIdentity> userManager,
+            IPlanilhaParser? planilhaParser = null)
         {
             _participacaoService = participacaoService;
             _participacaoSubEventoService = participacaoSubEventoService;
@@ -42,6 +44,7 @@ namespace EventoWeb.Controllers
             _inscricaoService = inscricaoService;
             _mapper = mapper;
             _userManager = userManager;
+            _planilhaParser = planilhaParser ?? new PlanilhaParser();
         }
 
         [Authorize(Roles = "GESTOR,COLABORADOR")]
@@ -261,8 +264,7 @@ namespace EventoWeb.Controllers
                 return RedirectToAction(destino, new { idEvento, idSubEvento });
             }
 
-            var parser = new PlanilhaParser();
-            var resultado = parser.Parse(arquivoPlanilha);
+            var resultado = _planilhaParser.Parse(arquivoPlanilha);
 
             if (resultado.ListaSucesso.Count == 0)
             {
@@ -283,7 +285,10 @@ namespace EventoWeb.Controllers
                 return RedirectToAction(destino, new { idEvento, idSubEvento });
             }
 
-            int importadosComSucesso = 0;
+            var resultadoImportacao = await _participacaoService.ImportarParticipantesAsync(
+                idEvento,
+                idSubEvento,
+                resultado.ListaSucesso);
 
 
             foreach (var inscritoDto in resultado.ListaSucesso)
@@ -310,21 +315,30 @@ namespace EventoWeb.Controllers
                     importadosComSucesso++;
             }
 
-                int totalErros = resultado.ListaErros.Count;
+        int totalErros = resultado.ListaErros.Count;
 
-            if (totalErros == 0)
+        if (totalErros == 0)
+        {
+            if (importadosComSucesso == 0)
             {
-                if (importadosComSucesso == 0)
-                {
-                    TempData["ErrorMessage"] = actionRetorno == "CreateParticipante"
-                        ? "Os participante(s) desta lista já estão inscritos. Por favor, verifique uma lista com novos participantes."
-                        : "Nenhuma frequência foi registrada a partir da planilha enviada.";
-                }
-                else
-                {
-                    TempData["Message"] = $"{importadosComSucesso} participante(s) importado(s) com sucesso a partir da planilha.";
-                }
+                TempData["ErrorMessage"] = actionRetorno == "CreateParticipante"
+                    ? "Os participante(s) desta lista já estão inscritos. Por favor, verifique uma lista com novos participantes."
+                    : "Nenhuma frequência foi registrada a partir da planilha enviada.";
             }
+            else
+            {
+                TempData["Message"] = $"{importadosComSucesso} participante(s) importado(s) com sucesso a partir da planilha.";
+            }
+        }else
+        {
+            if (importadosComSucesso == 0)
+            {
+                    TempData["ErrorMessage"] = $"Nenhum participante importado. Linha {resultado.ListaErros[0].NumeroLinha} - {resultado.ListaErros[0].MotivoRecusa}.";
+            }else
+            {
+                    TempData["Message"] = $"{importadosComSucesso} participante(s) importado(s) com sucesso. {totalErros} linha(s) continham inconsistências e foram ignoradas.";
+            }
+        }
 
             if (actionRetorno == "CreateParticipante")
                 return RedirectToAction("CreateParticipante", "Evento", new { idEvento, idSubEvento });
@@ -332,6 +346,7 @@ namespace EventoWeb.Controllers
             return RedirectToAction(destino, new { idEvento, idSubEvento });
 
         }
+        
         private IActionResult? ValidarAcessoEventoAction( uint idEvento, string actionRetorno, string mensagemSemPermissao, bool considerarCreateParticipante = false)
         {
             var username = User.Identity?.Name;

@@ -229,6 +229,7 @@ DROP TABLE IF EXISTS `inscricaopessoasubevento`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `inscricaopessoasubevento` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
   `idPessoa` int unsigned NOT NULL,
   `idSubEvento` int unsigned NOT NULL,
   `idPapel` int NOT NULL,
@@ -237,7 +238,7 @@ CREATE TABLE `inscricaopessoasubevento` (
   `valor` decimal(10,2) NOT NULL DEFAULT '0.00',
   `status` enum('A','C','S') NOT NULL DEFAULT 'S' COMMENT 'A - ATIVA\nC - CANCELADA\nS - SOLICITADA\n',
   `frequenciaFinal` decimal(10,2) NOT NULL DEFAULT '0.00',
-  PRIMARY KEY (`idPessoa`,`idSubEvento`),
+  PRIMARY KEY (`id`),
   KEY `fk_PessoaSubEvento_SubEvento1_idx` (`idSubEvento`),
   KEY `fk_PessoaSubEvento_Pessoa1_idx` (`idPessoa`),
   KEY `fk_InscricaoPessoaSubEvento_Papel1_idx` (`idPapel`),

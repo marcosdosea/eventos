@@ -16,6 +16,15 @@ namespace Service
             _context = context;
         }
 
+        public Task<List<BipouSubeventoDTO>> GetSubeventosBipouAsync(uint idEvento, CancellationToken cancellationToken = default)
+        {
+            return _context.Subeventos.AsNoTracking()
+                .Where(s => s.IdEvento == idEvento && s.Status == "A")
+                .OrderBy(s => s.Id)
+                .Select(s => new BipouSubeventoDTO(s.Id, s.IdEvento, s.Nome, s.DataInicio, s.DataFim))
+                .ToListAsync(cancellationToken);
+        }
+
         /// <summary>
         /// Cria um novo subevento para o evento
         /// </summary>

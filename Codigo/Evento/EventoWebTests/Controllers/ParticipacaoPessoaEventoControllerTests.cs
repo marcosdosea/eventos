@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Identity;
 using Moq;
 using AutoMapper;
 using System.Collections.Generic;
+using System.IO;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,6 +30,7 @@ namespace EventoWeb.Controllers.Tests
         private Mock<IPessoaService> _mockPessoa = null!;
         private Mock<IInscricaoService> _mockInscricao = null!;
         private Mock<UserManager<UsuarioIdentity>> _mockUserManager = null!;
+        private Mock<IPlanilhaParser> _mockPlanilhaParser = null!;
         private IMapper _mapper = null!;
 
         private ParticipacaoPessoaEventoController CriarController(bool comInscricaoParticipante, bool jaVinculado, int papelSeVinculado)
@@ -39,6 +41,7 @@ namespace EventoWeb.Controllers.Tests
             _mockSubevento = new Mock<ISubeventoService>();
             _mockPessoa = new Mock<IPessoaService>();
             _mockInscricao = new Mock<IInscricaoService>();
+            _mockPlanilhaParser = new Mock<IPlanilhaParser>();
 
             var mockUserStore = new Mock<IUserStore<UsuarioIdentity>>();
             _mockUserManager = new Mock<UserManager<UsuarioIdentity>>(
@@ -91,7 +94,7 @@ namespace EventoWeb.Controllers.Tests
 
             var controller = new ParticipacaoPessoaEventoController(
                 _mockParticipacao.Object, _mockParticipacaoSubEvento.Object, _mockEvento.Object, _mockSubevento.Object,
-                _mockPessoa.Object, _mockInscricao.Object, _mapper, _mockUserManager.Object);
+                _mockPessoa.Object, _mockInscricao.Object, _mapper, _mockUserManager.Object, _mockPlanilhaParser.Object);
 
             var claims = new List<Claim>
             {
@@ -645,6 +648,94 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("GerenciarEvento", result.ActionName);
             Assert.AreEqual("Evento", result.ControllerName);
             Assert.AreEqual("Você não possui um evento vinculado para exportar a frequência!", controller.TempData["ErrorMessage"]);
+        }
+
+        [TestMethod()]
+        public async Task ImportarCsv_SemArquivo_DefineErrorMessageERedireciona()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+
+            var result = await controller.ImportarCsv(1, null, null, "Frequencia") as RedirectToActionResult;
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual("Frequencia", result.ActionName);
+            Assert.AreEqual("Selecione um arquivo de planilha (.csv, .xlsx ou .xls) válido para importar.", controller.TempData["ErrorMessage"]);
+        }
+
+        [TestMethod()]
+        public async Task ImportarCsv_ComArquivoValido_UsaParserInjetadoEDelegaAoService()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+
+            var parsedDto = new ResultadoParsingSigaaDto
+            {
+                ListaSucesso = new List<PessoaInscritaDto>
+                {
+                    new PessoaInscritaDto { Cpf = "52998224725", Nome = "Fulano Teste", Email = "fulano@teste.com" }
+                }
+            };
+
+            _mockPlanilhaParser.Setup(p => p.Parse(It.IsAny<IFormFile>()))
+                .Returns(parsedDto);
+
+            _mockParticipacao.Setup(s => s.ImportarParticipantesAsync(
+                    1, null, It.IsAny<IEnumerable<PessoaInscritaDto>>()))
+                .ReturnsAsync(new ResultadoImportacaoParticipantesDTO
+                {
+                    TotalLidos = 1,
+                    TotalImportados = 1,
+                    TotalJaRegistrados = 0,
+                    TotalFalhas = 0
+                });
+
+            var bytes = Encoding.UTF8.GetBytes("CPF;NOME\n52998224725;Fulano Teste");
+            var stream = new MemoryStream(bytes);
+            var formFile = new FormFile(stream, 0, bytes.Length, "arquivoPlanilha", "inscritos.csv");
+
+            var result = await controller.ImportarCsv(1, null, formFile, "Frequencia") as RedirectToActionResult;
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual("Frequencia", result.ActionName);
+            Assert.AreEqual("1 participante(s) importado(s) com sucesso a partir da planilha.", controller.TempData["Message"]);
+            _mockPlanilhaParser.Verify(p => p.Parse(formFile), Times.Once);
+            _mockParticipacao.Verify(s => s.ImportarParticipantesAsync(1, null, parsedDto.ListaSucesso), Times.Once);
+        }
+
+        [TestMethod()]
+        public async Task ImportarCsv_TodosJaRegistrados_ExibeMensagemIdempotencia()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+
+            var parsedDto = new ResultadoParsingSigaaDto
+            {
+                ListaSucesso = new List<PessoaInscritaDto>
+                {
+                    new PessoaInscritaDto { Cpf = "52998224725", Nome = "Fulano Teste", Email = "fulano@teste.com" }
+                }
+            };
+
+            _mockPlanilhaParser.Setup(p => p.Parse(It.IsAny<IFormFile>()))
+                .Returns(parsedDto);
+
+            _mockParticipacao.Setup(s => s.ImportarParticipantesAsync(
+                    1, null, It.IsAny<IEnumerable<PessoaInscritaDto>>()))
+                .ReturnsAsync(new ResultadoImportacaoParticipantesDTO
+                {
+                    TotalLidos = 1,
+                    TotalImportados = 0,
+                    TotalJaRegistrados = 1,
+                    TotalFalhas = 0
+                });
+
+            var bytes = Encoding.UTF8.GetBytes("CPF;NOME\n52998224725;Fulano Teste");
+            var stream = new MemoryStream(bytes);
+            var formFile = new FormFile(stream, 0, bytes.Length, "arquivoPlanilha", "inscritos.csv");
+
+            var result = await controller.ImportarCsv(1, null, formFile, "Frequencia") as RedirectToActionResult;
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual("Frequencia", result.ActionName);
+            Assert.AreEqual("Nenhum novo registro criado: 1 participante(s) da planilha já possuíam presença registrada neste evento.", controller.TempData["Message"]);
         }
 
     }

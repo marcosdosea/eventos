@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -38,7 +39,7 @@ class PersistenceIntegrationTests {
     @Test
     void devePersistirParticipanteEBuscarPorIdComBloqueio() {
         String cpf = cpfAleatorio();
-        Participante participante = participanteRepository.saveAndFlush(novoParticipante(cpf));
+        Participante participante = participanteRepository.saveAndFlush(novoParticipante(cpf, 15L));
         entityManager.clear();
 
         Participante encontrado = participanteRepository.findByIdForUpdate(participante.getId()).orElseThrow();
@@ -46,16 +47,23 @@ class PersistenceIntegrationTests {
         assertThat(encontrado.getId()).isEqualTo(participante.getId());
         assertThat(encontrado.getNome()).isEqualTo("Participante Teste");
         assertThat(encontrado.getCadastroId()).isNotNull();
-        assertThat(participanteRepository.existsByCpf(new Cpf(cpf))).isTrue();
+        assertThat(encontrado.getEventoId()).isEqualTo(15L);
+        assertThat(encontrado.getSubeventoIds()).containsExactly(42L);
+        assertThat(participanteRepository.existsByEventoIdAndCpf(15L, new Cpf(cpf))).isTrue();
     }
 
     @Test
-    void deveImpedirCpfDuplicadoNoBanco() {
+    void deveImpedirCpfDuplicadoNoMesmoEventoEPermitirEmEventosDiferentes() {
         String cpf = cpfAleatorio();
-        participanteRepository.saveAndFlush(novoParticipante(cpf));
+        participanteRepository.saveAndFlush(novoParticipante(cpf, 15L));
         entityManager.clear();
 
-        Participante duplicado = novoParticipante(cpf);
+        Participante outroEvento = novoParticipante(cpf, 16L);
+        outroEvento.setIdPessoaBorala(1042L);
+        participanteRepository.saveAndFlush(outroEvento);
+        entityManager.clear();
+
+        Participante duplicado = novoParticipante(cpf, 15L);
         duplicado.setNome("Outro Participante");
 
         assertThatThrownBy(() -> participanteRepository.saveAndFlush(duplicado))
@@ -63,37 +71,59 @@ class PersistenceIntegrationTests {
     }
 
     @Test
-    void deveBuscarUltimoRegistroEPreservarInstanteComOffset() {
-        Participante participante = participanteRepository.saveAndFlush(novoParticipante(cpfAleatorio()));
+    void deveBuscarUltimoRegistroPorContextoEPreservarInstanteComOffset() {
+        Participante participante = participanteRepository.saveAndFlush(novoParticipante(cpfAleatorio(), 15L));
         OffsetDateTime entrada = OffsetDateTime.of(2026, 8, 22, 9, 0, 0, 123_456_000,
                 ZoneOffset.ofHours(-3));
+        OffsetDateTime entradaCurso = entrada.plusMinutes(10);
         OffsetDateTime saida = entrada.plusHours(8);
 
         registroRepository.save(Registro.builder()
-                .leituraId(java.util.UUID.randomUUID())
+                .leituraId(UUID.randomUUID())
                 .participante(participante)
+                .eventoId(15L)
+                .subeventoId(null)
                 .tipoAcao(TipoAcao.ENTRADA)
                 .dataHora(entrada)
                 .dataHoraLidaNoCelular(entrada)
                 .dispositivoId("celular-01")
+                .operadorUsuario("operador.geral")
+                .build());
+        registroRepository.save(Registro.builder()
+                .leituraId(UUID.randomUUID())
+                .participante(participante)
+                .eventoId(15L)
+                .subeventoId(42L)
+                .tipoAcao(TipoAcao.ENTRADA)
+                .dataHora(entradaCurso)
+                .dataHoraLidaNoCelular(entradaCurso)
+                .dispositivoId("celular-02")
+                .operadorUsuario("operador.curso")
                 .build());
         registroRepository.saveAndFlush(Registro.builder()
-                .leituraId(java.util.UUID.randomUUID())
+                .leituraId(UUID.randomUUID())
                 .participante(participante)
+                .eventoId(15L)
+                .subeventoId(null)
                 .tipoAcao(TipoAcao.SAIDA)
                 .dataHora(saida)
                 .dataHoraLidaNoCelular(saida)
-                .dispositivoId("celular-02")
+                .dispositivoId("celular-01")
+                .operadorUsuario("operador.geral")
                 .build());
         entityManager.clear();
 
-        Registro ultimoRegistro = registroRepository
-                .findTopByParticipanteIdOrderByDataHoraDesc(participante.getId())
+        Registro ultimoEventoGeral = registroRepository
+                .findTopByContextoOrderByDataHoraDesc(participante.getId(), 15L, null)
+                .orElseThrow();
+        Registro ultimoSubevento = registroRepository
+                .findTopByContextoOrderByDataHoraDesc(participante.getId(), 15L, 42L)
                 .orElseThrow();
 
-        assertThat(ultimoRegistro.getTipoAcao()).isEqualTo(TipoAcao.SAIDA);
-        assertThat(ultimoRegistro.getDataHora().toInstant()).isEqualTo(saida.toInstant());
-        assertThat(ultimoRegistro.getDispositivoId()).isEqualTo("celular-02");
+        assertThat(ultimoEventoGeral.getTipoAcao()).isEqualTo(TipoAcao.SAIDA);
+        assertThat(ultimoEventoGeral.getDataHora().toInstant()).isEqualTo(saida.toInstant());
+        assertThat(ultimoSubevento.getTipoAcao()).isEqualTo(TipoAcao.ENTRADA);
+        assertThat(ultimoSubevento.getSubeventoId()).isEqualTo(42L);
     }
 
     @Test
@@ -109,11 +139,14 @@ class PersistenceIntegrationTests {
         assertThat(tipoDaColuna).isEqualTo("timestamp with time zone");
     }
 
-    private Participante novoParticipante(String cpf) {
+    private Participante novoParticipante(String cpf, Long eventoId) {
         return Participante.builder()
                 .nome("Participante Teste")
                 .cpf(new Cpf(cpf))
                 .cadastroId(UUID.randomUUID())
+                .idPessoaBorala(1042L)
+                .eventoId(eventoId)
+                .subeventoIds(Set.of(42L))
                 .build();
     }
 

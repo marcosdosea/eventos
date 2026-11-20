@@ -196,6 +196,19 @@
                     formExcluirAtual.submit();
                 }
             });
+
+            // Animação de carregamento e prevenção de duplo envio na importação de planilha
+            $('#formImportarCsv').on('submit', function () {
+                var fileInput = document.getElementById('arquivoPlanilha');
+                if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                    return;
+                }
+                $('#btnSubmitImportarCsv')
+                    .prop('disabled', true)
+                    .html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Importando...');
+                $('#btnCancelarImportarCsv, #btnFecharModalImportarCsv').prop('disabled', true);
+                $('#statusCarregamentoImportacao').removeClass('d-none');
+            });
         });
     </script>
 }
