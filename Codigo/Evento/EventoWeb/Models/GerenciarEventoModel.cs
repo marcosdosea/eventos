@@ -8,4 +8,8 @@ public class GerenciarEventoModel
     public EventoModel Evento { get; set; }
     
     public IEnumerable<SubeventoEventoDTO> Subeventos { get; set; }
+
+    public int NotificacoesEnviadas { get; set; }
+
+    public int NotificacoesComFalha { get; set; }
 }

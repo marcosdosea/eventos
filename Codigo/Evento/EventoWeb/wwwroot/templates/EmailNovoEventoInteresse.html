@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="author" content="Boralá Eventos">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Novo evento de seu interesse no Boralá</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            margin: auto;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        }
+
+        .header {
+            font-family: 'Arial Black', Gadget, sans-serif;
+            font-size: 24px;
+            line-height: 1;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .logo-bora {
+            font-size: 22px;
+            font-weight: 900;
+            color: #0A2FE2;
+            letter-spacing: -1px;
+        }
+
+        .logo-la {
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: lowercase;
+        }
+
+        .logo-eventos {
+            display: block;
+            font-size: 10px;
+            color: #1132D9;
+            font-family: Arial, sans-serif;
+            text-transform: lowercase;
+            margin-top: -2px;
+        }
+
+        .highlight-box {
+            background-color: #f0f4ff;
+            border-left: 4px solid #0A2FE2;
+            padding: 16px 20px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+
+        .detail-row {
+            margin: 8px 0;
+            font-size: 15px;
+            color: #333333;
+        }
+
+        .detail-row strong {
+            color: #111111;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: #0A2FE2;
+            color: #ffffff !important;
+            padding: 12px 28px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .fallback-link {
+            font-size: 12px;
+            color: #666666;
+            word-break: break-all;
+            margin-top: 14px;
+        }
+
+        footer {
+            font-size: 12px;
+            color: #777777;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eeeeee;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="logo-bora">BORA<span class="logo-la">Lá</span></span>
+            <span class="logo-eventos">eventos</span>
+        </div>
+
+        <main>
+            <h2 style="color: #222; margin-top: 0;">Olá, {{NomeParticipante}}!</h2>
+            <p style="font-size: 16px; color: #444; line-height: 1.5;">
+                Um novo evento que corresponde às suas preferências de interesse acabou de ser publicado na plataforma <strong>Boralá</strong>.
+            </p>
+
+            <div class="highlight-box">
+                <div style="font-size: 12px; text-transform: uppercase; font-weight: bold; color: #0A2FE2; margin-bottom: 8px;">Detalhes do Evento</div>
+                <div style="font-size: 19px; font-weight: bold; color: #111; margin-bottom: 12px;">{{NomeEvento}}</div>
+                <div class="detail-row"><strong>Data:</strong> {{DataEvento}}</div>
+                <div class="detail-row"><strong>Local:</strong> {{LocalEvento}}</div>
+                <div class="detail-row"><strong>Áreas de interesse:</strong> {{AreasInteresse}}</div>
+            </div>
+
+            <div style="text-align: center; margin: 24px 0;">
+                <a href="{{LinkEvento}}" class="btn">Ver evento e inscrever-se</a>
+            </div>
+
+            <p class="fallback-link">
+                Se o botão acima não funcionar, copie e acesse este link no navegador: {{LinkEvento}}
+            </p>
+        </main>
+
+        <footer>
+            <p>Você recebeu este aviso porque acompanha áreas de interesse e estados compatíveis nas suas preferências do Boralá.</p>
+            <p>© Boralá Eventos - Todos os direitos reservados.</p>
+        </footer>
+    </div>
+</body>
+
+</html>

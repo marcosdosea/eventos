@@ -25,10 +25,24 @@ namespace EventoWeb.Controllers
         private readonly IAreaInteresseService _areaInteresseService;
         private readonly ISubeventoService _subeventoService;
         private readonly ITipoInscricaoService? _tipoInscricaoService;
+        private readonly INotificacaoEventoService? _notificacaoEventoService;
+        private readonly ILogger<EventoController>? _logger;
         private readonly IMapper _mapper;
         private readonly UserManager<UsuarioIdentity> _userManager;
 
-        public EventoController(UserManager<UsuarioIdentity> userManager, IEventoService eventoService, IMapper mapper, IEstadosbrasilService estadosbrasilService, IInscricaoService inscricaoService, ITipoeventoService tipoeventoService, IAreaInteresseService areaInteresseService, IPessoaService pessoaService, ISubeventoService subeventoService, ITipoInscricaoService? tipoInscricaoService = null)
+        public EventoController(
+            UserManager<UsuarioIdentity> userManager,
+            IEventoService eventoService,
+            IMapper mapper,
+            IEstadosbrasilService estadosbrasilService,
+            IInscricaoService inscricaoService,
+            ITipoeventoService tipoeventoService,
+            IAreaInteresseService areaInteresseService,
+            IPessoaService pessoaService,
+            ISubeventoService subeventoService,
+            ITipoInscricaoService? tipoInscricaoService = null,
+            INotificacaoEventoService? notificacaoEventoService = null,
+            ILogger<EventoController>? logger = null)
         {
             _userManager = userManager;
             _tipoEventoService = tipoeventoService;
@@ -40,6 +54,8 @@ namespace EventoWeb.Controllers
             _pessoaService = pessoaService;
             _subeventoService = subeventoService;
             _tipoInscricaoService = tipoInscricaoService;
+            _notificacaoEventoService = notificacaoEventoService;
+            _logger = logger;
         }
 
 
@@ -97,7 +113,7 @@ namespace EventoWeb.Controllers
         [HttpPost]
         [Route("Create")]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(EventoModel eventoModel)
+        public async Task<ActionResult> Create(EventoModel eventoModel)
         {
             if (ModelState.IsValid)
             {
@@ -120,6 +136,10 @@ namespace EventoWeb.Controllers
                     }
                 }
                 var evento = _mapper.Map<Evento>(eventoModel);
+                if (fotoSource != null)
+                {
+                    evento.ImagemPortal = fotoSource;
+                }
                 
                 var idsAreaInteresse = new List<uint>();
                 if (eventoModel.IdAreaInteresses != null && eventoModel.IdAreaInteresses.Any()) {
@@ -128,8 +148,9 @@ namespace EventoWeb.Controllers
                     idsAreaInteresse.Add(eventoModel.IdAreaInteresse);
                 }
 
-                _eventoService.Create(evento, idsAreaInteresse);
-                evento.ImagemPortal = fotoSource;
+                var idEventoCriado = _eventoService.Create(evento, idsAreaInteresse);
+                var idEventoFinal = idEventoCriado > 0 ? idEventoCriado : evento.Id;
+                await TentarNotificarNovoEventoAsync(idEventoFinal, estavaElegivelAntes: false);
                 return RedirectToAction(nameof(Index));
             }
 
@@ -164,23 +185,35 @@ namespace EventoWeb.Controllers
         [HttpPost]
         [Route("Edit/{id}")]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(uint id, EventoModel viewModel)
+        public async Task<ActionResult> Edit(uint id, EventoModel viewModel)
         {
 
             if (ModelState.IsValid)
             {
                 var eventoExistente = _eventoService.Get(id);
+                if (eventoExistente == null)
+                {
+                    return NotFound();
+                }
+
+                var areasAnteriores = _eventoService.GetAreasInteresseByEventoId(id)?.ToList() ?? new List<Areainteresse>();
+                var estavaElegivelAntes = EventoEstavaElegivel(eventoExistente, areasAnteriores);
+
                 eventoExistente.Nome = viewModel.Nome;
                 eventoExistente.IdTipoEvento = viewModel.IdTipoEvento;
                 eventoExistente.Estado = viewModel.Estado;
                 eventoExistente.Status = viewModel.Status;
 
-
-                var idsAreaInteresse = new List<uint> { viewModel.IdAreaInteresse };
+                var idsAreaInteresse = viewModel.IdAreaInteresses != null && viewModel.IdAreaInteresses.Any()
+                    ? viewModel.IdAreaInteresses
+                    : viewModel.IdAreaInteresse > 0
+                        ? new List<uint> { viewModel.IdAreaInteresse }
+                        : areasAnteriores.Select(a => a.Id).ToList();
 
                 if (_eventoService.Edit(eventoExistente, idsAreaInteresse))
                 {
                     TempData["SuccessMessage"] = "Evento alterado com sucesso!";
+                    await TentarNotificarNovoEventoAsync(eventoExistente.Id, estavaElegivelAntes);
                 }
                 else
                 {
@@ -945,10 +978,25 @@ namespace EventoWeb.Controllers
             else
             {
                 ViewData["EventoId"] = idEvento;
+                ResumoNotificacaoEventoDTO? resumoNotificacoes = null;
+                if (_notificacaoEventoService != null)
+                {
+                    try
+                    {
+                        resumoNotificacoes = _notificacaoEventoService.ObterResumoPorEvento(idEvento);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogWarning(ex, "Não foi possível consultar resumo de notificações do evento {IdEvento}.", idEvento);
+                    }
+                }
+
                 var viewModel = new GerenciarEventoModel()
                 {
                     Evento = _mapper.Map<EventoModel>(evento),
-                    Subeventos = _subeventoService.GetByIdEvento(idEvento)
+                    Subeventos = _subeventoService.GetByIdEvento(idEvento),
+                    NotificacoesEnviadas = resumoNotificacoes?.Enviados ?? 0,
+                    NotificacoesComFalha = (resumoNotificacoes?.Falhas ?? 0) + (resumoNotificacoes?.Pendentes ?? 0)
                 };
                 return View(viewModel);
             }
@@ -1074,7 +1122,7 @@ namespace EventoWeb.Controllers
         [Route("GestorEditarEvento/{id}")]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "GESTOR")]
-        public ActionResult GestorEditarEvento(uint id, EventoModel viewModel)
+        public async Task<ActionResult> GestorEditarEvento(uint id, EventoModel viewModel)
         {
             var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, id);
             if (gestor == null)
@@ -1108,6 +1156,9 @@ namespace EventoWeb.Controllers
                 var evento = _eventoService.Get(id);
                 if (evento == null) return NotFound();
 
+                var areasAnteriores = _eventoService.GetAreasInteresseByEventoId(id)?.ToList() ?? new List<Areainteresse>();
+                var estavaElegivelAntes = EventoEstavaElegivel(evento, areasAnteriores);
+
                 _mapper.Map(viewModel, evento);
 
                 if (fotoSource != null)
@@ -1121,6 +1172,7 @@ namespace EventoWeb.Controllers
                 if (_eventoService.Edit(evento, idsAreaInteresse))
                 {
                     TempData["SuccessMessage"] = "Evento alterado com sucesso!";
+                    await TentarNotificarNovoEventoAsync(evento.Id, estavaElegivelAntes);
                 }
                 else
                 {
@@ -1133,6 +1185,127 @@ namespace EventoWeb.Controllers
 
             CarregarDadosEventos(viewModel);
             return View(viewModel);
+        }
+
+        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
+        [HttpPost]
+        [Route("ReenviarNotificacoesEvento")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReenviarNotificacoesEvento(uint idEvento)
+        {
+            if (idEvento == 0)
+            {
+                return RedirectToAction("GerenciarEventoListar");
+            }
+
+            var evento = _eventoService.Get(idEvento);
+            if (evento == null)
+            {
+                TempData["Message"] = "Evento não encontrado!";
+                return RedirectToAction("Index", "Home");
+            }
+
+            var isAdmin = User.IsInRole("ADMINISTRADOR");
+            var gestor = _inscricaoService.GetGestorInEvent(User.Identity?.Name ?? string.Empty, idEvento);
+            if (!isAdmin && gestor == null)
+            {
+                TempData["Message"] = "Você não tem permissão para reenviar notificações deste evento!";
+                return RedirectToAction("GerenciarEvento", new { idEvento });
+            }
+
+            if (_notificacaoEventoService == null)
+            {
+                TempData["ErrorMessage"] = "Serviço de notificações indisponível no momento.";
+                return RedirectToAction("GerenciarEvento", new { idEvento });
+            }
+
+            try
+            {
+                var resultado = await _notificacaoEventoService.ReenviarFalhasAsync(
+                    idEvento,
+                    GerarLinkPublicoEvento(idEvento));
+
+                if (!resultado.EventoElegivel)
+                {
+                    TempData["WarningMessage"] = "O evento não está ativo e público com áreas de interesse para envio de notificações.";
+                }
+                else if (resultado.Falhas > 0)
+                {
+                    TempData["WarningMessage"] = $"Reenvio parcial: {resultado.Enviados} enviado(s) e {resultado.Falhas} ainda com falha.";
+                }
+                else if (resultado.Enviados > 0)
+                {
+                    TempData["SuccessMessage"] = $"Reenvio concluído com sucesso para {resultado.Enviados} participante(s).";
+                }
+                else
+                {
+                    TempData["SuccessMessage"] = "Não há notificações pendentes ou com falha para reenvio.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Erro ao reenviar notificações com falha do evento {IdEvento}.", idEvento);
+                TempData["ErrorMessage"] = "Não foi possível concluir o reenvio das notificações.";
+            }
+
+            return RedirectToAction("GerenciarEvento", new { idEvento });
+        }
+
+        private static bool EventoEstavaElegivel(Evento evento, IEnumerable<Areainteresse> areas)
+        {
+            return string.Equals(evento.Status?.Trim(), "A", StringComparison.OrdinalIgnoreCase)
+                && evento.EventoPublico == 1
+                && areas.Any();
+        }
+
+        private string GerarLinkPublicoEvento(uint idEvento)
+        {
+            try
+            {
+                var link = Url?.Action("realizarInscricao", "Inscricao", new { idEvento }, Request?.Scheme);
+                if (!string.IsNullOrWhiteSpace(link))
+                {
+                    return link;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "Não foi possível montar URL absoluta para o evento {IdEvento}.", idEvento);
+            }
+
+            return $"/Inscricao/realizarInscricao?idEvento={idEvento}";
+        }
+
+        private async Task TentarNotificarNovoEventoAsync(uint idEvento, bool estavaElegivelAntes)
+        {
+            if (_notificacaoEventoService == null || estavaElegivelAntes || idEvento == 0)
+            {
+                return;
+            }
+
+            try
+            {
+                var linkEvento = GerarLinkPublicoEvento(idEvento);
+                var resultado = await _notificacaoEventoService.NotificarNovoEventoAsync(idEvento, linkEvento);
+
+                if (resultado.Falhas > 0)
+                {
+                    _logger?.LogWarning(
+                        "Evento {IdEvento} divulgado com falhas parciais de e-mail: {Enviados} enviado(s), {Falhas} falha(s).",
+                        idEvento,
+                        resultado.Enviados,
+                        resultado.Falhas);
+                    TempData["WarningMessage"] =
+                        $"Evento salvo, mas {resultado.Falhas} e-mail(s) de notificação falharam e podem ser reenviados na tela de gerenciamento.";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(
+                    ex,
+                    "Falha inesperada ao disparar notificações de interesse do evento {IdEvento}. O cadastro/edição do evento foi mantido.",
+                    idEvento);
+            }
         }
 
         private void CarregarDadosEventos(EventoModel viewModel)

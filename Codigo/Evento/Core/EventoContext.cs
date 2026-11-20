@@ -29,6 +29,8 @@ public partial class EventoContext : DbContext
 
     public virtual DbSet<Modelocracha> Modelocrachas { get; set; }
 
+    public virtual DbSet<Notificacaoevento> Notificacaoeventos { get; set; }
+
     public virtual DbSet<Pagamento> Pagamentos { get; set; }
 
     public virtual DbSet<Papel> Papels { get; set; }
@@ -173,6 +175,7 @@ public partial class EventoContext : DbContext
                 .HasColumnName("estado");
             entity.Property(e => e.EventoPublico)
                 .HasDefaultValueSql("'1'")
+                .ValueGeneratedNever()
                 .HasColumnName("eventoPublico");
             entity.Property(e => e.FrequenciaMinimaCertificado)
                 .HasPrecision(10)
@@ -606,6 +609,58 @@ public partial class EventoContext : DbContext
                 .HasForeignKey(d => d.IdPessoa)
                 .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_PessoaAreaInteresse_Pessoa1");
+        });
+
+        modelBuilder.Entity<Notificacaoevento>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("notificacaoevento");
+
+            entity.HasIndex(e => new { e.IdEvento, e.IdPessoa }, "uk_notificacaoevento_evento_pessoa").IsUnique();
+
+            entity.HasIndex(e => e.IdEvento, "fk_NotificacaoEvento_Evento1_idx");
+
+            entity.HasIndex(e => e.IdPessoa, "fk_NotificacaoEvento_Pessoa1_idx");
+
+            entity.HasIndex(e => e.Status, "idx_notificacaoevento_status");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.IdEvento).HasColumnName("idEvento");
+            entity.Property(e => e.IdPessoa).HasColumnName("idPessoa");
+            entity.Property(e => e.EmailDestino)
+                .HasMaxLength(100)
+                .HasColumnName("emailDestino");
+            entity.Property(e => e.Status)
+                .HasMaxLength(1)
+                .HasDefaultValueSql("'P'")
+                .HasComment("P - PENDENTE\nE - ENVIADO\nF - FALHA\nC - CANCELADO")
+                .HasColumnName("status");
+            entity.Property(e => e.Tentativas)
+                .HasDefaultValue(0)
+                .HasColumnName("tentativas");
+            entity.Property(e => e.DataCriacao)
+                .HasColumnType("datetime")
+                .HasColumnName("dataCriacao");
+            entity.Property(e => e.DataUltimaTentativa)
+                .HasColumnType("datetime")
+                .HasColumnName("dataUltimaTentativa");
+            entity.Property(e => e.DataEnvio)
+                .HasColumnType("datetime")
+                .HasColumnName("dataEnvio");
+            entity.Property(e => e.MensagemErro)
+                .HasMaxLength(500)
+                .HasColumnName("mensagemErro");
+
+            entity.HasOne(d => d.IdEventoNavigation).WithMany(p => p.Notificacaoeventos)
+                .HasForeignKey(d => d.IdEvento)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_NotificacaoEvento_Evento1");
+
+            entity.HasOne(d => d.IdPessoaNavigation).WithMany(p => p.Notificacaoeventos)
+                .HasForeignKey(d => d.IdPessoa)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("fk_NotificacaoEvento_Pessoa1");
         });
 
         modelBuilder.Entity<Subevento>(entity =>

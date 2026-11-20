@@ -151,9 +151,9 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public void CreateTest_Valid()
+        public async Task CreateTest_Valid()
         {
-            var result = controller.Create(GetNewEvento());
+            var result = await controller.Create(GetNewEvento());
 
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
@@ -162,11 +162,11 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public void CreateTest_Invalid()
+        public async Task CreateTest_Invalid()
         {
             controller.ModelState.AddModelError("Nome", "Nome do Evento é obrigatório");
 
-            var result = controller.Create(GetNewEvento());
+            var result = await controller.Create(GetNewEvento());
 
             Assert.AreEqual(1, controller.ModelState.ErrorCount);
             Assert.IsInstanceOfType(result, typeof(ViewResult));
@@ -214,9 +214,9 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public void EditTest_Post_Valid()
+        public async Task EditTest_Post_Valid()
         {
-            var result = controller.Edit(GetTargetEventoModelEdit().Id, GetTargetEventoModelEdit());
+            var result = await controller.Edit(GetTargetEventoModelEdit().Id, GetTargetEventoModelEdit());
 
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
@@ -1063,6 +1063,193 @@ namespace EventoWeb.Controllers.Tests
                     CargaHoraria = 12,
                 }
             };
+        }
+
+        private static EventoController CriarControllerComNotificacao(
+            Mock<IEventoService> mockEvento,
+            Mock<INotificacaoEventoService> mockNotificacao,
+            Mock<IInscricaoService>? mockInscricao = null,
+            params string[] roles)
+        {
+            var mockUserStore = new Mock<IUserStore<UsuarioIdentity>>();
+            var mockUserManager = new Mock<UserManager<UsuarioIdentity>>(
+                mockUserStore.Object, null, null, null, null, null, null, null, null);
+
+            var mapper = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile(new EventoProfile());
+                cfg.AddProfile(new PessoaProfile());
+            }).CreateMapper();
+
+            var inscricao = mockInscricao ?? new Mock<IInscricaoService>();
+            var ctrl = new EventoController(
+                mockUserManager.Object,
+                mockEvento.Object,
+                mapper,
+                Mock.Of<IEstadosbrasilService>(),
+                inscricao.Object,
+                Mock.Of<ITipoeventoService>(),
+                Mock.Of<IAreaInteresseService>(),
+                Mock.Of<IPessoaService>(),
+                Mock.Of<ISubeventoService>(),
+                null,
+                mockNotificacao.Object);
+
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, "gestor@teste.com") };
+            foreach (var role in roles.Length > 0 ? roles : new[] { "ADMINISTRADOR", "GESTOR" })
+            {
+                claims.Add(new Claim(ClaimTypes.Role, role));
+            }
+
+            var httpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"))
+            };
+            ctrl.ControllerContext = new ControllerContext { HttpContext = httpContext };
+            ctrl.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
+            return ctrl;
+        }
+
+        [TestMethod]
+        public async Task GestorEditarEvento_AoPublicarPelaPrimeiraVez_DisparaNotificacaoComLinkPublico()
+        {
+            var mockEvento = new Mock<IEventoService>();
+            var mockInscricao = new Mock<IInscricaoService>();
+            var mockNotificacao = new Mock<INotificacaoEventoService>();
+
+            var eventoAntes = new Evento { Id = 10, Nome = "Seminfo", Status = "C", EventoPublico = 0, Estado = "SE" };
+            mockInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 10)).Returns(new Inscricaopessoaevento());
+            mockEvento.Setup(s => s.Get(10)).Returns(eventoAntes);
+            mockEvento.Setup(s => s.GetAreasInteresseByEventoId(10)).Returns(Array.Empty<Areainteresse>());
+            mockEvento.Setup(s => s.Edit(It.IsAny<Evento>(), It.IsAny<List<uint>>())).Returns(true);
+            mockNotificacao
+                .Setup(s => s.NotificarNovoEventoAsync(10, It.IsAny<string>(), false, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ResultadoNotificacaoEventoDTO { IdEvento = 10, EventoElegivel = true, Enviados = 2 });
+
+            var ctrl = CriarControllerComNotificacao(mockEvento, mockNotificacao, mockInscricao, "GESTOR");
+
+            var model = GetTargetEventoModelEdit();
+            model.Id = 10;
+            model.Status = "A";
+            model.EventoPublico = 1;
+            model.IdAreaInteresses = new List<uint> { 1, 2 };
+
+            var result = await ctrl.GestorEditarEvento(10, model);
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            mockNotificacao.Verify(s => s.NotificarNovoEventoAsync(
+                10,
+                It.Is<string>(link => link.Contains("realizarInscricao") && link.Contains("10")),
+                false,
+                It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [TestMethod]
+        public async Task GestorEditarEvento_EdicaoComumDeEventoJaPublicado_NaoDisparaNotificacaoNovamente()
+        {
+            var mockEvento = new Mock<IEventoService>();
+            var mockInscricao = new Mock<IInscricaoService>();
+            var mockNotificacao = new Mock<INotificacaoEventoService>();
+
+            var eventoJaPublicado = new Evento { Id = 10, Nome = "Seminfo", Status = "A", EventoPublico = 1, Estado = "SE" };
+            mockInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 10)).Returns(new Inscricaopessoaevento());
+            mockEvento.Setup(s => s.Get(10)).Returns(eventoJaPublicado);
+            mockEvento.Setup(s => s.GetAreasInteresseByEventoId(10)).Returns(new[] { new Areainteresse { Id = 1, Nome = "Tecnologia" } });
+            mockEvento.Setup(s => s.Edit(It.IsAny<Evento>(), It.IsAny<List<uint>>())).Returns(true);
+
+            var ctrl = CriarControllerComNotificacao(mockEvento, mockNotificacao, mockInscricao, "GESTOR");
+
+            var model = GetTargetEventoModelEdit();
+            model.Id = 10;
+            model.Nome = "Seminfo (Nome Corrigido)";
+            model.Status = "A";
+            model.EventoPublico = 1;
+            model.IdAreaInteresses = new List<uint> { 1 };
+
+            var result = await ctrl.GestorEditarEvento(10, model);
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            mockNotificacao.Verify(
+                s => s.NotificarNovoEventoAsync(It.IsAny<uint>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()),
+                Times.Never);
+        }
+
+        [TestMethod]
+        public async Task Create_ExcecaoNaNotificacao_NaoImpedeCadastroDoEvento()
+        {
+            var mockEvento = new Mock<IEventoService>();
+            var mockNotificacao = new Mock<INotificacaoEventoService>();
+
+            mockEvento.Setup(s => s.Create(It.IsAny<Evento>(), It.IsAny<List<uint>>())).Returns(42u);
+            mockNotificacao
+                .Setup(s => s.NotificarNovoEventoAsync(42, It.IsAny<string>(), false, It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new InvalidOperationException("SMTP fora do ar"));
+
+            var ctrl = CriarControllerComNotificacao(mockEvento, mockNotificacao, null, "ADMINISTRADOR");
+
+            var result = await ctrl.Create(GetNewEvento());
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("Index", redirect.ActionName);
+            mockEvento.Verify(s => s.Create(It.IsAny<Evento>(), It.IsAny<List<uint>>()), Times.Once);
+        }
+
+        [TestMethod]
+        public async Task Edit_AdminAtivandoEvento_PreservaAreasExistentesEDisparaNotificacao()
+        {
+            var mockEvento = new Mock<IEventoService>();
+            var mockNotificacao = new Mock<INotificacaoEventoService>();
+
+            var eventoEmCadastro = new Evento { Id = 15, Nome = "Feira Tech", Status = "C", EventoPublico = 1, Estado = "SE" };
+            mockEvento.Setup(s => s.Get(15)).Returns(eventoEmCadastro);
+            mockEvento.Setup(s => s.GetAreasInteresseByEventoId(15)).Returns(new[] { new Areainteresse { Id = 2, Nome = "Tecnologia" } });
+            List<uint>? areasEnviadasParaEdit = null;
+            mockEvento.Setup(s => s.Edit(It.IsAny<Evento>(), It.IsAny<List<uint>>()))
+                .Callback<Evento, List<uint>>((_, areas) => areasEnviadasParaEdit = areas)
+                .Returns(true);
+            mockNotificacao
+                .Setup(s => s.NotificarNovoEventoAsync(15, It.IsAny<string>(), false, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ResultadoNotificacaoEventoDTO { IdEvento = 15, EventoElegivel = true, Enviados = 1 });
+
+            var ctrl = CriarControllerComNotificacao(mockEvento, mockNotificacao, null, "ADMINISTRADOR");
+
+            var model = GetTargetEventoModelEdit();
+            model.Id = 15;
+            model.Status = "A";
+            model.IdAreaInteresse = 0;
+            model.IdAreaInteresses = new List<uint>();
+
+            var result = await ctrl.Edit(15, model);
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            Assert.IsNotNull(areasEnviadasParaEdit);
+            CollectionAssert.AreEquivalent(new uint[] { 2 }, areasEnviadasParaEdit);
+            mockNotificacao.Verify(s => s.NotificarNovoEventoAsync(15, It.IsAny<string>(), false, It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [TestMethod]
+        public async Task ReenviarNotificacoesEvento_Autorizado_ChamaReenviarFalhasERedireciona()
+        {
+            var mockEvento = new Mock<IEventoService>();
+            var mockInscricao = new Mock<IInscricaoService>();
+            var mockNotificacao = new Mock<INotificacaoEventoService>();
+
+            mockEvento.Setup(s => s.Get(20)).Returns(new Evento { Id = 20, Nome = "Evento X", Status = "A", EventoPublico = 1 });
+            mockInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 20)).Returns(new Inscricaopessoaevento());
+            mockNotificacao
+                .Setup(s => s.ReenviarFalhasAsync(20, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new ResultadoNotificacaoEventoDTO { IdEvento = 20, EventoElegivel = true, Enviados = 2, Falhas = 0 });
+
+            var ctrl = CriarControllerComNotificacao(mockEvento, mockNotificacao, mockInscricao, "GESTOR");
+
+            var result = await ctrl.ReenviarNotificacoesEvento(20);
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("GerenciarEvento", redirect.ActionName);
+            mockNotificacao.Verify(s => s.ReenviarFalhasAsync(20, It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Once);
+            Assert.IsNotNull(ctrl.TempData["SuccessMessage"]);
         }
     }
 }
