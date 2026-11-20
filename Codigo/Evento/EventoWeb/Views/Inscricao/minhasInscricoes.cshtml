@@ -210,6 +210,21 @@
                             {
                                 <div class="mi-evento-local">@string.Join(" • ", localPartes)</div>
                             }
+                            @if (evento?.DataInicio.HasValue == true)
+                            {
+                                var periodoEventoStr = evento.DataFim.HasValue
+                                    ? (evento.DataInicio.Value.Date == evento.DataFim.Value.Date
+                                        ? $"{evento.DataInicio.Value:dd/MM/yyyy • HH:mm} às {evento.DataFim.Value:HH:mm}"
+                                        : $"{evento.DataInicio.Value:dd/MM/yyyy • HH:mm} a {evento.DataFim.Value:dd/MM/yyyy • HH:mm}")
+                                    : evento.DataInicio.Value.ToString("dd/MM/yyyy • HH:mm");
+                                <div class="text-muted small mt-1">
+                                    <i class="bi bi-calendar3 me-1" aria-hidden="true"></i>@periodoEventoStr
+                                    @if (evento.CargaHoraria > 0)
+                                    {
+                                        <span class="badge bg-light text-primary border ms-1"><i class="bi bi-clock me-1" aria-hidden="true"></i>@(evento.CargaHoraria)h</span>
+                                    }
+                                </div>
+                            }
                             @if (subeventos.Any())
                             {
                                 <div class="mi-subeventos">
@@ -222,7 +237,22 @@
                                                 <i class="bi bi-arrow-return-right" aria-hidden="true"></i>
                                                 <div class="mi-sub-info">
                                                     <span class="mi-sub-nome">@(sub.IdSubEventoNavigation?.Nome ?? "Subevento")</span>
-                                                    <span class="mi-sub-valor">@sub.Valor.ToString("C", culturaBr)</span>
+                                                    <span class="mi-sub-valor">
+                                                        @sub.Valor.ToString("C", culturaBr)
+                                                        @if (sub.IdSubEventoNavigation?.DataInicio != null && sub.IdSubEventoNavigation.DataInicio != DateTime.MinValue)
+                                                        {
+                                                            var subInicio = sub.IdSubEventoNavigation.DataInicio;
+                                                            var subFim = sub.IdSubEventoNavigation.DataFim;
+                                                            var periodoSubStr = (subFim != DateTime.MinValue && subFim != subInicio)
+                                                                ? (subInicio.Date == subFim.Date ? $"{subInicio:dd/MM/yyyy • HH:mm} às {subFim:HH:mm}" : $"{subInicio:dd/MM/yyyy • HH:mm} a {subFim:dd/MM/yyyy • HH:mm}")
+                                                                : subInicio.ToString("dd/MM/yyyy • HH:mm");
+                                                            <span> • @periodoSubStr</span>
+                                                        }
+                                                        @if (sub.IdSubEventoNavigation?.CargaHoraria > 0)
+                                                        {
+                                                            <span> • @(sub.IdSubEventoNavigation.CargaHoraria)h</span>
+                                                        }
+                                                    </span>
                                                 </div>
                                                 @if (confirmado && subConfirmado)
                                                 {
@@ -262,7 +292,7 @@
                                 </div>
                             }
                         </td>
-                        <td class="mi-data">@item.DataInscricao.ToString("dd/MM/yyyy")</td>
+                        <td class="mi-data">@item.DataInscricao.ToString("dd/MM/yyyy HH:mm")</td>
                         <td><span class="mi-valor">@valorTotalGeral.ToString("C", culturaBr)</span></td>
                         <td>
                             @if (confirmado)
