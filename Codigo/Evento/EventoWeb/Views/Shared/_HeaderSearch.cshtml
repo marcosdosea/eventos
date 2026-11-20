@@ -23,10 +23,11 @@
     </div>
 
     @{
-        var isHomePage = ViewContext.RouteData.Values["controller"]?.ToString() == "Home" && ViewContext.RouteData.Values["action"]?.ToString() == "Index";
+        var isBuscarPage = string.Equals(ViewContext.RouteData.Values["controller"]?.ToString(), "Home", StringComparison.OrdinalIgnoreCase) &&
+                           string.Equals(ViewContext.RouteData.Values["action"]?.ToString(), "Buscar", StringComparison.OrdinalIgnoreCase);
     }
 
-    @if (!isHomePage)
+    @if (isBuscarPage)
     {
         <div class="dropdown filter-dropdown">
             <button class="btn filter-toggle-btn" type="button" id="filterDropdownMenu" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" aria-haspopup="true" aria-label="Filtros Avançados" title="Filtros Avançados">
