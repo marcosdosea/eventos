@@ -164,7 +164,7 @@
 </div>
 
 
-<partial name="_ImportaCSV" model="new { IdEvento = Model.Evento.Id, IdSubEvento = 0 }" />
+<partial name="_ImportaCSV" model='new { IdEvento = Model.Evento.Id, IdSubEvento = 0, actionRetorno = "CreateParticipante" }' />
 
 
 @await Html.PartialAsync("_DeleteModal", new EventoWeb.Models.DeleteModel
