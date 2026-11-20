@@ -1,6 +1,9 @@
 import 'package:bipou_frontend/features/manual_registration/views/manual_registration_screen.dart';
 import 'package:bipou_frontend/features/participants/views/participant_qr_screen.dart';
 import 'package:bipou_frontend/features/participants/views/participants_screen.dart';
+import 'package:bipou_frontend/features/scanner/models/scanner_context.dart';
+import 'package:bipou_frontend/features/scanner/services/scanner_sensory_feedback.dart';
+import 'package:bipou_frontend/features/scanner/view_models/scanner_view_model.dart';
 import 'package:bipou_frontend/features/scanner/views/scanner_screen.dart';
 import 'package:bipou_frontend/models/operation_result.dart';
 import 'package:bipou_frontend/models/participante_response.dart';
@@ -9,6 +12,7 @@ import 'package:bipou_frontend/services/audit_log_export_service.dart';
 import 'package:bipou_frontend/services/credenciamento_service.dart';
 import 'package:bipou_frontend/services/qr_code_share_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 final class DashboardScreen extends StatefulWidget {
   const DashboardScreen({
@@ -16,6 +20,11 @@ final class DashboardScreen extends StatefulWidget {
     required this.auditLogExporter,
     required this.qrCodeShare,
     required this.dispositivoId,
+    this.initialContext,
+    this.scannerSensoryFeedback,
+    this.scannerPayloadStream,
+    this.scannerCameraPreviewOverride,
+    this.scannerClock,
     super.key,
   });
 
@@ -23,6 +32,11 @@ final class DashboardScreen extends StatefulWidget {
   final AuditLogExporter auditLogExporter;
   final QrCodeShareGateway qrCodeShare;
   final String dispositivoId;
+  final ScannerSessionContext? initialContext;
+  final ScannerSensoryFeedback? scannerSensoryFeedback;
+  final Stream<String>? scannerPayloadStream;
+  final Widget? scannerCameraPreviewOverride;
+  final ScannerClock? scannerClock;
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -34,9 +48,12 @@ final class _DashboardScreenState extends State<DashboardScreen> {
   QrCodeShareGateway get qrCodeShare => widget.qrCodeShare;
   String get dispositivoId => widget.dispositivoId;
 
+  ScannerSessionContext? _contextoAtivo;
+
   @override
   void initState() {
     super.initState();
+    _contextoAtivo = widget.initialContext;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _sincronizarCadastrosPendentes();
     });
@@ -49,6 +66,14 @@ final class _DashboardScreenState extends State<DashboardScreen> {
         title: const Text('Credenciamento'),
         centerTitle: true,
         actions: <Widget>[
+          IconButton(
+            key: const Key('dashboard-context-button'),
+            tooltip: 'Contexto do evento',
+            onPressed: () => _configurarContexto(context),
+            icon: Icon(
+              _contextoAtivo == null ? Icons.event_note : Icons.event_available,
+            ),
+          ),
           IconButton(
             tooltip: 'Status da API',
             onPressed: () => _abrirDiagnostico(context),
@@ -78,10 +103,15 @@ final class _DashboardScreenState extends State<DashboardScreen> {
                 'Registre entradas e saídas rapidamente por QR Code.',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
               Expanded(
                 child: ListView(
                   children: <Widget>[
+                    _ContextCard(
+                      contexto: _contextoAtivo,
+                      onTap: () => _configurarContexto(context),
+                    ),
+                    const SizedBox(height: 14),
                     _DashboardButton(
                       label: 'Escanear QR Code',
                       icon: Icons.qr_code_scanner,
@@ -110,6 +140,20 @@ final class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _configurarContexto(BuildContext context) async {
+    final resultado = await showModalBottomSheet<_ContextSheetResult>(
+      context: context,
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => _ContextConfigSheet(contextoAtual: _contextoAtivo),
+    );
+
+    if (resultado != null && mounted) {
+      setState(() => _contextoAtivo = resultado.contexto);
+    }
   }
 
   Future<void> _selecionarAcao(BuildContext context) async {
@@ -173,6 +217,11 @@ final class _DashboardScreenState extends State<DashboardScreen> {
           tipoAcao: tipoAcao,
           credenciamento: credenciamento,
           dispositivoId: dispositivoId,
+          contextoAtivo: _contextoAtivo,
+          sensoryFeedback: widget.scannerSensoryFeedback,
+          payloadStream: widget.scannerPayloadStream,
+          cameraPreviewOverride: widget.scannerCameraPreviewOverride,
+          clock: widget.scannerClock,
         ),
       ),
     );
@@ -277,6 +326,325 @@ final class _DashboardScreenState extends State<DashboardScreen> {
       builder: (_) => _ApiStatusSheet(
         credenciamento: credenciamento,
         auditLogExporter: auditLogExporter,
+      ),
+    );
+  }
+}
+
+final class _ContextSheetResult {
+  const _ContextSheetResult(this.contexto);
+
+  final ScannerSessionContext? contexto;
+}
+
+final class _ContextCard extends StatelessWidget {
+  const _ContextCard({required this.contexto, required this.onTap});
+
+  final ScannerSessionContext? contexto;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final ativo = contexto != null;
+    final accentColor = ativo
+        ? const Color(0xFF175CD3)
+        : const Color(0xFF475467);
+
+    return Material(
+      key: const Key('dashboard-context-card'),
+      color: ativo ? const Color(0xFFEFF8FF) : const Color(0xFFF9FAFB),
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: ativo ? const Color(0xFF84CAFF) : const Color(0xFFD0D5DD),
+            ),
+          ),
+          child: Row(
+            children: <Widget>[
+              Icon(
+                ativo
+                    ? (contexto!.isSubevento ? Icons.school : Icons.event)
+                    : Icons.tune,
+                color: accentColor,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text(
+                      ativo ? 'Contexto ativo' : 'Contexto da portaria',
+                      style: TextStyle(
+                        color: accentColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      ativo
+                          ? contexto!.bannerLabel
+                          : 'Modo livre (sem filtro de evento ou curso)',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Color(0xFF101828),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                ativo ? 'Alterar' : 'Definir',
+                style: TextStyle(
+                  color: accentColor,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _ContextConfigSheet extends StatefulWidget {
+  const _ContextConfigSheet({required this.contextoAtual});
+
+  final ScannerSessionContext? contextoAtual;
+
+  @override
+  State<_ContextConfigSheet> createState() => _ContextConfigSheetState();
+}
+
+final class _ContextConfigSheetState extends State<_ContextConfigSheet> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _eventoIdController;
+  late final TextEditingController _eventoNomeController;
+  late final TextEditingController _subeventoIdController;
+  late final TextEditingController _subeventoNomeController;
+  late bool _isSubevento;
+
+  @override
+  void initState() {
+    super.initState();
+    final atual = widget.contextoAtual;
+    _eventoIdController = TextEditingController(
+      text: atual?.eventoId?.toString() ?? '',
+    );
+    _eventoNomeController = TextEditingController(
+      text: atual?.eventoNome ?? '',
+    );
+    _subeventoIdController = TextEditingController(
+      text: atual?.subeventoId?.toString() ?? '',
+    );
+    _subeventoNomeController = TextEditingController(
+      text: atual?.subeventoNome ?? '',
+    );
+    _isSubevento = atual?.isSubevento ?? true;
+  }
+
+  @override
+  void dispose() {
+    _eventoIdController.dispose();
+    _eventoNomeController.dispose();
+    _subeventoIdController.dispose();
+    _subeventoNomeController.dispose();
+    super.dispose();
+  }
+
+  void _aplicar() {
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      return;
+    }
+
+    final eventoId = int.parse(_eventoIdController.text.trim());
+    final eventoNome = _eventoNomeController.text.trim();
+    final subeventoId = _isSubevento
+        ? int.parse(_subeventoIdController.text.trim())
+        : null;
+    final subeventoNome = _isSubevento
+        ? _subeventoNomeController.text.trim()
+        : null;
+
+    Navigator.of(context).pop(
+      _ContextSheetResult(
+        ScannerSessionContext(
+          eventoId: eventoId,
+          eventoNome: eventoNome,
+          subeventoId: subeventoId,
+          subeventoNome: subeventoNome,
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 4,
+          bottom: MediaQuery.viewInsetsOf(context).bottom + 20,
+        ),
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                Text(
+                  'Configurar contexto da portaria',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  key: const Key('context-evento-id-field'),
+                  controller: _eventoIdController,
+                  keyboardType: TextInputType.number,
+                  inputFormatters: <TextInputFormatter>[
+                    FilteringTextInputFormatter.digitsOnly,
+                  ],
+                  decoration: const InputDecoration(
+                    labelText: 'ID do Evento',
+                    hintText: 'Ex.: 15',
+                    prefixIcon: Icon(Icons.tag),
+                  ),
+                  validator: (value) {
+                    final parsed = int.tryParse(value?.trim() ?? '');
+                    if (parsed == null || parsed <= 0) {
+                      return 'Informe um ID de evento válido';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  key: const Key('context-evento-nome-field'),
+                  controller: _eventoNomeController,
+                  textInputAction: TextInputAction.next,
+                  decoration: const InputDecoration(
+                    labelText: 'Nome do Evento',
+                    hintText: 'Ex.: Seminfo 2026',
+                    prefixIcon: Icon(Icons.event),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Informe o nome do evento';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 14),
+                SegmentedButton<bool>(
+                  segments: const <ButtonSegment<bool>>[
+                    ButtonSegment<bool>(
+                      value: false,
+                      label: Text(
+                        'Evento Geral',
+                        key: Key('context-mode-geral'),
+                      ),
+                      icon: Icon(Icons.event),
+                    ),
+                    ButtonSegment<bool>(
+                      value: true,
+                      label: Text(
+                        'Curso / Subevento',
+                        key: Key('context-mode-subevento'),
+                      ),
+                      icon: Icon(Icons.school),
+                    ),
+                  ],
+                  selected: <bool>{_isSubevento},
+                  onSelectionChanged: (selection) {
+                    setState(() => _isSubevento = selection.first);
+                  },
+                ),
+                if (_isSubevento) ...<Widget>[
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    key: const Key('context-subevento-id-field'),
+                    controller: _subeventoIdController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: <TextInputFormatter>[
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                    decoration: const InputDecoration(
+                      labelText: 'ID do Curso / Subevento',
+                      hintText: 'Ex.: 42',
+                      prefixIcon: Icon(Icons.numbers),
+                    ),
+                    validator: (value) {
+                      if (!_isSubevento) {
+                        return null;
+                      }
+                      final parsed = int.tryParse(value?.trim() ?? '');
+                      if (parsed == null || parsed <= 0) {
+                        return 'Informe um ID de curso válido';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    key: const Key('context-subevento-nome-field'),
+                    controller: _subeventoNomeController,
+                    textInputAction: TextInputAction.done,
+                    decoration: const InputDecoration(
+                      labelText: 'Nome do Curso / Subevento',
+                      hintText: 'Ex.: Flutter Avançado',
+                      prefixIcon: Icon(Icons.school),
+                    ),
+                    validator: (value) {
+                      if (!_isSubevento) {
+                        return null;
+                      }
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Informe o nome do curso';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
+                const SizedBox(height: 16),
+                FilledButton.icon(
+                  key: const Key('context-apply-button'),
+                  onPressed: _aplicar,
+                  icon: const Icon(Icons.check),
+                  label: const Text('Aplicar contexto'),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(52),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  key: const Key('context-clear-button'),
+                  onPressed: () {
+                    Navigator.of(context).pop(const _ContextSheetResult(null));
+                  },
+                  child: const Text('Usar modo livre'),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
