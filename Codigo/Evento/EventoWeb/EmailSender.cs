@@ -65,6 +65,42 @@ namespace EventoWeb
 
             return _client.SendMailAsync(mailMessage);
         }
+
+        public async Task<bool> EnviarEmailAsync(string email, string assunto, string mensagemHtml)
+        {
+            if (_client == null || string.IsNullOrWhiteSpace(_from))
+            {
+                _logger.LogWarning("Configuração SMTP ausente. E-mail para {Email} ({Subject}) não pôde ser enviado.", email, assunto);
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                _logger.LogWarning("Destinatário de e-mail ausente para {Subject}.", assunto);
+                return false;
+            }
+
+            try
+            {
+                using var mailMessage = new MailMessage
+                {
+                    From = new MailAddress(_from),
+                    Subject = assunto,
+                    Body = mensagemHtml,
+                    IsBodyHtml = true
+                };
+                mailMessage.To.Add(email.Trim());
+
+                await _client.SendMailAsync(mailMessage);
+                _logger.LogInformation("E-mail de {Assunto} enviado com sucesso para {Email}", assunto, email);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao enviar e-mail de {Assunto} para {Email}", assunto, email);
+                return false;
+            }
+        }
         public async Task<bool> ModeloEmailReset(String token,Pessoa pessoa, String callbackUrl)
         {
             string email = pessoa.Email;

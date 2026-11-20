@@ -63,6 +63,18 @@ namespace EventoWeb
             builder.Services.AddTransient<IInscricaopessoaeventoService, InscricaopessoaeventoService>();
             builder.Services.AddTransient<ISincronizacaoFrequenciaService, SincronizacaoFrequenciaService>();
             builder.Services.AddTransient<IEmailService, EmailSender>();
+            builder.Services.AddScoped<INotificacaoEventoService>(sp =>
+            {
+                var env = sp.GetRequiredService<IWebHostEnvironment>();
+                var templatePath = string.IsNullOrWhiteSpace(env.WebRootPath)
+                    ? null
+                    : Path.Combine(env.WebRootPath, "templates", "EmailNovoEventoInteresse.html");
+                return new NotificacaoEventoService(
+                    sp.GetRequiredService<EventoContext>(),
+                    sp.GetRequiredService<IEmailService>(),
+                    sp.GetRequiredService<ILogger<NotificacaoEventoService>>(),
+                    templatePath);
+            });
             builder.Services.AddScoped<IPlanilhaParser, PlanilhaParser>();
             builder.Services.AddDbContext<EventoContext>(
                 options => options.UseMySQL(builder.Configuration.GetConnectionString("EventoDatabase")));

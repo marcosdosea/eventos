@@ -251,11 +251,28 @@ CREATE TABLE pessoaareainteresse (
 );
 
 CREATE TABLE estadosbrasilpessoaareainteresse (
+    estadoEstadosBrasil TEXT NOT NULL,
     idPessoaPessoaAreaInteresse INTEGER NOT NULL,
     idAreaInteressePessoaAreaInteresse INTEGER NOT NULL,
-    estadoEstadosBrasils TEXT NOT NULL,
-    PRIMARY KEY (idPessoaPessoaAreaInteresse, idAreaInteressePessoaAreaInteresse),
-    CONSTRAINT fk_EstadosBrasilPessoaAreaInteresse_EstadosBrasil1 FOREIGN KEY (estadoEstadosBrasils) REFERENCES estadosbrasil (estado) ON DELETE RESTRICT
+    PRIMARY KEY (estadoEstadosBrasil, idPessoaPessoaAreaInteresse, idAreaInteressePessoaAreaInteresse),
+    CONSTRAINT fk_EstadosBrasilPessoaAreaInteresse_EstadosBrasil1 FOREIGN KEY (estadoEstadosBrasil) REFERENCES estadosbrasil (estado) ON DELETE RESTRICT,
+    CONSTRAINT fk_EstadosBrasilPessoaAreaInteresse_PessoaAreaInteresse1 FOREIGN KEY (idPessoaPessoaAreaInteresse, idAreaInteressePessoaAreaInteresse) REFERENCES pessoaareainteresse (idPessoa, idAreaInteresse) ON DELETE RESTRICT
+);
+
+CREATE TABLE notificacaoevento (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    idEvento INTEGER NOT NULL,
+    idPessoa INTEGER NOT NULL,
+    emailDestino TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'P',
+    tentativas INTEGER NOT NULL DEFAULT 0,
+    dataCriacao datetime NOT NULL,
+    dataUltimaTentativa datetime NULL,
+    dataEnvio datetime NULL,
+    mensagemErro TEXT NULL,
+    CONSTRAINT uk_notificacaoevento_evento_pessoa UNIQUE (idEvento, idPessoa),
+    CONSTRAINT fk_NotificacaoEvento_Evento1 FOREIGN KEY (idEvento) REFERENCES evento (id) ON DELETE RESTRICT,
+    CONSTRAINT fk_NotificacaoEvento_Pessoa1 FOREIGN KEY (idPessoa) REFERENCES pessoa (id) ON DELETE RESTRICT
 );
 ";
     }

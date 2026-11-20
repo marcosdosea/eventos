@@ -635,6 +635,34 @@ INSERT INTO `tipoinscricaosubevento` VALUES (5,4),(8,5),(11,6),(12,7),(15,8),(18
 UNLOCK TABLES;
 
 --
+-- Table structure for table `notificacaoevento`
+--
+
+DROP TABLE IF EXISTS `notificacaoevento`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `notificacaoevento` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `idEvento` int unsigned NOT NULL,
+  `idPessoa` int unsigned NOT NULL,
+  `emailDestino` varchar(100) NOT NULL,
+  `status` char(1) NOT NULL DEFAULT 'P' COMMENT 'P - PENDENTE\nE - ENVIADO\nF - FALHA\nC - CANCELADO',
+  `tentativas` int NOT NULL DEFAULT '0',
+  `dataCriacao` datetime NOT NULL,
+  `dataUltimaTentativa` datetime DEFAULT NULL,
+  `dataEnvio` datetime DEFAULT NULL,
+  `mensagemErro` varchar(500) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_notificacaoevento_evento_pessoa` (`idEvento`,`idPessoa`),
+  KEY `fk_NotificacaoEvento_Evento1_idx` (`idEvento`),
+  KEY `fk_NotificacaoEvento_Pessoa1_idx` (`idPessoa`),
+  KEY `idx_notificacaoevento_status` (`status`),
+  CONSTRAINT `fk_NotificacaoEvento_Evento1` FOREIGN KEY (`idEvento`) REFERENCES `evento` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT,
+  CONSTRAINT `fk_NotificacaoEvento_Pessoa1` FOREIGN KEY (`idPessoa`) REFERENCES `pessoa` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Current Database: `itatechusers`
 --
 
