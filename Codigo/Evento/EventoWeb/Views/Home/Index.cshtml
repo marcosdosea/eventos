@@ -4,6 +4,30 @@
     ViewData["Title"] = "BoraLá";
 
     var eventosGerenciadosIds = ViewBag.EventosGerenciadosIds as HashSet<uint> ?? new HashSet<uint>();
+    var estadoAtivo = ViewBag.EstadoAtivo as string;
+    var nomeEstadoAtivo = ViewBag.NomeEstadoAtivo as string ?? (string.IsNullOrEmpty(estadoAtivo) ? "Todo o Brasil" : estadoAtivo);
+
+    var categoriasHome = ViewBag.CategoriasHome as Dictionary<string, EventoWeb.Models.CategoriaHomeRouteModel>;
+    EventoWeb.Models.CategoriaHomeRouteModel ObterRota(string chave, uint? defaultTipo = null, uint? defaultArea = null, string? defaultTermo = null)
+    {
+        if (categoriasHome != null && categoriasHome.TryGetValue(chave, out var rota))
+        {
+            return rota;
+        }
+        return new EventoWeb.Models.CategoriaHomeRouteModel
+        {
+            IdTipoEvento = defaultTipo,
+            IdAreaInteresse = defaultArea,
+            TermoBusca = defaultTermo
+        };
+    }
+
+    var rotaPalestras = ObterRota("Palestras", defaultTipo: 1);
+    var rotaTeatros = ObterRota("Teatros", defaultTermo: "Teatro");
+    var rotaShows = ObterRota("Shows", defaultTipo: 6);
+    var rotaStandUp = ObterRota("Stand-Up", defaultTermo: "Stand-Up");
+    var rotaCulturais = ObterRota("Culturais", defaultTermo: "Cultural");
+    var rotaReligiosos = ObterRota("Religiosos", defaultTermo: "Religioso");
 }
 
 
@@ -47,37 +71,61 @@
                 <div class="categorias-list-container">
                     <ul class="categorias-list">
                         <li>
-                            <a href="#">
+                            <a asp-controller="Home" asp-action="Buscar"
+                               asp-route-IdTipoEvento="@rotaPalestras.IdTipoEvento"
+                               asp-route-IdAreaInteresse="@rotaPalestras.IdAreaInteresse"
+                               asp-route-TermoBusca="@rotaPalestras.TermoBusca"
+                               asp-route-Estado="@(string.IsNullOrWhiteSpace(estadoAtivo) ? null : estadoAtivo)">
                                 <img src="~/ícones/Palestras.png" alt="Palestras">
                                 <span>Palestras</span>
                             </a>
                         </li>
                         <li>
-                            <a href="#">
+                            <a asp-controller="Home" asp-action="Buscar"
+                               asp-route-IdTipoEvento="@rotaTeatros.IdTipoEvento"
+                               asp-route-IdAreaInteresse="@rotaTeatros.IdAreaInteresse"
+                               asp-route-TermoBusca="@rotaTeatros.TermoBusca"
+                               asp-route-Estado="@(string.IsNullOrWhiteSpace(estadoAtivo) ? null : estadoAtivo)">
                                 <img src="~/ícones/Teatros.png" alt="Teatros">
                                 <span>Teatros</span>
                             </a>
                         </li>
                         <li>
-                            <a href="#">
+                            <a asp-controller="Home" asp-action="Buscar"
+                               asp-route-IdTipoEvento="@rotaShows.IdTipoEvento"
+                               asp-route-IdAreaInteresse="@rotaShows.IdAreaInteresse"
+                               asp-route-TermoBusca="@rotaShows.TermoBusca"
+                               asp-route-Estado="@(string.IsNullOrWhiteSpace(estadoAtivo) ? null : estadoAtivo)">
                                 <img src="~/ícones/Shows.png" alt="Shows" class="i">
                                 <span>Shows</span>
                             </a>
                         </li>
                         <li>
-                            <a href="#">
+                            <a asp-controller="Home" asp-action="Buscar"
+                               asp-route-IdTipoEvento="@rotaStandUp.IdTipoEvento"
+                               asp-route-IdAreaInteresse="@rotaStandUp.IdAreaInteresse"
+                               asp-route-TermoBusca="@rotaStandUp.TermoBusca"
+                               asp-route-Estado="@(string.IsNullOrWhiteSpace(estadoAtivo) ? null : estadoAtivo)">
                                 <img src="~/ícones/Stand-up.png" alt="Stand-up">
                                 <span>Stand-Up</span>
                             </a>
                         </li>
                         <li>
-                            <a href="#">
+                            <a asp-controller="Home" asp-action="Buscar"
+                               asp-route-IdTipoEvento="@rotaCulturais.IdTipoEvento"
+                               asp-route-IdAreaInteresse="@rotaCulturais.IdAreaInteresse"
+                               asp-route-TermoBusca="@rotaCulturais.TermoBusca"
+                               asp-route-Estado="@(string.IsNullOrWhiteSpace(estadoAtivo) ? null : estadoAtivo)">
                                 <img src="~/ícones/Culturais.png" alt="Culturais">
                                 <span>Culturais</span>
                             </a>
                         </li>
                         <li>
-                            <a href="#">
+                            <a asp-controller="Home" asp-action="Buscar"
+                               asp-route-IdTipoEvento="@rotaReligiosos.IdTipoEvento"
+                               asp-route-IdAreaInteresse="@rotaReligiosos.IdAreaInteresse"
+                               asp-route-TermoBusca="@rotaReligiosos.TermoBusca"
+                               asp-route-Estado="@(string.IsNullOrWhiteSpace(estadoAtivo) ? null : estadoAtivo)">
                                 <img src="~/ícones/Religiosos.png" alt="Religiosos">
                                 <span>Religiosos</span>
                             </a>
@@ -130,8 +178,6 @@
             </section>
 
             @{
-                var estadoAtivo = ViewBag.EstadoAtivo as string;
-                var nomeEstadoAtivo = ViewBag.NomeEstadoAtivo as string ?? (string.IsNullOrEmpty(estadoAtivo) ? "Todo o Brasil" : estadoAtivo);
                 bool temEventos = Model != null && Model.Any();
             }
 
