@@ -5,7 +5,6 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using EventoWeb.Models;
 using ExcelDataReader;
-using Microsoft.AspNetCore.Http;
 using Util;
 
 namespace EventoWeb.Helpers

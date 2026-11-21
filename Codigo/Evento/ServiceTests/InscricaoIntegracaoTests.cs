@@ -217,7 +217,7 @@ namespace Service.Tests
                 command.ExecuteNonQuery();
             }
 
-            Assert.ThrowsException<ServiceException>(() => _eventoService.Delete(1));
+            Assert.Throws<ServiceException>(() => _eventoService.Delete(1));
 
             _context.ChangeTracker.Clear();
             Assert.AreEqual(1, _context.Eventos.Count());
@@ -321,7 +321,7 @@ namespace Service.Tests
                 Status = "A"
             });
 
-            Assert.ThrowsException<DbUpdateException>(() =>
+            Assert.Throws<DbUpdateException>(() =>
                 _inscricaoService.CreateInscricoesEmLote(
                     1,
                     new List<Inscricaopessoaevento>

@@ -1,9 +1,10 @@
 using AutoMapper;
 using Core;
 using Core.Service;
-using Microsoft.AspNetCore.Mvc;
+using EventoWeb.Mappers;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 
 namespace EventoWeb.Controllers
 {
@@ -12,12 +13,9 @@ namespace EventoWeb.Controllers
     public class AreaInteresseController : Controller
     {
         private readonly IAreaInteresseService _areaInteresseService;
-        private readonly IMapper _mapper;
-
-        public AreaInteresseController(IAreaInteresseService areaInteresseService, IMapper mapper)
+        public AreaInteresseController(IAreaInteresseService areaInteresseService)
         {
             _areaInteresseService = areaInteresseService;
-            _mapper = mapper;
         }
 
         // GET: AreainteresseController
@@ -27,7 +25,7 @@ namespace EventoWeb.Controllers
         public ActionResult Index()
         {
             var listaAreainteresse = _areaInteresseService.GetAll();
-            var listaAreainteresseModel = _mapper.Map<List<AreaInteresseModel>>(listaAreainteresse);
+            var listaAreainteresseModel = AreaInteresseMapper.ToViewModelList(listaAreainteresse);
             return View(listaAreainteresseModel);
         }
 
@@ -41,7 +39,7 @@ namespace EventoWeb.Controllers
             {
                 return NotFound();
             }
-            AreaInteresseModel areaInteresseModel = _mapper.Map<AreaInteresseModel>(areainteresse);
+            AreaInteresseModel areaInteresseModel = AreaInteresseMapper.ToViewModel(areainteresse);
             return View(areaInteresseModel);
         }
 
@@ -62,7 +60,7 @@ namespace EventoWeb.Controllers
         {
             if (ModelState.IsValid)
             {
-                var areainteresse = _mapper.Map<Areainteresse>(areaInteresseModel);
+                var areainteresse = AreaInteresseMapper.ToEntity(areaInteresseModel);
                 _areaInteresseService.Create(areainteresse);
                 return RedirectToAction(nameof(Index));
             }
@@ -79,7 +77,7 @@ namespace EventoWeb.Controllers
             {
                 return NotFound();
             }
-            AreaInteresseModel areaInteresseModel = _mapper.Map<AreaInteresseModel>(areainteresse);
+            AreaInteresseModel areaInteresseModel = AreaInteresseMapper.ToViewModel(areainteresse);
             return View(areaInteresseModel);
         }
 
@@ -91,7 +89,7 @@ namespace EventoWeb.Controllers
         {
             if (ModelState.IsValid)
             {
-                var areainteresse = _mapper.Map<Areainteresse>(areaInteresseModel);
+                var areainteresse = AreaInteresseMapper.ToEntity(areaInteresseModel);
                 _areaInteresseService.Edit(areainteresse);
                 return RedirectToAction(nameof(Index));
             }
@@ -108,7 +106,7 @@ namespace EventoWeb.Controllers
             {
                 return NotFound();
             }
-            AreaInteresseModel areaInteresseModel = _mapper.Map<AreaInteresseModel>(areainteresse);
+            AreaInteresseModel areaInteresseModel = AreaInteresseMapper.ToViewModel(areainteresse);
             return View(areaInteresseModel);
         }
 
