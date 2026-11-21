@@ -285,63 +285,92 @@ namespace EventoWeb.Controllers
                 return RedirectToAction(destino, new { idEvento, idSubEvento });
             }
 
+            if (actionRetorno == "CreateParticipante")
+            {
+                int importadosComSucesso = 0;
+
+                foreach (var inscritoDto in resultado.ListaSucesso)
+                {
+                    var cpf = inscritoDto.Cpf?.Replace(".", "").Replace("-", "").Trim();
+                    if (string.IsNullOrWhiteSpace(cpf))
+                        continue;
+
+                    var pessoa = _pessoaService.GetByCpf(cpf);
+                    var inscreveu = await InscreverViaCsvAsync(inscritoDto, pessoa, cpf, idEvento, idSubEvento);
+                    if (inscreveu)
+                        importadosComSucesso++;
+                }
+
+                int totalErrosInscricao = resultado.ListaErros.Count;
+
+                if (totalErrosInscricao == 0)
+                {
+                    if (importadosComSucesso == 0)
+                    {
+                        TempData["ErrorMessage"] = "Os participante(s) desta lista já estão inscritos. Por favor, verifique uma lista com novos participantes.";
+                    }
+                    else
+                    {
+                        TempData["Message"] = $"{importadosComSucesso} participante(s) inscrito(s) com sucesso a partir da planilha.";
+                    }
+                }
+                else
+                {
+                    if (importadosComSucesso == 0)
+                    {
+                        TempData["ErrorMessage"] = $"Nenhum participante inscrito. Linha {resultado.ListaErros[0].NumeroLinha} - {resultado.ListaErros[0].MotivoRecusa}.";
+                    }
+                    else
+                    {
+                        TempData["Message"] = $"{importadosComSucesso} participante(s) inscrito(s) com sucesso. {totalErrosInscricao} linha(s) continham inconsistências e foram ignoradas.";
+                    }
+                }
+
+                return RedirectToAction("CreateParticipante", "Evento", new { idEvento, idSubEvento });
+            }
+
             var resultadoImportacao = await _participacaoService.ImportarParticipantesAsync(
                 idEvento,
                 idSubEvento,
                 resultado.ListaSucesso);
 
 
-            foreach (var inscritoDto in resultado.ListaSucesso)
+
+            int totalErrosFrequencia = resultado.ListaErros.Count + resultadoImportacao.TotalFalhas;
+
+            if (resultadoImportacao.TotalImportados == 0 && resultadoImportacao.TotalJaRegistrados == 0 && totalErrosFrequencia > 0)
             {
-                var cpf = inscritoDto.Cpf?.Replace(".", "").Replace("-", "").Trim();
-                if (string.IsNullOrWhiteSpace(cpf))
-                    continue;
-                var pessoa = _pessoaService.GetByCpf(cpf);
-
-                if (actionRetorno == "CreateParticipante")
-                {
-                    var inscreveu = await InscreverViaCsvAsync(inscritoDto, pessoa, cpf, idEvento, idSubEvento);
-                    if (inscreveu)
-                        importadosComSucesso++;
-
-                    continue;
-                }
-
-                if (pessoa == null)
-                    continue;
-
-                var registrouFrequencia = await RegistrarFrequenciaViaCsvAsync(pessoa.Id, idEvento, idSubEvento);
-                if (registrouFrequencia)
-                    importadosComSucesso++;
+                var detalheErro = resultadoImportacao.Inconsistencias.FirstOrDefault()
+                    ?? (resultado.ListaErros.Count > 0
+                        ? $"Linha {resultado.ListaErros[0].NumeroLinha} - {resultado.ListaErros[0].MotivoRecusa}."
+                        : "Inconsistências encontradas.");
+                TempData["ErrorMessage"] = $"Nenhuma frequência registrada. {detalheErro}";
+                return RedirectToAction(destino, new { idEvento, idSubEvento });
             }
 
-        int totalErros = resultado.ListaErros.Count;
-
-        if (totalErros == 0)
-        {
-            if (importadosComSucesso == 0)
+            var partesMensagem = new List<string>();
+            if (resultadoImportacao.TotalImportados > 0)
             {
-                TempData["ErrorMessage"] = actionRetorno == "CreateParticipante"
-                    ? "Os participante(s) desta lista já estão inscritos. Por favor, verifique uma lista com novos participantes."
-                    : "Nenhuma frequência foi registrada a partir da planilha enviada.";
+                partesMensagem.Add($"{resultadoImportacao.TotalImportados} frequência(s) registrada(s) com sucesso a partir da planilha.");
+            }
+            else if (resultadoImportacao.TotalJaRegistrados > 0)
+            {
+                partesMensagem.Add($"Nenhum novo registro criado: {resultadoImportacao.TotalJaRegistrados} participante(s) da planilha já possuíam presença registrada neste evento.");
+            }
+
+            if (totalErrosFrequencia > 0)
+            {
+                partesMensagem.Add($"{totalErrosFrequencia} inconsistência(s) encontrada(s).");
+            }
+
+            if (partesMensagem.Count > 0)
+            {
+                TempData["Message"] = string.Join(" ", partesMensagem);
             }
             else
             {
-                TempData["Message"] = $"{importadosComSucesso} participante(s) importado(s) com sucesso a partir da planilha.";
+                TempData["ErrorMessage"] = "Nenhuma frequência foi registrada a partir da planilha enviada.";
             }
-        }else
-        {
-            if (importadosComSucesso == 0)
-            {
-                    TempData["ErrorMessage"] = $"Nenhum participante importado. Linha {resultado.ListaErros[0].NumeroLinha} - {resultado.ListaErros[0].MotivoRecusa}.";
-            }else
-            {
-                    TempData["Message"] = $"{importadosComSucesso} participante(s) importado(s) com sucesso. {totalErros} linha(s) continham inconsistências e foram ignoradas.";
-            }
-        }
-
-            if (actionRetorno == "CreateParticipante")
-                return RedirectToAction("CreateParticipante", "Evento", new { idEvento, idSubEvento });
 
             return RedirectToAction(destino, new { idEvento, idSubEvento });
 
