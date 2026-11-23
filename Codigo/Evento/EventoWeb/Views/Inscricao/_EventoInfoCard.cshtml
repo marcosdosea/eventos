@@ -22,7 +22,27 @@
             <div class="info-icon" aria-hidden="true"><i class="bi bi-calendar3"></i></div>
             <div class="info-text">
                 <h3>Data</h3>
-                <p>@(Model.DataInicio?.ToString("dd/MM/yyyy") ?? "A definir") a @(Model.DataFim?.ToString("dd/MM/yyyy") ?? "A definir")</p>
+                <p>
+                    @if (Model.DataInicio.HasValue && Model.DataFim.HasValue)
+                    {
+                        if (Model.DataInicio.Value.Date == Model.DataFim.Value.Date)
+                        {
+                            @($"{Model.DataInicio.Value:dd/MM/yyyy • HH:mm} às {Model.DataFim.Value:HH:mm}")
+                        }
+                        else
+                        {
+                            @($"{Model.DataInicio.Value:dd/MM/yyyy • HH:mm} a {Model.DataFim.Value:dd/MM/yyyy • HH:mm}")
+                        }
+                    }
+                    else if (Model.DataInicio.HasValue)
+                    {
+                        @Model.DataInicio.Value.ToString("dd/MM/yyyy • HH:mm")
+                    }
+                    else
+                    {
+                        @:A definir
+                    }
+                </p>
             </div>
         </div>
         <div class="info-item">

@@ -117,6 +117,9 @@
                                 }
                             </p>
                         }
+                        <p class="mb-2">
+                            <strong>Carga Horária:</strong> @(Model.IdEventoNavigation.CargaHoraria > 0 ? $"{Model.IdEventoNavigation.CargaHoraria}h" : "Não informada")
+                        </p>
                         @if (enderecoPartes.Any())
                         {
                             <p class="mb-2">
@@ -166,7 +169,7 @@
                         }
                         <div class="col-sm-6 col-md-3 mb-2">
                             <span class="text-muted d-block">Frequência Registrada:</span>
-                            <strong>@Model.FrequenciaFinal</strong>
+                            <strong>@Model.FrequenciaFinal.ToString("0.##")%</strong>
                         </div>
                     </div>
                 </div>
@@ -174,6 +177,11 @@
 
             @if (hasSubeventos)
             {
+                var subeventosAtivos = Model.Inscricaopessoasubeventos?.Where(s => s.Status != "C").ToList() ?? new List<Core.Inscricaopessoasubevento>();
+                var totalHorasSubeventos = subeventosAtivos.Sum(s => s.IdSubEventoNavigation?.CargaHoraria ?? 0);
+                var cargaEventoPrincipal = (Model.Status != "C" && Model.IdEventoNavigation != null) ? Model.IdEventoNavigation.CargaHoraria : 0;
+                var totalHorasGeral = cargaEventoPrincipal + totalHorasSubeventos;
+
                 <div class="mt-3">
                     <h5 class="text-primary border-bottom pb-2">Subeventos Contratados</h5>
                     <div class="table-responsive">
@@ -181,10 +189,12 @@
                             <thead class="table-light">
                                 <tr>
                                     <th>Subevento</th>
+                                    <th>Período / Horário</th>
+                                    <th class="text-center">Carga Horária</th>
                                     <th>Status</th>
                                     <th>Data da Inscrição</th>
                                     <th>Valor</th>
-                                    <th>Frequência</th>
+                                    <th class="text-center">Frequência</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -194,6 +204,35 @@
                                         <td>
                                             <span class="badge bg-secondary me-1">Subevento</span>
                                             <strong>@(sub.IdSubEventoNavigation?.Nome ?? "Subevento")</strong>
+                                        </td>
+                                        <td>
+                                            @if (sub.IdSubEventoNavigation?.DataInicio != null && sub.IdSubEventoNavigation.DataInicio != DateTime.MinValue)
+                                            {
+                                                var sInicio = sub.IdSubEventoNavigation.DataInicio;
+                                                var sFim = sub.IdSubEventoNavigation.DataFim;
+                                                if (sFim != DateTime.MinValue && sFim != sInicio)
+                                                {
+                                                    if (sInicio.Date == sFim.Date)
+                                                    {
+                                                        @($"{sInicio:dd/MM/yyyy HH:mm} às {sFim:HH:mm}")
+                                                    }
+                                                    else
+                                                    {
+                                                        @($"{sInicio:dd/MM/yyyy HH:mm} até {sFim:dd/MM/yyyy HH:mm}")
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    @sInicio.ToString("dd/MM/yyyy HH:mm")
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">A definir</span>
+                                            }
+                                        </td>
+                                        <td class="text-center">
+                                            @(sub.IdSubEventoNavigation?.CargaHoraria > 0 ? $"{sub.IdSubEventoNavigation.CargaHoraria}h" : "-")
                                         </td>
                                         <td>
                                             @{
@@ -209,18 +248,22 @@
                                         </td>
                                         <td>@sub.DataInscricao.ToString("dd/MM/yyyy HH:mm")</td>
                                         <td>@sub.Valor.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))</td>
-                                        <td>@sub.FrequenciaFinal</td>
+                                        <td class="text-center">@sub.FrequenciaFinal.ToString("0.##")%</td>
                                     </tr>
                                 }
                             </tbody>
                             <tfoot>
                                 <tr class="table-light fw-bold">
-                                    <td colspan="3" class="text-end">Total dos Subeventos:</td>
+                                    <td colspan="2" class="text-end">Total dos Subeventos:</td>
+                                    <td class="text-center text-primary">@(totalHorasSubeventos > 0 ? $"{totalHorasSubeventos}h" : "-")</td>
+                                    <td colspan="2"></td>
                                     <td class="text-success">@totalSubeventos.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))</td>
                                     <td></td>
                                 </tr>
                                 <tr class="table-secondary fw-bold">
-                                    <td colspan="3" class="text-end">Total Geral (Evento + Subeventos):</td>
+                                    <td colspan="2" class="text-end">Carga Horária & Valor Total Geral (Evento + Subeventos ativos):</td>
+                                    <td class="text-center text-primary">@(totalHorasGeral > 0 ? $"{totalHorasGeral}h" : "-")</td>
+                                    <td colspan="2"></td>
                                     <td class="text-primary">@totalGeral.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))</td>
                                     <td></td>
                                 </tr>

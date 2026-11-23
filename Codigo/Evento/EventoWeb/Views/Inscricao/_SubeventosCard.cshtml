@@ -127,7 +127,25 @@
                             </td>
                             <td style="text-align: center;">
                                 <div class="fw-semibold text-dark" style="font-size: 0.84rem;">
-                                    @(sub.DataInicio.HasValue ? sub.DataInicio.Value.ToString("dd/MM/yyyy • HH:mm") : "A definir")
+                                    @if (sub.DataInicio.HasValue && sub.DataFim.HasValue)
+                                    {
+                                        if (sub.DataInicio.Value.Date == sub.DataFim.Value.Date)
+                                        {
+                                            @($"{sub.DataInicio.Value:dd/MM/yyyy • HH:mm} às {sub.DataFim.Value:HH:mm}")
+                                        }
+                                        else
+                                        {
+                                            @($"{sub.DataInicio.Value:dd/MM/yyyy • HH:mm} a {sub.DataFim.Value:dd/MM/yyyy • HH:mm}")
+                                        }
+                                    }
+                                    else if (sub.DataInicio.HasValue)
+                                    {
+                                        @sub.DataInicio.Value.ToString("dd/MM/yyyy • HH:mm")
+                                    }
+                                    else
+                                    {
+                                        @:A definir
+                                    }
                                 </div>
                                 <div class="text-muted small">
                                     Carga: @(sub.CargaHoraria > 0 ? $"{sub.CargaHoraria}h" : "Livre")
