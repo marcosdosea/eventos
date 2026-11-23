@@ -124,15 +124,6 @@
     </div>
 }
 
-@if (ViewBag.EventoId != null && (uint)ViewBag.EventoId > 0)
-{
-    <div class="mb-3">
-        <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@ViewBag.EventoId" class="btn btn-primary">
-            &larr; Voltar para Inscrição do Evento
-        </a>
-    </div>
-}
-
 <section class="mi-card" aria-labelledby="tituloHistorico">
     <div class="mi-card-header">
         <h2 id="tituloHistorico" class="mi-card-titulo">
@@ -425,12 +416,6 @@
 </section>
 
 <div class="mt-4 d-flex gap-2 flex-wrap">
-    @if (ViewBag.EventoId != null && (uint)ViewBag.EventoId > 0)
-    {
-        <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@ViewBag.EventoId" class="btn btn-primary">
-            &larr; Voltar para Inscrição do Evento
-        </a>
-    }
     <a asp-action="Index" asp-controller="Home" asp-route-vitrine="true" class="btn btn-outline-secondary">
         Voltar para Início
     </a>
