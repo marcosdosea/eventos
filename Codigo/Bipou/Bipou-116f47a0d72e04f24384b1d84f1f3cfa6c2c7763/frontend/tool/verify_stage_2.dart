@@ -162,7 +162,10 @@ final class _ApiSpy implements CredenciamentoApi {
   }
 
   @override
-  Future<ParticipanteResponse> buscarParticipantePorCpf(String cpf) {
+  Future<ParticipanteResponse> buscarParticipantePorCpf(
+    String cpf, {
+    int? eventoId,
+  }) {
     throw UnimplementedError();
   }
 

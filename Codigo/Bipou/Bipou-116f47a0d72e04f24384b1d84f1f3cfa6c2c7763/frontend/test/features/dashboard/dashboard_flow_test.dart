@@ -161,7 +161,10 @@ final class _CredenciamentoWidgetSpy implements CredenciamentoGateway {
   }
 
   @override
-  Future<ParticipanteResponse> buscarParticipantePorCpf(String cpf) {
+  Future<ParticipanteResponse> buscarParticipantePorCpf(
+    String cpf, {
+    int? eventoId,
+  }) {
     throw UnimplementedError();
   }
 
@@ -171,6 +174,9 @@ final class _CredenciamentoWidgetSpy implements CredenciamentoGateway {
     required String participanteNome,
     required TipoAcao tipoAcao,
     required String dispositivoId,
+    int? eventoId,
+    int? subeventoId,
+    String? operadorUsuario,
   }) {
     throw UnimplementedError();
   }

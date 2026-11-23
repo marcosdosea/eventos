@@ -1,15 +1,14 @@
-using System.Globalization;
-using System.Threading.RateLimiting;
 using Core;
 using Core.Service;
 using EventoApi.Filter;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Service;
+using System.Globalization;
+using System.Threading.RateLimiting;
 
 namespace EventoApi
 {

@@ -1,3 +1,5 @@
+
+
 using Core;
 using Core.Service;
 using Microsoft.EntityFrameworkCore;
@@ -225,7 +227,7 @@ namespace Service.Tests
             Assert.AreEqual((uint)1, subevento.IdTipoEvento);
             Assert.AreEqual((uint)100, subevento.VagasOfertadas);
             Assert.AreEqual((uint)35, subevento.VagasReservadas);
-            Assert.AreEqual((uint)65, subevento.VagasDisponiveis);
+            Assert.AreEqual((uint)100, subevento.VagasDisponiveis);
             Assert.AreEqual((uint)4, subevento.CargaHoraria);
         }
 
@@ -315,6 +317,48 @@ namespace Service.Tests
 
             Assert.AreEqual(50m, _context.Inscricaopessoasubeventos.FirstOrDefault(s => s.IdPessoa == 1 && s.IdSubEvento == 1)!.FrequenciaFinal);
             Assert.AreEqual(0m, _context.Inscricaopessoaeventos.Find((uint)10)!.FrequenciaFinal);
+        }
+
+        [TestMethod()]
+        public void Edit_AlterarVagasOfertadas_RecalculaVagasDisponiveisConsiderandoInscritos()
+        {
+            _context.Inscricaopessoasubeventos.AddRange(
+                new Inscricaopessoasubevento { IdPessoa = 1, IdSubEvento = 1, IdPapel = 4, Status = "A", DataInscricao = DateTime.Now },
+                new Inscricaopessoasubevento { IdPessoa = 2, IdSubEvento = 1, IdPapel = 4, Status = "A", DataInscricao = DateTime.Now });
+            _context.SaveChanges();
+
+            var subevento = _subeventoService.Get(1);
+            subevento.VagasOfertadas = 150;
+            _subeventoService.Edit(subevento);
+
+            var atualizado = _subeventoService.Get(1);
+            Assert.AreEqual((uint)150, atualizado.VagasOfertadas);
+            Assert.AreEqual((uint)148, atualizado.VagasDisponiveis);
+
+            atualizado.VagasOfertadas = 1;
+            _subeventoService.Edit(atualizado);
+
+            var reduzido = _subeventoService.Get(1);
+            Assert.AreEqual((uint)1, reduzido.VagasOfertadas);
+            Assert.AreEqual((uint)0, reduzido.VagasDisponiveis);
+        }
+
+        [TestMethod()]
+        public void Edit_SemAlterarVagasOfertadas_CorrigeSaldoDefasado()
+        {
+            var subevento = _subeventoService.Get(1);
+            var vagasOfertadas = subevento.VagasOfertadas;
+            subevento.VagasDisponiveis = 0;
+            _context.SaveChanges();
+
+            subevento.Nome = "Nome atualizado";
+            _subeventoService.Edit(subevento);
+            _context.ChangeTracker.Clear();
+
+            var atualizado = _subeventoService.Get(1);
+            Assert.AreEqual("Nome atualizado", atualizado.Nome);
+            Assert.AreEqual(vagasOfertadas, atualizado.VagasOfertadas);
+            Assert.AreEqual(vagasOfertadas, atualizado.VagasDisponiveis);
         }
     }
 }

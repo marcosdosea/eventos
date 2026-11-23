@@ -250,7 +250,10 @@ final class _ApiSpy implements CredenciamentoApi {
   }
 
   @override
-  Future<ParticipanteResponse> buscarParticipantePorCpf(String cpf) async {
+  Future<ParticipanteResponse> buscarParticipantePorCpf(
+    String cpf, {
+    int? eventoId,
+  }) async {
     calls.add('api.buscarParticipantePorCpf');
     if (unavailable) {
       throw const ApiUnavailableException('Falha simulada.');

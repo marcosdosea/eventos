@@ -24,6 +24,9 @@ abstract interface class CredenciamentoGateway {
     required String participanteNome,
     required TipoAcao tipoAcao,
     required String dispositivoId,
+    int? eventoId,
+    int? subeventoId,
+    String? operadorUsuario,
   });
 
   Future<OperationResult<ParticipanteResponse>> cadastrarParticipante({
@@ -33,7 +36,10 @@ abstract interface class CredenciamentoGateway {
 
   Future<List<ParticipanteResponse>> listarParticipantes();
 
-  Future<ParticipanteResponse> buscarParticipantePorCpf(String cpf);
+  Future<ParticipanteResponse> buscarParticipantePorCpf(
+    String cpf, {
+    int? eventoId,
+  });
 
   Future<void> verificarConexao();
 }
@@ -98,6 +104,9 @@ final class CredenciamentoService
     required String participanteNome,
     required TipoAcao tipoAcao,
     required String dispositivoId,
+    int? eventoId,
+    int? subeventoId,
+    String? operadorUsuario,
   }) async {
     final dataHora = _clock().toUtc();
     final request = LeituraQrCodeRequest(
@@ -106,6 +115,9 @@ final class CredenciamentoService
       tipoAcao: tipoAcao,
       dispositivoId: dispositivoId,
       dataHoraLidaNoCelular: dataHora,
+      eventoId: eventoId,
+      subeventoId: subeventoId,
+      operadorUsuario: operadorUsuario,
     );
 
     await _auditLog.append(
@@ -177,8 +189,10 @@ final class CredenciamentoService
   }
 
   @override
-  Future<ParticipanteResponse> buscarParticipantePorCpf(String cpf) =>
-      _api.buscarParticipantePorCpf(cpf);
+  Future<ParticipanteResponse> buscarParticipantePorCpf(
+    String cpf, {
+    int? eventoId,
+  }) => _api.buscarParticipantePorCpf(cpf, eventoId: eventoId);
 
   @override
   Future<void> verificarConexao() async {

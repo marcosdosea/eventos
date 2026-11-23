@@ -14,7 +14,10 @@ abstract interface class CredenciamentoApi {
     ParticipanteRequest request,
   );
 
-  Future<ParticipanteResponse> buscarParticipantePorCpf(String cpf);
+  Future<ParticipanteResponse> buscarParticipantePorCpf(
+    String cpf, {
+    int? eventoId,
+  });
 
   Future<List<ParticipanteResponse>> listarParticipantes();
 }
@@ -57,10 +60,13 @@ final class ApiService implements CredenciamentoApi {
   }
 
   @override
-  Future<ParticipanteResponse> buscarParticipantePorCpf(String cpf) async {
+  Future<ParticipanteResponse> buscarParticipantePorCpf(
+    String cpf, {
+    int? eventoId,
+  }) async {
     final json = await _post(
       '/api/participantes/consultar-por-cpf',
-      <String, Object?>{'cpf': cpf},
+      <String, Object?>{'cpf': cpf, 'eventoId': ?eventoId},
     );
     return _parseResponse(json, ParticipanteResponse.fromJson);
   }

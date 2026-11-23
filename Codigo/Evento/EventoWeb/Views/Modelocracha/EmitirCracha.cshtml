@@ -19,6 +19,11 @@
 
     <div id="alertaCrachaContainer"></div>
 
+    @if (Model.EmDemonstracao)
+    {
+        <div class="alert alert-info">Prévia com dados de demonstração. O envio por e-mail fica disponível quando há inscrições no evento.</div>
+    }
+
     <div class="card-parametros mb-4">
         <div class="d-flex align-items-center gap-2 mb-3">
             <div class="card-header-icon">
@@ -28,7 +33,7 @@
         </div>
 
         <div class="row g-3 align-items-end">
-            <div class="col-lg-5 col-md-6">
+            <div class="col-lg-4 col-md-6">
                 <label for="selectEventoEmitir" class="form-label fw-bold text-dark small mb-1">
                     <i class="bi bi-calendar-event blue-normal me-1"></i> Evento Vinculado
                 </label>
@@ -76,14 +81,27 @@
                 </div>
             </div>
 
-            <div class="col-lg-3 col-md-12 text-lg-end text-start">
-                <button type="button" id="btnImprimirLotePdf" class="btn btn-blue-normal color-white py-2 px-4 rounded-3 fw-semibold shadow-sm w-100 d-inline-flex align-items-center justify-content-center gap-2">
-                    <i class="bi bi-printer-fill fs-5"></i>
-                    <div class="text-start lh-1">
-                        <span class="d-block" style="font-size: 0.88rem;">Imprimir Todos</span>
-                        <span class="d-block text-white-50" style="font-size: 0.72rem;">(PDF A4)</span>
-                    </div>
-                </button>
+            <div class="col-lg-4 col-md-12 text-lg-end text-start">
+                <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
+                    @if (!Model.EmDemonstracao)
+                    {
+                        <button type="button" id="btnEnviarEmailLote" class="btn btn-outline-primary py-2 px-3 rounded-3 fw-semibold shadow-sm flex-grow-1 d-inline-flex align-items-center justify-content-center gap-2" title="Enviar crachás por e-mail para os participantes selecionados">
+                            <span class="spinner-border spinner-border-sm d-none" id="spinnerEnviarEmailLote" role="status"></span>
+                            <i class="bi bi-envelope-fill fs-5" id="iconeEnviarEmailLote"></i>
+                            <div class="text-start lh-1">
+                                <span class="d-block" style="font-size: 0.85rem;">Enviar por E-mail</span>
+                                <span class="d-block opacity-75" style="font-size: 0.70rem;">(Selecionados)</span>
+                            </div>
+                        </button>
+                    }
+                    <button type="button" id="btnImprimirLotePdf" class="btn btn-blue-normal color-white py-2 px-3 rounded-3 fw-semibold shadow-sm flex-grow-1 d-inline-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-printer-fill fs-5"></i>
+                        <div class="text-start lh-1">
+                            <span class="d-block" style="font-size: 0.85rem;">Imprimir Todos</span>
+                            <span class="d-block text-white-50" style="font-size: 0.70rem;">(PDF A4)</span>
+                        </div>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -101,8 +119,18 @@
                         </span>
                     </div>
 
-                    <div class="d-flex align-items-center gap-2 flex-grow-1 justify-content-end" style="max-width: 520px;">
-                        <div style="min-width: 160px;">
+                    <div class="d-flex align-items-center gap-2 flex-grow-1 justify-content-end" style="max-width: 680px;">
+                        @if (!Model.EmDemonstracao)
+                        {
+                            <div style="min-width: 150px;">
+                                <select id="filtroEnvioEmail" class="form-select rounded-3 py-1 fw-semibold text-secondary" style="border-color: #CBD5E1; font-size: 0.88rem;" title="Filtrar por status de envio por e-mail" aria-label="Filtrar por status de envio por e-mail">
+                                    <option value="">Todos os Envios</option>
+                                    <option value="enviado">Enviados</option>
+                                    <option value="nao-enviado">Não Enviados</option>
+                                </select>
+                            </div>
+                        }
+                        <div style="min-width: 150px;">
                             <select id="filtroCargoParticipante" class="form-select rounded-3 py-1 fw-semibold text-secondary" style="border-color: #CBD5E1; font-size: 0.88rem;" title="Filtrar por cargo" aria-label="Filtrar por cargo">
                                 <option value="">Todos os Cargos</option>
                                 @if (Model.CargosDisponiveis != null)
@@ -135,7 +163,11 @@
                                 <th>NOME NO CRACHÁ</th>
                                 <th style="width: 120px;">CPF</th>
                                 <th style="width: 110px; text-align: center;">STATUS</th>
-                                <th style="width: 140px; text-align: center;">AÇÕES</th>
+                                @if (!Model.EmDemonstracao)
+                                {
+                                    <th style="width: 125px; text-align: center;">ENVIO E-MAIL</th>
+                                }
+                                <th style="width: 185px; text-align: center;">AÇÕES</th>
                             </tr>
                         </thead>
                         <tbody id="tabelaParticipantesBody">
@@ -144,10 +176,12 @@
                                 int index = 0;
                                 foreach (var p in Model.Participantes)
                                 {
+                                    var dataEnvioStr = p.DataEnvioEmail?.ToString("dd/MM/yyyy HH:mm") ?? "";
                                     <tr class="linha-participante @(index == 0 ? "linha-ativa-preview" : "")"
                                         data-index="@index"
                                         data-id="@p.IdInscricao"
                                         data-id-pessoa="@p.IdPessoa"
+                                        data-id-inscricao="@p.IdInscricao"
                                         data-nome="@p.NomeCracha"
                                         data-nome-completo="@p.NomeCompleto"
                                         data-depto="@p.OrganizacaoOuDepto"
@@ -160,7 +194,9 @@
                                         data-apto="@(p.StatusApto ? "true" : "false")"
                                         data-status-desc="@p.StatusDescricao"
                                         data-qrcode="@p.QrCodeBase64"
-                                        data-foto="@p.FotoDataUrl">
+                                        data-foto="@p.FotoDataUrl"
+                                        data-enviado="@(p.CrachaEnviadoEmail ? "true" : "false")"
+                                        data-data-envio="@dataEnvioStr">
                                         <td style="text-align: center;">
                                             <input type="checkbox" class="form-check-input custom-chk chk-participante-item" @(p.Selecionado ? "checked" : "") />
                                         </td>
@@ -206,8 +242,39 @@
                                                 </span>
                                             }
                                         </td>
+                                        @if (!Model.EmDemonstracao)
+                                        {
+                                            <td style="text-align: center;">
+                                                @if (p.CrachaEnviadoEmail)
+                                                {
+                                                    <div class="d-flex flex-column align-items-center">
+                                                        <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-2 py-1 badge-envio-email"
+                                                              style="font-size: 0.75rem;"
+                                                              title="@(!string.IsNullOrEmpty(dataEnvioStr) ? $"Enviado por e-mail em {dataEnvioStr}" : "Crachá enviado por e-mail")">
+                                                            <i class="bi bi-check-circle-fill me-1"></i>Enviado
+                                                        </span>
+                                                        <small class="text-muted mt-1 lbl-data-envio-email" style="font-size: 0.68rem;">@dataEnvioStr</small>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <div class="d-flex flex-column align-items-center">
+                                                        <span class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1 badge-envio-email"
+                                                              style="font-size: 0.75rem;"
+                                                              title="Crachá ainda não enviado por e-mail">
+                                                            <i class="bi bi-circle me-1"></i>Não Enviado
+                                                        </span>
+                                                        <small class="text-muted mt-1 lbl-data-envio-email d-none" style="font-size: 0.68rem;"></small>
+                                                    </div>
+                                                }
+                                            </td>
+                                        }
                                         <td style="text-align: center; white-space: nowrap;">
                                             <a href="javascript:void(0)" class="action-link-edit btn-ver-previa me-2" data-index="@index" title="Exibir crachá deste participante na simulação 1:1">Prévia</a>
+                                            @if (!Model.EmDemonstracao)
+                                            {
+                                                <a href="javascript:void(0)" class="action-link-edit btn-enviar-email-item me-2" data-index="@index" title="Enviar crachá individual por e-mail para este participante">@(p.CrachaEnviadoEmail ? "Reenviar" : "E-mail")</a>
+                                            }
                                             <a href="javascript:void(0)" class="action-link-edit btn-abrir-modal-editar me-2" data-id-pessoa="@p.IdPessoa" data-id-evento="@eventoAtualId" data-nome="@p.NomeCracha" data-nome-completo="@p.NomeCompleto" title="Editar nome e crachá do participante">Editar</a>
                                             <a href="javascript:void(0)" class="action-link-delete btn-excluir-item" data-index="@index" title="Remover da lista de emissão">Excluir</a>
                                         </td>
@@ -218,14 +285,14 @@
                             else
                             {
                                 <tr id="linhaVaziaParticipantes">
-                                    <td colspan="6" class="text-center py-5 text-muted">
+                                    <td colspan="@(Model.EmDemonstracao ? 6 : 7)" class="text-center py-5 text-muted">
                                         <i class="bi bi-people fs-1 d-block mb-2 text-secondary opacity-50"></i>
                                         <span class="fw-semibold">Nenhum participante encontrado para este evento.</span>
                                     </td>
                                 </tr>
                             }
                             <tr id="linhaSemResultadosBusca" style="display: none;">
-                                <td colspan="6" class="text-center py-5 text-muted">
+                                <td colspan="@(Model.EmDemonstracao ? 6 : 7)" class="text-center py-5 text-muted">
                                     <i class="bi bi-search fs-2 d-block mb-2 text-secondary opacity-50"></i>
                                     <span class="fw-semibold">Nenhum participante encontrado para o termo pesquisado.</span>
                                 </td>
@@ -242,6 +309,15 @@
                         <button type="button" id="btnLimparSelecao" class="btn btn-outline-secondary btn-sm rounded-3 fw-semibold px-3 py-1">
                             Limpar Seleção
                         </button>
+                        @if (!Model.EmDemonstracao)
+                        {
+                            <div class="form-check form-switch ms-2 mb-0 d-inline-flex align-items-center gap-2">
+                                <input class="form-check-input" type="checkbox" id="chkEnviarApenasNaoEnviados" style="cursor: pointer;">
+                                <label class="form-check-label small text-secondary fw-semibold" for="chkEnviarApenasNaoEnviados" style="cursor: pointer;">
+                                    Enviar apenas para não enviados
+                                </label>
+                            </div>
+                        }
                     </div>
 
                     <div class="d-flex align-items-center gap-2">
@@ -386,11 +462,39 @@
                     </div>
                 </div>
 
-                <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 mt-3 pt-3 border-top">
+                @if (!Model.EmDemonstracao)
+                {
+                    <div class="d-flex align-items-center justify-content-center mt-3 pt-2 border-top" id="previewStatusEnvioEmailBox">
+                        @if (primeiroParticipante != null && primeiroParticipante.CrachaEnviadoEmail)
+                        {
+                            <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3 py-2" id="previewBadgeEnvioEmail" style="font-size: 0.78rem;">
+                                <i class="bi bi-check-circle-fill me-1"></i>
+                                Crachá enviado por e-mail @(primeiroParticipante.DataEnvioEmail.HasValue ? $"em {primeiroParticipante.DataEnvioEmail.Value:dd/MM/yyyy HH:mm}" : "")
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle px-3 py-2" id="previewBadgeEnvioEmail" style="font-size: 0.78rem;">
+                                <i class="bi bi-circle me-1"></i>
+                                Crachá ainda não enviado por e-mail
+                            </span>
+                        }
+                    </div>
+                }
+
+                <div class="d-flex flex-wrap align-items-center justify-content-center gap-2 mt-2 pt-2">
                     <button type="button" id="btnExportarPng" class="btn btn-blue-normal color-white rounded-3 fw-semibold px-3 py-2 shadow-sm d-inline-flex align-items-center gap-2" title="Exportar crachá do participante em exibição como PNG">
                         <i class="bi bi-download"></i>
                         <span>Exportar PNG</span>
                     </button>
+                    @if (!Model.EmDemonstracao)
+                    {
+                        <button type="button" id="btnEnviarEmailPreview" class="btn btn-outline-success rounded-3 fw-semibold px-3 py-2 shadow-sm d-inline-flex align-items-center gap-2" title="Enviar crachá em exibição por e-mail para este participante">
+                            <span class="spinner-border spinner-border-sm d-none" id="spinnerEnviarEmailPreview" role="status"></span>
+                            <i class="bi bi-envelope-paper" id="iconeEnviarEmailPreview"></i>
+                            <span id="lblBtnEnviarEmailPreview">@(primeiroParticipante != null && primeiroParticipante.CrachaEnviadoEmail ? "Reenviar E-mail" : "Enviar E-mail")</span>
+                        </button>
+                    }
                     <button type="button" id="btnExportarLotePng" class="btn btn-outline-primary rounded-3 fw-semibold px-3 py-2 shadow-sm d-inline-flex align-items-center gap-2" title="Exportar crachás dos participantes selecionados em formato PNG (compactados em .ZIP)">
                         <i class="bi bi-file-earmark-zip"></i>
                         <span>Exportar Selecionados (ZIP)</span>
