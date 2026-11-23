@@ -24,26 +24,26 @@ namespace Service.Tests
             _context.Database.EnsureDeleted();
             _context.Database.EnsureCreated();
 
-			var areainteresses = new List<Areainteresse>
-				{
-				new Areainteresse
-				{
-						Id = 1,
-						Nome =  "Curso",
-					},
-				new Areainteresse
-				{
-						Id = 2,
-						Nome =  "Palestra",
-					},
-				new Areainteresse
-				{
-						Id = 3,
-						Nome =  "Festival",
-					},
-				};
+            var areainteresses = new List<Areainteresse>
+                {
+                new Areainteresse
+                {
+                        Id = 1,
+                        Nome =  "Curso",
+                    },
+                new Areainteresse
+                {
+                        Id = 2,
+                        Nome =  "Palestra",
+                    },
+                new Areainteresse
+                {
+                        Id = 3,
+                        Nome =  "Festival",
+                    },
+                };
 
-			var eventos = new List<Evento>
+            var eventos = new List<Evento>
                 {
                 new Evento
                 {
@@ -141,9 +141,9 @@ namespace Service.Tests
                 };
 
             _context.AddRange(eventos);
-			_context.AddRange(areainteresses);
+            _context.AddRange(areainteresses);
 
-			_context.SaveChanges();
+            _context.SaveChanges();
 
             _eventoService = new EventoService(_context);
         }
@@ -230,7 +230,7 @@ namespace Service.Tests
         public void DeleteTest_EventoAtivo_LancaServiceException()
         {
             // Evento 1 possui Status = "A"
-            var ex = Assert.ThrowsException<ServiceException>(() => _eventoService.Delete(1));
+            var ex = Assert.Throws<ServiceException>(() => _eventoService.Delete(1));
             Assert.AreEqual("Não é possível excluir um evento ativo. Cancele o evento antes de excluí-lo.", ex.Message);
         }
 
@@ -250,7 +250,7 @@ namespace Service.Tests
             _context.SaveChanges();
             _context.ChangeTracker.Clear();
 
-            var ex = Assert.ThrowsException<ServiceException>(() => _eventoService.Delete(2));
+            var ex = Assert.Throws<ServiceException>(() => _eventoService.Delete(2));
             Assert.AreEqual("Não é possível excluir um evento que possui inscrições vinculadas.", ex.Message);
         }
 
@@ -284,7 +284,7 @@ namespace Service.Tests
             _context.SaveChanges();
             _context.ChangeTracker.Clear();
 
-            var ex = Assert.ThrowsException<ServiceException>(() => _eventoService.Delete(2));
+            var ex = Assert.Throws<ServiceException>(() => _eventoService.Delete(2));
             Assert.AreEqual("Não é possível excluir um evento que possui inscrições vinculadas.", ex.Message);
         }
 
@@ -359,10 +359,10 @@ namespace Service.Tests
             evento.VagasDisponiveis = 65;
             evento.TempoMinutosReserva = 240;
             evento.CargaHoraria = 4;
-			var IdsAreaInteresse = new List<uint> {1, 3};
+            var IdsAreaInteresse = new List<uint> { 1, 3 };
 
-			// Act
-			_eventoService.Edit(evento, IdsAreaInteresse);
+            // Act
+            _eventoService.Edit(evento, IdsAreaInteresse);
             //Assert
             Assert.AreEqual((uint)2, evento.Id);
             Assert.AreEqual("SEMAC", evento.Nome);
@@ -533,10 +533,10 @@ namespace Service.Tests
         }
 
         [TestMethod()]
-        [ExpectedException(typeof(ServiceException))]
         public void GetEventByCpfPessoaNaoEncontradaTest()
         {
-            _eventoService.GetEventByCpf("00000000000", 2);
+            Assert.Throws<ServiceException>(() =>
+                _eventoService.GetEventByCpf("00000000000", 2));
         }
 
         [TestMethod()]
@@ -969,10 +969,17 @@ namespace Service.Tests
                 new Evento { Id = 401, Nome = "Outro Freq", Descricao = "Desc", Status = "F", DataInicio = inicio, DataFim = inicio.AddHours(4), CargaHoraria = 4, IdTipoEvento = 1 });
             _context.Subeventos.Add(new Subevento
             {
-                Id = 410, IdEvento = 400, Nome = "Sub Freq", Descricao = "Sub", Status = "A",
-                DataInicio = inicio, DataFim = inicio.AddHours(2),
-                DataInicioInscricao = inicio.AddDays(-2), DataFimInscricao = inicio.AddDays(-1),
-                CargaHoraria = 2, IdTipoEvento = 1
+                Id = 410,
+                IdEvento = 400,
+                Nome = "Sub Freq",
+                Descricao = "Sub",
+                Status = "A",
+                DataInicio = inicio,
+                DataFim = inicio.AddHours(2),
+                DataInicioInscricao = inicio.AddDays(-2),
+                DataFimInscricao = inicio.AddDays(-1),
+                CargaHoraria = 2,
+                IdTipoEvento = 1
             });
             _context.Inscricaopessoaeventos.AddRange(
                 new Inscricaopessoaevento { Id = 401, IdEvento = 400, IdPessoa = 1, IdPapel = 4, Status = "A", DataInscricao = inicio },
