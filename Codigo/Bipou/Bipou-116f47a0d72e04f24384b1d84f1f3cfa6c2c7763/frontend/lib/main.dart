@@ -8,8 +8,10 @@ import 'package:bipou_frontend/services/audit_log_export_service.dart';
 import 'package:bipou_frontend/services/audit_log_service.dart';
 import 'package:bipou_frontend/services/borala_api_service.dart';
 import 'package:bipou_frontend/services/cadastro_pendente_store.dart';
+import 'package:bipou_frontend/services/connectivity_monitor.dart';
 import 'package:bipou_frontend/services/credenciamento_service.dart';
 import 'package:bipou_frontend/services/device_identity_service.dart';
+import 'package:bipou_frontend/services/frequencia_pendente_store.dart';
 import 'package:bipou_frontend/services/local_participant_repository.dart';
 import 'package:bipou_frontend/services/qr_code_share_service.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +26,8 @@ Future<void> main() async {
       auditLog: auditLog,
       api: ApiService(),
       cadastroPendenteStore: CadastroPendenteFileStore(),
+      frequenciaPendenteStore: SqliteFrequenciaPendenteStore(),
+      connectivityMonitor: ConnectivityPlusMonitor(),
     );
     final localParticipantRepository = SqliteLocalParticipantRepository();
     final boralaApi = BoralaApiService();

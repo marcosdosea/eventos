@@ -72,6 +72,9 @@ void main() {
       expect(credenciamento.calls, 1);
       expect(credenciamento.lastParticipanteNome, 'Maria Santos');
       expect(credenciamento.lastParticipanteId, isNotNull);
+      expect(credenciamento.lastIdPessoa, 1042);
+      expect(credenciamento.lastIdEvento, 15);
+      expect(credenciamento.lastIdSubEvento, isNull);
       expect(credenciamento.lastEventoId, 15);
       expect(feedbacks.first.type, ScannerFeedbackType.processando);
       expect(feedbacks.last.type, ScannerFeedbackType.sucesso);
@@ -762,6 +765,9 @@ final class _CredenciamentoSpy implements CredenciamentoGateway {
   String? lastParticipanteNome;
   TipoAcao? lastTipoAcao;
   String? lastDispositivoId;
+  int? lastIdPessoa;
+  int? lastIdEvento;
+  int? lastIdSubEvento;
   int? lastEventoId;
   int? lastSubeventoId;
   Completer<OperationResult<RegistroResponse>>? pendingResult;
@@ -809,6 +815,9 @@ final class _CredenciamentoSpy implements CredenciamentoGateway {
     required String participanteNome,
     required TipoAcao tipoAcao,
     required String dispositivoId,
+    int? idPessoa,
+    int? idEvento,
+    int? idSubEvento,
     int? eventoId,
     int? subeventoId,
     String? operadorUsuario,
@@ -818,6 +827,9 @@ final class _CredenciamentoSpy implements CredenciamentoGateway {
     lastParticipanteNome = participanteNome;
     lastTipoAcao = tipoAcao;
     lastDispositivoId = dispositivoId;
+    lastIdPessoa = idPessoa;
+    lastIdEvento = idEvento;
+    lastIdSubEvento = idSubEvento;
     lastEventoId = eventoId;
     lastSubeventoId = subeventoId;
 

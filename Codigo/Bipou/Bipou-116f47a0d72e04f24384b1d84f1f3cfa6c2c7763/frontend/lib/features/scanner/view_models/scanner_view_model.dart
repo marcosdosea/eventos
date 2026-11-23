@@ -12,6 +12,7 @@ import 'package:bipou_frontend/models/tipo_acao.dart';
 import 'package:bipou_frontend/services/api_service.dart';
 import 'package:bipou_frontend/services/audit_log_service.dart';
 import 'package:bipou_frontend/services/credenciamento_service.dart';
+import 'package:bipou_frontend/services/frequencia_pendente_store_contract.dart';
 import 'package:bipou_frontend/services/local_participant_repository.dart';
 import 'package:flutter/foundation.dart';
 
@@ -351,12 +352,16 @@ final class ScannerViewModel extends ChangeNotifier {
       );
 
       try {
+        final eventoResolvido = eventoAtivo ?? eventoParticipante;
         final result = await _credenciamento.registrarLeitura(
           participanteId: participanteId,
           participanteNome: nomeIdentificado,
           tipoAcao: tipoAcao,
           dispositivoId: dispositivoId,
-          eventoId: eventoAtivo ?? eventoParticipante,
+          idPessoa: local?.idPessoa ?? participante.pid,
+          idEvento: eventoResolvido,
+          idSubEvento: subeventoAtivo,
+          eventoId: eventoResolvido,
           subeventoId: subeventoAtivo,
           operadorUsuario: sessaoAtiva?.operadorUsuario,
         );
@@ -428,6 +433,16 @@ final class ScannerViewModel extends ChangeNotifier {
             type: ScannerFeedbackType.erro,
             participantName: nomeIdentificado,
             statusLabel: 'ERRO DE AUDITORIA',
+            processingDuration: stopwatch.elapsed,
+          ),
+        );
+      } on FrequenciaPendenteStoreException {
+        _emitir(
+          ScannerFeedback(
+            message: 'Falha ao salvar a leitura na fila local',
+            type: ScannerFeedbackType.erro,
+            participantName: nomeIdentificado,
+            statusLabel: 'ERRO NA FILA LOCAL',
             processingDuration: stopwatch.elapsed,
           ),
         );

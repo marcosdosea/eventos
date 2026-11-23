@@ -61,8 +61,15 @@ final class _DashboardScreenState extends State<DashboardScreen> {
       widget.localParticipantRepository;
 
   PortariaSession? _sessaoAtiva;
-
   ScannerSessionContext? _contextoAtivo;
+  bool _sincronizandoAgora = false;
+
+  FrequenciaPendenteSynchronizer? get _frequenciaSynchronizer {
+    final gateway = credenciamento;
+    return gateway is FrequenciaPendenteSynchronizer
+        ? gateway as FrequenciaPendenteSynchronizer
+        : null;
+  }
 
   @override
   void initState() {
@@ -70,7 +77,7 @@ final class _DashboardScreenState extends State<DashboardScreen> {
     _contextoAtivo = widget.initialContext;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _carregarSessaoAtiva();
-      _sincronizarCadastrosPendentes();
+      _inicializarSincronizacao();
     });
   }
 
@@ -92,6 +99,7 @@ final class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final frequenciaSynchronizer = _frequenciaSynchronizer;
     final sessao = _sessaoAtiva;
     final usarSessaoLocal = localRepository != null;
     final exibirContextoManual = !usarSessaoLocal || _contextoAtivo != null;
@@ -164,6 +172,25 @@ final class _DashboardScreenState extends State<DashboardScreen> {
                         onTap: () => _configurarContexto(context),
                       ),
                       const SizedBox(height: 14),
+                    ],
+                    if (frequenciaSynchronizer != null) ...<Widget>[
+                      StreamBuilder<int>(
+                        initialData:
+                            frequenciaSynchronizer.frequenciasPendentesCount,
+                        stream:
+                            frequenciaSynchronizer.onFrequenciasPendentesChanged,
+                        builder: (context, snapshot) {
+                          final pendentes =
+                              snapshot.data ??
+                              frequenciaSynchronizer.frequenciasPendentesCount;
+                          return _OfflineQueueBanner(
+                            pendentes: pendentes,
+                            sincronizando: _sincronizandoAgora,
+                            onSincronizarAgora: _sincronizarAgoraManual,
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 16),
                     ],
                     _DashboardButton(
                       label: 'Escanear QR Code',
@@ -306,8 +333,8 @@ final class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  Future<void> _abrirScanner(BuildContext context, TipoAcao tipoAcao) {
-    return Navigator.of(context).push<void>(
+  Future<void> _abrirScanner(BuildContext context, TipoAcao tipoAcao) async {
+    await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (_) => ScannerScreen(
           tipoAcao: tipoAcao,
@@ -323,6 +350,7 @@ final class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
     );
+    await _atualizarContagemFrequencias();
   }
 
   Future<void> _abrirCadastroManual(BuildContext context) async {
@@ -381,6 +409,122 @@ final class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  Future<void> _inicializarSincronizacao() async {
+    await _atualizarContagemFrequencias();
+    await _sincronizarCadastrosPendentes();
+    await _sincronizarFrequenciasAutomaticamente();
+  }
+
+  Future<void> _atualizarContagemFrequencias() async {
+    final synchronizer = _frequenciaSynchronizer;
+    if (synchronizer == null) {
+      return;
+    }
+    try {
+      await synchronizer.atualizarContagemFrequenciasPendentes();
+    } on Object {
+      // Mantém a última contagem conhecida caso o banco esteja ocupado.
+    }
+  }
+
+  Future<void> _sincronizarFrequenciasAutomaticamente() async {
+    final synchronizer = _frequenciaSynchronizer;
+    if (synchronizer == null) {
+      return;
+    }
+    try {
+      final result = await synchronizer.sincronizarFrequenciasPendentes();
+      if (!mounted) {
+        return;
+      }
+      if (result.enviados > 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${result.enviados} presença(s) offline sincronizada(s)',
+            ),
+            backgroundColor: const Color(0xFF16803C),
+          ),
+        );
+      }
+    } on Object {
+      // A fila permanece salva no SQLite e será tentada novamente.
+    }
+  }
+
+  Future<void> _sincronizarAgoraManual() async {
+    if (_sincronizandoAgora) {
+      return;
+    }
+
+    setState(() => _sincronizandoAgora = true);
+    try {
+      await _sincronizarCadastrosPendentes();
+
+      final synchronizer = _frequenciaSynchronizer;
+      if (synchronizer == null || !mounted) {
+        return;
+      }
+
+      final result = await synchronizer.sincronizarFrequenciasPendentes();
+      if (!mounted) {
+        return;
+      }
+
+      final String mensagem;
+      final Color cor;
+      if (result.offline) {
+        mensagem = result.restantes > 0
+            ? 'Sem conexão no momento. ${result.restantes} presença(s) aguardando sincronização.'
+            : 'Dispositivo sem conexão no momento.';
+        cor = const Color(0xFFB45309);
+      } else if (result.enviados > 0 &&
+          result.rejeitados == 0 &&
+          result.restantes == 0) {
+        mensagem = '${result.enviados} presença(s) offline sincronizada(s)';
+        cor = const Color(0xFF16803C);
+      } else if (result.enviados > 0 && result.rejeitados > 0) {
+        mensagem =
+            '${result.enviados} sincronizada(s) e ${result.rejeitados} recusada(s) pela API.';
+        cor = const Color(0xFFB45309);
+      } else if (result.enviados > 0 && result.restantes > 0) {
+        mensagem =
+            '${result.enviados} sincronizada(s); ${result.restantes} ainda aguardando sincronização.';
+        cor = const Color(0xFFB45309);
+      } else if (result.rejeitados > 0) {
+        mensagem =
+            '${result.rejeitados} presença(s) pendente(s) foram recusadas pela API.';
+        cor = const Color(0xFFB42318);
+      } else if (result.restantes > 0) {
+        mensagem =
+            '${result.restantes} presença(s) ainda aguardando sincronização.';
+        cor = const Color(0xFFB45309);
+      } else {
+        mensagem = 'Nenhuma presença pendente para sincronizar.';
+        cor = const Color(0xFF16803C);
+      }
+
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(mensagem), backgroundColor: cor));
+    } on Object {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text('Não foi possível sincronizar a fila offline.'),
+              backgroundColor: Color(0xFFB42318),
+            ),
+          );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _sincronizandoAgora = false);
+      }
+    }
+  }
+
   Future<void> _sincronizarCadastrosPendentes() async {
     final gateway = credenciamento;
     if (gateway is! CadastroPendenteSynchronizer) {
@@ -426,6 +570,85 @@ final class _DashboardScreenState extends State<DashboardScreen> {
       builder: (_) => _ApiStatusSheet(
         credenciamento: credenciamento,
         auditLogExporter: auditLogExporter,
+      ),
+    );
+  }
+}
+
+final class _OfflineQueueBanner extends StatelessWidget {
+  const _OfflineQueueBanner({
+    required this.pendentes,
+    required this.sincronizando,
+    required this.onSincronizarAgora,
+  });
+
+  final int pendentes;
+  final bool sincronizando;
+  final VoidCallback onSincronizarAgora;
+
+  @override
+  Widget build(BuildContext context) {
+    final possuiPendencias = pendentes > 0;
+    final accentColor = possuiPendencias
+        ? const Color(0xFFB42318)
+        : const Color(0xFF16803C);
+    final titulo = possuiPendencias
+        ? (pendentes == 1
+              ? '🔴 1 presença salva offline'
+              : '🔴 $pendentes presenças salvas offline')
+        : 'Fila offline sincronizada';
+    final subtitulo = possuiPendencias
+        ? 'As leituras estão protegidas localmente e serão enviadas automaticamente ao retornar a conexão.'
+        : 'Todas as presenças lidas neste dispositivo foram enviadas.';
+
+    return DecoratedBox(
+      key: const Key('offline-queue-banner'),
+      decoration: BoxDecoration(
+        color: accentColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: accentColor.withValues(alpha: 0.35)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Text(
+              titulo,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: accentColor,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(subtitulo, style: Theme.of(context).textTheme.bodySmall),
+            const SizedBox(height: 12),
+            FilledButton.icon(
+              key: const Key('sincronizar-agora-button'),
+              onPressed: sincronizando ? null : onSincronizarAgora,
+              icon: sincronizando
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.sync),
+              label: Text(
+                sincronizando ? 'Sincronizando...' : 'Sincronizar Agora',
+              ),
+              style: FilledButton.styleFrom(
+                backgroundColor: accentColor,
+                foregroundColor: Colors.white,
+                minimumSize: const Size.fromHeight(46),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'package:bipou_frontend/core/config/api_config.dart';
+import 'package:bipou_frontend/models/frequencia_pendente.dart';
 import 'package:bipou_frontend/models/leitura_qr_code_request.dart';
 import 'package:bipou_frontend/models/participante_request.dart';
 import 'package:bipou_frontend/models/participante_response.dart';
@@ -22,7 +23,77 @@ abstract interface class CredenciamentoApi {
   Future<List<ParticipanteResponse>> listarParticipantes();
 }
 
-final class ApiService implements CredenciamentoApi {
+abstract interface class FrequenciaLoteApi {
+  Future<FrequenciaLoteSyncResponse> sincronizarFrequenciasLote(
+    List<FrequenciaPendente> lote,
+  );
+}
+
+final class FrequenciaLoteRejeicao {
+  const FrequenciaLoteRejeicao({
+    required this.leituraId,
+    required this.mensagem,
+    this.codigo,
+  });
+
+  final String leituraId;
+  final String? codigo;
+  final String mensagem;
+}
+
+final class FrequenciaLoteSyncResponse {
+  const FrequenciaLoteSyncResponse({
+    required this.confirmados,
+    this.rejeitados = const <FrequenciaLoteRejeicao>[],
+  });
+
+  factory FrequenciaLoteSyncResponse.fromJson(Map<String, dynamic> json) {
+    final confirmadosRaw = json['confirmados'];
+    final rejeitadosRaw = json['rejeitados'];
+
+    final confirmados = <String>[];
+    if (confirmadosRaw is List) {
+      for (final item in confirmadosRaw) {
+        if (item is String && item.trim().isNotEmpty) {
+          confirmados.add(item.trim());
+        }
+      }
+    }
+
+    final rejeitados = <FrequenciaLoteRejeicao>[];
+    if (rejeitadosRaw is List) {
+      for (final item in rejeitadosRaw) {
+        if (item is Map) {
+          final map = Map<String, dynamic>.from(item);
+          final leituraId = map['leituraId'];
+          if (leituraId is String && leituraId.trim().isNotEmpty) {
+            final codigo = map['codigo'];
+            final mensagem = map['mensagem'];
+            rejeitados.add(
+              FrequenciaLoteRejeicao(
+                leituraId: leituraId.trim(),
+                codigo: codigo is String ? codigo : null,
+                mensagem: mensagem is String && mensagem.trim().isNotEmpty
+                    ? mensagem.trim()
+                    : 'Registro recusado pela API.',
+              ),
+            );
+          }
+        }
+      }
+    }
+
+    return FrequenciaLoteSyncResponse(
+      confirmados: List<String>.unmodifiable(confirmados),
+      rejeitados: List<FrequenciaLoteRejeicao>.unmodifiable(rejeitados),
+    );
+  }
+
+  final List<String> confirmados;
+  final List<FrequenciaLoteRejeicao> rejeitados;
+}
+
+final class ApiService implements CredenciamentoApi, FrequenciaLoteApi {
   ApiService({Dio? dio, String? baseUrl})
     : _baseUrl = baseUrl ?? ApiConfig.baseUrl,
       _dio =
@@ -80,6 +151,93 @@ final class ApiService implements CredenciamentoApi {
     return json
         .map((item) => _parseResponse(item, ParticipanteResponse.fromJson))
         .toList();
+  }
+
+  @override
+  Future<FrequenciaLoteSyncResponse> sincronizarFrequenciasLote(
+    List<FrequenciaPendente> lote,
+  ) async {
+    if (lote.isEmpty) {
+      return const FrequenciaLoteSyncResponse(confirmados: <String>[]);
+    }
+
+    final comContextoBorala = lote
+        .where((item) => item.possuiContextoBorala)
+        .toList(growable: false);
+    final somenteLegado = lote
+        .where((item) => !item.possuiContextoBorala)
+        .toList(growable: false);
+
+    final confirmados = <String>[];
+    final rejeitados = <FrequenciaLoteRejeicao>[];
+
+    if (comContextoBorala.isNotEmpty) {
+      try {
+        final json = await _post(
+          '/api/bipou/v1/frequencias/lote',
+          <String, Object?>{
+            'leituras': comContextoBorala
+                .map((item) => item.toBipouLoteJson())
+                .toList(growable: false),
+          },
+        );
+        final parsed = _parseResponse(
+          json,
+          FrequenciaLoteSyncResponse.fromJson,
+        );
+        confirmados.addAll(parsed.confirmados);
+        rejeitados.addAll(parsed.rejeitados);
+      } on ApiRequestException catch (error) {
+        if (error.statusCode == 404 || error.statusCode == 405) {
+          await _enviarIndividualmentePorRegistro(
+            comContextoBorala,
+            confirmados: confirmados,
+            rejeitados: rejeitados,
+          );
+        } else {
+          rethrow;
+        }
+      }
+    }
+
+    if (somenteLegado.isNotEmpty) {
+      await _enviarIndividualmentePorRegistro(
+        somenteLegado,
+        confirmados: confirmados,
+        rejeitados: rejeitados,
+      );
+    }
+
+    return FrequenciaLoteSyncResponse(
+      confirmados: List<String>.unmodifiable(confirmados),
+      rejeitados: List<FrequenciaLoteRejeicao>.unmodifiable(rejeitados),
+    );
+  }
+
+  Future<void> _enviarIndividualmentePorRegistro(
+    List<FrequenciaPendente> itens, {
+    required List<String> confirmados,
+    required List<FrequenciaLoteRejeicao> rejeitados,
+  }) async {
+    for (final item in itens) {
+      try {
+        await registrar(item.toLeituraQrCodeRequest());
+        confirmados.add(item.leituraId);
+      } on ApiUnavailableException {
+        if (confirmados.isEmpty && rejeitados.isEmpty) {
+          rethrow;
+        }
+        break;
+      } on ApiRequestException catch (error) {
+        rejeitados.add(
+          FrequenciaLoteRejeicao(
+            leituraId: item.leituraId,
+            codigo: error.statusCode?.toString(),
+            mensagem: error.message,
+          ),
+        );
+      }
+    }
   }
 
   Future<Object?> _get(String path) async {
