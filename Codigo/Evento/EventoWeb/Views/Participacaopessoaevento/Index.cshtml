@@ -155,7 +155,7 @@
     </div>
 </div>
 
-<partial name="_ImportaCSV" model="new { IdEvento = Model.Evento.Id, IdSubEvento = Model.SubEvento?.Id }" />
+<partial name="_ImportaCSV" model='new EventoWeb.Models.ImportarCsvModalModel { IdEvento = Model.Evento.Id, IdSubEvento = Model.SubEvento?.Id, ActionRetorno = "Index" }' />
 
 @section Scripts {
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

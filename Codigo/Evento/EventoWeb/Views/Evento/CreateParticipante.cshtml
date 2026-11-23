@@ -164,7 +164,7 @@
 </div>
 
 
-<partial name="_ImportaCSV" model='new { IdEvento = Model.Evento.Id, IdSubEvento = 0, actionRetorno = "CreateParticipante" }' />
+<partial name="_ImportaCSV" model='new EventoWeb.Models.ImportarCsvModalModel { IdEvento = Model.Evento.Id, IdSubEvento = null, ActionRetorno = "CreateParticipante", Titulo = "Importar Planilha de Participantes", Descricao = "Selecione o arquivo de planilha (formatos .csv, .xlsx ou .xls, como o relatório do SIGAA) para inscrever os participantes no evento.", MensagemCarregamento = "Processando planilha e inscrevendo participantes, aguarde..." }' />
 
 
 @await Html.PartialAsync("_DeleteModal", new EventoWeb.Models.DeleteModel
@@ -188,6 +188,19 @@
                 language: {
                     url: '@Url.Content("~/lib/datatable/js/pt-BR.json")'
                 }
+            });
+
+            // Animação de carregamento e prevenção de duplo envio na importação de planilha
+            $('#formImportarCsv').on('submit', function () {
+                var fileInput = document.getElementById('arquivoPlanilha');
+                if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                    return;
+                }
+                $('#btnSubmitImportarCsv')
+                    .prop('disabled', true)
+                    .html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Importando...');
+                $('#btnCancelarImportarCsv, #btnFecharModalImportarCsv').prop('disabled', true);
+                $('#statusCarregamentoImportacao').removeClass('d-none');
             });
         });
 

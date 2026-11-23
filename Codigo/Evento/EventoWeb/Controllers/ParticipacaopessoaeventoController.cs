@@ -7,8 +7,6 @@ using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Razor.Language.CodeGeneration;
-using Mysqlx;
 
 namespace EventoWeb.Controllers
 {
@@ -261,7 +259,7 @@ namespace EventoWeb.Controllers
             if (arquivoPlanilha == null || arquivoPlanilha.Length == 0)
             {
                 TempData["ErrorMessage"] = "Selecione um arquivo de planilha (.csv, .xlsx ou .xls) válido para importar.";
-                return RedirectToAction(destino, new { idEvento, idSubEvento });
+                return RedirecionarRetornoImportacao(destino, idEvento, idSubEvento);
             }
 
             var resultado = _planilhaParser.Parse(arquivoPlanilha);
@@ -278,11 +276,7 @@ namespace EventoWeb.Controllers
                     TempData["ErrorMessage"] = "Nenhum participante válido foi encontrado no arquivo.";
                 }
 
-                if(actionRetorno == "CreateParticipante")
-                    return RedirectToAction("CreateParticipante", "Evento", new { idEvento, idSubEvento });
-                
-                
-                return RedirectToAction(destino, new { idEvento, idSubEvento });
+                return RedirecionarRetornoImportacao(destino, idEvento, idSubEvento);
             }
 
             if (actionRetorno == "CreateParticipante")
@@ -376,6 +370,16 @@ namespace EventoWeb.Controllers
 
         }
         
+        private IActionResult RedirecionarRetornoImportacao(string destino, uint idEvento, uint? idSubEvento)
+        {
+            if (destino == "CreateParticipante")
+            {
+                return RedirectToAction("CreateParticipante", "Evento", new { idEvento, idSubEvento });
+            }
+
+            return RedirectToAction(destino, new { idEvento, idSubEvento });
+        }
+
         private IActionResult? ValidarAcessoEventoAction( uint idEvento, string actionRetorno, string mensagemSemPermissao, bool considerarCreateParticipante = false)
         {
             var username = User.Identity?.Name;
@@ -592,31 +596,6 @@ namespace EventoWeb.Controllers
             return criouAlgo;
         }
 
-        private async Task<bool> RegistrarFrequenciaViaCsvAsync(uint idPessoa, uint idEvento, uint? idSubEvento)
-        {
-            if (idPessoa == 0) return false;
-
-            if (idSubEvento.HasValue && idSubEvento.Value > 0)
-            {
-                var novaParticipacaoSub = new Participacaopessoasubevento
-                {
-                    IdPessoa = idPessoa,
-                    IdSubEvento = idSubEvento.Value,
-                    Entrada = DateTime.Now
-                };
-                _participacaoSubEventoService.Create(novaParticipacaoSub);
-                return true;
-            }
-
-            var novaParticipacao = new Participacaopessoaevento
-            {
-                IdPessoa = idPessoa,
-                IdEvento = idEvento,
-                Entrada = DateTime.Now
-            };
-            await _participacaoService.AddAsync(novaParticipacao);
-            return true;
-        }
         /// <summary>
         /// Carrega as participações do evento ou do subevento informado.
         /// Retorna (null, null) quando o subevento não existe ou pertence a outro evento.
