@@ -132,6 +132,7 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun playPcmSegments(segments: List<ToneSegment>): Boolean {
+        var track: AudioTrack? = null
         return try {
             val totalSamples = segments.sumOf { (SAMPLE_RATE * it.durationMs) / 1000 }
             if (totalSamples <= 0) return false
@@ -156,7 +157,7 @@ class MainActivity : FlutterActivity() {
                 offset += count
             }
 
-            val track = AudioTrack.Builder()
+            track = AudioTrack.Builder()
                 .setAudioAttributes(
                     AudioAttributes.Builder()
                         .setUsage(AudioAttributes.USAGE_NOTIFICATION_EVENT)
@@ -178,11 +179,22 @@ class MainActivity : FlutterActivity() {
             track.play()
             val totalDurationMs = segments.sumOf { it.durationMs }.toLong()
             Thread.sleep(totalDurationMs + 40L)
-            track.stop()
-            track.release()
             true
         } catch (_: Throwable) {
             false
+        } finally {
+            try {
+                if (track?.playState == AudioTrack.PLAYSTATE_PLAYING) {
+                    track.stop()
+                }
+            } catch (_: Throwable) {
+                // Ignora erro ao interromper reproducao no encerramento.
+            }
+            try {
+                track?.release()
+            } catch (_: Throwable) {
+                // Ignora erro ao liberar recurso nativo de audio.
+            }
         }
     }
 

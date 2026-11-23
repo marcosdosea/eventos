@@ -52,7 +52,8 @@ final class ScannerViewModel extends ChangeNotifier {
 
   Stream<ScannerFeedback> get feedbacks => _feedbackController.stream;
   int get leiturasEmProcessamento => _participantesEmProcessamento.length;
-  bool get processando => _participantesEmProcessamento.isNotEmpty;
+  bool get processando =>
+      _leituraEmAndamento || _participantesEmProcessamento.isNotEmpty;
   List<RecentScanRecord> get historicoRecente =>
       List<RecentScanRecord>.unmodifiable(_historicoRecente);
 
@@ -250,198 +251,214 @@ final class ScannerViewModel extends ChangeNotifier {
     LocalParticipant? localPrecarregado,
     bool consultarCacheLocal = true,
   }) async {
-    var local = localPrecarregado;
-    if (local == null && consultarCacheLocal && localParticipants != null) {
-      local = await _buscarNoCacheLocal(participante);
-    }
-
-    final nomeIdentificado = local?.nome ?? participante.nome;
-    final participanteId = local?.id ?? participante.id;
-    final eventoParticipante = participante.eid ?? local?.eventoId;
-    final subeventosParticipante =
-        local != null ? local.subeventoIds : participante.sid;
-
-    final eventoAtivo = _eventoIdAtivo;
-    if (eventoAtivo != null &&
-        eventoParticipante != null &&
-        eventoParticipante != eventoAtivo) {
-      _emitir(
-        ScannerFeedback(
-          message: _isSubeventoAtivo
-              ? 'Não inscrito neste curso!'
-              : 'Não inscrito neste evento!',
-          type: ScannerFeedbackType.naoInscrito,
-          participantName: nomeIdentificado,
-          statusLabel: 'ACESSO NEGADO',
-          detail: 'Crachá pertence a outro evento',
-          processingDuration: stopwatch.elapsed,
-        ),
-      );
+    if (_leituraEmAndamento) {
       return;
     }
 
-    final subeventoAtivo = _subeventoIdAtivo;
-    if (subeventoAtivo != null &&
-        !subeventosParticipante.contains(subeventoAtivo)) {
-      _emitir(
-        ScannerFeedback(
-          message: 'Não inscrito neste curso!',
-          type: ScannerFeedbackType.naoInscrito,
-          participantName: nomeIdentificado,
-          statusLabel: 'ACESSO NEGADO',
-          detail: 'Curso ativo: $_destinoAtivoLabel',
-          processingDuration: stopwatch.elapsed,
-        ),
-      );
-      return;
-    }
-
-    final agora = _clock();
-    _removerLeiturasExpiradas(agora);
-
-    if (_participantesEmProcessamento.contains(participanteId)) {
-      return;
-    }
-
-    final ultimaLeitura = _ultimaLeituraPorParticipante[participanteId];
-    if (ultimaLeitura != null && agora.difference(ultimaLeitura) < cooldown) {
-      _emitir(
-        ScannerFeedback(
-          message: 'Aguarde para bipar novamente',
-          type: ScannerFeedbackType.duplicado,
-          participantName: nomeIdentificado,
-          statusLabel: 'LEITURA DUPLICADA',
-          detail:
-              'Crachá lido recentemente (aguarde ${cooldown.inSeconds}s)',
-          processingDuration: stopwatch.elapsed,
-        ),
-      );
-      return;
-    }
-
-    _ultimaLeituraPorParticipante[participanteId] = agora;
-    _participantesEmProcessamento.add(participanteId);
     _leituraEmAndamento = true;
-    _notificarMudanca();
-
-    _emitir(
-      ScannerFeedback(
-        message: 'Processando leitura: $nomeIdentificado',
-        type: ScannerFeedbackType.processando,
-        participantName: nomeIdentificado,
-        statusLabel: 'PROCESSANDO LEITURA',
-        detail: 'Aguardando confirmação...',
-        processingDuration: stopwatch.elapsed,
-      ),
-    );
-
+    String? participanteIdEmProcessamento;
     var registroEfetivado = false;
+
     try {
-      final result = await _credenciamento.registrarLeitura(
-        participanteId: participanteId,
-        participanteNome: nomeIdentificado,
-        tipoAcao: tipoAcao,
-        dispositivoId: dispositivoId,
-        eventoId: eventoAtivo ?? eventoParticipante,
-        subeventoId: subeventoAtivo,
-        operadorUsuario: sessaoAtiva?.operadorUsuario,
-      );
+      var local = localPrecarregado;
+      if (local == null && consultarCacheLocal && localParticipants != null) {
+        try {
+          local = await _buscarNoCacheLocal(participante);
+        } on Object {
+          // Falha pontual no cache local nao deve impedir a validacao pelo payload do QR.
+          local = null;
+        }
+      }
 
-      final statusAcao = _statusAcaoRegistrada(tipoAcao);
+      final nomeIdentificado = local?.nome ?? participante.nome;
+      final participanteId = local?.id ?? participante.id;
+      final eventoParticipante = participante.eid ?? local?.eventoId;
+      final subeventosParticipante =
+          local != null ? local.subeventoIds : participante.sid;
 
-      if (result.status == SyncStatus.salvoOffline) {
-        registroEfetivado = true;
-        _adicionarAoHistorico(
-          RecentScanRecord(
-            participanteId: participanteId,
-            participanteNome: nomeIdentificado,
-            tipoAcao: tipoAcao,
-            registradoEm: agora,
-            offline: true,
-          ),
-        );
+      final eventoAtivo = _eventoIdAtivo;
+      if (eventoAtivo != null &&
+          eventoParticipante != null &&
+          eventoParticipante != eventoAtivo) {
         _emitir(
           ScannerFeedback(
-            message: 'Salvo Offline: $nomeIdentificado',
-            type: ScannerFeedbackType.offline,
+            message: _isSubeventoAtivo
+                ? 'Não inscrito neste curso!'
+                : 'Não inscrito neste evento!',
+            type: ScannerFeedbackType.naoInscrito,
             participantName: nomeIdentificado,
-            statusLabel: statusAcao,
-            detail: 'Salvo offline na auditoria local',
+            statusLabel: 'ACESSO NEGADO',
+            detail: 'Crachá pertence a outro evento',
             processingDuration: stopwatch.elapsed,
           ),
         );
         return;
       }
 
-      final nomeRetornado = result.data?.participanteNome.trim();
-      final nomeConfirmado =
-          (nomeRetornado != null && nomeRetornado.isNotEmpty)
-          ? nomeRetornado
-          : nomeIdentificado;
-      registroEfetivado = true;
-      _adicionarAoHistorico(
-        RecentScanRecord(
-          participanteId: participanteId,
-          participanteNome: nomeConfirmado,
-          tipoAcao: tipoAcao,
-          registradoEm: agora,
-          offline: false,
-        ),
-      );
-      _emitir(
-        ScannerFeedback(
-          message: '$statusAcao: $nomeConfirmado',
-          type: ScannerFeedbackType.sucesso,
-          participantName: nomeConfirmado,
-          statusLabel: statusAcao,
-          processingDuration: stopwatch.elapsed,
-        ),
-      );
-    } on ApiRequestException catch (error) {
-      _emitir(
-        ScannerFeedback(
-          message: error.message,
-          type: ScannerFeedbackType.erro,
-          participantName: nomeIdentificado,
-          statusLabel: 'ERRO NO REGISTRO',
-          processingDuration: stopwatch.elapsed,
-        ),
-      );
-    } on AuditLogException {
-      _emitir(
-        ScannerFeedback(
-          message: 'Falha ao salvar a auditoria local',
-          type: ScannerFeedbackType.erro,
-          participantName: nomeIdentificado,
-          statusLabel: 'ERRO DE AUDITORIA',
-          processingDuration: stopwatch.elapsed,
-        ),
-      );
-    } on ArgumentError {
-      _emitir(
-        ScannerFeedback(
-          message: 'Dados da leitura invalidos',
-          type: ScannerFeedbackType.erro,
-          participantName: nomeIdentificado,
-          statusLabel: 'DADOS INVÁLIDOS',
-          processingDuration: stopwatch.elapsed,
-        ),
-      );
-    } on Object {
-      _emitir(
-        ScannerFeedback(
-          message: 'Nao foi possivel processar a leitura',
-          type: ScannerFeedbackType.erro,
-          participantName: nomeIdentificado,
-          statusLabel: 'ERRO NO REGISTRO',
-          processingDuration: stopwatch.elapsed,
-        ),
-      );
-    } finally {
-      if (!registroEfetivado) {
-        _ultimaLeituraPorParticipante.remove(participanteId);
+      final subeventoAtivo = _subeventoIdAtivo;
+      if (subeventoAtivo != null &&
+          !subeventosParticipante.contains(subeventoAtivo)) {
+        _emitir(
+          ScannerFeedback(
+            message: 'Não inscrito neste curso!',
+            type: ScannerFeedbackType.naoInscrito,
+            participantName: nomeIdentificado,
+            statusLabel: 'ACESSO NEGADO',
+            detail: 'Curso ativo: $_destinoAtivoLabel',
+            processingDuration: stopwatch.elapsed,
+          ),
+        );
+        return;
       }
-      _participantesEmProcessamento.remove(participanteId);
+
+      final agora = _clock();
+      _removerLeiturasExpiradas(agora);
+
+      if (_participantesEmProcessamento.contains(participanteId)) {
+        return;
+      }
+
+      final ultimaLeitura = _ultimaLeituraPorParticipante[participanteId];
+      if (ultimaLeitura != null && agora.difference(ultimaLeitura) < cooldown) {
+        _emitir(
+          ScannerFeedback(
+            message: 'Aguarde para bipar novamente',
+            type: ScannerFeedbackType.duplicado,
+            participantName: nomeIdentificado,
+            statusLabel: 'LEITURA DUPLICADA',
+            detail:
+                'Crachá lido recentemente (aguarde ${cooldown.inSeconds}s)',
+            processingDuration: stopwatch.elapsed,
+          ),
+        );
+        return;
+      }
+
+      _ultimaLeituraPorParticipante[participanteId] = agora;
+      _participantesEmProcessamento.add(participanteId);
+      participanteIdEmProcessamento = participanteId;
+      _notificarMudanca();
+
+      _emitir(
+        ScannerFeedback(
+          message: 'Processando leitura: $nomeIdentificado',
+          type: ScannerFeedbackType.processando,
+          participantName: nomeIdentificado,
+          statusLabel: 'PROCESSANDO LEITURA',
+          detail: 'Aguardando confirmação...',
+          processingDuration: stopwatch.elapsed,
+        ),
+      );
+
+      try {
+        final result = await _credenciamento.registrarLeitura(
+          participanteId: participanteId,
+          participanteNome: nomeIdentificado,
+          tipoAcao: tipoAcao,
+          dispositivoId: dispositivoId,
+          eventoId: eventoAtivo ?? eventoParticipante,
+          subeventoId: subeventoAtivo,
+          operadorUsuario: sessaoAtiva?.operadorUsuario,
+        );
+
+        final statusAcao = _statusAcaoRegistrada(tipoAcao);
+
+        if (result.status == SyncStatus.salvoOffline) {
+          registroEfetivado = true;
+          _adicionarAoHistorico(
+            RecentScanRecord(
+              participanteId: participanteId,
+              participanteNome: nomeIdentificado,
+              tipoAcao: tipoAcao,
+              registradoEm: agora,
+              offline: true,
+            ),
+          );
+          _emitir(
+            ScannerFeedback(
+              message: 'Salvo Offline: $nomeIdentificado',
+              type: ScannerFeedbackType.offline,
+              participantName: nomeIdentificado,
+              statusLabel: statusAcao,
+              detail: 'Salvo offline na auditoria local',
+              processingDuration: stopwatch.elapsed,
+            ),
+          );
+          return;
+        }
+
+        final nomeRetornado = result.data?.participanteNome.trim();
+        final nomeConfirmado =
+            (nomeRetornado != null && nomeRetornado.isNotEmpty)
+            ? nomeRetornado
+            : nomeIdentificado;
+        registroEfetivado = true;
+        _adicionarAoHistorico(
+          RecentScanRecord(
+            participanteId: participanteId,
+            participanteNome: nomeConfirmado,
+            tipoAcao: tipoAcao,
+            registradoEm: agora,
+            offline: false,
+          ),
+        );
+        _emitir(
+          ScannerFeedback(
+            message: '$statusAcao: $nomeConfirmado',
+            type: ScannerFeedbackType.sucesso,
+            participantName: nomeConfirmado,
+            statusLabel: statusAcao,
+            processingDuration: stopwatch.elapsed,
+          ),
+        );
+      } on ApiRequestException catch (error) {
+        _emitir(
+          ScannerFeedback(
+            message: error.message,
+            type: ScannerFeedbackType.erro,
+            participantName: nomeIdentificado,
+            statusLabel: 'ERRO NO REGISTRO',
+            processingDuration: stopwatch.elapsed,
+          ),
+        );
+      } on AuditLogException {
+        _emitir(
+          ScannerFeedback(
+            message: 'Falha ao salvar a auditoria local',
+            type: ScannerFeedbackType.erro,
+            participantName: nomeIdentificado,
+            statusLabel: 'ERRO DE AUDITORIA',
+            processingDuration: stopwatch.elapsed,
+          ),
+        );
+      } on ArgumentError {
+        _emitir(
+          ScannerFeedback(
+            message: 'Dados da leitura invalidos',
+            type: ScannerFeedbackType.erro,
+            participantName: nomeIdentificado,
+            statusLabel: 'DADOS INVÁLIDOS',
+            processingDuration: stopwatch.elapsed,
+          ),
+        );
+      } on Object {
+        _emitir(
+          ScannerFeedback(
+            message: 'Nao foi possivel processar a leitura',
+            type: ScannerFeedbackType.erro,
+            participantName: nomeIdentificado,
+            statusLabel: 'ERRO NO REGISTRO',
+            processingDuration: stopwatch.elapsed,
+          ),
+        );
+      }
+    } finally {
+      if (participanteIdEmProcessamento != null) {
+        if (!registroEfetivado) {
+          _ultimaLeituraPorParticipante.remove(participanteIdEmProcessamento);
+        }
+        _participantesEmProcessamento.remove(participanteIdEmProcessamento);
+      }
       _leituraEmAndamento = false;
       _notificarMudanca();
     }

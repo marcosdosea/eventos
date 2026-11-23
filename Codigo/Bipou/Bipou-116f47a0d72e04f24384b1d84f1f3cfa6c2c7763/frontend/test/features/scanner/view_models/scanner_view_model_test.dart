@@ -604,7 +604,135 @@ void main() {
         expect(offlineFeedbacks.last.participantName, 'Joao Somente Geral');
       },
     );
+
+    test(
+      'bloqueia leitura concorrente enquanto consulta no cache local esta em andamento',
+      () async {
+        final pendingLookup = Completer<LocalParticipant?>();
+        final slowLookup = _ControlledLocalLookup(pending: pendingLookup);
+        final sessao = PortariaSession(
+          eventoId: 15,
+          eventoNome: 'Seminfo 2026',
+          subeventoId: 42,
+          subeventoNome: 'Curso de Python',
+          totalParticipantesCarregados: 1,
+          sincronizadoEm: now,
+        );
+        final vm = ScannerViewModel(
+          credenciamento: credenciamento,
+          tipoAcao: TipoAcao.entrada,
+          dispositivoId: 'portaria-01',
+          sessaoAtiva: sessao,
+          localParticipants: slowLookup,
+          clock: () => now,
+        );
+        addTearDown(vm.dispose);
+
+        const qr1 =
+            '{"v":1,"pid":1042,"cpf":"12345678901","nome":"Maria Santos","eid":15,"sid":[42,43],"hash":"0ec02205"}';
+        final qr2 = ParticipanteQrPayload.v1(
+          pid: 2002,
+          cpf: '11144477735',
+          nome: 'Outro Participante',
+          eid: 15,
+          sid: const <int>[42],
+        ).toRawJson();
+
+        final primeira = vm.processarPayload(qr1);
+        expect(vm.processando, isTrue);
+
+        // Segunda leitura durante o lookup SQLite deve ser ignorada pelo lock.
+        await vm.processarPayload(qr2);
+        expect(slowLookup.lookups, 1);
+
+        pendingLookup.complete(null);
+        await primeira;
+
+        expect(vm.processando, isFalse);
+        expect(credenciamento.calls, 1);
+        expect(credenciamento.lastParticipanteNome, 'Maria Santos');
+      },
+    );
+
+    test(
+      'continua validacao pelo payload do QR quando consulta ao cache local falha',
+      () async {
+        final failingLookup = _ControlledLocalLookup(throwError: true);
+        final sessao = PortariaSession(
+          eventoId: 15,
+          eventoNome: 'Seminfo 2026',
+          subeventoId: 42,
+          subeventoNome: 'Curso de Python',
+          totalParticipantesCarregados: 1,
+          sincronizadoEm: now,
+        );
+        final vm = ScannerViewModel(
+          credenciamento: credenciamento,
+          tipoAcao: TipoAcao.entrada,
+          dispositivoId: 'portaria-01',
+          sessaoAtiva: sessao,
+          localParticipants: failingLookup,
+          clock: () => now,
+        );
+        final eventos = <ScannerFeedback>[];
+        final sub = vm.feedbacks.listen(eventos.add);
+        addTearDown(() async {
+          await sub.cancel();
+          vm.dispose();
+        });
+
+        const qrValido =
+            '{"v":1,"pid":1042,"cpf":"12345678901","nome":"Maria Santos","eid":15,"sid":[42,43],"hash":"0ec02205"}';
+        await vm.processarPayload(qrValido);
+
+        expect(vm.processando, isFalse);
+        expect(credenciamento.calls, 1);
+        expect(eventos.last.type, ScannerFeedbackType.sucesso);
+      },
+    );
   });
+}
+
+final class _ControlledLocalLookup implements LocalParticipantLookup {
+  _ControlledLocalLookup({this.pending, this.throwError = false});
+
+  final Completer<LocalParticipant?>? pending;
+  final bool throwError;
+  int lookups = 0;
+
+  Future<LocalParticipant?> _resolve() {
+    lookups++;
+    if (throwError) {
+      return Future<LocalParticipant?>.error(StateError('SQLite indisponivel'));
+    }
+    if (pending != null) {
+      return pending!.future;
+    }
+    return Future<LocalParticipant?>.value(null);
+  }
+
+  @override
+  Future<int> countByContext({required int eventoId, int? subeventoId}) async =>
+      0;
+
+  @override
+  Future<LocalParticipant?> findByCpf(String cpf, {required int eventoId}) =>
+      _resolve();
+
+  @override
+  Future<LocalParticipant?> findById(String id, {int? eventoId}) => _resolve();
+
+  @override
+  Future<LocalParticipant?> findByIdPessoa(
+    int idPessoa, {
+    required int eventoId,
+  }) => _resolve();
+
+  @override
+  Future<List<LocalParticipant>> listByContext({
+    required int eventoId,
+    int? subeventoId,
+  }) async => const <LocalParticipant>[];
 }
 
 OperationResult<RegistroResponse> _successResult({

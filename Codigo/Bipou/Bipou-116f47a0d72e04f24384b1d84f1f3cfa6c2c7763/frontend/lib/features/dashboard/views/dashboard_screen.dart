@@ -93,26 +93,31 @@ final class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final sessao = _sessaoAtiva;
+    final usarSessaoLocal = localRepository != null;
+    final exibirContextoManual = !usarSessaoLocal || _contextoAtivo != null;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Credenciamento'),
         centerTitle: true,
         actions: <Widget>[
-          if (localRepository != null)
+          if (usarSessaoLocal)
             IconButton(
               tooltip: 'Sessão de Portaria',
               onPressed: () => _abrirConfiguracaoSessao(context),
               icon: const Icon(Icons.tune),
             ),
-          IconButton(
-            key: const Key('dashboard-context-button'),
-            tooltip: 'Contexto do evento',
-            onPressed: () => _configurarContexto(context),
-            icon: Icon(
-              _contextoAtivo == null ? Icons.event_note : Icons.event_available,
+          if (exibirContextoManual)
+            IconButton(
+              key: const Key('dashboard-context-button'),
+              tooltip: 'Contexto do evento',
+              onPressed: () => _configurarContexto(context),
+              icon: Icon(
+                _contextoAtivo == null
+                    ? Icons.event_note
+                    : Icons.event_available,
+              ),
             ),
-          ),
           IconButton(
             tooltip: 'Status da API',
             onPressed: () => _abrirDiagnostico(context),
@@ -142,7 +147,7 @@ final class _DashboardScreenState extends State<DashboardScreen> {
                 'Registre entradas e saídas rapidamente por QR Code.',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-              if (localRepository != null) ...<Widget>[
+              if (usarSessaoLocal) ...<Widget>[
                 const SizedBox(height: 16),
                 _SessionStatusCard(
                   sessao: sessao,
@@ -153,11 +158,13 @@ final class _DashboardScreenState extends State<DashboardScreen> {
               Expanded(
                 child: ListView(
                   children: <Widget>[
-                    _ContextCard(
-                      contexto: _contextoAtivo,
-                      onTap: () => _configurarContexto(context),
-                    ),
-                    const SizedBox(height: 14),
+                    if (exibirContextoManual) ...<Widget>[
+                      _ContextCard(
+                        contexto: _contextoAtivo,
+                        onTap: () => _configurarContexto(context),
+                      ),
+                      const SizedBox(height: 14),
+                    ],
                     _DashboardButton(
                       label: 'Escanear QR Code',
                       icon: Icons.qr_code_scanner,
@@ -198,7 +205,12 @@ final class _DashboardScreenState extends State<DashboardScreen> {
     );
 
     if (resultado != null && mounted) {
-      setState(() => _contextoAtivo = resultado.contexto);
+      setState(() {
+        _contextoAtivo = resultado.contexto;
+        if (resultado.contexto != null) {
+          _sessaoAtiva = null;
+        }
+      });
     }
   }
 

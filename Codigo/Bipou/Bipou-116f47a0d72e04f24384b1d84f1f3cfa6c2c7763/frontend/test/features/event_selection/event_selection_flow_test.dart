@@ -235,6 +235,9 @@ void main() {
         ),
         findsOneWidget,
       );
+      expect(find.byKey(const Key('dashboard-session-card')), findsOneWidget);
+      expect(find.byKey(const Key('dashboard-context-card')), findsNothing);
+      expect(find.byKey(const Key('dashboard-context-button')), findsNothing);
     },
   );
 
