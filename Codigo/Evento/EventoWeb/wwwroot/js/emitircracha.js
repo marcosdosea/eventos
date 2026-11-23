@@ -558,7 +558,11 @@
             }
         }
 
-        async function enviarCrachaPorEmail(idsPessoas, apenasNaoEnviados = false, uiFeedback = {}) {
+        let envioEmailEmAndamento = false;
+
+        async function enviarCrachaPorEmail(idsInscricoes, apenasNaoEnviados = false, uiFeedback = {}) {
+            if (envioEmailEmAndamento) return;
+
             const idEvento = selectEvento?.value || editModalIdEvento?.value || "0";
             const idModelo = selectModelo?.value || "0";
 
@@ -567,11 +571,12 @@
                 return;
             }
 
-            if (!idsPessoas || idsPessoas.length === 0) {
+            if (!idsInscricoes || idsInscricoes.length === 0) {
                 exibirMensagemFeedback("Selecione pelo menos um participante para enviar o crachá por e-mail.", "warning");
                 return;
             }
 
+            envioEmailEmAndamento = true;
             const { botao, spinner, icone } = uiFeedback;
             if (botao) botao.disabled = true;
             if (spinner) spinner.classList.remove("d-none");
@@ -588,7 +593,7 @@
                     formData.append("IdModelo", idModelo);
                 }
                 formData.append("ApenasNaoEnviados", apenasNaoEnviados ? "true" : "false");
-                idsPessoas.forEach(id => formData.append("IdsPessoas", String(id)));
+                idsInscricoes.forEach(id => formData.append("IdsInscricoes", String(id)));
 
                 const response = await fetch("/Modelocracha/EnviarCrachaEmail", {
                     method: "POST",
@@ -624,12 +629,13 @@
 
                 filtrarParticipantes(true);
 
-                const tipoAlerta = (resultado.enviados === 0 && resultado.ignorados > 0) ? "warning" : "success";
+                const tipoAlerta = (resultado.falhas > 0 || resultado.enviados === 0) ? "warning" : "success";
                 exibirMensagemFeedback(resultado.mensagem || "Crachá(s) enviado(s) por e-mail com sucesso!", tipoAlerta);
             } catch (err) {
                 console.error("Erro ao enviar crachá por e-mail:", err);
                 exibirMensagemFeedback("Erro de comunicação ao tentar enviar o(s) crachá(s) por e-mail.", "danger");
             } finally {
+                envioEmailEmAndamento = false;
                 if (botao) botao.disabled = false;
                 if (spinner) spinner.classList.add("d-none");
                 if (icone) icone.classList.remove("d-none");
@@ -798,9 +804,9 @@
                 if (btnEnviarItem) {
                     e.preventDefault();
                     const linha = btnEnviarItem.closest(".linha-participante");
-                    const idPessoa = linha?.dataset.idPessoa || btnEnviarItem.dataset.idPessoa;
-                    if (idPessoa && idPessoa !== "0") {
-                        enviarCrachaPorEmail([idPessoa], false, { botao: btnEnviarItem });
+                    const idInscricao = linha?.dataset.idInscricao;
+                    if (idInscricao && idInscricao !== "0") {
+                        enviarCrachaPorEmail([idInscricao], false, { botao: btnEnviarItem });
                     }
                     return;
                 }
@@ -1013,12 +1019,12 @@
         if (btnEnviarEmailPreview) {
             btnEnviarEmailPreview.addEventListener("click", function () {
                 const linhaAtiva = document.querySelector(".linha-ativa-preview") || linhasFiltradas[0] || linhas[0];
-                const idPessoa = linhaAtiva?.dataset.idPessoa;
-                if (!idPessoa || idPessoa === "0") {
+                const idInscricao = linhaAtiva?.dataset.idInscricao;
+                if (!idInscricao || idInscricao === "0") {
                     exibirMensagemFeedback("Nenhum participante em pré-visualização para envio por e-mail.", "warning");
                     return;
                 }
-                enviarCrachaPorEmail([idPessoa], false, {
+                enviarCrachaPorEmail([idInscricao], false, {
                     botao: btnEnviarEmailPreview,
                     spinner: spinnerEnviarEmailPreview,
                     icone: iconeEnviarEmailPreview
@@ -1035,11 +1041,11 @@
                 }
 
                 const apenasNaoEnviados = chkEnviarApenasNaoEnviados?.checked === true;
-                const idsPessoas = linhasSelecionadas
-                    .map(l => l.dataset.idPessoa)
+                const idsInscricoes = linhasSelecionadas
+                    .map(l => l.dataset.idInscricao)
                     .filter(id => id && id !== "0");
 
-                enviarCrachaPorEmail(idsPessoas, apenasNaoEnviados, {
+                enviarCrachaPorEmail(idsInscricoes, apenasNaoEnviados, {
                     botao: btnEnviarEmailLote,
                     spinner: spinnerEnviarEmailLote,
                     icone: iconeEnviarEmailLote

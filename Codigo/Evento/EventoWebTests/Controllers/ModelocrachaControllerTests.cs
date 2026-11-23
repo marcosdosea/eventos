@@ -1880,6 +1880,15 @@ namespace EventoWeb.Controllers.Tests
                 {
                     new Inscricaopessoaevento
                     {
+                        Id = 19,
+                        IdPessoa = 10,
+                        IdEvento = 1,
+                        IdPapel = 4,
+                        NomeCracha = "OUTRA INSCRIÇÃO",
+                        IdPessoaNavigation = pessoa
+                    },
+                    new Inscricaopessoaevento
+                    {
                         Id = 20,
                         IdPessoa = 10,
                         IdEvento = 1,
@@ -1909,8 +1918,8 @@ namespace EventoWeb.Controllers.Tests
             string? emailEnviadoPara = null;
             string? assuntoEnviado = null;
             string? corpoHtmlEnviado = null;
-            var mockEmailSender = new Mock<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender>();
-            mockEmailSender.Setup(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            var mockEmailSender = new Mock<IEmailService>();
+            mockEmailSender.Setup(e => e.EnviarEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .Callback<string, string, string>((to, subj, body) =>
                 {
                     emailEnviadoPara = to;
@@ -1920,8 +1929,14 @@ namespace EventoWeb.Controllers.Tests
                 .Returns(System.Threading.Tasks.Task.CompletedTask);
 
             IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
+            var logo = new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+            var mockModelo = new Mock<IModelocrachaService>();
+            mockModelo.Setup(s => s.GetByEvento(1)).Returns(new[]
+            {
+                new Modelocracha { Id = 7, IdEvento = 1, Logotipo = logo, Qrcode = 1 }
+            });
             var ctrl = new ModelocrachaController(
-                new Mock<IModelocrachaService>().Object,
+                mockModelo.Object,
                 mockServiceEvento.Object,
                 mockServicePessoa.Object,
                 mockServiceInscricao.Object,
@@ -1936,7 +1951,8 @@ namespace EventoWeb.Controllers.Tests
             var result = await ctrl.EnviarCrachaEmail(new EnviarCrachaEmailModel
             {
                 IdEvento = 1,
-                IdPessoa = 10,
+                IdInscricao = 20,
+                IdModelo = 7,
                 ApenasNaoEnviados = false
             });
 
@@ -1953,8 +1969,44 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("ana@email.com", emailEnviadoPara);
             Assert.IsTrue(assuntoEnviado?.Contains("SEMAC 2026") == true);
             Assert.IsTrue(corpoHtmlEnviado?.Contains("ANA BEATRIZ") == true);
-            Assert.IsTrue(corpoHtmlEnviado?.Contains("data:image/png;base64,") == true);
+            StringAssert.Contains(corpoHtmlEnviado, "#00020");
+            StringAssert.Contains(corpoHtmlEnviado, $"data:image/png;base64,{Convert.ToBase64String(logo)}");
+            StringAssert.Contains(corpoHtmlEnviado, "QR Code de Presença");
             Assert.IsNotNull(ModelocrachaController.ObterDataEnvioEmail(1, 10));
+        }
+
+        [TestMethod]
+        public async System.Threading.Tasks.Task EnviarCrachaEmailTest_EventoSemInscritosNaoEnviaCrachasDeDemonstracao()
+        {
+            var inscricoes = new Mock<IInscricaoService>();
+            inscricoes.Setup(s => s.GetByEvento(1)).Returns(Array.Empty<Inscricaopessoaevento>());
+            inscricoes.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+            var emailService = new Mock<IEmailService>();
+            var controller = new ModelocrachaController(
+                new Mock<IModelocrachaService>().Object,
+                new Mock<IEventoService>().Object,
+                new Mock<IPessoaService>().Object,
+                inscricoes.Object,
+                new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper(),
+                emailSender: emailService.Object)
+            {
+                ControllerContext = new ControllerContext
+                {
+                    HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+                }
+            };
+            var previa = (ViewResult)controller.EmitirCracha(1, null, null);
+            Assert.IsTrue(((EmitirCrachaModel)previa.Model!).EmDemonstracao);
+
+            var resultado = await controller.EnviarCrachaEmail(new EnviarCrachaEmailModel
+            {
+                IdEvento = 1,
+                IdsInscricoes = new List<uint> { 1, 2 }
+            });
+
+            Assert.IsInstanceOfType<BadRequestObjectResult>(resultado);
+            emailService.VerifyNoOtherCalls();
         }
 
         [TestMethod]
@@ -1982,8 +2034,8 @@ namespace EventoWeb.Controllers.Tests
             mockServicePessoa.Setup(s => s.Get(10)).Returns(pessoaEnviada);
             mockServicePessoa.Setup(s => s.Get(20)).Returns(pessoaPendente);
 
-            var mockEmailSender = new Mock<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender>();
-            mockEmailSender.Setup(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            var mockEmailSender = new Mock<IEmailService>();
+            mockEmailSender.Setup(e => e.EnviarEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(System.Threading.Tasks.Task.CompletedTask);
 
             IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
@@ -2003,7 +2055,7 @@ namespace EventoWeb.Controllers.Tests
             var result = await ctrl.EnviarCrachaEmail(new EnviarCrachaEmailModel
             {
                 IdEvento = 1,
-                IdsPessoas = new List<uint> { 10, 20 },
+                IdsInscricoes = new List<uint> { 101, 102 },
                 ApenasNaoEnviados = true
             });
 
@@ -2018,8 +2070,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual(1, root.GetProperty("ignorados").GetInt32());
             Assert.AreEqual(0, root.GetProperty("falhas").GetInt32());
 
-            mockEmailSender.Verify(e => e.SendEmailAsync("jaenviado@email.com", It.IsAny<string>(), It.IsAny<string>()), Times.Never);
-            mockEmailSender.Verify(e => e.SendEmailAsync("novoinscrito@email.com", It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+            mockEmailSender.Verify(e => e.EnviarEmailAsync("jaenviado@email.com", It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            mockEmailSender.Verify(e => e.EnviarEmailAsync("novoinscrito@email.com", It.IsAny<string>(), It.IsAny<string>()), Times.Once);
             Assert.IsNotNull(ModelocrachaController.ObterDataEnvioEmail(1, 20));
         }
 
@@ -2045,8 +2097,8 @@ namespace EventoWeb.Controllers.Tests
             mockServicePessoa.Setup(s => s.Get(10)).Returns(pessoaSemEmail);
             mockServicePessoa.Setup(s => s.Get(20)).Returns(pessoaComEmail);
 
-            var mockEmailSender = new Mock<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender>();
-            mockEmailSender.Setup(e => e.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
+            var mockEmailSender = new Mock<IEmailService>();
+            mockEmailSender.Setup(e => e.EnviarEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .ThrowsAsync(new InvalidOperationException("Falha no servidor SMTP"));
 
             IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new ModeloCrachaProfile())).CreateMapper();
@@ -2066,14 +2118,14 @@ namespace EventoWeb.Controllers.Tests
             var resSemEmail = await ctrl.EnviarCrachaEmail(new EnviarCrachaEmailModel
             {
                 IdEvento = 1,
-                IdPessoa = 10
+                IdInscricao = 101
             });
             Assert.IsInstanceOfType(resSemEmail, typeof(BadRequestObjectResult));
 
             var resFalhaSmtp = await ctrl.EnviarCrachaEmail(new EnviarCrachaEmailModel
             {
                 IdEvento = 1,
-                IdPessoa = 20
+                IdInscricao = 102
             });
             Assert.IsInstanceOfType(resFalhaSmtp, typeof(BadRequestObjectResult));
             Assert.IsNull(ModelocrachaController.ObterDataEnvioEmail(1, 20));

@@ -1,12 +1,10 @@
 using Core;
 using Core.Service;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 using System.Net;
 using System.Net.Mail;
 using System.Text;
 using System.Text.RegularExpressions;
-using static QRCoder.PayloadGenerator.SwissQrCode;
 
 namespace EventoWeb
 {
@@ -48,18 +46,28 @@ namespace EventoWeb
             }
         }
    
-        public async Task SendEmailAsync(string email, string subject, string htmlMessage)
+        public Task SendEmailAsync(string email, string subject, string htmlMessage)
         {
             if (_client == null || string.IsNullOrWhiteSpace(_from))
             {
                 _logger.LogWarning("Configuração SMTP ausente. E-mail para {Email} ({Subject}) não pôde ser enviado.", email, subject);
-                return;
+                return Task.CompletedTask;
+            }
+
+            return EnviarEmailAsync(email, subject, htmlMessage);
+        }
+
+        public async Task EnviarEmailAsync(string email, string assunto, string mensagemHtml)
+        {
+            if (_client == null || string.IsNullOrWhiteSpace(_from))
+            {
+                throw new InvalidOperationException("O serviço SMTP de envio de e-mail não está configurado.");
             }
 
             using var mailMessage = new MailMessage
             {
                 From = new MailAddress(_from),
-                Subject = subject,
+                Subject = assunto,
                 IsBodyHtml = true
             };
             mailMessage.To.Add(email);
@@ -71,7 +79,7 @@ namespace EventoWeb
                 int index = 0;
 
                 string htmlProcessado = Regex.Replace(
-                    htmlMessage ?? string.Empty,
+                    mensagemHtml,
                     @"src\s*=\s*[""']data:(?<mime>image/[a-zA-Z0-9.+-]+);base64,(?<data>[A-Za-z0-9+/=\s]+)[""']",
                     match =>
                     {
@@ -121,7 +129,7 @@ namespace EventoWeb
                 }
                 else
                 {
-                    mailMessage.Body = htmlMessage;
+                    mailMessage.Body = mensagemHtml;
                 }
 
                 await _client.SendMailAsync(mailMessage);
@@ -162,12 +170,7 @@ namespace EventoWeb
                 .Replace("{{Nome}}", pessoa.Nome)
                 .Replace("{{LinkCallback}}", callbackUrl)
                 .Replace("{{LinkContato}}", contato);
-                await SendEmailAsync(email, assunto, mensagemHtml);
-
-                if (_client == null || string.IsNullOrWhiteSpace(_from))
-                {
-                    return false;
-                }
+                await EnviarEmailAsync(email, assunto, mensagemHtml);
                 _logger.LogInformation("E-mail de {assunto} enviado com sucesso para {Email}", assunto, email);
                 return true;
 

@@ -6,11 +6,11 @@ using EventoWeb.Helpers;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Net;
+using System.Net.Mail;
 using Util;
 
 namespace EventoWeb.Controllers
@@ -34,7 +34,7 @@ namespace EventoWeb.Controllers
         private readonly IInscricaoService _inscricaoService;
         private readonly IMapper _mapper;
         private readonly IWebHostEnvironment? _environment;
-        private readonly IEmailSender? _emailSender;
+        private readonly IEmailService? _emailSender;
 
         public ModelocrachaController(
             IModelocrachaService modelocrachaService,
@@ -43,7 +43,7 @@ namespace EventoWeb.Controllers
             IInscricaoService inscricaoService,
             IMapper mapper,
             IWebHostEnvironment? environment = null,
-            IEmailSender? emailSender = null)
+            IEmailService? emailSender = null)
         {
             _modelocrachaService = modelocrachaService;
             _eventoService = eventoService;
@@ -487,6 +487,16 @@ namespace EventoWeb.Controllers
                 return "logo_institucional.gif";
 
             return "logo_institucional.png";
+        }
+
+        private static string? ObterDataUrlLogo(byte[]? bytes)
+        {
+            if (bytes == null || bytes.Length == 0)
+                return null;
+
+            var base64 = Convert.ToBase64String(bytes);
+            var mime = ObterMimeType(ObterNomeArquivoLogo(bytes), base64);
+            return $"data:{mime};base64,{base64}";
         }
 
         private static string ObterMimeType(string nomeArquivo, string base64)
@@ -940,25 +950,7 @@ namespace EventoWeb.Controllers
                 ? _modelocrachaService.GetByEvento(idEventoAlvo).ToList()
                 : new List<Modelocracha>();
 
-            var predefinido = ObterLogotipoPredefinido();
-            string? logoPadraoDataUrl = null;
-            if (predefinido.bytes != null && predefinido.bytes.Length > 0)
-            {
-                var nomePadrao = ObterNomeArquivoLogo(predefinido.bytes);
-                var mimePadrao = ObterMimeType(nomePadrao, Convert.ToBase64String(predefinido.bytes));
-                logoPadraoDataUrl = $"data:{mimePadrao};base64,{Convert.ToBase64String(predefinido.bytes)}";
-            }
-
-            string? ObterDataUrlLogo(byte[]? bytes)
-            {
-                if (bytes != null && bytes.Length > 0)
-                {
-                    var nome = ObterNomeArquivoLogo(bytes);
-                    var mime = ObterMimeType(nome, Convert.ToBase64String(bytes));
-                    return $"data:{mime};base64,{Convert.ToBase64String(bytes)}";
-                }
-                return logoPadraoDataUrl;
-            }
+            var logoPadraoDataUrl = ObterDataUrlLogo(ObterLogotipoPredefinido().bytes);
 
             var modelosDTO = modelosDoEvento.Select(m => new ModelocrachaItemDTO
             {
@@ -966,7 +958,7 @@ namespace EventoWeb.Controllers
                 Nome = $"Gabarito #{m.Id} - 90×130mm",
                 Texto = m.Texto,
                 TemLogotipo = m.Logotipo != null && m.Logotipo.Length > 0,
-                LogotipoDataUrl = ObterDataUrlLogo(m.Logotipo),
+                LogotipoDataUrl = ObterDataUrlLogo(m.Logotipo) ?? logoPadraoDataUrl,
                 Qrcode = m.Qrcode
             }).ToList();
 
@@ -990,7 +982,7 @@ namespace EventoWeb.Controllers
             }
             modeloSelecionado ??= modelosDoEvento.FirstOrDefault();
 
-            string? logoDataUrl = ObterDataUrlLogo(modeloSelecionado?.Logotipo);
+            string? logoDataUrl = ObterDataUrlLogo(modeloSelecionado?.Logotipo) ?? logoPadraoDataUrl;
 
 
             var textoModelo = modeloSelecionado?.Texto ?? TextoPadraoCracha;
@@ -1045,7 +1037,6 @@ namespace EventoWeb.Controllers
                             FotoDataUrl = fotoDataUrl,
                             QrCodeBase64 = qrCodeBase64,
                             Selecionado = true,
-                            Email = pessoa?.Email,
                             CrachaEnviadoEmail = dataEnvio.HasValue,
                             DataEnvioEmail = dataEnvio
                         });
@@ -1053,7 +1044,8 @@ namespace EventoWeb.Controllers
                 }
             }
 
-            if (!participantes.Any())
+            bool emDemonstracao = !participantes.Any();
+            if (emDemonstracao)
             {
                 participantes = ObterParticipantesDemonstracao(idEventoAlvo);
             }
@@ -1078,6 +1070,7 @@ namespace EventoWeb.Controllers
                 TextoModelo = textoModelo,
                 LogotipoDataUrl = logoDataUrl,
                 QrcodeHabilitado = qrcodeHabilitado,
+                EmDemonstracao = emDemonstracao,
                 EventosDisponiveis = eventosDisponiveis,
                 ModelosDisponiveis = modelosDTO,
                 Participantes = participantes
@@ -1125,7 +1118,6 @@ namespace EventoWeb.Controllers
             {
                 if (!inscricoes.Any())
                 {
-                    RemoverRegistroEnvioEmail(model.IdEvento, model.IdPessoa);
                     var demoParticipante = ObterParticipantesDemonstracao(model.IdEvento)
                         .FirstOrDefault(d => d.IdPessoa == model.IdPessoa);
                     var qrDemo = CrachaQrCodeHelper.GerarQrCodeBase64(
@@ -1171,7 +1163,7 @@ namespace EventoWeb.Controllers
                 return BadRequest(new { sucesso = false, mensagem = "Não foi possível salvar as alterações do participante. Tente novamente." });
             }
 
-            RemoverRegistroEnvioEmail(model.IdEvento, model.IdEvento == 0 ? pessoa.Id : model.IdPessoa);
+            RemoverRegistroEnvioEmail(model.IdEvento, model.IdPessoa);
             var subeventos = _inscricaoService.GetSubByEvento(model.IdEvento);
             var qrCodeBase64 = GerarQrCodeInscricao(inscricao, nomeCracha, model.IdEvento, subeventos);
 
@@ -1192,7 +1184,7 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EnviarCrachaEmail([FromForm] EnviarCrachaEmailModel model)
         {
-            if (model == null || model.IdEvento == 0)
+            if (model == null || model.IdEvento == 0 || !ModelState.IsValid)
             {
                 return BadRequest(new { sucesso = false, mensagem = "Dados inválidos para envio de crachá por e-mail." });
             }
@@ -1208,19 +1200,25 @@ namespace EventoWeb.Controllers
             }
 
             var idsAlvo = new List<uint>();
-            if (model.IdPessoa.HasValue && model.IdPessoa.Value > 0)
+            if (model.IdInscricao.HasValue && model.IdInscricao.Value > 0)
             {
-                idsAlvo.Add(model.IdPessoa.Value);
+                idsAlvo.Add(model.IdInscricao.Value);
             }
-            if (model.IdsPessoas != null && model.IdsPessoas.Any())
+            if (model.IdsInscricoes != null && model.IdsInscricoes.Any())
             {
-                idsAlvo.AddRange(model.IdsPessoas.Where(id => id > 0));
+                idsAlvo.AddRange(model.IdsInscricoes.Where(id => id > 0));
             }
             idsAlvo = idsAlvo.Distinct().ToList();
 
             if (!idsAlvo.Any())
             {
                 return BadRequest(new { sucesso = false, mensagem = "Nenhum participante selecionado para envio do crachá." });
+            }
+
+            var inscricoes = _inscricaoService.GetByEvento(model.IdEvento)?.ToDictionary(i => i.Id);
+            if (inscricoes == null || inscricoes.Count == 0)
+            {
+                return BadRequest(new { sucesso = false, mensagem = "Este evento não tem participantes inscritos." });
             }
 
             var evento = _eventoService.Get(model.IdEvento);
@@ -1241,16 +1239,11 @@ namespace EventoWeb.Controllers
                 modeloSelecionado = modelosDoEvento.FirstOrDefault(m => m.Id == model.IdModelo.Value);
             }
             modeloSelecionado ??= modelosDoEvento.FirstOrDefault();
-            var textoModelo = !string.IsNullOrWhiteSpace(modeloSelecionado?.Texto)
-                ? modeloSelecionado.Texto
-                : TextoPadraoCracha;
-            bool qrcodeHabilitado = modeloSelecionado == null || modeloSelecionado.Qrcode != 0;
-
-            var inscricoes = _inscricaoService.GetByEvento(model.IdEvento)?.ToList() ?? new List<Inscricaopessoaevento>();
-            var subeventos = _inscricaoService.GetSubByEvento(model.IdEvento)?.ToList() ?? new List<Inscricaopessoasubevento>();
-            var participantesDemo = !inscricoes.Any()
-                ? ObterParticipantesDemonstracao(model.IdEvento)
-                : new List<ParticipanteCrachaItemModel>();
+            var textoModelo = modeloSelecionado?.Texto ?? TextoPadraoCracha;
+            var logoDataUrl = ObterDataUrlLogo(modeloSelecionado?.Logotipo)
+                ?? ObterDataUrlLogo(ObterLogotipoPredefinido().bytes);
+            bool qrcodeHabilitado = modeloSelecionado?.Qrcode != 0;
+            var subeventos = qrcodeHabilitado ? _inscricaoService.GetSubByEvento(model.IdEvento) : null;
 
             int enviados = 0;
             int ignorados = 0;
@@ -1258,92 +1251,42 @@ namespace EventoWeb.Controllers
             var detalhesEnviados = new List<object>();
             var erros = new List<string>();
 
-            foreach (var idPessoaAlvo in idsAlvo)
+            var pessoasEnviadasNestaSolicitacao = new HashSet<uint>();
+            foreach (var idInscricao in idsAlvo)
             {
-                if (model.ApenasNaoEnviados && ObterDataEnvioEmail(model.IdEvento, idPessoaAlvo).HasValue)
+                if (!inscricoes.TryGetValue(idInscricao, out var inscricao) || inscricao.Status == "C")
+                {
+                    falhas++;
+                    erros.Add($"A inscrição #{idInscricao} não está válida neste evento.");
+                    continue;
+                }
+
+                var idPessoa = inscricao.IdPessoa;
+                if (pessoasEnviadasNestaSolicitacao.Contains(idPessoa) ||
+                    (model.ApenasNaoEnviados && ObterDataEnvioEmail(model.IdEvento, idPessoa).HasValue))
                 {
                     ignorados++;
                     continue;
                 }
 
-                string? emailDestino = null;
-                string nomeCompleto = "Participante";
-                string nomeCracha = "Participante";
-                string papel = "PARTICIPANTE";
-                string organizacao = "Participante Homologado";
-                string cpfMascarado = "***.***.***-**";
-                string codigoCredencial = $"#{idPessoaAlvo:D5}";
-                string codigoPresenca = $"BL - EVT - {DateTime.Now.Year} - {idPessoaAlvo:D5}";
-                string qrCodeBase64 = string.Empty;
-                string? fotoDataUrl = null;
-                string? imagemCrachaRenderizada = null;
-
-                if (model.ImagensCrachaBase64 != null && model.ImagensCrachaBase64.TryGetValue(idPessoaAlvo, out var imgCracha) && !string.IsNullOrWhiteSpace(imgCracha))
-                {
-                    imagemCrachaRenderizada = imgCracha.Trim();
-                }
-
-                var ins = inscricoes.FirstOrDefault(i => i.IdPessoa == idPessoaAlvo);
-                if (ins != null)
-                {
-                    var pessoa = _pessoaService.Get(idPessoaAlvo) ?? ins.IdPessoaNavigation;
-                    emailDestino = pessoa?.Email?.Trim();
-                    nomeCompleto = (pessoa?.Nome ?? "Participante").Trim();
-                    nomeCracha = !string.IsNullOrWhiteSpace(ins.NomeCracha)
-                        ? ins.NomeCracha.Trim()
-                        : (!string.IsNullOrWhiteSpace(pessoa?.NomeCracha)
-                            ? pessoa.NomeCracha.Trim()
-                            : nomeCompleto);
-                    papel = ObterDescricaoPapel(ins.IdPapel, ins.IdPapelNavigation?.Nome);
-                    organizacao = ObterOrganizacaoOuDepto(ins);
-                    cpfMascarado = MascararCpfParaExibicao(pessoa?.Cpf);
-                    codigoCredencial = $"#{ins.Id:D5}";
-                    codigoPresenca = $"BL - EVT - {DateTime.Now.Year} - {ins.Id:D5}";
-                    FotoHelper.TryObterFotoDataUrl(pessoa?.Foto, out fotoDataUrl);
-                    if (qrcodeHabilitado)
-                    {
-                        qrCodeBase64 = GerarQrCodeInscricao(ins, nomeCracha, model.IdEvento, subeventos);
-                    }
-                }
-                else if (participantesDemo.Any())
-                {
-                    var demo = participantesDemo.FirstOrDefault(d => d.IdPessoa == idPessoaAlvo);
-                    if (demo != null)
-                    {
-                        emailDestino = demo.Email?.Trim();
-                        nomeCompleto = demo.NomeCompleto;
-                        nomeCracha = demo.NomeCracha;
-                        papel = demo.Papel;
-                        organizacao = demo.OrganizacaoOuDepto ?? demo.TipoInscricao;
-                        cpfMascarado = demo.CpfMascarado;
-                        codigoCredencial = demo.CodigoCredencial;
-                        codigoPresenca = demo.CodigoPresenca;
-                        fotoDataUrl = demo.FotoDataUrl;
-                        if (qrcodeHabilitado)
-                        {
-                            qrCodeBase64 = demo.QrCodeBase64;
-                        }
-                    }
-                    else
-                    {
-                        falhas++;
-                        erros.Add($"Participante #{idPessoaAlvo} não encontrado no evento.");
-                        continue;
-                    }
-                }
-                else
-                {
-                    falhas++;
-                    erros.Add($"Participante #{idPessoaAlvo} não encontrado no evento.");
-                    continue;
-                }
-
-                if (string.IsNullOrWhiteSpace(emailDestino) || !emailDestino.Contains("@"))
+                var pessoa = inscricao.IdPessoaNavigation ?? _pessoaService.Get(idPessoa);
+                var nomeCompleto = pessoa?.Nome?.Trim() ?? "Participante";
+                var nomeCracha = !string.IsNullOrWhiteSpace(inscricao.NomeCracha)
+                    ? inscricao.NomeCracha.Trim()
+                    : (!string.IsNullOrWhiteSpace(pessoa?.NomeCracha) ? pessoa.NomeCracha.Trim() : nomeCompleto);
+                var emailDestino = pessoa?.Email?.Trim();
+                if (!MailAddress.TryCreate(emailDestino, out var email) ||
+                    !string.Equals(email.Address, emailDestino, StringComparison.OrdinalIgnoreCase))
                 {
                     falhas++;
                     erros.Add($"O participante {nomeCracha} não possui um e-mail válido cadastrado.");
                     continue;
                 }
+
+                var qrCodeBase64 = qrcodeHabilitado
+                    ? GerarQrCodeInscricao(inscricao, nomeCracha, model.IdEvento, subeventos)
+                    : string.Empty;
+                FotoHelper.TryObterFotoDataUrl(pessoa?.Foto, out var fotoDataUrl);
 
                 try
                 {
@@ -1353,33 +1296,33 @@ namespace EventoWeb.Controllers
                         periodoEvento,
                         localEvento,
                         nomeCracha,
-                        papel,
-                        organizacao,
-                        cpfMascarado,
-                        codigoCredencial,
-                        codigoPresenca,
+                        ObterDescricaoPapel(inscricao.IdPapel, inscricao.IdPapelNavigation?.Nome),
+                        ObterOrganizacaoOuDepto(inscricao),
+                        MascararCpfParaExibicao(pessoa?.Cpf),
+                        $"#{inscricao.Id:D5}",
+                        $"BL - EVT - {DateTime.Now.Year} - {inscricao.Id:D5}",
                         qrCodeBase64,
                         textoModelo,
                         fotoDataUrl,
-                        imagemCrachaRenderizada);
+                        logoDataUrl);
 
                     var assunto = $"Boralá - Sua Credencial Digital ({nomeEvento})";
-                    await _emailSender.SendEmailAsync(emailDestino, assunto, htmlBody);
+                    await _emailSender.EnviarEmailAsync(email.Address, assunto, htmlBody);
 
                     var agora = DateTime.Now;
-                    RegistrarEnvioEmail(model.IdEvento, idPessoaAlvo, agora);
+                    RegistrarEnvioEmail(model.IdEvento, idPessoa, agora);
+                    pessoasEnviadasNestaSolicitacao.Add(idPessoa);
                     enviados++;
                     detalhesEnviados.Add(new
                     {
-                        idPessoa = idPessoaAlvo,
-                        email = emailDestino,
+                        idPessoa,
                         enviado = true,
                         dataEnvio = agora.ToString("dd/MM/yyyy HH:mm")
                     });
                 }
                 catch (Exception ex)
                 {
-                    System.Diagnostics.Trace.TraceError($"Falha ao enviar crachá por e-mail para {emailDestino}: {ex}");
+                    System.Diagnostics.Trace.TraceError($"Falha ao enviar crachá da inscrição {inscricao.Id}: {ex}");
                     falhas++;
                     erros.Add($"Não foi possível enviar o e-mail para {nomeCracha}.");
                 }
@@ -1444,7 +1387,7 @@ namespace EventoWeb.Controllers
             string qrCodeBase64,
             string textoModelo,
             string? fotoDataUrl = null,
-            string? imagemCrachaRenderizada = null)
+            string? logoDataUrl = null)
         {
             string? templateHtml = null;
             if (_environment != null && !string.IsNullOrWhiteSpace(_environment.WebRootPath))
@@ -1472,11 +1415,16 @@ namespace EventoWeb.Controllers
 
             var blocoFoto = $"<div style=\"margin-bottom:10px;\"><img src=\"{avatarSrc}\" alt=\"Foto do Participante\" width=\"78\" height=\"78\" style=\"border-radius:50%;object-fit:cover;border:3px solid #E2E8F0;box-shadow:0 2px 8px rgba(15,23,42,0.12);display:inline-block;\" /></div>";
 
+            var blocoLogotipo = string.IsNullOrEmpty(logoDataUrl)
+                ? string.Empty
+                : $"<img src=\"{logoDataUrl}\" alt=\"Logotipo institucional\" width=\"96\" style=\"display:block;width:auto;max-width:96px;height:auto;max-height:64px;margin:0 auto 8px;\" />";
+
             if (string.IsNullOrWhiteSpace(templateHtml))
             {
                 return $@"<html><body>
                     <h2>Olá, {WebUtility.HtmlEncode(nomeParticipante)}!</h2>
                     <p>Sua credencial para o evento <strong>{WebUtility.HtmlEncode(nomeEvento)}</strong>:</p>
+                    {blocoLogotipo}
                     {blocoFoto}
                     <div><strong>Nome no Crachá:</strong> {WebUtility.HtmlEncode(nomeCracha)}</div>
                     <div><strong>Papel:</strong> {WebUtility.HtmlEncode(papel)}</div>
@@ -1491,6 +1439,7 @@ namespace EventoWeb.Controllers
                 .Replace("{{NomeEvento}}", WebUtility.HtmlEncode(nomeEvento))
                 .Replace("{{PeriodoEvento}}", WebUtility.HtmlEncode(periodoEvento))
                 .Replace("{{LocalEvento}}", WebUtility.HtmlEncode(localEvento))
+                .Replace("{{BlocoLogotipo}}", blocoLogotipo)
                 .Replace("{{BlocoFotoParticipante}}", blocoFoto)
                 .Replace("{{NomeCracha}}", WebUtility.HtmlEncode(nomeCracha))
                 .Replace("{{Papel}}", WebUtility.HtmlEncode(papel))
@@ -1603,9 +1552,6 @@ namespace EventoWeb.Controllers
                     StatusDescricao = "Apto",
                     QrCodeBase64 = CrachaQrCodeHelper.GerarQrCodeBase64(1, "04299988818", "Cassiano Menezes", idEvento, Enumerable.Empty<uint>()),
                     Selecionado = true,
-                    Email = "cassiano@borala.com",
-                    CrachaEnviadoEmail = ObterDataEnvioEmail(idEvento, 1).HasValue,
-                    DataEnvioEmail = ObterDataEnvioEmail(idEvento, 1)
                 },
                 new ParticipanteCrachaItemModel
                 {
@@ -1624,9 +1570,6 @@ namespace EventoWeb.Controllers
                     StatusDescricao = "Apto",
                     QrCodeBase64 = CrachaQrCodeHelper.GerarQrCodeBase64(2, "11988877745", "Carlos E. M. Santos", idEvento, Enumerable.Empty<uint>()),
                     Selecionado = true,
-                    Email = "carlos@borala.com",
-                    CrachaEnviadoEmail = ObterDataEnvioEmail(idEvento, 2).HasValue,
-                    DataEnvioEmail = ObterDataEnvioEmail(idEvento, 2)
                 },
                 new ParticipanteCrachaItemModel
                 {
@@ -1645,9 +1588,6 @@ namespace EventoWeb.Controllers
                     StatusDescricao = "Apto",
                     QrCodeBase64 = CrachaQrCodeHelper.GerarQrCodeBase64(3, "83277766601", "Mariana Silveira Rocha", idEvento, Enumerable.Empty<uint>()),
                     Selecionado = true,
-                    Email = "mariana@borala.com",
-                    CrachaEnviadoEmail = ObterDataEnvioEmail(idEvento, 3).HasValue,
-                    DataEnvioEmail = ObterDataEnvioEmail(idEvento, 3)
                 },
                 new ParticipanteCrachaItemModel
                 {
@@ -1666,9 +1606,6 @@ namespace EventoWeb.Controllers
                     StatusDescricao = "Apto",
                     QrCodeBase64 = CrachaQrCodeHelper.GerarQrCodeBase64(4, "55466655590", "Rafael Lima Mendes", idEvento, Enumerable.Empty<uint>()),
                     Selecionado = true,
-                    Email = "rafael@borala.com",
-                    CrachaEnviadoEmail = ObterDataEnvioEmail(idEvento, 4).HasValue,
-                    DataEnvioEmail = ObterDataEnvioEmail(idEvento, 4)
                 },
                 new ParticipanteCrachaItemModel
                 {
@@ -1687,9 +1624,6 @@ namespace EventoWeb.Controllers
                     StatusDescricao = "Pendente Foto",
                     QrCodeBase64 = CrachaQrCodeHelper.GerarQrCodeBase64(5, "90155544422", "Júlia Prado Fontes", idEvento, Enumerable.Empty<uint>()),
                     Selecionado = false,
-                    Email = "julia@borala.com",
-                    CrachaEnviadoEmail = ObterDataEnvioEmail(idEvento, 5).HasValue,
-                    DataEnvioEmail = ObterDataEnvioEmail(idEvento, 5)
                 }
             };
             return demo;

@@ -22,6 +22,7 @@ namespace EventoWeb.Models
         public string? LogotipoDataUrl { get; set; }
 
         public bool QrcodeHabilitado { get; set; } = true;
+        public bool EmDemonstracao { get; set; }
 
         public List<EventoSimpleDTO> EventosDisponiveis { get; set; } = new();
 
@@ -51,10 +52,9 @@ namespace EventoWeb.Models
     {
         public uint IdEvento { get; set; }
         public uint? IdModelo { get; set; }
-        public uint? IdPessoa { get; set; }
-        public List<uint>? IdsPessoas { get; set; }
+        public uint? IdInscricao { get; set; }
+        public List<uint>? IdsInscricoes { get; set; }
         public bool ApenasNaoEnviados { get; set; }
-        public Dictionary<uint, string>? ImagensCrachaBase64 { get; set; }
     }
 
     public class ModelocrachaItemDTO
@@ -85,7 +85,6 @@ namespace EventoWeb.Models
         public string? FotoDataUrl { get; set; }
         public string QrCodeBase64 { get; set; } = string.Empty;
         public bool Selecionado { get; set; } = true;
-        public string? Email { get; set; }
         public bool CrachaEnviadoEmail { get; set; }
         public DateTime? DataEnvioEmail { get; set; }
     }
