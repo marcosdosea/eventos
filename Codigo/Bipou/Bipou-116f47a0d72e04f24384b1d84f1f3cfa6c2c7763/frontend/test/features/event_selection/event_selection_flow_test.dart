@@ -235,6 +235,9 @@ void main() {
         ),
         findsOneWidget,
       );
+      expect(find.byKey(const Key('dashboard-session-card')), findsOneWidget);
+      expect(find.byKey(const Key('dashboard-context-card')), findsNothing);
+      expect(find.byKey(const Key('dashboard-context-button')), findsNothing);
     },
   );
 
@@ -495,7 +498,10 @@ final class _FakeCredenciamento implements CredenciamentoGateway {
   String get apiBaseUrl => 'http://localhost:8080';
 
   @override
-  Future<ParticipanteResponse> buscarParticipantePorCpf(String cpf) {
+  Future<ParticipanteResponse> buscarParticipantePorCpf(
+    String cpf, {
+    int? eventoId,
+  }) {
     throw UnimplementedError();
   }
 

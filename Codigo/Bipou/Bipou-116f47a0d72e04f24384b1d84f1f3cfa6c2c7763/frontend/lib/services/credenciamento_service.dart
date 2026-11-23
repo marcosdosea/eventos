@@ -36,7 +36,10 @@ abstract interface class CredenciamentoGateway {
 
   Future<List<ParticipanteResponse>> listarParticipantes();
 
-  Future<ParticipanteResponse> buscarParticipantePorCpf(String cpf);
+  Future<ParticipanteResponse> buscarParticipantePorCpf(
+    String cpf, {
+    int? eventoId,
+  });
 
   Future<void> verificarConexao();
 }
@@ -186,8 +189,10 @@ final class CredenciamentoService
   }
 
   @override
-  Future<ParticipanteResponse> buscarParticipantePorCpf(String cpf) =>
-      _api.buscarParticipantePorCpf(cpf);
+  Future<ParticipanteResponse> buscarParticipantePorCpf(
+    String cpf, {
+    int? eventoId,
+  }) => _api.buscarParticipantePorCpf(cpf, eventoId: eventoId);
 
   @override
   Future<void> verificarConexao() async {
