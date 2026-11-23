@@ -599,8 +599,6 @@ namespace EventoWeb.Controllers
             ViewBag.NomeParticipante = participante?.Nome;
             ViewBag.CpfMascarado = MascararCpf(participante?.Cpf ?? username);
 
-            ViewBag.EventoId = ObterEventoParaVoltar(idEvento, listarEventosModel);
-
             var totalRegistros = listarEventosModel.Count;
             var totalPaginas = Math.Max(1, (int)Math.Ceiling(totalRegistros / (double)INSCRICOES_POR_PAGINA));
             var paginaAtual = Math.Clamp(pagina, 1, totalPaginas);
@@ -618,32 +616,6 @@ namespace EventoWeb.Controllers
         }
 
         private const int INSCRICOES_POR_PAGINA = 10;
-
-        private uint? ObterEventoParaVoltar(uint? idEvento, List<InscricaoEventoModel> inscricoes)
-        {
-            if (idEvento.HasValue && idEvento.Value > 0)
-            {
-                var evento = inscricoes.FirstOrDefault(i => i.IdEvento == idEvento.Value)?.IdEventoNavigation
-                    ?? _eventoService.Get(idEvento.Value);
-                return InscricoesAbertas(evento) ? idEvento.Value : null;
-            }
-
-            return inscricoes.FirstOrDefault(i => InscricoesAbertas(i.IdEventoNavigation))?.IdEvento;
-        }
-
-        private static bool InscricoesAbertas(Evento? evento)
-        {
-            if (evento == null || evento.Status != "A")
-            {
-                return false;
-            }
-            var agora = DateTime.Now;
-            if (evento.DataInicioInscricao.HasValue && evento.DataInicioInscricao.Value > agora)
-            {
-                return false;
-            }
-            return !evento.DataFimInscricao.HasValue || evento.DataFimInscricao.Value >= agora;
-        }
 
         private static string? MascararCpf(string? cpf)
         {
@@ -690,6 +662,29 @@ namespace EventoWeb.Controllers
             {
                 model.Inscricaopessoasubeventos = inscricao.Inscricaopessoasubeventos.ToList();
             }
+
+            return View(model);
+        }
+
+        [HttpGet("ReciboPagamento/{id}")]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public IActionResult ReciboPagamento(uint id)
+        {
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+                return Challenge();
+
+            if (id == 0)
+                return NotFound();
+
+            var inscricao = _inscricaoService.GetAllEventsByUserId(username)
+                .FirstOrDefault(i => i.Id == id);
+            if (inscricao == null)
+                return NotFound();
+
+            var model = _mapper.Map<InscricaoEventoModel>(inscricao);
+            if (model.StatusPagamento != StatusPagamentoInscricao.Confirmado)
+                return NotFound();
 
             return View(model);
         }

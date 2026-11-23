@@ -66,6 +66,7 @@ final class SqliteFrequenciaPendenteStore implements FrequenciaPendenteStore {
                 participante_nome TEXT NOT NULL,
                 id_evento INTEGER NOT NULL,
                 id_sub_evento INTEGER,
+                operador_usuario TEXT,
                 tipo_acao TEXT NOT NULL,
                 data_hora_lida TEXT NOT NULL,
                 dispositivo_id TEXT NOT NULL,

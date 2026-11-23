@@ -515,6 +515,55 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
+        public void EditTest_Post_AlterarVagasOfertadas_DelegaRecalculoAoServico()
+        {
+            // Arrange
+            var mockSub = new Mock<ISubeventoService>();
+            var subeventoExistente = GetTargetSubevento();
+            mockSub.Setup(s => s.Get(1)).Returns(subeventoExistente);
+
+            var mockEventoService = new Mock<IEventoService>();
+            mockEventoService.Setup(s => s.Get(1)).Returns(new Evento
+            {
+                Id = 1,
+                Nome = "SEMINFO",
+                DataInicio = new DateTime(2024, 09, 1, 0, 0, 0),
+                DataFim = new DateTime(2024, 09, 10, 0, 0, 0)
+            });
+
+            var mockTipoEventoService = new Mock<ITipoeventoService>();
+            var mockTipoInscricaoService = new Mock<ITipoInscricaoService>();
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new SubeventoProfile())).CreateMapper();
+
+            var ctl = new SubeventoController(
+                mockSub.Object,
+                mapper,
+                mockEventoService.Object,
+                mockTipoEventoService.Object,
+                mockTipoInscricaoService.Object,
+                MockInscricaoSozinhoEventoProprio().Object);
+
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = GestorPrincipal() }
+            };
+            ctl.TempData = new TempDataDictionary(ctl.ControllerContext.HttpContext, Mock.Of<ITempDataProvider>());
+
+            var model = GetNewSubevento();
+            model.Id = 1;
+            model.VagasOfertadas = 150;
+
+            // Act
+            var result = ctl.CreateOrEdit(1, model);
+
+            // Assert
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            Assert.AreEqual((uint)150, subeventoExistente.VagasOfertadas);
+            mockSub.Verify(s => s.Edit(It.Is<Subevento>(sub => sub.Id == 1 && sub.VagasOfertadas == 150)), Times.Once);
+            mockSub.Verify(s => s.AtualizarVagasDisponiveis(It.IsAny<uint>(), It.IsAny<bool>()), Times.Never);
+        }
+
+        [TestMethod()]
         public void CreateTest_EventoPaiComDatasNulas_Valid()
         {
             // Arrange

@@ -1,12 +1,15 @@
+import 'package:bipou_frontend/core/config/api_config.dart';
 import 'package:bipou_frontend/features/dashboard/views/dashboard_screen.dart';
 import 'package:bipou_frontend/services/api_service.dart';
 import 'package:bipou_frontend/services/audit_log_export_service.dart';
 import 'package:bipou_frontend/services/audit_log_service.dart';
+import 'package:bipou_frontend/services/borala_api_service.dart';
 import 'package:bipou_frontend/services/cadastro_pendente_store.dart';
 import 'package:bipou_frontend/services/connectivity_monitor.dart';
 import 'package:bipou_frontend/services/credenciamento_service.dart';
 import 'package:bipou_frontend/services/device_identity_service.dart';
 import 'package:bipou_frontend/services/frequencia_pendente_store.dart';
+import 'package:bipou_frontend/services/local_participant_repository.dart';
 import 'package:bipou_frontend/services/qr_code_share_service.dart';
 import 'package:flutter/material.dart';
 
@@ -23,6 +26,8 @@ Future<void> main() async {
       frequenciaPendenteStore: SqliteFrequenciaPendenteStore(),
       connectivityMonitor: ConnectivityPlusMonitor(),
     );
+    final localParticipantRepository = SqliteLocalParticipantRepository();
+    final boralaApi = BoralaApiService();
 
     runApp(
       BipouApp(
@@ -30,6 +35,9 @@ Future<void> main() async {
         auditLogExporter: AuditLogExportService(auditLog: auditLog),
         qrCodeShare: QrCodeShareService(),
         dispositivoId: dispositivoId,
+        localParticipantRepository: localParticipantRepository,
+        boralaApi: boralaApi,
+        initialBoralaBaseUrl: ApiConfig.boralaBaseUrl,
       ),
     );
   } on Object catch (error) {
@@ -43,6 +51,9 @@ final class BipouApp extends StatelessWidget {
     required this.auditLogExporter,
     required this.qrCodeShare,
     required this.dispositivoId,
+    this.localParticipantRepository,
+    this.boralaApi,
+    this.initialBoralaBaseUrl,
     super.key,
   });
 
@@ -50,6 +61,9 @@ final class BipouApp extends StatelessWidget {
   final AuditLogExporter auditLogExporter;
   final QrCodeShareGateway qrCodeShare;
   final String dispositivoId;
+  final LocalParticipantRepository? localParticipantRepository;
+  final BoralaApiClient? boralaApi;
+  final String? initialBoralaBaseUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +84,9 @@ final class BipouApp extends StatelessWidget {
         auditLogExporter: auditLogExporter,
         qrCodeShare: qrCodeShare,
         dispositivoId: dispositivoId,
+        localParticipantRepository: localParticipantRepository,
+        boralaApi: boralaApi,
+        initialBoralaBaseUrl: initialBoralaBaseUrl,
       ),
     );
   }

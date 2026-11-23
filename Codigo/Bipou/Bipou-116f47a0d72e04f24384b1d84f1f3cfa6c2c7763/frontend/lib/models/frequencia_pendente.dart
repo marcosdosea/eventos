@@ -32,6 +32,7 @@ final class FrequenciaPendente {
     required DateTime dataHoraLida,
     required String dispositivoId,
     this.idSubEvento,
+    this.operadorUsuario,
     this.statusEnvio = StatusEnvioFrequencia.pendente,
     this.tentativasEnvio = 0,
     this.ultimoErro,
@@ -90,6 +91,7 @@ final class FrequenciaPendente {
     final statusEnvio = map['status_envio'];
     final tentativasEnvio = map['tentativas_envio'];
     final ultimoErro = map['ultimo_erro'];
+    final operadorUsuario = map['operador_usuario'];
 
     if (leituraId is! String ||
         idPessoa is! int ||
@@ -110,6 +112,9 @@ final class FrequenciaPendente {
     if (ultimoErro != null && ultimoErro is! String) {
       throw const FormatException('Campo ultimo_erro invalido.');
     }
+    if (operadorUsuario != null && operadorUsuario is! String) {
+      throw const FormatException('Campo operador_usuario invalido.');
+    }
 
     return FrequenciaPendente(
       leituraId: leituraId,
@@ -118,6 +123,7 @@ final class FrequenciaPendente {
       participanteNome: participanteNome,
       idEvento: idEvento,
       idSubEvento: idSubEvento as int?,
+      operadorUsuario: operadorUsuario as String?,
       tipoAcao: _parseTipoAcao(tipoAcao),
       dataHoraLida: DateTime.parse(dataHoraLida),
       dispositivoId: dispositivoId,
@@ -137,6 +143,7 @@ final class FrequenciaPendente {
   final String participanteNome;
   final int idEvento;
   final int? idSubEvento;
+  final String? operadorUsuario;
   final TipoAcao tipoAcao;
   final DateTime dataHoraLida;
   final String dispositivoId;
@@ -159,6 +166,7 @@ final class FrequenciaPendente {
       participanteNome: participanteNome,
       idEvento: idEvento,
       idSubEvento: idSubEvento,
+      operadorUsuario: operadorUsuario,
       tipoAcao: tipoAcao,
       dataHoraLida: dataHoraLida,
       dispositivoId: dispositivoId,
@@ -175,6 +183,7 @@ final class FrequenciaPendente {
     'participante_nome': participanteNome,
     'id_evento': idEvento,
     'id_sub_evento': idSubEvento,
+    'operador_usuario': operadorUsuario,
     'tipo_acao': tipoAcao.apiValue,
     'data_hora_lida': dataHoraLida.toIso8601String(),
     'dispositivo_id': dispositivoId,
@@ -199,6 +208,9 @@ final class FrequenciaPendente {
     tipoAcao: tipoAcao,
     dispositivoId: dispositivoId,
     dataHoraLidaNoCelular: dataHoraLida,
+    eventoId: idEvento > 0 ? idEvento : null,
+    subeventoId: idSubEvento,
+    operadorUsuario: operadorUsuario,
   );
 
   static TipoAcao _parseTipoAcao(String value) {

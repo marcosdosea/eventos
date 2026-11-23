@@ -204,6 +204,9 @@ final class _CredenciamentoWidgetSpy implements CredenciamentoGateway {
     int? idPessoa,
     int? idEvento,
     int? idSubEvento,
+    int? eventoId,
+    int? subeventoId,
+    String? operadorUsuario,
   }) {
     throw UnimplementedError();
   }

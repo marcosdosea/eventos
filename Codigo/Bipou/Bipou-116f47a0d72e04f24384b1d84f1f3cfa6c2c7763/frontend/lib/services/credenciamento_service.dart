@@ -29,6 +29,9 @@ abstract interface class CredenciamentoGateway {
     int? idPessoa,
     int? idEvento,
     int? idSubEvento,
+    int? eventoId,
+    int? subeventoId,
+    String? operadorUsuario,
   });
 
   Future<OperationResult<ParticipanteResponse>> cadastrarParticipante({
@@ -173,16 +176,22 @@ final class CredenciamentoService
     int? idPessoa,
     int? idEvento,
     int? idSubEvento,
+    int? eventoId,
+    int? subeventoId,
+    String? operadorUsuario,
   }) async {
     final dataHora = _clock().toUtc();
     final leituraId = _uuidGenerator();
+    final eventoResolvido = eventoId ?? idEvento;
+    final subeventoResolvido = subeventoId ?? idSubEvento;
     final frequencia = FrequenciaPendente(
       leituraId: leituraId,
       idPessoa: idPessoa ?? 0,
       participanteId: participanteId,
       participanteNome: participanteNome,
-      idEvento: idEvento ?? 0,
-      idSubEvento: idSubEvento,
+      idEvento: eventoResolvido ?? 0,
+      idSubEvento: subeventoResolvido,
+      operadorUsuario: operadorUsuario,
       tipoAcao: tipoAcao,
       dataHoraLida: dataHora,
       dispositivoId: dispositivoId,
