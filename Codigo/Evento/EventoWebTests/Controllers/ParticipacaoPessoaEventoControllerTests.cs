@@ -786,5 +786,103 @@ namespace EventoWeb.Controllers.Tests
             _mockEvento.Verify(e => e.AtualizarVagasDisponiveis(1, true), Times.Once);
         }
 
+        [TestMethod()]
+        public async Task ImportarCsv_CreateParticipante_PessoaExistenteComNomeLongoSemNomeCracha_NormalizaCpfETruncaNomeCracha()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+
+            var parsedDto = new ResultadoParsingSigaaDto
+            {
+                ListaSucesso = new List<PessoaInscritaDto>
+                {
+                    new PessoaInscritaDto
+                    {
+                        Cpf = "529.982.247-25 ",
+                        Nome = "Maria Aparecida dos Santos Oliveira",
+                        Email = "maria@teste.com"
+                    }
+                }
+            };
+
+            _mockPlanilhaParser.Setup(p => p.Parse(It.IsAny<IFormFile>()))
+                .Returns(parsedDto);
+
+            _mockPessoa.Setup(p => p.GetByCpf("52998224725"))
+                .Returns(new Pessoa
+                {
+                    Id = 15,
+                    Cpf = "52998224725",
+                    Nome = "Maria Aparecida dos Santos Oliveira",
+                    NomeCracha = null
+                });
+
+            _mockInscricao.Setup(i => i.IsInscrito(15, 1)).Returns(false);
+
+            var bytes = Encoding.UTF8.GetBytes("CPF;NOME\n529.982.247-25;Maria Aparecida dos Santos Oliveira");
+            var stream = new MemoryStream(bytes);
+            var formFile = new FormFile(stream, 0, bytes.Length, "arquivoPlanilha", "inscritos.csv");
+
+            var result = await controller.ImportarCsv(1, null, formFile, "CreateParticipante") as RedirectToActionResult;
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual("CreateParticipante", result.ActionName);
+            Assert.AreEqual("Evento", result.ControllerName);
+            _mockInscricao.Verify(i => i.CreateInscricaoEvento(It.Is<Inscricaopessoaevento>(
+                ins => ins.IdPessoa == 15
+                    && ins.IdEvento == 1
+                    && ins.NomeCracha != null
+                    && ins.NomeCracha.Length == 20)), Times.Once);
+        }
+
+        [TestMethod()]
+        public async Task ImportarCsv_CreateParticipante_NovaPessoaComCamposLongos_TruncaParaLimitesDoBanco()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+
+            var nomeLongo = new string('A', 70);
+            var emailLongo = $"{new string('b', 45)}@exemplo.com.br";
+            var parsedDto = new ResultadoParsingSigaaDto
+            {
+                ListaSucesso = new List<PessoaInscritaDto>
+                {
+                    new PessoaInscritaDto
+                    {
+                        Cpf = "111.444.777-35",
+                        Nome = nomeLongo,
+                        Email = emailLongo
+                    }
+                }
+            };
+
+            _mockPlanilhaParser.Setup(p => p.Parse(It.IsAny<IFormFile>()))
+                .Returns(parsedDto);
+
+            _mockPessoa.SetupSequence(p => p.GetByCpf("11144477735"))
+                .Returns((Pessoa)null!)
+                .Returns(new Pessoa { Id = 22, Cpf = "11144477735", Nome = nomeLongo.Substring(0, 50) });
+
+            _mockPessoa.Setup(p => p.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), 1, 4))
+                .ReturnsAsync(true);
+
+            var bytes = Encoding.UTF8.GetBytes($"CPF;NOME\n111.444.777-35;{nomeLongo}");
+            var stream = new MemoryStream(bytes);
+            var formFile = new FormFile(stream, 0, bytes.Length, "arquivoPlanilha", "inscritos.csv");
+
+            var result = await controller.ImportarCsv(1, null, formFile, "CreateParticipante") as RedirectToActionResult;
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual("CreateParticipante", result.ActionName);
+            Assert.AreEqual("Evento", result.ControllerName);
+            Assert.AreEqual("1 participante(s) inscrito(s) com sucesso a partir da planilha.", controller.TempData["Message"]);
+            _mockPessoa.Verify(p => p.CreatePessoaIdentityComPapelAsync(
+                It.Is<Pessoa>(pes =>
+                    pes.Cpf == "11144477735"
+                    && pes.Nome.Length == 50
+                    && pes.NomeCracha!.Length == 20
+                    && pes.Email.Length == 50),
+                1,
+                4), Times.Once);
+        }
+
     }
 }

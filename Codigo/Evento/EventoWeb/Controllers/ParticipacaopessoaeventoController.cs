@@ -7,6 +7,7 @@ using EventoWeb.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Util;
 
 namespace EventoWeb.Controllers
 {
@@ -245,8 +246,11 @@ namespace EventoWeb.Controllers
         {
             var destino = (actionRetorno == "Frequencia" || actionRetorno == "CreateParticipante") ? actionRetorno : nameof(Index);
 
-            var bloqueio = ValidarAcessoEventoAction(idEvento,actionRetorno, 
-                "Você não possui um evento vinculado para importar participantes!",true);
+            var bloqueio = ValidarAcessoEventoAction(
+                idEvento,
+                actionRetorno,
+                "Você não possui um evento vinculado para importar participantes!",
+                true);
 
             if (bloqueio != null)
                 return bloqueio;
@@ -285,7 +289,7 @@ namespace EventoWeb.Controllers
 
                 foreach (var inscritoDto in resultado.ListaSucesso)
                 {
-                    var cpf = inscritoDto.Cpf?.Replace(".", "").Replace("-", "").Trim();
+                    var cpf = Methods.RemoveNaoNumericos(inscritoDto.Cpf ?? string.Empty);
                     if (string.IsNullOrWhiteSpace(cpf))
                         continue;
 
@@ -320,15 +324,13 @@ namespace EventoWeb.Controllers
                     }
                 }
 
-                return RedirectToAction("CreateParticipante", "Evento", new { idEvento, idSubEvento });
+                return RedirecionarRetornoImportacao(destino, idEvento, idSubEvento);
             }
 
             var resultadoImportacao = await _participacaoService.ImportarParticipantesAsync(
                 idEvento,
                 idSubEvento,
                 resultado.ListaSucesso);
-
-
 
             int totalErrosFrequencia = resultado.ListaErros.Count + resultadoImportacao.TotalFalhas;
 
@@ -380,12 +382,12 @@ namespace EventoWeb.Controllers
             return RedirectToAction(destino, new { idEvento, idSubEvento });
         }
 
-        private IActionResult? ValidarAcessoEventoAction( uint idEvento, string actionRetorno, string mensagemSemPermissao, bool considerarCreateParticipante = false)
+        private IActionResult? ValidarAcessoEventoAction(uint idEvento, string actionRetorno, string mensagemSemPermissao, bool considerarCreateParticipante = false)
         {
             var username = User.Identity?.Name;
             if (string.IsNullOrEmpty(username))
             {
-                return RedirecionarBloqueioAction(idEvento, actionRetorno, "Usuário não autenticado.",considerarCreateParticipante);
+                return RedirecionarBloqueioAction(idEvento, actionRetorno, "Usuário não autenticado.", considerarCreateParticipante);
             }
 
             var gestor = _inscricaoService.GetGestorInEvent(username, idEvento);
@@ -393,7 +395,7 @@ namespace EventoWeb.Controllers
 
             if (gestor == null && colaborador == null && !User.IsInRole("ADMINISTRADOR"))
             {
-                var cpfUsuario = username.Replace(".", "").Replace("-", "");
+                var cpfUsuario = Methods.RemoveNaoNumericos(username);
                 gestor = _inscricaoService.GetGestorInEvent(cpfUsuario, idEvento);
                 colaborador = _inscricaoService.GetColaboradorInEvent(cpfUsuario, idEvento);
             }
@@ -406,14 +408,14 @@ namespace EventoWeb.Controllers
             return null;
         }
 
-        private IActionResult RedirecionarBloqueioAction(uint idEvento,string actionRetorno,string mensagemErro, bool considerarCreateParticipante = false)
+        private IActionResult RedirecionarBloqueioAction(uint idEvento, string actionRetorno, string mensagemErro, bool considerarCreateParticipante = false)
         {
             TempData.Clear();
             TempData["ErrorMessage"] = mensagemErro;
 
             var ehRetornoEspecial = actionRetorno == "Frequencia" || (considerarCreateParticipante && actionRetorno == "CreateParticipante");
 
-            if (ehRetornoEspecial|| !(User.IsInRole("GESTOR") || User.IsInRole("ADMINISTRADOR")))
+            if (ehRetornoEspecial || !(User.IsInRole("GESTOR") || User.IsInRole("ADMINISTRADOR")))
             {
                 return RedirectToAction("Index", "Home");
             }
@@ -543,18 +545,28 @@ namespace EventoWeb.Controllers
             return null;
         }
 
-        private async Task<bool> InscreverViaCsvAsync(PessoaInscritaDto inscritoDto,Pessoa? pessoa,string cpf,uint idEvento,uint? idSubEvento)
+        private async Task<bool> InscreverViaCsvAsync(PessoaInscritaDto inscritoDto, Pessoa? pessoa, string cpf, uint idEvento, uint? idSubEvento)
         {
             var criouAlgo = false;
 
             if (pessoa == null)
             {
+                var nome = string.IsNullOrWhiteSpace(inscritoDto.Nome) ? "Participante" : inscritoDto.Nome.Trim();
+                if (nome.Length > 50)
+                    nome = nome.Substring(0, 50);
+
+                var nomeCracha = nome.Length > 20 ? nome.Substring(0, 20) : nome;
+
+                var email = string.IsNullOrWhiteSpace(inscritoDto.Email) ? $"{cpf}@evento.com" : inscritoDto.Email.Trim();
+                if (email.Length > 50)
+                    email = email.Substring(0, 50);
+
                 var novaPessoa = new Pessoa
                 {
                     Cpf = cpf,
-                    Nome = inscritoDto.Nome,
-                    NomeCracha = inscritoDto.Nome.Length > 20 ? inscritoDto.Nome.Substring(0, 20) : inscritoDto.Nome,
-                    Email = string.IsNullOrWhiteSpace(inscritoDto.Email) ? $"{cpf}@evento.com" : inscritoDto.Email,
+                    Nome = nome,
+                    NomeCracha = nomeCracha,
+                    Email = email,
                     Sexo = "N"
                 };
 
@@ -571,13 +583,19 @@ namespace EventoWeb.Controllers
             }
             else if (!_inscricaoService.IsInscrito(pessoa.Id, idEvento))
             {
+                var nomeBaseCracha = !string.IsNullOrWhiteSpace(pessoa.NomeCracha)
+                    ? pessoa.NomeCracha.Trim()
+                    : (pessoa.Nome ?? string.Empty).Trim();
+                if (nomeBaseCracha.Length > 20)
+                    nomeBaseCracha = nomeBaseCracha.Substring(0, 20);
+
                 var novaInscricao = new Inscricaopessoaevento
                 {
                     IdPessoa = pessoa.Id,
                     IdEvento = idEvento,
                     IdPapel = 4,
                     DataInscricao = DateTime.Now,
-                    NomeCracha = !string.IsNullOrWhiteSpace(pessoa.NomeCracha) ? pessoa.NomeCracha : pessoa.Nome,
+                    NomeCracha = nomeBaseCracha,
                     Status = "S"
                 };
 
@@ -586,11 +604,9 @@ namespace EventoWeb.Controllers
                 criouAlgo = true;
             }
 
-            if ((idSubEvento.HasValue && idSubEvento.Value > 0))
+            if (idSubEvento.HasValue && idSubEvento.Value > 0)
             {
-               
-                    criouAlgo |= GarantirInscricaoSubEvento( pessoa.Id,idEvento, idSubEvento.Value);
-                
+                criouAlgo |= GarantirInscricaoSubEvento(pessoa.Id, idEvento, idSubEvento.Value);
             }
 
             return criouAlgo;

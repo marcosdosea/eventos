@@ -164,7 +164,7 @@
 </div>
 
 
-<partial name="_ImportaCSV" model='new EventoWeb.Models.ImportarCsvModalModel { IdEvento = Model.Evento.Id, IdSubEvento = null, ActionRetorno = "CreateParticipante", Titulo = "Importar Planilha de Participantes", Descricao = "Selecione o arquivo de planilha (formatos .csv, .xlsx ou .xls, como o relatório do SIGAA) para inscrever os participantes no evento.", MensagemCarregamento = "Processando planilha e inscrevendo participantes, aguarde..." }' />
+<partial name="_ImportaCSV" model='new EventoWeb.Models.ImportarCsvModalModel { IdEvento = Model.Evento?.Id ?? 0, IdSubEvento = null, ActionRetorno = "CreateParticipante", Titulo = "Importar Planilha de Participantes", Descricao = "Selecione o arquivo de planilha (formatos .csv, .xlsx ou .xls, como o relatório do SIGAA) para inscrever os participantes no evento.", MensagemCarregamento = "Processando planilha e inscrevendo participantes, aguarde..." }' />
 
 
 @await Html.PartialAsync("_DeleteModal", new EventoWeb.Models.DeleteModel
