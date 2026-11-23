@@ -597,7 +597,7 @@ public class NotificacaoEventoService : INotificacaoEventoService
                 : $"https://{site}";
         }
 
-        return $"/Inscricao/realizarInscricao?idEvento={evento.Id}";
+        return $"/Inscricao/RealizarInscricao/{evento.Id}";
     }
 
     private static string EscaparHtml(string? texto)

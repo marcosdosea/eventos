@@ -161,7 +161,7 @@ public class NotificacaoEventoServiceTests
         var idEvento = CriarEvento(estado: "SE", idsAreas: new uint[] { 1 });
         var service = CriarService();
 
-        var resultado = await service.NotificarNovoEventoAsync(idEvento, $"https://borala.ufs.br/Inscricao/realizarInscricao?idEvento={idEvento}");
+        var resultado = await service.NotificarNovoEventoAsync(idEvento, $"https://borala.ufs.br/Inscricao/RealizarInscricao/{idEvento}");
 
         Assert.IsTrue(resultado.EventoElegivel);
         Assert.IsFalse(resultado.JaDivulgadoAnteriormente);
@@ -224,7 +224,7 @@ public class NotificacaoEventoServiceTests
             Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "EventoWeb", "wwwroot", "templates", "EmailNovoEventoInteresse.html"));
         Assert.IsTrue(File.Exists(caminhoTemplate), $"Template não encontrado em {caminhoTemplate}");
 
-        var link = $"https://borala.ufs.br/Inscricao/realizarInscricao?idEvento={idEvento}";
+        var link = $"https://borala.ufs.br/Inscricao/RealizarInscricao/{idEvento}";
         var service = CriarService(caminhoTemplate);
 
         var resultado = await service.NotificarNovoEventoAsync(idEvento, link);
@@ -237,6 +237,21 @@ public class NotificacaoEventoServiceTests
         StringAssert.Contains(enviado.Html, "Av. Vereador Olímpio Grande, 100");
         StringAssert.Contains(enviado.Html, "Itabaiana - SE");
         StringAssert.Contains(enviado.Html, link);
+    }
+
+    [TestMethod]
+    public async Task NotificarNovoEvento_SemLinkNemWebsite_UsaRotaRealizarInscricaoPorSegmento()
+    {
+        SalvarPreferencia(1, 1, todosEstados: true);
+        var idEvento = CriarEvento(estado: "SE", idsAreas: new uint[] { 1 });
+
+        var service = CriarService();
+        var resultado = await service.NotificarNovoEventoAsync(idEvento, string.Empty);
+
+        Assert.AreEqual(1, resultado.Enviados);
+        var enviado = _emailService.Enviados.Single();
+        StringAssert.Contains(enviado.Html, $"/Inscricao/RealizarInscricao/{idEvento}");
+        Assert.IsFalse(enviado.Html.Contains("?idEvento="));
     }
 
     [TestMethod]

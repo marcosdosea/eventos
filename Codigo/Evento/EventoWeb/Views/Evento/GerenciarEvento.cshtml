@@ -53,7 +53,10 @@
 
     @if ((User.IsInRole("GESTOR") || User.IsInRole("ADMINISTRADOR")) && Model.NotificacoesComFalha > 0)
     {
-        <div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4" role="alert">
+        <div id="notificacoes-reenvio-banner"
+             class="rounded p-3 d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4"
+             style="background-color: #fff3cd; border: 1px solid #ffecb5; color: #664d03;"
+             role="status">
             <div>
                 <strong>Notificações pendentes de reenvio:</strong>
                 @Model.NotificacoesComFalha aviso(s) de novo evento falharam no envio

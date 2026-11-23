@@ -1139,7 +1139,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             mockNotificacao.Verify(s => s.NotificarNovoEventoAsync(
                 10,
-                It.Is<string>(link => link.Contains("realizarInscricao") && link.Contains("10")),
+                It.Is<string>(link => link.Contains("/Inscricao/RealizarInscricao/10")),
                 false,
                 It.IsAny<CancellationToken>()), Times.Once);
         }

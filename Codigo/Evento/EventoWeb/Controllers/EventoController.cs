@@ -1284,7 +1284,7 @@ namespace EventoWeb.Controllers
                 _logger?.LogWarning(ex, "Não foi possível montar URL absoluta para o evento {IdEvento}.", idEvento);
             }
 
-            return $"/Inscricao/realizarInscricao?idEvento={idEvento}";
+            return $"/Inscricao/RealizarInscricao/{idEvento}";
         }
 
         private async Task TentarNotificarNovoEventoAsync(uint idEvento, bool estavaElegivelAntes)
