@@ -7,6 +7,13 @@
 <link href="~/lib/datatable/css/datatables.min.css" rel="stylesheet" />
 
 <div class="container">
+	@if (TempData["WarningMessage"] != null)
+	{
+		<div class="alert alert-warning" role="alert" id="alertwarning">
+			@TempData["WarningMessage"]
+		</div>
+		TempData.Remove("WarningMessage");
+	}
 	<h1 class="blue-normal">Seja Bem-vindo</h1>
 	<h3>Confira os eventos do sistema!</h3>
 	<div class="btn-container">

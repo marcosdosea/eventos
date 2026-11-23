@@ -460,6 +460,36 @@ public class NotificacaoEventoServiceTests
         Assert.AreEqual(0, _context.Notificacaoeventos.Count(n => n.IdEvento == idEvento));
     }
 
+    [TestMethod]
+    public async Task NotificarNovoEventoAsync_FalhaDePersistenciaEmUmDestinatario_DesanexaEntradaEPersisteDemais()
+    {
+        SalvarPreferencia(1, 1, todosEstados: true);
+        SalvarPreferencia(2, 1, todosEstados: false, "SE");
+        var idEvento = CriarEvento(estado: "SE", idsAreas: new uint[] { 1 });
+
+        _emailService.ComportamentoPorEmail["ana@teste.com"] = () =>
+        {
+            using var cmd = _connection.CreateCommand();
+            cmd.CommandText = @"
+                INSERT INTO notificacaoevento (idEvento, idPessoa, emailDestino, status, tentativas, dataCriacao)
+                VALUES ($idEvento, 1, 'ana@teste.com', 'P', 0, '2026-11-20 10:00:00');";
+            cmd.Parameters.AddWithValue("$idEvento", idEvento);
+            cmd.ExecuteNonQuery();
+            return Task.FromResult(true);
+        };
+
+        var service = CriarService();
+        var resultado = await service.NotificarNovoEventoAsync(idEvento, "https://borala.ufs.br/e/1");
+
+        Assert.AreEqual(2, resultado.TotalDestinatariosElegiveis);
+        Assert.IsTrue(resultado.Erros.Any(e => e.Contains("Pessoa 1")));
+
+        _context.ChangeTracker.Clear();
+        var registroBruno = _context.Notificacaoeventos.SingleOrDefault(n => n.IdEvento == idEvento && n.IdPessoa == 2);
+        Assert.IsNotNull(registroBruno);
+        Assert.AreEqual(Notificacaoevento.StatusEnviado, registroBruno.Status);
+    }
+
     private sealed class FakeEmailService : IEmailService
     {
         public List<(string Email, string Assunto, string Html)> Enviados { get; } = new();

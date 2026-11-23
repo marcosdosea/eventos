@@ -1251,11 +1251,22 @@ namespace EventoWeb.Controllers
             return RedirectToAction("GerenciarEvento", new { idEvento });
         }
 
-        private static bool EventoEstavaElegivel(Evento evento, IEnumerable<Areainteresse> areas)
+        private bool EventoEstavaElegivel(Evento evento, ICollection<Areainteresse> areas)
         {
-            return string.Equals(evento.Status?.Trim(), "A", StringComparison.OrdinalIgnoreCase)
-                && evento.EventoPublico == 1
-                && areas.Any();
+            if (_notificacaoEventoService == null)
+            {
+                return false;
+            }
+
+            var snapshotAntesEdicao = new Evento
+            {
+                Id = evento.Id,
+                Status = evento.Status,
+                EventoPublico = evento.EventoPublico,
+                IdAreaInteresses = areas
+            };
+
+            return _notificacaoEventoService.EventoElegivelParaNotificacao(snapshotAntesEdicao);
         }
 
         private string GerarLinkPublicoEvento(uint idEvento)

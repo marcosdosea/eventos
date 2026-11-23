@@ -200,7 +200,7 @@ public class NotificacaoEventoService : INotificacaoEventoService
                 registro.DataUltimaTentativa = _agora();
                 registro.MensagemErro = "Preferências vigentes do participante não correspondem mais ao evento.";
                 resultado.CanceladosPorPreferenciaAlterada++;
-                await SalvarComSegurancaAsync(idEvento, registro.IdPessoa, resultado, cancellationToken);
+                await SalvarComSegurancaAsync(registro, resultado, cancellationToken);
                 continue;
             }
 
@@ -372,12 +372,11 @@ public class NotificacaoEventoService : INotificacaoEventoService
                 destinatario.Email);
         }
 
-        await SalvarComSegurancaAsync(evento.Id, destinatario.IdPessoa, resultado, cancellationToken);
+        await SalvarComSegurancaAsync(registro, resultado, cancellationToken);
     }
 
     private async Task SalvarComSegurancaAsync(
-        uint idEvento,
-        uint idPessoa,
+        Notificacaoevento registro,
         ResultadoNotificacaoEventoDTO resultado,
         CancellationToken cancellationToken)
     {
@@ -387,13 +386,19 @@ public class NotificacaoEventoService : INotificacaoEventoService
         }
         catch (Exception ex)
         {
+            var entry = _context.Entry(registro);
+            if (entry.State != EntityState.Detached)
+            {
+                entry.State = EntityState.Detached;
+            }
+
             var erro = Truncar($"Erro ao persistir registro de notificação: {ex.Message}", 500);
-            resultado.Erros.Add($"Pessoa {idPessoa}: {erro}");
+            resultado.Erros.Add($"Pessoa {registro.IdPessoa}: {erro}");
             _logger?.LogError(
                 ex,
                 "Erro ao persistir status de notificação do evento {IdEvento} para pessoa {IdPessoa}.",
-                idEvento,
-                idPessoa);
+                registro.IdEvento,
+                registro.IdPessoa);
         }
     }
 

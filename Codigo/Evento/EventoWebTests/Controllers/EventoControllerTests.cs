@@ -1156,6 +1156,10 @@ namespace EventoWeb.Controllers.Tests
             mockEvento.Setup(s => s.Get(10)).Returns(eventoJaPublicado);
             mockEvento.Setup(s => s.GetAreasInteresseByEventoId(10)).Returns(new[] { new Areainteresse { Id = 1, Nome = "Tecnologia" } });
             mockEvento.Setup(s => s.Edit(It.IsAny<Evento>(), It.IsAny<List<uint>>())).Returns(true);
+            mockNotificacao
+                .Setup(s => s.EventoElegivelParaNotificacao(It.Is<Evento>(e =>
+                    e != null && e.Id == 10 && e.Status == "A" && e.EventoPublico == 1 && e.IdAreaInteresses.Count == 1)))
+                .Returns(true);
 
             var ctrl = CriarControllerComNotificacao(mockEvento, mockNotificacao, mockInscricao, "GESTOR");
 
@@ -1169,6 +1173,9 @@ namespace EventoWeb.Controllers.Tests
             var result = await ctrl.GestorEditarEvento(10, model);
 
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            mockNotificacao.Verify(
+                s => s.EventoElegivelParaNotificacao(It.Is<Evento>(e => e != null && e.Id == 10)),
+                Times.Once);
             mockNotificacao.Verify(
                 s => s.NotificarNovoEventoAsync(It.IsAny<uint>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()),
                 Times.Never);
