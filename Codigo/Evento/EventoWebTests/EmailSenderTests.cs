@@ -11,7 +11,7 @@ namespace EventoWeb.Tests;
 public class EmailSenderTests
 {
     [TestMethod]
-    public async Task EnviarEmailAsync_SemConfiguracaoSmtp_RetornaFalseSemLancarExcecao()
+    public async Task TentarEnviarEmailAsync_SemConfiguracaoSmtp_RetornaFalseSemLancarExcecao()
     {
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -32,7 +32,7 @@ public class EmailSenderTests
             Environment.SetEnvironmentVariable("EMAIL_USER", null);
 
             var sender = new EmailSender(config, env.Object, logger.Object);
-            var resultado = await sender.EnviarEmailAsync("participante@teste.com", "Assunto", "<p>Teste</p>");
+            var resultado = await sender.TentarEnviarEmailAsync("participante@teste.com", "Assunto", "<p>Teste</p>");
 
             Assert.IsFalse(resultado);
         }
@@ -44,7 +44,39 @@ public class EmailSenderTests
     }
 
     [TestMethod]
-    public async Task EnviarEmailAsync_DestinatarioVazio_RetornaFalse()
+    public async Task EnviarEmailAsync_SemConfiguracaoSmtp_LancaInvalidOperationException()
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Smtp:Host"] = "",
+                ["Smtp:From"] = ""
+            })
+            .Build();
+
+        var env = new Mock<IWebHostEnvironment>();
+        var logger = new Mock<ILogger<IEmailSender>>();
+
+        var prevHost = Environment.GetEnvironmentVariable("EMAIL_SMTP");
+        var prevUser = Environment.GetEnvironmentVariable("EMAIL_USER");
+        try
+        {
+            Environment.SetEnvironmentVariable("EMAIL_SMTP", null);
+            Environment.SetEnvironmentVariable("EMAIL_USER", null);
+
+            var sender = new EmailSender(config, env.Object, logger.Object);
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(
+                () => sender.EnviarEmailAsync("participante@teste.com", "Assunto", "<p>Teste</p>"));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("EMAIL_SMTP", prevHost);
+            Environment.SetEnvironmentVariable("EMAIL_USER", prevUser);
+        }
+    }
+
+    [TestMethod]
+    public async Task TentarEnviarEmailAsync_DestinatarioVazio_RetornaFalse()
     {
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
@@ -60,7 +92,7 @@ public class EmailSenderTests
         var logger = new Mock<ILogger<IEmailSender>>();
 
         var sender = new EmailSender(config, env.Object, logger.Object);
-        var resultado = await sender.EnviarEmailAsync("   ", "Assunto", "<p>Teste</p>");
+        var resultado = await sender.TentarEnviarEmailAsync("   ", "Assunto", "<p>Teste</p>");
 
         Assert.IsFalse(resultado);
     }

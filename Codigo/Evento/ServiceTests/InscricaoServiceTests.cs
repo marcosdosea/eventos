@@ -387,6 +387,32 @@ namespace Service.Tests
         }
 
         [TestMethod()]
+        public void GetAllEventsByUserIdTest_CarregaPagamentosDaInscricao()
+        {
+            // Arrange
+            _context.Pagamentos.Add(new Pagamento
+            {
+                Id = 50,
+                IdInscricaoPessoaEvento = 1,
+                Valor = 10m,
+                Status = "S",
+                Forma = "C",
+                DataSolicitacao = new DateTime(2024, 7, 3),
+                DataPagamento = new DateTime(2024, 7, 3)
+            });
+            _context.SaveChanges();
+            _context.ChangeTracker.Clear();
+
+            // Act
+            var result = _inscricaoService.GetAllEventsByUserId("122.462.323-67").ToList();
+
+            // Assert
+            Assert.AreEqual(1, result.Count);
+            Assert.AreEqual(1, result[0].Pagamentos.Count);
+            Assert.AreEqual((uint)50, result[0].Pagamentos.First().Id);
+        }
+
+        [TestMethod()]
         public void GetAllEventsByUserIdTest_PartialCpf_DoesNotMatch()
         {
             // Act - busca com CPF parcial não deve retornar registros (correspondência exata)

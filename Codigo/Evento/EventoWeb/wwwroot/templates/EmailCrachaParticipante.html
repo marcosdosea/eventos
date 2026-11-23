@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="author" content="Boralá Eventos">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sua Credencial Digital - {{NomeEvento}}</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background-color: #f1f5f9;
+            padding: 20px;
+            margin: 0;
+            color: #1e293b;
+        }
+
+        .container {
+            max-width: 600px;
+            background: #ffffff;
+            padding: 32px;
+            border-radius: 12px;
+            margin: auto;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+        }
+
+        .header {
+            font-family: 'Arial Black', Gadget, sans-serif;
+            font-size: 24px;
+            line-height: 1;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .logo-bora {
+            font-size: 22px;
+            font-weight: 900;
+            color: #0A2FE2;
+            letter-spacing: -1px;
+        }
+
+        .logo-la {
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: lowercase;
+            color: #f59e0b;
+        }
+
+        .logo-eventos {
+            display: block;
+            font-size: 10px;
+            color: #1132D9;
+            font-family: Arial, sans-serif;
+            text-transform: lowercase;
+            margin-top: 2px;
+        }
+
+        .badge-card {
+            max-width: 340px;
+            margin: 24px auto;
+            border: 2px solid #cbd5e1;
+            border-radius: 16px;
+            overflow: hidden;
+            background: #ffffff;
+            text-align: center;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.1);
+        }
+
+        .badge-header {
+            background: linear-gradient(135deg, #0A2FE2 0%, #1e40af 100%);
+            color: #ffffff;
+            padding: 18px 16px;
+        }
+
+        .badge-header-sub {
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            opacity: 0.85;
+            margin-bottom: 6px;
+        }
+
+        .badge-event-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .badge-body {
+            padding: 20px 16px;
+        }
+
+        .participant-name {
+            font-size: 20px;
+            font-weight: 800;
+            color: #0f172a;
+            text-transform: uppercase;
+            margin: 6px 0 4px 0;
+        }
+
+        .participant-org {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 12px;
+        }
+
+        .role-pill {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            border-radius: 999px;
+            padding: 4px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 14px;
+        }
+
+        .meta-row {
+            font-size: 12px;
+            color: #475569;
+            margin-bottom: 16px;
+            padding: 8px 12px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .qrcode-box {
+            padding: 12px;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            display: inline-block;
+            background: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .presenca-code {
+            font-family: monospace;
+            font-size: 12px;
+            font-weight: bold;
+            color: #334155;
+            margin-top: 4px;
+        }
+
+        .badge-footer {
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            padding: 10px 14px;
+            font-size: 11px;
+            color: #64748b;
+        }
+
+        .info-box {
+            background-color: #f0f4ff;
+            border-left: 4px solid #0A2FE2;
+            padding: 14px 18px;
+            border-radius: 6px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        footer {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 28px;
+            padding-top: 18px;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <span class="logo-bora">BORA</span><span class="logo-la">lá</span>
+            <span class="logo-eventos">eventos</span>
+        </div>
+
+        <p>Olá, <strong>{{NomeParticipante}}</strong>!</p>
+
+        <p>Sua credencial oficial para o evento <strong>{{NomeEvento}}</strong> já está disponível. Apresente o crachá abaixo na tela do seu celular ou impresso na portaria e nas salas de atividades.</p>
+
+        <div class="info-box">
+            <div><strong>Período:</strong> {{PeriodoEvento}}</div>
+            <div><strong>Local:</strong> {{LocalEvento}}</div>
+        </div>
+
+        <div class="badge-card">
+            <div class="badge-header">
+                {{BlocoLogotipo}}
+                <div class="badge-header-sub">BORA LÁ EVENTOS • CREDENCIAL OFICIAL</div>
+                <p class="badge-event-title">{{NomeEvento}}</p>
+            </div>
+            <div class="badge-body">
+                {{BlocoFotoParticipante}}
+                <div class="participant-name">{{NomeCracha}}</div>
+                <div class="participant-org">{{Organizacao}}</div>
+                <div class="role-pill">{{Papel}}</div>
+
+                <div class="meta-row">
+                    <span>CPF: <strong>{{CpfMascarado}}</strong></span> &nbsp;|&nbsp;
+                    <span>Credencial: <strong>{{CodigoCredencial}}</strong></span>
+                </div>
+
+                {{BlocoQrCode}}
+
+                <div class="presenca-code">{{CodigoPresenca}}</div>
+            </div>
+            <div class="badge-footer">
+                {{TextoModelo}}
+            </div>
+        </div>
+
+        <p style="font-size: 13px; color: #475569; text-align: center;">
+            <strong>Dica:</strong> Apresente sua credencial no celular ou impressa. Quando o crachá incluir um QR Code, a equipe poderá lê-lo pelo <strong>Bipou</strong>.
+        </p>
+
+        <footer>
+            <p>Este é um e-mail automático enviado pelo sistema <strong>Boralá Eventos</strong>.</p>
+            <p>&copy; {{AnoAtual}} - Todos os direitos reservados.</p>
+        </footer>
+    </div>
+</body>
+
+</html>

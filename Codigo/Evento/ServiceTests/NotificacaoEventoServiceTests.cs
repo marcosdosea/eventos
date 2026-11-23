@@ -465,6 +465,12 @@ public class NotificacaoEventoServiceTests
         public List<(string Email, string Assunto, string Html)> Enviados { get; } = new();
         public Dictionary<string, Func<Task<bool>>> ComportamentoPorEmail { get; } = new(StringComparer.OrdinalIgnoreCase);
 
+        public Task EnviarEmailAsync(string email, string assunto, string mensagemHtml)
+        {
+            Enviados.Add((email, assunto, mensagemHtml));
+            return Task.CompletedTask;
+        }
+
         public Task<bool> ModeloEmailReset(string token, Pessoa pessoa, string callbackUrl) => Task.FromResult(true);
 
         public Task<bool> ModeloConfirmEmail(string token, Pessoa pessoa, string callbackUrl) => Task.FromResult(true);
@@ -472,7 +478,7 @@ public class NotificacaoEventoServiceTests
         public Task<bool> ModeloEmail(string token, Pessoa pessoa, string callbackUrl, string email, string contato, string assunto, string caminhoTemplate)
             => Task.FromResult(true);
 
-        public async Task<bool> EnviarEmailAsync(string email, string assunto, string mensagemHtml)
+        public async Task<bool> TentarEnviarEmailAsync(string email, string assunto, string mensagemHtml)
         {
             if (ComportamentoPorEmail.TryGetValue(email, out var acao))
             {

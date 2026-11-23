@@ -335,7 +335,7 @@ public class NotificacaoEventoService : INotificacaoEventoService
 
         try
         {
-            var enviado = await _emailService.EnviarEmailAsync(destinatario.Email, assunto, corpoHtml);
+            var enviado = await _emailService.TentarEnviarEmailAsync(destinatario.Email, assunto, corpoHtml);
             if (enviado)
             {
                 registro.Status = Notificacaoevento.StatusEnviado;

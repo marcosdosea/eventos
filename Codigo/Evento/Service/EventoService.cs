@@ -217,6 +217,8 @@ namespace Service
 
                 if (eventoExistente == null) throw new ServiceException();
 
+                bool vagasOfertadasAlteradas = eventoExistente.VagasOfertadas != evento.VagasOfertadas;
+
                 var idsAtuaisNoBanco = eventoExistente.IdAreaInteresses.Select(ai => ai.Id).ToList();
                 var idsDesejados = novosIdsAreaInteresse ?? new List<uint>();
 
@@ -255,6 +257,11 @@ namespace Service
                     }
                 }
                 
+
+                if (vagasOfertadasAlteradas)
+                {
+                    AtualizarVagasDisponiveis(evento.Id, saveChanges: false);
+                }
 
                 if (evento.Status == "F")
                 {

@@ -1,10 +1,10 @@
 using Core;
 using Core.Service;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 using System.Net;
 using System.Net.Mail;
-using static QRCoder.PayloadGenerator.SwissQrCode;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace EventoWeb
 {
@@ -54,19 +54,96 @@ namespace EventoWeb
                 return Task.CompletedTask;
             }
 
-            var mailMessage = new MailMessage
+            return EnviarEmailAsync(email, subject, htmlMessage);
+        }
+
+        public async Task EnviarEmailAsync(string email, string assunto, string mensagemHtml)
+        {
+            if (_client == null || string.IsNullOrWhiteSpace(_from))
+            {
+                throw new InvalidOperationException("O serviço SMTP de envio de e-mail não está configurado.");
+            }
+
+            using var mailMessage = new MailMessage
             {
                 From = new MailAddress(_from),
-                Subject = subject,
-                Body = htmlMessage,
+                Subject = assunto,
                 IsBodyHtml = true
             };
             mailMessage.To.Add(email);
 
-            return _client.SendMailAsync(mailMessage);
+            var streamsParaDispor = new List<MemoryStream>();
+            try
+            {
+                var linkedResources = new List<LinkedResource>();
+                int index = 0;
+
+                string htmlProcessado = Regex.Replace(
+                    mensagemHtml,
+                    @"src\s*=\s*[""']data:(?<mime>image/[a-zA-Z0-9.+-]+);base64,(?<data>[A-Za-z0-9+/=\s]+)[""']",
+                    match =>
+                    {
+                        var mime = match.Groups["mime"].Value.Trim().ToLowerInvariant();
+                        var base64 = Regex.Replace(match.Groups["data"].Value, @"\s+", "");
+                        try
+                        {
+                            var bytes = Convert.FromBase64String(base64);
+                            var msInline = new MemoryStream(bytes);
+                            streamsParaDispor.Add(msInline);
+
+                            index++;
+                            var ext = (mime.Contains("jpeg") || mime.Contains("jpg")) ? "jpg" : "png";
+                            var cid = $"borala_img_{index}_{Guid.NewGuid():N}";
+                            var resource = new LinkedResource(msInline, mime)
+                            {
+                                ContentId = cid,
+                                TransferEncoding = System.Net.Mime.TransferEncoding.Base64
+                            };
+                            resource.ContentType.MediaType = mime;
+                            resource.ContentType.Name = $"credencial_{index}.{ext}";
+                            linkedResources.Add(resource);
+
+                            return $"src=\"cid:{cid}\"";
+                        }
+                        catch
+                        {
+                            return match.Value;
+                        }
+                    },
+                    RegexOptions.IgnoreCase);
+
+                if (linkedResources.Any())
+                {
+                    var htmlView = AlternateView.CreateAlternateViewFromString(
+                        htmlProcessado,
+                        Encoding.UTF8,
+                        System.Net.Mime.MediaTypeNames.Text.Html);
+
+                    foreach (var res in linkedResources)
+                    {
+                        htmlView.LinkedResources.Add(res);
+                    }
+
+                    mailMessage.AlternateViews.Add(htmlView);
+                    mailMessage.Body = htmlProcessado;
+                }
+                else
+                {
+                    mailMessage.Body = mensagemHtml;
+                }
+
+                await _client.SendMailAsync(mailMessage);
+            }
+            finally
+            {
+                foreach (var ms in streamsParaDispor)
+                {
+                    ms.Dispose();
+                }
+            }
         }
 
-        public async Task<bool> EnviarEmailAsync(string email, string assunto, string mensagemHtml)
+        public async Task<bool> TentarEnviarEmailAsync(string email, string assunto, string mensagemHtml)
         {
             if (_client == null || string.IsNullOrWhiteSpace(_from))
             {
@@ -82,16 +159,7 @@ namespace EventoWeb
 
             try
             {
-                using var mailMessage = new MailMessage
-                {
-                    From = new MailAddress(_from),
-                    Subject = assunto,
-                    Body = mensagemHtml,
-                    IsBodyHtml = true
-                };
-                mailMessage.To.Add(email.Trim());
-
-                await _client.SendMailAsync(mailMessage);
+                await EnviarEmailAsync(email.Trim(), assunto, mensagemHtml);
                 _logger.LogInformation("E-mail de {Assunto} enviado com sucesso para {Email}", assunto, email);
                 return true;
             }
@@ -129,12 +197,7 @@ namespace EventoWeb
                 .Replace("{{Nome}}", pessoa.Nome)
                 .Replace("{{LinkCallback}}", callbackUrl)
                 .Replace("{{LinkContato}}", contato);
-                await SendEmailAsync(email, assunto, mensagemHtml);
-
-                if (_client == null || string.IsNullOrWhiteSpace(_from))
-                {
-                    return false;
-                }
+                await EnviarEmailAsync(email, assunto, mensagemHtml);
                 _logger.LogInformation("E-mail de {assunto} enviado com sucesso para {Email}", assunto, email);
                 return true;
 
