@@ -227,7 +227,7 @@ namespace Service.Tests
             Assert.AreEqual((uint)1, subevento.IdTipoEvento);
             Assert.AreEqual((uint)100, subevento.VagasOfertadas);
             Assert.AreEqual((uint)35, subevento.VagasReservadas);
-            Assert.AreEqual((uint)65, subevento.VagasDisponiveis);
+            Assert.AreEqual((uint)100, subevento.VagasDisponiveis);
             Assert.AreEqual((uint)4, subevento.CargaHoraria);
         }
 
@@ -341,6 +341,24 @@ namespace Service.Tests
             var reduzido = _subeventoService.Get(1);
             Assert.AreEqual((uint)1, reduzido.VagasOfertadas);
             Assert.AreEqual((uint)0, reduzido.VagasDisponiveis);
+        }
+
+        [TestMethod()]
+        public void Edit_SemAlterarVagasOfertadas_CorrigeSaldoDefasado()
+        {
+            var subevento = _subeventoService.Get(1);
+            var vagasOfertadas = subevento.VagasOfertadas;
+            subevento.VagasDisponiveis = 0;
+            _context.SaveChanges();
+
+            subevento.Nome = "Nome atualizado";
+            _subeventoService.Edit(subevento);
+            _context.ChangeTracker.Clear();
+
+            var atualizado = _subeventoService.Get(1);
+            Assert.AreEqual("Nome atualizado", atualizado.Nome);
+            Assert.AreEqual(vagasOfertadas, atualizado.VagasOfertadas);
+            Assert.AreEqual(vagasOfertadas, atualizado.VagasDisponiveis);
         }
     }
 }

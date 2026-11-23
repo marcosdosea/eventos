@@ -515,7 +515,7 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public void EditTest_Post_AlterarVagasOfertadas_ChamaAtualizarVagasDisponiveis()
+        public void EditTest_Post_AlterarVagasOfertadas_DelegaRecalculoAoServico()
         {
             // Arrange
             var mockSub = new Mock<ISubeventoService>();
@@ -560,7 +560,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             Assert.AreEqual((uint)150, subeventoExistente.VagasOfertadas);
             mockSub.Verify(s => s.Edit(It.Is<Subevento>(sub => sub.Id == 1 && sub.VagasOfertadas == 150)), Times.Once);
-            mockSub.Verify(s => s.AtualizarVagasDisponiveis(1, true), Times.Once);
+            mockSub.Verify(s => s.AtualizarVagasDisponiveis(It.IsAny<uint>(), It.IsAny<bool>()), Times.Never);
         }
 
         [TestMethod()]
