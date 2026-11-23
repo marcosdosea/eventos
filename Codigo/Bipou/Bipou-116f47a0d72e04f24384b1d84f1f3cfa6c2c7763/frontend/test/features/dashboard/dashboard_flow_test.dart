@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:bipou_frontend/features/dashboard/views/dashboard_screen.dart';
@@ -105,6 +106,35 @@ void main() {
 
     expect(exporter.exports, 1);
   });
+
+  testWidgets(
+    'exibe indicador de presencas salvas offline e sincroniza pelo botao Sincronizar Agora',
+    (tester) async {
+      final credenciamento = _CredenciamentoOfflineQueueSpy(
+        pendentesIniciais: 14,
+        offline: true,
+      );
+      addTearDown(credenciamento.dispose);
+
+      await tester.pumpWidget(_app(credenciamento));
+      await tester.pumpAndSettle();
+
+      expect(find.text('🔴 14 presenças salvas offline'), findsOneWidget);
+      expect(find.text('Sincronizar Agora'), findsOneWidget);
+
+      credenciamento.offline = false;
+      await tester.tap(find.text('Sincronizar Agora'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('🔴 14 presenças salvas offline'), findsNothing);
+      expect(find.text('Fila offline sincronizada'), findsOneWidget);
+      expect(
+        find.text('14 presença(s) offline sincronizada(s)'),
+        findsOneWidget,
+      );
+      expect(credenciamento.syncCalls, greaterThanOrEqualTo(2));
+    },
+  );
 }
 
 Widget _app(
@@ -171,6 +201,9 @@ final class _CredenciamentoWidgetSpy implements CredenciamentoGateway {
     required String participanteNome,
     required TipoAcao tipoAcao,
     required String dispositivoId,
+    int? idPessoa,
+    int? idEvento,
+    int? idSubEvento,
   }) {
     throw UnimplementedError();
   }
@@ -184,4 +217,59 @@ final class _CredenciamentoWidgetSpy implements CredenciamentoGateway {
   Future<void> verificarConexao() async {
     connectionTests++;
   }
+}
+
+final class _CredenciamentoOfflineQueueSpy extends _CredenciamentoWidgetSpy
+    implements FrequenciaPendenteSynchronizer {
+  _CredenciamentoOfflineQueueSpy({
+    required int pendentesIniciais,
+    required this.offline,
+  }) : _pendentes = pendentesIniciais;
+
+  bool offline;
+  int _pendentes;
+  int syncCalls = 0;
+  final StreamController<int> _controller = StreamController<int>.broadcast();
+
+  @override
+  int get frequenciasPendentesCount => _pendentes;
+
+  @override
+  Stream<int> get onFrequenciasPendentesChanged => _controller.stream;
+
+  @override
+  Future<int> atualizarContagemFrequenciasPendentes() async {
+    if (!_controller.isClosed) {
+      _controller.add(_pendentes);
+    }
+    return _pendentes;
+  }
+
+  @override
+  Future<FrequenciaSyncResult> sincronizarFrequenciasPendentes() async {
+    syncCalls++;
+    if (offline) {
+      return FrequenciaSyncResult(
+        enviados: 0,
+        rejeitados: 0,
+        restantes: _pendentes,
+        lotesEnviados: 0,
+        offline: true,
+      );
+    }
+    final enviados = _pendentes;
+    _pendentes = 0;
+    if (!_controller.isClosed) {
+      _controller.add(_pendentes);
+    }
+    return FrequenciaSyncResult(
+      enviados: enviados,
+      rejeitados: 0,
+      restantes: 0,
+      lotesEnviados: enviados == 0 ? 0 : 1,
+    );
+  }
+
+  @override
+  Future<void> dispose() => _controller.close();
 }

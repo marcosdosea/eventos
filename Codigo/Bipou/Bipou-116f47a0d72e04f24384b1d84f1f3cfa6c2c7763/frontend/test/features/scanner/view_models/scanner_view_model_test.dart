@@ -61,6 +61,9 @@ void main() {
     expect(credenciamento.calls, 1);
     expect(credenciamento.lastParticipanteNome, 'Maria Santos');
     expect(credenciamento.lastParticipanteId, isNotNull);
+    expect(credenciamento.lastIdPessoa, 1042);
+    expect(credenciamento.lastIdEvento, 15);
+    expect(credenciamento.lastIdSubEvento, isNull);
     expect(feedbacks.single.type, ScannerFeedbackType.sucesso);
     expect(feedbacks.single.message, contains('Maria Santos'));
   });
@@ -196,6 +199,9 @@ final class _CredenciamentoSpy implements CredenciamentoGateway {
   String? lastParticipanteNome;
   TipoAcao? lastTipoAcao;
   String? lastDispositivoId;
+  int? lastIdPessoa;
+  int? lastIdEvento;
+  int? lastIdSubEvento;
   Completer<OperationResult<RegistroResponse>>? pendingResult;
   String? cpfConsultado;
   bool cpfNaoEncontrado = false;
@@ -233,12 +239,18 @@ final class _CredenciamentoSpy implements CredenciamentoGateway {
     required String participanteNome,
     required TipoAcao tipoAcao,
     required String dispositivoId,
+    int? idPessoa,
+    int? idEvento,
+    int? idSubEvento,
   }) async {
     calls++;
     lastParticipanteId = participanteId;
     lastParticipanteNome = participanteNome;
     lastTipoAcao = tipoAcao;
     lastDispositivoId = dispositivoId;
+    lastIdPessoa = idPessoa;
+    lastIdEvento = idEvento;
+    lastIdSubEvento = idSubEvento;
 
     final pending = pendingResult;
     if (pending != null) {

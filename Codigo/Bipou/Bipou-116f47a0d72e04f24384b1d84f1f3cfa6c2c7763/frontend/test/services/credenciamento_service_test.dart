@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:bipou_frontend/models/audit_log_entry.dart';
 import 'package:bipou_frontend/models/cadastro_pendente.dart';
+import 'package:bipou_frontend/models/frequencia_pendente.dart';
 import 'package:bipou_frontend/models/leitura_qr_code_request.dart';
 import 'package:bipou_frontend/models/operation_result.dart';
 import 'package:bipou_frontend/models/participante_request.dart';
@@ -11,7 +13,9 @@ import 'package:bipou_frontend/models/tipo_acao.dart';
 import 'package:bipou_frontend/services/api_service.dart';
 import 'package:bipou_frontend/services/audit_log_service.dart';
 import 'package:bipou_frontend/services/cadastro_pendente_store.dart';
+import 'package:bipou_frontend/services/connectivity_monitor_contract.dart';
 import 'package:bipou_frontend/services/credenciamento_service.dart';
+import 'package:bipou_frontend/services/frequencia_pendente_store_contract.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -198,6 +202,206 @@ void main() {
     expect(result.restantes, 1);
     expect(store.items.single.cadastroId, uuid);
   });
+
+  test(
+    'persiste leitura offline na fila local sem chamar a API quando sem conexao',
+    () async {
+      final calls = <String>[];
+      final frequenciaStore = InMemoryFrequenciaPendenteStore();
+      final connectivity = _ConnectivityMonitorFake(connected: false);
+      final service = CredenciamentoService(
+        auditLog: _AuditSpy(calls),
+        api: _BatchApiSpy(calls),
+        cadastroPendenteStore: _CadastroPendenteStoreMemory(),
+        frequenciaPendenteStore: frequenciaStore,
+        connectivityMonitor: connectivity,
+        clock: () => now,
+        uuidGenerator: () => uuid,
+      );
+
+      try {
+        final result = await service.registrarLeitura(
+          participanteId: participanteId,
+          participanteNome: 'Maria Santos',
+          tipoAcao: TipoAcao.entrada,
+          dispositivoId: 'portaria-01',
+          idPessoa: 1042,
+          idEvento: 15,
+          idSubEvento: 42,
+        );
+
+        expect(result.status, SyncStatus.salvoOffline);
+        expect(calls, <String>['audit']);
+        expect(service.frequenciasPendentesCount, 1);
+
+        final salva = await frequenciaStore.buscarPorLeituraId(uuid);
+        expect(salva, isNotNull);
+        expect(salva?.idPessoa, 1042);
+        expect(salva?.idEvento, 15);
+        expect(salva?.idSubEvento, 42);
+        expect(salva?.statusEnvio, StatusEnvioFrequencia.pendente);
+        expect(salva?.tentativasEnvio, 0);
+      } finally {
+        await service.dispose();
+        await connectivity.dispose();
+      }
+    },
+  );
+
+  test(
+    'envia 120 presencas pendentes em 3 lotes de ate 50 registros (50 + 50 + 20)',
+    () async {
+      final calls = <String>[];
+      final api = _BatchApiSpy(calls);
+      final frequenciaStore = InMemoryFrequenciaPendenteStore();
+      final connectivity = _ConnectivityMonitorFake(connected: false);
+      var seq = 0;
+      final service = CredenciamentoService(
+        auditLog: _AuditSpy(calls),
+        api: api,
+        cadastroPendenteStore: _CadastroPendenteStoreMemory(),
+        frequenciaPendenteStore: frequenciaStore,
+        connectivityMonitor: connectivity,
+        clock: () => now.add(Duration(seconds: seq)),
+        uuidGenerator: () {
+          seq++;
+          final sufixo = seq.toString().padLeft(4, '0');
+          return '550e8400-e29b-41d4-a716-44665544$sufixo';
+        },
+      );
+
+      try {
+        for (var i = 1; i <= 120; i++) {
+          final result = await service.registrarLeitura(
+            participanteId: participanteId,
+            participanteNome: 'Participante $i',
+            tipoAcao: TipoAcao.entrada,
+            dispositivoId: 'portaria-01',
+            idPessoa: 1000 + i,
+            idEvento: 15,
+          );
+          expect(result.status, SyncStatus.salvoOffline);
+        }
+
+        expect(service.frequenciasPendentesCount, 120);
+        expect(api.batchSizes, isEmpty);
+
+        connectivity.connected = true;
+        final syncResult = await service.sincronizarFrequenciasPendentes();
+
+        expect(syncResult.offline, isFalse);
+        expect(syncResult.enviados, 120);
+        expect(syncResult.rejeitados, 0);
+        expect(syncResult.restantes, 0);
+        expect(syncResult.lotesEnviados, 3);
+        expect(api.batchSizes, <int>[50, 50, 20]);
+        expect(service.frequenciasPendentesCount, 0);
+        expect(await frequenciaStore.contarPendentes(), 0);
+      } finally {
+        await service.dispose();
+        await connectivity.dispose();
+      }
+    },
+  );
+
+  test(
+    'dispara sincronizacao automatica quando o monitor detecta retorno de rede',
+    () async {
+      final calls = <String>[];
+      final api = _BatchApiSpy(calls);
+      final frequenciaStore = InMemoryFrequenciaPendenteStore();
+      final connectivity = _ConnectivityMonitorFake(connected: false);
+      var seq = 0;
+      final service = CredenciamentoService(
+        auditLog: _AuditSpy(calls),
+        api: api,
+        cadastroPendenteStore: _CadastroPendenteStoreMemory(),
+        frequenciaPendenteStore: frequenciaStore,
+        connectivityMonitor: connectivity,
+        clock: () => now.add(Duration(seconds: seq)),
+        uuidGenerator: () {
+          seq++;
+          final sufixo = seq.toString().padLeft(4, '0');
+          return '550e8400-e29b-41d4-a716-44665544$sufixo';
+        },
+      );
+
+      try {
+        for (var i = 0; i < 3; i++) {
+          await service.registrarLeitura(
+            participanteId: participanteId,
+            participanteNome: 'Participante $i',
+            tipoAcao: TipoAcao.entrada,
+            dispositivoId: 'portaria-01',
+            idPessoa: 2000 + i,
+            idEvento: 15,
+          );
+        }
+        expect(service.frequenciasPendentesCount, 3);
+
+        final zerouFila = service.onFrequenciasPendentesChanged.firstWhere(
+          (count) => count == 0,
+        );
+        connectivity.emitConnected(true);
+        await zerouFila;
+
+        expect(api.batchSizes, <int>[3]);
+        expect(await frequenciaStore.contarPendentes(), 0);
+      } finally {
+        await service.dispose();
+        await connectivity.dispose();
+      }
+    },
+  );
+
+  test(
+    'garante idempotencia preservando o mesmo leituraId sem duplicar registros',
+    () async {
+      final calls = <String>[];
+      final api = _BatchApiSpy(calls);
+      final frequenciaStore = InMemoryFrequenciaPendenteStore();
+      final connectivity = _ConnectivityMonitorFake(connected: false);
+      final service = CredenciamentoService(
+        auditLog: _AuditSpy(calls),
+        api: api,
+        cadastroPendenteStore: _CadastroPendenteStoreMemory(),
+        frequenciaPendenteStore: frequenciaStore,
+        connectivityMonitor: connectivity,
+        clock: () => now,
+        uuidGenerator: () => uuid,
+      );
+
+      try {
+        await service.registrarLeitura(
+          participanteId: participanteId,
+          participanteNome: 'Maria Santos',
+          tipoAcao: TipoAcao.entrada,
+          dispositivoId: 'portaria-01',
+          idPessoa: 1042,
+          idEvento: 15,
+        );
+        await service.registrarLeitura(
+          participanteId: participanteId,
+          participanteNome: 'Maria Santos',
+          tipoAcao: TipoAcao.entrada,
+          dispositivoId: 'portaria-01',
+          idPessoa: 1042,
+          idEvento: 15,
+        );
+
+        expect(await frequenciaStore.listarTodas(), hasLength(1));
+
+        connectivity.connected = true;
+        final syncResult = await service.sincronizarFrequenciasPendentes();
+
+        expect(syncResult.enviados, 1);
+        expect(api.sentLeituraIds, <String>[uuid]);
+      } finally {
+        await service.dispose();
+        await connectivity.dispose();
+      }
+    },
+  );
 }
 
 final class _AuditSpy implements AuditLogWriter {
@@ -310,4 +514,45 @@ final class _CadastroPendenteStoreMemory implements CadastroPendenteStore {
       items.add(cadastro);
     }
   }
+}
+
+final class _BatchApiSpy extends _ApiSpy implements FrequenciaLoteApi {
+  _BatchApiSpy(super.calls, {super.unavailable, super.rejectManual});
+
+  final List<int> batchSizes = <int>[];
+  final List<String> sentLeituraIds = <String>[];
+
+  @override
+  Future<FrequenciaLoteSyncResponse> sincronizarFrequenciasLote(
+    List<FrequenciaPendente> lote,
+  ) async {
+    calls.add('api.sincronizarFrequenciasLote');
+    if (unavailable) {
+      throw const ApiUnavailableException('Falha simulada.');
+    }
+    batchSizes.add(lote.length);
+    final confirmados = lote.map((item) => item.leituraId).toList();
+    sentLeituraIds.addAll(confirmados);
+    return FrequenciaLoteSyncResponse(confirmados: confirmados);
+  }
+}
+
+final class _ConnectivityMonitorFake implements ConnectivityMonitor {
+  _ConnectivityMonitorFake({required this.connected});
+
+  bool connected;
+  final StreamController<bool> _controller = StreamController<bool>.broadcast();
+
+  @override
+  Future<bool> get isConnected async => connected;
+
+  @override
+  Stream<bool> get onConnectivityChanged => _controller.stream;
+
+  void emitConnected(bool value) {
+    connected = value;
+    _controller.add(value);
+  }
+
+  Future<void> dispose() => _controller.close();
 }

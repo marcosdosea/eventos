@@ -8,6 +8,7 @@ import 'package:bipou_frontend/models/tipo_acao.dart';
 import 'package:bipou_frontend/services/api_service.dart';
 import 'package:bipou_frontend/services/audit_log_service.dart';
 import 'package:bipou_frontend/services/credenciamento_service.dart';
+import 'package:bipou_frontend/services/frequencia_pendente_store_contract.dart';
 import 'package:flutter/foundation.dart';
 
 typedef ScannerClock = DateTime Function();
@@ -76,6 +77,11 @@ final class ScannerViewModel extends ChangeNotifier {
         participanteNome: participante.nome,
         tipoAcao: tipoAcao,
         dispositivoId: dispositivoId,
+        idPessoa: participante.pid,
+        idEvento: participante.eid,
+        idSubEvento: participante.sid.length == 1
+            ? participante.sid.first
+            : null,
       );
 
       if (result.status == SyncStatus.salvoOffline) {
@@ -105,6 +111,13 @@ final class ScannerViewModel extends ChangeNotifier {
       _emitir(
         const ScannerFeedback(
           message: 'Falha ao salvar a auditoria local',
+          type: ScannerFeedbackType.erro,
+        ),
+      );
+    } on FrequenciaPendenteStoreException {
+      _emitir(
+        const ScannerFeedback(
+          message: 'Falha ao salvar a leitura na fila local',
           type: ScannerFeedbackType.erro,
         ),
       );
