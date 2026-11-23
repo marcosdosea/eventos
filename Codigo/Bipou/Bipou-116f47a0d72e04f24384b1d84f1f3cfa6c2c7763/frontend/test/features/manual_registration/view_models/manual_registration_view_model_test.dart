@@ -103,6 +103,9 @@ final class _CredenciamentoManualSpy implements CredenciamentoGateway {
     required String participanteNome,
     required TipoAcao tipoAcao,
     required String dispositivoId,
+    int? eventoId,
+    int? subeventoId,
+    String? operadorUsuario,
   }) {
     throw UnimplementedError();
   }

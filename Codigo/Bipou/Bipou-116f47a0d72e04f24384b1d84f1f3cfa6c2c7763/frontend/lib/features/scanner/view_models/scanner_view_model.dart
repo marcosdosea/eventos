@@ -2,12 +2,15 @@ import 'dart:async';
 
 import 'package:bipou_frontend/core/validation/cpf_validator.dart';
 import 'package:bipou_frontend/features/scanner/models/scanner_feedback.dart';
+import 'package:bipou_frontend/models/local_participant.dart';
 import 'package:bipou_frontend/models/operation_result.dart';
 import 'package:bipou_frontend/models/participante_qr_payload.dart';
+import 'package:bipou_frontend/models/portaria_session.dart';
 import 'package:bipou_frontend/models/tipo_acao.dart';
 import 'package:bipou_frontend/services/api_service.dart';
 import 'package:bipou_frontend/services/audit_log_service.dart';
 import 'package:bipou_frontend/services/credenciamento_service.dart';
+import 'package:bipou_frontend/services/local_participant_repository.dart';
 import 'package:flutter/foundation.dart';
 
 typedef ScannerClock = DateTime Function();
@@ -17,6 +20,8 @@ final class ScannerViewModel extends ChangeNotifier {
     required this._credenciamento,
     required this.tipoAcao,
     required this.dispositivoId,
+    this.sessaoAtiva,
+    this.localParticipants,
     this.cooldown = const Duration(seconds: 5),
     ScannerClock? clock,
   }) : _clock = clock ?? DateTime.now;
@@ -25,6 +30,8 @@ final class ScannerViewModel extends ChangeNotifier {
   final ScannerClock _clock;
   final TipoAcao tipoAcao;
   final String dispositivoId;
+  final PortariaSession? sessaoAtiva;
+  final LocalParticipantLookup? localParticipants;
   final Duration cooldown;
 
   final StreamController<ScannerFeedback> _feedbackController =
@@ -65,35 +72,70 @@ final class ScannerViewModel extends ChangeNotifier {
       return;
     }
 
-    _ultimaLeituraPorParticipante[participante.id] = agora;
     _participantesEmProcessamento.add(participante.id);
     _leituraEmAndamento = true;
     _notificarMudanca();
 
     try {
+      final sessao = sessaoAtiva;
+      if (sessao != null &&
+          participante.eid != null &&
+          participante.eid != sessao.eventoId) {
+        _emitir(
+          const ScannerFeedback(
+            message: 'Participante pertence a outro evento',
+            type: ScannerFeedbackType.erro,
+          ),
+        );
+        return;
+      }
+
+      final local = await _buscarNoCacheLocal(participante, sessao);
+      final nomeIdentificado = local?.nome ?? participante.nome;
+      final participanteId = local?.id ?? participante.id;
+
+      if (sessao != null && sessao.subeventoId != null) {
+        final subId = sessao.subeventoId!;
+        final inscrito = local != null
+            ? local.inscritoNoSubevento(subId)
+            : participante.sid.contains(subId);
+        if (!inscrito) {
+          _emitir(
+            ScannerFeedback(
+              message: '$nomeIdentificado nao esta inscrito neste subevento',
+              type: ScannerFeedbackType.erro,
+            ),
+          );
+          return;
+        }
+      }
+
+      _ultimaLeituraPorParticipante[participante.id] = agora;
+
       final result = await _credenciamento.registrarLeitura(
-        participanteId: participante.id,
-        participanteNome: participante.nome,
+        participanteId: participanteId,
+        participanteNome: nomeIdentificado,
         tipoAcao: tipoAcao,
         dispositivoId: dispositivoId,
+        eventoId: sessao?.eventoId,
+        subeventoId: sessao?.subeventoId,
+        operadorUsuario: sessao?.operadorUsuario,
       );
 
       if (result.status == SyncStatus.salvoOffline) {
         _emitir(
           ScannerFeedback(
-            message: 'Salvo Offline: ${participante.nome}',
+            message: 'Salvo Offline: $nomeIdentificado',
             type: ScannerFeedbackType.offline,
           ),
         );
         return;
       }
 
-      final nomeConfirmado = result.data?.participanteNome;
+      final nomeConfirmado = result.data?.participanteNome ?? nomeIdentificado;
       _emitir(
         ScannerFeedback(
-          message: nomeConfirmado == null
-              ? 'Registro realizado'
-              : 'Registro realizado: $nomeConfirmado',
+          message: 'Registro realizado: $nomeConfirmado',
           type: ScannerFeedbackType.sucesso,
         ),
       );
@@ -152,15 +194,26 @@ final class ScannerViewModel extends ChangeNotifier {
 
     ParticipanteQrPayload? participante;
     try {
-      final encontrado = await _credenciamento.buscarParticipantePorCpf(cpf);
-      participante = ParticipanteQrPayload(
-        id: encontrado.id,
-        nome: encontrado.nome,
-      );
+      final sessao = sessaoAtiva;
+      final lookup = localParticipants;
+      if (sessao != null && lookup != null) {
+        final local = await lookup.findByCpf(cpf, eventoId: sessao.eventoId);
+        if (local != null) {
+          participante = local.toQrPayload();
+        }
+      }
+
+      if (participante == null) {
+        final encontrado = await _credenciamento.buscarParticipantePorCpf(cpf);
+        participante = ParticipanteQrPayload(
+          id: encontrado.id,
+          nome: encontrado.nome,
+        );
+      }
     } on ApiUnavailableException {
       _emitir(
         const ScannerFeedback(
-          message: 'API indisponivel para consultar o CPF',
+          message: 'Participante nao encontrado no cache local e API indisponivel',
           type: ScannerFeedbackType.erro,
         ),
       );
@@ -184,6 +237,36 @@ final class ScannerViewModel extends ChangeNotifier {
     if (participante != null) {
       await processarPayload(participante.toRawJson());
     }
+  }
+
+  Future<LocalParticipant?> _buscarNoCacheLocal(
+    ParticipanteQrPayload payload,
+    PortariaSession? sessao,
+  ) async {
+    final lookup = localParticipants;
+    if (lookup == null) {
+      return null;
+    }
+
+    final eventoId = sessao?.eventoId ?? payload.eid;
+    if (eventoId != null && payload.pid != null) {
+      final porPessoa = await lookup.findByIdPessoa(
+        payload.pid!,
+        eventoId: eventoId,
+      );
+      if (porPessoa != null) {
+        return porPessoa;
+      }
+    }
+
+    if (eventoId != null && payload.cpf != null && payload.cpf != '00000000000') {
+      final porCpf = await lookup.findByCpf(payload.cpf!, eventoId: eventoId);
+      if (porCpf != null) {
+        return porCpf;
+      }
+    }
+
+    return lookup.findById(payload.id, eventoId: eventoId);
   }
 
   void reportarErroDaCamera() {
