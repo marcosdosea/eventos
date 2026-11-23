@@ -3,15 +3,20 @@ import 'dart:async';
 import 'package:bipou_frontend/features/scanner/models/scanner_context.dart';
 import 'package:bipou_frontend/features/scanner/models/scanner_feedback.dart';
 import 'package:bipou_frontend/features/scanner/view_models/scanner_view_model.dart';
+import 'package:bipou_frontend/models/borala_models.dart';
+import 'package:bipou_frontend/models/local_participant.dart';
 import 'package:bipou_frontend/models/operation_result.dart';
 import 'package:bipou_frontend/models/participante_qr_payload.dart';
 import 'package:bipou_frontend/models/participante_request.dart';
 import 'package:bipou_frontend/models/participante_response.dart';
+import 'package:bipou_frontend/models/portaria_session.dart';
 import 'package:bipou_frontend/models/registro_response.dart';
 import 'package:bipou_frontend/models/tipo_acao.dart';
 import 'package:bipou_frontend/services/api_service.dart';
 import 'package:bipou_frontend/services/credenciamento_service.dart';
+import 'package:bipou_frontend/services/local_participant_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
   const participanteId = '6ba7b810-9dad-41d1-80b4-00c04fd430c8';
@@ -50,9 +55,10 @@ void main() {
     expect(credenciamento.lastParticipanteNome, 'Participante Teste');
     expect(credenciamento.lastTipoAcao, TipoAcao.entrada);
     expect(credenciamento.lastDispositivoId, 'portaria-01');
-    expect(feedbacks.single.type, ScannerFeedbackType.sucesso);
-    expect(feedbacks.single.message, contains('Participante Teste'));
-    expect(feedbacks.single.statusLabel, 'ENTRADA REGISTRADA');
+    expect(feedbacks.first.type, ScannerFeedbackType.processando);
+    expect(feedbacks.last.type, ScannerFeedbackType.sucesso);
+    expect(feedbacks.last.message, contains('Participante Teste'));
+    expect(feedbacks.last.statusLabel, 'ENTRADA REGISTRADA');
   });
 
   test(
@@ -66,8 +72,10 @@ void main() {
       expect(credenciamento.calls, 1);
       expect(credenciamento.lastParticipanteNome, 'Maria Santos');
       expect(credenciamento.lastParticipanteId, isNotNull);
-      expect(feedbacks.single.type, ScannerFeedbackType.sucesso);
-      expect(feedbacks.single.message, contains('Maria Santos'));
+      expect(credenciamento.lastEventoId, 15);
+      expect(feedbacks.first.type, ScannerFeedbackType.processando);
+      expect(feedbacks.last.type, ScannerFeedbackType.sucesso);
+      expect(feedbacks.last.message, contains('Maria Santos'));
       expect(viewModel.historicoRecente, hasLength(1));
       expect(viewModel.historicoRecente.single.participanteNome, 'Maria Santos');
     },
@@ -115,10 +123,12 @@ void main() {
 
       expect(credenciamento.calls, 1);
       expect(viewModel.leiturasEmProcessamento, 1);
+      expect(feedbacks.single.type, ScannerFeedbackType.processando);
 
       pendingResult.complete(_successResult());
       await firstRead;
       expect(viewModel.processando, isFalse);
+      expect(feedbacks.last.type, ScannerFeedbackType.sucesso);
     },
   );
 
@@ -155,8 +165,9 @@ void main() {
 
     await viewModel.processarPayload(participantePayload);
 
-    expect(feedbacks.single.type, ScannerFeedbackType.offline);
-    expect(feedbacks.single.message, 'Salvo Offline: Participante Teste');
+    expect(feedbacks.first.type, ScannerFeedbackType.processando);
+    expect(feedbacks.last.type, ScannerFeedbackType.offline);
+    expect(feedbacks.last.message, 'Salvo Offline: Participante Teste');
     expect(viewModel.historicoRecente.single.offline, isTrue);
   });
 
@@ -167,7 +178,8 @@ void main() {
     expect(credenciamento.calls, 1);
     expect(credenciamento.lastParticipanteId, participanteId);
     expect(credenciamento.lastParticipanteNome, 'Participante Teste');
-    expect(feedbacks.single.type, ScannerFeedbackType.sucesso);
+    expect(feedbacks.first.type, ScannerFeedbackType.processando);
+    expect(feedbacks.last.type, ScannerFeedbackType.sucesso);
   });
 
   test('rejeita CPF invalido antes de consultar o backend', () async {
@@ -184,8 +196,9 @@ void main() {
     await viewModel.processarCpf('52998224725');
 
     expect(credenciamento.calls, 0);
-    expect(feedbacks.single.type, ScannerFeedbackType.erro);
-    expect(feedbacks.single.message, 'Participante nao encontrado');
+    expect(feedbacks.first.type, ScannerFeedbackType.processando);
+    expect(feedbacks.last.type, ScannerFeedbackType.erro);
+    expect(feedbacks.last.message, 'Participante nao encontrado');
   });
 
   group('Validacao de contexto, feedback e historico (#901)', () {
@@ -263,6 +276,101 @@ void main() {
       expect(portariaEvento15.historicoRecente, isEmpty);
     });
 
+    test('envia eventoId e subeventoId no registro conforme contexto ativo', () async {
+      final portaria = ScannerViewModel(
+        credenciamento: credenciamento,
+        tipoAcao: TipoAcao.entrada,
+        dispositivoId: 'portaria-01',
+        contextoAtivo: const ScannerSessionContext(
+          eventoId: 15,
+          eventoNome: 'Seminfo 2026',
+          subeventoId: 42,
+          subeventoNome: 'Curso A',
+        ),
+        clock: () => now,
+      );
+      addTearDown(portaria.dispose);
+
+      const v1Payload =
+          '{"v":1,"pid":1042,"cpf":"12345678901","nome":"Maria Santos","eid":15,"sid":[42,43],"hash":"0ec02205"}';
+      await portaria.processarPayload(v1Payload);
+
+      expect(credenciamento.calls, 1);
+      expect(credenciamento.lastEventoId, 15);
+      expect(credenciamento.lastSubeventoId, 42);
+    });
+
+    test(
+      'aplica validacao de evento e curso ativo na entrada manual por CPF',
+      () async {
+        final cursoB = ScannerViewModel(
+          credenciamento: credenciamento,
+          tipoAcao: TipoAcao.entrada,
+          dispositivoId: 'portaria-curso-b',
+          contextoAtivo: const ScannerSessionContext(
+            eventoId: 15,
+            eventoNome: 'Seminfo 2026',
+            subeventoId: 43,
+            subeventoNome: 'Curso B',
+          ),
+          clock: () => now,
+        );
+        final eventos = <ScannerFeedback>[];
+        final sub = cursoB.feedbacks.listen(eventos.add);
+        addTearDown(() async {
+          await sub.cancel();
+          cursoB.dispose();
+        });
+
+        // 1. Participante encontrado na API, mas inscrito apenas no curso 42
+        credenciamento.cpfResposta = const ParticipanteResponse(
+          id: participanteId,
+          nome: 'Aluno Curso A',
+          cpf: '52998224725',
+          idPessoaBorala: 1042,
+          eventoId: 15,
+          subeventoIds: <int>[42],
+        );
+
+        await cursoB.processarCpf('52998224725');
+        expect(credenciamento.cpfEventoIdConsultado, 15);
+        expect(credenciamento.calls, 0);
+        expect(eventos.last.type, ScannerFeedbackType.naoInscrito);
+        expect(eventos.last.message, 'Não inscrito neste curso!');
+
+        // 2. Participante de outro evento
+        credenciamento.cpfResposta = const ParticipanteResponse(
+          id: outroParticipanteId,
+          nome: 'Visitante Evento 99',
+          cpf: '11144477735',
+          idPessoaBorala: 3001,
+          eventoId: 99,
+          subeventoIds: <int>[43],
+        );
+
+        await cursoB.processarCpf('11144477735');
+        expect(credenciamento.calls, 0);
+        expect(eventos.last.type, ScannerFeedbackType.naoInscrito);
+        expect(eventos.last.detail, 'Crachá pertence a outro evento');
+
+        // 3. Participante inscrito no evento 15 e curso 43 -> registra enviando IDs
+        credenciamento.cpfResposta = const ParticipanteResponse(
+          id: participanteId,
+          nome: 'Maria Curso B',
+          cpf: '52998224725',
+          idPessoaBorala: 1042,
+          eventoId: 15,
+          subeventoIds: <int>[42, 43],
+        );
+
+        await cursoB.processarCpf('52998224725');
+        expect(credenciamento.calls, 1);
+        expect(credenciamento.lastEventoId, 15);
+        expect(credenciamento.lastSubeventoId, 43);
+        expect(eventos.last.type, ScannerFeedbackType.sucesso);
+      },
+    );
+
     test('emite SAÍDA REGISTRADA quando a acao selecionada for saida', () async {
       final saidaVm = ScannerViewModel(
         credenciamento: credenciamento,
@@ -289,8 +397,11 @@ void main() {
 
       expect(credenciamento.calls, 1);
       expect(credenciamento.lastTipoAcao, TipoAcao.saida);
-      expect(eventos.single.type, ScannerFeedbackType.sucesso);
-      expect(eventos.single.statusLabel, 'SAÍDA REGISTRADA');
+      expect(credenciamento.lastEventoId, 15);
+      expect(credenciamento.lastSubeventoId, 42);
+      expect(eventos.first.type, ScannerFeedbackType.processando);
+      expect(eventos.last.type, ScannerFeedbackType.sucesso);
+      expect(eventos.last.statusLabel, 'SAÍDA REGISTRADA');
       expect(saidaVm.historicoRecente.single.statusLabel, 'SAÍDA');
     });
 
@@ -320,7 +431,7 @@ void main() {
     });
 
     test(
-      'processa validacao e emite feedback em menos de 300ms (criterio de aceite)',
+      'emite feedback imediato de processamento em menos de 300ms mesmo com API demorando 420ms',
       () async {
         final vmComContexto = ScannerViewModel(
           credenciamento: credenciamento,
@@ -341,19 +452,156 @@ void main() {
           vmComContexto.dispose();
         });
 
+        credenciamento.artificialDelay = const Duration(milliseconds: 420);
+
         const v1Payload =
             '{"v":1,"pid":1042,"cpf":"12345678901","nome":"Maria Santos","eid":15,"sid":[42,43],"hash":"0ec02205"}';
 
         final sw = Stopwatch()..start();
-        await vmComContexto.processarPayload(v1Payload);
-        sw.stop();
+        final future = vmComContexto.processarPayload(v1Payload);
 
-        expect(sw.elapsedMilliseconds, lessThan(300));
+        // Antes da resposta da API (0-20ms), o feedback imediato ja foi emitido.
+        expect(eventos, hasLength(1));
+        expect(eventos.single.type, ScannerFeedbackType.processando);
+        expect(eventos.single.statusLabel, 'PROCESSANDO LEITURA');
+        expect(eventos.single.participantName, 'Maria Santos');
         expect(eventos.single.processingDuration, isNotNull);
         expect(
           eventos.single.processingDuration!.inMilliseconds,
           lessThan(300),
         );
+
+        await future;
+        sw.stop();
+
+        expect(sw.elapsedMilliseconds, greaterThanOrEqualTo(400));
+        expect(eventos, hasLength(2));
+        expect(eventos.last.type, ScannerFeedbackType.sucesso);
+        expect(eventos.last.statusLabel, 'ENTRADA REGISTRADA');
+      },
+    );
+  });
+
+  group('modo offline com cache SQLite e sessao de portaria ativa', () {
+    late SqliteLocalParticipantRepository localRepo;
+
+    setUp(() async {
+      sqfliteFfiInit();
+      localRepo = SqliteLocalParticipantRepository(
+        databaseFactory: databaseFactoryFfi,
+        databasePath: inMemoryDatabasePath,
+      );
+      await localRepo.replaceAllForEvent(
+        eventoId: 15,
+        participants: <LocalParticipant>[
+          LocalParticipant.fromBorala(
+            eventoId: 15,
+            participante: BoralaParticipante(
+              idPessoa: 1042,
+              nome: 'Maria Santos da Silva',
+              nomeCracha: 'Maria Santos',
+              cpf: '52998224725',
+              subeventosInscritos: const <int>[42],
+            ),
+          ),
+          LocalParticipant.fromBorala(
+            eventoId: 15,
+            participante: BoralaParticipante(
+              idPessoa: 1043,
+              nome: 'Joao Somente Geral',
+              cpf: '11144477735',
+              subeventosInscritos: const <int>[],
+            ),
+          ),
+        ],
+      );
+    });
+
+    tearDown(() async {
+      await localRepo.close();
+    });
+
+    test(
+      'identifica participante pelo nome imediatamente via cache local em modo aviao (QR e CPF)',
+      () async {
+        credenciamento.offline = true;
+        final sessao = PortariaSession(
+          eventoId: 15,
+          eventoNome: 'Seminfo 2026',
+          subeventoId: 42,
+          subeventoNome: 'Curso de Python',
+          totalParticipantesCarregados: 1,
+          sincronizadoEm: now,
+        );
+        final offlineVm = ScannerViewModel(
+          credenciamento: credenciamento,
+          tipoAcao: TipoAcao.entrada,
+          dispositivoId: 'portaria-01',
+          sessaoAtiva: sessao,
+          localParticipants: localRepo,
+          clock: () => now,
+        );
+        final offlineFeedbacks = <ScannerFeedback>[];
+        final sub = offlineVm.feedbacks.listen(offlineFeedbacks.add);
+        addTearDown(() async {
+          await sub.cancel();
+          offlineVm.dispose();
+        });
+
+        // Consulta por CPF 100% offline usando SQLite (sem tocar a API de busca).
+        await offlineVm.processarCpf('52998224725');
+
+        expect(credenciamento.cpfConsultado, isNull);
+        expect(credenciamento.calls, 1);
+        expect(credenciamento.lastEventoId, 15);
+        expect(credenciamento.lastSubeventoId, 42);
+        expect(credenciamento.lastParticipanteNome, 'Maria Santos da Silva');
+        expect(offlineFeedbacks.first.type, ScannerFeedbackType.processando);
+        expect(offlineFeedbacks.last.type, ScannerFeedbackType.offline);
+        expect(
+          offlineFeedbacks.last.message,
+          'Salvo Offline: Maria Santos da Silva',
+        );
+      },
+    );
+
+    test(
+      'bloqueia participante nao inscrito no subevento ativo usando cache local',
+      () async {
+        credenciamento.offline = true;
+        final sessao = PortariaSession(
+          eventoId: 15,
+          eventoNome: 'Seminfo 2026',
+          subeventoId: 42,
+          subeventoNome: 'Curso de Python',
+          totalParticipantesCarregados: 1,
+          sincronizadoEm: now,
+        );
+        final offlineVm = ScannerViewModel(
+          credenciamento: credenciamento,
+          tipoAcao: TipoAcao.entrada,
+          dispositivoId: 'portaria-01',
+          sessaoAtiva: sessao,
+          localParticipants: localRepo,
+          clock: () => now,
+        );
+        final offlineFeedbacks = <ScannerFeedback>[];
+        final sub = offlineVm.feedbacks.listen(offlineFeedbacks.add);
+        addTearDown(() async {
+          await sub.cancel();
+          offlineVm.dispose();
+        });
+
+        await offlineVm.processarCpf('11144477735');
+
+        expect(credenciamento.calls, 0);
+        expect(offlineFeedbacks.first.type, ScannerFeedbackType.processando);
+        expect(offlineFeedbacks.last.type, ScannerFeedbackType.naoInscrito);
+        expect(
+          offlineFeedbacks.last.message,
+          'Não inscrito neste curso!',
+        );
+        expect(offlineFeedbacks.last.participantName, 'Joao Somente Geral');
       },
     );
   });
@@ -386,27 +634,37 @@ final class _CredenciamentoSpy implements CredenciamentoGateway {
   String? lastParticipanteNome;
   TipoAcao? lastTipoAcao;
   String? lastDispositivoId;
+  int? lastEventoId;
+  int? lastSubeventoId;
   Completer<OperationResult<RegistroResponse>>? pendingResult;
+  Duration? artificialDelay;
   String? cpfConsultado;
+  int? cpfEventoIdConsultado;
   bool cpfNaoEncontrado = false;
+  ParticipanteResponse? cpfResposta;
 
   @override
   String get apiBaseUrl => 'http://localhost:8080';
 
   @override
-  Future<ParticipanteResponse> buscarParticipantePorCpf(String cpf) async {
+  Future<ParticipanteResponse> buscarParticipantePorCpf(
+    String cpf, {
+    int? eventoId,
+  }) async {
     cpfConsultado = cpf;
+    cpfEventoIdConsultado = eventoId;
     if (cpfNaoEncontrado) {
       throw const ApiRequestException(
         'Participante nao encontrado',
         statusCode: 404,
       );
     }
-    return const ParticipanteResponse(
-      id: '6ba7b810-9dad-41d1-80b4-00c04fd430c8',
-      nome: 'Participante Teste',
-      cpf: '52998224725',
-    );
+    return cpfResposta ??
+        const ParticipanteResponse(
+          id: '6ba7b810-9dad-41d1-80b4-00c04fd430c8',
+          nome: 'Participante Teste',
+          cpf: '52998224725',
+        );
   }
 
   @override
@@ -423,12 +681,22 @@ final class _CredenciamentoSpy implements CredenciamentoGateway {
     required String participanteNome,
     required TipoAcao tipoAcao,
     required String dispositivoId,
+    int? eventoId,
+    int? subeventoId,
+    String? operadorUsuario,
   }) async {
     calls++;
     lastParticipanteId = participanteId;
     lastParticipanteNome = participanteNome;
     lastTipoAcao = tipoAcao;
     lastDispositivoId = dispositivoId;
+    lastEventoId = eventoId;
+    lastSubeventoId = subeventoId;
+
+    final delay = artificialDelay;
+    if (delay != null) {
+      await Future<void>.delayed(delay);
+    }
 
     final pending = pendingResult;
     if (pending != null) {

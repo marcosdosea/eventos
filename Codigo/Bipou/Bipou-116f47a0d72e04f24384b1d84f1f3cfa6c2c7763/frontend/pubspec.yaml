@@ -17,6 +17,9 @@ dependencies:
   qr_flutter: ^4.1.0
   share_plus: ^13.3.0
   uuid: ^4.6.0
+  sqflite: ^2.4.6
+  path: ^1.9.1
+  file_picker: ^13.4.0
 
 dev_dependencies:
   flutter_test:
@@ -24,6 +27,7 @@ dev_dependencies:
   integration_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  sqflite_common_ffi: ^2.4.7
 
 flutter:
   uses-material-design: true

@@ -7,8 +7,10 @@ import 'package:bipou_frontend/features/scanner/models/scanner_context.dart';
 import 'package:bipou_frontend/features/scanner/models/scanner_feedback.dart';
 import 'package:bipou_frontend/features/scanner/services/scanner_sensory_feedback.dart';
 import 'package:bipou_frontend/features/scanner/view_models/scanner_view_model.dart';
+import 'package:bipou_frontend/models/portaria_session.dart';
 import 'package:bipou_frontend/models/tipo_acao.dart';
 import 'package:bipou_frontend/services/credenciamento_service.dart';
+import 'package:bipou_frontend/services/local_participant_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -19,8 +21,11 @@ final class ScannerScreen extends StatefulWidget {
     required this.credenciamento,
     required this.dispositivoId,
     this.contextoAtivo,
+    this.sessaoAtiva,
+    this.localParticipants,
     this.sensoryFeedback,
     this.payloadStream,
+    this.barcodeCaptureStream,
     this.cameraPreviewOverride,
     this.clock,
     super.key,
@@ -30,8 +35,11 @@ final class ScannerScreen extends StatefulWidget {
   final CredenciamentoGateway credenciamento;
   final String dispositivoId;
   final ScannerSessionContext? contextoAtivo;
+  final PortariaSession? sessaoAtiva;
+  final LocalParticipantLookup? localParticipants;
   final ScannerSensoryFeedback? sensoryFeedback;
   final Stream<String>? payloadStream;
+  final Stream<BarcodeCapture>? barcodeCaptureStream;
   final Widget? cameraPreviewOverride;
   final ScannerClock? clock;
 
@@ -41,7 +49,9 @@ final class ScannerScreen extends StatefulWidget {
 
 final class _ScannerScreenState extends State<ScannerScreen>
     with WidgetsBindingObserver {
-  static const Duration _cameraSameCodeDebounce = Duration(milliseconds: 1200);
+  static const Duration _ausenciaParaNovaApresentacao = Duration(
+    milliseconds: 1500,
+  );
   static const Duration _feedbackDisplayDuration = Duration(milliseconds: 2200);
 
   MobileScannerController? _cameraController;
@@ -50,13 +60,14 @@ final class _ScannerScreenState extends State<ScannerScreen>
   late final ScannerClock _clock;
   final TextEditingController _cpfController = TextEditingController();
   StreamSubscription<BarcodeCapture>? _barcodeSubscription;
+  StreamSubscription<BarcodeCapture>? _testBarcodeSubscription;
   StreamSubscription<String>? _payloadSubscription;
   StreamSubscription<ScannerFeedback>? _feedbackSubscription;
   ScannerFeedback? _feedback;
   Timer? _feedbackTimer;
   int _feedbackSequence = 0;
-  String? _ultimoRawCamera;
-  DateTime? _ultimaCapturaCameraEm;
+  String? _codigoAtualmenteNoQuadro;
+  DateTime? _ultimaPresencaNoQuadroEm;
 
   @override
   void initState() {
@@ -71,6 +82,8 @@ final class _ScannerScreenState extends State<ScannerScreen>
       tipoAcao: widget.tipoAcao,
       dispositivoId: widget.dispositivoId,
       contextoAtivo: widget.contextoAtivo,
+      sessaoAtiva: widget.sessaoAtiva,
+      localParticipants: widget.localParticipants,
       clock: _clock,
     );
 
@@ -78,6 +91,9 @@ final class _ScannerScreenState extends State<ScannerScreen>
     _payloadSubscription = widget.payloadStream?.listen((rawPayload) {
       unawaited(_viewModel.processarPayload(rawPayload));
     });
+    _testBarcodeSubscription = widget.barcodeCaptureStream?.listen(
+      _processarCaptura,
+    );
 
     if (widget.cameraPreviewOverride == null) {
       final controller = MobileScannerController(
@@ -126,28 +142,40 @@ final class _ScannerScreenState extends State<ScannerScreen>
   }
 
   void _processarCaptura(BarcodeCapture capture) {
+    String? rawValue;
+    for (final barcode in capture.barcodes) {
+      final candidate = barcode.rawValue;
+      if (candidate != null && candidate.isNotEmpty) {
+        rawValue = candidate;
+        break;
+      }
+    }
+
+    final agora = _clock();
+    if (rawValue == null) {
+      _codigoAtualmenteNoQuadro = null;
+      _ultimaPresencaNoQuadroEm = null;
+      return;
+    }
+
+    final mesmoCodigoNoQuadro =
+        _codigoAtualmenteNoQuadro == rawValue &&
+        _ultimaPresencaNoQuadroEm != null &&
+        agora.difference(_ultimaPresencaNoQuadroEm!) <
+            _ausenciaParaNovaApresentacao;
+
+    if (mesmoCodigoNoQuadro) {
+      _ultimaPresencaNoQuadroEm = agora;
+      return;
+    }
+
     if (_viewModel.processando) {
       return;
     }
 
-    for (final barcode in capture.barcodes) {
-      final rawValue = barcode.rawValue;
-      if (rawValue == null || rawValue.isEmpty) {
-        continue;
-      }
-
-      final agora = _clock();
-      if (_ultimoRawCamera == rawValue &&
-          _ultimaCapturaCameraEm != null &&
-          agora.difference(_ultimaCapturaCameraEm!) < _cameraSameCodeDebounce) {
-        return;
-      }
-
-      _ultimoRawCamera = rawValue;
-      _ultimaCapturaCameraEm = agora;
-      unawaited(_viewModel.processarPayload(rawValue));
-      return;
-    }
+    _codigoAtualmenteNoQuadro = rawValue;
+    _ultimaPresencaNoQuadroEm = agora;
+    unawaited(_viewModel.processarPayload(rawValue));
   }
 
   void _mostrarFeedback(ScannerFeedback feedback) {
@@ -162,6 +190,8 @@ final class _ScannerScreenState extends State<ScannerScreen>
     });
 
     switch (feedback.type) {
+      case ScannerFeedbackType.processando:
+        return;
       case ScannerFeedbackType.sucesso:
         unawaited(_sensoryFeedback.playSuccess());
       case ScannerFeedbackType.offline:
@@ -187,6 +217,7 @@ final class _ScannerScreenState extends State<ScannerScreen>
     _feedbackTimer?.cancel();
     _cpfController.dispose();
     unawaited(_barcodeSubscription?.cancel());
+    unawaited(_testBarcodeSubscription?.cancel());
     unawaited(_payloadSubscription?.cancel());
     unawaited(_feedbackSubscription?.cancel());
     _viewModel.dispose();
@@ -200,7 +231,14 @@ final class _ScannerScreenState extends State<ScannerScreen>
   @override
   Widget build(BuildContext context) {
     final contexto = widget.contextoAtivo;
+    final sessao = widget.sessaoAtiva;
     final controller = _cameraController;
+    final bannerLabel = contexto?.bannerLabel ?? sessao?.contextoBanner;
+    final bannerIsSubevento = contexto != null
+        ? contexto.isSubevento
+        : (sessao != null && !sessao.isEventoGeral);
+    final bannerOfflineCount =
+        contexto == null ? sessao?.totalParticipantesCarregados : null;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -234,7 +272,12 @@ final class _ScannerScreenState extends State<ScannerScreen>
         top: false,
         child: Column(
           children: <Widget>[
-            if (contexto != null) _ActiveSessionBanner(contexto: contexto),
+            if (bannerLabel != null)
+              _ActiveSessionBanner(
+                bannerLabel: bannerLabel,
+                isSubevento: bannerIsSubevento,
+                offlineCount: bannerOfflineCount,
+              ),
             Expanded(
               child: Stack(
                 fit: StackFit.expand,
@@ -376,9 +419,15 @@ final class _ScannerScreenState extends State<ScannerScreen>
 }
 
 final class _ActiveSessionBanner extends StatelessWidget {
-  const _ActiveSessionBanner({required this.contexto});
+  const _ActiveSessionBanner({
+    required this.bannerLabel,
+    required this.isSubevento,
+    this.offlineCount,
+  });
 
-  final ScannerSessionContext contexto;
+  final String bannerLabel;
+  final bool isSubevento;
+  final int? offlineCount;
 
   @override
   Widget build(BuildContext context) {
@@ -390,14 +439,14 @@ final class _ActiveSessionBanner extends StatelessWidget {
       child: Row(
         children: <Widget>[
           Icon(
-            contexto.isSubevento ? Icons.school : Icons.event,
+            isSubevento ? Icons.school : Icons.event,
             color: Colors.white,
             size: 18,
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              contexto.bannerLabel,
+              bannerLabel,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
@@ -407,6 +456,24 @@ final class _ActiveSessionBanner extends StatelessWidget {
               ),
             ),
           ),
+          if (offlineCount != null) ...<Widget>[
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '$offlineCount offline',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -483,6 +550,7 @@ final class _ScannerFrame extends StatelessWidget {
   static Color _frameColor(ScannerFeedbackType? type) {
     return switch (type) {
       null => Colors.white,
+      ScannerFeedbackType.processando => const Color(0xFF3B82F6),
       ScannerFeedbackType.sucesso ||
       ScannerFeedbackType.offline => const Color(0xFF22C55E),
       ScannerFeedbackType.naoInscrito ||
@@ -575,11 +643,20 @@ final class _FeedbackBanner extends StatelessWidget {
                     ),
                     child: Row(
                       children: <Widget>[
-                        Icon(
-                          _icon(item.type),
-                          color: _foregroundColor(item.type),
-                          size: 30,
-                        ),
+                        if (item.type == ScannerFeedbackType.processando)
+                          SizedBox.square(
+                            dimension: 28,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 3,
+                              color: _foregroundColor(item.type),
+                            ),
+                          )
+                        else
+                          Icon(
+                            _icon(item.type),
+                            color: _foregroundColor(item.type),
+                            size: 30,
+                          ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: _FeedbackContent(
@@ -598,6 +675,7 @@ final class _FeedbackBanner extends StatelessWidget {
 
   static Color _backgroundColor(ScannerFeedbackType type) {
     return switch (type) {
+      ScannerFeedbackType.processando => const Color(0xFF1D4ED8),
       ScannerFeedbackType.sucesso => const Color(0xFF15803D),
       ScannerFeedbackType.offline => const Color(0xFF166534),
       ScannerFeedbackType.naoInscrito ||
@@ -615,6 +693,7 @@ final class _FeedbackBanner extends StatelessWidget {
 
   static IconData _icon(ScannerFeedbackType type) {
     return switch (type) {
+      ScannerFeedbackType.processando => Icons.sync,
       ScannerFeedbackType.sucesso => Icons.check_circle,
       ScannerFeedbackType.offline => Icons.cloud_off,
       ScannerFeedbackType.naoInscrito => Icons.block,
@@ -711,7 +790,8 @@ final class _FeedbackContent extends StatelessWidget {
 
   static String _titulo(ScannerFeedback feedback) {
     if (feedback.type == ScannerFeedbackType.sucesso ||
-        feedback.type == ScannerFeedbackType.offline) {
+        feedback.type == ScannerFeedbackType.offline ||
+        feedback.type == ScannerFeedbackType.processando) {
       return feedback.participantName ?? feedback.message;
     }
     if (feedback.type == ScannerFeedbackType.erro &&

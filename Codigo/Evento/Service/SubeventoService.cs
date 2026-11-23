@@ -90,6 +90,7 @@ namespace Service
         public void Edit(Subevento subevento)
         {
             _context.Update(subevento);
+            AtualizarVagasDisponiveis(subevento.Id, saveChanges: false);
             var evento = _context.Eventos.Find(subevento.IdEvento);
             if (subevento.Status == "F" || evento?.Status == "F")
                 AtualizarFrequenciaFinal(subevento.Id, saveChanges: false);

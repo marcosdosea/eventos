@@ -12,6 +12,7 @@ import 'package:bipou_frontend/models/tipo_acao.dart';
 import 'package:bipou_frontend/services/credenciamento_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 void main() {
   testWidgets(
@@ -57,6 +58,9 @@ void main() {
       await tester.pump(const Duration(milliseconds: 150));
 
       expect(sensory.successCalls, 1);
+      expect(credenciamento.calls, 1);
+      expect(credenciamento.lastEventoId, 15);
+      expect(credenciamento.lastSubeventoId, 42);
       expect(find.text('ENTRADA REGISTRADA'), findsOneWidget);
       expect(find.text('Maria Santos'), findsNWidgets(2)); // banner + historico
       expect(_frameBorderColor(tester), const Color(0xFF22C55E));
@@ -158,6 +162,131 @@ void main() {
 
     await tester.pump(const Duration(seconds: 3));
   });
+
+  testWidgets(
+    'nao realiza segunda chamada com o mesmo cracha parado no quadro por 6 segundos',
+    (tester) async {
+      var now = DateTime.utc(2026, 11, 19, 14, 0, 0);
+      final captureController = StreamController<BarcodeCapture>.broadcast();
+      final sensory = _SensoryFeedbackSpy();
+      final credenciamento = _CredenciamentoScreenSpy();
+      addTearDown(captureController.close);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ScannerScreen(
+            tipoAcao: TipoAcao.entrada,
+            credenciamento: credenciamento,
+            dispositivoId: 'portaria-01',
+            contextoAtivo: const ScannerSessionContext(
+              eventoId: 15,
+              eventoNome: 'Seminfo 2026',
+              subeventoId: 42,
+              subeventoNome: 'Curso A',
+            ),
+            sensoryFeedback: sensory,
+            barcodeCaptureStream: captureController.stream,
+            cameraPreviewOverride: const ColoredBox(color: Colors.black87),
+            clock: () => now,
+          ),
+        ),
+      );
+
+      const goldenV1 =
+          '{"v":1,"pid":1042,"cpf":"12345678901","nome":"Maria Santos","eid":15,"sid":[42,43],"hash":"0ec02205"}';
+      final captureComCracha = BarcodeCapture(
+        barcodes: const <Barcode>[Barcode(rawValue: goldenV1)],
+      );
+
+      // Mantem o mesmo cracha continuamente no quadro por 6,5 segundos (frames a cada 250ms).
+      for (var ms = 0; ms <= 6500; ms += 250) {
+        captureController.add(captureComCracha);
+        await tester.pump();
+        now = now.add(const Duration(milliseconds: 250));
+      }
+
+      expect(credenciamento.calls, 1);
+      expect(sensory.successCalls, 1);
+      expect(sensory.duplicateCalls, 0);
+
+      // Retira o cracha do quadro (quadro vazio) e apresenta novamente -> nova leitura aceita.
+      captureController.add(const BarcodeCapture());
+      await tester.pump();
+      captureController.add(captureComCracha);
+      await tester.pump();
+
+      expect(credenciamento.calls, 2);
+      expect(sensory.successCalls, 2);
+
+      await tester.pump(const Duration(seconds: 3));
+    },
+  );
+
+  testWidgets(
+    'exibe banner de processamento imediato quando API demora 420ms e confirma ao concluir',
+    (tester) async {
+      final payloadController = StreamController<String>.broadcast();
+      final sensory = _SensoryFeedbackSpy();
+      final pending = Completer<OperationResult<RegistroResponse>>();
+      final credenciamento = _CredenciamentoScreenSpy()..pendingResult = pending;
+      addTearDown(payloadController.close);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: ScannerScreen(
+            tipoAcao: TipoAcao.entrada,
+            credenciamento: credenciamento,
+            dispositivoId: 'portaria-01',
+            contextoAtivo: const ScannerSessionContext(
+              eventoId: 15,
+              eventoNome: 'Seminfo 2026',
+              subeventoId: 42,
+              subeventoNome: 'Curso A',
+            ),
+            sensoryFeedback: sensory,
+            payloadStream: payloadController.stream,
+            cameraPreviewOverride: const ColoredBox(color: Colors.black87),
+          ),
+        ),
+      );
+
+      const goldenV1 =
+          '{"v":1,"pid":1042,"cpf":"12345678901","nome":"Maria Santos","eid":15,"sid":[42,43],"hash":"0ec02205"}';
+      payloadController.add(goldenV1);
+      await tester.pump();
+
+      // Antes de concluir a API: feedback imediato de leitura em processamento.
+      expect(find.text('PROCESSANDO LEITURA'), findsOneWidget);
+      expect(find.text('Maria Santos'), findsOneWidget);
+      expect(_frameBorderColor(tester), const Color(0xFF3B82F6));
+      expect(sensory.successCalls, 0);
+
+      // Simula API respondendo apos 420ms.
+      await tester.pump(const Duration(milliseconds: 420));
+      pending.complete(
+        OperationResult<RegistroResponse>.enviado(
+          RegistroResponse(
+            id: 'reg-420ms',
+            leituraId: '550e8400-e29b-41d4-a716-446655440000',
+            participanteId: '6ba7b810-9dad-41d1-80b4-00c04fd430c8',
+            participanteNome: 'Maria Santos',
+            tipoAcao: TipoAcao.entrada,
+            dataHora: DateTime.utc(2026, 11, 19, 14, 0),
+            dataHoraLidaNoCelular: DateTime.utc(2026, 11, 19, 14, 0),
+            dispositivoId: 'portaria-01',
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 150));
+
+      expect(find.text('ENTRADA REGISTRADA'), findsOneWidget);
+      expect(_frameBorderColor(tester), const Color(0xFF22C55E));
+      expect(sensory.successCalls, 1);
+
+      await tester.pump(const Duration(seconds: 3));
+    },
+  );
 }
 
 Color? _frameBorderColor(WidgetTester tester) {
@@ -202,11 +331,19 @@ final class _SensoryFeedbackSpy implements ScannerSensoryFeedback {
 }
 
 final class _CredenciamentoScreenSpy implements CredenciamentoGateway {
+  int calls = 0;
+  int? lastEventoId;
+  int? lastSubeventoId;
+  Completer<OperationResult<RegistroResponse>>? pendingResult;
+
   @override
   String get apiBaseUrl => 'http://localhost:8080';
 
   @override
-  Future<ParticipanteResponse> buscarParticipantePorCpf(String cpf) {
+  Future<ParticipanteResponse> buscarParticipantePorCpf(
+    String cpf, {
+    int? eventoId,
+  }) {
     throw UnimplementedError();
   }
 
@@ -229,7 +366,17 @@ final class _CredenciamentoScreenSpy implements CredenciamentoGateway {
     required String participanteNome,
     required TipoAcao tipoAcao,
     required String dispositivoId,
+    int? eventoId,
+    int? subeventoId,
+    String? operadorUsuario,
   }) async {
+    calls++;
+    lastEventoId = eventoId;
+    lastSubeventoId = subeventoId;
+    final pending = pendingResult;
+    if (pending != null) {
+      return pending.future;
+    }
     return OperationResult<RegistroResponse>.enviado(
       RegistroResponse(
         id: 'reg-${DateTime.now().microsecondsSinceEpoch}',

@@ -1,3 +1,4 @@
+import 'package:bipou_frontend/features/event_selection/views/event_selection_screen.dart';
 import 'package:bipou_frontend/features/manual_registration/views/manual_registration_screen.dart';
 import 'package:bipou_frontend/features/participants/views/participant_qr_screen.dart';
 import 'package:bipou_frontend/features/participants/views/participants_screen.dart';
@@ -7,9 +8,12 @@ import 'package:bipou_frontend/features/scanner/view_models/scanner_view_model.d
 import 'package:bipou_frontend/features/scanner/views/scanner_screen.dart';
 import 'package:bipou_frontend/models/operation_result.dart';
 import 'package:bipou_frontend/models/participante_response.dart';
+import 'package:bipou_frontend/models/portaria_session.dart';
 import 'package:bipou_frontend/models/tipo_acao.dart';
 import 'package:bipou_frontend/services/audit_log_export_service.dart';
+import 'package:bipou_frontend/services/borala_api_service.dart';
 import 'package:bipou_frontend/services/credenciamento_service.dart';
+import 'package:bipou_frontend/services/local_participant_repository.dart';
 import 'package:bipou_frontend/services/qr_code_share_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -20,6 +24,9 @@ final class DashboardScreen extends StatefulWidget {
     required this.auditLogExporter,
     required this.qrCodeShare,
     required this.dispositivoId,
+    this.localParticipantRepository,
+    this.boralaApi,
+    this.initialBoralaBaseUrl,
     this.initialContext,
     this.scannerSensoryFeedback,
     this.scannerPayloadStream,
@@ -32,6 +39,9 @@ final class DashboardScreen extends StatefulWidget {
   final AuditLogExporter auditLogExporter;
   final QrCodeShareGateway qrCodeShare;
   final String dispositivoId;
+  final LocalParticipantRepository? localParticipantRepository;
+  final BoralaApiClient? boralaApi;
+  final String? initialBoralaBaseUrl;
   final ScannerSessionContext? initialContext;
   final ScannerSensoryFeedback? scannerSensoryFeedback;
   final Stream<String>? scannerPayloadStream;
@@ -47,6 +57,10 @@ final class _DashboardScreenState extends State<DashboardScreen> {
   AuditLogExporter get auditLogExporter => widget.auditLogExporter;
   QrCodeShareGateway get qrCodeShare => widget.qrCodeShare;
   String get dispositivoId => widget.dispositivoId;
+  LocalParticipantRepository? get localRepository =>
+      widget.localParticipantRepository;
+
+  PortariaSession? _sessaoAtiva;
 
   ScannerSessionContext? _contextoAtivo;
 
@@ -55,17 +69,42 @@ final class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     _contextoAtivo = widget.initialContext;
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _carregarSessaoAtiva();
       _sincronizarCadastrosPendentes();
     });
   }
 
+  Future<void> _carregarSessaoAtiva() async {
+    final repo = localRepository;
+    if (repo == null) {
+      return;
+    }
+    try {
+      final sessao = await repo.loadSession();
+      if (!mounted) {
+        return;
+      }
+      setState(() => _sessaoAtiva = sessao);
+    } on Object {
+      // Mantém operação padrão caso não haja sessão persistida.
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final sessao = _sessaoAtiva;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Credenciamento'),
         centerTitle: true,
         actions: <Widget>[
+          if (localRepository != null)
+            IconButton(
+              tooltip: 'Sessão de Portaria',
+              onPressed: () => _abrirConfiguracaoSessao(context),
+              icon: const Icon(Icons.tune),
+            ),
           IconButton(
             key: const Key('dashboard-context-button'),
             tooltip: 'Contexto do evento',
@@ -103,7 +142,14 @@ final class _DashboardScreenState extends State<DashboardScreen> {
                 'Registre entradas e saídas rapidamente por QR Code.',
                 style: Theme.of(context).textTheme.bodyMedium,
               ),
-              const SizedBox(height: 20),
+              if (localRepository != null) ...<Widget>[
+                const SizedBox(height: 16),
+                _SessionStatusCard(
+                  sessao: sessao,
+                  onConfigure: () => _abrirConfiguracaoSessao(context),
+                ),
+              ],
+              const SizedBox(height: 18),
               Expanded(
                 child: ListView(
                   children: <Widget>[
@@ -153,6 +199,44 @@ final class _DashboardScreenState extends State<DashboardScreen> {
 
     if (resultado != null && mounted) {
       setState(() => _contextoAtivo = resultado.contexto);
+    }
+  }
+
+  Future<void> _abrirConfiguracaoSessao(BuildContext context) async {
+    final repo = localRepository;
+    if (repo == null) {
+      return;
+    }
+
+    final result = await Navigator.of(context).push<PortariaSession>(
+      MaterialPageRoute<PortariaSession>(
+        builder: (_) => EventSelectionScreen(
+          repository: repo,
+          boralaApi: widget.boralaApi ?? BoralaApiService(),
+          initialBoralaBaseUrl: widget.initialBoralaBaseUrl,
+        ),
+      ),
+    );
+
+    if (!context.mounted) {
+      return;
+    }
+
+    if (result != null) {
+      setState(() {
+        _sessaoAtiva = result;
+        _contextoAtivo = null;
+      });
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('Sessão ativa: ${result.contextoBanner}'),
+            backgroundColor: const Color(0xFF16803C),
+          ),
+        );
+    } else {
+      await _carregarSessaoAtiva();
     }
   }
 
@@ -218,6 +302,8 @@ final class _DashboardScreenState extends State<DashboardScreen> {
           credenciamento: credenciamento,
           dispositivoId: dispositivoId,
           contextoAtivo: _contextoAtivo,
+          sessaoAtiva: _sessaoAtiva,
+          localParticipants: localRepository,
           sensoryFeedback: widget.scannerSensoryFeedback,
           payloadStream: widget.scannerPayloadStream,
           cameraPreviewOverride: widget.scannerCameraPreviewOverride,
@@ -276,6 +362,8 @@ final class _DashboardScreenState extends State<DashboardScreen> {
         builder: (_) => ParticipantsScreen(
           credenciamento: credenciamento,
           qrCodeShare: qrCodeShare,
+          sessaoAtiva: _sessaoAtiva,
+          localParticipants: localRepository,
         ),
       ),
     );
@@ -644,6 +732,74 @@ final class _ContextConfigSheetState extends State<_ContextConfigSheet> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+final class _SessionStatusCard extends StatelessWidget {
+  const _SessionStatusCard({required this.sessao, required this.onConfigure});
+
+  final PortariaSession? sessao;
+  final VoidCallback onConfigure;
+
+  @override
+  Widget build(BuildContext context) {
+    final active = sessao;
+    final hasSession = active != null;
+    final accent = hasSession
+        ? const Color(0xFF175CD3)
+        : const Color(0xFFB45309);
+
+    return DecoratedBox(
+      key: const Key('dashboard-session-card'),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: accent.withValues(alpha: 0.35)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: <Widget>[
+            Icon(
+              hasSession ? Icons.verified_user : Icons.event_note,
+              color: accent,
+              size: 28,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    hasSession
+                        ? active.contextoBanner
+                        : 'Sessão de Portaria não configurada',
+                    style: TextStyle(
+                      color: accent,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    hasSession
+                        ? active.resumoParticipantes
+                        : 'Selecione o evento/curso e baixe a lista para operar offline.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            FilledButton.tonal(
+              key: const Key('dashboard-configure-session-button'),
+              onPressed: onConfigure,
+              child: Text(hasSession ? 'Trocar' : 'Configurar'),
+            ),
+          ],
         ),
       ),
     );

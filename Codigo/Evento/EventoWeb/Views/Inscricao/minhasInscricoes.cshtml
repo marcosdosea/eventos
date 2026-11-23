@@ -55,30 +55,25 @@
     .mi-status-pendente { background: #fef3c7; color: #92400e; }
     .mi-status-confirmado { background: #dcfce7; color: #166534; }
     .mi-status-cancelado { background: #f1f3f5; color: #6c757d; }
+    .mi-status-aguardando { background: #e0ecff; color: #1e40af; }
     .mi-indisponivel { color: #6b7280; font-size: .8rem; }
-    .mi-btn-pdf { background: #e8edf9; color: #1d4ed8; border: none; font-weight: 600; font-size: .78rem; white-space: nowrap; }
-    .mi-btn-pdf:hover { background: #d6e0f7; color: #1d4ed8; }
     .mi-acoes { display: flex; flex-direction: column; align-items: center; gap: .4rem; }
-    .mi-acoes-botoes { display: flex; flex-direction: column; align-items: center; gap: .4rem; }
     .mi-acoes .btn { display: inline-flex; align-items: center; gap: .35rem; font-weight: 600; white-space: nowrap; }
-    .mi-link-acao { color: #1d4ed8; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: .3rem; font-size: .82rem; background: none; border: none; padding: 0; white-space: nowrap; }
-    .mi-link-acao:hover { text-decoration: underline; }
-    .mi-link-acao:disabled { color: #9ca3af; cursor: not-allowed; text-decoration: none; }
+    .mi-protocolo-link { display: inline-flex; align-items: center; gap: .3rem; text-decoration: none; }
+    .mi-protocolo-link:hover { text-decoration: underline; }
+    .mi-icone-acao { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: 8px; border: none; background: #e8edf9; color: #1d4ed8; font-size: 1rem; text-decoration: none; }
+    .mi-icone-acao:hover { background: #d6e0f7; color: #1d4ed8; }
+    .mi-icone-certificado { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: 8px; background: #f1f3f5; color: #9ca3af; font-size: 1.1rem; cursor: default; }
+    .mi-icone-certificado.ativo { background: #e6f6ec; color: #146c43; }
     .mi-paginacao { display: flex; justify-content: flex-end; align-items: center; gap: .75rem; margin-top: 1.25rem; flex-wrap: wrap; }
     .mi-paginacao-info { color: #4b5563; font-size: .85rem; font-weight: 600; }
-    .cert-status { display: inline-flex; align-items: center; gap: .35rem; padding: .2rem .65rem; border-radius: 999px;
-                   font-size: .75rem; font-weight: 500; border: 1px solid transparent; white-space: nowrap; }
-    .cert-neutro  { background: #f1f3f5; color: #6c757d; border-color: #dee2e6; }
-    .cert-info    { background: #e7f1ff; color: #0a58ca; border-color: #b6d4fe; }
-    .cert-alerta  { background: #fff4e0; color: #b45309; border-color: #fcd9a0; }
-    .cert-sucesso { background: #e6f6ec; color: #146c43; border-color: #a3d9b8; }
 </style>
 
 <div class="mi-header">
     <div>
         <h1 class="mi-titulo">@ViewData["Title"]</h1>
         <p class="mi-subtitulo">
-            Gerencie suas credenciais, pendências financeiras e efetue o pagamento online com liberação imediata de acesso e crachá digital.
+            Acompanhe suas inscrições, pagamentos e elegibilidade para certificados.
         </p>
     </div>
     @if (!string.IsNullOrWhiteSpace(nomeParticipante) || !string.IsNullOrWhiteSpace(cpfMascarado))
@@ -127,15 +122,6 @@
     </div>
 }
 
-@if (ViewBag.EventoId != null && (uint)ViewBag.EventoId > 0)
-{
-    <div class="mb-3">
-        <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@ViewBag.EventoId" class="btn btn-primary">
-            &larr; Voltar para Inscrição do Evento
-        </a>
-    </div>
-}
-
 <section class="mi-card" aria-labelledby="tituloHistorico">
     <div class="mi-card-header">
         <h2 id="tituloHistorico" class="mi-card-titulo">
@@ -156,17 +142,15 @@
                     <th scope="col">Data da Inscrição</th>
                     <th scope="col">Valor Total</th>
                     <th scope="col">Status do Pagamento</th>
-                    <th scope="col">Comprovante</th>
-                    <th scope="col">Pagamento</th>
                     <th scope="col">Credencial</th>
-                    <th scope="col">Ações</th>
+                    <th scope="col">Certificado</th>
                 </tr>
             </thead>
             <tbody>
                 @if (totalRegistros == 0)
                 {
                     <tr>
-                        <td colspan="9" class="text-center text-muted py-4">
+                        <td colspan="7" class="text-center text-muted py-4">
                             Nenhuma inscrição encontrada.
                         </td>
                     </tr>
@@ -175,12 +159,12 @@
                 {
                     var evento = item.IdEventoNavigation;
                     var subeventos = item.Inscricaopessoasubeventos?.ToList() ?? new List<Core.Inscricaopessoasubevento>();
-                    var valorTotalGeral = item.ValorTotal + subeventos.Sum(s => s.Valor);
+                    var valorTotalGeral = item.ValorTotalGeral;
                     var protocolo = item.Id > 0 ? $"#INS-{item.DataInscricao.Year}-{item.Id:D4}" : (subeventos.Any() ? $"#SUB-{subeventos.First().DataInscricao.Year}-{subeventos.First().Id:D4}" : "-");
                     var semCusto = valorTotalGeral <= 0;
-                    var confirmado = item.Status == "A" || (item.Status == "S" && semCusto);
-                    var pendente = item.Status == "S" && !semCusto;
-                    var cancelado = item.Status == "C";
+                    var statusPagamento = item.StatusPagamento;
+                    var inscricaoConfirmada = item.Status == "A" || (item.Status == "S" && semCusto);
+                    var temComprovante = item.Id > 0 || item.IdEvento > 0;
 
                     var localPartes = new List<string>();
                     if (evento != null)
@@ -202,7 +186,69 @@
 
                     <tr>
                         <td>
-                            <span class="mi-protocolo @(confirmado ? "confirmado" : "")">@protocolo</span>
+                            @if (temComprovante)
+                            {
+                                <a asp-action="DetalhesInscricao" asp-controller="Inscricao"
+                                   asp-route-id="@(item.Id > 0 ? item.Id : null)"
+                                   asp-route-idEvento="@(item.Id > 0 ? null : item.IdEvento)"
+                                   class="mi-protocolo mi-protocolo-link @(inscricaoConfirmada ? "confirmado" : "")"
+                                   title="Ver comprovante da inscrição">
+                                    <i class="bi bi-file-earmark-text" aria-hidden="true"></i> @protocolo
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="mi-protocolo">@protocolo</span>
+                            }
+                            <div class="mi-acoes mt-2">
+                                @if (inscricaoConfirmada && item.Id > 0)
+                                {
+                                    var eventoJaOcorreu = (evento != null) && (
+                                        (evento.DataFim.HasValue && evento.DataFim.Value < DateTime.Now) ||
+                                        (!evento.DataFim.HasValue && evento.DataInicio.HasValue && evento.DataInicio.Value < DateTime.Now) ||
+                                        evento.Status == "F" || evento.Status == "C"
+                                    );
+
+                                    @if (eventoJaOcorreu)
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-secondary text-nowrap" disabled
+                                                title="Não é possível transferir a titularidade de um evento que já aconteceu ou foi encerrado.">
+                                            <i class="bi bi-clock-history" aria-hidden="true"></i> Evento Encerrado
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-sm btn-outline-primary text-nowrap btn-abrir-modal-transferir"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalTransferirIngresso"
+                                                data-id-inscricao="@item.Id"
+                                                data-id-subevento=""
+                                                data-nome-evento="@(evento?.Nome ?? "Evento")"
+                                                data-protocolo="@protocolo">
+                                            <i class="bi bi-arrow-left-right" aria-hidden="true"></i> Transferir Titularidade
+                                        </button>
+                                    }
+                                }
+                                @if (item.Id == 0 && subeventos.Any())
+                                {
+                                    <span class="badge bg-light text-secondary border p-2" title="Você não possui o ingresso do evento principal, apenas inscrições em subeventos.">
+                                        <i class="bi bi-diagram-2 me-1" aria-hidden="true"></i> Apenas Subevento(s)
+                                    </span>
+                                }
+                                @if (item.IdPapel == 4 && evento != null && evento.Status == "A"
+                                    && (!evento.DataInicio.HasValue || evento.DataInicio.Value > DateTime.Now)
+                                    && (!evento.DataFim.HasValue || evento.DataFim.Value >= DateTime.Now))
+                                {
+                                    <form asp-action="CancelarInscricao" asp-controller="Inscricao" method="post" class="d-inline"
+                                          onsubmit="return confirm('Deseja desistir da inscrição neste evento? Sua vaga será liberada.');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="idEvento" value="@item.IdEvento" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-x-circle" aria-hidden="true"></i> Desistir
+                                        </button>
+                                    </form>
+                                }
+                            </div>
                         </td>
                         <td class="mi-col-evento">
                             <div class="mi-evento-nome">@(evento?.Nome ?? "Evento")</div>
@@ -224,7 +270,7 @@
                                                     <span class="mi-sub-nome">@(sub.IdSubEventoNavigation?.Nome ?? "Subevento")</span>
                                                     <span class="mi-sub-valor">@sub.Valor.ToString("C", culturaBr)</span>
                                                 </div>
-                                                @if (confirmado && subConfirmado)
+                                                @if (inscricaoConfirmada && subConfirmado)
                                                 {
                                                     var subJaOcorreu = (sub.IdSubEventoNavigation != null) && (
                                                         (sub.IdSubEventoNavigation.DataFim != DateTime.MinValue && sub.IdSubEventoNavigation.DataFim < DateTime.Now) ||
@@ -265,147 +311,63 @@
                         <td class="mi-data">@item.DataInscricao.ToString("dd/MM/yyyy")</td>
                         <td><span class="mi-valor">@valorTotalGeral.ToString("C", culturaBr)</span></td>
                         <td>
-                            @if (confirmado)
-                            {
-                                <span class="mi-status mi-status-confirmado"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Confirmado</span>
-                            }
-                            else if (pendente)
-                            {
-                                <span class="mi-status mi-status-pendente"><i class="bi bi-clock" aria-hidden="true"></i> Pendente</span>
-                            }
-                            else if (cancelado)
-                            {
-                                <span class="mi-status mi-status-cancelado"><i class="bi bi-slash-circle" aria-hidden="true"></i> Cancelado</span>
-                            }
-                            else
-                            {
-                                <span class="mi-status mi-status-cancelado">-</span>
-                            }
-                        </td>
-                        <td>
-                            @if (confirmado && item.Id > 0)
-                            {
-                                <a asp-action="DetalhesInscricao" asp-controller="Inscricao" asp-route-id="@item.Id" class="btn btn-sm mi-btn-pdf">
-                                    <i class="bi bi-file-earmark-text" aria-hidden="true"></i> Ver Recibo
-                                </a>
-                            }
-                            else
-                            {
-                                <span class="mi-indisponivel">Indisponível</span>
-                            }
-                        </td>
-                        <td>
-                            @if (pendente)
-                            {
-                                <button type="button" class="btn btn-sm btn-primary text-nowrap" disabled
-                                        title="Pagamento online ainda não disponível">
-                                    <i class="bi bi-credit-card" aria-hidden="true"></i> Pagar Agora
-                                </button>
-                            }
-                            else if (confirmado && semCusto)
-                            {
-                                <span class="mi-indisponivel">Gratuito</span>
-                            }
-                            else if (confirmado)
-                            {
-                                <span class="mi-indisponivel">Pago</span>
-                            }
-                            else
-                            {
-                                <span class="mi-indisponivel">-</span>
-                            }
-                        </td>
-                        <td>
-                            @if (confirmado)
-                            {
-                                <button type="button" class="mi-link-acao text-nowrap" disabled title="Credencial digital ainda não disponível">
-                                    <i class="bi bi-person-badge" aria-hidden="true"></i> Credencial
-                                </button>
-                            }
-                            else
-                            {
-                                <span class="mi-indisponivel">Indisponível</span>
-                            }
-                        </td>
-                        <td>
                             <div class="mi-acoes">
-                                <div class="mi-acoes-botoes">
-                                    @if (confirmado && item.Id > 0)
-                                    {
-                                        var eventoJaOcorreu = (evento != null) && (
-                                            (evento.DataFim.HasValue && evento.DataFim.Value < DateTime.Now) ||
-                                            (!evento.DataFim.HasValue && evento.DataInicio.HasValue && evento.DataInicio.Value < DateTime.Now) ||
-                                            evento.Status == "F" || evento.Status == "C"
-                                        );
-
-                                        @if (eventoJaOcorreu)
-                                        {
-                                            <button type="button" class="btn btn-sm btn-outline-secondary text-nowrap" disabled
-                                                    title="Não é possível transferir a titularidade de um evento que já aconteceu ou foi encerrado.">
-                                                <i class="bi bi-clock-history" aria-hidden="true"></i> Evento Encerrado
-                                            </button>
-                                        }
-                                        else
-                                        {
-                                            <button type="button" class="btn btn-sm btn-outline-primary text-nowrap btn-abrir-modal-transferir"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#modalTransferirIngresso"
-                                                    data-id-inscricao="@item.Id"
-                                                    data-id-subevento=""
-                                                    data-nome-evento="@(evento?.Nome ?? "Evento")"
-                                                    data-protocolo="@protocolo">
-                                                <i class="bi bi-arrow-left-right" aria-hidden="true"></i> Transferir Titularidade
-                                            </button>
-                                        }
-                                    }
-                                    @if (item.Id == 0 && subeventos.Any())
-                                    {
-                                        <span class="badge bg-light text-secondary border p-2" title="Você não possui o ingresso do evento principal, apenas inscrições em subeventos.">
-                                            <i class="bi bi-diagram-2 me-1" aria-hidden="true"></i> Apenas Subevento(s)
-                                        </span>
-                                    }
-                                    @if (!confirmado && item.Id > 0)
-                                    {
-                                        <a asp-action="DetalhesInscricao" asp-controller="Inscricao" asp-route-id="@item.Id" class="mi-link-acao">
-                                            <i class="bi bi-eye" aria-hidden="true"></i> Ver Inscrição
-                                        </a>
-                                    }
-                                    else if (!confirmado && item.IdEvento > 0)
-                                    {
-                                        <a asp-action="DetalhesInscricao" asp-controller="Inscricao" asp-route-idEvento="@item.IdEvento" class="mi-link-acao">
-                                            <i class="bi bi-eye" aria-hidden="true"></i> Ver Inscrição
-                                        </a>
-                                    }
-                                    @if (item.IdPapel == 4 && evento != null && evento.Status == "A"
-                                        && (!evento.DataInicio.HasValue || evento.DataInicio.Value > DateTime.Now)
-                                        && (!evento.DataFim.HasValue || evento.DataFim.Value >= DateTime.Now))
-                                    {
-                                        <form asp-action="CancelarInscricao" asp-controller="Inscricao" method="post" class="d-inline"
-                                              onsubmit="return confirm('Deseja desistir da inscrição neste evento? Sua vaga será liberada.');">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="idEvento" value="@item.IdEvento" />
-                                            <button type="submit" class="btn btn-sm btn-outline-danger">
-                                                <i class="bi bi-x-circle" aria-hidden="true"></i> Desistir
-                                            </button>
-                                        </form>
-                                    }
-                                </div>
-                                @switch (item.StatusCertificado)
+                                @switch (statusPagamento)
                                 {
-                                    case StatusCertificadoInscricao.SemCertificado:
-                                        <span class="cert-status cert-neutro" title="Este evento não emite certificado"><i class="bi bi-dash-circle" aria-hidden="true"></i> Sem certificado</span>
+                                    case StatusPagamentoInscricao.Gratuito:
+                                        <span class="mi-indisponivel">Gratuito</span>
                                         break;
-                                    case StatusCertificadoInscricao.EmAndamento:
-                                        <span class="cert-status cert-info" title="Disponível após o encerramento do evento"><i class="bi bi-hourglass-split" aria-hidden="true"></i> Em andamento</span>
+                                    case StatusPagamentoInscricao.Confirmado:
+                                        <span class="mi-status mi-status-confirmado"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Confirmado</span>
+                                        @if (item.Id > 0)
+                                        {
+                                            <a asp-action="ReciboPagamento" asp-route-id="@item.Id"
+                                               target="_blank" rel="noopener"
+                                               class="mi-icone-acao" title="Imprimir recibo de pagamento" aria-label="Imprimir recibo de pagamento">
+                                                <i class="bi bi-printer" aria-hidden="true"></i>
+                                            </a>
+                                        }
                                         break;
-                                    case StatusCertificadoInscricao.FrequenciaInsuficiente:
-                                        <span class="cert-status cert-alerta" title="Frequência obtida: @(item.FrequenciaFinal.ToString("F1"))% | mínima exigida: @(evento?.FrequenciaMinimaCertificado.ToString("F1"))%"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> Frequência insuficiente</span>
+                                    case StatusPagamentoInscricao.AguardandoConfirmacao:
+                                        <span class="mi-status mi-status-aguardando" title="Pagamento registrado, aguardando confirmação (ex.: operadora do cartão)"><i class="bi bi-hourglass-split" aria-hidden="true"></i> Aguardando Confirmação</span>
                                         break;
-                                    case StatusCertificadoInscricao.Elegivel:
-                                        <span class="cert-status cert-sucesso" title="Requisitos atendidos para certificação"><i class="bi bi-patch-check" aria-hidden="true"></i> Elegível</span>
+                                    case StatusPagamentoInscricao.Pendente:
+                                        <span class="mi-status mi-status-pendente"><i class="bi bi-clock" aria-hidden="true"></i> Pendente</span>
+                                        <span class="mi-indisponivel">Pagamento online indisponível</span>
+                                        break;
+                                    default:
+                                        <span class="mi-status mi-status-cancelado"><i class="bi bi-slash-circle" aria-hidden="true"></i> Cancelado</span>
                                         break;
                                 }
                             </div>
+                        </td>
+                        <td>
+                            <span class="mi-indisponivel">Consulte a organização</span>
+                        </td>
+                        <td>
+                            @{
+                                var statusCertificado = item.StatusCertificado;
+                                var elegivel = statusCertificado == StatusCertificadoInscricao.Elegivel;
+                                var descricaoCertificado = statusCertificado switch
+                                {
+                                    StatusCertificadoInscricao.SemCertificado => "Sem certificado",
+                                    StatusCertificadoInscricao.EmAndamento => "Evento em andamento",
+                                    StatusCertificadoInscricao.FrequenciaInsuficiente => "Frequência insuficiente",
+                                    StatusCertificadoInscricao.Elegivel => "Elegível",
+                                    StatusCertificadoInscricao.Cancelada => "Inscrição cancelada",
+                                    _ => "Indisponível"
+                                };
+                                var detalheCertificado = statusCertificado switch
+                                {
+                                    StatusCertificadoInscricao.FrequenciaInsuficiente => $"Frequência obtida: {item.FrequenciaFinal:F1}% | mínima exigida: {evento?.FrequenciaMinimaCertificado:F1}%",
+                                    StatusCertificadoInscricao.Elegivel => "A emissão não está disponível nesta tela.",
+                                    _ => null
+                                };
+                            }
+                            <span class="mi-icone-certificado @(elegivel ? "ativo" : "")" aria-hidden="true">
+                                <i class="bi bi-award"></i>
+                            </span>
+                            <div class="mi-indisponivel mt-1" title="@detalheCertificado">@descricaoCertificado</div>
                         </td>
                     </tr>
                 }
@@ -436,12 +398,6 @@
 </section>
 
 <div class="mt-4 d-flex gap-2 flex-wrap">
-    @if (ViewBag.EventoId != null && (uint)ViewBag.EventoId > 0)
-    {
-        <a asp-action="realizarInscricao" asp-controller="Inscricao" asp-route-idEvento="@ViewBag.EventoId" class="btn btn-primary">
-            &larr; Voltar para Inscrição do Evento
-        </a>
-    }
     <a asp-action="Index" asp-controller="Home" asp-route-vitrine="true" class="btn btn-outline-secondary">
         Voltar para Início
     </a>

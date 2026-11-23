@@ -1,4 +1,11 @@
-enum ScannerFeedbackType { sucesso, offline, naoInscrito, duplicado, erro }
+enum ScannerFeedbackType {
+  processando,
+  sucesso,
+  offline,
+  naoInscrito,
+  duplicado,
+  erro,
+}
 
 final class ScannerFeedback {
   const ScannerFeedback({

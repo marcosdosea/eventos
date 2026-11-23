@@ -7,10 +7,23 @@ final class LeituraQrCodeRequest {
     required this.tipoAcao,
     required this.dispositivoId,
     required DateTime dataHoraLidaNoCelular,
+    this.eventoId,
+    this.subeventoId,
+    this.operadorUsuario,
   }) : dataHoraLidaNoCelular = dataHoraLidaNoCelular.toUtc() {
     _validarUuid(leituraId);
     _validarUuid(participanteId, fieldName: 'participanteId');
     _validarDispositivoId(dispositivoId);
+    if (eventoId != null && eventoId! <= 0) {
+      throw ArgumentError.value(eventoId, 'eventoId', 'Deve ser positivo');
+    }
+    if (subeventoId != null && subeventoId! <= 0) {
+      throw ArgumentError.value(
+        subeventoId,
+        'subeventoId',
+        'Deve ser positivo',
+      );
+    }
   }
 
   final String leituraId;
@@ -18,12 +31,19 @@ final class LeituraQrCodeRequest {
   final TipoAcao tipoAcao;
   final String dispositivoId;
   final DateTime dataHoraLidaNoCelular;
+  final int? eventoId;
+  final int? subeventoId;
+  final String? operadorUsuario;
 
   Map<String, Object> toJson() => <String, Object>{
     'leituraId': leituraId,
     'participanteId': participanteId,
+    'eventoId': ?eventoId,
+    'subeventoId': ?subeventoId,
     'tipoAcao': tipoAcao.apiValue,
     'dispositivoId': dispositivoId,
+    if (operadorUsuario != null && operadorUsuario!.trim().isNotEmpty)
+      'operadorUsuario': operadorUsuario!.trim(),
     'dataHoraLidaNoCelular': dataHoraLidaNoCelular.toIso8601String(),
   };
 

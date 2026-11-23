@@ -334,7 +334,10 @@ final class _InMemoryCredenciamentoGateway implements CredenciamentoGateway {
   String get apiBaseUrl => 'http://localhost:8080';
 
   @override
-  Future<ParticipanteResponse> buscarParticipantePorCpf(String cpf) {
+  Future<ParticipanteResponse> buscarParticipantePorCpf(
+    String cpf, {
+    int? eventoId,
+  }) {
     throw UnimplementedError();
   }
 
@@ -356,6 +359,9 @@ final class _InMemoryCredenciamentoGateway implements CredenciamentoGateway {
     required String participanteNome,
     required TipoAcao tipoAcao,
     required String dispositivoId,
+    int? eventoId,
+    int? subeventoId,
+    String? operadorUsuario,
   }) async {
     _seq++;
     final agora = DateTime.now().toUtc();

@@ -4,12 +4,15 @@ import 'package:bipou_frontend/core/validation/cpf_validator.dart';
 import 'package:bipou_frontend/features/scanner/models/recent_scan_record.dart';
 import 'package:bipou_frontend/features/scanner/models/scanner_context.dart';
 import 'package:bipou_frontend/features/scanner/models/scanner_feedback.dart';
+import 'package:bipou_frontend/models/local_participant.dart';
 import 'package:bipou_frontend/models/operation_result.dart';
 import 'package:bipou_frontend/models/participante_qr_payload.dart';
+import 'package:bipou_frontend/models/portaria_session.dart';
 import 'package:bipou_frontend/models/tipo_acao.dart';
 import 'package:bipou_frontend/services/api_service.dart';
 import 'package:bipou_frontend/services/audit_log_service.dart';
 import 'package:bipou_frontend/services/credenciamento_service.dart';
+import 'package:bipou_frontend/services/local_participant_repository.dart';
 import 'package:flutter/foundation.dart';
 
 typedef ScannerClock = DateTime Function();
@@ -20,6 +23,8 @@ final class ScannerViewModel extends ChangeNotifier {
     required this.tipoAcao,
     required this.dispositivoId,
     this.contextoAtivo,
+    this.sessaoAtiva,
+    this.localParticipants,
     this.cooldown = const Duration(seconds: 5),
     ScannerClock? clock,
   }) : _clock = clock ?? DateTime.now;
@@ -31,6 +36,8 @@ final class ScannerViewModel extends ChangeNotifier {
   final TipoAcao tipoAcao;
   final String dispositivoId;
   final ScannerSessionContext? contextoAtivo;
+  final PortariaSession? sessaoAtiva;
+  final LocalParticipantLookup? localParticipants;
   final Duration cooldown;
 
   final StreamController<ScannerFeedback> _feedbackController =
@@ -48,6 +55,23 @@ final class ScannerViewModel extends ChangeNotifier {
   bool get processando => _participantesEmProcessamento.isNotEmpty;
   List<RecentScanRecord> get historicoRecente =>
       List<RecentScanRecord>.unmodifiable(_historicoRecente);
+
+  int? get _eventoIdAtivo => contextoAtivo?.eventoId ?? sessaoAtiva?.eventoId;
+
+  int? get _subeventoIdAtivo =>
+      contextoAtivo != null ? contextoAtivo!.subeventoId : sessaoAtiva?.subeventoId;
+
+  bool get _isSubeventoAtivo => _subeventoIdAtivo != null;
+
+  String get _destinoAtivoLabel {
+    if (contextoAtivo != null) {
+      return contextoAtivo!.destinoLabel;
+    }
+    if (sessaoAtiva != null) {
+      return sessaoAtiva!.destinoLabel;
+    }
+    return 'Evento Geral';
+  }
 
   Future<void> processarPayload(String? rawPayload) async {
     if (_leituraEmAndamento) {
@@ -70,43 +94,7 @@ final class ScannerViewModel extends ChangeNotifier {
       return;
     }
 
-    final contexto = contextoAtivo;
-    if (contexto != null) {
-      if (contexto.eventoId != null &&
-          participante.eid != null &&
-          participante.eid != contexto.eventoId) {
-        _emitir(
-          ScannerFeedback(
-            message: contexto.isSubevento
-                ? 'Não inscrito neste curso!'
-                : 'Não inscrito neste evento!',
-            type: ScannerFeedbackType.naoInscrito,
-            participantName: participante.nome,
-            statusLabel: 'ACESSO NEGADO',
-            detail: 'Crachá pertence a outro evento',
-            processingDuration: stopwatch.elapsed,
-          ),
-        );
-        return;
-      }
-
-      if (contexto.subeventoId != null &&
-          !participante.sid.contains(contexto.subeventoId!)) {
-        _emitir(
-          ScannerFeedback(
-            message: 'Não inscrito neste curso!',
-            type: ScannerFeedbackType.naoInscrito,
-            participantName: participante.nome,
-            statusLabel: 'ACESSO NEGADO',
-            detail: 'Curso ativo: ${contexto.destinoLabel}',
-            processingDuration: stopwatch.elapsed,
-          ),
-        );
-        return;
-      }
-    }
-
-    await _registrarParticipanteValidado(participante, stopwatch);
+    await _validarEProcessarParticipante(participante, stopwatch: stopwatch);
   }
 
   Future<void> processarCpf(String cpfInformado) async {
@@ -133,17 +121,49 @@ final class ScannerViewModel extends ChangeNotifier {
     _participantesEmProcessamento.add(chaveConsulta);
     _notificarMudanca();
 
+    _emitir(
+      ScannerFeedback(
+        message: 'Consultando CPF...',
+        type: ScannerFeedbackType.processando,
+        statusLabel: 'PROCESSANDO LEITURA',
+        detail: 'Validando inscrição do participante...',
+        processingDuration: stopwatch.elapsed,
+      ),
+    );
+
     ParticipanteQrPayload? participante;
+    LocalParticipant? localEncontrado;
     try {
-      final encontrado = await _credenciamento.buscarParticipantePorCpf(cpf);
-      participante = ParticipanteQrPayload(
-        id: encontrado.id,
-        nome: encontrado.nome,
-      );
+      final eventoAtivo = _eventoIdAtivo;
+      final lookup = localParticipants;
+      if (eventoAtivo != null && lookup != null) {
+        final local = await lookup.findByCpf(cpf, eventoId: eventoAtivo);
+        if (local != null) {
+          localEncontrado = local;
+          participante = local.toQrPayload();
+        }
+      }
+
+      if (participante == null) {
+        final encontrado = await _credenciamento.buscarParticipantePorCpf(
+          cpf,
+          eventoId: eventoAtivo,
+        );
+        participante = ParticipanteQrPayload(
+          id: encontrado.id,
+          nome: encontrado.nome,
+          pid: encontrado.idPessoaBorala,
+          cpf: encontrado.cpf,
+          eid: encontrado.eventoId,
+          sid: encontrado.subeventoIds,
+        );
+      }
     } on ApiUnavailableException {
       _emitir(
         ScannerFeedback(
-          message: 'API indisponivel para consultar o CPF',
+          message: localParticipants != null
+              ? 'Participante nao encontrado no cache local e API indisponivel'
+              : 'API indisponivel para consultar o CPF',
           type: ScannerFeedbackType.erro,
           statusLabel: 'API INDISPONÍVEL',
           processingDuration: stopwatch.elapsed,
@@ -174,8 +194,44 @@ final class ScannerViewModel extends ChangeNotifier {
     }
 
     if (participante != null) {
-      await _registrarParticipanteValidado(participante, stopwatch);
+      await _validarEProcessarParticipante(
+        participante,
+        stopwatch: stopwatch,
+        localPrecarregado: localEncontrado,
+        consultarCacheLocal: false,
+      );
     }
+  }
+
+  Future<LocalParticipant?> _buscarNoCacheLocal(
+    ParticipanteQrPayload payload,
+  ) async {
+    final lookup = localParticipants;
+    if (lookup == null) {
+      return null;
+    }
+
+    final eventoId = _eventoIdAtivo ?? payload.eid;
+    if (eventoId != null && payload.pid != null) {
+      final porPessoa = await lookup.findByIdPessoa(
+        payload.pid!,
+        eventoId: eventoId,
+      );
+      if (porPessoa != null) {
+        return porPessoa;
+      }
+    }
+
+    if (eventoId != null &&
+        payload.cpf != null &&
+        payload.cpf != '00000000000') {
+      final porCpf = await lookup.findByCpf(payload.cpf!, eventoId: eventoId);
+      if (porCpf != null) {
+        return porCpf;
+      }
+    }
+
+    return lookup.findById(payload.id, eventoId: eventoId);
   }
 
   void reportarErroDaCamera() {
@@ -188,24 +244,72 @@ final class ScannerViewModel extends ChangeNotifier {
     );
   }
 
-  Future<void> _registrarParticipanteValidado(
-    ParticipanteQrPayload participante,
-    Stopwatch stopwatch,
-  ) async {
-    final agora = _clock();
-    _removerLeiturasExpiradas(agora);
+  Future<void> _validarEProcessarParticipante(
+    ParticipanteQrPayload participante, {
+    required Stopwatch stopwatch,
+    LocalParticipant? localPrecarregado,
+    bool consultarCacheLocal = true,
+  }) async {
+    var local = localPrecarregado;
+    if (local == null && consultarCacheLocal && localParticipants != null) {
+      local = await _buscarNoCacheLocal(participante);
+    }
 
-    if (_participantesEmProcessamento.contains(participante.id)) {
+    final nomeIdentificado = local?.nome ?? participante.nome;
+    final participanteId = local?.id ?? participante.id;
+    final eventoParticipante = participante.eid ?? local?.eventoId;
+    final subeventosParticipante =
+        local != null ? local.subeventoIds : participante.sid;
+
+    final eventoAtivo = _eventoIdAtivo;
+    if (eventoAtivo != null &&
+        eventoParticipante != null &&
+        eventoParticipante != eventoAtivo) {
+      _emitir(
+        ScannerFeedback(
+          message: _isSubeventoAtivo
+              ? 'Não inscrito neste curso!'
+              : 'Não inscrito neste evento!',
+          type: ScannerFeedbackType.naoInscrito,
+          participantName: nomeIdentificado,
+          statusLabel: 'ACESSO NEGADO',
+          detail: 'Crachá pertence a outro evento',
+          processingDuration: stopwatch.elapsed,
+        ),
+      );
       return;
     }
 
-    final ultimaLeitura = _ultimaLeituraPorParticipante[participante.id];
+    final subeventoAtivo = _subeventoIdAtivo;
+    if (subeventoAtivo != null &&
+        !subeventosParticipante.contains(subeventoAtivo)) {
+      _emitir(
+        ScannerFeedback(
+          message: 'Não inscrito neste curso!',
+          type: ScannerFeedbackType.naoInscrito,
+          participantName: nomeIdentificado,
+          statusLabel: 'ACESSO NEGADO',
+          detail: 'Curso ativo: $_destinoAtivoLabel',
+          processingDuration: stopwatch.elapsed,
+        ),
+      );
+      return;
+    }
+
+    final agora = _clock();
+    _removerLeiturasExpiradas(agora);
+
+    if (_participantesEmProcessamento.contains(participanteId)) {
+      return;
+    }
+
+    final ultimaLeitura = _ultimaLeituraPorParticipante[participanteId];
     if (ultimaLeitura != null && agora.difference(ultimaLeitura) < cooldown) {
       _emitir(
         ScannerFeedback(
           message: 'Aguarde para bipar novamente',
           type: ScannerFeedbackType.duplicado,
-          participantName: participante.nome,
+          participantName: nomeIdentificado,
           statusLabel: 'LEITURA DUPLICADA',
           detail:
               'Crachá lido recentemente (aguarde ${cooldown.inSeconds}s)',
@@ -215,18 +319,32 @@ final class ScannerViewModel extends ChangeNotifier {
       return;
     }
 
-    _ultimaLeituraPorParticipante[participante.id] = agora;
-    _participantesEmProcessamento.add(participante.id);
+    _ultimaLeituraPorParticipante[participanteId] = agora;
+    _participantesEmProcessamento.add(participanteId);
     _leituraEmAndamento = true;
     _notificarMudanca();
+
+    _emitir(
+      ScannerFeedback(
+        message: 'Processando leitura: $nomeIdentificado',
+        type: ScannerFeedbackType.processando,
+        participantName: nomeIdentificado,
+        statusLabel: 'PROCESSANDO LEITURA',
+        detail: 'Aguardando confirmação...',
+        processingDuration: stopwatch.elapsed,
+      ),
+    );
 
     var registroEfetivado = false;
     try {
       final result = await _credenciamento.registrarLeitura(
-        participanteId: participante.id,
-        participanteNome: participante.nome,
+        participanteId: participanteId,
+        participanteNome: nomeIdentificado,
         tipoAcao: tipoAcao,
         dispositivoId: dispositivoId,
+        eventoId: eventoAtivo ?? eventoParticipante,
+        subeventoId: subeventoAtivo,
+        operadorUsuario: sessaoAtiva?.operadorUsuario,
       );
 
       final statusAcao = _statusAcaoRegistrada(tipoAcao);
@@ -235,8 +353,8 @@ final class ScannerViewModel extends ChangeNotifier {
         registroEfetivado = true;
         _adicionarAoHistorico(
           RecentScanRecord(
-            participanteId: participante.id,
-            participanteNome: participante.nome,
+            participanteId: participanteId,
+            participanteNome: nomeIdentificado,
             tipoAcao: tipoAcao,
             registradoEm: agora,
             offline: true,
@@ -244,9 +362,9 @@ final class ScannerViewModel extends ChangeNotifier {
         );
         _emitir(
           ScannerFeedback(
-            message: 'Salvo Offline: ${participante.nome}',
+            message: 'Salvo Offline: $nomeIdentificado',
             type: ScannerFeedbackType.offline,
-            participantName: participante.nome,
+            participantName: nomeIdentificado,
             statusLabel: statusAcao,
             detail: 'Salvo offline na auditoria local',
             processingDuration: stopwatch.elapsed,
@@ -259,11 +377,11 @@ final class ScannerViewModel extends ChangeNotifier {
       final nomeConfirmado =
           (nomeRetornado != null && nomeRetornado.isNotEmpty)
           ? nomeRetornado
-          : participante.nome;
+          : nomeIdentificado;
       registroEfetivado = true;
       _adicionarAoHistorico(
         RecentScanRecord(
-          participanteId: participante.id,
+          participanteId: participanteId,
           participanteNome: nomeConfirmado,
           tipoAcao: tipoAcao,
           registradoEm: agora,
@@ -284,7 +402,7 @@ final class ScannerViewModel extends ChangeNotifier {
         ScannerFeedback(
           message: error.message,
           type: ScannerFeedbackType.erro,
-          participantName: participante.nome,
+          participantName: nomeIdentificado,
           statusLabel: 'ERRO NO REGISTRO',
           processingDuration: stopwatch.elapsed,
         ),
@@ -294,7 +412,7 @@ final class ScannerViewModel extends ChangeNotifier {
         ScannerFeedback(
           message: 'Falha ao salvar a auditoria local',
           type: ScannerFeedbackType.erro,
-          participantName: participante.nome,
+          participantName: nomeIdentificado,
           statusLabel: 'ERRO DE AUDITORIA',
           processingDuration: stopwatch.elapsed,
         ),
@@ -304,7 +422,7 @@ final class ScannerViewModel extends ChangeNotifier {
         ScannerFeedback(
           message: 'Dados da leitura invalidos',
           type: ScannerFeedbackType.erro,
-          participantName: participante.nome,
+          participantName: nomeIdentificado,
           statusLabel: 'DADOS INVÁLIDOS',
           processingDuration: stopwatch.elapsed,
         ),
@@ -314,16 +432,16 @@ final class ScannerViewModel extends ChangeNotifier {
         ScannerFeedback(
           message: 'Nao foi possivel processar a leitura',
           type: ScannerFeedbackType.erro,
-          participantName: participante.nome,
+          participantName: nomeIdentificado,
           statusLabel: 'ERRO NO REGISTRO',
           processingDuration: stopwatch.elapsed,
         ),
       );
     } finally {
       if (!registroEfetivado) {
-        _ultimaLeituraPorParticipante.remove(participante.id);
+        _ultimaLeituraPorParticipante.remove(participanteId);
       }
-      _participantesEmProcessamento.remove(participante.id);
+      _participantesEmProcessamento.remove(participanteId);
       _leituraEmAndamento = false;
       _notificarMudanca();
     }
