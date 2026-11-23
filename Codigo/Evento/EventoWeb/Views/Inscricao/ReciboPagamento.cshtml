@@ -1,0 +1,72 @@
+@model InscricaoEventoModel
+@{
+    ViewData["Title"] = "Recibo de pagamento";
+    var cultura = System.Globalization.CultureInfo.GetCultureInfo("pt-BR");
+    var pagamentos = Model.PagamentosConfirmados.OrderBy(p => p.DataPagamento);
+}
+
+<style>
+    @@media print {
+        header, footer, nav, .sidebar { display: none !important; }
+        html, body { height: auto; overflow: visible; background: #fff; }
+        .conteudo { margin: 0 !important; padding: 0 !important; }
+    }
+</style>
+
+<div class="container my-4">
+    <h1 class="blue-normal mb-3">@ViewData["Title"]</h1>
+    <div class="d-flex flex-wrap gap-2 mb-3 d-print-none">
+        <button type="button" class="btn btn-primary" onclick="window.print()">
+            <i class="bi bi-printer" aria-hidden="true"></i> Imprimir recibo
+        </button>
+        <a asp-action="minhasInscricoes" class="btn btn-outline-secondary">Voltar para Minhas Inscrições</a>
+    </div>
+
+    <dl class="row">
+        <dt class="col-sm-3">Evento</dt>
+        <dd class="col-sm-9">@Model.IdEventoNavigation?.Nome</dd>
+        <dt class="col-sm-3">Participante</dt>
+        <dd class="col-sm-9">@Model.IdPessoaNavigation?.Nome</dd>
+        <dt class="col-sm-3">Protocolo da inscrição</dt>
+        <dd class="col-sm-9">@($"#INS-{Model.DataInscricao.Year}-{Model.Id:D4}")</dd>
+    </dl>
+
+    <table class="table">
+        <caption class="caption-top">Pagamentos confirmados</caption>
+        <thead>
+            <tr>
+                <th scope="col">Data</th>
+                <th scope="col">Forma de pagamento</th>
+                <th scope="col" class="text-end">Valor</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var pagamento in pagamentos)
+            {
+                var forma = pagamento.Forma switch
+                {
+                    "B" => "Boleto",
+                    "C" => "Cartão",
+                    "D" => "Dinheiro",
+                    "P" => "Pix",
+                    _ => "Não informada"
+                };
+                <tr>
+                    <td>@pagamento.DataPagamento.ToString("dd/MM/yyyy", cultura)</td>
+                    <td>@forma</td>
+                    <td class="text-end">@pagamento.Valor.ToString("C", cultura)</td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <th scope="row" colspan="2">Total pago</th>
+                <td class="text-end fw-bold">@Model.ValorPago.ToString("C", cultura)</td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<script>
+    window.addEventListener('load', function () { window.print(); });
+</script>

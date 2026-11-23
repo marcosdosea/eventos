@@ -61,10 +61,8 @@
     .mi-acoes .btn { display: inline-flex; align-items: center; gap: .35rem; font-weight: 600; white-space: nowrap; }
     .mi-protocolo-link { display: inline-flex; align-items: center; gap: .3rem; text-decoration: none; }
     .mi-protocolo-link:hover { text-decoration: underline; }
-    .mi-icones { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; }
     .mi-icone-acao { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: 8px; border: none; background: #e8edf9; color: #1d4ed8; font-size: 1rem; text-decoration: none; }
     .mi-icone-acao:hover { background: #d6e0f7; color: #1d4ed8; }
-    .mi-icone-acao:disabled { background: #f1f3f5; color: #9ca3af; cursor: not-allowed; }
     .mi-icone-certificado { display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: 8px; background: #f1f3f5; color: #9ca3af; font-size: 1.1rem; cursor: default; }
     .mi-icone-certificado.ativo { background: #e6f6ec; color: #146c43; }
     .mi-paginacao { display: flex; justify-content: flex-end; align-items: center; gap: .75rem; margin-top: 1.25rem; flex-wrap: wrap; }
@@ -75,7 +73,7 @@
     <div>
         <h1 class="mi-titulo">@ViewData["Title"]</h1>
         <p class="mi-subtitulo">
-            Gerencie suas credenciais, pendências financeiras e efetue o pagamento online com liberação imediata de acesso e crachá digital.
+            Acompanhe suas inscrições, pagamentos e elegibilidade para certificados.
         </p>
     </div>
     @if (!string.IsNullOrWhiteSpace(nomeParticipante) || !string.IsNullOrWhiteSpace(cpfMascarado))
@@ -165,7 +163,7 @@
                     var protocolo = item.Id > 0 ? $"#INS-{item.DataInscricao.Year}-{item.Id:D4}" : (subeventos.Any() ? $"#SUB-{subeventos.First().DataInscricao.Year}-{subeventos.First().Id:D4}" : "-");
                     var semCusto = valorTotalGeral <= 0;
                     var statusPagamento = item.StatusPagamento;
-                    var confirmado = statusPagamento == StatusPagamentoInscricao.Confirmado;
+                    var inscricaoConfirmada = item.Status == "A" || (item.Status == "S" && semCusto);
                     var temComprovante = item.Id > 0 || item.IdEvento > 0;
 
                     var localPartes = new List<string>();
@@ -193,7 +191,7 @@
                                 <a asp-action="DetalhesInscricao" asp-controller="Inscricao"
                                    asp-route-id="@(item.Id > 0 ? item.Id : null)"
                                    asp-route-idEvento="@(item.Id > 0 ? null : item.IdEvento)"
-                                   class="mi-protocolo mi-protocolo-link @(confirmado ? "confirmado" : "")"
+                                   class="mi-protocolo mi-protocolo-link @(inscricaoConfirmada ? "confirmado" : "")"
                                    title="Ver comprovante da inscrição">
                                     <i class="bi bi-file-earmark-text" aria-hidden="true"></i> @protocolo
                                 </a>
@@ -203,7 +201,7 @@
                                 <span class="mi-protocolo">@protocolo</span>
                             }
                             <div class="mi-acoes mt-2">
-                                @if (confirmado && item.Id > 0)
+                                @if (inscricaoConfirmada && item.Id > 0)
                                 {
                                     var eventoJaOcorreu = (evento != null) && (
                                         (evento.DataFim.HasValue && evento.DataFim.Value < DateTime.Now) ||
@@ -272,7 +270,7 @@
                                                     <span class="mi-sub-nome">@(sub.IdSubEventoNavigation?.Nome ?? "Subevento")</span>
                                                     <span class="mi-sub-valor">@sub.Valor.ToString("C", culturaBr)</span>
                                                 </div>
-                                                @if (confirmado && subConfirmado)
+                                                @if (inscricaoConfirmada && subConfirmado)
                                                 {
                                                     var subJaOcorreu = (sub.IdSubEventoNavigation != null) && (
                                                         (sub.IdSubEventoNavigation.DataFim != DateTime.MinValue && sub.IdSubEventoNavigation.DataFim < DateTime.Now) ||
@@ -316,20 +314,16 @@
                             <div class="mi-acoes">
                                 @switch (statusPagamento)
                                 {
+                                    case StatusPagamentoInscricao.Gratuito:
+                                        <span class="mi-indisponivel">Gratuito</span>
+                                        break;
                                     case StatusPagamentoInscricao.Confirmado:
                                         <span class="mi-status mi-status-confirmado"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Confirmado</span>
-                                        @if (semCusto)
+                                        @if (item.Id > 0)
                                         {
-                                            <span class="mi-indisponivel">Gratuito</span>
-                                        }
-                                        @if (temComprovante)
-                                        {
-                                            <a asp-action="DetalhesInscricao" asp-controller="Inscricao"
-                                               asp-route-id="@(item.Id > 0 ? item.Id : null)"
-                                               asp-route-idEvento="@(item.Id > 0 ? null : item.IdEvento)"
-                                               asp-route-imprimir="true"
+                                            <a asp-action="ReciboPagamento" asp-route-id="@item.Id"
                                                target="_blank" rel="noopener"
-                                               class="mi-icone-acao" title="Imprimir recibo" aria-label="Imprimir recibo">
+                                               class="mi-icone-acao" title="Imprimir recibo de pagamento" aria-label="Imprimir recibo de pagamento">
                                                 <i class="bi bi-printer" aria-hidden="true"></i>
                                             </a>
                                         }
@@ -339,10 +333,7 @@
                                         break;
                                     case StatusPagamentoInscricao.Pendente:
                                         <span class="mi-status mi-status-pendente"><i class="bi bi-clock" aria-hidden="true"></i> Pendente</span>
-                                        <button type="button" class="btn btn-sm btn-primary text-nowrap" disabled
-                                                title="Pagamento online ainda não disponível">
-                                            <i class="bi bi-credit-card" aria-hidden="true"></i> Pagar
-                                        </button>
+                                        <span class="mi-indisponivel">Pagamento online indisponível</span>
                                         break;
                                     default:
                                         <span class="mi-status mi-status-cancelado"><i class="bi bi-slash-circle" aria-hidden="true"></i> Cancelado</span>
@@ -351,41 +342,32 @@
                             </div>
                         </td>
                         <td>
-                            @if (confirmado)
-                            {
-                                <div class="mi-icones">
-                                    <button type="button" class="mi-icone-acao" disabled title="Visualizar credencial (ainda não disponível)" aria-label="Visualizar credencial">
-                                        <i class="bi bi-eye" aria-hidden="true"></i>
-                                    </button>
-                                    <button type="button" class="mi-icone-acao" disabled title="Crachá digital (ainda não disponível)" aria-label="Crachá digital">
-                                        <i class="bi bi-person-badge" aria-hidden="true"></i>
-                                    </button>
-                                    <button type="button" class="mi-icone-acao" disabled title="Imprimir credencial (ainda não disponível)" aria-label="Imprimir credencial">
-                                        <i class="bi bi-printer" aria-hidden="true"></i>
-                                    </button>
-                                </div>
-                            }
-                            else
-                            {
-                                <span class="mi-indisponivel">Indisponível</span>
-                            }
+                            <span class="mi-indisponivel">Consulte a organização</span>
                         </td>
                         <td>
                             @{
-                                var certificadoDisponivel = item.StatusCertificado == StatusCertificadoInscricao.Elegivel;
-                                var tituloCertificado = item.StatusCertificado switch
+                                var statusCertificado = item.StatusCertificado;
+                                var elegivel = statusCertificado == StatusCertificadoInscricao.Elegivel;
+                                var descricaoCertificado = statusCertificado switch
                                 {
-                                    StatusCertificadoInscricao.SemCertificado => "Este evento não emite certificado",
-                                    StatusCertificadoInscricao.EmAndamento => "Disponível após o encerramento do evento",
-                                    StatusCertificadoInscricao.FrequenciaInsuficiente => $"Frequência insuficiente. Obtida: {item.FrequenciaFinal:F1}% | mínima exigida: {evento?.FrequenciaMinimaCertificado:F1}%",
-                                    StatusCertificadoInscricao.Elegivel => "Certificado disponível",
+                                    StatusCertificadoInscricao.SemCertificado => "Sem certificado",
+                                    StatusCertificadoInscricao.EmAndamento => "Evento em andamento",
+                                    StatusCertificadoInscricao.FrequenciaInsuficiente => "Frequência insuficiente",
+                                    StatusCertificadoInscricao.Elegivel => "Elegível",
                                     StatusCertificadoInscricao.Cancelada => "Inscrição cancelada",
-                                    _ => "Certificado indisponível"
+                                    _ => "Indisponível"
+                                };
+                                var detalheCertificado = statusCertificado switch
+                                {
+                                    StatusCertificadoInscricao.FrequenciaInsuficiente => $"Frequência obtida: {item.FrequenciaFinal:F1}% | mínima exigida: {evento?.FrequenciaMinimaCertificado:F1}%",
+                                    StatusCertificadoInscricao.Elegivel => "A emissão não está disponível nesta tela.",
+                                    _ => null
                                 };
                             }
-                            <span class="mi-icone-certificado @(certificadoDisponivel ? "ativo" : "")" title="@tituloCertificado" aria-label="@tituloCertificado" role="img">
-                                <i class="bi bi-award" aria-hidden="true"></i>
+                            <span class="mi-icone-certificado @(elegivel ? "ativo" : "")" aria-hidden="true">
+                                <i class="bi bi-award"></i>
                             </span>
+                            <div class="mi-indisponivel mt-1" title="@detalheCertificado">@descricaoCertificado</div>
                         </td>
                     </tr>
                 }

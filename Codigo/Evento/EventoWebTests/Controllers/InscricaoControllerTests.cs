@@ -74,63 +74,11 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public async Task MinhasInscricoesTest_SemEventoComInscricaoAberta_NaoExibeVoltar()
+        public async Task MinhasInscricoesTest_IdEvento_PreservaRotaDaPaginacao()
         {
-            // Act: os eventos de GetTestInscricoes nao estao ativos
-            var result = await controller.minhasInscricoes(null);
+            await controller.minhasInscricoes(7);
 
-            // Assert
-            Assert.IsInstanceOfType(result, typeof(ViewResult));
-            Assert.IsNull(controller.ViewBag.EventoId);
-        }
-
-        [TestMethod()]
-        public async Task MinhasInscricoesTest_SemIdEvento_UsaPrimeiroEventoComInscricaoAberta()
-        {
-            // Arrange
-            var inscricoes = new List<Inscricaopessoaevento>
-            {
-                new Inscricaopessoaevento { Id = 1, IdEvento = 1, IdPapel = 4, Status = "S", IdEventoNavigation = new Evento { Id = 1, Status = "F" } },
-                new Inscricaopessoaevento { Id = 2, IdEvento = 2, IdPapel = 4, Status = "S", IdEventoNavigation = new Evento { Id = 2, Status = "A", DataFimInscricao = DateTime.Now.AddDays(-1) } },
-                new Inscricaopessoaevento { Id = 3, IdEvento = 3, IdPapel = 4, Status = "S", IdEventoNavigation = new Evento { Id = 3, Status = "A", DataFimInscricao = DateTime.Now.AddDays(5) } }
-            };
-            var minhasController = CriarControllerMinhasInscricoes(inscricoes, Mock.Of<IEventoService>());
-
-            // Act
-            await minhasController.minhasInscricoes(null);
-
-            // Assert
-            Assert.AreEqual((uint)3, minhasController.ViewBag.EventoId);
-        }
-
-        [TestMethod()]
-        public async Task MinhasInscricoesTest_IdEventoInativo_NaoExibeVoltar()
-        {
-            // Arrange
-            var mockEvento = new Mock<IEventoService>();
-            mockEvento.Setup(s => s.Get(7)).Returns(new Evento { Id = 7, Status = "I" });
-            var minhasController = CriarControllerMinhasInscricoes(new List<Inscricaopessoaevento>(), mockEvento.Object);
-
-            // Act
-            await minhasController.minhasInscricoes(7);
-
-            // Assert
-            Assert.IsNull(minhasController.ViewBag.EventoId);
-        }
-
-        [TestMethod()]
-        public async Task MinhasInscricoesTest_IdEventoComInscricaoAberta_ExibeVoltar()
-        {
-            // Arrange
-            var mockEvento = new Mock<IEventoService>();
-            mockEvento.Setup(s => s.Get(7)).Returns(new Evento { Id = 7, Status = "A" });
-            var minhasController = CriarControllerMinhasInscricoes(new List<Inscricaopessoaevento>(), mockEvento.Object);
-
-            // Act
-            await minhasController.minhasInscricoes(7);
-
-            // Assert
-            Assert.AreEqual((uint)7, minhasController.ViewBag.EventoId);
+            Assert.AreEqual((uint)7, controller.ViewBag.IdEventoRota);
         }
 
         [TestMethod()]
@@ -2103,26 +2051,44 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("SEMAC", model.IdEventoNavigation?.Nome);
         }
 
-        [TestMethod()]
-        public async Task DetalhesInscricaoTest_Imprimir_SinalizaImpressaoNaView()
+        [TestMethod]
+        [DataRow("S", "C", 80, 80, true)]
+        [DataRow("S", "S", 80, 80, false)]
+        [DataRow("A", "C", 80, 30, false)]
+        [DataRow("A", "S", 0, 0, false)]
+        [DataRow("C", "C", 80, 80, false)]
+        public void ReciboPagamentoTest_EmiteApenasQuandoHaQuitacaoConfirmada(
+            string statusInscricao, string statusPagamento, int valorTotal, int valorPagamento, bool emite)
         {
-            // Act
-            var result = await controller.DetalhesInscricao(1, null, true);
+            var inscricao = new Inscricaopessoaevento
+            {
+                Id = 7,
+                Status = statusInscricao,
+                ValorTotal = valorTotal,
+                Pagamentos = new List<Pagamento> { new Pagamento { Status = statusPagamento, Valor = valorPagamento } }
+            };
+            var minhasController = CriarControllerMinhasInscricoes(
+                new List<Inscricaopessoaevento> { inscricao }, Mock.Of<IEventoService>());
 
-            // Assert
-            var viewResult = (ViewResult)result;
-            Assert.AreEqual(true, viewResult.ViewData["Imprimir"]);
+            var resultado = minhasController.ReciboPagamento(7);
+
+            if (emite)
+            {
+                var view = (ViewResult)resultado;
+                var model = (InscricaoEventoModel)view.Model!;
+                Assert.AreEqual((uint)7, model.Id);
+                Assert.AreEqual((decimal)valorPagamento, model.ValorPago);
+            }
+            else
+            {
+                Assert.IsInstanceOfType<NotFoundResult>(resultado);
+            }
         }
 
-        [TestMethod()]
-        public async Task DetalhesInscricaoTest_SemImprimir_NaoSinalizaImpressao()
+        [TestMethod]
+        public void ReciboPagamentoTest_InscricaoForaDaListaDoUsuario_RetornaNotFound()
         {
-            // Act
-            var result = await controller.DetalhesInscricao(1, null);
-
-            // Assert
-            var viewResult = (ViewResult)result;
-            Assert.AreEqual(false, viewResult.ViewData["Imprimir"]);
+            Assert.IsInstanceOfType<NotFoundResult>(controller.ReciboPagamento(999));
         }
 
         [TestMethod()]
@@ -2162,18 +2128,41 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
-        public void StatusPagamento_InscricaoAtiva_RetornaConfirmado()
+        public void StatusPagamento_InscricaoAtivaSemPagamento_RetornaPendente()
         {
             var model = new InscricaoEventoModel { Status = "A", ValorTotal = 50m };
 
-            Assert.AreEqual(StatusPagamentoInscricao.Confirmado, model.StatusPagamento);
+            Assert.AreEqual(StatusPagamentoInscricao.Pendente, model.StatusPagamento);
         }
 
         [TestMethod()]
-        public void StatusPagamento_SolicitadaSemCusto_RetornaConfirmado()
+        public void StatusPagamento_SolicitadaSemCusto_RetornaGratuito()
         {
             var model = new InscricaoEventoModel { Status = "S", ValorTotal = 0m };
 
+            Assert.AreEqual(StatusPagamentoInscricao.Gratuito, model.StatusPagamento);
+        }
+
+        [TestMethod]
+        public void StatusPagamento_ContaSomenteValoresConfirmados()
+        {
+            var model = new InscricaoEventoModel
+            {
+                Status = "S",
+                ValorTotal = 50m,
+                Pagamentos = new List<Pagamento>
+                {
+                    new Pagamento { Valor = 25m, Status = "C" },
+                    new Pagamento { Valor = 25m, Status = "S" }
+                }
+            };
+
+            Assert.AreEqual(25m, model.ValorPago);
+            Assert.AreEqual(StatusPagamentoInscricao.AguardandoConfirmacao, model.StatusPagamento);
+
+            model.Pagamentos.Last().Status = "C";
+
+            Assert.AreEqual(50m, model.ValorPago);
             Assert.AreEqual(StatusPagamentoInscricao.Confirmado, model.StatusPagamento);
         }
 

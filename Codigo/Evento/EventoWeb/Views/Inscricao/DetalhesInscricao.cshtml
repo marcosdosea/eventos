@@ -239,10 +239,4 @@
 <script>
     document.title = @Json.Serialize($"Comprovante ({Model.IdEventoNavigation?.Nome ?? "Evento"})");
 </script>
-@if (ViewBag.Imprimir as bool? == true)
-{
-    <script>
-        window.addEventListener('load', function () { window.print(); });
-    </script>
-}
 
