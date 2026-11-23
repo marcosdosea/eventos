@@ -41,7 +41,10 @@ abstract interface class CredenciamentoGateway {
 
   Future<List<ParticipanteResponse>> listarParticipantes();
 
-  Future<ParticipanteResponse> buscarParticipantePorCpf(String cpf);
+  Future<ParticipanteResponse> buscarParticipantePorCpf(
+    String cpf, {
+    int? eventoId,
+  });
 
   Future<void> verificarConexao();
 }
@@ -129,8 +132,7 @@ final class CredenciamentoService
         .listen(
           (connected) {
             if (connected && !_disposed) {
-              unawaited(sincronizarFrequenciasPendentes());
-              unawaited(sincronizarCadastrosPendentes());
+              _dispararSincronizacaoEmBackground();
             }
           },
           onError: (Object _) {},
@@ -223,8 +225,7 @@ final class CredenciamentoService
       final response = await _api.registrar(request);
       await _marcarFrequenciasEnviadas(<String>[leituraId]);
       await atualizarContagemFrequenciasPendentes();
-      unawaited(sincronizarCadastrosPendentes());
-      unawaited(sincronizarFrequenciasPendentes());
+      _dispararSincronizacaoEmBackground();
       return OperationResult<RegistroResponse>.enviado(response);
     } on ApiUnavailableException {
       await _registrarTentativaFalhaRede(<String>[leituraId]);
@@ -284,14 +285,15 @@ final class CredenciamentoService
   @override
   Future<List<ParticipanteResponse>> listarParticipantes() async {
     final participantes = await _api.listarParticipantes();
-    unawaited(sincronizarCadastrosPendentes());
-    unawaited(sincronizarFrequenciasPendentes());
+    _dispararSincronizacaoEmBackground();
     return participantes;
   }
 
   @override
-  Future<ParticipanteResponse> buscarParticipantePorCpf(String cpf) =>
-      _api.buscarParticipantePorCpf(cpf);
+  Future<ParticipanteResponse> buscarParticipantePorCpf(
+    String cpf, {
+    int? eventoId,
+  }) => _api.buscarParticipantePorCpf(cpf, eventoId: eventoId);
 
   @override
   Future<void> verificarConexao() async {
@@ -396,6 +398,13 @@ final class CredenciamentoService
         offline = true;
         break;
       } on ApiRequestException catch (error) {
+        if (error.statusCode == 401 ||
+            error.statusCode == 403 ||
+            error.statusCode == 408 ||
+            error.statusCode == 429) {
+          await _registrarTentativaFalhaRede(leituraIdsDoLote);
+          break;
+        }
         final erros = <String, String>{
           for (final id in leituraIdsDoLote) id: error.message,
         };
@@ -419,7 +428,7 @@ final class CredenciamentoService
   ) async {
     final api = _api;
     if (api is FrequenciaLoteApi) {
-      return api.sincronizarFrequenciasLote(lote);
+      return (api as FrequenciaLoteApi).sincronizarFrequenciasLote(lote);
     }
 
     final confirmados = <String>[];
@@ -528,6 +537,18 @@ final class CredenciamentoService
     } on FrequenciaPendenteStoreException {
       // A leitura já foi persistida como PENDENTE antes da tentativa de envio.
     }
+  }
+
+  void _dispararSincronizacaoEmBackground() {
+    unawaited(
+      sincronizarCadastrosPendentes().then<void>((_) {}, onError: (Object _) {}),
+    );
+    unawaited(
+      sincronizarFrequenciasPendentes().then<void>(
+        (_) {},
+        onError: (Object _) {},
+      ),
+    );
   }
 
   void _atualizarContagemLocal(int total) {

@@ -589,7 +589,7 @@ namespace Service.Tests
             };
             await _userManager.CreateAsync(usuario, "Temp@1234!");
 
-            await Assert.ThrowsExceptionAsync<ArgumentException>(() =>
+            await Assert.ThrowsAsync<ArgumentException>(() =>
                 _pessoaService.CreatePessoaIdentityComPapelAsync(pessoa, 0, 99));
         }
 

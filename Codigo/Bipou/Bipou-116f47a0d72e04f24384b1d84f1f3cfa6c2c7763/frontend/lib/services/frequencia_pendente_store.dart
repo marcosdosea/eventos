@@ -7,10 +7,9 @@ export 'package:bipou_frontend/services/frequencia_pendente_store_contract.dart'
 
 final class SqliteFrequenciaPendenteStore implements FrequenciaPendenteStore {
   SqliteFrequenciaPendenteStore({
-    String? databasePath,
-    DatabaseFactory? databaseFactoryOverride,
-  }) : _databasePath = databasePath,
-       _databaseFactoryOverride = databaseFactoryOverride;
+    this._databasePath,
+    this._databaseFactoryOverride,
+  });
 
   static const String databaseName = 'bipou_frequencias_offline.db';
   static const String tableName = 'frequencias_pendentes';

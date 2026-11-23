@@ -124,12 +124,19 @@ namespace Service.Tests
         }
 
         [TestMethod()]
-        [ExpectedException(typeof(ServiceException))]
+
         public void GetDashboardFinanceiro_EventoInexistente()
         {
-            _eventoService.GetDashboardFinanceiro(999, new DashboardFiltrosDTO());
+            Assert.Throws<ServiceException>(() =>
+                _eventoService.GetDashboardFinanceiro(999, new DashboardFiltrosDTO()));
         }
 
+        [TestMethod()]
+        public void GetDashboardOperacao_EventoInexistente()
+        {
+            Assert.Throws<ServiceException>(() =>
+                _eventoService.GetDashboardOperacao(999, new DashboardFiltrosDTO()));
+        }
         [TestMethod()]
         public void GetDashboardOperacao_PresencaCertificadoDemografia()
         {
@@ -157,8 +164,12 @@ namespace Service.Tests
             _context.Inscricaopessoasubeventos.FirstOrDefault(s => s.IdPessoa == 2 && s.IdSubEvento == 10)!.FrequenciaFinal = 100;
             _context.Inscricaopessoasubeventos.Add(new Inscricaopessoasubevento
             {
-                IdPessoa = 4, IdSubEvento = 10, IdPapel = 4, Status = "A",
-                DataInscricao = new DateTime(2024, 9, 8), FrequenciaFinal = 100
+                IdPessoa = 4,
+                IdSubEvento = 10,
+                IdPapel = 4,
+                Status = "A",
+                DataInscricao = new DateTime(2024, 9, 8),
+                FrequenciaFinal = 100
             });
             _context.SaveChanges();
 
@@ -168,13 +179,6 @@ namespace Service.Tests
             Assert.AreEqual(1, op.Presentes);
             Assert.AreEqual(75m, op.FrequenciaMedia);
             Assert.AreEqual(1, op.AptosCertificado);
-        }
-
-        [TestMethod()]
-        [ExpectedException(typeof(ServiceException))]
-        public void GetDashboardOperacao_EventoInexistente()
-        {
-            _eventoService.GetDashboardOperacao(999, new DashboardFiltrosDTO());
         }
     }
 }

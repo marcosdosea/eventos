@@ -2941,5 +2941,179 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsTrue((bool)json["sucesso"]!);
             Assert.IsFalse((bool)json["existe"]!);
         }
+
+        [TestMethod()]
+        public async Task MinhasInscricoesTest_CarregaCargaHorariaEEstatisticas_RetornaModelComDadosCompletos()
+        {
+            // Arrange
+            var evento = new Evento
+            {
+                Id = 1,
+                Nome = "Congresso de Tecnologia",
+                CargaHoraria = 20,
+                DataInicio = new DateTime(2026, 11, 16, 8, 0, 0),
+                DataFim = new DateTime(2026, 11, 18, 18, 0, 0)
+            };
+
+            var subevento = new Subevento
+            {
+                Id = 10,
+                IdEvento = 1,
+                Nome = "Workshop de Arquitetura",
+                CargaHoraria = 4,
+                DataInicio = new DateTime(2026, 11, 17, 14, 0, 0),
+                DataFim = new DateTime(2026, 11, 17, 18, 0, 0)
+            };
+
+            var inscricaoEvento = new Inscricaopessoaevento
+            {
+                Id = 100,
+                IdEvento = 1,
+                IdPessoa = 1,
+                DataInscricao = new DateTime(2026, 11, 10, 10, 30, 0),
+                Status = "A",
+                ValorTotal = 50m,
+                IdEventoNavigation = evento,
+                Inscricaopessoasubeventos = new List<Inscricaopessoasubevento>
+                {
+                    new Inscricaopessoasubevento
+                    {
+                        Id = 200,
+                        IdSubEvento = 10,
+                        IdPessoa = 1,
+                        DataInscricao = new DateTime(2026, 11, 10, 10, 35, 0),
+                        Status = "A",
+                        Valor = 20m,
+                        IdSubEventoNavigation = subevento
+                    }
+                }
+            };
+
+            var mockInscricaoService = new Mock<IInscricaoService>();
+            mockInscricaoService.Setup(s => s.GetAllEventsByUserId(UsernameTeste))
+                .Returns(new List<Inscricaopessoaevento> { inscricaoEvento });
+
+            var mockPessoaService = new Mock<IPessoaService>();
+            mockPessoaService.Setup(s => s.GetByCpf(UsernameTeste))
+                .Returns(new Pessoa { Id = 1, Cpf = UsernameTeste, Nome = "Participante Teste" });
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new InscricaoProfile())).CreateMapper();
+
+            var controller = new InscricaoController(
+                null!,
+                Mock.Of<ITipoInscricaoService>(),
+                Mock.Of<IEventoService>(),
+                mapper,
+                mockInscricaoService.Object,
+                mockPessoaService.Object,
+                Mock.Of<ISubeventoService>());
+
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, UsernameTeste) };
+            var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) };
+            controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
+
+            // Act
+            var result = await controller.minhasInscricoes(null, 1) as ViewResult;
+
+            // Assert
+            Assert.IsNotNull(result);
+            var model = result.Model as IEnumerable<InscricaoEventoModel>;
+            Assert.IsNotNull(model);
+            var lista = model.ToList();
+            Assert.AreEqual(1, lista.Count);
+            Assert.AreEqual(20, lista[0].IdEventoNavigation.CargaHoraria);
+            Assert.IsNotNull(lista[0].Inscricaopessoasubeventos);
+            Assert.AreEqual(1, lista[0].Inscricaopessoasubeventos.Count);
+            Assert.IsNotNull(lista[0].Inscricaopessoasubeventos.First().IdSubEventoNavigation);
+            Assert.AreEqual((uint)4, lista[0].Inscricaopessoasubeventos.First().IdSubEventoNavigation!.CargaHoraria);
+        }
+
+        [TestMethod()]
+        public async Task DetalhesInscricaoTest_CarregaCargaHorariaEEstatisticas_RetornaModelComDadosCompletos()
+        {
+            // Arrange
+            var evento = new Evento
+            {
+                Id = 1,
+                Nome = "Congresso de Tecnologia",
+                CargaHoraria = 30,
+                DataInicio = new DateTime(2026, 11, 16, 8, 0, 0),
+                DataFim = new DateTime(2026, 11, 18, 18, 0, 0)
+            };
+
+            var subevento = new Subevento
+            {
+                Id = 10,
+                IdEvento = 1,
+                Nome = "Workshop de Arquitetura",
+                CargaHoraria = 8,
+                DataInicio = new DateTime(2026, 11, 17, 14, 0, 0),
+                DataFim = new DateTime(2026, 11, 17, 18, 0, 0)
+            };
+
+            var inscricaoEvento = new Inscricaopessoaevento
+            {
+                Id = 101,
+                IdEvento = 1,
+                IdPessoa = 1,
+                DataInscricao = new DateTime(2026, 11, 10, 10, 30, 0),
+                Status = "A",
+                ValorTotal = 50m,
+                FrequenciaFinal = 100m,
+                IdEventoNavigation = evento,
+                Inscricaopessoasubeventos = new List<Inscricaopessoasubevento>
+                {
+                    new Inscricaopessoasubevento
+                    {
+                        Id = 201,
+                        IdSubEvento = 10,
+                        IdPessoa = 1,
+                        DataInscricao = new DateTime(2026, 11, 10, 10, 35, 0),
+                        Status = "A",
+                        Valor = 20m,
+                        FrequenciaFinal = 100m,
+                        IdSubEventoNavigation = subevento
+                    }
+                }
+            };
+
+            var mockInscricaoService = new Mock<IInscricaoService>();
+            mockInscricaoService.Setup(s => s.GetAllEventsByUserId(UsernameTeste))
+                .Returns(new List<Inscricaopessoaevento> { inscricaoEvento });
+
+            var mockPessoaService = new Mock<IPessoaService>();
+            mockPessoaService.Setup(s => s.GetByCpf(UsernameTeste))
+                .Returns(new Pessoa { Id = 1, Cpf = UsernameTeste, Nome = "Participante Teste" });
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new InscricaoProfile())).CreateMapper();
+
+            var controller = new InscricaoController(
+                null!,
+                Mock.Of<ITipoInscricaoService>(),
+                Mock.Of<IEventoService>(),
+                mapper,
+                mockInscricaoService.Object,
+                mockPessoaService.Object,
+                Mock.Of<ISubeventoService>());
+
+            var claims = new List<Claim> { new Claim(ClaimTypes.Name, UsernameTeste) };
+            var httpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) };
+            controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
+
+            // Act
+            var result = await controller.DetalhesInscricao(101, null) as ViewResult;
+
+            // Assert
+            Assert.IsNotNull(result);
+            var model = result.Model as InscricaoEventoModel;
+            Assert.IsNotNull(model);
+            Assert.AreEqual((uint)101, model.Id);
+            Assert.AreEqual(30, model.IdEventoNavigation.CargaHoraria);
+            Assert.AreEqual(100m, model.FrequenciaFinal);
+            Assert.IsNotNull(model.Inscricaopessoasubeventos);
+            Assert.AreEqual(1, model.Inscricaopessoasubeventos.Count);
+            Assert.IsNotNull(model.Inscricaopessoasubeventos.First().IdSubEventoNavigation);
+            Assert.AreEqual((uint)8, model.Inscricaopessoasubeventos.First().IdSubEventoNavigation!.CargaHoraria);
+        }
     }
 }

@@ -402,6 +402,59 @@ void main() {
       }
     },
   );
+
+  test(
+    'preserva registros pendentes quando sincronizacao em lote sofre falha de rede ou erro 401',
+    () async {
+      final calls = <String>[];
+      final api = _BatchApiSpy(calls, unavailable: true);
+      final frequenciaStore = InMemoryFrequenciaPendenteStore();
+      final connectivity = _ConnectivityMonitorFake(connected: false);
+      final service = CredenciamentoService(
+        auditLog: _AuditSpy(calls),
+        api: api,
+        cadastroPendenteStore: _CadastroPendenteStoreMemory(),
+        frequenciaPendenteStore: frequenciaStore,
+        connectivityMonitor: connectivity,
+        clock: () => now,
+        uuidGenerator: () => uuid,
+      );
+
+      try {
+        await service.registrarLeitura(
+          participanteId: participanteId,
+          participanteNome: 'Maria Santos',
+          tipoAcao: TipoAcao.entrada,
+          dispositivoId: 'portaria-01',
+          idPessoa: 1042,
+          idEvento: 15,
+        );
+
+        connectivity.connected = true;
+        final falhaRede = await service.sincronizarFrequenciasPendentes();
+        expect(falhaRede.offline, isTrue);
+        expect(falhaRede.restantes, 1);
+        expect(
+          (await frequenciaStore.buscarPorLeituraId(uuid))?.statusEnvio,
+          StatusEnvioFrequencia.pendente,
+        );
+
+        api
+          ..batchUnavailable = false
+          ..batchErrorStatusCode = 401;
+        final falhaAuth = await service.sincronizarFrequenciasPendentes();
+        expect(falhaAuth.offline, isFalse);
+        expect(falhaAuth.rejeitados, 0);
+        expect(falhaAuth.restantes, 1);
+        final aposAuth = await frequenciaStore.buscarPorLeituraId(uuid);
+        expect(aposAuth?.statusEnvio, StatusEnvioFrequencia.pendente);
+        expect(aposAuth?.tentativasEnvio, 2);
+      } finally {
+        await service.dispose();
+        await connectivity.dispose();
+      }
+    },
+  );
 }
 
 final class _AuditSpy implements AuditLogWriter {
@@ -454,7 +507,10 @@ final class _ApiSpy implements CredenciamentoApi {
   }
 
   @override
-  Future<ParticipanteResponse> buscarParticipantePorCpf(String cpf) async {
+  Future<ParticipanteResponse> buscarParticipantePorCpf(
+    String cpf, {
+    int? eventoId,
+  }) async {
     calls.add('api.buscarParticipantePorCpf');
     if (unavailable) {
       throw const ApiUnavailableException('Falha simulada.');
@@ -517,8 +573,11 @@ final class _CadastroPendenteStoreMemory implements CadastroPendenteStore {
 }
 
 final class _BatchApiSpy extends _ApiSpy implements FrequenciaLoteApi {
-  _BatchApiSpy(super.calls, {super.unavailable, super.rejectManual});
+  _BatchApiSpy(super.calls, {super.unavailable})
+    : batchUnavailable = unavailable;
 
+  bool batchUnavailable;
+  int? batchErrorStatusCode;
   final List<int> batchSizes = <int>[];
   final List<String> sentLeituraIds = <String>[];
 
@@ -527,8 +586,14 @@ final class _BatchApiSpy extends _ApiSpy implements FrequenciaLoteApi {
     List<FrequenciaPendente> lote,
   ) async {
     calls.add('api.sincronizarFrequenciasLote');
-    if (unavailable) {
+    if (batchUnavailable) {
       throw const ApiUnavailableException('Falha simulada.');
+    }
+    if (batchErrorStatusCode != null) {
+      throw ApiRequestException(
+        'Erro simulado.',
+        statusCode: batchErrorStatusCode,
+      );
     }
     batchSizes.add(lote.length);
     final confirmados = lote.map((item) => item.leituraId).toList();

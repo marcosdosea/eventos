@@ -223,13 +223,100 @@ namespace EventoWeb.Controllers
             ViewBag.EstadoAtivo = localizacao.Estado;
             ViewBag.CidadeAtiva = localizacao.Cidade;
             ViewBag.NomeEstadoAtivo = localizacao.NomeExibicao;
+            ViewBag.CategoriasHome = ObterCategoriasHome();
 
             return View(listarEventosModel);
         }
 
-        [HttpGet]
-        public IActionResult Buscar([FromQuery] Core.DTO.EventoFilterDTO filter, int pagina = 1)
+        public Dictionary<string, CategoriaHomeRouteModel> ObterCategoriasHome()
         {
+            IEnumerable<Core.Tipoevento> tipos = Enumerable.Empty<Core.Tipoevento>();
+            try
+            {
+                tipos = _tipoEventoService.GetAll() ?? Enumerable.Empty<Core.Tipoevento>();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "Erro ao obter tipos de evento para categorias da vitrine.");
+            }
+
+            IEnumerable<Core.Areainteresse> areas = Enumerable.Empty<Core.Areainteresse>();
+            try
+            {
+                areas = _areaInteresseService.GetAll() ?? Enumerable.Empty<Core.Areainteresse>();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "Erro ao obter áreas de interesse para categorias da vitrine.");
+            }
+
+            CategoriaHomeRouteModel Resolver(string chave, string[] termosTipo, string[] termosArea, uint? defaultTipo = null, uint? defaultArea = null, string? defaultTermo = null)
+            {
+                foreach (var termo in termosTipo)
+                {
+                    var matchTipo = tipos.FirstOrDefault(t => !string.IsNullOrEmpty(t.Nome) && t.Nome.Contains(termo, StringComparison.OrdinalIgnoreCase));
+                    if (matchTipo != null)
+                        return new CategoriaHomeRouteModel { IdTipoEvento = matchTipo.Id };
+                }
+
+                if (defaultTipo.HasValue)
+                {
+                    return new CategoriaHomeRouteModel { IdTipoEvento = defaultTipo.Value };
+                }
+
+                foreach (var termo in termosArea)
+                {
+                    var matchArea = areas.FirstOrDefault(a => !string.IsNullOrEmpty(a.Nome) && a.Nome.Contains(termo, StringComparison.OrdinalIgnoreCase));
+                    if (matchArea != null)
+                        return new CategoriaHomeRouteModel { IdAreaInteresse = matchArea.Id };
+                }
+
+                if (defaultArea.HasValue)
+                {
+                    return new CategoriaHomeRouteModel { IdAreaInteresse = defaultArea.Value };
+                }
+
+                return new CategoriaHomeRouteModel { TermoBusca = defaultTermo ?? chave };
+            }
+
+            return new Dictionary<string, CategoriaHomeRouteModel>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Palestras"] = Resolver("Palestras", new[] { "Palestra" }, Array.Empty<string>(), defaultTipo: 1),
+                ["Teatros"] = Resolver("Teatros", new[] { "Teatro" }, new[] { "Teatro" }, defaultTermo: "Teatro"),
+                ["Shows"] = Resolver("Shows", new[] { "Show" }, new[] { "Show" }, defaultTipo: 6),
+                ["Stand-Up"] = Resolver("Stand-Up", new[] { "Stand-Up", "Standup", "Stand Up" }, new[] { "Stand-Up", "Standup", "Stand Up" }, defaultTermo: "Stand-Up"),
+                ["Culturais"] = Resolver("Culturais", new[] { "Cultur" }, new[] { "Cultur" }, defaultTermo: "Cultural"),
+                ["Religiosos"] = Resolver("Religiosos", new[] { "Religio" }, new[] { "Religio" }, defaultTermo: "Religioso")
+            };
+        }
+
+        [HttpGet]
+        public IActionResult Buscar([FromQuery] Core.DTO.EventoFilterDTO filter, [FromQuery] string? categoria = null, int pagina = 1)
+        {
+            if (!string.IsNullOrWhiteSpace(categoria) &&
+                !filter.IdTipoEvento.HasValue &&
+                !filter.IdAreaInteresse.HasValue &&
+                string.IsNullOrWhiteSpace(filter.TermoBusca))
+            {
+                var categoriasMapeadas = ObterCategoriasHome();
+                var chave = categoria.Trim();
+                if (!categoriasMapeadas.TryGetValue(chave, out var rota))
+                {
+                    if (chave.Equals("Palestra", StringComparison.OrdinalIgnoreCase)) rota = categoriasMapeadas["Palestras"];
+                    else if (chave.Equals("Teatro", StringComparison.OrdinalIgnoreCase)) rota = categoriasMapeadas["Teatros"];
+                    else if (chave.Equals("Show", StringComparison.OrdinalIgnoreCase)) rota = categoriasMapeadas["Shows"];
+                    else if (chave.Equals("Standup", StringComparison.OrdinalIgnoreCase) || chave.Equals("Stand up", StringComparison.OrdinalIgnoreCase)) rota = categoriasMapeadas["Stand-Up"];
+                    else if (chave.Equals("Cultural", StringComparison.OrdinalIgnoreCase)) rota = categoriasMapeadas["Culturais"];
+                    else if (chave.Equals("Religioso", StringComparison.OrdinalIgnoreCase)) rota = categoriasMapeadas["Religiosos"];
+                }
+
+                if (rota != null)
+                {
+                    if (rota.IdTipoEvento.HasValue) filter.IdTipoEvento = rota.IdTipoEvento;
+                    if (rota.IdAreaInteresse.HasValue) filter.IdAreaInteresse = rota.IdAreaInteresse;
+                    if (!string.IsNullOrWhiteSpace(rota.TermoBusca)) filter.TermoBusca = rota.TermoBusca;
+                }
+            }
             int tamanhoPagina = 16; 
             IEnumerable<Core.Evento> eventos = new List<Core.Evento>();
 
