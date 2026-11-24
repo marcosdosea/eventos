@@ -1,6 +1,8 @@
 import 'package:bipou_frontend/core/config/api_config.dart';
+import 'package:bipou_frontend/models/borala_models.dart';
 import 'package:bipou_frontend/models/frequencia_pendente.dart';
 import 'package:bipou_frontend/models/leitura_qr_code_request.dart';
+import 'package:bipou_frontend/models/local_participant.dart';
 import 'package:bipou_frontend/models/participante_request.dart';
 import 'package:bipou_frontend/models/participante_response.dart';
 import 'package:bipou_frontend/models/registro_response.dart';
@@ -94,10 +96,17 @@ final class FrequenciaLoteSyncResponse {
 }
 
 final class BoralaSessionCredentials {
-  const BoralaSessionCredentials({this.baseUrl, this.accessToken});
+  const BoralaSessionCredentials({
+    this.baseUrl,
+    this.accessToken,
+    this.eventoId,
+    this.subeventoId,
+  });
 
   final String? baseUrl;
   final String? accessToken;
+  final int? eventoId;
+  final int? subeventoId;
 }
 
 typedef BoralaCredentialsProvider = Future<BoralaSessionCredentials?> Function();
@@ -157,14 +166,84 @@ final class ApiService implements CredenciamentoApi, FrequenciaLoteApi {
 
   @override
   Future<List<ParticipanteResponse>> listarParticipantes() async {
-    final json = await _get('/api/participantes');
+    final credentials = await _boralaCredentialsProvider?.call();
+    final token = credentials?.accessToken?.trim();
+    final eventoId = credentials?.eventoId;
+
+    if (eventoId != null &&
+        eventoId > 0 &&
+        token != null &&
+        token.isNotEmpty) {
+      return _listarParticipantesBorala(
+        baseUrl: credentials?.baseUrl,
+        accessToken: token,
+        eventoId: eventoId,
+        subeventoId: credentials?.subeventoId,
+      );
+    }
+
+    if (_boralaCredentialsProvider != null && _usaApiBoralaPorPadrao()) {
+      throw const ApiRequestException(
+        'Configure e conecte uma Sessao de Portaria para listar os participantes.',
+        statusCode: 401,
+      );
+    }
+
+    try {
+      final json = await _get('/api/participantes');
+      if (json is! List) {
+        throw const ApiRequestException('Resposta invalida recebida da API.');
+      }
+      return json
+          .map((item) => _parseResponse(item, ParticipanteResponse.fromJson))
+          .toList();
+    } on ApiRequestException catch (error) {
+      if (error.statusCode == 404 && _boralaCredentialsProvider != null) {
+        throw const ApiRequestException(
+          'Configure e conecte uma Sessao de Portaria para listar os participantes.',
+          statusCode: 401,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  Future<List<ParticipanteResponse>> _listarParticipantesBorala({
+    required String? baseUrl,
+    required String accessToken,
+    required int eventoId,
+    int? subeventoId,
+  }) async {
+    final boralaBaseUrl = baseUrl?.trim();
+    final endpoint = (boralaBaseUrl != null && boralaBaseUrl.isNotEmpty)
+        ? '${ApiConfig.normalizeHttpUrl(boralaBaseUrl, fieldName: 'BORALA_API_BASE_URL')}/api/bipou/v1/eventos/$eventoId/participantes'
+        : '/api/bipou/v1/eventos/$eventoId/participantes';
+
+    final json = await _get(
+      endpoint,
+      queryParameters: subeventoId != null
+          ? <String, Object>{'subEventoId': subeventoId}
+          : null,
+      options: Options(
+        headers: <String, Object>{'Authorization': 'Bearer $accessToken'},
+      ),
+    );
     if (json is! List) {
       throw const ApiRequestException('Resposta invalida recebida da API.');
     }
-    return json
-        .map((item) => _parseResponse(item, ParticipanteResponse.fromJson))
-        .toList();
+
+    return json.map((item) {
+      final participante = _parseResponse(item, BoralaParticipante.fromJson);
+      return LocalParticipant.fromBorala(
+        eventoId: eventoId,
+        participante: participante,
+      ).toParticipanteResponse();
+    }).toList();
   }
+
+  bool _usaApiBoralaPorPadrao() =>
+      _baseUrl.toLowerCase() ==
+      ApiConfig.defaultBoralaApiBaseUrl.toLowerCase();
 
   @override
   Future<FrequenciaLoteSyncResponse> sincronizarFrequenciasLote(
@@ -267,9 +346,17 @@ final class ApiService implements CredenciamentoApi, FrequenciaLoteApi {
     }
   }
 
-  Future<Object?> _get(String path) async {
+  Future<Object?> _get(
+    String path, {
+    Map<String, Object?>? queryParameters,
+    Options? options,
+  }) async {
     try {
-      final response = await _dio.get<Object?>(path);
+      final response = await _dio.get<Object?>(
+        path,
+        queryParameters: queryParameters,
+        options: options,
+      );
       return response.data;
     } on DioException catch (error, stackTrace) {
       if (_isUnavailable(error)) {

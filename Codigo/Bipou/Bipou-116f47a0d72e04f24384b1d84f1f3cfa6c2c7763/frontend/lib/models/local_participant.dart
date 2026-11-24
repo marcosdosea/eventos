@@ -129,7 +129,14 @@ final class LocalParticipant {
   }
 
   ParticipanteResponse toParticipanteResponse() {
-    return ParticipanteResponse(id: id, nome: nome, cpf: cpf);
+    return ParticipanteResponse(
+      id: id,
+      nome: nome,
+      cpf: cpf,
+      idPessoaBorala: idPessoa,
+      eventoId: eventoId,
+      subeventoIds: subeventoIds,
+    );
   }
 
   Map<String, Object?> toMap() => <String, Object?>{
