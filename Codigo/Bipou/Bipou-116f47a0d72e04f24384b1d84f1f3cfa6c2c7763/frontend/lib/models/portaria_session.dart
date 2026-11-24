@@ -8,6 +8,7 @@ final class PortariaSession {
     required this.sincronizadoEm,
     this.boralaBaseUrl,
     this.operadorUsuario,
+    this.accessToken,
   });
 
   factory PortariaSession.fromJson(Map<String, dynamic> json) {
@@ -48,6 +49,9 @@ final class PortariaSession {
       operadorUsuario: json['operadorUsuario'] is String
           ? json['operadorUsuario'] as String
           : null,
+      accessToken: json['accessToken'] is String
+          ? json['accessToken'] as String
+          : null,
     );
   }
 
@@ -59,6 +63,7 @@ final class PortariaSession {
   final DateTime sincronizadoEm;
   final String? boralaBaseUrl;
   final String? operadorUsuario;
+  final String? accessToken;
 
   bool get isEventoGeral => subeventoId == null;
 
@@ -92,6 +97,7 @@ final class PortariaSession {
     DateTime? sincronizadoEm,
     String? boralaBaseUrl,
     String? operadorUsuario,
+    String? accessToken,
   }) {
     return PortariaSession(
       eventoId: eventoId ?? this.eventoId,
@@ -105,6 +111,7 @@ final class PortariaSession {
       sincronizadoEm: sincronizadoEm ?? this.sincronizadoEm,
       boralaBaseUrl: boralaBaseUrl ?? this.boralaBaseUrl,
       operadorUsuario: operadorUsuario ?? this.operadorUsuario,
+      accessToken: accessToken ?? this.accessToken,
     );
   }
 
@@ -117,5 +124,6 @@ final class PortariaSession {
     'sincronizadoEm': sincronizadoEm.toUtc().toIso8601String(),
     if (boralaBaseUrl != null) 'boralaBaseUrl': boralaBaseUrl,
     if (operadorUsuario != null) 'operadorUsuario': operadorUsuario,
+    if (accessToken != null) 'accessToken': accessToken,
   };
 }

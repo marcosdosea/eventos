@@ -93,24 +93,37 @@ final class FrequenciaLoteSyncResponse {
   final List<FrequenciaLoteRejeicao> rejeitados;
 }
 
+final class BoralaSessionCredentials {
+  const BoralaSessionCredentials({this.baseUrl, this.accessToken});
+
+  final String? baseUrl;
+  final String? accessToken;
+}
+
+typedef BoralaCredentialsProvider = Future<BoralaSessionCredentials?> Function();
+
 final class ApiService implements CredenciamentoApi, FrequenciaLoteApi {
-  ApiService({Dio? dio, String? baseUrl})
-    : _baseUrl = baseUrl ?? ApiConfig.baseUrl,
-      _dio =
-          dio ??
-          Dio(
-            BaseOptions(
-              baseUrl: baseUrl ?? ApiConfig.baseUrl,
-              connectTimeout: const Duration(seconds: 5),
-              sendTimeout: const Duration(seconds: 5),
-              receiveTimeout: const Duration(seconds: 8),
-              contentType: Headers.jsonContentType,
-              responseType: ResponseType.json,
-              headers: const <String, Object>{'Accept': 'application/json'},
-            ),
-          );
+  ApiService({
+    Dio? dio,
+    String? baseUrl,
+    this._boralaCredentialsProvider,
+  }) : _baseUrl = baseUrl ?? ApiConfig.baseUrl,
+       _dio =
+           dio ??
+           Dio(
+             BaseOptions(
+               baseUrl: baseUrl ?? ApiConfig.baseUrl,
+               connectTimeout: const Duration(seconds: 5),
+               sendTimeout: const Duration(seconds: 5),
+               receiveTimeout: const Duration(seconds: 8),
+               contentType: Headers.jsonContentType,
+               responseType: ResponseType.json,
+               headers: const <String, Object>{'Accept': 'application/json'},
+             ),
+           );
 
   final String _baseUrl;
+  final BoralaCredentialsProvider? _boralaCredentialsProvider;
   final Dio _dio;
 
   @override
@@ -173,13 +186,27 @@ final class ApiService implements CredenciamentoApi, FrequenciaLoteApi {
 
     if (comContextoBorala.isNotEmpty) {
       try {
+        final credentials = await _boralaCredentialsProvider?.call();
+        final boralaBaseUrl = credentials?.baseUrl?.trim();
+        final endpoint =
+            (boralaBaseUrl != null && boralaBaseUrl.isNotEmpty)
+            ? '${ApiConfig.normalizeHttpUrl(boralaBaseUrl, fieldName: 'BORALA_API_BASE_URL')}/api/bipou/v1/frequencias/lote'
+            : '/api/bipou/v1/frequencias/lote';
+        final token = credentials?.accessToken?.trim();
+        final options = (token != null && token.isNotEmpty)
+            ? Options(
+                headers: <String, Object>{'Authorization': 'Bearer $token'},
+              )
+            : null;
+
         final json = await _post(
-          '/api/bipou/v1/frequencias/lote',
+          endpoint,
           <String, Object?>{
             'leituras': comContextoBorala
                 .map((item) => item.toBipouLoteJson())
                 .toList(growable: false),
           },
+          options: options,
         );
         final parsed = _parseResponse(
           json,
@@ -254,7 +281,10 @@ final class ApiService implements CredenciamentoApi, FrequenciaLoteApi {
 
       Error.throwWithStackTrace(
         ApiRequestException(
-          _extractServerMessage(error.response?.data),
+          _extractServerMessage(
+            error.response?.data,
+            statusCode: error.response?.statusCode,
+          ),
           statusCode: error.response?.statusCode,
           cause: error,
         ),
@@ -263,9 +293,17 @@ final class ApiService implements CredenciamentoApi, FrequenciaLoteApi {
     }
   }
 
-  Future<Object?> _post(String path, Map<String, Object?> body) async {
+  Future<Object?> _post(
+    String path,
+    Map<String, Object?> body, {
+    Options? options,
+  }) async {
     try {
-      final response = await _dio.post<Object?>(path, data: body);
+      final response = await _dio.post<Object?>(
+        path,
+        data: body,
+        options: options,
+      );
       return response.data;
     } on DioException catch (error, stackTrace) {
       if (_isUnavailable(error)) {
@@ -277,7 +315,10 @@ final class ApiService implements CredenciamentoApi, FrequenciaLoteApi {
 
       Error.throwWithStackTrace(
         ApiRequestException(
-          _extractServerMessage(error.response?.data),
+          _extractServerMessage(
+            error.response?.data,
+            statusCode: error.response?.statusCode,
+          ),
           statusCode: error.response?.statusCode,
           cause: error,
         ),
@@ -316,13 +357,30 @@ final class ApiService implements CredenciamentoApi, FrequenciaLoteApi {
     };
   }
 
-  String _extractServerMessage(Object? data) {
-    if (data case {
-      'mensagem': final String mensagem,
-    } when mensagem.isNotEmpty) {
-      return mensagem;
+  String _extractServerMessage(Object? data, {int? statusCode}) {
+    if (data is Map) {
+      for (final key in const <String>[
+        'mensagem',
+        'message',
+        'detail',
+        'title',
+      ]) {
+        final value = data[key];
+        if (value is String && value.trim().isNotEmpty) {
+          return value.trim();
+        }
+      }
     }
-    return 'A API recusou a operacao.';
+
+    return switch (statusCode) {
+      401 =>
+        'Sessao expirada ou nao autenticada. Conecte-se novamente na Sessao de Portaria.',
+      403 => 'Operador sem permissao para registrar frequencia neste evento.',
+      404 =>
+        'Endpoint nao encontrado na API (HTTP 404). Verifique a URL configurada.',
+      final int code => 'A API recusou a operacao (HTTP $code).',
+      null => 'A API recusou a operacao.',
+    };
   }
 }
 

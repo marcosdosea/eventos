@@ -222,7 +222,43 @@ final class CredenciamentoService
     }
 
     try {
-      final response = await _api.registrar(request);
+      final api = _api;
+      final RegistroResponse response;
+      if (frequencia.possuiContextoBorala && api is FrequenciaLoteApi) {
+        final loteApi = api as FrequenciaLoteApi;
+        final loteResponse = await loteApi.sincronizarFrequenciasLote(
+          <FrequenciaPendente>[frequencia],
+        );
+        if (loteResponse.confirmados.contains(leituraId)) {
+          response = RegistroResponse(
+            id: leituraId,
+            leituraId: leituraId,
+            participanteId: participanteId,
+            participanteNome: participanteNome,
+            tipoAcao: tipoAcao,
+            dataHora: dataHora,
+            dataHoraLidaNoCelular: dataHora,
+            dispositivoId: dispositivoId,
+          );
+        } else {
+          FrequenciaLoteRejeicao? rejeicao;
+          for (final item in loteResponse.rejeitados) {
+            if (item.leituraId == leituraId) {
+              rejeicao = item;
+              break;
+            }
+          }
+          if (rejeicao != null) {
+            throw ApiRequestException(rejeicao.mensagem);
+          }
+          await _registrarTentativaFalhaRede(<String>[leituraId]);
+          await atualizarContagemFrequenciasPendentes();
+          return const OperationResult<RegistroResponse>.salvoOffline();
+        }
+      } else {
+        response = await api.registrar(request);
+      }
+
       await _marcarFrequenciasEnviadas(<String>[leituraId]);
       await atualizarContagemFrequenciasPendentes();
       _dispararSincronizacaoEmBackground();
@@ -232,9 +268,16 @@ final class CredenciamentoService
       await atualizarContagemFrequenciasPendentes();
       return const OperationResult<RegistroResponse>.salvoOffline();
     } on ApiRequestException catch (error) {
-      await _marcarFrequenciasComErro(<String, String>{
-        leituraId: error.message,
-      });
+      if (error.statusCode == 401 ||
+          error.statusCode == 403 ||
+          error.statusCode == 408 ||
+          error.statusCode == 429) {
+        await _registrarTentativaFalhaRede(<String>[leituraId]);
+      } else {
+        await _marcarFrequenciasComErro(<String, String>{
+          leituraId: error.message,
+        });
+      }
       await atualizarContagemFrequenciasPendentes();
       rethrow;
     }
