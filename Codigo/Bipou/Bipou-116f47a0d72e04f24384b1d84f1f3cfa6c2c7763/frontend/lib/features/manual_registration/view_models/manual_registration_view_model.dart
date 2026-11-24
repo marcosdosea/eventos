@@ -25,6 +25,7 @@ final class ManualRegistrationViewModel extends ChangeNotifier {
   Future<OperationResult<ParticipanteResponse>?> salvar({
     required String nome,
     required String cpf,
+    String? email,
   }) async {
     if (_salvando) {
       return null;
@@ -35,7 +36,11 @@ final class ManualRegistrationViewModel extends ChangeNotifier {
     _notify();
 
     try {
-      final participante = ParticipanteRequest(nome: nome, cpf: cpf);
+      final participante = ParticipanteRequest(
+        nome: nome,
+        cpf: cpf,
+        email: email,
+      );
       final result = await _credenciamento.cadastrarParticipante(
         participante: participante,
         dispositivoId: dispositivoId,

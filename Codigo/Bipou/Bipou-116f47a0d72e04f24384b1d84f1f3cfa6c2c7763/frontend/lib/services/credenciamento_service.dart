@@ -307,6 +307,7 @@ final class CredenciamentoService
       cadastroId: request.cadastroId!,
       nome: request.nome,
       cpf: request.cpf,
+      email: request.email,
       dispositivoId: dispositivoId,
       criadoEm: dataHora,
     );
