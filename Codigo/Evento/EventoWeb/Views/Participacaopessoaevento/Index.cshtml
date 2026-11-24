@@ -71,8 +71,8 @@
             <thead class="blue-normal blue-normal-bg-table">
                 <tr>
                     <th>Nome</th>
-                    <th>Tipo</th>
-                    <th>Data e Hora</th>
+                    <th>Entrada</th>
+                    <th>Saída</th>
                     <th>Ações</th>
                 </tr>
             </thead>
@@ -83,8 +83,8 @@
                     {
                     <tr>
                         <td>@participacao.IdPessoaNavigation?.Nome</td>
-                        <td>@(participacao.Saida.HasValue ? "Saída" : "Entrada")</td>
-                        <td>@(participacao.Saida.HasValue ? participacao.Saida.Value.ToString("dd/MM/yyyy às HH:mm\\h") : participacao.Entrada.ToString("dd/MM/yyyy às HH:mm\\h"))</td>
+                        <td data-order="@participacao.Entrada.ToString("yyyy-MM-dd HH:mm:ss")">@participacao.Entrada.ToString("dd/MM/yyyy 'às' HH:mm'h'")</td>
+                        <td data-order="@(participacao.Saida?.ToString("yyyy-MM-dd HH:mm:ss") ?? string.Empty)">@(participacao.Saida.HasValue ? participacao.Saida.Value.ToString("dd/MM/yyyy 'às' HH:mm'h'") : "-")</td>
                         <td>
                             <form style="display: inline;" method="post" asp-action="ExcluirParticipacao" id="formExcluir_@participacao.Id">
                                 @Html.AntiForgeryToken()
@@ -99,8 +99,8 @@
                                         style="text-decoration: none;"
                                         data-form-id="formExcluir_@participacao.Id"
                                         data-nome="@participacao.IdPessoaNavigation?.Nome"
-                                        data-tipo="@(participacao.Saida.HasValue ? "Saída" : "Entrada")"
-                                        data-data="@(participacao.Saida.HasValue ? participacao.Saida.Value.ToString("dd/MM/yyyy 'às' HH:mm") : participacao.Entrada.ToString("dd/MM/yyyy 'às' HH:mm"))">
+                                        data-entrada="@participacao.Entrada.ToString("dd/MM/yyyy 'às' HH:mm'h'")"
+                                        data-saida="@(participacao.Saida.HasValue ? participacao.Saida.Value.ToString("dd/MM/yyyy 'às' HH:mm'h'") : string.Empty)">
                                     Excluir
                                 </button>
                             </form>
@@ -166,7 +166,7 @@
                 language: {
                     url: '@Url.Content("~/lib/datatable/js/pt-BR.json")'
                 },
-                order: [[2, 'desc']], // Ordena por data/hora decrescente
+                order: [[1, 'desc']], // Ordena por data/hora de entrada decrescente
                 columnDefs: [
                     { orderable: false, targets: 3 } // Desabilita ordenação na coluna de ações
                 ]
@@ -187,7 +187,12 @@
            $(document).on('click', '.btn-excluir-participacao', function () {
                 formExcluirAtual = document.getElementById($(this).data('form-id'));
                 $('#nomeParticipanteExcluir').text($(this).data('nome'));
-                $('#detalheParticipacaoExcluir').text('Registro de ' + $(this).data('tipo') + ' em ' + $(this).data('data'));
+                var entrada = $(this).data('entrada');
+                var saida = $(this).data('saida');
+                var detalhe = saida
+                    ? 'Entrada em ' + entrada + ' | Saída em ' + saida
+                    : 'Entrada em ' + entrada;
+                $('#detalheParticipacaoExcluir').text(detalhe);
                 new bootstrap.Modal(document.getElementById('modalExcluirParticipacao')).show();
             });
 

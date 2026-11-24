@@ -455,6 +455,98 @@ void main() {
       }
     },
   );
+
+  test(
+    'envia leitura online com contexto Borala diretamente pelo endpoint de lote',
+    () async {
+      final calls = <String>[];
+      final api = _BatchApiSpy(calls);
+      final frequenciaStore = InMemoryFrequenciaPendenteStore();
+      final connectivity = _ConnectivityMonitorFake(connected: true);
+      final service = CredenciamentoService(
+        auditLog: _AuditSpy(calls),
+        api: api,
+        cadastroPendenteStore: _CadastroPendenteStoreMemory(),
+        frequenciaPendenteStore: frequenciaStore,
+        connectivityMonitor: connectivity,
+        clock: () => now,
+        uuidGenerator: () => uuid,
+      );
+
+      try {
+        final result = await service.registrarLeitura(
+          participanteId: participanteId,
+          participanteNome: 'Maria Santos',
+          tipoAcao: TipoAcao.entrada,
+          dispositivoId: 'portaria-01',
+          idPessoa: 1042,
+          idEvento: 15,
+          idSubEvento: 42,
+        );
+
+        expect(result.status, SyncStatus.enviado);
+        expect(result.data?.participanteNome, 'Maria Santos');
+        expect(calls, <String>['audit', 'api.sincronizarFrequenciasLote']);
+        expect(api.batchSizes, <int>[1]);
+        expect(api.sentLeituraIds, <String>[uuid]);
+        expect(await frequenciaStore.contarPendentes(), 0);
+        expect(
+          (await frequenciaStore.buscarPorLeituraId(uuid))?.statusEnvio,
+          StatusEnvioFrequencia.enviado,
+        );
+      } finally {
+        await service.dispose();
+        await connectivity.dispose();
+      }
+    },
+  );
+
+  test(
+    'preserva leitura pendente quando envio imediato online retorna HTTP 401',
+    () async {
+      final calls = <String>[];
+      final api = _BatchApiSpy(calls)..batchErrorStatusCode = 401;
+      final frequenciaStore = InMemoryFrequenciaPendenteStore();
+      final connectivity = _ConnectivityMonitorFake(connected: true);
+      final service = CredenciamentoService(
+        auditLog: _AuditSpy(calls),
+        api: api,
+        cadastroPendenteStore: _CadastroPendenteStoreMemory(),
+        frequenciaPendenteStore: frequenciaStore,
+        connectivityMonitor: connectivity,
+        clock: () => now,
+        uuidGenerator: () => uuid,
+      );
+
+      try {
+        await expectLater(
+          service.registrarLeitura(
+            participanteId: participanteId,
+            participanteNome: 'Maria Santos',
+            tipoAcao: TipoAcao.entrada,
+            dispositivoId: 'portaria-01',
+            idPessoa: 1042,
+            idEvento: 15,
+          ),
+          throwsA(
+            isA<ApiRequestException>().having(
+              (e) => e.statusCode,
+              'statusCode',
+              401,
+            ),
+          ),
+        );
+
+        expect(await frequenciaStore.contarPendentes(), 1);
+        final salva = await frequenciaStore.buscarPorLeituraId(uuid);
+        expect(salva?.statusEnvio, StatusEnvioFrequencia.pendente);
+        expect(salva?.tentativasEnvio, 1);
+      } finally {
+        await service.dispose();
+        await connectivity.dispose();
+      }
+    },
+  );
 }
 
 final class _AuditSpy implements AuditLogWriter {

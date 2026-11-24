@@ -22,14 +22,26 @@ Future<void> main() async {
   try {
     final dispositivoId = await DeviceIdentityService().getOrCreate();
     final auditLog = AuditLogService();
+    final localParticipantRepository = SqliteLocalParticipantRepository();
+    final apiService = ApiService(
+      boralaCredentialsProvider: () async {
+        final sessao = await localParticipantRepository.loadSession();
+        if (sessao == null) {
+          return null;
+        }
+        return BoralaSessionCredentials(
+          baseUrl: sessao.boralaBaseUrl,
+          accessToken: sessao.accessToken,
+        );
+      },
+    );
     final credenciamento = CredenciamentoService(
       auditLog: auditLog,
-      api: ApiService(),
+      api: apiService,
       cadastroPendenteStore: CadastroPendenteFileStore(),
       frequenciaPendenteStore: SqliteFrequenciaPendenteStore(),
       connectivityMonitor: ConnectivityPlusMonitor(),
     );
-    final localParticipantRepository = SqliteLocalParticipantRepository();
     final boralaApi = BoralaApiService();
 
     runApp(

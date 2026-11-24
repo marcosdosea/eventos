@@ -274,6 +274,7 @@ final class _DashboardScreenState extends State<DashboardScreen> {
             backgroundColor: const Color(0xFF16803C),
           ),
         );
+      await _sincronizarFrequenciasAutomaticamente();
     } else {
       await _carregarSessaoAtiva();
     }

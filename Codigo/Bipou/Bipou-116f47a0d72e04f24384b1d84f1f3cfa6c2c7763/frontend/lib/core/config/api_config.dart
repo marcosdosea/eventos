@@ -1,12 +1,17 @@
 final class ApiConfig {
   ApiConfig._();
 
+  static const String defaultBoralaApiBaseUrl =
+      'https://borala-api.itatechjr.com.br';
+
   static const String _configuredBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
+    defaultValue: defaultBoralaApiBaseUrl,
   );
 
   static const String _configuredBoralaBaseUrl = String.fromEnvironment(
     'BORALA_API_BASE_URL',
+    defaultValue: defaultBoralaApiBaseUrl,
   );
 
   static String get baseUrl {
