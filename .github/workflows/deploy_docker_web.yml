@@ -14,7 +14,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0'
+          dotnet-version: '10.0'
 
       - name: Restore dependencies
         run: |
@@ -34,7 +34,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0'
+          dotnet-version: '10.0'
 
       - name: Restore dependencies
         run: |
@@ -90,6 +90,6 @@ jobs:
           script: |
             export PATH=$HOME/bin:$PATH
             export DOCKER_HOST=unix:///run/user/$(id -u)/docker.sock
-            cd ${{ secrets.COMPOSER_DIR }}
+            cd ${{ secrets.COMPOSE_DIR }}
             docker compose pull borala-web
             docker compose up -d borala-web
