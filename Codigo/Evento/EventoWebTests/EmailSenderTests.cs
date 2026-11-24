@@ -65,7 +65,7 @@ public class EmailSenderTests
             Environment.SetEnvironmentVariable("EMAIL_USER", null);
 
             var sender = new EmailSender(config, env.Object, logger.Object);
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(
+            await Assert.ThrowsAsync<InvalidOperationException>(
                 () => sender.EnviarEmailAsync("participante@teste.com", "Assunto", "<p>Teste</p>"));
         }
         finally

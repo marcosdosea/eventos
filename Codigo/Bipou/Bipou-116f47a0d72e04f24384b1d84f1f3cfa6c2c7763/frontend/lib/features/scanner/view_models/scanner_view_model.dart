@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:bipou_frontend/core/validation/cpf_validator.dart';
+import 'package:bipou_frontend/features/scanner/models/recent_scan_record.dart';
+import 'package:bipou_frontend/features/scanner/models/scanner_context.dart';
 import 'package:bipou_frontend/features/scanner/models/scanner_feedback.dart';
 import 'package:bipou_frontend/models/local_participant.dart';
 import 'package:bipou_frontend/models/operation_result.dart';
@@ -10,6 +12,7 @@ import 'package:bipou_frontend/models/tipo_acao.dart';
 import 'package:bipou_frontend/services/api_service.dart';
 import 'package:bipou_frontend/services/audit_log_service.dart';
 import 'package:bipou_frontend/services/credenciamento_service.dart';
+import 'package:bipou_frontend/services/frequencia_pendente_store_contract.dart';
 import 'package:bipou_frontend/services/local_participant_repository.dart';
 import 'package:flutter/foundation.dart';
 
@@ -20,16 +23,20 @@ final class ScannerViewModel extends ChangeNotifier {
     required this._credenciamento,
     required this.tipoAcao,
     required this.dispositivoId,
+    this.contextoAtivo,
     this.sessaoAtiva,
     this.localParticipants,
     this.cooldown = const Duration(seconds: 5),
     ScannerClock? clock,
   }) : _clock = clock ?? DateTime.now;
 
+  static const int maxHistoricoRecente = 5;
+
   final CredenciamentoGateway _credenciamento;
   final ScannerClock _clock;
   final TipoAcao tipoAcao;
   final String dispositivoId;
+  final ScannerSessionContext? contextoAtivo;
   final PortariaSession? sessaoAtiva;
   final LocalParticipantLookup? localParticipants;
   final Duration cooldown;
@@ -39,136 +46,57 @@ final class ScannerViewModel extends ChangeNotifier {
   final Map<String, DateTime> _ultimaLeituraPorParticipante =
       <String, DateTime>{};
   final Set<String> _participantesEmProcessamento = <String>{};
+  final List<RecentScanRecord> _historicoRecente = <RecentScanRecord>[];
 
   bool _disposed = false;
   bool _leituraEmAndamento = false;
 
   Stream<ScannerFeedback> get feedbacks => _feedbackController.stream;
   int get leiturasEmProcessamento => _participantesEmProcessamento.length;
-  bool get processando => _participantesEmProcessamento.isNotEmpty;
+  bool get processando =>
+      _leituraEmAndamento || _participantesEmProcessamento.isNotEmpty;
+  List<RecentScanRecord> get historicoRecente =>
+      List<RecentScanRecord>.unmodifiable(_historicoRecente);
 
-  Future<void> processarPayload(String? payload) async {
+  int? get _eventoIdAtivo => contextoAtivo?.eventoId ?? sessaoAtiva?.eventoId;
+
+  int? get _subeventoIdAtivo =>
+      contextoAtivo != null ? contextoAtivo!.subeventoId : sessaoAtiva?.subeventoId;
+
+  bool get _isSubeventoAtivo => _subeventoIdAtivo != null;
+
+  String get _destinoAtivoLabel {
+    if (contextoAtivo != null) {
+      return contextoAtivo!.destinoLabel;
+    }
+    if (sessaoAtiva != null) {
+      return sessaoAtiva!.destinoLabel;
+    }
+    return 'Evento Geral';
+  }
+
+  Future<void> processarPayload(String? rawPayload) async {
     if (_leituraEmAndamento) {
       return;
     }
 
-    final participante = _extrairParticipante(payload);
+    final stopwatch = Stopwatch()..start();
+    final extracao = _extrairParticipanteDetalhado(rawPayload);
+    final participante = extracao.participante;
     if (participante == null) {
       _emitir(
-        const ScannerFeedback(
+        ScannerFeedback(
           message: 'QR Code invalido',
           type: ScannerFeedbackType.erro,
+          statusLabel: 'QR CODE INVÁLIDO',
+          detail: extracao.errorDetail,
+          processingDuration: stopwatch.elapsed,
         ),
       );
       return;
     }
 
-    final agora = _clock();
-    _removerLeiturasExpiradas(agora);
-
-    final ultimaLeitura = _ultimaLeituraPorParticipante[participante.id];
-    if (_participantesEmProcessamento.contains(participante.id) ||
-        (ultimaLeitura != null && agora.difference(ultimaLeitura) < cooldown)) {
-      return;
-    }
-
-    _participantesEmProcessamento.add(participante.id);
-    _leituraEmAndamento = true;
-    _notificarMudanca();
-
-    try {
-      final sessao = sessaoAtiva;
-      if (sessao != null &&
-          participante.eid != null &&
-          participante.eid != sessao.eventoId) {
-        _emitir(
-          const ScannerFeedback(
-            message: 'Participante pertence a outro evento',
-            type: ScannerFeedbackType.erro,
-          ),
-        );
-        return;
-      }
-
-      final local = await _buscarNoCacheLocal(participante, sessao);
-      final nomeIdentificado = local?.nome ?? participante.nome;
-      final participanteId = local?.id ?? participante.id;
-
-      if (sessao != null && sessao.subeventoId != null) {
-        final subId = sessao.subeventoId!;
-        final inscrito = local != null
-            ? local.inscritoNoSubevento(subId)
-            : participante.sid.contains(subId);
-        if (!inscrito) {
-          _emitir(
-            ScannerFeedback(
-              message: '$nomeIdentificado nao esta inscrito neste subevento',
-              type: ScannerFeedbackType.erro,
-            ),
-          );
-          return;
-        }
-      }
-
-      _ultimaLeituraPorParticipante[participante.id] = agora;
-
-      final result = await _credenciamento.registrarLeitura(
-        participanteId: participanteId,
-        participanteNome: nomeIdentificado,
-        tipoAcao: tipoAcao,
-        dispositivoId: dispositivoId,
-        eventoId: sessao?.eventoId,
-        subeventoId: sessao?.subeventoId,
-        operadorUsuario: sessao?.operadorUsuario,
-      );
-
-      if (result.status == SyncStatus.salvoOffline) {
-        _emitir(
-          ScannerFeedback(
-            message: 'Salvo Offline: $nomeIdentificado',
-            type: ScannerFeedbackType.offline,
-          ),
-        );
-        return;
-      }
-
-      final nomeConfirmado = result.data?.participanteNome ?? nomeIdentificado;
-      _emitir(
-        ScannerFeedback(
-          message: 'Registro realizado: $nomeConfirmado',
-          type: ScannerFeedbackType.sucesso,
-        ),
-      );
-    } on ApiRequestException catch (error) {
-      _emitir(
-        ScannerFeedback(message: error.message, type: ScannerFeedbackType.erro),
-      );
-    } on AuditLogException {
-      _emitir(
-        const ScannerFeedback(
-          message: 'Falha ao salvar a auditoria local',
-          type: ScannerFeedbackType.erro,
-        ),
-      );
-    } on ArgumentError {
-      _emitir(
-        const ScannerFeedback(
-          message: 'Dados da leitura invalidos',
-          type: ScannerFeedbackType.erro,
-        ),
-      );
-    } on Object {
-      _emitir(
-        const ScannerFeedback(
-          message: 'Nao foi possivel processar a leitura',
-          type: ScannerFeedbackType.erro,
-        ),
-      );
-    } finally {
-      _participantesEmProcessamento.remove(participante.id);
-      _leituraEmAndamento = false;
-      _notificarMudanca();
-    }
+    await _validarEProcessarParticipante(participante, stopwatch: stopwatch);
   }
 
   Future<void> processarCpf(String cpfInformado) async {
@@ -176,12 +104,15 @@ final class ScannerViewModel extends ChangeNotifier {
       return;
     }
 
+    final stopwatch = Stopwatch()..start();
     final cpf = cpfInformado.trim();
     if (!CpfValidator.isValid(cpf)) {
       _emitir(
-        const ScannerFeedback(
+        ScannerFeedback(
           message: 'CPF invalido',
           type: ScannerFeedbackType.erro,
+          statusLabel: 'CPF INVÁLIDO',
+          processingDuration: stopwatch.elapsed,
         ),
       );
       return;
@@ -192,40 +123,70 @@ final class ScannerViewModel extends ChangeNotifier {
     _participantesEmProcessamento.add(chaveConsulta);
     _notificarMudanca();
 
+    _emitir(
+      ScannerFeedback(
+        message: 'Consultando CPF...',
+        type: ScannerFeedbackType.processando,
+        statusLabel: 'PROCESSANDO LEITURA',
+        detail: 'Validando inscrição do participante...',
+        processingDuration: stopwatch.elapsed,
+      ),
+    );
+
     ParticipanteQrPayload? participante;
+    LocalParticipant? localEncontrado;
     try {
-      final sessao = sessaoAtiva;
+      final eventoAtivo = _eventoIdAtivo;
       final lookup = localParticipants;
-      if (sessao != null && lookup != null) {
-        final local = await lookup.findByCpf(cpf, eventoId: sessao.eventoId);
+      if (eventoAtivo != null && lookup != null) {
+        final local = await lookup.findByCpf(cpf, eventoId: eventoAtivo);
         if (local != null) {
+          localEncontrado = local;
           participante = local.toQrPayload();
         }
       }
 
       if (participante == null) {
-        final encontrado = await _credenciamento.buscarParticipantePorCpf(cpf);
+        final encontrado = await _credenciamento.buscarParticipantePorCpf(
+          cpf,
+          eventoId: eventoAtivo,
+        );
         participante = ParticipanteQrPayload(
           id: encontrado.id,
           nome: encontrado.nome,
+          pid: encontrado.idPessoaBorala,
+          cpf: encontrado.cpf,
+          eid: encontrado.eventoId,
+          sid: encontrado.subeventoIds,
         );
       }
     } on ApiUnavailableException {
       _emitir(
-        const ScannerFeedback(
-          message: 'Participante nao encontrado no cache local e API indisponivel',
+        ScannerFeedback(
+          message: localParticipants != null
+              ? 'Participante nao encontrado no cache local e API indisponivel'
+              : 'API indisponivel para consultar o CPF',
           type: ScannerFeedbackType.erro,
+          statusLabel: 'API INDISPONÍVEL',
+          processingDuration: stopwatch.elapsed,
         ),
       );
     } on ApiRequestException catch (error) {
       _emitir(
-        ScannerFeedback(message: error.message, type: ScannerFeedbackType.erro),
+        ScannerFeedback(
+          message: error.message,
+          type: ScannerFeedbackType.erro,
+          statusLabel: 'CPF NÃO ENCONTRADO',
+          processingDuration: stopwatch.elapsed,
+        ),
       );
     } on Object {
       _emitir(
-        const ScannerFeedback(
+        ScannerFeedback(
           message: 'Nao foi possivel consultar o CPF',
           type: ScannerFeedbackType.erro,
+          statusLabel: 'ERRO NA CONSULTA',
+          processingDuration: stopwatch.elapsed,
         ),
       );
     } finally {
@@ -235,20 +196,24 @@ final class ScannerViewModel extends ChangeNotifier {
     }
 
     if (participante != null) {
-      await processarPayload(participante.toRawJson());
+      await _validarEProcessarParticipante(
+        participante,
+        stopwatch: stopwatch,
+        localPrecarregado: localEncontrado,
+        consultarCacheLocal: false,
+      );
     }
   }
 
   Future<LocalParticipant?> _buscarNoCacheLocal(
     ParticipanteQrPayload payload,
-    PortariaSession? sessao,
   ) async {
     final lookup = localParticipants;
     if (lookup == null) {
       return null;
     }
 
-    final eventoId = sessao?.eventoId ?? payload.eid;
+    final eventoId = _eventoIdAtivo ?? payload.eid;
     if (eventoId != null && payload.pid != null) {
       final porPessoa = await lookup.findByIdPessoa(
         payload.pid!,
@@ -259,7 +224,9 @@ final class ScannerViewModel extends ChangeNotifier {
       }
     }
 
-    if (eventoId != null && payload.cpf != null && payload.cpf != '00000000000') {
+    if (eventoId != null &&
+        payload.cpf != null &&
+        payload.cpf != '00000000000') {
       final porCpf = await lookup.findByCpf(payload.cpf!, eventoId: eventoId);
       if (porCpf != null) {
         return porCpf;
@@ -274,16 +241,279 @@ final class ScannerViewModel extends ChangeNotifier {
       const ScannerFeedback(
         message: 'Falha na camera',
         type: ScannerFeedbackType.erro,
+        statusLabel: 'FALHA NA CÂMERA',
       ),
     );
   }
 
-  ParticipanteQrPayload? _extrairParticipante(String? payload) {
-    try {
-      return ParticipanteQrPayload.fromRawJson(payload);
-    } on FormatException {
-      return null;
+  Future<void> _validarEProcessarParticipante(
+    ParticipanteQrPayload participante, {
+    required Stopwatch stopwatch,
+    LocalParticipant? localPrecarregado,
+    bool consultarCacheLocal = true,
+  }) async {
+    if (_leituraEmAndamento) {
+      return;
     }
+
+    _leituraEmAndamento = true;
+    String? participanteIdEmProcessamento;
+    var registroEfetivado = false;
+
+    try {
+      var local = localPrecarregado;
+      if (local == null && consultarCacheLocal && localParticipants != null) {
+        try {
+          local = await _buscarNoCacheLocal(participante);
+        } on Object {
+          // Falha pontual no cache local nao deve impedir a validacao pelo payload do QR.
+          local = null;
+        }
+      }
+
+      final nomeIdentificado = local?.nome ?? participante.nome;
+      final participanteId = local?.id ?? participante.id;
+      final eventoParticipante = participante.eid ?? local?.eventoId;
+      final subeventosParticipante =
+          local != null ? local.subeventoIds : participante.sid;
+
+      final eventoAtivo = _eventoIdAtivo;
+      if (eventoAtivo != null &&
+          eventoParticipante != null &&
+          eventoParticipante != eventoAtivo) {
+        _emitir(
+          ScannerFeedback(
+            message: _isSubeventoAtivo
+                ? 'Não inscrito neste curso!'
+                : 'Não inscrito neste evento!',
+            type: ScannerFeedbackType.naoInscrito,
+            participantName: nomeIdentificado,
+            statusLabel: 'ACESSO NEGADO',
+            detail: 'Crachá pertence a outro evento',
+            processingDuration: stopwatch.elapsed,
+          ),
+        );
+        return;
+      }
+
+      final subeventoAtivo = _subeventoIdAtivo;
+      if (subeventoAtivo != null &&
+          !subeventosParticipante.contains(subeventoAtivo)) {
+        _emitir(
+          ScannerFeedback(
+            message: 'Não inscrito neste curso!',
+            type: ScannerFeedbackType.naoInscrito,
+            participantName: nomeIdentificado,
+            statusLabel: 'ACESSO NEGADO',
+            detail: 'Curso ativo: $_destinoAtivoLabel',
+            processingDuration: stopwatch.elapsed,
+          ),
+        );
+        return;
+      }
+
+      final agora = _clock();
+      _removerLeiturasExpiradas(agora);
+
+      if (_participantesEmProcessamento.contains(participanteId)) {
+        return;
+      }
+
+      final ultimaLeitura = _ultimaLeituraPorParticipante[participanteId];
+      if (ultimaLeitura != null && agora.difference(ultimaLeitura) < cooldown) {
+        _emitir(
+          ScannerFeedback(
+            message: 'Aguarde para bipar novamente',
+            type: ScannerFeedbackType.duplicado,
+            participantName: nomeIdentificado,
+            statusLabel: 'LEITURA DUPLICADA',
+            detail:
+                'Crachá lido recentemente (aguarde ${cooldown.inSeconds}s)',
+            processingDuration: stopwatch.elapsed,
+          ),
+        );
+        return;
+      }
+
+      _ultimaLeituraPorParticipante[participanteId] = agora;
+      _participantesEmProcessamento.add(participanteId);
+      participanteIdEmProcessamento = participanteId;
+      _notificarMudanca();
+
+      _emitir(
+        ScannerFeedback(
+          message: 'Processando leitura: $nomeIdentificado',
+          type: ScannerFeedbackType.processando,
+          participantName: nomeIdentificado,
+          statusLabel: 'PROCESSANDO LEITURA',
+          detail: 'Aguardando confirmação...',
+          processingDuration: stopwatch.elapsed,
+        ),
+      );
+
+      try {
+        final eventoResolvido = eventoAtivo ?? eventoParticipante;
+        final result = await _credenciamento.registrarLeitura(
+          participanteId: participanteId,
+          participanteNome: nomeIdentificado,
+          tipoAcao: tipoAcao,
+          dispositivoId: dispositivoId,
+          idPessoa: local?.idPessoa ?? participante.pid,
+          idEvento: eventoResolvido,
+          idSubEvento: subeventoAtivo,
+          eventoId: eventoResolvido,
+          subeventoId: subeventoAtivo,
+          operadorUsuario: sessaoAtiva?.operadorUsuario,
+        );
+
+        final statusAcao = _statusAcaoRegistrada(tipoAcao);
+
+        if (result.status == SyncStatus.salvoOffline) {
+          registroEfetivado = true;
+          _adicionarAoHistorico(
+            RecentScanRecord(
+              participanteId: participanteId,
+              participanteNome: nomeIdentificado,
+              tipoAcao: tipoAcao,
+              registradoEm: agora,
+              offline: true,
+            ),
+          );
+          _emitir(
+            ScannerFeedback(
+              message: 'Salvo Offline: $nomeIdentificado',
+              type: ScannerFeedbackType.offline,
+              participantName: nomeIdentificado,
+              statusLabel: statusAcao,
+              detail: 'Salvo offline na auditoria local',
+              processingDuration: stopwatch.elapsed,
+            ),
+          );
+          return;
+        }
+
+        final nomeRetornado = result.data?.participanteNome.trim();
+        final nomeConfirmado =
+            (nomeRetornado != null && nomeRetornado.isNotEmpty)
+            ? nomeRetornado
+            : nomeIdentificado;
+        registroEfetivado = true;
+        _adicionarAoHistorico(
+          RecentScanRecord(
+            participanteId: participanteId,
+            participanteNome: nomeConfirmado,
+            tipoAcao: tipoAcao,
+            registradoEm: agora,
+            offline: false,
+          ),
+        );
+        _emitir(
+          ScannerFeedback(
+            message: '$statusAcao: $nomeConfirmado',
+            type: ScannerFeedbackType.sucesso,
+            participantName: nomeConfirmado,
+            statusLabel: statusAcao,
+            processingDuration: stopwatch.elapsed,
+          ),
+        );
+      } on ApiRequestException catch (error) {
+        _emitir(
+          ScannerFeedback(
+            message: error.message,
+            type: ScannerFeedbackType.erro,
+            participantName: nomeIdentificado,
+            statusLabel: 'ERRO NO REGISTRO',
+            processingDuration: stopwatch.elapsed,
+          ),
+        );
+      } on AuditLogException {
+        _emitir(
+          ScannerFeedback(
+            message: 'Falha ao salvar a auditoria local',
+            type: ScannerFeedbackType.erro,
+            participantName: nomeIdentificado,
+            statusLabel: 'ERRO DE AUDITORIA',
+            processingDuration: stopwatch.elapsed,
+          ),
+        );
+      } on FrequenciaPendenteStoreException {
+        _emitir(
+          ScannerFeedback(
+            message: 'Falha ao salvar a leitura na fila local',
+            type: ScannerFeedbackType.erro,
+            participantName: nomeIdentificado,
+            statusLabel: 'ERRO NA FILA LOCAL',
+            processingDuration: stopwatch.elapsed,
+          ),
+        );
+      } on ArgumentError {
+        _emitir(
+          ScannerFeedback(
+            message: 'Dados da leitura invalidos',
+            type: ScannerFeedbackType.erro,
+            participantName: nomeIdentificado,
+            statusLabel: 'DADOS INVÁLIDOS',
+            processingDuration: stopwatch.elapsed,
+          ),
+        );
+      } on Object {
+        _emitir(
+          ScannerFeedback(
+            message: 'Nao foi possivel processar a leitura',
+            type: ScannerFeedbackType.erro,
+            participantName: nomeIdentificado,
+            statusLabel: 'ERRO NO REGISTRO',
+            processingDuration: stopwatch.elapsed,
+          ),
+        );
+      }
+    } finally {
+      if (participanteIdEmProcessamento != null) {
+        if (!registroEfetivado) {
+          _ultimaLeituraPorParticipante.remove(participanteIdEmProcessamento);
+        }
+        _participantesEmProcessamento.remove(participanteIdEmProcessamento);
+      }
+      _leituraEmAndamento = false;
+      _notificarMudanca();
+    }
+  }
+
+  ({ParticipanteQrPayload? participante, String errorDetail})
+  _extrairParticipanteDetalhado(String? payload) {
+    try {
+      final parsed = ParticipanteQrPayload.fromRawJson(
+        payload,
+        secretKey: contextoAtivo?.secretKey,
+      );
+      return (participante: parsed, errorDetail: '');
+    } on FormatException catch (error) {
+      final msg = error.message.toLowerCase();
+      final isHashError = msg.contains('hash') || msg.contains('assinatura');
+      return (
+        participante: null,
+        errorDetail: isHashError
+            ? 'Assinatura hash divergente'
+            : 'QR Code corrompido ou inválido',
+      );
+    }
+  }
+
+  void _adicionarAoHistorico(RecentScanRecord record) {
+    _historicoRecente.insert(0, record);
+    if (_historicoRecente.length > maxHistoricoRecente) {
+      _historicoRecente.removeRange(
+        maxHistoricoRecente,
+        _historicoRecente.length,
+      );
+    }
+  }
+
+  String _statusAcaoRegistrada(TipoAcao acao) {
+    return switch (acao) {
+      TipoAcao.entrada => 'ENTRADA REGISTRADA',
+      TipoAcao.saida => 'SAÍDA REGISTRADA',
+    };
   }
 
   void _removerLeiturasExpiradas(DateTime agora) {

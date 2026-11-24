@@ -805,21 +805,20 @@ namespace Service.Tests
         }
 
         [TestMethod()]
-        [ExpectedException(typeof(ArgumentException))]
-        public void TransferirIngressoTest_CpfInvalido_LancaArgumentException()
+         public void TransferirIngressoTest_CpfInvalido_LancaArgumentException()
         {
-            _inscricaoService.TransferirIngresso(1, "123456", "Nome Amigo", "amigo@gmail.com", "12246232367");
+            Assert.Throws<ArgumentException>(() =>
+                _inscricaoService.TransferirIngresso(1, "123456", "Nome Amigo", "amigo@gmail.com", "12246232367"));
         }
 
         [TestMethod()]
-        [ExpectedException(typeof(ArgumentException))]
         public void TransferirIngressoTest_MesmoUsuario_LancaArgumentException()
         {
-            _inscricaoService.TransferirIngresso(1, "12246232367", "Mesmo Nome", "amigo@gmail.com", "12246232367");
+            Assert.Throws<ArgumentException>(() =>
+                _inscricaoService.TransferirIngresso(1, "12246232367", "Mesmo Nome", "amigo@gmail.com", "12246232367"));
         }
 
         [TestMethod()]
-        [ExpectedException(typeof(ArgumentException))]
         public void TransferirIngressoTest_InscricaoNaoPertenceAoUsuario_LancaArgumentException()
         {
             var inscricao = new Inscricaopessoaevento
@@ -835,11 +834,11 @@ namespace Service.Tests
             _context.Inscricaopessoaeventos.Add(inscricao);
             _context.SaveChanges();
 
-            _inscricaoService.TransferirIngresso(53, "04026893057", "Amigo", "amigo@gmail.com", "12246232367");
+            Assert.Throws<ArgumentException>(() =>
+                _inscricaoService.TransferirIngresso(53, "04026893057", "Amigo", "amigo@gmail.com", "12246232367"));
         }
 
         [TestMethod()]
-        [ExpectedException(typeof(InvalidOperationException))]
         public void TransferirIngressoTest_IngressoCancelado_LancaInvalidOperationException()
         {
             var inscricao = new Inscricaopessoaevento
@@ -855,11 +854,11 @@ namespace Service.Tests
             _context.Inscricaopessoaeventos.Add(inscricao);
             _context.SaveChanges();
 
-            _inscricaoService.TransferirIngresso(54, "04026893057", "Amigo", "amigo@gmail.com", "12246232367");
+            Assert.Throws<InvalidOperationException>(() =>
+                _inscricaoService.TransferirIngresso(54, "04026893057", "Amigo", "amigo@gmail.com", "12246232367"));
         }
 
         [TestMethod()]
-        [ExpectedException(typeof(InvalidOperationException))]
         public void TransferirIngressoTest_EventoEncerrado_LancaInvalidOperationException()
         {
             var inscricao = new Inscricaopessoaevento
@@ -875,17 +874,17 @@ namespace Service.Tests
             _context.Inscricaopessoaeventos.Add(inscricao);
             _context.SaveChanges();
 
-            _inscricaoService.TransferirIngresso(55, "04026893057", "Amigo", "amigo@gmail.com", "12246232367");
+            Assert.Throws<InvalidOperationException>(() =>
+                _inscricaoService.TransferirIngresso(55, "04026893057", "Amigo", "amigo@gmail.com", "12246232367"));
         }
         [TestMethod()]
-        [ExpectedException(typeof(ArgumentException))]
         public void TransferirIngressoTest_EmailInvalido_LancaArgumentException()
         {
-            _inscricaoService.TransferirIngresso(1, "04026893057", "Nome Amigo", "email_invalido", "12246232367");
+            Assert.Throws<ArgumentException>(() =>
+                _inscricaoService.TransferirIngresso(1, "04026893057", "Nome Amigo", "email_invalido", "12246232367"));
         }
 
         [TestMethod()]
-        [ExpectedException(typeof(ArgumentException))]
         public void TransferirIngressoTest_EmailNaoConfereComBanco_LancaArgumentException()
         {
             var evento = _context.Eventos.Find((uint)1);
@@ -915,11 +914,11 @@ namespace Service.Tests
             _context.Inscricaopessoaeventos.Add(inscricao);
             _context.SaveChanges();
 
-            _inscricaoService.TransferirIngresso(56, "415.236.789-00", "Lucas Oliveira", "email.errado@gmail.com", "12246232367");
+            Assert.Throws<ArgumentException>(() =>
+                _inscricaoService.TransferirIngresso(56, "415.236.789-00", "Lucas Oliveira", "email.errado@gmail.com", "12246232367"));
         }
 
         [TestMethod()]
-        [ExpectedException(typeof(ArgumentException))]
         public void TransferirIngressoTest_EmailJaCadastradoOutroCpf_LancaArgumentException()
         {
             var evento = _context.Eventos.Find((uint)1);
@@ -949,11 +948,11 @@ namespace Service.Tests
             _context.Inscricaopessoaeventos.Add(inscricao);
             _context.SaveChanges();
 
-            _inscricaoService.TransferirIngresso(57, "987.654.321-00", "Novo Participante", "renata@gmail.com", "12246232367");
+            Assert.Throws<ArgumentException>(() =>
+                _inscricaoService.TransferirIngresso(57, "987.654.321-00", "Novo Participante", "renata@gmail.com", "12246232367"));
         }
 
         [TestMethod()]
-        [ExpectedException(typeof(ArgumentException))]
         public void TransferirIngressoTest_NomeNaoConfereComBanco_LancaArgumentException()
         {
             var evento = _context.Eventos.Find((uint)1);
@@ -983,11 +982,11 @@ namespace Service.Tests
             _context.Inscricaopessoaeventos.Add(inscricao);
             _context.SaveChanges();
 
-            _inscricaoService.TransferirIngresso(58, "666.777.888-99", "Fernanda Lima", "gabriel@gmail.com", "12246232367");
+            Assert.Throws<ArgumentException>(() =>
+                _inscricaoService.TransferirIngresso(58, "666.777.888-99", "Fernanda Lima", "gabriel@gmail.com", "12246232367"));
         }
 
         [TestMethod()]
-        [ExpectedException(typeof(InvalidOperationException))]
         public void TransferirIngressoTest_SubeventoEncerrado_LancaInvalidOperationException()
         {
             var subEncerrado = new Subevento
@@ -999,6 +998,7 @@ namespace Service.Tests
                 Status = "A",
                 DataFim = DateTime.Now.AddDays(-2)
             };
+
             _context.Subeventos.Add(subEncerrado);
 
             var inscricaoSub = new Inscricaopessoasubevento
@@ -1010,10 +1010,18 @@ namespace Service.Tests
                 DataInscricao = DateTime.Now,
                 Valor = 10m
             };
+
             _context.Inscricaopessoasubeventos.Add(inscricaoSub);
             _context.SaveChanges();
-
-            _inscricaoService.TransferirIngresso(0, "040.268.930-57", "Amigo Existente", "amigoexistente@gmail.com", "12246232367", idSubevento: 32);
+                    
+            Assert.Throws<InvalidOperationException>(() =>
+                _inscricaoService.TransferirIngresso(
+                    0,
+                    "040.268.930-57",
+                    "Amigo Existente",
+                    "amigoexistente@gmail.com",
+                    "12246232367",
+                    idSubevento: 32));
         }
 
         [TestMethod()]

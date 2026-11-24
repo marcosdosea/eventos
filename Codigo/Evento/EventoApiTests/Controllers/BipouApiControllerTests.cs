@@ -13,6 +13,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.BearerToken;
@@ -471,6 +472,10 @@ public class BipouApiControllerTests
             {
                 services.RemoveAll<DbContextOptions<EventoContext>>();
                 services.RemoveAll<DbContextOptions<IdentityContext>>();
+
+                services.RemoveAll<IDbContextOptionsConfiguration<EventoContext>>();
+                services.RemoveAll<IDbContextOptionsConfiguration<IdentityContext>>();
+
                 services.AddDbContext<EventoContext>(o => { if (eventoConnection == null) o.UseSqlite(connection); else o.UseMySQL(eventoConnection); });
                 services.AddDbContext<IdentityContext>(o => { if (identityConnection == null) o.UseInMemoryDatabase(identityDatabase); else o.UseMySQL(identityConnection); });
                 services.AddLogging(o => o.AddFilter("Microsoft", LogLevel.Warning));

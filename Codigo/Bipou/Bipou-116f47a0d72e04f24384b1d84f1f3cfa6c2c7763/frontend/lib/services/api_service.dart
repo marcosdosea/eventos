@@ -1,4 +1,5 @@
 import 'package:bipou_frontend/core/config/api_config.dart';
+import 'package:bipou_frontend/models/frequencia_pendente.dart';
 import 'package:bipou_frontend/models/leitura_qr_code_request.dart';
 import 'package:bipou_frontend/models/participante_request.dart';
 import 'package:bipou_frontend/models/participante_response.dart';
@@ -14,29 +15,115 @@ abstract interface class CredenciamentoApi {
     ParticipanteRequest request,
   );
 
-  Future<ParticipanteResponse> buscarParticipantePorCpf(String cpf);
+  Future<ParticipanteResponse> buscarParticipantePorCpf(
+    String cpf, {
+    int? eventoId,
+  });
 
   Future<List<ParticipanteResponse>> listarParticipantes();
 }
 
-final class ApiService implements CredenciamentoApi {
-  ApiService({Dio? dio, String? baseUrl})
-    : _baseUrl = baseUrl ?? ApiConfig.baseUrl,
-      _dio =
-          dio ??
-          Dio(
-            BaseOptions(
-              baseUrl: baseUrl ?? ApiConfig.baseUrl,
-              connectTimeout: const Duration(seconds: 5),
-              sendTimeout: const Duration(seconds: 5),
-              receiveTimeout: const Duration(seconds: 8),
-              contentType: Headers.jsonContentType,
-              responseType: ResponseType.json,
-              headers: const <String, Object>{'Accept': 'application/json'},
-            ),
-          );
+abstract interface class FrequenciaLoteApi {
+  Future<FrequenciaLoteSyncResponse> sincronizarFrequenciasLote(
+    List<FrequenciaPendente> lote,
+  );
+}
+
+final class FrequenciaLoteRejeicao {
+  const FrequenciaLoteRejeicao({
+    required this.leituraId,
+    required this.mensagem,
+    this.codigo,
+  });
+
+  final String leituraId;
+  final String? codigo;
+  final String mensagem;
+}
+
+final class FrequenciaLoteSyncResponse {
+  const FrequenciaLoteSyncResponse({
+    required this.confirmados,
+    this.rejeitados = const <FrequenciaLoteRejeicao>[],
+  });
+
+  factory FrequenciaLoteSyncResponse.fromJson(Map<String, dynamic> json) {
+    final confirmadosRaw = json['confirmados'];
+    final rejeitadosRaw = json['rejeitados'];
+
+    final confirmados = <String>[];
+    if (confirmadosRaw is List) {
+      for (final item in confirmadosRaw) {
+        if (item is String && item.trim().isNotEmpty) {
+          confirmados.add(item.trim());
+        }
+      }
+    }
+
+    final rejeitados = <FrequenciaLoteRejeicao>[];
+    if (rejeitadosRaw is List) {
+      for (final item in rejeitadosRaw) {
+        if (item is Map) {
+          final map = Map<String, dynamic>.from(item);
+          final leituraId = map['leituraId'];
+          if (leituraId is String && leituraId.trim().isNotEmpty) {
+            final codigo = map['codigo'];
+            final mensagem = map['mensagem'];
+            rejeitados.add(
+              FrequenciaLoteRejeicao(
+                leituraId: leituraId.trim(),
+                codigo: codigo is String ? codigo : null,
+                mensagem: mensagem is String && mensagem.trim().isNotEmpty
+                    ? mensagem.trim()
+                    : 'Registro recusado pela API.',
+              ),
+            );
+          }
+        }
+      }
+    }
+
+    return FrequenciaLoteSyncResponse(
+      confirmados: List<String>.unmodifiable(confirmados),
+      rejeitados: List<FrequenciaLoteRejeicao>.unmodifiable(rejeitados),
+    );
+  }
+
+  final List<String> confirmados;
+  final List<FrequenciaLoteRejeicao> rejeitados;
+}
+
+final class BoralaSessionCredentials {
+  const BoralaSessionCredentials({this.baseUrl, this.accessToken});
+
+  final String? baseUrl;
+  final String? accessToken;
+}
+
+typedef BoralaCredentialsProvider = Future<BoralaSessionCredentials?> Function();
+
+final class ApiService implements CredenciamentoApi, FrequenciaLoteApi {
+  ApiService({
+    Dio? dio,
+    String? baseUrl,
+    this._boralaCredentialsProvider,
+  }) : _baseUrl = baseUrl ?? ApiConfig.baseUrl,
+       _dio =
+           dio ??
+           Dio(
+             BaseOptions(
+               baseUrl: baseUrl ?? ApiConfig.baseUrl,
+               connectTimeout: const Duration(seconds: 5),
+               sendTimeout: const Duration(seconds: 5),
+               receiveTimeout: const Duration(seconds: 8),
+               contentType: Headers.jsonContentType,
+               responseType: ResponseType.json,
+               headers: const <String, Object>{'Accept': 'application/json'},
+             ),
+           );
 
   final String _baseUrl;
+  final BoralaCredentialsProvider? _boralaCredentialsProvider;
   final Dio _dio;
 
   @override
@@ -57,10 +144,13 @@ final class ApiService implements CredenciamentoApi {
   }
 
   @override
-  Future<ParticipanteResponse> buscarParticipantePorCpf(String cpf) async {
+  Future<ParticipanteResponse> buscarParticipantePorCpf(
+    String cpf, {
+    int? eventoId,
+  }) async {
     final json = await _post(
       '/api/participantes/consultar-por-cpf',
-      <String, Object?>{'cpf': cpf},
+      <String, Object?>{'cpf': cpf, 'eventoId': ?eventoId},
     );
     return _parseResponse(json, ParticipanteResponse.fromJson);
   }
@@ -74,6 +164,107 @@ final class ApiService implements CredenciamentoApi {
     return json
         .map((item) => _parseResponse(item, ParticipanteResponse.fromJson))
         .toList();
+  }
+
+  @override
+  Future<FrequenciaLoteSyncResponse> sincronizarFrequenciasLote(
+    List<FrequenciaPendente> lote,
+  ) async {
+    if (lote.isEmpty) {
+      return const FrequenciaLoteSyncResponse(confirmados: <String>[]);
+    }
+
+    final comContextoBorala = lote
+        .where((item) => item.possuiContextoBorala)
+        .toList(growable: false);
+    final somenteLegado = lote
+        .where((item) => !item.possuiContextoBorala)
+        .toList(growable: false);
+
+    final confirmados = <String>[];
+    final rejeitados = <FrequenciaLoteRejeicao>[];
+
+    if (comContextoBorala.isNotEmpty) {
+      try {
+        final credentials = await _boralaCredentialsProvider?.call();
+        final boralaBaseUrl = credentials?.baseUrl?.trim();
+        final endpoint =
+            (boralaBaseUrl != null && boralaBaseUrl.isNotEmpty)
+            ? '${ApiConfig.normalizeHttpUrl(boralaBaseUrl, fieldName: 'BORALA_API_BASE_URL')}/api/bipou/v1/frequencias/lote'
+            : '/api/bipou/v1/frequencias/lote';
+        final token = credentials?.accessToken?.trim();
+        final options = (token != null && token.isNotEmpty)
+            ? Options(
+                headers: <String, Object>{'Authorization': 'Bearer $token'},
+              )
+            : null;
+
+        final json = await _post(
+          endpoint,
+          <String, Object?>{
+            'leituras': comContextoBorala
+                .map((item) => item.toBipouLoteJson())
+                .toList(growable: false),
+          },
+          options: options,
+        );
+        final parsed = _parseResponse(
+          json,
+          FrequenciaLoteSyncResponse.fromJson,
+        );
+        confirmados.addAll(parsed.confirmados);
+        rejeitados.addAll(parsed.rejeitados);
+      } on ApiRequestException catch (error) {
+        if (error.statusCode == 404 || error.statusCode == 405) {
+          await _enviarIndividualmentePorRegistro(
+            comContextoBorala,
+            confirmados: confirmados,
+            rejeitados: rejeitados,
+          );
+        } else {
+          rethrow;
+        }
+      }
+    }
+
+    if (somenteLegado.isNotEmpty) {
+      await _enviarIndividualmentePorRegistro(
+        somenteLegado,
+        confirmados: confirmados,
+        rejeitados: rejeitados,
+      );
+    }
+
+    return FrequenciaLoteSyncResponse(
+      confirmados: List<String>.unmodifiable(confirmados),
+      rejeitados: List<FrequenciaLoteRejeicao>.unmodifiable(rejeitados),
+    );
+  }
+
+  Future<void> _enviarIndividualmentePorRegistro(
+    List<FrequenciaPendente> itens, {
+    required List<String> confirmados,
+    required List<FrequenciaLoteRejeicao> rejeitados,
+  }) async {
+    for (final item in itens) {
+      try {
+        await registrar(item.toLeituraQrCodeRequest());
+        confirmados.add(item.leituraId);
+      } on ApiUnavailableException {
+        if (confirmados.isEmpty && rejeitados.isEmpty) {
+          rethrow;
+        }
+        break;
+      } on ApiRequestException catch (error) {
+        rejeitados.add(
+          FrequenciaLoteRejeicao(
+            leituraId: item.leituraId,
+            codigo: error.statusCode?.toString(),
+            mensagem: error.message,
+          ),
+        );
+      }
+    }
   }
 
   Future<Object?> _get(String path) async {
@@ -90,7 +281,10 @@ final class ApiService implements CredenciamentoApi {
 
       Error.throwWithStackTrace(
         ApiRequestException(
-          _extractServerMessage(error.response?.data),
+          _extractServerMessage(
+            error.response?.data,
+            statusCode: error.response?.statusCode,
+          ),
           statusCode: error.response?.statusCode,
           cause: error,
         ),
@@ -99,9 +293,17 @@ final class ApiService implements CredenciamentoApi {
     }
   }
 
-  Future<Object?> _post(String path, Map<String, Object?> body) async {
+  Future<Object?> _post(
+    String path,
+    Map<String, Object?> body, {
+    Options? options,
+  }) async {
     try {
-      final response = await _dio.post<Object?>(path, data: body);
+      final response = await _dio.post<Object?>(
+        path,
+        data: body,
+        options: options,
+      );
       return response.data;
     } on DioException catch (error, stackTrace) {
       if (_isUnavailable(error)) {
@@ -113,7 +315,10 @@ final class ApiService implements CredenciamentoApi {
 
       Error.throwWithStackTrace(
         ApiRequestException(
-          _extractServerMessage(error.response?.data),
+          _extractServerMessage(
+            error.response?.data,
+            statusCode: error.response?.statusCode,
+          ),
           statusCode: error.response?.statusCode,
           cause: error,
         ),
@@ -152,13 +357,30 @@ final class ApiService implements CredenciamentoApi {
     };
   }
 
-  String _extractServerMessage(Object? data) {
-    if (data case {
-      'mensagem': final String mensagem,
-    } when mensagem.isNotEmpty) {
-      return mensagem;
+  String _extractServerMessage(Object? data, {int? statusCode}) {
+    if (data is Map) {
+      for (final key in const <String>[
+        'mensagem',
+        'message',
+        'detail',
+        'title',
+      ]) {
+        final value = data[key];
+        if (value is String && value.trim().isNotEmpty) {
+          return value.trim();
+        }
+      }
     }
-    return 'A API recusou a operacao.';
+
+    return switch (statusCode) {
+      401 =>
+        'Sessao expirada ou nao autenticada. Conecte-se novamente na Sessao de Portaria.',
+      403 => 'Operador sem permissao para registrar frequencia neste evento.',
+      404 =>
+        'Endpoint nao encontrado na API (HTTP 404). Verifique a URL configurada.',
+      final int code => 'A API recusou a operacao (HTTP $code).',
+      null => 'A API recusou a operacao.',
+    };
   }
 }
 

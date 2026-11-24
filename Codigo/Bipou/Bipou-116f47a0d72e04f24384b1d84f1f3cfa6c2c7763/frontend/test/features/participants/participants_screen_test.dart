@@ -151,7 +151,10 @@ final class _ParticipantsGatewayFake implements CredenciamentoGateway {
   String get apiBaseUrl => 'http://localhost:8080';
 
   @override
-  Future<ParticipanteResponse> buscarParticipantePorCpf(String cpf) {
+  Future<ParticipanteResponse> buscarParticipantePorCpf(
+    String cpf, {
+    int? eventoId,
+  }) {
     throw UnimplementedError();
   }
 
@@ -185,6 +188,9 @@ final class _ParticipantsGatewayFake implements CredenciamentoGateway {
     required String participanteNome,
     required TipoAcao tipoAcao,
     required String dispositivoId,
+    int? idPessoa,
+    int? idEvento,
+    int? idSubEvento,
     int? eventoId,
     int? subeventoId,
     String? operadorUsuario,

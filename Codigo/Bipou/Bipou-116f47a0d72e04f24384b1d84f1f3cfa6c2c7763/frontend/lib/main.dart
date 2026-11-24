@@ -1,12 +1,17 @@
 import 'package:bipou_frontend/core/config/api_config.dart';
 import 'package:bipou_frontend/features/dashboard/views/dashboard_screen.dart';
+import 'package:bipou_frontend/features/scanner/models/scanner_context.dart';
+import 'package:bipou_frontend/features/scanner/services/scanner_sensory_feedback.dart';
+import 'package:bipou_frontend/features/scanner/view_models/scanner_view_model.dart';
 import 'package:bipou_frontend/services/api_service.dart';
 import 'package:bipou_frontend/services/audit_log_export_service.dart';
 import 'package:bipou_frontend/services/audit_log_service.dart';
 import 'package:bipou_frontend/services/borala_api_service.dart';
 import 'package:bipou_frontend/services/cadastro_pendente_store.dart';
+import 'package:bipou_frontend/services/connectivity_monitor.dart';
 import 'package:bipou_frontend/services/credenciamento_service.dart';
 import 'package:bipou_frontend/services/device_identity_service.dart';
+import 'package:bipou_frontend/services/frequencia_pendente_store.dart';
 import 'package:bipou_frontend/services/local_participant_repository.dart';
 import 'package:bipou_frontend/services/qr_code_share_service.dart';
 import 'package:flutter/material.dart';
@@ -17,12 +22,26 @@ Future<void> main() async {
   try {
     final dispositivoId = await DeviceIdentityService().getOrCreate();
     final auditLog = AuditLogService();
+    final localParticipantRepository = SqliteLocalParticipantRepository();
+    final apiService = ApiService(
+      boralaCredentialsProvider: () async {
+        final sessao = await localParticipantRepository.loadSession();
+        if (sessao == null) {
+          return null;
+        }
+        return BoralaSessionCredentials(
+          baseUrl: sessao.boralaBaseUrl,
+          accessToken: sessao.accessToken,
+        );
+      },
+    );
     final credenciamento = CredenciamentoService(
       auditLog: auditLog,
-      api: ApiService(),
+      api: apiService,
       cadastroPendenteStore: CadastroPendenteFileStore(),
+      frequenciaPendenteStore: SqliteFrequenciaPendenteStore(),
+      connectivityMonitor: ConnectivityPlusMonitor(),
     );
-    final localParticipantRepository = SqliteLocalParticipantRepository();
     final boralaApi = BoralaApiService();
 
     runApp(
@@ -50,6 +69,11 @@ final class BipouApp extends StatelessWidget {
     this.localParticipantRepository,
     this.boralaApi,
     this.initialBoralaBaseUrl,
+    this.initialContext,
+    this.scannerSensoryFeedback,
+    this.scannerPayloadStream,
+    this.scannerCameraPreviewOverride,
+    this.scannerClock,
     super.key,
   });
 
@@ -60,6 +84,11 @@ final class BipouApp extends StatelessWidget {
   final LocalParticipantRepository? localParticipantRepository;
   final BoralaApiClient? boralaApi;
   final String? initialBoralaBaseUrl;
+  final ScannerSessionContext? initialContext;
+  final ScannerSensoryFeedback? scannerSensoryFeedback;
+  final Stream<String>? scannerPayloadStream;
+  final Widget? scannerCameraPreviewOverride;
+  final ScannerClock? scannerClock;
 
   @override
   Widget build(BuildContext context) {
@@ -83,6 +112,11 @@ final class BipouApp extends StatelessWidget {
         localParticipantRepository: localParticipantRepository,
         boralaApi: boralaApi,
         initialBoralaBaseUrl: initialBoralaBaseUrl,
+        initialContext: initialContext,
+        scannerSensoryFeedback: scannerSensoryFeedback,
+        scannerPayloadStream: scannerPayloadStream,
+        scannerCameraPreviewOverride: scannerCameraPreviewOverride,
+        scannerClock: scannerClock,
       ),
     );
   }
@@ -101,28 +135,32 @@ final class _StartupErrorApp extends StatelessWidget {
         body: SafeArea(
           child: Center(
             child: Padding(
-              padding: EdgeInsets.all(32),
+              padding: const EdgeInsets.all(32),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
-                  Icon(Icons.settings_ethernet, size: 64, color: Colors.red),
-                  SizedBox(height: 20),
-                  Text(
+                  const Icon(
+                    Icons.settings_ethernet,
+                    size: 64,
+                    color: Colors.red,
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
                     'Não foi possível iniciar o aplicativo.',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
                   ),
-                  SizedBox(height: 12),
-                  Text(
+                  const SizedBox(height: 12),
+                  const Text(
                     'Verifique a configuração API_BASE_URL e o armazenamento '
                     'local do dispositivo.',
                     textAlign: TextAlign.center,
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   SelectableText(
                     error.toString(),
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 12),
+                    style: const TextStyle(fontSize: 12),
                   ),
                 ],
               ),

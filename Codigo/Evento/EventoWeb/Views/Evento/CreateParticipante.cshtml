@@ -5,12 +5,11 @@
 
 <h1 class="blue-normal">Cadastrar Participantes do Evento</h1>
 <hr />
-
 <div class="row">
     <div>
         <form asp-action="CreateParticipante" method="post" onsubmit="removerMascara()">
-            <div class="row">
-                <div class="col-lg-3">
+            <div class="row mb-4 align-items-end">
+                <div class="col-lg-8 col-12 mb-3 mb-lg-0">
                     <div class="form-group">
                         <label for="IdEvento" class="control-label">Evento</label>
                         <select id="IdEvento" name="IdEvento" class="form-control" readonly>
@@ -26,8 +25,23 @@
                         @Html.HiddenFor(model => model.Evento.Id)
                         @Html.HiddenFor(model => model.Evento.Nome)
                     </div>
+                  
                 </div>
+                <div class="col-lg-4 col-12 text-lg-end">
+                    <div class="d-flex flex-column flex-sm-row justify-content-lg-end gap-2">
+                        <button type="button" class="btn btn-outline-primary flex-fill" data-bs-toggle="modal" data-bs-target="#modalImportarCsv">
+                            <i class="bi bi-upload me-1"></i> Importar CSV
+                        </button>
+                         @if (User.IsInRole("GESTOR"))
+                         {
+                            <a href="@Url.Action("ExportarFrequencia", "ParticipacaoPessoaEvento", new { idEvento = Model.Evento?.Id})" class="btn btn-blue-normal flex-fill text-center">
+                                <i class="bi bi-download me-1"></i> Exportar CSV
+                            </a>
+                         }
+                    </div>
+                  </div>
             </div>
+
             <br />
             <h4 class="blue-normal">
                 Dados do participante
@@ -150,6 +164,7 @@
 </div>
 
 
+<partial name="_ImportaCSV" model='new EventoWeb.Models.ImportarCsvModalModel { IdEvento = Model.Evento?.Id ?? 0, IdSubEvento = null, ActionRetorno = "CreateParticipante", Titulo = "Importar Planilha de Participantes", Descricao = "Selecione o arquivo de planilha (formatos .csv, .xlsx ou .xls, como o relatório do SIGAA) para inscrever os participantes no evento.", MensagemCarregamento = "Processando planilha e inscrevendo participantes, aguarde..." }' />
 
 
 @await Html.PartialAsync("_DeleteModal", new EventoWeb.Models.DeleteModel
@@ -173,6 +188,19 @@
                 language: {
                     url: '@Url.Content("~/lib/datatable/js/pt-BR.json")'
                 }
+            });
+
+            // Animação de carregamento e prevenção de duplo envio na importação de planilha
+            $('#formImportarCsv').on('submit', function () {
+                var fileInput = document.getElementById('arquivoPlanilha');
+                if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+                    return;
+                }
+                $('#btnSubmitImportarCsv')
+                    .prop('disabled', true)
+                    .html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Importando...');
+                $('#btnCancelarImportarCsv, #btnFecharModalImportarCsv').prop('disabled', true);
+                $('#statusCarregamentoImportacao').removeClass('d-none');
             });
         });
 

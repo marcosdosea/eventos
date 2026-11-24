@@ -138,6 +138,10 @@ final class EventSelectionViewModel extends ChangeNotifier {
           _boralaBaseUrl = sessao.boralaBaseUrl!;
         }
         _operadorUsuario = sessao.operadorUsuario;
+        if (sessao.accessToken != null &&
+            sessao.accessToken!.trim().isNotEmpty) {
+          _accessToken = sessao.accessToken;
+        }
         _ultimaSincronizacao = sessao.sincronizadoEm;
       }
 
@@ -252,6 +256,15 @@ final class EventSelectionViewModel extends ChangeNotifier {
       _boralaBaseUrl = normalizedUrl;
       _operadorUsuario = usuarioLimpo;
       _accessToken = token.accessToken;
+      if (_sessaoSalva != null) {
+        final sessaoAtualizada = _sessaoSalva!.copyWith(
+          boralaBaseUrl: normalizedUrl,
+          operadorUsuario: usuarioLimpo,
+          accessToken: token.accessToken,
+        );
+        await _repository.saveSession(sessaoAtualizada);
+        _sessaoSalva = sessaoAtualizada;
+      }
       _eventos = List<BoralaEvento>.unmodifiable(eventos);
 
       if (eventos.isEmpty) {
@@ -620,6 +633,7 @@ final class EventSelectionViewModel extends ChangeNotifier {
       sincronizadoEm: _ultimaSincronizacao ?? _clock().toUtc(),
       boralaBaseUrl: _boralaBaseUrl.trim().isEmpty ? null : _boralaBaseUrl,
       operadorUsuario: _operadorUsuario,
+      accessToken: _accessToken ?? _sessaoSalva?.accessToken,
     );
     await _repository.saveSession(sessao);
     _sessaoSalva = sessao;

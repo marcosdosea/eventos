@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using Core;
 using Core.Service;
 using EventoWeb.Controllers;
@@ -495,6 +495,137 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("SE", controller.ViewBag.EstadoAtivo);
             Assert.IsNull(controller.ViewBag.CidadeAtiva);
             Assert.AreEqual("Sergipe (SE)", controller.ViewBag.NomeEstadoAtivo);
+        }
+
+        [TestMethod]
+        public void Index_DeveDefinirCategoriasHomeComMapeamentoResilienteEDinamico()
+        {
+            var httpContext = new DefaultHttpContext();
+            _mockTipoEventoService.Setup(s => s.GetAll()).Returns(new List<Tipoevento>
+            {
+                new Tipoevento { Id = 1, Nome = "Palestra" },
+                new Tipoevento { Id = 6, Nome = "Show" }
+            });
+            _mockAreaInteresseService.Setup(s => s.GetAll()).Returns(new List<Areainteresse>
+            {
+                new Areainteresse { Id = 4, Nome = "Exposição Cultural" }
+            });
+            _mockEventoService.Setup(s => s.GetEventosVitrine(null)).Returns(new List<Evento>());
+
+            var controller = CreateController(httpContext);
+
+            var result = controller.Index(vitrine: true);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var categorias = controller.ViewBag.CategoriasHome as Dictionary<string, CategoriaHomeRouteModel>;
+            Assert.IsNotNull(categorias);
+            Assert.IsTrue(categorias.ContainsKey("Palestras"));
+            Assert.AreEqual((uint)1, categorias["Palestras"].IdTipoEvento);
+
+            Assert.IsTrue(categorias.ContainsKey("Shows"));
+            Assert.AreEqual((uint)6, categorias["Shows"].IdTipoEvento);
+
+            Assert.IsTrue(categorias.ContainsKey("Culturais"));
+            Assert.AreEqual((uint)4, categorias["Culturais"].IdAreaInteresse);
+
+            Assert.IsTrue(categorias.ContainsKey("Teatros"));
+            Assert.AreEqual("Teatro", categorias["Teatros"].TermoBusca);
+
+            Assert.IsTrue(categorias.ContainsKey("Stand-Up"));
+            Assert.AreEqual("Stand-Up", categorias["Stand-Up"].TermoBusca);
+
+            Assert.IsTrue(categorias.ContainsKey("Religiosos"));
+            Assert.AreEqual("Religioso", categorias["Religiosos"].TermoBusca);
+        }
+
+        [TestMethod]
+        public void Buscar_ComFiltroCategoriaPalestrasEEstado_AplicaFiltroETipoEventoEEstado()
+        {
+            var httpContext = new DefaultHttpContext();
+            _mockEstadosBrasilService.Setup(s => s.Get("SE"))
+                .Returns(new Estadosbrasil { Estado = "SE", Nome = "Sergipe" });
+
+            int totalRegistros = 1;
+            var eventoEsperado = new Evento { Id = 10, Nome = "Palestra de IA", IdTipoEvento = 1, Estado = "SE", Status = "A" };
+            _mockEventoService.Setup(s => s.Search(It.Is<Core.DTO.EventoFilterDTO>(f => f.IdTipoEvento == 1 && f.Estado == "SE"), It.IsAny<int>(), It.IsAny<int>(), out totalRegistros))
+                .Returns(new List<Evento> { eventoEsperado });
+            _mockTipoEventoService.Setup(s => s.GetAll()).Returns(new List<Tipoevento> { new Tipoevento { Id = 1, Nome = "Palestra" } });
+            _mockAreaInteresseService.Setup(s => s.GetAll()).Returns(new List<Areainteresse>());
+            _mockEstadosBrasilService.Setup(s => s.GetAll()).Returns(new List<Estadosbrasil>());
+
+            var controller = CreateController(httpContext);
+            var filter = new Core.DTO.EventoFilterDTO { IdTipoEvento = 1, Estado = "SE" };
+
+            var result = controller.Buscar(filter);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var viewResult = (ViewResult)result;
+            var model = viewResult.Model as List<EventoModel>;
+            Assert.IsNotNull(model);
+            Assert.AreEqual(1, model.Count);
+            Assert.AreEqual((uint)10, model[0].Id);
+            Assert.AreEqual("SE", controller.ViewBag.EstadoAtivo);
+        }
+
+        [TestMethod]
+        public void Buscar_ComParametroCategoriaShowsEEstado_MapeiaDinamicamenteERespeitaEstado()
+        {
+            var httpContext = new DefaultHttpContext();
+            _mockEstadosBrasilService.Setup(s => s.Get("SE"))
+                .Returns(new Estadosbrasil { Estado = "SE", Nome = "Sergipe" });
+            _mockTipoEventoService.Setup(s => s.GetAll()).Returns(new List<Tipoevento>
+            {
+                new Tipoevento { Id = 6, Nome = "Show" }
+            });
+            _mockAreaInteresseService.Setup(s => s.GetAll()).Returns(new List<Areainteresse>());
+            _mockEstadosBrasilService.Setup(s => s.GetAll()).Returns(new List<Estadosbrasil>());
+
+            int totalRegistros = 1;
+            var eventoShow = new Evento { Id = 20, Nome = "Show de Verão", IdTipoEvento = 6, Estado = "SE", Status = "A" };
+            _mockEventoService.Setup(s => s.Search(It.Is<Core.DTO.EventoFilterDTO>(f => f.IdTipoEvento == 6 && f.Estado == "SE"), It.IsAny<int>(), It.IsAny<int>(), out totalRegistros))
+                .Returns(new List<Evento> { eventoShow });
+
+            var controller = CreateController(httpContext);
+            var filter = new Core.DTO.EventoFilterDTO { Estado = "SE" };
+
+            var result = controller.Buscar(filter, categoria: "Shows");
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var viewResult = (ViewResult)result;
+            var model = viewResult.Model as List<EventoModel>;
+            Assert.IsNotNull(model);
+            Assert.AreEqual(1, model.Count);
+            Assert.AreEqual((uint)20, model[0].Id);
+            Assert.AreEqual("SE", controller.ViewBag.EstadoAtivo);
+        }
+
+        [TestMethod]
+        public void Buscar_ComParametroCategoriaTeatrosEEstado_AplicaTermoBuscaTeatroEEstado()
+        {
+            var httpContext = new DefaultHttpContext();
+            _mockEstadosBrasilService.Setup(s => s.Get("BA"))
+                .Returns(new Estadosbrasil { Estado = "BA", Nome = "Bahia" });
+            _mockTipoEventoService.Setup(s => s.GetAll()).Returns(new List<Tipoevento>());
+            _mockAreaInteresseService.Setup(s => s.GetAll()).Returns(new List<Areainteresse>());
+            _mockEstadosBrasilService.Setup(s => s.GetAll()).Returns(new List<Estadosbrasil>());
+
+            int totalRegistros = 1;
+            var eventoTeatro = new Evento { Id = 30, Nome = "Peça de Teatro Musical", Estado = "BA", Status = "A" };
+            _mockEventoService.Setup(s => s.Search(It.Is<Core.DTO.EventoFilterDTO>(f => f.TermoBusca == "Teatro" && f.Estado == "BA"), It.IsAny<int>(), It.IsAny<int>(), out totalRegistros))
+                .Returns(new List<Evento> { eventoTeatro });
+
+            var controller = CreateController(httpContext);
+            var filter = new Core.DTO.EventoFilterDTO { Estado = "BA" };
+
+            var result = controller.Buscar(filter, categoria: "Teatros");
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var viewResult = (ViewResult)result;
+            var model = viewResult.Model as List<EventoModel>;
+            Assert.IsNotNull(model);
+            Assert.AreEqual(1, model.Count);
+            Assert.AreEqual((uint)30, model[0].Id);
+            Assert.AreEqual("BA", controller.ViewBag.EstadoAtivo);
         }
     }
 }

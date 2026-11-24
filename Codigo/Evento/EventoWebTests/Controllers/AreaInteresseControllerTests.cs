@@ -19,16 +19,13 @@ namespace EventoWeb.Controllers.Tests
             // Arrange
             var mockService = new Mock<IAreaInteresseService>();
 
-            IMapper mapper = new MapperConfiguration(cfg =>
-            cfg.AddProfile(new AreainteresseProfile())).CreateMapper();
-
             mockService.Setup(service => service.GetAll())
                 .Returns(GetTestAreaInteresses());
             mockService.Setup(service => service.Get(1))
                 .Returns(GetTargetAreaInteresse());
             mockService.Setup(service => service.Create(It.IsAny<Areainteresse>()))
                 .Verifiable();
-            controller = new AreaInteresseController(mockService.Object, mapper);
+            controller = new AreaInteresseController(mockService.Object);
         }
 
         [TestMethod()]
@@ -40,10 +37,10 @@ namespace EventoWeb.Controllers.Tests
             // Assert
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
-            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(List<AreaInteresseModel>));
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(IEnumerable<AreaInteresseModel>));
 
-            List<AreaInteresseModel>? lista = (List<AreaInteresseModel>)viewResult.ViewData.Model;
-            Assert.AreEqual(3, lista.Count);
+            IEnumerable<AreaInteresseModel>? lista = (IEnumerable<AreaInteresseModel>)viewResult.ViewData.Model;
+            Assert.AreEqual(3, lista.Count());
         }
 
         [TestMethod()]
