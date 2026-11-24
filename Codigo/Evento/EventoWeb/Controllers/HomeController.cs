@@ -293,6 +293,9 @@ namespace EventoWeb.Controllers
         [HttpGet]
         public IActionResult Buscar([FromQuery] Core.DTO.EventoFilterDTO filter, [FromQuery] string? categoria = null, int pagina = 1)
         {
+            filter ??= new Core.DTO.EventoFilterDTO();
+            pagina = Math.Max(1, pagina);
+
             if (!string.IsNullOrWhiteSpace(categoria) &&
                 !filter.IdTipoEvento.HasValue &&
                 !filter.IdAreaInteresse.HasValue &&

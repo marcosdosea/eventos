@@ -48,9 +48,10 @@
 
                     <div class="row">
                         <div class="col-md-2">
-                            <div class="form-group mb-2">
+                            <div class="form-group mb-2" id="valorInscricaoGroup">
                                 <label asp-for="Valor" class="control-label">Valor Inscrição (R$)</label>
-                                <input type="number" asp-for="Valor" class="form-control" />
+                                <input type="text" id="ValorTela" class="form-control" value="@Model.Valor.ToString("F2", new System.Globalization.CultureInfo("pt-BR"))" placeholder="0,00" />
+                                <input type="hidden" asp-for="Valor" id="ValorReal" />
                                 <span asp-validation-for="Valor" class="text-danger"></span>
                             </div>
                         </div>
@@ -75,7 +76,7 @@
                             <div class="form-group mb-2">
                                 <div class="d-flex align-items-center">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" value="1" id="UsadaEvento" name="TipoInscricao.UsadaEvento"
+                                        <input class="form-check-input" type="checkbox" value="1" id="UsadaEvento" name="UsadaEvento"
                                                @(Model.UsadaEvento == 1 ? "checked" : "")>
                                         <label class="form-check-label" for="UsadaEvento">Usado em Evento</label>
                                         <input type="hidden" name="UsadaEvento" value="0">
@@ -105,7 +106,7 @@
                                 <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
                             </div>
                             <div class="form-group">
-                                <a href="/TipoInscricao/Index?idEvento=@Model..IdEvento" class="btn btn-outline-danger">Voltar</a>
+                                <a asp-action="Index" asp-route-idEvento="@Model.IdEvento" class="btn btn-outline-danger">Voltar</a>
                             </div>
                         </div>
                     </div>
@@ -119,13 +120,6 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-    <script>
-        document.getElementById('UsadaEvento').addEventListener('change', function () {
-            this.nextElementSibling.value = this.checked ? 1 : 0; // Ajusta o valor do campo oculto baseado no estado do checkbox
-        });
-        document.getElementById('UsadaSubevento').addEventListener('change', function () {
-            this.nextElementSibling.value = this.checked ? 1 : 0; // Ajusta o valor do campo oculto baseado no estado do checkbox
-        });
-    </script>
+    <script src="~/js/converterNumeroComVirgula.js"></script>
 }
 

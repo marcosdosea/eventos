@@ -45,9 +45,6 @@
 								case "F":
 									statusDescricao = "Finalizado";
 									break;
-								case "I":
-									statusDescricao = "Inativo";
-									break;
 							}
 						}
 						@statusDescricao
@@ -56,22 +53,42 @@
 					<td>
 						@Html.ActionLink("Editar", "Edit", new { id = item.Id }, new { @style = "text-decoration:none;" })
 						&nbsp;&nbsp;
-						<a href="#" style="text-decoration:none;" class="danger-normal" data-bs-toggle="modal" data-bs-target="#modalExcluir-@item.Id">Excluir</a>
+						<a href="javascript:void(0);"
+						   style="text-decoration:none;"
+						   class="danger-normal link-excluir-evento"
+						   data-evento-id="@item.Id"
+						   data-evento-nome="@item.Nome">Excluir</a>
 						&nbsp;&nbsp;
 						@Html.ActionLink("Gestores", "CreateGestor", new { idEvento = item.Id}, new { @style = "text-decoration:none;" })
-						&nbsp;&nbsp;
-						<partial name="_DeleteModal" model="@(new EventoWeb.Models.DeleteModel {
-							ModalId = $"modalExcluir-{item.Id}",
-							ActionName = "Delete",
-							ControllerName = "Evento",
-							RouteValues = item.Id,
-							ItemName = item.Nome
-						})" />
 					</td>
 				</tr>
 			}
 		</tbody>
 	</table>
+</div>
+
+<div class="modal fade text-wrap" id="modalExcluirEvento" tabindex="-1" role="dialog" aria-labelledby="modalExcluirEventoLabel" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content border-0 shadow">
+			<div class="modal-header bg-primary text-white position-relative">
+				<h5 class="modal-title w-100 text-center fw-bold" id="modalExcluirEventoLabel">Confirmar exclusão</h5>
+				<button type="button" class="btn-close btn-close-white position-absolute end-0 me-3" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body text-center p-4 text-break">
+				<h5 class="fs-5 fw-normal text-break mb-3">
+					Tem certeza que deseja excluir "<strong id="nomeEventoExcluir"></strong>"?
+				</h5>
+				<div class="text-danger fw-bold small">
+					Essa operação não pode ser desfeita.
+				</div>
+			</div>
+			<form id="formExcluirEvento" asp-action="Delete" asp-controller="Evento" method="post" class="modal-footer justify-content-center border-top-0 pt-0 pb-4">
+				<input type="hidden" name="id" id="idEventoExcluir" value="0" />
+				<button type="button" class="btn btn-primary px-4 me-2" data-bs-dismiss="modal">Não</button>
+				<button type="submit" class="btn btn-danger px-4" id="btnConfirmarExclusaoEvento">Sim</button>
+			</form>
+		</div>
+	</div>
 </div>
 
 @section Scripts {
@@ -89,6 +106,16 @@
 				language: {
 					url: '@Url.Content("~/lib/datatable/js/pt-BR.json")'
 				}
+			});
+
+			$(document).on('click', '.link-excluir-evento', function () {
+				var id = $(this).data('evento-id');
+				var nome = $(this).data('evento-nome');
+				$('#nomeEventoExcluir').text(nome);
+				$('#idEventoExcluir').val(id);
+				$('#formExcluirEvento').attr('action', '@Url.Action("Delete", "Evento")/' + id);
+				var modal = new bootstrap.Modal(document.getElementById('modalExcluirEvento'));
+				modal.show();
 			});
 		});
 	</script>

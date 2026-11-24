@@ -126,6 +126,12 @@ namespace EventoWeb.Areas.Identity.Pages.Account
             {
         
                 string cpfSemFormatacao = Util.Methods.RemoveNaoNumericos(Input.CPF);
+
+                if (!Util.Methods.ValidarCpf(cpfSemFormatacao))
+                {
+                    ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.CPF)}", "CPF inválido");
+                    return Page();
+                }
                 
                 if (_pessoaService.GetByCpf(cpfSemFormatacao) != null)
                 {
@@ -194,7 +200,7 @@ namespace EventoWeb.Areas.Identity.Pages.Account
                 {
                     TempData["Cpf"] = cpfSemFormatacao;
                     TempData["SuccessMessage"] = "E-mail de confirmação enviado com sucesso!";
-                    return RedirectToPage("RegisterConfirmation", new {email = Input.Email, cpf = cpfSemFormatacao, returnUrl = returnUrl });
+                    return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
                 }
                 else
                 {

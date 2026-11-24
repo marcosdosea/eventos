@@ -349,13 +349,17 @@ namespace EventoWeb.Controllers
 
             if (ModelState.IsValid)
             {
-                var nomeFormatado = viewModel.Nome.Trim().Split(' ')[0];
-                if (!_pessoaService.ValidaEmail(viewModel.Email))
+                if (!Methods.ValidarCpf(viewModel.Cpf))
+                {
+                    ModelState.AddModelError("Cpf", "CPF inválido");
+                }
+                else if (!_pessoaService.ValidaEmail(viewModel.Email))
                 {
                     ModelState.AddModelError("Email", "Por favor, digite um e-mail em um formato válido.");
                 } else if (await _pessoaService.EmailExist(viewModel.Email, viewModel.Cpf)) {
                     ModelState.AddModelError("Email", "O e-mail informado já está em uso.");
                 } else {
+                    var nomeFormatado = viewModel.Nome.Trim().Split(' ')[0];
 
                     var pessoa = new Pessoa
                     {
@@ -395,7 +399,7 @@ namespace EventoWeb.Controllers
 
             }
             var adminsAtuais = await _pessoaService.GetAllAdmAsync();
-            viewModel.Administradores = _mapper.Map<List<PessoaModel>>(adminsAtuais.OrderBy(p => p.Nome).ToList());
+            viewModel.Administradores = _mapper.Map<List<PessoaModel>>((adminsAtuais ?? new List<Pessoa>()).OrderBy(p => p.Nome).ToList());
             return View(viewModel);
         }
        
@@ -484,16 +488,33 @@ namespace EventoWeb.Controllers
         [AllowAnonymous]
         [HttpGet]
         [Route("EnviarConfirmacaoEmail")]
-        public async Task<ActionResult> EnviarConfirmacaoEmail(string email, string cpf, string returnUrl = null)
+        public async Task<ActionResult> EnviarConfirmacaoEmail(string email, string? cpf = null, string? returnUrl = null)
         {
-            Pessoa pessoa = _pessoaService.GetByCpf(cpf);
-            
-            var (token,user) = await _pessoaService.GerarTokenConfirmacaoEmailAsync(cpf);
-           
+            var cpfAlvo = !string.IsNullOrWhiteSpace(cpf)
+                ? cpf
+                : TempData.Peek("Cpf")?.ToString();
+
+            Pessoa? pessoa = !string.IsNullOrWhiteSpace(cpfAlvo)
+                ? _pessoaService.GetByCpf(cpfAlvo)
+                : (!string.IsNullOrWhiteSpace(email)
+                    ? _pessoaService.GetAll().FirstOrDefault(p =>
+                        !string.IsNullOrWhiteSpace(p.Email) &&
+                        p.Email.Equals(email.Trim(), StringComparison.OrdinalIgnoreCase))
+                    : null);
+
+            if (pessoa != null && string.IsNullOrWhiteSpace(cpfAlvo))
+            {
+                cpfAlvo = pessoa.Cpf;
+            }
+
+            var (token, user) = !string.IsNullOrWhiteSpace(cpfAlvo)
+                ? await _pessoaService.GerarTokenConfirmacaoEmailAsync(cpfAlvo)
+                : (null, null);
+
             if (pessoa == null || user == null)
             {
                 TempData["ErrorMessage"] = "Usuário não encontrado.";
-                return RedirectToPage("/Account/RegisterConfirmation", new { area = "Identity", email = email, cpf = cpf, returnUrl = returnUrl });
+                return RedirectToPage("/Account/RegisterConfirmation", new { area = "Identity", email = email, returnUrl = returnUrl });
             }
             token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
             if (!string.IsNullOrWhiteSpace(token))
@@ -501,7 +522,7 @@ namespace EventoWeb.Controllers
                 var callbackUrl = Url.Page(
                     pageName: "/Account/ConfirmEmail",
                     pageHandler: null,
-                    values: new { area = "Identity",userId = user.Id, code = token, returnUrl = returnUrl },
+                    values: new { area = "Identity", userId = user.Id, code = token, returnUrl = returnUrl },
                     protocol: Request.Scheme);
                 var sucesso = await _emailService.ModeloConfirmEmail(token, pessoa, callbackUrl);
                 if (sucesso)
@@ -520,7 +541,7 @@ namespace EventoWeb.Controllers
 
             }
 
-            return RedirectToPage("/Account/RegisterConfirmation", new { area = "Identity", email = email, cpf = cpf, returnUrl = returnUrl });
+            return RedirectToPage("/Account/RegisterConfirmation", new { area = "Identity", email = email, returnUrl = returnUrl });
         }
         // =====================================================================
         // HELPER PRIVADO

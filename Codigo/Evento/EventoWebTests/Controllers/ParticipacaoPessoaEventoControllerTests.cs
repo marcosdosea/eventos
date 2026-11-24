@@ -884,5 +884,59 @@ namespace EventoWeb.Controllers.Tests
                 4), Times.Once);
         }
 
+        [TestMethod()]
+        public async Task Frequencia_ColaboradorDoEvento_ComIdSubEvento_PermiteAcessoECarregaSubEvento()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+            _mockInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
+                .Returns((Inscricaopessoaevento)null!);
+            _mockInscricao.Setup(s => s.GetColaboradorInEvent(It.IsAny<string>(), (uint)349))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 9, IdEvento = 349, IdPapel = 3 });
+            _mockSubevento.Setup(s => s.Get((uint)75))
+                .Returns(new Subevento { Id = 75, IdEvento = 349, Nome = "Minicurso QA" });
+            _mockEvento.Setup(s => s.GetEventoSimpleDto(349))
+                .Returns(new EventoSimpleDTO { Id = 349, Nome = "Congresso" });
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "40201971054"),
+                new Claim(ClaimTypes.Role, "COLABORADOR")
+            };
+            controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType"));
+
+            var result = await controller.Frequencia(349, 75) as ViewResult;
+
+            Assert.IsNotNull(result);
+            var vm = result.Model as FrequenciaViewModel;
+            Assert.IsNotNull(vm);
+            Assert.IsNotNull(vm.SubEvento);
+            Assert.AreEqual((uint)75, vm.SubEvento.Id);
+            Assert.IsNull(controller.TempData["ErrorMessage"]);
+            Assert.IsNull(controller.TempData["Message"]);
+        }
+
+        [TestMethod()]
+        public async Task Frequencia_ColaboradorDeOutroEvento_ComIdSubEvento_BloqueiaAcesso()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+            _mockInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
+                .Returns((Inscricaopessoaevento)null!);
+            _mockInscricao.Setup(s => s.GetColaboradorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
+                .Returns((Inscricaopessoaevento)null!);
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "40201971054"),
+                new Claim(ClaimTypes.Role, "COLABORADOR")
+            };
+            controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType"));
+
+            var result = await controller.Frequencia(5, 75) as RedirectToActionResult;
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual("GerenciarEventoListar", result.ActionName);
+            Assert.IsNotNull(controller.TempData["ErrorMessage"]);
+        }
+
     }
 }

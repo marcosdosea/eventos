@@ -17,6 +17,8 @@ namespace EventoWeb.Controllers
     [Authorize]
     public class EventoController : Controller
     {
+        private static readonly HashSet<string> StatusPermitidos = new(StringComparer.OrdinalIgnoreCase) { "C", "A", "F" };
+
         private readonly IEstadosbrasilService _estadosbrasilService;
         private readonly ITipoeventoService _tipoEventoService;
         private readonly IEventoService _eventoService;
@@ -75,7 +77,7 @@ namespace EventoWeb.Controllers
             return View(eventoModel);
         }
 
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
+        [Authorize(Roles = "ADMINISTRADOR")]
 
         [HttpGet]
         [Route("Create")]
@@ -99,8 +101,14 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Create(EventoModel eventoModel)
         {
+            if (string.IsNullOrWhiteSpace(eventoModel.Status) || !StatusPermitidos.Contains(eventoModel.Status.Trim()))
+            {
+                ModelState.AddModelError("Status", "Status inválido. Os valores permitidos são Cadastro (C), Ativo (A) ou Finalizado (F).");
+            }
+
             if (ModelState.IsValid)
             {
+                eventoModel.Status = eventoModel.Status.Trim().ToUpperInvariant();
                 byte[] fotoSource = null;
                 if (eventoModel.ImagemPortal != null && eventoModel.ImagemPortal.Length > 0)
                 {
@@ -153,8 +161,8 @@ namespace EventoWeb.Controllers
             var areaInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
             var viewModel = _mapper.Map<EventoModel>(evento);
             viewModel.Estados = new SelectList(estados, "Estado", "Nome", viewModel.Estado);
-            viewModel.TiposEventos = new SelectList(tiposEventos, "Id", "Nome", viewModel.Id);
-            viewModel.AreaInteresse = new SelectList(areaInteresse, "Id", "Nome", viewModel.Id);
+            viewModel.TiposEventos = new SelectList(tiposEventos, "Id", "Nome", viewModel.IdTipoEvento);
+            viewModel.AreaInteresse = new SelectList(areaInteresse, "Id", "Nome", viewModel.IdAreaInteresse);
 
             return View(viewModel);
         }
@@ -166,14 +174,23 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Edit(uint id, EventoModel viewModel)
         {
+            if (string.IsNullOrWhiteSpace(viewModel.Status) || !StatusPermitidos.Contains(viewModel.Status.Trim()))
+            {
+                ModelState.AddModelError("Status", "Status inválido. Os valores permitidos são Cadastro (C), Ativo (A) ou Finalizado (F).");
+            }
 
             if (ModelState.IsValid)
             {
                 var eventoExistente = _eventoService.Get(id);
+                if (eventoExistente == null)
+                {
+                    return NotFound();
+                }
+
                 eventoExistente.Nome = viewModel.Nome;
                 eventoExistente.IdTipoEvento = viewModel.IdTipoEvento;
                 eventoExistente.Estado = viewModel.Estado;
-                eventoExistente.Status = viewModel.Status;
+                eventoExistente.Status = viewModel.Status.Trim().ToUpperInvariant();
 
 
                 var idsAreaInteresse = new List<uint> { viewModel.IdAreaInteresse };
@@ -272,8 +289,18 @@ namespace EventoWeb.Controllers
         {
             if (ModelState.IsValid)
             {
-                var pessoaExistente = _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
                 var idEvento = gestaoPapelModel.Evento.Id;
+                var cpfGestorLimpo = Util.Methods.RemoveNaoNumericos(gestaoPapelModel.Pessoa?.Cpf ?? string.Empty);
+
+                if (!Util.Methods.ValidarCpf(cpfGestorLimpo))
+                {
+                    ModelState.AddModelError("Pessoa.Cpf", "CPF inválido.");
+                    gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
+                    gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 2);
+                    return View(gestaoPapelModel);
+                }
+
+                var pessoaExistente = _pessoaService.GetByCpf(cpfGestorLimpo) ?? _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
 
                 if (pessoaExistente is null)
                 {
@@ -283,16 +310,23 @@ namespace EventoWeb.Controllers
                     return View(gestaoPapelModel);
                 }
 
-                var nomeDigitado = gestaoPapelModel.Pessoa.Nome?.Trim() ?? "";
-                var nomeComparacao = pessoaExistente.Nome?.Trim() ?? "";
+                var nomeDigitado = Util.Methods.RemoverAcentos(gestaoPapelModel.Pessoa.Nome?.Trim() ?? string.Empty);
+                var nomeComparacao = Util.Methods.RemoverAcentos(pessoaExistente.Nome?.Trim() ?? string.Empty);
+                var nomeCrachaComparacao = Util.Methods.RemoverAcentos(pessoaExistente.NomeCracha?.Trim() ?? string.Empty);
                 var primeiroEspaco = nomeComparacao.IndexOf(' ');
                 var nomeCurto = primeiroEspaco > 0
                     ? nomeComparacao.Substring(0, primeiroEspaco)
                     : nomeComparacao.Substring(0, Math.Min(20, nomeComparacao.Length));
-                if (!nomeDigitado.StartsWith(nomeCurto, StringComparison.OrdinalIgnoreCase))
+
+                var nomeConfereComCadastro =
+                    (!string.IsNullOrEmpty(nomeCurto) && nomeDigitado.StartsWith(nomeCurto, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(nomeComparacao) && nomeDigitado.Equals(nomeComparacao, StringComparison.OrdinalIgnoreCase)) ||
+                    (!string.IsNullOrEmpty(nomeCrachaComparacao) && nomeDigitado.Equals(nomeCrachaComparacao, StringComparison.OrdinalIgnoreCase));
+
+                if (!nomeConfereComCadastro)
                     ModelState.AddModelError("Pessoa.Nome", "Nome não confere com o cadastro do CPF informado.");
 
-                if (!pessoaExistente.Email.Equals(gestaoPapelModel.Pessoa.Email, StringComparison.OrdinalIgnoreCase))
+                if (!pessoaExistente.Email.Equals(gestaoPapelModel.Pessoa.Email?.Trim(), StringComparison.OrdinalIgnoreCase))
                     ModelState.AddModelError("Pessoa.Email", "E-mail não confere com o cadastro do CPF informado.");
 
                 if (!ModelState.IsValid)
@@ -304,10 +338,16 @@ namespace EventoWeb.Controllers
 
                 var papel = _inscricaoService.GetPapelPessoaByEvento(pessoaExistente.Id, idEvento);
 
-                if (papel is 2 or 3)
+                if (papel is 2 or 3 or 4)
                 {
-                    var papelNome = papel == 2 ? "gestor" : "colaborador";
-                    ModelState.AddModelError(string.Empty, $"A pessoa selecionada já é um {papelNome} do evento.");
+                    var mensagem = papel switch
+                    {
+                        2 => "A pessoa selecionada já é um gestor do evento.",
+                        3 => "A pessoa selecionada já é um colaborador do evento.",
+                        4 => "A pessoa selecionada já está inscrita como participante deste evento.",
+                        _ => "A pessoa selecionada já está vinculada a este evento."
+                    };
+                    ModelState.AddModelError(string.Empty, mensagem);
                     gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
                     gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 2);
                     return View(gestaoPapelModel);
@@ -315,6 +355,7 @@ namespace EventoWeb.Controllers
 
                 await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoaExistente, idEvento, 2);
                 _eventoService.AtualizarVagasDisponiveis(idEvento);
+                TempData["SuccessMessage"] = $"Gestor \"{pessoaExistente.Nome}\" adicionado com sucesso!";
 
                 return RedirectToAction("CreateGestor", new { idEvento });
             }
@@ -367,14 +408,24 @@ namespace EventoWeb.Controllers
 
             if (ModelState.IsValid)
             {
-                var pessoaExistente = _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
-
                 var idEvento = gestaoPapelModel.Evento.Id;
+                var cpfColaboradorLimpo = Util.Methods.RemoveNaoNumericos(gestaoPapelModel.Pessoa?.Cpf ?? string.Empty);
+
+                if (!Util.Methods.ValidarCpf(cpfColaboradorLimpo))
+                {
+                    ModelState.AddModelError("Pessoa.Cpf", "CPF inválido.");
+                    gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
+                    gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 3);
+                    return View(gestaoPapelModel);
+                }
+
+                var pessoaExistente = _pessoaService.GetByCpf(cpfColaboradorLimpo) ?? _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
+
                 if (pessoaExistente is null)
                 {
                     var pessoa = new Pessoa
                     {
-                        Cpf = gestaoPapelModel.Pessoa.Cpf,
+                        Cpf = cpfColaboradorLimpo,
                         Nome = gestaoPapelModel.Pessoa.Nome,
                         NomeCracha = gestaoPapelModel.Pessoa.Nome.Length > 20 ? gestaoPapelModel.Pessoa.Nome.Substring(0, 20) : gestaoPapelModel.Pessoa.Nome,
                         Telefone1 = gestaoPapelModel.Pessoa.Telefone1,
@@ -406,21 +457,17 @@ namespace EventoWeb.Controllers
                 }
                 var papel = _inscricaoService.GetPapelPessoaByEvento(pessoaExistente.Id, idEvento);
 
-                if (papel is 2 or 3)
+                if (papel is 2 or 3 or 4)
                 {
-                    var papelNome = "";
-
-                    switch (papel)
+                    var mensagem = papel switch
                     {
-                        case 2:
-                            papelNome = "gestor";
-                            break;
-                        case 3:
-                            papelNome = "colaborador";
-                            break;
-                    }
+                        2 => "A pessoa selecionada já é um gestor do evento.",
+                        3 => "A pessoa selecionada já é um colaborador do evento.",
+                        4 => "A pessoa selecionada já está inscrita como participante deste evento. Remova a inscrição de participante antes de vinculá-la como colaboradora.",
+                        _ => "A pessoa selecionada já está vinculada a este evento."
+                    };
 
-                    ModelState.AddModelError(string.Empty, $"A pessoa selecionada já é um {papelNome} do evento.");
+                    ModelState.AddModelError(string.Empty, mensagem);
 
                     gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
                     gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 3);
@@ -430,6 +477,7 @@ namespace EventoWeb.Controllers
 
                 await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoaExistente, gestaoPapelModel.Evento.Id, 3);
                 _eventoService.AtualizarVagasDisponiveis(idEvento);
+                TempData["SuccessMessage"] = $"Colaborador \"{pessoaExistente.Nome}\" adicionado com sucesso!";
                 return RedirectToAction("CreateColaborador", new { idEvento });
             }
             if (gestaoPapelModel.Evento.Id > 0)
@@ -494,9 +542,9 @@ namespace EventoWeb.Controllers
 
             if (ModelState.IsValid)
             {
-                var cpfLimpo = gestaoPapelModel.Pessoa?.Cpf?.Replace(".", "").Replace("-", "").Trim() ?? string.Empty;
+                var cpfLimpo = Util.Methods.RemoveNaoNumericos(gestaoPapelModel.Pessoa?.Cpf ?? string.Empty);
 
-                if (string.IsNullOrWhiteSpace(cpfLimpo))
+                if (string.IsNullOrWhiteSpace(cpfLimpo) || !Util.Methods.ValidarCpf(cpfLimpo))
                 {
                     ModelState.AddModelError("Pessoa.Cpf", "Informe um CPF válido.");
                     gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(eventoId);
@@ -928,8 +976,8 @@ namespace EventoWeb.Controllers
             if (evento == null)
             {
                 TempData.Clear();
-                TempData["Message"] = "Evento não encontrado!";
-                return RedirectToAction("Index", "Home");
+                TempData["ErrorMessage"] = "Evento não encontrado!";
+                return RedirectToAction("GerenciarEventoListar");
             }
 
             var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
@@ -939,8 +987,8 @@ namespace EventoWeb.Controllers
             if (!isAdmin && gestor == null && colaborador == null)
             {
                 TempData.Clear();
-                TempData["Message"] = "Você não tem permissão para gerenciar este evento!";
-                return RedirectToAction("Index", "Home");
+                TempData["ErrorMessage"] = "Você não tem permissão para gerenciar este evento!";
+                return RedirectToAction("GerenciarEventoListar");
             }
             else
             {
@@ -1084,8 +1132,14 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("GerenciarEvento", new { idEvento = id });
             }
 
+            if (string.IsNullOrWhiteSpace(viewModel.Status) || !StatusPermitidos.Contains(viewModel.Status.Trim()))
+            {
+                ModelState.AddModelError("Status", "Status inválido. Os valores permitidos são Cadastro (C), Ativo (A) ou Finalizado (F).");
+            }
+
             if (ModelState.IsValid)
             {
+                viewModel.Status = viewModel.Status.Trim().ToUpperInvariant();
                 byte[] fotoSource = null;
                 if (viewModel.ImagemPortal != null && viewModel.ImagemPortal.Length > 0)
                 {

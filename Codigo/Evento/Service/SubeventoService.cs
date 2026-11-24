@@ -176,19 +176,21 @@ namespace Service
                 // ChangeTracker, para funcionar tanto na inscrição (lote) quanto no
                 // cancelamento, que rodam dentro da mesma transação.
                 var participantesNoBanco = _context.Inscricaopessoasubeventos
-                    .Count(i => i.IdSubEvento == idSubevento && i.IdPapel == PapelParticipante);
+                    .Count(i => i.IdSubEvento == idSubevento && i.IdPapel == PapelParticipante && i.Status != "C");
 
                 var inscricoesPendentes = _context.ChangeTracker
                     .Entries<Inscricaopessoasubevento>()
                     .Count(e => e.State == EntityState.Added
                              && e.Entity.IdSubEvento == idSubevento
-                             && e.Entity.IdPapel == PapelParticipante);
+                             && e.Entity.IdPapel == PapelParticipante
+                             && e.Entity.Status != "C");
 
                 var inscricoesRemovidas = _context.ChangeTracker
                     .Entries<Inscricaopessoasubevento>()
                     .Count(e => e.State == EntityState.Deleted
                              && e.Entity.IdSubEvento == idSubevento
-                             && e.Entity.IdPapel == PapelParticipante);
+                             && e.Entity.IdPapel == PapelParticipante
+                             && e.Entity.Status != "C");
 
                 var quantidadeParticipantes = participantesNoBanco + inscricoesPendentes - inscricoesRemovidas;
 

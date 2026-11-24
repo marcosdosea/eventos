@@ -39,6 +39,7 @@ namespace EventoWeb.Models
 
         [Display(Name = "Status")]
         [Required(ErrorMessage = "Status do Evento é obrigatório")]
+        [RegularExpression("^[CAF]$", ErrorMessage = "Status inválido. Os valores permitidos são Cadastro (C), Ativo (A) ou Finalizado (F).")]
         public string Status { get; set; } = null!;
 
         [Display(Name = "Data e hora inicial de inscrição")]

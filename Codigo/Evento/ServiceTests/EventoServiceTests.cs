@@ -1002,5 +1002,83 @@ namespace Service.Tests
             Assert.AreEqual(12m, _context.Inscricaopessoaeventos.Find((uint)402)!.FrequenciaFinal);
             Assert.AreEqual(27m, _context.Inscricaopessoaeventos.Find((uint)403)!.FrequenciaFinal);
         }
+
+        [TestMethod()]
+        [DataRow(0, 16)]
+        [DataRow(-3, 16)]
+        [DataRow(0, 0)]
+        public void Search_ComPaginaOuTamanhoMenorQueUm_NaoLancaExcecaoERetornaPrimeiraPagina(int pagina, int tamanhoPagina)
+        {
+            _context.Eventos.Add(new Evento
+            {
+                Id = 500,
+                Nome = "Evento Busca Valida",
+                Descricao = "Descricao",
+                Status = "A",
+                DataInicio = DateTime.Now.AddDays(5),
+                DataFim = DateTime.Now.AddDays(6),
+                DataInicioInscricao = DateTime.Now.AddDays(-1),
+                DataFimInscricao = DateTime.Now.AddDays(4),
+                IdTipoEvento = 1
+            });
+            _context.SaveChanges();
+
+            var resultado = _eventoService.Search(new Core.DTO.EventoFilterDTO { TermoBusca = "Busca Valida" }, pagina, tamanhoPagina, out int totalRegistros).ToList();
+
+            Assert.AreEqual(1, totalRegistros);
+            Assert.AreEqual(1, resultado.Count);
+            Assert.AreEqual((uint)500, resultado[0].Id);
+        }
+
+        [TestMethod()]
+        public void DeleteTest_EventoComApenasGestorOuColaboradorVinculado_LancaMensagemEspecifica()
+        {
+            // Evento 3 está em Cadastro ("C") e sem inscrições
+            _context.Inscricaopessoaeventos.Add(new Inscricaopessoaevento
+            {
+                Id = 601,
+                IdEvento = 3,
+                IdPessoa = 1,
+                IdPapel = 2,
+                Status = "S"
+            });
+            _context.SaveChanges();
+            _context.ChangeTracker.Clear();
+
+            var exGestor = Assert.Throws<ServiceException>(() => _eventoService.Delete(3));
+            StringAssert.Contains(exGestor.Message, "gestores vinculados");
+
+            var vinculo = _context.Inscricaopessoaeventos.Find((uint)601)!;
+            vinculo.IdPapel = 3;
+            _context.SaveChanges();
+            _context.ChangeTracker.Clear();
+
+            var exColab = Assert.Throws<ServiceException>(() => _eventoService.Delete(3));
+            StringAssert.Contains(exColab.Message, "colaboradores vinculados");
+        }
+
+        [TestMethod()]
+        public void AtualizarVagasDisponiveis_IgnoraInscricoesCanceladas()
+        {
+            _context.Eventos.Add(new Evento
+            {
+                Id = 510,
+                Nome = "Evento Vagas",
+                Descricao = "Desc",
+                Status = "A",
+                IdTipoEvento = 1,
+                VagasOfertadas = 100,
+                VagasDisponiveis = 80
+            });
+            _context.Inscricaopessoaeventos.AddRange(
+                new Inscricaopessoaevento { Id = 611, IdEvento = 510, IdPessoa = 1, IdPapel = 4, Status = "A" },
+                new Inscricaopessoaevento { Id = 612, IdEvento = 510, IdPessoa = 2, IdPapel = 4, Status = "C" });
+            _context.SaveChanges();
+
+            _eventoService.AtualizarVagasDisponiveis(510);
+            _context.ChangeTracker.Clear();
+
+            Assert.AreEqual(99, _context.Eventos.Find((uint)510)!.VagasDisponiveis);
+        }
     }
 }

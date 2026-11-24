@@ -98,6 +98,15 @@ namespace EventoWeb.Controllers
             }
 
             EventoModel eventoModel = _mapper.Map<EventoModel>(evento);
+            if (eventoModel.VagasOfertadas > 0)
+            {
+                var participantesEvento = _inscricaoService.GetByEventoAndPapel(idEvento, 4);
+                if (participantesEvento != null)
+                {
+                    var ocupadas = participantesEvento.Count(i => i.Status != "C");
+                    eventoModel.VagasDisponiveis = Math.Max(0, eventoModel.VagasOfertadas - ocupadas);
+                }
+            }
             var tipoInscricaoModel = _tipoinscricaoService.GetByEvento(idEvento).ToList();
             var subeventos = _subeventoService.GetByIdEvento(idEvento).ToList();
             var tiposPorSubevento = _tipoinscricaoService.GetTiposAgrupadosPorSubevento(idEvento) 

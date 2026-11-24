@@ -33,8 +33,9 @@ namespace EventoWeb.Controllers
             return AutorizacaoEventoHelper.IsAutorizado(User, _inscricaoService, idEvento);
         }
 
-        // GET: /TipoInscricaocontroller
-        [HttpGet]
+        // GET: /TipoInscricao ou /TipoInscricao/Index
+        [HttpGet("")]
+        [HttpGet("Index")]
         public ActionResult Index(uint? idEvento)
         {
             if (idEvento.HasValue)
@@ -166,8 +167,8 @@ namespace EventoWeb.Controllers
                 existente.Valor = tipoInscricaoModel.Valor;
                 existente.DataInicio = tipoInscricaoModel.DataInicio;
                 existente.Datafim = tipoInscricaoModel.Datafim;
-                existente.UsadaEvento = tipoInscricaoModel.UsadaEvento ?? existente.UsadaEvento;
-                existente.UsadaSubevento = tipoInscricaoModel.UsadaSubevento ?? existente.UsadaSubevento;
+                existente.UsadaEvento = tipoInscricaoModel.UsadaEvento ?? 0;
+                existente.UsadaSubevento = tipoInscricaoModel.UsadaSubevento ?? 0;
                 _tipoInscricaoService.Edit(existente);
 
                 return RedirectToAction(nameof(Index), new { idEvento = existente.IdEvento });

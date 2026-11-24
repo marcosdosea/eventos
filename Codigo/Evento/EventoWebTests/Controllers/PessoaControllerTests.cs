@@ -460,7 +460,7 @@ namespace EventoWeb.Controllers.Tests
             {
                 Id = 4,
                 Nome = "Novo Admin",
-                Cpf = "999.999.999-99",
+                Cpf = "529.982.247-25",
                 Email = "novo@admin.com",
                 Telefone1 = "7999999999"
             };
@@ -475,10 +475,10 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("Administrador definido com sucesso.", localController.TempData["SuccessMessage"]);
             Assert.IsNull(localController.TempData["ErrorMessage"]);
             mockService.Verify(service => service.ValidaEmail("novo@admin.com"), Times.Once);
-            mockService.Verify(service => service.EmailExist("novo@admin.com", "999.999.999-99"), Times.Once);
+            mockService.Verify(service => service.EmailExist("novo@admin.com", "529.982.247-25"), Times.Once);
             mockService.Verify(service => service.IsAdmAsync(It.IsAny<Pessoa>()), Times.Once);
             mockService.Verify(service => service.CreatePessoaIdentityComPapelAsync(It.Is<Pessoa>(p =>
-                p.Cpf == "999.999.999-99" &&
+                p.Cpf == "529.982.247-25" &&
                 p.Nome == "Novo Admin" &&
                 p.NomeCracha == "Novo" &&
                 p.Email == "novo@admin.com" &&
@@ -514,7 +514,7 @@ namespace EventoWeb.Controllers.Tests
             {
                 Id = 4,
                 Nome = "Novo Admin",
-                Cpf = "999.999.999-99",
+                Cpf = "529.982.247-25",
                 Email = "email-invalido",
                 Telefone1 = "7999999999"
             };
@@ -568,7 +568,7 @@ namespace EventoWeb.Controllers.Tests
             {
                 Id = 4,
                 Nome = "Novo Admin",
-                Cpf = "999.999.999-99",
+                Cpf = "529.982.247-25",
                 Email = "existente@gmail.com",
                 Telefone1 = "7999999999"
             };
@@ -586,7 +586,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual(1, model.Administradores.Count);
             Assert.AreEqual((uint)1, model.Administradores[0].Id);
             mockService.Verify(service => service.ValidaEmail("existente@gmail.com"), Times.Once);
-            mockService.Verify(service => service.EmailExist("existente@gmail.com", "999.999.999-99"), Times.Once);
+            mockService.Verify(service => service.EmailExist("existente@gmail.com", "529.982.247-25"), Times.Once);
             mockService.Verify(service => service.IsAdmAsync(It.IsAny<Pessoa>()), Times.Never);
             mockService.Verify(service => service.VerificaEdit(It.IsAny<Pessoa>()), Times.Never);
             mockService.Verify(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), 0, 1), Times.Never);
@@ -712,7 +712,7 @@ namespace EventoWeb.Controllers.Tests
             {
                 Id = 4,
                 Nome = "Novo Admin",
-                Cpf = "999.999.999-99",
+                Cpf = "529.982.247-25",
                 Email = "novo@admin.com",
                 Telefone1 = "7999999999"
             };
@@ -754,7 +754,7 @@ namespace EventoWeb.Controllers.Tests
             {
                 Id = 4,
                 Nome = "Novo Admin",
-                Cpf = "999.999.999-99",
+                Cpf = "529.982.247-25",
                 Email = "novo@admin.com",
                 Telefone1 = "7999999999"
             };
@@ -769,6 +769,66 @@ namespace EventoWeb.Controllers.Tests
 
             mockService.Verify(service => service.VerificaEdit(It.IsAny<Pessoa>()), Times.Never);
             mockService.Verify(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), 0, 1), Times.Once);
+        }
+
+        [TestMethod()]
+        [DataRow("111.111.111-11")]
+        [DataRow("888.888.888-88")]
+        [DataRow("999.999.999-99")]
+        public async Task DefinirAdministradorTest_Post_CpfInvalido_RetornaViewComErro(string cpfInvalido)
+        {
+            var mockService = new Mock<IPessoaService>();
+            var mockEstadosService = new Mock<IEstadosbrasilService>();
+            mockService.Setup(service => service.GetAllAdmAsync()).ReturnsAsync(new List<Pessoa> { GetTargetPessoa() });
+            var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
+            var localController = new PessoaController(mockService.Object, mockEstadosService.Object, mapper, Mock.Of<IEmailService>(), Mock.Of<IAreaInteresseService>());
+
+            localController.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
+            localController.TempData = new TempDataDictionary(localController.HttpContext, Mock.Of<ITempDataProvider>());
+
+            var viewModel = new GestaoAdministradorModel
+            {
+                Id = 4,
+                Nome = "Admin Invalido",
+                Cpf = cpfInvalido,
+                Email = "novo@admin.com",
+                Telefone1 = "79999999999"
+            };
+
+            var result = await localController.DefinirAdministrador(viewModel);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            Assert.IsTrue(localController.ModelState.ContainsKey("Cpf"));
+            mockService.Verify(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), It.IsAny<uint>(), It.IsAny<int>()), Times.Never);
+        }
+
+        [TestMethod()]
+        public async Task EnviarConfirmacaoEmail_SemCpfNaUrl_ResolvePorEmailERedirecionaSemCpf()
+        {
+            var mockService = new Mock<IPessoaService>();
+            var mockEmail = new Mock<IEmailService>();
+            var pessoa = new Pessoa { Id = 10, Nome = "Fulano", Cpf = "52998224725", Email = "fulano@teste.com" };
+            var user = new UsuarioIdentity { Id = "u-1", UserName = "52998224725", Email = "fulano@teste.com" };
+
+            mockService.Setup(s => s.GetAll()).Returns(new List<Pessoa> { pessoa });
+            mockService.Setup(s => s.GerarTokenConfirmacaoEmailAsync("52998224725")).ReturnsAsync(("tok-1", user));
+            mockEmail.Setup(e => e.ModeloConfirmEmail(It.IsAny<string>(), pessoa, It.IsAny<string>())).ReturnsAsync(true);
+
+            var mapper = new MapperConfiguration(cfg => cfg.AddProfile(new PessoaProfile())).CreateMapper();
+            var localController = new PessoaController(mockService.Object, Mock.Of<IEstadosbrasilService>(), mapper, mockEmail.Object, Mock.Of<IAreaInteresseService>());
+            localController.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() };
+            localController.TempData = new TempDataDictionary(localController.HttpContext, Mock.Of<ITempDataProvider>());
+            localController.Url = new TestUrlHelper();
+
+            var result = await localController.EnviarConfirmacaoEmail("fulano@teste.com");
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToPageResult));
+            var redirect = (RedirectToPageResult)result;
+            Assert.AreEqual("/Account/RegisterConfirmation", redirect.PageName);
+            Assert.IsNotNull(redirect.RouteValues);
+            Assert.AreEqual("fulano@teste.com", redirect.RouteValues["email"]);
+            Assert.IsFalse(redirect.RouteValues.ContainsKey("cpf"), "CPF não deve ser reexposto na URL.");
+            Assert.AreEqual("E-mail de confirmação enviado com sucesso!", localController.TempData["SuccessMessage"]);
         }
 
         [TestMethod()]

@@ -93,12 +93,38 @@ namespace Service
             }
 
             var idsSubeventos = evento.Subeventos?.Select(s => s.Id).ToList() ?? new List<uint>();
-            var temInscricaoEvento = _context.Inscricaopessoaeventos.Any(i => i.IdEvento == Id);
+            var papeisVinculadosEvento = _context.Inscricaopessoaeventos
+                .Where(i => i.IdEvento == Id)
+                .Select(i => i.IdPapel)
+                .Distinct()
+                .ToList();
+            var temParticipanteEvento = papeisVinculadosEvento.Contains(PapelParticipante);
             var temInscricaoSubevento = idsSubeventos.Count > 0 && _context.Inscricaopessoasubeventos.Any(s => idsSubeventos.Contains(s.IdSubEvento));
 
-            if (temInscricaoEvento || temInscricaoSubevento)
+            if (temParticipanteEvento || temInscricaoSubevento)
             {
                 throw new ServiceException("Não é possível excluir um evento que possui inscrições vinculadas.");
+            }
+
+            if (papeisVinculadosEvento.Count > 0)
+            {
+                var temGestor = papeisVinculadosEvento.Contains(2);
+                var temColaborador = papeisVinculadosEvento.Contains(3);
+
+                if (temGestor && temColaborador)
+                {
+                    throw new ServiceException("Não é possível excluir um evento que possui gestores e colaboradores vinculados. Remova os vínculos antes de excluí-lo.");
+                }
+                if (temGestor)
+                {
+                    throw new ServiceException("Não é possível excluir um evento que possui gestores vinculados. Remova os gestores antes de excluí-lo.");
+                }
+                if (temColaborador)
+                {
+                    throw new ServiceException("Não é possível excluir um evento que possui colaboradores vinculados. Remova os colaboradores antes de excluí-lo.");
+                }
+
+                throw new ServiceException("Não é possível excluir um evento que possui vínculos associados.");
             }
 
             try
@@ -416,19 +442,21 @@ namespace Service
                 // (InscricaoController.realizarInscricao) ignoraria as inscrições
                 // recém-criadas e as vagas não seriam abatidas.
                 var participantesNoBanco = _context.Inscricaopessoaeventos
-                    .Count(i => i.IdEvento == idEvento && i.IdPapel == PapelParticipante);
+                    .Count(i => i.IdEvento == idEvento && i.IdPapel == PapelParticipante && i.Status != "C");
 
                 var inscricoesPendentes = _context.ChangeTracker
                     .Entries<Inscricaopessoaevento>()
                     .Count(e => e.State == EntityState.Added
                              && e.Entity.IdEvento == idEvento
-                             && e.Entity.IdPapel == PapelParticipante);
+                             && e.Entity.IdPapel == PapelParticipante
+                             && e.Entity.Status != "C");
 
                 var inscricoesRemovidas = _context.ChangeTracker
                     .Entries<Inscricaopessoaevento>()
                     .Count(e => e.State == EntityState.Deleted
                              && e.Entity.IdEvento == idEvento
-                             && e.Entity.IdPapel == PapelParticipante);
+                             && e.Entity.IdPapel == PapelParticipante
+                             && e.Entity.Status != "C");
 
                 var quantidadeParticipantes = participantesNoBanco + inscricoesPendentes - inscricoesRemovidas;
 
@@ -524,6 +552,10 @@ namespace Service
 
         public IEnumerable<Evento> Search(EventoFilterDTO filter, int pagina, int tamanhoPagina, out int totalRegistros)
         {
+            filter ??= new EventoFilterDTO();
+            pagina = Math.Max(1, pagina);
+            tamanhoPagina = Math.Max(1, tamanhoPagina);
+
             var query = _context.Eventos
                 .AsNoTracking()
                 .Include(e => e.IdTipoEventoNavigation)

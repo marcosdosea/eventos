@@ -42,6 +42,9 @@ namespace Util
 
 		public static bool ValidarCpf(string cpf)
         {
+            if (string.IsNullOrWhiteSpace(cpf))
+                return false;
+
 			cpf = RemoveNaoNumericos(cpf);
 
             if (string.IsNullOrEmpty(cpf))
@@ -57,6 +60,9 @@ namespace Util
             cpf = cpf.Replace(".", "").Replace("-", "");
 
             if (cpf.Length != 11)
+                return false;
+
+            if (new string(cpf[0], 11) == cpf)
                 return false;
 
             tempCpf = cpf.Substring(0, 9);

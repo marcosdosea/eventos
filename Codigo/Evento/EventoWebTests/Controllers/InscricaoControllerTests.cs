@@ -3115,5 +3115,63 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsNotNull(model.Inscricaopessoasubeventos.First().IdSubEventoNavigation);
             Assert.AreEqual((uint)8, model.Inscricaopessoasubeventos.First().IdSubEventoNavigation!.CargaHoraria);
         }
+
+        [TestMethod()]
+        public void RealizarInscricao_Get_RecalculaVagasDisponiveisConsistenteComParticipantesAtivos()
+        {
+            var mockEvento = new Mock<IEventoService>();
+            mockEvento.Setup(s => s.Get(6)).Returns(new Evento
+            {
+                Id = 6,
+                Nome = "Simpósio",
+                Status = "A",
+                DataInicioInscricao = DateTime.Now.AddDays(-1),
+                DataFimInscricao = DateTime.Now.AddDays(5),
+                VagasOfertadas = 800,
+                VagasReservadas = 20,
+                VagasDisponiveis = 780
+            });
+
+            var mockInscricao = new Mock<IInscricaoService>();
+            mockInscricao.Setup(s => s.GetByEventoAndPapel(6, 4)).Returns(new List<Inscricaopessoaevento>
+            {
+                new Inscricaopessoaevento { Id = 1, IdEvento = 6, IdPessoa = 10, IdPapel = 4, Status = "A" },
+                new Inscricaopessoaevento { Id = 2, IdEvento = 6, IdPessoa = 11, IdPapel = 4, Status = "C" }
+            });
+
+            var mockTipo = new Mock<ITipoInscricaoService>();
+            mockTipo.Setup(s => s.GetByEvento(6)).Returns(new List<Tipoinscricao>());
+            mockTipo.Setup(s => s.GetTiposAgrupadosPorSubevento(6)).Returns(new Dictionary<uint, List<TipoInscricaoDTO>>());
+
+            var mockSub = new Mock<ISubeventoService>();
+            mockSub.Setup(s => s.GetByIdEvento(6)).Returns(new List<SubeventoEventoDTO>());
+
+            IMapper mapper = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile(new EventoProfile());
+                cfg.AddProfile(new InscricaoProfile());
+            }).CreateMapper();
+
+            var ctl = new InscricaoController(
+                null!,
+                mockTipo.Object,
+                mockEvento.Object,
+                mapper,
+                mockInscricao.Object,
+                Mock.Of<IPessoaService>(),
+                mockSub.Object);
+
+            var httpContext = new DefaultHttpContext();
+            ctl.ControllerContext = new ControllerContext { HttpContext = httpContext };
+            ctl.TempData = new TempDataDictionary(httpContext, Mock.Of<ITempDataProvider>());
+            ctl.Url = Mock.Of<Microsoft.AspNetCore.Mvc.IUrlHelper>();
+
+            var result = ctl.realizarInscricao(6, (uint?)null) as ViewResult;
+
+            Assert.IsNotNull(result);
+            var vm = result.Model as InscricaoEventoViewModel;
+            Assert.IsNotNull(vm);
+            Assert.AreEqual(799, vm.eventoNavigation.VagasDisponiveis);
+        }
     }
 }

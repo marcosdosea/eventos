@@ -26,5 +26,5 @@
 <form asp-action="DeleteConfirmed" method="post">
     <input type="hidden" asp-for="Id" />
     <button type="submit" class="btn btn-danger">Excluir</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+    <a asp-action="Index" asp-route-idEvento="@Model.IdEvento" class="btn btn-secondary">Cancelar</a>
 </form>

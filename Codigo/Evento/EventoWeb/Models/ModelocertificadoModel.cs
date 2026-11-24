@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -23,9 +24,11 @@ namespace EventoWeb.Models
 
         // Para exibição
         [Display(Name = "Evento")]
+        [ValidateNever]
         public string NomeEvento { get; set; } = string.Empty;
 
         // Listas para dropdown
+        [ValidateNever]
         public SelectList Eventos { get; set; } = new SelectList(Array.Empty<object>(), "Id", "Nome");
     }
 }

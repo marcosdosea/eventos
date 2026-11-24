@@ -110,5 +110,28 @@ namespace Service.Tests
             var firstAreainteresse = listaAreaInteresse.First();
             Assert.AreEqual((uint)1, firstAreainteresse.Id);
         }
+
+        [TestMethod()]
+        public void CreateTest_NomeDuplicadoCaseInsensitive_LancaServiceException()
+        {
+            var ex = Assert.Throws<ServiceException>(() => _areaInteresseService.Create(new Areainteresse
+            {
+                Id = 10,
+                Nome = "  curso  "
+            }));
+
+            StringAssert.Contains(ex.Message, "Já existe uma área de interesse");
+        }
+
+        [TestMethod()]
+        public void EditTest_NomeDuplicadoDeOutraArea_LancaServiceException()
+        {
+            var area = _areaInteresseService.Get(1);
+            area.Nome = "PALESTRA";
+
+            var ex = Assert.Throws<ServiceException>(() => _areaInteresseService.Edit(area));
+
+            StringAssert.Contains(ex.Message, "Já existe uma área de interesse");
+        }
     }
 }

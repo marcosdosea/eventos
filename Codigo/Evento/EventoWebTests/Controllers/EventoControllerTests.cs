@@ -1064,5 +1064,124 @@ namespace EventoWeb.Controllers.Tests
                 }
             };
         }
+
+        [TestMethod()]
+        public void GetCreate_ExigeApenasAdministrador()
+        {
+            var metodo = typeof(EventoController).GetMethod(nameof(EventoController.Create), Type.EmptyTypes);
+            Assert.IsNotNull(metodo);
+
+            var autorizacao = metodo!.GetCustomAttributes(typeof(AuthorizeAttribute), false)
+                .Cast<AuthorizeAttribute>().FirstOrDefault();
+            Assert.IsNotNull(autorizacao);
+            Assert.AreEqual("ADMINISTRADOR", autorizacao!.Roles);
+        }
+
+        [TestMethod()]
+        public void Edit_Post_StatusInativo_RejeitaSemSalvar()
+        {
+            var model = GetTargetEventoModelEdit();
+            model.Status = "I";
+
+            var result = controller.Edit(model.Id, model);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            Assert.IsTrue(controller.ModelState.ContainsKey("Status"));
+        }
+
+        [TestMethod()]
+        public void GestorEditarEvento_Post_StatusInativo_RejeitaSemSalvar()
+        {
+            var model = GetTargetEventoModelEdit();
+            model.Status = "I";
+
+            var result = controller.GestorEditarEvento(model.Id, model);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            Assert.IsTrue(controller.ModelState.ContainsKey("Status"));
+        }
+
+        [TestMethod()]
+        public void EventoModel_StatusInativo_FalhaValidacaoDataAnnotations()
+        {
+            var model = GetTargetEventoModelEdit();
+            model.Status = "I";
+
+            var resultados = new List<ValidationResult>();
+            var valido = Validator.TryValidateObject(model, new ValidationContext(model), resultados, true);
+
+            Assert.IsFalse(valido);
+            Assert.IsTrue(resultados.Any(r => r.MemberNames.Contains(nameof(EventoModel.Status))));
+        }
+
+        [TestMethod()]
+        public async Task CreateGestor_Post_ComNomeCrachaOuNomeCompletoSemAcento_AceitaCadastro()
+        {
+            var model = GetNewGestaoPapel();
+            model.Pessoa.Nome = "Sodre";
+
+            var result = await controller.CreateGestor(model);
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("CreateGestor", redirect.ActionName);
+        }
+
+        [TestMethod()]
+        [DataRow("111.111.111-11")]
+        [DataRow("888.888.888-88")]
+        [DataRow("999.999.999-99")]
+        public async Task CreateGestor_E_CreateParticipante_CpfInvalido_RejeitaComErro(string cpfInvalido)
+        {
+            var modelGestor = GetNewGestaoPapel();
+            modelGestor.Pessoa.Cpf = cpfInvalido;
+
+            var resGestor = await controller.CreateGestor(modelGestor);
+            Assert.IsInstanceOfType(resGestor, typeof(ViewResult));
+            Assert.IsTrue(controller.ModelState.ContainsKey("Pessoa.Cpf"));
+
+            controller.ModelState.Clear();
+            var modelPart = GetNewGestaoPapel();
+            modelPart.Pessoa.Cpf = cpfInvalido;
+
+            var resPart = await controller.CreateParticipante(modelPart);
+            Assert.IsInstanceOfType(resPart, typeof(ViewResult));
+            Assert.IsTrue(controller.ModelState.ContainsKey("Pessoa.Cpf"));
+        }
+
+        [TestMethod()]
+        public async Task CreateColaborador_Post_PessoaJaParticipante_ExibeErroDeValidacao()
+        {
+            mockServiceInscricao.Setup(s => s.GetPapelPessoaByEvento(It.IsAny<uint>(), It.IsAny<uint>())).Returns(4);
+            var model = GetNewGestaoPapel();
+
+            var result = await controller.CreateColaborador(model);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            Assert.IsFalse(controller.ModelState.IsValid);
+            var erros = controller.ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage).ToList();
+            Assert.IsTrue(erros.Any(e => e.Contains("participante", StringComparison.OrdinalIgnoreCase)));
+        }
+
+        [TestMethod()]
+        public void GerenciarEvento_SemPermissao_DefineErrorMessageERedirecionaParaGerenciarEventoListar()
+        {
+            mockServiceInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), 1)).Returns((Inscricaopessoaevento)null!);
+            mockServiceInscricao.Setup(s => s.GetColaboradorInEvent(It.IsAny<string>(), 1)).Returns((Inscricaopessoaevento)null!);
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "40201971054"),
+                new Claim(ClaimTypes.Role, "COLABORADOR")
+            };
+            controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType"));
+
+            var result = controller.GerenciarEvento(1) as RedirectToActionResult;
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual("GerenciarEventoListar", result.ActionName);
+            Assert.AreEqual("Você não tem permissão para gerenciar este evento!", controller.TempData["ErrorMessage"]);
+            Assert.IsNull(controller.TempData["Message"]);
+        }
     }
 }

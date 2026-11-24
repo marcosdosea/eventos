@@ -158,9 +158,39 @@ namespace EventoWeb.Controllers.Tests
         {
             return new AreaInteresseModel
             {
-                Id = 1,
-                Nome = "Curso",
+                Id = 4,
+                Nome = "Workshop",
             };
+        }
+
+        [TestMethod()]
+        public void CreateTest_NomeDuplicadoCaseInsensitive_RetornaViewComErroEmNome()
+        {
+            var result = controller.Create(new AreaInteresseModel { Nome = "  cUrSo  " });
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            Assert.IsTrue(controller.ModelState.ContainsKey("Nome"));
+        }
+
+        [TestMethod()]
+        public void EditTest_NomeDuplicadoDeOutraArea_RetornaViewComErroEmNome()
+        {
+            var result = controller.Edit(1, new AreaInteresseModel { Id = 1, Nome = "PALESTRA" });
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            Assert.IsTrue(controller.ModelState.ContainsKey("Nome"));
+        }
+
+        [TestMethod()]
+        public void AreaInteresseModel_MensagensValidacao_ReferemAreaDeInteresse()
+        {
+            var propId = typeof(AreaInteresseModel).GetProperty(nameof(AreaInteresseModel.Id))!;
+            var reqId = (System.ComponentModel.DataAnnotations.RequiredAttribute)Attribute.GetCustomAttribute(propId, typeof(System.ComponentModel.DataAnnotations.RequiredAttribute))!;
+            Assert.AreEqual("Código da Área de Interesse é obrigatório", reqId.ErrorMessage);
+
+            var propNome = typeof(AreaInteresseModel).GetProperty(nameof(AreaInteresseModel.Nome))!;
+            var reqNome = (System.ComponentModel.DataAnnotations.RequiredAttribute)Attribute.GetCustomAttribute(propNome, typeof(System.ComponentModel.DataAnnotations.RequiredAttribute))!;
+            Assert.AreEqual("Nome da Área de Interesse é obrigatório", reqNome.ErrorMessage);
         }
         private static Areainteresse GetTargetAreaInteresse()
         {

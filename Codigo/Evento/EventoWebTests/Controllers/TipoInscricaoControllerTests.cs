@@ -477,5 +477,70 @@ namespace EventoWeb.Controllers.Tests
                     },
             };
         }
+
+        [TestMethod()]
+        public void Index_PossuiRotasVaziaEIndex()
+        {
+            var metodo = typeof(TipoInscricaoController).GetMethod(nameof(TipoInscricaoController.Index))!;
+            var templates = metodo.GetCustomAttributes(typeof(HttpGetAttribute), false)
+                .Cast<HttpGetAttribute>()
+                .Select(a => a.Template)
+                .ToList();
+
+            CollectionAssert.Contains(templates, "");
+            CollectionAssert.Contains(templates, "Index");
+        }
+
+        [TestMethod()]
+        public void Edit_Post_PreservaHorarioEAtualizaUsadaEventoESubevento()
+        {
+            var existente = new Tipoinscricao
+            {
+                Id = 1,
+                IdEvento = 1,
+                Nome = "Lote 1",
+                Descricao = "Desc",
+                Valor = 50m,
+                DataInicio = new DateTime(2026, 11, 24, 14, 30, 0),
+                Datafim = new DateTime(2026, 11, 30, 23, 59, 0),
+                UsadaEvento = 1,
+                UsadaSubevento = 1
+            };
+
+            var mockTipo = new Mock<ITipoInscricaoService>();
+            mockTipo.Setup(s => s.Get(1)).Returns(existente);
+            Tipoinscricao? salvo = null;
+            mockTipo.Setup(s => s.Edit(It.IsAny<Tipoinscricao>())).Callback<Tipoinscricao>(t => salvo = t);
+
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), (uint)1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new TipoInscricaoProfile())).CreateMapper();
+            var ctl = new TipoInscricaoController(mockTipo.Object, mapper, new Mock<IEventoService>().Object, new Mock<ISubeventoService>().Object, mockInsc.Object);
+            ctl.ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext { User = GestorPrincipal() } };
+
+            var editModel = new TipoInscricaoModel
+            {
+                Id = 1,
+                IdEvento = 1,
+                Nome = "Lote 1 Atualizado",
+                Descricao = "Desc",
+                Valor = 75m,
+                DataInicio = new DateTime(2026, 11, 24, 14, 30, 0),
+                Datafim = new DateTime(2026, 11, 30, 23, 59, 0),
+                UsadaEvento = 0,
+                UsadaSubevento = 1
+            };
+
+            var result = ctl.Edit(1, editModel);
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            Assert.IsNotNull(salvo);
+            Assert.AreEqual(new DateTime(2026, 11, 24, 14, 30, 0), salvo.DataInicio);
+            Assert.AreEqual(new DateTime(2026, 11, 30, 23, 59, 0), salvo.Datafim);
+            Assert.AreEqual((sbyte)0, salvo.UsadaEvento);
+            Assert.AreEqual((sbyte)1, salvo.UsadaSubevento);
+        }
     }
 }

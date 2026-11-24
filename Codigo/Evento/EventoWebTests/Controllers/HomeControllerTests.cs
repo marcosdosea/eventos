@@ -627,5 +627,28 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual((uint)30, model[0].Id);
             Assert.AreEqual("BA", controller.ViewBag.EstadoAtivo);
         }
+
+        [TestMethod]
+        [DataRow(0)]
+        [DataRow(-5)]
+        public void Buscar_ComPaginaZeroOuNegativa_AjustaParaPaginaUm(int paginaInvalida)
+        {
+            var httpContext = new DefaultHttpContext();
+            int totalRegistros = 1;
+            var evento = new Evento { Id = 40, Nome = "Evento Pagina 1", Status = "A" };
+            _mockEventoService
+                .Setup(s => s.Search(It.IsAny<Core.DTO.EventoFilterDTO>(), 1, 16, out totalRegistros))
+                .Returns(new List<Evento> { evento });
+            _mockTipoEventoService.Setup(s => s.GetAll()).Returns(new List<Tipoevento>());
+            _mockAreaInteresseService.Setup(s => s.GetAll()).Returns(new List<Areainteresse>());
+            _mockEstadosBrasilService.Setup(s => s.GetAll()).Returns(new List<Estadosbrasil>());
+
+            var controller = CreateController(httpContext);
+            var result = controller.Buscar(new Core.DTO.EventoFilterDTO(), pagina: paginaInvalida);
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            Assert.AreEqual(1, controller.ViewBag.PaginaAtual);
+            _mockEventoService.Verify(s => s.Search(It.IsAny<Core.DTO.EventoFilterDTO>(), 1, 16, out It.Ref<int>.IsAny), Times.Once);
+        }
     }
 }

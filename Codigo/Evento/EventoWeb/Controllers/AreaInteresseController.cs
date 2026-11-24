@@ -60,9 +60,25 @@ namespace EventoWeb.Controllers
         {
             if (ModelState.IsValid)
             {
-                var areainteresse = AreaInteresseMapper.ToEntity(areaInteresseModel);
-                _areaInteresseService.Create(areainteresse);
-                return RedirectToAction(nameof(Index));
+                var nomeNormalizado = (areaInteresseModel.Nome ?? string.Empty).Trim();
+                var existentes = _areaInteresseService.GetAll();
+                if (existentes != null && existentes.Any(a => string.Equals(a.Nome?.Trim(), nomeNormalizado, StringComparison.OrdinalIgnoreCase)))
+                {
+                    ModelState.AddModelError("Nome", "Já existe uma área de interesse cadastrada com este nome.");
+                    return View(areaInteresseModel);
+                }
+
+                try
+                {
+                    areaInteresseModel.Nome = nomeNormalizado;
+                    var areainteresse = AreaInteresseMapper.ToEntity(areaInteresseModel);
+                    _areaInteresseService.Create(areainteresse);
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (ServiceException ex)
+                {
+                    ModelState.AddModelError("Nome", ex.Message);
+                }
             }
             return View(areaInteresseModel);
         }
@@ -89,9 +105,25 @@ namespace EventoWeb.Controllers
         {
             if (ModelState.IsValid)
             {
-                var areainteresse = AreaInteresseMapper.ToEntity(areaInteresseModel);
-                _areaInteresseService.Edit(areainteresse);
-                return RedirectToAction(nameof(Index));
+                var nomeNormalizado = (areaInteresseModel.Nome ?? string.Empty).Trim();
+                var existentes = _areaInteresseService.GetAll();
+                if (existentes != null && existentes.Any(a => a.Id != id && string.Equals(a.Nome?.Trim(), nomeNormalizado, StringComparison.OrdinalIgnoreCase)))
+                {
+                    ModelState.AddModelError("Nome", "Já existe uma área de interesse cadastrada com este nome.");
+                    return View(areaInteresseModel);
+                }
+
+                try
+                {
+                    areaInteresseModel.Nome = nomeNormalizado;
+                    var areainteresse = AreaInteresseMapper.ToEntity(areaInteresseModel);
+                    _areaInteresseService.Edit(areainteresse);
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (ServiceException ex)
+                {
+                    ModelState.AddModelError("Nome", ex.Message);
+                }
             }
             return View(areaInteresseModel);
         }

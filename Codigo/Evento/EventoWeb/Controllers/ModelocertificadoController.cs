@@ -76,18 +76,27 @@ namespace EventoWeb.Controllers
             if (entity == null) return NotFound();
             if (!IsAuthorized(entity.IdEvento))
                 return Forbid();
+            ViewData["EventoId"] = entity.IdEvento;
             var model = _mapper.Map<ModelocertificadoModel>(entity);
             return View(model);
         }
 
         [HttpGet]
         [Route("Create")]
-        public IActionResult Create()
+        public IActionResult Create(uint? idEvento = null)
         {
+            if (idEvento.HasValue && idEvento.Value > 0)
+            {
+                if (!IsAuthorized(idEvento.Value))
+                    return Forbid();
+                ViewData["EventoId"] = idEvento.Value;
+            }
+
             var model = new ModelocertificadoModel
             {
+                IdEvento = idEvento ?? 0,
                 DataEmissao = System.DateTime.Now,
-                Eventos = EventosSelectList()
+                Eventos = EventosSelectList(idEvento)
             };
             return View(model);
         }
@@ -99,15 +108,25 @@ namespace EventoWeb.Controllers
         {
             if (!IsAuthorized(model.IdEvento))
                 return Forbid();
+            ViewData["EventoId"] = model.IdEvento;
             if (!ModelState.IsValid)
             {
                 model.Eventos = EventosSelectList(model.IdEvento);
                 return View(model);
             }
 
-            var entity = _mapper.Map<Modelocertificado>(model);
-            _service.Create(entity);
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                var entity = _mapper.Map<Modelocertificado>(model);
+                _service.Create(entity);
+                return RedirectToAction(nameof(Index), new { idEvento = entity.IdEvento });
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+                model.Eventos = EventosSelectList(model.IdEvento);
+                return View(model);
+            }
         }
 
         [HttpGet]
@@ -118,6 +137,7 @@ namespace EventoWeb.Controllers
             if (entity == null) return NotFound();
             if (!IsAuthorized(entity.IdEvento))
                 return Forbid();
+            ViewData["EventoId"] = entity.IdEvento;
             var model = _mapper.Map<ModelocertificadoModel>(entity);
             model.Eventos = EventosSelectList(model.IdEvento);
             return View(model);
@@ -133,6 +153,7 @@ namespace EventoWeb.Controllers
             if (existente == null) return NotFound();
             if (!IsAuthorized(existente.IdEvento) || !IsAuthorized(model.IdEvento))
                 return Forbid();
+            ViewData["EventoId"] = model.IdEvento;
             if (!ModelState.IsValid)
             {
                 model.Eventos = EventosSelectList(model.IdEvento);
@@ -140,8 +161,19 @@ namespace EventoWeb.Controllers
             }
 
             var entity = _mapper.Map<Modelocertificado>(model);
+            if (existente.LogotipoSuperior != null && existente.LogotipoSuperior.Length > 0)
+                entity.LogotipoSuperior = existente.LogotipoSuperior;
+            if (existente.Assinatura1 != null && existente.Assinatura1.Length > 0)
+                entity.Assinatura1 = existente.Assinatura1;
+            if (!string.IsNullOrWhiteSpace(existente.TextoAntesEvento))
+                entity.TextoAntesEvento = existente.TextoAntesEvento;
+            if (!string.IsNullOrWhiteSpace(existente.TextoAntesCargaHoraria))
+                entity.TextoAntesCargaHoraria = existente.TextoAntesCargaHoraria;
+            entity.Assinatura2 = existente.Assinatura2;
+            entity.Assinatura2Texto = existente.Assinatura2Texto;
+
             _service.Update(entity);
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Index), new { idEvento = entity.IdEvento });
         }
 
         [HttpGet]
@@ -152,6 +184,7 @@ namespace EventoWeb.Controllers
             if (entity == null) return NotFound();
             if (!IsAuthorized(entity.IdEvento))
                 return Forbid();
+            ViewData["EventoId"] = entity.IdEvento;
             var model = _mapper.Map<ModelocertificadoModel>(entity);
             return View(model);
         }
@@ -166,7 +199,7 @@ namespace EventoWeb.Controllers
             if (!IsAuthorized(existente.IdEvento))
                 return Forbid();
             _service.Delete((uint)id);
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Index), new { idEvento = existente.IdEvento });
         }
     }
 }

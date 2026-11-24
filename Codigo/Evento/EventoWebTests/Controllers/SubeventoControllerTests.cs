@@ -1082,5 +1082,78 @@ namespace EventoWeb.Controllers.Tests
                 }
             };
         }
+
+        [TestMethod()]
+        public void Index_ComIdEventoAlheio_RetornaForbid()
+        {
+            var mockService = new Mock<ISubeventoService>();
+            var mockEvento = new Mock<IEventoService>();
+            var mockTipo = new Mock<ITipoeventoService>();
+            var mockTipoInsc = new Mock<ITipoInscricaoService>();
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), (uint)1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), (uint)5))
+                .Returns((Inscricaopessoaevento)null!);
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new SubeventoProfile())).CreateMapper();
+            var ctl = new SubeventoController(mockService.Object, mapper, mockEvento.Object, mockTipo.Object, mockTipoInsc.Object, mockInsc.Object);
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "12345678900"),
+                new Claim(ClaimTypes.Role, "GESTOR")
+            };
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) }
+            };
+
+            var result = ctl.Index(5);
+
+            Assert.IsInstanceOfType(result, typeof(ForbidResult));
+        }
+
+        [TestMethod()]
+        public void Index_ComIdEventoProprio_FiltraPorEventoEDefineViewData()
+        {
+            var mockService = new Mock<ISubeventoService>();
+            mockService.Setup(s => s.GetAll()).Returns(new List<Subevento>
+            {
+                new Subevento { Id = 1, IdEvento = 1, Nome = "Sub Evento 1", IdTipoEvento = 1 },
+                new Subevento { Id = 2, IdEvento = 2, Nome = "Sub Evento 2", IdTipoEvento = 1 }
+            });
+            var mockEvento = new Mock<IEventoService>();
+            mockEvento.Setup(s => s.GetAll()).Returns(new List<Evento>
+            {
+                new Evento { Id = 1, Nome = "Ev 1" },
+                new Evento { Id = 2, Nome = "Ev 2" }
+            });
+            var mockTipo = new Mock<ITipoeventoService>();
+            mockTipo.Setup(s => s.GetAll()).Returns(new List<Tipoevento> { new Tipoevento { Id = 1, Nome = "Palestra" } });
+            var mockInsc = new Mock<IInscricaoService>();
+            mockInsc.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), (uint)1))
+                .Returns(new Inscricaopessoaevento { IdPessoa = 1, IdEvento = 1, IdPapel = 2 });
+
+            IMapper mapper = new MapperConfiguration(cfg => cfg.AddProfile(new SubeventoProfile())).CreateMapper();
+            var ctl = new SubeventoController(mockService.Object, mapper, mockEvento.Object, mockTipo.Object, new Mock<ITipoInscricaoService>().Object, mockInsc.Object);
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "12345678900"),
+                new Claim(ClaimTypes.Role, "GESTOR")
+            };
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) }
+            };
+
+            var result = ctl.Index(1) as ViewResult;
+
+            Assert.IsNotNull(result);
+            var lista = result.Model as List<SubeventoModel>;
+            Assert.IsNotNull(lista);
+            Assert.AreEqual(1, lista.Count);
+            Assert.AreEqual((uint)1, lista[0].IdEvento);
+            Assert.AreEqual((uint)1, ctl.ViewData["EventoId"]);
+        }
     }
 }
