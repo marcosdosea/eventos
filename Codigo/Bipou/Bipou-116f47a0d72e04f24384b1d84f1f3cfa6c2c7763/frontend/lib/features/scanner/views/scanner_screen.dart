@@ -17,9 +17,9 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 final class ScannerScreen extends StatefulWidget {
   const ScannerScreen({
-    required this.tipoAcao,
     required this.credenciamento,
     required this.dispositivoId,
+    this.tipoAcao,
     this.contextoAtivo,
     this.sessaoAtiva,
     this.localParticipants,
@@ -31,7 +31,7 @@ final class ScannerScreen extends StatefulWidget {
     super.key,
   });
 
-  final TipoAcao tipoAcao;
+  final TipoAcao? tipoAcao;
   final CredenciamentoGateway credenciamento;
   final String dispositivoId;
   final ScannerSessionContext? contextoAtivo;
@@ -79,7 +79,7 @@ final class _ScannerScreenState extends State<ScannerScreen>
         widget.sensoryFeedback ?? const PlatformScannerSensoryFeedback();
     _viewModel = ScannerViewModel(
       credenciamento: widget.credenciamento,
-      tipoAcao: widget.tipoAcao,
+      tipoAcao: widget.tipoAcao ?? TipoAcao.entrada,
       dispositivoId: widget.dispositivoId,
       contextoAtivo: widget.contextoAtivo,
       sessaoAtiva: widget.sessaoAtiva,
@@ -330,8 +330,9 @@ final class _ScannerScreenState extends State<ScannerScreen>
     );
   }
 
-  String _tituloDaAcao(TipoAcao tipoAcao) {
+  String _tituloDaAcao(TipoAcao? tipoAcao) {
     return switch (tipoAcao) {
+      null => 'Escanear QR Code',
       TipoAcao.entrada => 'Registrar ENTRADA',
       TipoAcao.saida => 'Registrar SAÍDA',
     };

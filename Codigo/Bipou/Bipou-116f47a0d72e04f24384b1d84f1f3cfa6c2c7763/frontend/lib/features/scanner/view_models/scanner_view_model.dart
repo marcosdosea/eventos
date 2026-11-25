@@ -21,8 +21,8 @@ typedef ScannerClock = DateTime Function();
 final class ScannerViewModel extends ChangeNotifier {
   ScannerViewModel({
     required this._credenciamento,
-    required this.tipoAcao,
     required this.dispositivoId,
+    this.tipoAcao = TipoAcao.entrada,
     this.contextoAtivo,
     this.sessaoAtiva,
     this.localParticipants,
