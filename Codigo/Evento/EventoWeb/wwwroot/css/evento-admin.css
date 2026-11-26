@@ -1,0 +1,762 @@
+/* ==========================================================================
+   Eventos (UC01 - Administrador) - Design System Boralá
+   ========================================================================== */
+
+.evento-page-container,
+.evento-delete-container {
+    padding: 1.25rem 0 3rem 0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* Breadcrumb */
+.evento-breadcrumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    font-size: 0.84rem;
+    color: #64748B;
+    margin-bottom: 0.5rem;
+}
+
+.evento-breadcrumb a {
+    color: #64748B;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.15s ease;
+}
+
+.evento-breadcrumb a:hover {
+    color: #232ed0;
+}
+
+.evento-breadcrumb .evento-breadcrumb-active {
+    color: #232ed0;
+    font-weight: 600;
+}
+
+/* Tipografia de Cabeçalho */
+.evento-title {
+    color: #232ed0;
+    font-weight: 700;
+    font-size: 1.85rem;
+    letter-spacing: -0.3px;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.evento-subtitle {
+    color: #64748B;
+    font-size: 0.94rem;
+    margin: 0.3rem 0 0 0;
+}
+
+/* Botões e Badges de Cabeçalho */
+.evento-back-btn {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    color: #1E293B;
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-weight: 600;
+    font-size: 0.88rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.05);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.evento-back-btn:hover {
+    background-color: #F8FAFC;
+    border-color: #CBD5E1;
+    color: #232ed0;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+
+.evento-count-badge {
+    background-color: #EEF2FF;
+    color: #232ed0;
+    border: 1px solid #E0E7FF;
+    font-weight: 700;
+    font-size: 0.8rem;
+    padding: 6px 14px;
+    border-radius: 50px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+/* Badges Pill de Status */
+.evento-pill {
+    border-radius: 50px;
+    padding: 6px 14px;
+    font-weight: 600;
+    font-size: 0.82rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.evento-pill .dot {
+    font-size: 0.72rem;
+    line-height: 1;
+}
+
+.evento-pill-cadastro {
+    background-color: #EEF2FF;
+    color: #232ed0;
+    border: 1px solid #E0E7FF;
+}
+
+.evento-pill-cadastro .dot {
+    color: #232ed0;
+}
+
+.evento-pill-ativo {
+    background-color: #D1FAE5;
+    color: #065F46;
+    border: 1px solid #A7F3D0;
+}
+
+.evento-pill-ativo .dot {
+    color: #10B981;
+}
+
+.evento-pill-finalizado {
+    background-color: #E2E8F0;
+    color: #475569;
+    border: 1px solid #CBD5E1;
+}
+
+.evento-pill-finalizado .dot {
+    color: #64748B;
+}
+
+.evento-pill-inativo {
+    background-color: #FEE2E2;
+    color: #991B1B;
+    border: 1px solid #FECACA;
+}
+
+.evento-pill-inativo .dot {
+    color: #EF4444;
+}
+
+.evento-pill-outline {
+    background-color: #FFFFFF;
+    color: #232ed0;
+    border: 1px solid #CBD5E1;
+    border-radius: 50px;
+    padding: 5px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Cards Principais */
+.evento-card {
+    background: #FFFFFF;
+    border-radius: 16px;
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+    padding: 24px;
+}
+
+.evento-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #F1F5F9;
+}
+
+.evento-card-icon {
+    width: 38px;
+    height: 38px;
+    background-color: #EFF6FF;
+    color: #232ed0;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.evento-card-title {
+    font-size: 1.08rem;
+    font-weight: 700;
+    color: #0F172A;
+    margin: 0;
+}
+
+.evento-card-subtitle {
+    font-size: 0.84rem;
+    color: #64748B;
+    margin: 0.15rem 0 0 0;
+}
+
+/* Campos de Formulário */
+.evento-label {
+    font-weight: 700;
+    color: #1E293B;
+    font-size: 0.86rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.evento-label i {
+    color: #232ed0;
+}
+
+.evento-input,
+.evento-select {
+    border-color: #CBD5E1;
+    border-radius: 10px;
+    font-size: 0.92rem;
+    color: #0F172A;
+    padding: 0.58rem 0.85rem;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.evento-input:focus,
+.evento-select:focus {
+    border-color: #232ed0;
+    box-shadow: 0 0 0 3px rgba(35, 46, 208, 0.12);
+}
+
+.evento-helper-text {
+    font-size: 0.8rem;
+    color: #64748B;
+    margin-top: 0.38rem;
+}
+
+/* Caixa Informativa de Ciclo de Vida (estilo .box-qrcode-custom) */
+.evento-info-box {
+    background-color: #F0F4FF;
+    border: 1px solid #DBEAFE;
+    border-radius: 12px;
+    padding: 18px;
+}
+
+.evento-info-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: #232ed0;
+    color: #FFFFFF;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.evento-form-footer {
+    border-top: 1px solid #F1F5F9;
+    padding-top: 20px;
+    margin-top: 24px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+/* Painel Lateral: Próximos Passos do Fluxo */
+.evento-step-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.evento-step-card {
+    background-color: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.evento-step-card.is-active {
+    background-color: #FFFFFF;
+    border-color: #CBD5E1;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+}
+
+.evento-step-number {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background-color: #94A3B8;
+    color: #FFFFFF;
+    font-size: 0.78rem;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.evento-step-card.is-active .evento-step-number {
+    background-color: #232ed0;
+}
+
+.evento-step-card.is-done .evento-step-number {
+    background-color: #10B981;
+}
+
+.evento-step-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #0F172A;
+    margin: 0 0 3px 0;
+}
+
+.evento-step-desc {
+    font-size: 0.82rem;
+    color: #64748B;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.evento-step-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 8px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #232ed0;
+    text-decoration: none;
+}
+
+.evento-step-link:hover {
+    color: #151c7d;
+    text-decoration: underline;
+}
+
+/* Validação */
+.evento-validation-summary.validation-summary-valid {
+    display: none;
+}
+
+.evento-validation-summary.validation-summary-errors {
+    background-color: #FEF2F2;
+    border: 1px solid #FECACA;
+    color: #991B1B;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 18px;
+    font-size: 0.88rem;
+}
+
+.evento-validation-summary ul {
+    margin: 0;
+    padding-left: 1.15rem;
+}
+
+/* --------------------------------------------------------------------------
+   Index: Tabela em Card, Busca Pill e Paginação
+   -------------------------------------------------------------------------- */
+
+.evento-table-card {
+    background: #FFFFFF;
+    border-radius: 16px;
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+    overflow: hidden;
+}
+
+.evento-table-toolbar {
+    padding: 18px 22px;
+    background-color: #FFFFFF;
+    border-bottom: 1px solid #F1F5F9;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.evento-search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background-color: #F1F4FA;
+    border: 1px solid #E2E8F0;
+    border-radius: 50px;
+    padding: 7px 16px;
+    min-width: 280px;
+    transition: all 0.2s ease;
+}
+
+.evento-search-box:focus-within {
+    background-color: #FFFFFF;
+    border-color: #232ed0;
+    box-shadow: 0 0 0 3px rgba(35, 46, 208, 0.12);
+}
+
+.evento-search-input {
+    border: none;
+    background: transparent;
+    outline: none;
+    width: 100%;
+    font-size: 0.9rem;
+    color: #334155;
+}
+
+.evento-search-input::placeholder {
+    color: #94A3B8;
+    font-size: 0.88rem;
+}
+
+.evento-clear-btn {
+    background: none;
+    border: none;
+    color: #64748B;
+    padding: 0 2px;
+    line-height: 1;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.evento-clear-btn:hover {
+    color: #232ed0;
+}
+
+.evento-filter-select {
+    border: 1px solid #CBD5E1;
+    border-radius: 50px;
+    background-color: #FFFFFF;
+    color: #334155;
+    font-size: 0.86rem;
+    font-weight: 600;
+    padding: 7px 34px 7px 14px;
+    width: auto;
+    min-width: 165px;
+}
+
+.evento-filter-select:focus {
+    border-color: #232ed0;
+    box-shadow: 0 0 0 3px rgba(35, 46, 208, 0.12);
+}
+
+.evento-table {
+    width: 100% !important;
+    margin: 0 !important;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.evento-table thead tr,
+#tableEvento.evento-table thead tr {
+    background-color: #EDF2FB;
+    border-bottom: none !important;
+}
+
+.evento-table thead th,
+#tableEvento.evento-table thead th {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: #1E293B;
+    padding: 15px 18px;
+    border: none !important;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.evento-table tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.evento-table tbody tr:hover {
+    background-color: #F8FAFC;
+}
+
+.evento-table tbody td {
+    padding: 15px 18px;
+    font-size: 0.91rem;
+    color: #334155;
+    vertical-align: middle;
+    border-top: 1px solid #F1F5F9;
+    border-bottom: none;
+}
+
+.evento-table tbody td.dataTables_empty {
+    padding: 40px 20px !important;
+    color: #64748B;
+    font-weight: 500;
+    text-align: center;
+}
+
+.evento-nome-col {
+    font-weight: 600;
+    color: #0F172A;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.evento-mono-id {
+    font-family: 'Consolas', 'Menlo', 'Monaco', monospace;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #64748B;
+}
+
+.evento-tipo-badge {
+    background-color: #F8FAFC;
+    color: #1E40AF;
+    border: 1px solid #DBEAFE;
+    border-radius: 50px;
+    padding: 4px 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    display: inline-block;
+    white-space: nowrap;
+}
+
+/* Ações da Tabela */
+.evento-actions-group {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    white-space: nowrap;
+}
+
+.evento-action-gestores {
+    color: #232ed0;
+    background-color: #EEF2FF;
+    border: 1px solid #E0E7FF;
+    border-radius: 8px;
+    padding: 5px 11px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.15s ease;
+}
+
+.evento-action-gestores:hover {
+    background-color: #232ed0;
+    border-color: #232ed0;
+    color: #FFFFFF;
+}
+
+.evento-action-edit {
+    color: #232ed0;
+    font-weight: 600;
+    font-size: 0.86rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.15s ease;
+}
+
+.evento-action-edit:hover {
+    color: #151c7d;
+    text-decoration: underline;
+}
+
+.evento-action-delete {
+    color: #dc3545;
+    font-weight: 600;
+    font-size: 0.86rem;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: color 0.15s ease;
+}
+
+.evento-action-delete:hover {
+    color: #b02a37;
+    text-decoration: underline;
+}
+
+/* Rodapé e Paginação */
+.evento-table-footer {
+    padding: 16px 22px;
+    background-color: #FFFFFF;
+    border-top: 1px solid #F1F5F9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.pagination-custom .page-btn {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    color: #232ed0;
+    padding: 6px 13px;
+    border-radius: 8px;
+    font-size: 0.86rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-decoration: none;
+}
+
+.pagination-custom .page-btn:hover:not(:disabled) {
+    background-color: #F8FAFC;
+    border-color: #CBD5E1;
+    color: #151c7d;
+}
+
+.pagination-custom .page-btn:disabled {
+    color: #94A3B8;
+    background-color: #F8FAFC;
+    border-color: #E2E8F0;
+    cursor: not-allowed;
+}
+
+.pagination-custom .page-btn.active {
+    background-color: #232ed0;
+    border-color: #232ed0;
+    color: #FFFFFF;
+}
+
+/* Estado Vazio */
+.evento-empty-box {
+    background-color: #FFFFFF;
+    border: 1px dashed #CBD5E1;
+    border-radius: 16px;
+    padding: 44px 24px;
+    text-align: center;
+}
+
+.evento-empty-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: #EFF6FF;
+    color: #232ed0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 12px;
+}
+
+/* --------------------------------------------------------------------------
+   Exclusão (Delete)
+   -------------------------------------------------------------------------- */
+
+.evento-delete-card {
+    background: #FFFFFF;
+    border-radius: 16px;
+    border: 1px solid #FECACA;
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.06);
+    padding: 32px;
+    max-width: 820px;
+    margin: 0 auto;
+}
+
+.evento-delete-header-icon {
+    width: 48px;
+    height: 48px;
+    background-color: #FEE2E2;
+    color: #dc3545;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.evento-summary-box {
+    background-color: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.evento-summary-section {
+    padding-top: 14px;
+    margin-top: 14px;
+    border-top: 1px solid #E2E8F0;
+}
+
+.evento-summary-label {
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #64748B;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.evento-summary-value {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #0F172A;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+/* --------------------------------------------------------------------------
+   Responsividade (Mobile 390px / Tablet / Desktop 1400px)
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 767.98px) {
+    .evento-title {
+        font-size: 1.5rem;
+    }
+
+    .evento-card,
+    .evento-delete-card {
+        padding: 18px;
+    }
+
+    .evento-table-toolbar,
+    .evento-table-footer {
+        padding: 14px 16px;
+    }
+
+    .evento-search-box,
+    .evento-filter-select {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .evento-form-footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .evento-form-footer .evento-form-actions {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .evento-form-footer a,
+    .evento-form-footer button {
+        width: 100%;
+        justify-content: center;
+    }
+}

@@ -148,6 +148,13 @@ namespace EventoWeb.Controllers.Tests
             var result = controller.Create();
 
             Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var viewResult = (ViewResult)result;
+            var model = viewResult.ViewData.Model as EventoModel;
+            Assert.IsNotNull(model);
+            Assert.AreEqual("C", model.Status);
+            Assert.IsNotNull(model.Estados);
+            Assert.IsNotNull(model.TiposEventos);
+            Assert.IsNotNull(model.AreaInteresse);
         }
 
         [TestMethod()]
@@ -159,6 +166,7 @@ namespace EventoWeb.Controllers.Tests
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.IsNull(redirectToActionResult.ControllerName);
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
+            Assert.IsNotNull(controller.TempData["SuccessMessage"]);
         }
 
         [TestMethod()]
@@ -172,6 +180,31 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
             Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(EventoModel));
+            var model = (EventoModel)viewResult.ViewData.Model;
+            Assert.IsNotNull(model.Estados);
+            Assert.IsNotNull(model.TiposEventos);
+            Assert.IsNotNull(model.AreaInteresse);
+        }
+
+        [TestMethod()]
+        public void CreateTest_Post_AcaoAssociarGestor_RedirecionaParaCreateGestor()
+        {
+            var mockService = new Mock<IEventoService>();
+            mockService.Setup(s => s.Create(It.IsAny<Evento>(), It.IsAny<List<uint>>())).Returns(42);
+            var ctl = CriarControllerComEventoService(mockService.Object);
+            ctl.ControllerContext.HttpContext.Request.Form = new FormCollection(
+                new Dictionary<string, Microsoft.Extensions.Primitives.StringValues>
+                {
+                    { "acao", "associarGestor" }
+                });
+
+            var result = ctl.Create(GetNewEvento());
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("CreateGestor", redirect.ActionName);
+            Assert.AreEqual((uint)42, redirect.RouteValues?["idEvento"]);
+            Assert.IsNotNull(ctl.TempData["SuccessMessage"]);
         }
 
 
@@ -222,6 +255,60 @@ namespace EventoWeb.Controllers.Tests
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.IsNull(redirectToActionResult.ControllerName);
             Assert.AreEqual("Index", redirectToActionResult.ActionName);
+        }
+
+        [TestMethod()]
+        public void EditTest_Post_EventoInexistente_RetornaNotFound()
+        {
+            var mockService = new Mock<IEventoService>();
+            mockService.Setup(s => s.Get(999)).Returns((Evento)null!);
+            var ctl = CriarControllerComEventoService(mockService.Object);
+
+            var result = ctl.Edit(999, GetTargetEventoModelEdit());
+
+            Assert.IsInstanceOfType(result, typeof(NotFoundResult));
+        }
+
+        [TestMethod()]
+        public void EditTest_Post_PreservaAreasInteresseExistentesQuandoNaoInformadas()
+        {
+            var mockService = new Mock<IEventoService>();
+            mockService.Setup(s => s.Get(1)).Returns(GetTargetEvento());
+            mockService.Setup(s => s.GetAreasInteresseByEventoId(1))
+                .Returns(new List<Areainteresse> { new Areainteresse { Id = 7, Nome = "Tecnologia" } });
+            List<uint>? areasEnviadas = null;
+            mockService.Setup(s => s.Edit(It.IsAny<Evento>(), It.IsAny<List<uint>>()))
+                .Callback<Evento, List<uint>>((_, areas) => areasEnviadas = areas)
+                .Returns(true);
+            var ctl = CriarControllerComEventoService(mockService.Object);
+
+            var result = ctl.Edit(1, GetTargetEventoModelEdit());
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            Assert.IsNotNull(areasEnviadas);
+            CollectionAssert.AreEqual(new List<uint> { 7 }, areasEnviadas);
+        }
+
+        [TestMethod()]
+        public void EditTest_Post_AcaoAssociarGestor_RedirecionaParaCreateGestor()
+        {
+            var mockService = new Mock<IEventoService>();
+            mockService.Setup(s => s.Get(1)).Returns(GetTargetEvento());
+            mockService.Setup(s => s.GetAreasInteresseByEventoId(1)).Returns(new List<Areainteresse>());
+            mockService.Setup(s => s.Edit(It.IsAny<Evento>(), It.IsAny<List<uint>>())).Returns(true);
+            var ctl = CriarControllerComEventoService(mockService.Object);
+            ctl.ControllerContext.HttpContext.Request.Form = new FormCollection(
+                new Dictionary<string, Microsoft.Extensions.Primitives.StringValues>
+                {
+                    { "acao", "associarGestor" }
+                });
+
+            var result = ctl.Edit(1, GetTargetEventoModelEdit());
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirect = (RedirectToActionResult)result;
+            Assert.AreEqual("CreateGestor", redirect.ActionName);
+            Assert.AreEqual((uint)1, redirect.RouteValues?["idEvento"]);
         }
 
         [TestMethod()]
@@ -453,6 +540,7 @@ namespace EventoWeb.Controllers.Tests
         }
 
         [TestMethod()]
+        [DataRow("Create", new Type[] { typeof(EventoModel) }, "ADMINISTRADOR")]
         [DataRow("Edit", new Type[] { typeof(uint), typeof(EventoModel) }, "ADMINISTRADOR")]
         [DataRow("Delete", new Type[] { typeof(uint), typeof(EventoModel) }, "ADMINISTRADOR")]
         [DataRow("CreateGestor", new Type[] { typeof(GestaoPapelModel) }, "ADMINISTRADOR")]
@@ -597,6 +685,41 @@ namespace EventoWeb.Controllers.Tests
         // ============================================
         // MÉTODOS AUXILIARES
         // ============================================
+
+        private static EventoController CriarControllerComEventoService(IEventoService eventoService)
+        {
+            var mockUserStore = new Mock<IUserStore<UsuarioIdentity>>();
+            var mockUserManager = new Mock<UserManager<UsuarioIdentity>>(
+                mockUserStore.Object, null, null, null, null, null, null, null, null);
+            IMapper mapper = new MapperConfiguration(cfg =>
+            {
+                cfg.AddProfile(new EventoProfile());
+                cfg.AddProfile(new PessoaProfile());
+            }).CreateMapper();
+
+            var ctl = new EventoController(
+                mockUserManager.Object,
+                eventoService,
+                mapper,
+                Mock.Of<IEstadosbrasilService>(),
+                Mock.Of<IInscricaoService>(),
+                Mock.Of<ITipoeventoService>(),
+                Mock.Of<IAreaInteresseService>(),
+                Mock.Of<IPessoaService>(),
+                Mock.Of<ISubeventoService>());
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "usuario@teste.com"),
+                new Claim(ClaimTypes.Role, "ADMINISTRADOR")
+            };
+            ctl.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuthType")) }
+            };
+            ctl.TempData = new TempDataDictionary(ctl.ControllerContext.HttpContext, Mock.Of<ITempDataProvider>());
+            return ctl;
+        }
 
         [TestMethod()]
         public void Index_ComEventoDataInicioNula_NaoLancaExcecao()

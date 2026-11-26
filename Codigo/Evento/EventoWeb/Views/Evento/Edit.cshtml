@@ -1,80 +1,203 @@
 @model EventoWeb.Models.EventoModel
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Editar Evento";
+    var (statusNomeInicial, statusClasseInicial) = Model.Status switch
+    {
+        "A" => ("Ativo", "evento-pill-ativo"),
+        "F" => ("Finalizado", "evento-pill-finalizado"),
+        "I" => ("Inativo", "evento-pill-inativo"),
+        _ => ("Cadastro", "evento-pill-cadastro")
+    };
 }
 
-<!DOCTYPE html>
-<html lang="pt-BR">
+<link rel="stylesheet" href="~/css/evento-admin.css" asp-append-version="true" />
 
-<h1 class="blue-normal">Editar Evento</h1>
-<div class="row">
-    <div>
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-			<input type="hidden" asp-for="Id" />
-			<div class="form-group">
-				<label asp-for="Nome" class="control-label"></label>
-				<input asp-for="Nome" class="form-control" placeholder="Nome do evento" />
-				<span asp-validation-for="Nome" class="text-danger"></span>
-			</div>
-			<br/>
-			<div class="row">
-				<div class="col-md-3">
-					<div class="form-group">
-						<label asp-for="Estado" class="control-label"></label>
-						<select asp-for="Estado" class="form-select" asp-items="Model.Estados">
-							<option value="">Selecione o estado</option>
-						</select>
-						<span asp-validation-for="Estado" class="text-danger"></span>
-					</div>
-				</div>
-				<div class="col-md-3">
-					<div class="form-group">
-						<label asp-for="IdTipoEvento" class="control-label">Tipo do Evento</label>
-						<select asp-for="IdTipoEvento" class="form-select" asp-items="Model.TiposEventos">
-							<option value="">Selecione o tipo de evento</option>
-						</select>
-						<span asp-validation-for="IdTipoEvento" class="text-danger"></span>
-					</div>
-				</div>
-			</div>
-			<br/>
-			<div class="row">
-				<div class="col-2">
-					<div class="form-group">
-						<label asp-for="Status" class="control-label"></label>
-						<select asp-for="Status" class="form-select" aria-label="Default select example">
-							<option value="C">Cadastro</option>
-							<option value="A">Ativo</option>
-							<option value="F">Finalizado</option>
-						</select>
-						<span asp-validation-for="Status" class="text-danger"></span>
-					</div>
-				</div>
-			</div>
-			<br/>
-	        <div class="d-flex justify-content-end">
-	        <div class="d-flex flex-row">
-		        <div class="form-group" style="margin-right: 10px;">
-			        <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
-		        </div>
-		        <div class="form-group">
-			        <a asp-action="Index" class="btn btn-outline-danger">Cancelar</a>
-		        </div>
-	        </div>
-	        </div>
-        </form>
+<div class="evento-page-container">
+    <nav class="evento-breadcrumb" aria-label="Navegação estrutural">
+        <span class="d-inline-flex align-items-center gap-1">
+            <i class="bi bi-house-door"></i>
+            <span>Painel Administrativo</span>
+        </span>
+        <i class="bi bi-chevron-right small opacity-75"></i>
+        <a asp-action="Index">Eventos</a>
+        <i class="bi bi-chevron-right small opacity-75"></i>
+        <span class="evento-breadcrumb-active">Editar Evento</span>
+    </nav>
+
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="evento-title">@ViewData["Title"]</h1>
+            <p class="evento-subtitle">Atualize a identificação, categoria, estado (UF) e status do evento</p>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span id="badgeStatusHeader" class="evento-pill @statusClasseInicial">
+                <span class="dot">●</span>
+                <span id="lblStatusHeader">Status: @statusNomeInicial</span>
+            </span>
+            <a asp-action="Index" class="evento-back-btn">
+                <i class="bi bi-arrow-left"></i>
+                <span>Voltar à Lista</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4 align-items-start">
+        <div class="col-lg-8">
+            <form asp-action="Edit" asp-route-id="@Model.Id" method="post" id="formEventoEdit">
+                <div asp-validation-summary="ModelOnly" class="evento-validation-summary" role="alert"></div>
+                <input type="hidden" asp-for="Id" />
+
+                <section class="evento-card" aria-labelledby="tituloInfoBasicaEdit">
+                    <div class="evento-card-header">
+                        <div class="evento-card-icon">
+                            <i class="bi bi-pencil-square"></i>
+                        </div>
+                        <div>
+                            <h2 class="evento-card-title" id="tituloInfoBasicaEdit">Informações Básicas do Evento</h2>
+                            <p class="evento-card-subtitle">Revise os dados administrativos de identificação, classificação e situação</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="Nome" class="form-label evento-label">
+                            <i class="bi bi-fonts"></i>
+                            <span>Nome do Evento</span>
+                            <span class="text-danger">*</span>
+                        </label>
+                        <input asp-for="Nome" class="form-control evento-input" placeholder="Ex.: VII Simpósio Sergipano de Engenharia de Software e Inovação" maxlength="100" />
+                        <div class="evento-helper-text">Título oficial que será exibido no portal público, crachás e certificados.</div>
+                        <span asp-validation-for="Nome" class="text-danger small d-block mt-1"></span>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-5">
+                            <label asp-for="IdTipoEvento" class="form-label evento-label">
+                                <i class="bi bi-tag"></i>
+                                <span>Tipo do Evento</span>
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="IdTipoEvento" class="form-select evento-select" asp-items="Model.TiposEventos">
+                                <option value="">Selecione o tipo de evento</option>
+                            </select>
+                            <span asp-validation-for="IdTipoEvento" class="text-danger small d-block mt-1"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="Estado" class="form-label evento-label">
+                                <i class="bi bi-geo-alt"></i>
+                                <span>Estado (UF)</span>
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="Estado" class="form-select evento-select" asp-items="Model.Estados">
+                                <option value="">Selecione o estado</option>
+                            </select>
+                            <span asp-validation-for="Estado" class="text-danger small d-block mt-1"></span>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label asp-for="Status" class="form-label evento-label">
+                                <i class="bi bi-toggle-on"></i>
+                                <span>Status</span>
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select asp-for="Status" class="form-select evento-select">
+                                <option value="C">Cadastro</option>
+                                <option value="A">Ativo</option>
+                                <option value="F">Finalizado</option>
+                            </select>
+                            <span asp-validation-for="Status" class="text-danger small d-block mt-1"></span>
+                        </div>
+                    </div>
+
+                    <div class="evento-info-box" id="boxStatusCicloVida">
+                        <div class="d-flex flex-column flex-sm-row align-items-start justify-content-between gap-3">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="evento-info-icon" aria-hidden="true">
+                                    <i class="bi bi-info-lg"></i>
+                                </div>
+                                <div>
+                                    <h3 class="h6 fw-bold text-dark mb-1">Situação do Evento no Ciclo de Vida</h3>
+                                    <p class="text-muted small mb-0" id="descStatusBox">
+                                        Em preparação administrativa. O evento não é exibido na vitrine pública até que o Gestor finalize as configurações e ative a publicação.
+                                    </p>
+                                </div>
+                            </div>
+                            <span class="evento-pill-outline" id="badgeStatusBox">@statusNomeInicial</span>
+                        </div>
+                    </div>
+
+                    <div class="evento-form-footer">
+                        <a asp-action="Index" class="btn btn-outline-danger rounded-3 px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2">
+                            <i class="bi bi-x-lg"></i>
+                            <span>Cancelar</span>
+                        </a>
+
+                        <div class="evento-form-actions d-flex flex-wrap align-items-center gap-2">
+                            <button type="submit" name="acao" value="associarGestor" class="btn btn-outline-blue-normal bg-white rounded-3 px-3 py-2 fw-semibold d-inline-flex align-items-center gap-2">
+                                <i class="bi bi-person-plus"></i>
+                                <span>Salvar e Associar Gestor</span>
+                            </button>
+                            <button type="submit" name="acao" value="salvar" class="btn btn-blue-normal color-white rounded-3 px-4 py-2 fw-semibold shadow-sm d-inline-flex align-items-center gap-2">
+                                <i class="bi bi-check-lg"></i>
+                                <span>Salvar Alterações</span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </form>
+        </div>
+
+        <aside class="col-lg-4">
+            <section class="evento-card" aria-labelledby="tituloProximosPassosEdit">
+                <div class="evento-card-header">
+                    <div class="evento-card-icon">
+                        <i class="bi bi-signpost-split"></i>
+                    </div>
+                    <h2 class="evento-card-title" id="tituloProximosPassosEdit">Próximos Passos do Fluxo</h2>
+                </div>
+
+                <div class="evento-step-list">
+                    <div class="evento-step-card is-done">
+                        <span class="evento-step-number">
+                            <i class="bi bi-check-lg"></i>
+                        </span>
+                        <div>
+                            <h3 class="evento-step-title">Registro Inicial</h3>
+                            <p class="evento-step-desc">Define nome, categoria e UF do evento no sistema.</p>
+                        </div>
+                    </div>
+
+                    <div class="evento-step-card is-active">
+                        <span class="evento-step-number">2</span>
+                        <div>
+                            <h3 class="evento-step-title">Designar Gestor (UC02)</h3>
+                            <p class="evento-step-desc">Vincule um ou mais gestores via CPF para administrar o evento.</p>
+                            <a asp-action="CreateGestor" asp-route-idEvento="@Model.Id" class="evento-step-link">
+                                <i class="bi bi-people"></i>
+                                <span>Gerenciar gestores deste evento</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="evento-step-card">
+                        <span class="evento-step-number">3</span>
+                        <div>
+                            <h3 class="evento-step-title">Configuração Completa (UC05)</h3>
+                            <p class="evento-step-desc">O gestor define datas, lotes, subeventos, crachás e publica no portal.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </aside>
     </div>
 </div>
 
-
 @section Scripts {
-	@{
-		await Html.RenderPartialAsync("_ValidationScriptsPartial");
-	}
-	<script>
-		toggleInputBased('InscricaoGratuita', 'valorInscricaoGroup', '1');
-		toggleInputBased('PossuiCertificado', 'FrequenciaMinimaCertificado', '0');
-	</script>
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    <script src="~/js/jquery-validate-ptbr.js" asp-append-version="true"></script>
+    <script src="~/js/evento-admin.js" asp-append-version="true"></script>
 }
