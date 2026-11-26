@@ -34,7 +34,8 @@ namespace EventoWeb.Controllers
         }
 
         // GET: /TipoInscricaocontroller
-        [HttpGet]
+        [HttpGet("")]
+        [HttpGet("Index")]
         public ActionResult Index(uint? idEvento)
         {
             if (idEvento.HasValue)
@@ -174,6 +175,7 @@ namespace EventoWeb.Controllers
             }
 
             var eventos = _eventoService.GetAll().OrderBy(e => e.Nome);
+            tipoInscricaoModel.Id = existente.Id;
             tipoInscricaoModel.IdEvento = existente.IdEvento;
             tipoInscricaoModel.Evento = new SelectList(eventos, "Id", "Nome");
             return View(tipoInscricaoModel);

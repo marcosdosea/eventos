@@ -92,13 +92,15 @@ namespace Service
                 throw new ServiceException("Não é possível excluir um evento ativo. Cancele o evento antes de excluí-lo.");
             }
 
-            var idsSubeventos = evento.Subeventos?.Select(s => s.Id).ToList() ?? new List<uint>();
-            var temInscricaoEvento = _context.Inscricaopessoaeventos.Any(i => i.IdEvento == Id);
-            var temInscricaoSubevento = idsSubeventos.Count > 0 && _context.Inscricaopessoasubeventos.Any(s => idsSubeventos.Contains(s.IdSubEvento));
-
-            if (temInscricaoEvento || temInscricaoSubevento)
+            if (evento.Inscricaopessoaeventos.Any(i => i.IdPapel == PapelParticipante) ||
+                evento.Subeventos.Any(s => s.Inscricaopessoasubeventos.Any()))
             {
                 throw new ServiceException("Não é possível excluir um evento que possui inscrições vinculadas.");
+            }
+
+            if (evento.Inscricaopessoaeventos.Any())
+            {
+                throw new ServiceException("Não é possível excluir um evento que possui vínculos de equipe, como gestores ou colaboradores.");
             }
 
             try
@@ -408,29 +410,17 @@ namespace Service
 
             if (evento != null)
             {
-                // Regra de negócio: vagas disponíveis = vagas ofertadas - participantes.
-                //
-                // A contagem soma o que já está gravado com o que está pendente no
-                // ChangeTracker (inscrições adicionadas ou removidas no mesmo contexto).
-                // Sem isso, a chamada feita antes do SaveChanges do lote
-                // (InscricaoController.realizarInscricao) ignoraria as inscrições
-                // recém-criadas e as vagas não seriam abatidas.
-                var participantesNoBanco = _context.Inscricaopessoaeventos
-                    .Count(i => i.IdEvento == idEvento && i.IdPapel == PapelParticipante);
-
-                var inscricoesPendentes = _context.ChangeTracker
-                    .Entries<Inscricaopessoaevento>()
-                    .Count(e => e.State == EntityState.Added
-                             && e.Entity.IdEvento == idEvento
-                             && e.Entity.IdPapel == PapelParticipante);
-
-                var inscricoesRemovidas = _context.ChangeTracker
-                    .Entries<Inscricaopessoaevento>()
-                    .Count(e => e.State == EntityState.Deleted
-                             && e.Entity.IdEvento == idEvento
-                             && e.Entity.IdPapel == PapelParticipante);
-
-                var quantidadeParticipantes = participantesNoBanco + inscricoesPendentes - inscricoesRemovidas;
+                // As alterações pendentes substituem a versão persistida de cada inscrição.
+                var alteradas = _context.ChangeTracker.Entries<Inscricaopessoaevento>()
+                    .Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+                    .ToList();
+                var idsAlterados = alteradas.Where(e => e.State != EntityState.Added)
+                    .Select(e => e.Entity.Id).ToList();
+                var quantidadeParticipantes = _context.Inscricaopessoaeventos
+                    .Count(i => i.IdEvento == idEvento && i.IdPapel == PapelParticipante &&
+                                i.Status != "C" && !idsAlterados.Contains(i.Id))
+                    + alteradas.Count(e => e.State != EntityState.Deleted && e.Entity.IdEvento == idEvento &&
+                                           e.Entity.IdPapel == PapelParticipante && e.Entity.Status != "C");
 
                 evento.VagasDisponiveis = Math.Max(0, evento.VagasOfertadas - quantidadeParticipantes);
 
@@ -579,10 +569,14 @@ namespace Service
             query = query.Where(e => e.Status == "A" && e.DataFimInscricao >= DateTime.Now);
 
             totalRegistros = query.Count();
+            tamanhoPagina = Math.Max(1, tamanhoPagina);
+            long offset = (long)(Math.Max(1, pagina) - 1) * tamanhoPagina;
+            if (offset >= totalRegistros)
+                return Array.Empty<Evento>();
 
             // Paginacao (ordenando para garantir resultados consistentes)
             return query.OrderBy(e => e.Id)
-                        .Skip((pagina - 1) * tamanhoPagina)
+                        .Skip((int)offset)
                         .Take(tamanhoPagina)
                         .AsNoTracking()
                         .ToList();

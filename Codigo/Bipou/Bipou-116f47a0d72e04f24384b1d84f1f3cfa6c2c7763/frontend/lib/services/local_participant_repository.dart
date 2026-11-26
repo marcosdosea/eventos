@@ -118,7 +118,7 @@ final class SqliteLocalParticipantRepository
   });
 
   static const String defaultDatabaseFileName = 'bipou_local_cache.db';
-  static const int _databaseVersion = 1;
+  static const int _databaseVersion = 2;
   static const String _participantsTable = 'local_participants';
   static const String _stateTable = 'portaria_state';
   static const String _activeSessionKey = 'active_session';
@@ -155,6 +155,7 @@ final class SqliteLocalParticipantRepository
               subevento_ids TEXT NOT NULL,
               hash_validacao TEXT NOT NULL,
               status_inscricao TEXT NOT NULL DEFAULT 'A',
+              ultima_acao TEXT,
               PRIMARY KEY (evento_id, id_pessoa)
             )
           ''');
@@ -172,6 +173,13 @@ final class SqliteLocalParticipantRepository
               value TEXT NOT NULL
             )
           ''');
+        },
+        onUpgrade: (db, oldVersion, newVersion) async {
+          if (oldVersion < 2) {
+            await db.execute(
+              'ALTER TABLE $_participantsTable ADD COLUMN ultima_acao TEXT',
+            );
+          }
         },
       ),
     );

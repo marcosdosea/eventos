@@ -460,7 +460,7 @@ namespace EventoWeb.Controllers.Tests
             {
                 Id = 4,
                 Nome = "Novo Admin",
-                Cpf = "999.999.999-99",
+                Cpf = "529.982.247-25",
                 Email = "novo@admin.com",
                 Telefone1 = "7999999999"
             };
@@ -475,10 +475,10 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("Administrador definido com sucesso.", localController.TempData["SuccessMessage"]);
             Assert.IsNull(localController.TempData["ErrorMessage"]);
             mockService.Verify(service => service.ValidaEmail("novo@admin.com"), Times.Once);
-            mockService.Verify(service => service.EmailExist("novo@admin.com", "999.999.999-99"), Times.Once);
+            mockService.Verify(service => service.EmailExist("novo@admin.com", "52998224725"), Times.Once);
             mockService.Verify(service => service.IsAdmAsync(It.IsAny<Pessoa>()), Times.Once);
             mockService.Verify(service => service.CreatePessoaIdentityComPapelAsync(It.Is<Pessoa>(p =>
-                p.Cpf == "999.999.999-99" &&
+                p.Cpf == "52998224725" &&
                 p.Nome == "Novo Admin" &&
                 p.NomeCracha == "Novo" &&
                 p.Email == "novo@admin.com" &&
@@ -568,7 +568,7 @@ namespace EventoWeb.Controllers.Tests
             {
                 Id = 4,
                 Nome = "Novo Admin",
-                Cpf = "999.999.999-99",
+                Cpf = "529.982.247-25",
                 Email = "existente@gmail.com",
                 Telefone1 = "7999999999"
             };
@@ -586,7 +586,7 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual(1, model.Administradores.Count);
             Assert.AreEqual((uint)1, model.Administradores[0].Id);
             mockService.Verify(service => service.ValidaEmail("existente@gmail.com"), Times.Once);
-            mockService.Verify(service => service.EmailExist("existente@gmail.com", "999.999.999-99"), Times.Once);
+            mockService.Verify(service => service.EmailExist("existente@gmail.com", "52998224725"), Times.Once);
             mockService.Verify(service => service.IsAdmAsync(It.IsAny<Pessoa>()), Times.Never);
             mockService.Verify(service => service.VerificaEdit(It.IsAny<Pessoa>()), Times.Never);
             mockService.Verify(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), 0, 1), Times.Never);
@@ -638,8 +638,8 @@ namespace EventoWeb.Controllers.Tests
             Assert.IsNull(localController.TempData["SuccessMessage"]);
 
             mockService.Verify(service => service.ValidaEmail("email@gmail.com"), Times.Once);
-            mockService.Verify(service => service.EmailExist("email@gmail.com", "040.268.930-57"), Times.Once);
-            mockService.Verify(service => service.IsAdmAsync(It.Is<Pessoa>(p => p.Cpf == "040.268.930-57")), Times.Once);
+            mockService.Verify(service => service.EmailExist("email@gmail.com", "04026893057"), Times.Once);
+            mockService.Verify(service => service.IsAdmAsync(It.Is<Pessoa>(p => p.Cpf == "04026893057")), Times.Once);
             mockService.Verify(service => service.VerificaEdit(It.IsAny<Pessoa>()), Times.Never);
             mockService.Verify(service => service.CreatePessoaIdentityComPapelAsync(It.IsAny<Pessoa>(), It.IsAny<uint>(), It.IsAny<int>()), Times.Never);
             mockService.Verify(service => service.GetAllAdmAsync(), Times.Never);

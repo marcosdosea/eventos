@@ -336,7 +336,10 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("Todo o Brasil", controller.ViewBag.NomeEstadoAtivo);
         }
         [TestMethod]
-        public void Buscar_ComIdTipoEvento_PassaFiltroParaServiceERetornaModel()
+        [DataRow(1)]
+        [DataRow(0)]
+        [DataRow(-4)]
+        public void Buscar_ComIdTipoEvento_PassaFiltroParaServiceERetornaModel(int pagina)
         {
             var httpContext = new DefaultHttpContext();
             int totalRegistros = 1;
@@ -351,7 +354,7 @@ namespace EventoWeb.Controllers.Tests
             var controller = CreateController(httpContext);
             var filter = new Core.DTO.EventoFilterDTO { IdTipoEvento = 6 };
 
-            var result = controller.Buscar(filter);
+            var result = controller.Buscar(filter, pagina: pagina);
 
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             var viewResult = (ViewResult)result;

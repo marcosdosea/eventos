@@ -96,10 +96,12 @@
         @if (ViewBag.TotalPaginas > 0)
         {
             var filter = ViewBag.FiltroAtual as Core.DTO.EventoFilterDTO;
+            bool primeiraPagina = ViewBag.PaginaAtual <= 1;
+            bool ultimaPagina = ViewBag.PaginaAtual >= ViewBag.TotalPaginas;
             <nav aria-label="Navegação de páginas de eventos">
                 <ul class="pagination justify-content-center custom-pagination">
-                    <li class="page-item @(ViewBag.PaginaAtual <= 1 ? "disabled" : "")">
-                        <a class="page-link" href="@Url.Action("Buscar", new { pagina = ViewBag.PaginaAtual - 1, TermoBusca = filter?.TermoBusca, IdAreaInteresse = filter?.IdAreaInteresse, IdTipoEvento = filter?.IdTipoEvento, Data = filter?.Data?.ToString("yyyy-MM-dd"), Estado = filter?.Estado, Cidade = filter?.Cidade, PossuiSubeventos = filter?.PossuiSubeventos })" aria-label="Anterior">
+                    <li class="page-item @(primeiraPagina ? "disabled" : "")">
+                        <a class="page-link" href="@(primeiraPagina ? null : Url.Action("Buscar", new { pagina = ViewBag.PaginaAtual - 1, TermoBusca = filter?.TermoBusca, IdAreaInteresse = filter?.IdAreaInteresse, IdTipoEvento = filter?.IdTipoEvento, Data = filter?.Data?.ToString("yyyy-MM-dd"), Estado = filter?.Estado, Cidade = filter?.Cidade, PossuiSubeventos = filter?.PossuiSubeventos }))" aria-label="Anterior" aria-disabled="@(primeiraPagina ? "true" : null)">
                             <span aria-hidden="true">&laquo; Anterior</span>
                         </a>
                     </li>
@@ -111,8 +113,8 @@
                         </li>
                     }
 
-                    <li class="page-item @(ViewBag.PaginaAtual >= ViewBag.TotalPaginas ? "disabled" : "")">
-                        <a class="page-link" href="@Url.Action("Buscar", new { pagina = ViewBag.PaginaAtual + 1, TermoBusca = filter?.TermoBusca, IdAreaInteresse = filter?.IdAreaInteresse, IdTipoEvento = filter?.IdTipoEvento, Data = filter?.Data?.ToString("yyyy-MM-dd"), Estado = filter?.Estado, Cidade = filter?.Cidade, PossuiSubeventos = filter?.PossuiSubeventos })" aria-label="Próximo">
+                    <li class="page-item @(ultimaPagina ? "disabled" : "")">
+                        <a class="page-link" href="@(ultimaPagina ? null : Url.Action("Buscar", new { pagina = ViewBag.PaginaAtual + 1, TermoBusca = filter?.TermoBusca, IdAreaInteresse = filter?.IdAreaInteresse, IdTipoEvento = filter?.IdTipoEvento, Data = filter?.Data?.ToString("yyyy-MM-dd"), Estado = filter?.Estado, Cidade = filter?.Cidade, PossuiSubeventos = filter?.PossuiSubeventos }))" aria-label="Próximo" aria-disabled="@(ultimaPagina ? "true" : null)">
                             <span aria-hidden="true">Próximo &raquo;</span>
                         </a>
                     </li>

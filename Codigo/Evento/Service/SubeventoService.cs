@@ -171,26 +171,17 @@ namespace Service
 
             if (subevento != null)
             {
-                // Mesma regra do evento: vagas disponíveis = vagas ofertadas - participantes.
-                // A contagem soma o que já está gravado com o que está pendente no
-                // ChangeTracker, para funcionar tanto na inscrição (lote) quanto no
-                // cancelamento, que rodam dentro da mesma transação.
-                var participantesNoBanco = _context.Inscricaopessoasubeventos
-                    .Count(i => i.IdSubEvento == idSubevento && i.IdPapel == PapelParticipante);
-
-                var inscricoesPendentes = _context.ChangeTracker
-                    .Entries<Inscricaopessoasubevento>()
-                    .Count(e => e.State == EntityState.Added
-                             && e.Entity.IdSubEvento == idSubevento
-                             && e.Entity.IdPapel == PapelParticipante);
-
-                var inscricoesRemovidas = _context.ChangeTracker
-                    .Entries<Inscricaopessoasubevento>()
-                    .Count(e => e.State == EntityState.Deleted
-                             && e.Entity.IdSubEvento == idSubevento
-                             && e.Entity.IdPapel == PapelParticipante);
-
-                var quantidadeParticipantes = participantesNoBanco + inscricoesPendentes - inscricoesRemovidas;
+                // As alterações pendentes substituem a versão persistida de cada inscrição.
+                var alteradas = _context.ChangeTracker.Entries<Inscricaopessoasubevento>()
+                    .Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
+                    .ToList();
+                var idsAlterados = alteradas.Where(e => e.State != EntityState.Added)
+                    .Select(e => e.Entity.Id).ToList();
+                var quantidadeParticipantes = _context.Inscricaopessoasubeventos
+                    .Count(i => i.IdSubEvento == idSubevento && i.IdPapel == PapelParticipante &&
+                                i.Status != "C" && !idsAlterados.Contains(i.Id))
+                    + alteradas.Count(e => e.State != EntityState.Deleted && e.Entity.IdSubEvento == idSubevento &&
+                                           e.Entity.IdPapel == PapelParticipante && e.Entity.Status != "C");
 
                 int vagasRestantes = (int)subevento.VagasOfertadas - quantidadeParticipantes;
                 subevento.VagasDisponiveis = (uint)(vagasRestantes < 0 ? 0 : vagasRestantes);

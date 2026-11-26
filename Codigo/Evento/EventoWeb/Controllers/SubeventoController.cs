@@ -41,13 +41,17 @@ namespace EventoWeb.Controllers
         [HttpGet]
         [Route("")]
         [Route("Index")]
-        public IActionResult Index()
+        public IActionResult Index(uint? idEvento = null)
         {
             if (User?.Identity?.IsAuthenticated != true)
             {
                 return View(new List<SubeventoModel>());
             }
 
+            if (idEvento.HasValue && !IsAuthorized(idEvento.Value))
+                return Forbid();
+
+            ViewData["EventoId"] = idEvento;
             string userCpf = User.FindFirstValue(ClaimTypes.Name);
 
             if (string.IsNullOrEmpty(userCpf))
@@ -60,7 +64,11 @@ namespace EventoWeb.Controllers
             var todosSubeventos = _subeventoService.GetAll();
             if (todosSubeventos != null)
             {
-                if (User.IsInRole("ADMINISTRADOR"))
+                if (idEvento.HasValue)
+                {
+                    listaSubeventos = todosSubeventos.Where(s => s.IdEvento == idEvento.Value).ToList();
+                }
+                else if (User.IsInRole("ADMINISTRADOR"))
                 {
                     listaSubeventos = todosSubeventos.ToList();
                 }

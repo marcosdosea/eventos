@@ -7,7 +7,11 @@
     ViewData["ExibirMenuSanduiche"] = true;
     ViewData["EventoId"] = Model.Evento.Id;
 
-    var isGestorOuAdmin = User.IsInRole("GESTOR") || User.IsInRole("ADMINISTRADOR");
+    var isAdmin = User.IsInRole("ADMINISTRADOR");
+    var isGestor = User.IsInRole("GESTOR") && ViewData["GestorVinculado"] is true;
+    var isGestorOuAdmin = isGestor || isAdmin;
+    var podeOperar = ViewData["ParticipacaoEquipe"] is true &&
+        (User.IsInRole("GESTOR") || User.IsInRole("COLABORADOR"));
     var subeventos = Model.Subeventos?.ToList() ?? new List<Core.DTO.SubeventoEventoDTO>();
     var qtdSubeventos = subeventos.Count;
 
@@ -86,24 +90,25 @@
     <div class="cards-gerenciar-wrapper mb-5">
         @{
             var cardsList = new List<dynamic>();
-
-            if (!isGestorOuAdmin)
+            if (podeOperar)
             {
                 cardsList.Add(new { Nome = "Frequência", Action = "Frequencia", Controller = "Participacaopessoaevento", Icon = "Inscricoes.png", Parametros = (object)new { idEvento = Model.Evento.Id } });
                 cardsList.Add(new { Nome = "Inscrições", Action = "CreateParticipante", Controller = "Evento", Icon = "Inscricoes.png", Parametros = (object)new { idEvento = Model.Evento.Id } });
-                cardsList.Add(new { Nome = "Emitir Crachá", Action = "EmitirCracha", Controller = "Modelocracha", Icon = "cracha.svg", Parametros = (object)new { idEvento = Model.Evento.Id } });
+                cardsList.Add(new { Nome = "Usuário", Action = "CreateUsuario", Controller = "Evento", Icon = "Participantes.png", Parametros = (object)new { idEvento = Model.Evento.Id } });
             }
-            else
+            if (isGestor)
             {
-                cardsList.Add(new { Nome = "Frequência", Action = "Frequencia", Controller = "Participacaopessoaevento", Icon = "Inscricoes.png", Parametros = (object)new { idEvento = Model.Evento.Id } });
-                cardsList.Add(new { Nome = "Inscrições", Action = "CreateParticipante", Controller = "Evento", Icon = "Inscricoes.png", Parametros = (object)new { idEvento = Model.Evento.Id } });
                 cardsList.Add(new { Nome = "Colaboradores", Action = "CreateColaborador", Controller = "Evento", Icon = "Colaboradores.png", Parametros = (object)new { idEvento = Model.Evento.Id } });
-                cardsList.Add(new { Nome = "Emitir Crachá", Action = "EmitirCracha", Controller = "Modelocracha", Icon = "cracha.svg", Parametros = (object)new { idEvento = Model.Evento.Id } });
-                cardsList.Add(new { Nome = "Dashboard", Action = "Dashboard", Controller = "Evento", Icon = "Evento.png", Parametros = (object)new { idEvento = Model.Evento.Id } });
-                cardsList.Add(new { Nome = "Evento", Action = "GestorEditarEvento", Controller = "Evento", Icon = "Evento.png", Parametros = (object)new { id = Model.Evento.Id } });
             }
-
-            cardsList.Add(new { Nome = "Usuário", Action = "CreateUsuario", Controller = "Evento", Icon = "Participantes.png", Parametros = (object)new { idEvento = Model.Evento.Id } });
+            if (isAdmin || podeOperar)
+            {
+                cardsList.Add(new { Nome = "Emitir Crachá", Action = "EmitirCracha", Controller = "Modelocracha", Icon = "cracha.svg", Parametros = (object)new { idEvento = Model.Evento.Id } });
+            }
+            if (isGestorOuAdmin)
+            {
+                cardsList.Add(new { Nome = "Dashboard", Action = "Dashboard", Controller = "Evento", Icon = "Evento.png", Parametros = (object)new { idEvento = Model.Evento.Id } });
+                cardsList.Add(new { Nome = "Evento", Action = isAdmin ? "Edit" : "GestorEditarEvento", Controller = "Evento", Icon = "Evento.png", Parametros = (object)new { id = Model.Evento.Id } });
+            }
         }
 
         @foreach (var item in cardsList)
@@ -185,14 +190,17 @@
                                 </td>
                                 <td class="text-end" style="white-space: nowrap;">
                                     <div class="d-inline-flex align-items-center gap-3">
-                                        <a asp-controller="ParticipacaoPessoaEvento"
-                                           asp-action="Frequencia"
-                                           asp-route-idEvento="@Model.Evento.Id"
-                                           asp-route-idSubEvento="@subevento.Id"
-                                           class="btn btn-sm btn-blue-normal color-white rounded-3 px-3 fw-semibold"
-                                           title="Frequência do Subevento">
-                                            <i class="bi bi-calendar-check me-1"></i>Frequência
-                                        </a>
+                                        @if (podeOperar)
+                                        {
+                                            <a asp-controller="ParticipacaoPessoaEvento"
+                                               asp-action="Frequencia"
+                                               asp-route-idEvento="@Model.Evento.Id"
+                                               asp-route-idSubEvento="@subevento.Id"
+                                               class="btn btn-sm btn-blue-normal color-white rounded-3 px-3 fw-semibold"
+                                               title="Frequência do Subevento">
+                                                <i class="bi bi-calendar-check me-1"></i>Frequência
+                                            </a>
+                                        }
 
                                         @if (isGestorOuAdmin)
                                         {

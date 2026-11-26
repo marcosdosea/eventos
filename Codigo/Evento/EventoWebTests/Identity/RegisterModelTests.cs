@@ -28,6 +28,18 @@ namespace EventoWeb.Identity.Tests
         private Mock<IPessoaService> _pessoaServiceMock;
         private RegisterModel _model;
 
+        [TestMethod]
+        [DataRow("52998224725", true)]
+        [DataRow("529.982.247-25", true)]
+        [DataRow("11111111111", false)]
+        [DataRow("52998224726", false)]
+        [DataRow("529/982/247-25", false)]
+        [DataRow("52998224725x", false)]
+        public void Cpf_ValidaMesmoFormatoNosFormularios(string cpf, bool esperado)
+        {
+            Assert.AreEqual(esperado, new Util.CPFAttribute().IsValid(cpf));
+        }
+
         [TestInitialize()]
         public void Initialize()
         {

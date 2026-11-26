@@ -75,7 +75,7 @@ namespace EventoWeb.Controllers
             return View(eventoModel);
         }
 
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
+        [Authorize(Roles = "ADMINISTRADOR")]
 
         [HttpGet]
         [Route("Create")]
@@ -249,6 +249,13 @@ namespace EventoWeb.Controllers
             }
         }
 
+        private static string MensagemPapelJaVinculado(int papel) => papel switch
+        {
+            2 => "A pessoa selecionada já é um gestor do evento.",
+            3 => "A pessoa selecionada já é um colaborador do evento.",
+            _ => "A pessoa selecionada já está inscrita como participante deste evento."
+        };
+
         [Authorize(Roles = "ADMINISTRADOR")]
 
         [HttpGet]
@@ -289,7 +296,12 @@ namespace EventoWeb.Controllers
                 var nomeCurto = primeiroEspaco > 0
                     ? nomeComparacao.Substring(0, primeiroEspaco)
                     : nomeComparacao.Substring(0, Math.Min(20, nomeComparacao.Length));
-                if (!nomeDigitado.StartsWith(nomeCurto, StringComparison.OrdinalIgnoreCase))
+                var nomeCracha = string.IsNullOrWhiteSpace(pessoaExistente.NomeCracha)
+                    ? nomeComparacao
+                    : pessoaExistente.NomeCracha;
+                nomeCracha = nomeCracha[..Math.Min(20, nomeCracha.Length)].Trim();
+                if (!nomeDigitado.Equals(nomeCracha, StringComparison.OrdinalIgnoreCase) &&
+                    !nomeDigitado.StartsWith(nomeCurto, StringComparison.OrdinalIgnoreCase))
                     ModelState.AddModelError("Pessoa.Nome", "Nome não confere com o cadastro do CPF informado.");
 
                 if (!pessoaExistente.Email.Equals(gestaoPapelModel.Pessoa.Email, StringComparison.OrdinalIgnoreCase))
@@ -304,10 +316,9 @@ namespace EventoWeb.Controllers
 
                 var papel = _inscricaoService.GetPapelPessoaByEvento(pessoaExistente.Id, idEvento);
 
-                if (papel is 2 or 3)
+                if (papel is 2 or 3 or 4)
                 {
-                    var papelNome = papel == 2 ? "gestor" : "colaborador";
-                    ModelState.AddModelError(string.Empty, $"A pessoa selecionada já é um {papelNome} do evento.");
+                    ModelState.AddModelError(string.Empty, MensagemPapelJaVinculado(papel));
                     gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
                     gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 2);
                     return View(gestaoPapelModel);
@@ -374,7 +385,7 @@ namespace EventoWeb.Controllers
                 {
                     var pessoa = new Pessoa
                     {
-                        Cpf = gestaoPapelModel.Pessoa.Cpf,
+                        Cpf = Util.Methods.RemoveNaoNumericos(gestaoPapelModel.Pessoa.Cpf),
                         Nome = gestaoPapelModel.Pessoa.Nome,
                         NomeCracha = gestaoPapelModel.Pessoa.Nome.Length > 20 ? gestaoPapelModel.Pessoa.Nome.Substring(0, 20) : gestaoPapelModel.Pessoa.Nome,
                         Telefone1 = gestaoPapelModel.Pessoa.Telefone1,
@@ -406,22 +417,9 @@ namespace EventoWeb.Controllers
                 }
                 var papel = _inscricaoService.GetPapelPessoaByEvento(pessoaExistente.Id, idEvento);
 
-                if (papel is 2 or 3)
+                if (papel is 2 or 3 or 4)
                 {
-                    var papelNome = "";
-
-                    switch (papel)
-                    {
-                        case 2:
-                            papelNome = "gestor";
-                            break;
-                        case 3:
-                            papelNome = "colaborador";
-                            break;
-                    }
-
-                    ModelState.AddModelError(string.Empty, $"A pessoa selecionada já é um {papelNome} do evento.");
-
+                    ModelState.AddModelError(string.Empty, MensagemPapelJaVinculado(papel));
                     gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
                     gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 3);
 
@@ -762,7 +760,7 @@ namespace EventoWeb.Controllers
                 var nome = viewModel.Nome ?? string.Empty;
                 var pessoa = new Pessoa
                 {
-                    Cpf = viewModel.Cpf,
+                    Cpf = Util.Methods.RemoveNaoNumericos(viewModel.Cpf),
                     Nome = viewModel.Nome,
                     NomeCracha = nome.Length > 20 ? nome.Substring(0, 20) : nome,
                     Telefone1 = viewModel.Telefone1,
@@ -928,8 +926,8 @@ namespace EventoWeb.Controllers
             if (evento == null)
             {
                 TempData.Clear();
-                TempData["Message"] = "Evento não encontrado!";
-                return RedirectToAction("Index", "Home");
+                TempData["ErrorMessage"] = "Evento não encontrado!";
+                return RedirectToAction(nameof(GerenciarEventoListar));
             }
 
             var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
@@ -939,12 +937,14 @@ namespace EventoWeb.Controllers
             if (!isAdmin && gestor == null && colaborador == null)
             {
                 TempData.Clear();
-                TempData["Message"] = "Você não tem permissão para gerenciar este evento!";
-                return RedirectToAction("Index", "Home");
+                TempData["ErrorMessage"] = "Você não tem permissão para gerenciar este evento!";
+                return RedirectToAction(nameof(GerenciarEventoListar));
             }
             else
             {
                 ViewData["EventoId"] = idEvento;
+                ViewData["GestorVinculado"] = gestor != null;
+                ViewData["ParticipacaoEquipe"] = gestor != null || colaborador != null;
                 var viewModel = new GerenciarEventoModel()
                 {
                     Evento = _mapper.Map<EventoModel>(evento),
