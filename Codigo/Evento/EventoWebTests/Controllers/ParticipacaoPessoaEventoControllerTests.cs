@@ -53,6 +53,8 @@ namespace EventoWeb.Controllers.Tests
 
             _mockEvento.Setup(s => s.GetEventoSimpleDto(It.IsAny<uint>()))
                 .Returns(new EventoSimpleDTO { Id = 1, Nome = "Evento Teste" });
+            _mockEvento.Setup(s => s.Get(It.IsAny<uint>()))
+                .Returns(new Evento { Id = 1, Nome = "Evento Teste", CargaHoraria = 20, FrequenciaMinimaCertificado = 75 });
 
             // Usuário logado é gestor do evento (permissão concedida).
             _mockInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
@@ -436,7 +438,7 @@ namespace EventoWeb.Controllers.Tests
                 }
             });
 
-            var result = await controller.ExportarFrequencia(1, null) as FileContentResult;
+            var result = await controller.ExportarFrequencia(1, null, "csv") as FileContentResult;
 
             Assert.IsNotNull(result);
             Assert.AreEqual("text/csv; charset=utf-8", result.ContentType);
@@ -446,14 +448,10 @@ namespace EventoWeb.Controllers.Tests
             var linhas = LerLinhas(result.FileContents);
             Assert.AreEqual(3, linhas.Length);
             StringAssert.StartsWith(linhas[0], "TÍTULO: Evento Teste");
-            Assert.AreEqual(FrequenciaCsvExporter.Cabecalho, linhas[1]);
-            StringAssert.Contains(linhas[2], "Maria");
-            StringAssert.Contains(linhas[2], "Silva");
+            Assert.AreEqual(FrequenciaCsvExporter.CabecalhoRelatorio, linhas[1]);
+            StringAssert.Contains(linhas[2], "Maria Silva");
             StringAssert.Contains(linhas[2], "maria@teste.com");
-            StringAssert.Contains(linhas[2], "PARTICIPANTE");
-            StringAssert.Contains(linhas[2], "30/10/2026 09:00");
-            StringAssert.Contains(linhas[2], "30/10/2026 10:30");
-            StringAssert.EndsWith(linhas[2], ";90");
+            StringAssert.Contains(linhas[2], "123.456.789-09");
             Assert.IsFalse(linhas.Any(l => l.Contains("Outro Evento")));
         }
 
@@ -481,7 +479,7 @@ namespace EventoWeb.Controllers.Tests
                 }
             });
 
-            var result = await controller.ExportarFrequencia(1, 7) as FileContentResult;
+            var result = await controller.ExportarFrequencia(1, 7, "csv") as FileContentResult;
 
             Assert.IsNotNull(result);
             StringAssert.StartsWith(result.FileDownloadName, "frequencia-evento-teste-1-workshop-net-7-");
@@ -489,10 +487,9 @@ namespace EventoWeb.Controllers.Tests
             var linhas = LerLinhas(result.FileContents);
             Assert.AreEqual(3, linhas.Length);
             Assert.AreEqual("TÍTULO: Evento Teste - Workshop .NET", linhas[0]);
-            Assert.AreEqual(FrequenciaCsvExporter.Cabecalho, linhas[1]);
-            StringAssert.Contains(linhas[2], "Maria");
-            StringAssert.Contains(linhas[2], "Silva");
-            StringAssert.EndsWith(linhas[2], ";45");
+            Assert.AreEqual(FrequenciaCsvExporter.CabecalhoRelatorio, linhas[1]);
+            StringAssert.Contains(linhas[2], "Maria Silva");
+            StringAssert.Contains(linhas[2], "Workshop .NET");
             _mockParticipacao.Verify(s => s.GetByEventoAsync(It.IsAny<uint>()), Times.Never);
             _mockParticipacao.Verify(s => s.GetAllAsync(), Times.Never);
         }
@@ -502,13 +499,13 @@ namespace EventoWeb.Controllers.Tests
         {
             var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
 
-            var result = await controller.ExportarFrequencia(1, null) as FileContentResult;
+            var result = await controller.ExportarFrequencia(1, null, "csv") as FileContentResult;
 
             Assert.IsNotNull(result);
             var linhas = LerLinhas(result.FileContents);
             Assert.AreEqual(2, linhas.Length);
             StringAssert.StartsWith(linhas[0], "TÍTULO: Evento Teste");
-            Assert.AreEqual(FrequenciaCsvExporter.Cabecalho, linhas[1]);
+            Assert.AreEqual(FrequenciaCsvExporter.CabecalhoRelatorio, linhas[1]);
         }
 
         [TestMethod()]
@@ -565,6 +562,7 @@ namespace EventoWeb.Controllers.Tests
         {
             var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
             _mockEvento.Setup(s => s.GetEventoSimpleDto(1)).Returns((EventoSimpleDTO)null);
+            _mockEvento.Setup(s => s.Get(1)).Returns((Evento)null);
 
             var result = await controller.ExportarFrequencia(1, null);
 
@@ -572,7 +570,7 @@ namespace EventoWeb.Controllers.Tests
         }
     
         [TestMethod()]
-        public void ExportarFrequencia_ExigeApenasRoleGestor()
+        public void ExportarFrequencia_ExigeRolesGestorEColaborador()
         {
             var metodo = typeof(ParticipacaoPessoaEventoController)
                 .GetMethod(nameof(ParticipacaoPessoaEventoController.ExportarFrequencia));
@@ -580,7 +578,99 @@ namespace EventoWeb.Controllers.Tests
                 .Cast<AuthorizeAttribute>().FirstOrDefault();
 
             Assert.IsNotNull(autorizacao);
-            Assert.AreEqual("GESTOR", autorizacao.Roles);
+            Assert.AreEqual("GESTOR,COLABORADOR", autorizacao.Roles);
+        }
+
+        [TestMethod()]
+        public async Task ExportarFrequencia_FormatoXlsx_RetornaPlanilhaExcelValida()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+            _mockParticipacao.Setup(s => s.GetByEventoAsync((uint)1)).ReturnsAsync(new List<Participacaopessoaevento>
+            {
+                new()
+                {
+                    Id = 1,
+                    IdEvento = 1,
+                    Entrada = new DateTime(2026, 10, 30, 9, 0, 0),
+                    Saida = new DateTime(2026, 10, 30, 11, 0, 0),
+                    IdPessoaNavigation = new Pessoa
+                    {
+                        Id = 10,
+                        Nome = "Maria Silva",
+                        Cpf = "12345678909",
+                        Email = "maria@teste.com"
+                    }
+                }
+            });
+
+            var result = await controller.ExportarFrequencia(1, null, "xlsx") as FileContentResult;
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", result.ContentType);
+            StringAssert.EndsWith(result.FileDownloadName, ".xlsx");
+            Assert.IsTrue(result.FileContents.Length > 0);
+        }
+
+        [TestMethod()]
+        public async Task ExportarFrequencia_StatusSomenteAptos_FiltraApenasAptos()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+            _mockParticipacao.Setup(s => s.GetByEventoAsync((uint)1)).ReturnsAsync(new List<Participacaopessoaevento>
+            {
+                new()
+                {
+                    Id = 1,
+                    IdEvento = 1,
+                    Entrada = new DateTime(2026, 10, 30, 8, 0, 0),
+                    Saida = new DateTime(2026, 10, 30, 23, 59, 0), // ~16h em evento de 20h = ~80% (>= 75% -> Apto)
+                    IdPessoaNavigation = new Pessoa
+                    {
+                        Id = 10,
+                        Nome = "Apto Silva",
+                        Cpf = "12345678909",
+                        Email = "apto@teste.com"
+                    }
+                }
+            });
+
+            var result = await controller.ExportarFrequencia(1, null, "csv", "Somente Aptos") as FileContentResult;
+
+            Assert.IsNotNull(result);
+            var linhas = LerLinhas(result.FileContents);
+            Assert.AreEqual(3, linhas.Length);
+            StringAssert.Contains(linhas[2], "Apto Silva");
+            StringAssert.Contains(linhas[2], "APTO PARA CERTIFICADO");
+        }
+
+        [TestMethod()]
+        public async Task ExportarFrequencia_StatusAbaixoDaMedia_FiltraApenasInsuficientes()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+            _mockParticipacao.Setup(s => s.GetByEventoAsync((uint)1)).ReturnsAsync(new List<Participacaopessoaevento>
+            {
+                new()
+                {
+                    Id = 1,
+                    IdEvento = 1,
+                    Entrada = new DateTime(2026, 10, 30, 9, 0, 0),
+                    Saida = new DateTime(2026, 10, 30, 10, 0, 0), // 1h em evento de 20h = 5% (< 75% -> Insuficiente)
+                    IdPessoaNavigation = new Pessoa
+                    {
+                        Id = 10,
+                        Nome = "Incompleto Silva",
+                        Cpf = "12345678909",
+                        Email = "incompleto@teste.com"
+                    }
+                }
+            });
+
+            var result = await controller.ExportarFrequencia(1, null, "csv", "Somente Abaixo da Média") as FileContentResult;
+
+            Assert.IsNotNull(result);
+            var linhas = LerLinhas(result.FileContents);
+            Assert.AreEqual(3, linhas.Length);
+            StringAssert.Contains(linhas[2], "Incompleto Silva");
+            StringAssert.Contains(linhas[2], "INSUFICIENTE");
         }
 
         [TestMethod()]

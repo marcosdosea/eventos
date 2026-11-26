@@ -244,5 +244,57 @@ namespace EventoWeb.Helpers.Tests
 
             Assert.AreEqual("frequencia-evento-9-20260102-0304.csv", nome);
         }
+
+        [TestMethod()]
+        public void GerarRelatorio_DeveGerarPlanilhaCsvCom9ColunasEBomUtf8()
+        {
+            var itens = new List<FrequenciaRelatorioItem>
+            {
+                new()
+                {
+                    Cpf = "123.456.789-00",
+                    NomeCompleto = "Maria Silva",
+                    Email = "maria@teste.com",
+                    CursoOuSubevento = "Workshop .NET",
+                    CargaHorariaTotal = 20m,
+                    TotalHorasPresentes = 16m,
+                    PercentualFrequencia = 80m,
+                    SituacaoFrequencia = "APTO PARA CERTIFICADO",
+                    HistoricoEntradasSaidas = "18/11/2026 08:00 às 12:00"
+                }
+            };
+
+            var csv = FrequenciaCsvExporter.GerarRelatorio("SEMAC 2026", "Workshop .NET", itens);
+            var linhas = Linhas(csv);
+
+            CollectionAssert.AreEqual(new byte[] { 0xEF, 0xBB, 0xBF }, csv.Take(3).ToArray());
+            Assert.AreEqual("TÍTULO: SEMAC 2026 - Workshop .NET", linhas[0]);
+            Assert.AreEqual(string.Empty, linhas[1]);
+            Assert.AreEqual(FrequenciaCsvExporter.CabecalhoRelatorio, linhas[2]);
+
+            var camposHeader = Campos(linhas[2]);
+            Assert.AreEqual(9, camposHeader.Length);
+            Assert.AreEqual("CPF", camposHeader[0]);
+            Assert.AreEqual("NOME COMPLETO", camposHeader[1]);
+            Assert.AreEqual("E-MAIL", camposHeader[2]);
+            Assert.AreEqual("CURSO / SUBEVENTO", camposHeader[3]);
+            Assert.AreEqual("CARGA HORÁRIA TOTAL (HORAS)", camposHeader[4]);
+            Assert.AreEqual("TOTAL HORAS PRESENTES", camposHeader[5]);
+            Assert.AreEqual("PERCENTUAL DE FREQUÊNCIA (%)", camposHeader[6]);
+            Assert.AreEqual("SITUAÇÃO DA FREQUÊNCIA", camposHeader[7]);
+            Assert.AreEqual("HISTÓRICO DE ENTRADAS E SAÍDAS", camposHeader[8]);
+
+            var camposDado = Campos(linhas[3]);
+            Assert.AreEqual(9, camposDado.Length);
+            Assert.AreEqual("123.456.789-00", camposDado[0]);
+            Assert.AreEqual("Maria Silva", camposDado[1]);
+            Assert.AreEqual("maria@teste.com", camposDado[2]);
+            Assert.AreEqual("Workshop .NET", camposDado[3]);
+            Assert.AreEqual("20.00", camposDado[4]);
+            Assert.AreEqual("16.00", camposDado[5]);
+            Assert.AreEqual("80.00%", camposDado[6]);
+            Assert.AreEqual("APTO PARA CERTIFICADO", camposDado[7]);
+            Assert.AreEqual("18/11/2026 08:00 às 12:00", camposDado[8]);
+        }
     }
 }
