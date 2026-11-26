@@ -16,5 +16,8 @@ RUN dotnet publish EventoApi/EventoApi.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 WORKDIR /app
+RUN mkdir -p /app/dataprotection-keys
+ENV DataProtection__KeysPath=/app/dataprotection-keys
+VOLUME ["/app/dataprotection-keys"]
 COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "EventoApi.dll"]

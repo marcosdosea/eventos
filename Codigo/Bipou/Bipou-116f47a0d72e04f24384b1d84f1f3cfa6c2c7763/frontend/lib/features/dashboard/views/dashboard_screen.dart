@@ -11,6 +11,7 @@ import 'package:bipou_frontend/models/participante_response.dart';
 import 'package:bipou_frontend/models/portaria_session.dart';
 import 'package:bipou_frontend/services/audit_log_export_service.dart';
 import 'package:bipou_frontend/services/borala_api_service.dart';
+import 'package:bipou_frontend/services/borala_session_manager.dart';
 import 'package:bipou_frontend/services/credenciamento_service.dart';
 import 'package:bipou_frontend/services/local_participant_repository.dart';
 import 'package:bipou_frontend/services/qr_code_share_service.dart';
@@ -25,6 +26,7 @@ final class DashboardScreen extends StatefulWidget {
     required this.dispositivoId,
     this.localParticipantRepository,
     this.boralaApi,
+    this.boralaSessionManager,
     this.initialBoralaBaseUrl,
     this.initialContext,
     this.scannerSensoryFeedback,
@@ -40,6 +42,7 @@ final class DashboardScreen extends StatefulWidget {
   final String dispositivoId;
   final LocalParticipantRepository? localParticipantRepository;
   final BoralaApiClient? boralaApi;
+  final BoralaSessionManager? boralaSessionManager;
   final String? initialBoralaBaseUrl;
   final ScannerSessionContext? initialContext;
   final ScannerSensoryFeedback? scannerSensoryFeedback;
@@ -356,6 +359,7 @@ final class _DashboardScreenState extends State<DashboardScreen> {
           boralaApi: localRepository != null
               ? (widget.boralaApi ?? BoralaApiService())
               : widget.boralaApi,
+          boralaSessionManager: widget.boralaSessionManager,
           onConfigureSession: localRepository != null
               ? () => _abrirConfiguracaoSessao(context)
               : null,

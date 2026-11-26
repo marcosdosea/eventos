@@ -11,3 +11,9 @@ public class BipouSessaoModel
     public string Senha { get; set; } = string.Empty;
 }
 
+public class BipouRefreshTokenModel
+{
+    [Required]
+    public string RefreshToken { get; set; } = string.Empty;
+}
+

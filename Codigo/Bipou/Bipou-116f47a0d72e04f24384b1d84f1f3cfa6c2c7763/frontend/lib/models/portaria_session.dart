@@ -9,6 +9,8 @@ final class PortariaSession {
     this.boralaBaseUrl,
     this.operadorUsuario,
     this.accessToken,
+    this.refreshToken,
+    this.expiresAt,
   });
 
   factory PortariaSession.fromJson(Map<String, dynamic> json) {
@@ -52,6 +54,12 @@ final class PortariaSession {
       accessToken: json['accessToken'] is String
           ? json['accessToken'] as String
           : null,
+      refreshToken: json['refreshToken'] is String
+          ? json['refreshToken'] as String
+          : null,
+      expiresAt: json['expiresAt'] is String
+          ? DateTime.tryParse(json['expiresAt'] as String)
+          : null,
     );
   }
 
@@ -64,6 +72,20 @@ final class PortariaSession {
   final String? boralaBaseUrl;
   final String? operadorUsuario;
   final String? accessToken;
+  final String? refreshToken;
+  final DateTime? expiresAt;
+
+  bool isTokenExpirandoOuExpirado({
+    DateTime? agora,
+    Duration margem = const Duration(minutes: 5),
+  }) {
+    final exp = expiresAt;
+    if (exp == null) {
+      return false;
+    }
+    final referencia = (agora ?? DateTime.now()).toUtc();
+    return !referencia.isBefore(exp.toUtc().subtract(margem));
+  }
 
   bool get isEventoGeral => subeventoId == null;
 
@@ -98,6 +120,8 @@ final class PortariaSession {
     String? boralaBaseUrl,
     String? operadorUsuario,
     String? accessToken,
+    String? refreshToken,
+    DateTime? expiresAt,
   }) {
     return PortariaSession(
       eventoId: eventoId ?? this.eventoId,
@@ -112,6 +136,8 @@ final class PortariaSession {
       boralaBaseUrl: boralaBaseUrl ?? this.boralaBaseUrl,
       operadorUsuario: operadorUsuario ?? this.operadorUsuario,
       accessToken: accessToken ?? this.accessToken,
+      refreshToken: refreshToken ?? this.refreshToken,
+      expiresAt: expiresAt ?? this.expiresAt,
     );
   }
 
@@ -125,5 +151,7 @@ final class PortariaSession {
     if (boralaBaseUrl != null) 'boralaBaseUrl': boralaBaseUrl,
     if (operadorUsuario != null) 'operadorUsuario': operadorUsuario,
     if (accessToken != null) 'accessToken': accessToken,
+    if (refreshToken != null) 'refreshToken': refreshToken,
+    if (expiresAt != null) 'expiresAt': expiresAt!.toUtc().toIso8601String(),
   };
 }

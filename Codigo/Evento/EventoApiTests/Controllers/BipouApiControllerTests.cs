@@ -80,7 +80,7 @@ public class BipouApiControllerTests
         user.EmailConfirmed = true; user.TwoFactorEnabled = true; await users.UpdateAsync(user);
         Assert.AreEqual(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync(Api + "/sessao", new { usuario = user.UserName, senha = Senha })).StatusCode);
         user.TwoFactorEnabled = false; user.LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(5); await users.UpdateAsync(user);
-        Assert.AreEqual(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync(Api + "/sessao", new { usuario = user.UserName, senha = Senha })).StatusCode);
+        Assert.AreEqual(HttpStatusCode.Locked, (await client.PostAsJsonAsync(Api + "/sessao", new { usuario = user.UserName, senha = Senha })).StatusCode);
         var options = factory.Services.GetRequiredService<IOptionsMonitor<BearerTokenOptions>>().Get(IdentityConstants.BearerScheme);
         var principal = new ClaimsPrincipal(new ClaimsIdentity(new[] { new Claim(ClaimTypes.Name, user.UserName!), new Claim(ClaimTypes.Role, "GESTOR") }, IdentityConstants.BearerScheme));
         var ticket = new AuthenticationTicket(principal, new AuthenticationProperties { ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(-1) }, IdentityConstants.BearerScheme);
@@ -92,9 +92,51 @@ public class BipouApiControllerTests
     public async Task Sessao_LimitaTentativasPorOrigem()
     {
         HttpResponseMessage response = null!;
-        for (var i = 0; i < 11; i++)
+        for (var i = 0; i < 31; i++)
             response = await client.PostAsJsonAsync(Api + "/sessao", new { usuario = "inexistente", senha = Senha });
         Assert.AreEqual(HttpStatusCode.TooManyRequests, response.StatusCode);
+
+        // Outro IP via X-Forwarded-For não compartilha o mesmo balde de rate limit.
+        using var outroDispositivo = new HttpRequestMessage(HttpMethod.Post, Api + "/sessao")
+        {
+            Content = JsonContent.Create(new { usuario = "inexistente", senha = Senha })
+        };
+        outroDispositivo.Headers.Add("X-Forwarded-For", "198.51.100.42");
+        var respostaOutroIp = await client.SendAsync(outroDispositivo);
+        Assert.AreEqual(HttpStatusCode.Unauthorized, respostaOutroIp.StatusCode);
+    }
+
+    [TestMethod]
+    public async Task Sessao_Refresh_RenovaTokenValidoERecusaInvalidoOuBloqueado()
+    {
+        var loginResponse = await client.PostAsJsonAsync(Api + "/sessao", new { usuario = "11144477735", senha = Senha });
+        Assert.AreEqual(HttpStatusCode.OK, loginResponse.StatusCode);
+
+        var loginPayload = await loginResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var refreshToken = loginPayload.GetProperty("refreshToken").GetString()!;
+        Assert.IsFalse(string.IsNullOrWhiteSpace(refreshToken));
+        Assert.AreEqual(28800, loginPayload.GetProperty("expiresIn").GetInt32());
+
+        var refreshResponse = await client.PostAsJsonAsync(Api + "/sessao/refresh", new { refreshToken });
+        Assert.AreEqual(HttpStatusCode.OK, refreshResponse.StatusCode);
+        var refreshPayload = await refreshResponse.Content.ReadFromJsonAsync<JsonElement>();
+        var novoAccessToken = refreshPayload.GetProperty("accessToken").GetString()!;
+        Assert.IsFalse(string.IsNullOrWhiteSpace(novoAccessToken));
+
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", novoAccessToken);
+        Assert.AreEqual(HttpStatusCode.OK, (await client.GetAsync(Api + "/eventos")).StatusCode);
+
+        var invalidoResponse = await client.PostAsJsonAsync(Api + "/sessao/refresh", new { refreshToken = "token-invalido" });
+        Assert.AreEqual(HttpStatusCode.Unauthorized, invalidoResponse.StatusCode);
+
+        using var scope = factory.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<UserManager<UsuarioIdentity>>();
+        var user = (await users.FindByNameAsync("11144477735"))!;
+        user.LockoutEnd = DateTimeOffset.UtcNow.AddMinutes(5);
+        await users.UpdateAsync(user);
+
+        var bloqueadoResponse = await client.PostAsJsonAsync(Api + "/sessao/refresh", new { refreshToken });
+        Assert.AreEqual(HttpStatusCode.Locked, bloqueadoResponse.StatusCode);
     }
 
     [TestMethod]

@@ -1,6 +1,8 @@
 using Core;
 using Core.Service;
 using EventoApi.Filter;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
@@ -112,10 +114,29 @@ namespace EventoApi
             .AddErrorDescriber<IdentityErrorDescriberPtBr>()
             .AddEntityFrameworkStores<IdentityContext>();
 
+            // Persistência das chaves de Data Protection para manter tokens válidos entre restarts
+            var dataProtectionKeysPath = builder.Configuration["DataProtection:KeysPath"]
+                ?? Path.Combine(AppContext.BaseDirectory, "dataprotection-keys");
+            Directory.CreateDirectory(dataProtectionKeysPath);
+            builder.Services.AddDataProtection()
+                .SetApplicationName("EventoApi")
+                .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
+
+            // Encaminhamento de headers de proxy reverso (IP real e protocolo)
+            builder.Services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+                options.KnownIPNetworks.Clear();
+                options.KnownProxies.Clear();
+            });
+
             // Configurações de Autenticação e Autorização Bearer
             builder.Services.AddAuthentication()
                 .AddBearerToken(IdentityConstants.BearerScheme, options =>
-                    options.BearerTokenExpiration = TimeSpan.FromHours(1));
+                {
+                    options.BearerTokenExpiration = TimeSpan.FromHours(8);
+                    options.RefreshTokenExpiration = TimeSpan.FromDays(7);
+                });
 
             builder.Services.AddAuthorization(options =>
             {
@@ -133,7 +154,15 @@ namespace EventoApi
                     context.Connection.RemoteIpAddress?.ToString() ?? "local",
                     _ => new FixedWindowRateLimiterOptions
                     {
-                        PermitLimit = 10,
+                        PermitLimit = 30,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0
+                    }));
+                options.AddPolicy("bipou-refresh", context => RateLimitPartition.GetFixedWindowLimiter(
+                    context.Connection.RemoteIpAddress?.ToString() ?? "local",
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 60,
                         Window = TimeSpan.FromMinutes(1),
                         QueueLimit = 0
                     }));
@@ -160,6 +189,7 @@ namespace EventoApi
                 app.UseSwaggerUI();
             }
 
+            app.UseForwardedHeaders();
             app.UseHttpsRedirection();
             app.UseRouting();
 

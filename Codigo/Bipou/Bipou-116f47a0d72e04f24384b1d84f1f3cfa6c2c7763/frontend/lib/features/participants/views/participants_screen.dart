@@ -5,6 +5,7 @@ import 'package:bipou_frontend/models/participante_response.dart';
 import 'package:bipou_frontend/models/portaria_session.dart';
 import 'package:bipou_frontend/services/api_service.dart';
 import 'package:bipou_frontend/services/borala_api_service.dart';
+import 'package:bipou_frontend/services/borala_session_manager.dart';
 import 'package:bipou_frontend/services/credenciamento_service.dart';
 import 'package:bipou_frontend/services/local_participant_repository.dart';
 import 'package:bipou_frontend/services/qr_code_share_service.dart';
@@ -17,6 +18,7 @@ final class ParticipantsScreen extends StatefulWidget {
     this.sessaoAtiva,
     this.localParticipants,
     this.boralaApi,
+    this.boralaSessionManager,
     this.onConfigureSession,
     super.key,
   });
@@ -26,6 +28,7 @@ final class ParticipantsScreen extends StatefulWidget {
   final PortariaSession? sessaoAtiva;
   final LocalParticipantLookup? localParticipants;
   final BoralaApiClient? boralaApi;
+  final BoralaSessionManager? boralaSessionManager;
   final Future<PortariaSession?> Function()? onConfigureSession;
 
   @override
@@ -55,10 +58,13 @@ final class _ParticipantsScreenState extends State<ParticipantsScreen> {
   }) async {
     var sessao = _sessaoAtiva;
     final repo = _localRepository;
-    if (sessao == null && repo != null) {
+    if (repo != null) {
       try {
-        sessao = await repo.loadSession();
-        _sessaoAtiva = sessao;
+        final persistida = await repo.loadSession();
+        if (persistida != null) {
+          sessao = persistida;
+          _sessaoAtiva = persistida;
+        }
       } on Object {
         // Segue sem sessao local persistida.
       }
@@ -66,10 +72,11 @@ final class _ParticipantsScreenState extends State<ParticipantsScreen> {
 
     final lookup = widget.localParticipants;
     if (sessao != null) {
+      var sessaoCorrente = sessao;
       final locais = lookup != null
           ? await lookup.listByContext(
-              eventoId: sessao.eventoId,
-              subeventoId: sessao.subeventoId,
+              eventoId: sessaoCorrente.eventoId,
+              subeventoId: sessaoCorrente.subeventoId,
             )
           : const <LocalParticipant>[];
 
@@ -82,20 +89,79 @@ final class _ParticipantsScreenState extends State<ParticipantsScreen> {
         );
       }
 
-      final token = sessao.accessToken?.trim();
+      final token = sessaoCorrente.accessToken?.trim();
       final possuiToken = token != null && token.isNotEmpty;
       if (possuiToken && widget.boralaApi != null) {
-        final baseUrl =
-            sessao.boralaBaseUrl != null &&
-                sessao.boralaBaseUrl!.trim().isNotEmpty
-            ? sessao.boralaBaseUrl!.trim()
+        var activeToken = token;
+        var baseUrl =
+            sessaoCorrente.boralaBaseUrl != null &&
+                sessaoCorrente.boralaBaseUrl!.trim().isNotEmpty
+            ? sessaoCorrente.boralaBaseUrl!.trim()
             : widget.credenciamento.apiBaseUrl;
+        final sessionManager = widget.boralaSessionManager;
+        if (sessionManager != null) {
+          final credentials = await sessionManager.getValidCredentials();
+          final validToken = credentials?.accessToken?.trim();
+          if (validToken != null && validToken.isNotEmpty) {
+            activeToken = validToken;
+          }
+          final validBaseUrl = credentials?.baseUrl?.trim();
+          if (validBaseUrl != null && validBaseUrl.isNotEmpty) {
+            baseUrl = validBaseUrl;
+          }
+          if (repo != null) {
+            try {
+              final atualizada = await repo.loadSession();
+              if (atualizada != null) {
+                sessaoCorrente = atualizada;
+                _sessaoAtiva = atualizada;
+              }
+            } on Object {
+              // Mantem sessaoCorrente em memoria caso o repositorio falhe.
+            }
+          }
+        }
         try {
-          final result = await widget.boralaApi!.listarParticipantes(
-            baseUrl: baseUrl,
-            accessToken: token,
-            eventoId: sessao.eventoId,
-          );
+          BoralaParticipantesResult result;
+          try {
+            result = await widget.boralaApi!.listarParticipantes(
+              baseUrl: baseUrl,
+              accessToken: activeToken,
+              eventoId: sessaoCorrente.eventoId,
+            );
+          } on ApiRequestException catch (error) {
+            if (error.statusCode == 401 && sessionManager != null) {
+              final refreshed = await sessionManager.refreshActiveSession();
+              final refreshedToken = refreshed?.accessToken?.trim();
+              if (refreshedToken != null && refreshedToken.isNotEmpty) {
+                activeToken = refreshedToken;
+                final refreshedBaseUrl = refreshed?.baseUrl?.trim();
+                if (refreshedBaseUrl != null && refreshedBaseUrl.isNotEmpty) {
+                  baseUrl = refreshedBaseUrl;
+                }
+                if (repo != null) {
+                  try {
+                    final atualizada = await repo.loadSession();
+                    if (atualizada != null) {
+                      sessaoCorrente = atualizada;
+                      _sessaoAtiva = atualizada;
+                    }
+                  } on Object {
+                    // Mantem sessaoCorrente em memoria caso o repositorio falhe.
+                  }
+                }
+                result = await widget.boralaApi!.listarParticipantes(
+                  baseUrl: baseUrl,
+                  accessToken: activeToken,
+                  eventoId: sessaoCorrente.eventoId,
+                );
+              } else {
+                rethrow;
+              }
+            } else {
+              rethrow;
+            }
+          }
 
           final List<LocalParticipant> todosLocais;
           if (result.notModified) {
@@ -104,24 +170,24 @@ final class _ParticipantsScreenState extends State<ParticipantsScreen> {
             todosLocais = result.participantes
                 .map(
                   (p) => LocalParticipant.fromBorala(
-                    eventoId: sessao!.eventoId,
+                    eventoId: sessaoCorrente.eventoId,
                     participante: p,
                   ),
                 )
                 .toList();
             if (repo != null) {
               await repo.replaceAllForEvent(
-                eventoId: sessao.eventoId,
+                eventoId: sessaoCorrente.eventoId,
                 participants: todosLocais,
               );
               await repo.saveEventEtag(
-                eventoId: sessao.eventoId,
+                eventoId: sessaoCorrente.eventoId,
                 etag: result.etag,
               );
             }
           }
 
-          final subeventoId = sessao.subeventoId;
+          final subeventoId = sessaoCorrente.subeventoId;
           final filtradosContexto = subeventoId == null
               ? todosLocais
               : todosLocais
@@ -129,7 +195,8 @@ final class _ParticipantsScreenState extends State<ParticipantsScreen> {
                     .toList();
 
           if (repo != null && !result.notModified) {
-            final sessaoAtualizada = sessao.copyWith(
+            final sessaoAtualizada = sessaoCorrente.copyWith(
+              accessToken: activeToken,
               totalParticipantesCarregados: filtradosContexto.length,
               sincronizadoEm: DateTime.now().toUtc(),
             );

@@ -116,6 +116,7 @@ final class ApiService implements CredenciamentoApi, FrequenciaLoteApi {
     Dio? dio,
     String? baseUrl,
     this._boralaCredentialsProvider,
+    this._boralaSessionRefresher,
   }) : _baseUrl = baseUrl ?? ApiConfig.baseUrl,
        _dio =
            dio ??
@@ -133,6 +134,7 @@ final class ApiService implements CredenciamentoApi, FrequenciaLoteApi {
 
   final String _baseUrl;
   final BoralaCredentialsProvider? _boralaCredentialsProvider;
+  final BoralaCredentialsProvider? _boralaSessionRefresher;
   final Dio _dio;
 
   @override
@@ -174,12 +176,31 @@ final class ApiService implements CredenciamentoApi, FrequenciaLoteApi {
         eventoId > 0 &&
         token != null &&
         token.isNotEmpty) {
-      return _listarParticipantesBorala(
-        baseUrl: credentials?.baseUrl,
-        accessToken: token,
-        eventoId: eventoId,
-        subeventoId: credentials?.subeventoId,
-      );
+      try {
+        return await _listarParticipantesBorala(
+          baseUrl: credentials?.baseUrl,
+          accessToken: token,
+          eventoId: eventoId,
+          subeventoId: credentials?.subeventoId,
+        );
+      } on ApiRequestException catch (error) {
+        if (error.statusCode == 401 && _boralaSessionRefresher != null) {
+          final refreshed = await _boralaSessionRefresher.call();
+          final refreshedToken = refreshed?.accessToken?.trim();
+          final refreshedEventoId = refreshed?.eventoId ?? eventoId;
+          if (refreshedToken != null &&
+              refreshedToken.isNotEmpty &&
+              refreshedEventoId > 0) {
+            return _listarParticipantesBorala(
+              baseUrl: refreshed?.baseUrl ?? credentials?.baseUrl,
+              accessToken: refreshedToken,
+              eventoId: refreshedEventoId,
+              subeventoId: refreshed?.subeventoId ?? credentials?.subeventoId,
+            );
+          }
+        }
+        rethrow;
+      }
     }
 
     if (_boralaCredentialsProvider != null && _usaApiBoralaPorPadrao()) {
@@ -266,31 +287,22 @@ final class ApiService implements CredenciamentoApi, FrequenciaLoteApi {
     if (comContextoBorala.isNotEmpty) {
       try {
         final credentials = await _boralaCredentialsProvider?.call();
-        final boralaBaseUrl = credentials?.baseUrl?.trim();
-        final endpoint =
-            (boralaBaseUrl != null && boralaBaseUrl.isNotEmpty)
-            ? '${ApiConfig.normalizeHttpUrl(boralaBaseUrl, fieldName: 'BORALA_API_BASE_URL')}/api/bipou/v1/frequencias/lote'
-            : '/api/bipou/v1/frequencias/lote';
-        final token = credentials?.accessToken?.trim();
-        final options = (token != null && token.isNotEmpty)
-            ? Options(
-                headers: <String, Object>{'Authorization': 'Bearer $token'},
-              )
-            : null;
-
-        final json = await _post(
-          endpoint,
-          <String, Object?>{
-            'leituras': comContextoBorala
-                .map((item) => item.toBipouLoteJson())
-                .toList(growable: false),
-          },
-          options: options,
-        );
-        final parsed = _parseResponse(
-          json,
-          FrequenciaLoteSyncResponse.fromJson,
-        );
+        FrequenciaLoteSyncResponse parsed;
+        try {
+          parsed = await _enviarLoteBorala(comContextoBorala, credentials);
+        } on ApiRequestException catch (error) {
+          if (error.statusCode == 401 && _boralaSessionRefresher != null) {
+            final refreshed = await _boralaSessionRefresher.call();
+            final refreshedToken = refreshed?.accessToken?.trim();
+            if (refreshedToken != null && refreshedToken.isNotEmpty) {
+              parsed = await _enviarLoteBorala(comContextoBorala, refreshed);
+            } else {
+              rethrow;
+            }
+          } else {
+            rethrow;
+          }
+        }
         confirmados.addAll(parsed.confirmados);
         rejeitados.addAll(parsed.rejeitados);
       } on ApiRequestException catch (error) {
@@ -318,6 +330,31 @@ final class ApiService implements CredenciamentoApi, FrequenciaLoteApi {
       confirmados: List<String>.unmodifiable(confirmados),
       rejeitados: List<FrequenciaLoteRejeicao>.unmodifiable(rejeitados),
     );
+  }
+
+  Future<FrequenciaLoteSyncResponse> _enviarLoteBorala(
+    List<FrequenciaPendente> lote,
+    BoralaSessionCredentials? credentials,
+  ) async {
+    final boralaBaseUrl = credentials?.baseUrl?.trim();
+    final endpoint = (boralaBaseUrl != null && boralaBaseUrl.isNotEmpty)
+        ? '${ApiConfig.normalizeHttpUrl(boralaBaseUrl, fieldName: 'BORALA_API_BASE_URL')}/api/bipou/v1/frequencias/lote'
+        : '/api/bipou/v1/frequencias/lote';
+    final token = credentials?.accessToken?.trim();
+    final options = (token != null && token.isNotEmpty)
+        ? Options(headers: <String, Object>{'Authorization': 'Bearer $token'})
+        : null;
+
+    final json = await _post(
+      endpoint,
+      <String, Object?>{
+        'leituras': lote
+            .map((item) => item.toBipouLoteJson())
+            .toList(growable: false),
+      },
+      options: options,
+    );
+    return _parseResponse(json, FrequenciaLoteSyncResponse.fromJson);
   }
 
   Future<void> _enviarIndividualmentePorRegistro(

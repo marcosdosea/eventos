@@ -33,6 +33,8 @@ final class EventSelectionViewModel extends ChangeNotifier {
   String _boralaBaseUrl;
   String? _operadorUsuario;
   String? _accessToken;
+  String? _refreshToken;
+  DateTime? _tokenExpiresAt;
 
   List<BoralaEvento> _eventos = const <BoralaEvento>[];
   Map<int, List<BoralaSubevento>> _subeventosPorEvento =
@@ -142,6 +144,8 @@ final class EventSelectionViewModel extends ChangeNotifier {
             sessao.accessToken!.trim().isNotEmpty) {
           _accessToken = sessao.accessToken;
         }
+        _refreshToken = sessao.refreshToken;
+        _tokenExpiresAt = sessao.expiresAt;
         _ultimaSincronizacao = sessao.sincronizadoEm;
       }
 
@@ -256,11 +260,17 @@ final class EventSelectionViewModel extends ChangeNotifier {
       _boralaBaseUrl = normalizedUrl;
       _operadorUsuario = usuarioLimpo;
       _accessToken = token.accessToken;
+      _refreshToken = token.refreshToken;
+      _tokenExpiresAt = (token.expiresIn != null && token.expiresIn! > 0)
+          ? _clock().toUtc().add(Duration(seconds: token.expiresIn!))
+          : null;
       if (_sessaoSalva != null) {
         final sessaoAtualizada = _sessaoSalva!.copyWith(
           boralaBaseUrl: normalizedUrl,
           operadorUsuario: usuarioLimpo,
           accessToken: token.accessToken,
+          refreshToken: _refreshToken,
+          expiresAt: _tokenExpiresAt,
         );
         await _repository.saveSession(sessaoAtualizada);
         _sessaoSalva = sessaoAtualizada;
@@ -634,6 +644,8 @@ final class EventSelectionViewModel extends ChangeNotifier {
       boralaBaseUrl: _boralaBaseUrl.trim().isEmpty ? null : _boralaBaseUrl,
       operadorUsuario: _operadorUsuario,
       accessToken: _accessToken ?? _sessaoSalva?.accessToken,
+      refreshToken: _refreshToken ?? _sessaoSalva?.refreshToken,
+      expiresAt: _tokenExpiresAt ?? _sessaoSalva?.expiresAt,
     );
     await _repository.saveSession(sessao);
     _sessaoSalva = sessao;
