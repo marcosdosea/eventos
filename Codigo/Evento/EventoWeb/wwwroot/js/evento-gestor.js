@@ -89,8 +89,13 @@
 
             if (alerta) alerta.classList.add("d-none");
             const kb = Math.max(1, Math.round(file.size / 1024));
-            if (lblNome) lblNome.textContent = file.name;
+            if (lblNome) {
+                lblNome.textContent = file.name;
+                lblNome.title = file.name;
+            }
             if (lblInfo) lblInfo.textContent = `${kb} KB`;
+            const lblBotao = btn.querySelector("span");
+            if (lblBotao) lblBotao.textContent = "Trocar";
 
             const reader = new FileReader();
             reader.onload = function (e) {

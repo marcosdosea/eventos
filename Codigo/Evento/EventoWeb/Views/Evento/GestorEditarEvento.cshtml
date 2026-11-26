@@ -380,7 +380,7 @@
                     </div>
 
                     <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-1 mb-2">
                             <label asp-for="ImagemPortal" class="form-label gestor-label mb-0">
                                 <span>Imagem de Capa</span>
                             </label>
@@ -388,7 +388,7 @@
                         </div>
 
                         <div class="gestor-upload-box">
-                            <div class="d-flex align-items-center gap-3 min-w-0">
+                            <div class="gestor-upload-info">
                                 <div class="gestor-upload-thumb" id="thumbCapaBox">
                                     @if (possuiImagemAtual)
                                     {
@@ -401,8 +401,8 @@
                                         <img id="thumbCapaImg" src="" alt="Prévia da capa" class="d-none" />
                                     }
                                 </div>
-                                <div class="min-w-0">
-                                    <div class="fw-bold text-dark small text-truncate" id="lblNomeCapa">
+                                <div class="gestor-upload-meta">
+                                    <div class="fw-bold text-dark small text-truncate" id="lblNomeCapa" title="@(possuiImagemAtual ? "Capa cadastrada no portal" : "")">
                                         @(possuiImagemAtual ? "Capa cadastrada no portal" : "Nenhuma imagem selecionada")
                                     </div>
                                     <div class="text-muted text-truncate" id="lblInfoCapa" style="font-size: 0.75rem;">
@@ -411,7 +411,7 @@
                                 </div>
                             </div>
 
-                            <button type="button" id="btnSelecionarCapa" class="btn btn-outline-blue-normal btn-sm bg-white rounded-3 px-3 py-1 fw-semibold d-inline-flex align-items-center gap-2 flex-shrink-0">
+                            <button type="button" id="btnSelecionarCapa" class="btn btn-outline-blue-normal btn-sm bg-white rounded-3 px-3 py-1 fw-semibold d-inline-flex align-items-center gap-2 flex-shrink-0 text-nowrap">
                                 <i class="bi bi-upload"></i>
                                 <span>@(possuiImagemAtual ? "Trocar" : "Carregar")</span>
                             </button>

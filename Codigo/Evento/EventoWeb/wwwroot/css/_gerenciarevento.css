@@ -291,7 +291,23 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+    max-width: 100%;
+    overflow: hidden;
     transition: all 0.2s ease;
+}
+
+.gestor-upload-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1 1 0%;
+    min-width: 0;
+}
+
+.gestor-upload-meta {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .gestor-upload-box:hover {
@@ -792,6 +808,10 @@
     .gestor-upload-box {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .gestor-upload-info {
+        width: 100%;
     }
 
     .gestor-search-box {
