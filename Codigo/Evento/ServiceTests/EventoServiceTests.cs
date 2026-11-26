@@ -254,6 +254,29 @@ namespace Service.Tests
             Assert.AreEqual("Não é possível excluir um evento que possui inscrições vinculadas.", ex.Message);
         }
 
+        [TestMethod]
+        public void AtualizarVagasDisponiveis_ConsideraCancelamentoPendente()
+        {
+            var evento = _context.Eventos.Single(e => e.Id == 1);
+            var inscricao = new Inscricaopessoaevento
+            {
+                IdEvento = evento.Id,
+                IdPessoa = 1,
+                IdPapel = 4,
+                Status = "A"
+            };
+            _context.Inscricaopessoaeventos.Add(inscricao);
+            _context.SaveChanges();
+
+            _eventoService.AtualizarVagasDisponiveis(evento.Id, saveChanges: false);
+            var vagasAntes = evento.VagasDisponiveis;
+            inscricao.Status = "C";
+
+            _eventoService.AtualizarVagasDisponiveis(evento.Id, saveChanges: false);
+
+            Assert.AreEqual(vagasAntes + 1, evento.VagasDisponiveis);
+        }
+
         [TestMethod()]
         public void DeleteTest_EventoComInscricaoEmSubevento_LancaServiceException()
         {

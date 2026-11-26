@@ -100,6 +100,14 @@ namespace EventoWeb.Controllers
             EventoModel eventoModel = _mapper.Map<EventoModel>(evento);
             var tipoInscricaoModel = _tipoinscricaoService.GetByEvento(idEvento).ToList();
             var subeventos = _subeventoService.GetByIdEvento(idEvento).ToList();
+            var inscricoesSubevento = _inscricaoService.GetSubByEvento(idEvento);
+            var ocupacaoSubeventos = inscricoesSubevento
+                .Where(i => i.IdPapel == 4 && i.Status != "C")
+                .ToLookup(i => i.IdSubEvento);
+            eventoModel.VagasDisponiveis = VagasDisponiveisEvento(evento);
+            foreach (var sub in subeventos)
+                sub.VagasDisponiveis = (uint)Math.Max(0L, (long)sub.VagasOfertadas - ocupacaoSubeventos[sub.Id].Count());
+
             var tiposPorSubevento = _tipoinscricaoService.GetTiposAgrupadosPorSubevento(idEvento) 
                 ?? new Dictionary<uint, List<TipoInscricaoDTO>>();
             var subeventosOpcoes = new List<SubeventoOpcao>();
@@ -123,7 +131,7 @@ namespace EventoWeb.Controllers
                     var inscricaoExistente = _inscricaoService.GetByEvento(idEvento)
                         .FirstOrDefault(i => i.IdPessoa == pessoa.Id && i.IdPapel == 4);
 
-                    var subeventosInscritos = _inscricaoService.GetSubByEvento(idEvento)
+                    var subeventosInscritos = inscricoesSubevento
                         .Where(s => s.IdPessoa == pessoa.Id && s.Status != "C")
                         .Select(s => s.IdSubEvento)
                         .ToHashSet();
@@ -164,6 +172,12 @@ namespace EventoWeb.Controllers
             return View(model);
         }
 
+        private int VagasDisponiveisEvento(Evento evento)
+        {
+            int ocupadas = _inscricaoService.GetByEventoAndPapel(evento.Id, 4).Count(i => i.Status != "C");
+            return Math.Max(0, evento.VagasOfertadas - ocupadas);
+        }
+
         [Authorize]
         [HttpPost]
         [Route("RealizarInscricao/{idEvento}")]
@@ -201,7 +215,8 @@ namespace EventoWeb.Controllers
             }
 
             bool jaInscritoEventoPrincipal = _inscricaoService.IsInscrito(pessoa.Id, idEvento);
-            var subeventosJaInscritos = _inscricaoService.GetSubByEvento(idEvento)
+            var inscricoesSubevento = _inscricaoService.GetSubByEvento(idEvento);
+            var subeventosJaInscritos = inscricoesSubevento
                 .Where(s => s.IdPessoa == pessoa.Id && s.Status != "C")
                 .Select(s => s.IdSubEvento)
                 .ToHashSet();
@@ -289,13 +304,14 @@ namespace EventoWeb.Controllers
 
             if (totalEventTickets > 0 && (!jaInscritoEventoPrincipal || evento.PossuiCertificado == 0))
             {
-                if (evento.VagasDisponiveis <= 0)
+                int vagasDisponiveis = VagasDisponiveisEvento(evento);
+                if (vagasDisponiveis <= 0)
                 {
                     TempData["ParticipanteMessage"] = "Lotação esgotada.";
                     return RedirectToAction("Index", "Home"); 
                 }
 
-                if (evento.VagasDisponiveis < totalEventTickets)
+                if (vagasDisponiveis < totalEventTickets)
                 {
                     TempData["ParticipanteMessage"] = "A quantidade de ingressos solicitada excede o número de vagas disponíveis do evento.";
                     return RedirectToAction("Index", "Home"); 
@@ -472,13 +488,16 @@ namespace EventoWeb.Controllers
                         subEventQuantities[parsedTipo] = 1;
                     }
 
-                    if (subevento.VagasDisponiveis <= 0)
+                    var ocupadas = inscricoesSubevento.Count(i =>
+                        i.IdSubEvento == idSubevento && i.IdPapel == 4 && i.Status != "C");
+                    long vagasDisponiveis = (long)subevento.VagasOfertadas - ocupadas;
+                    if (vagasDisponiveis <= 0)
                     {
                         TempData["ParticipanteMessage"] = $"As vagas para o subevento {subevento.Nome} estão esgotadas.";
                         return RedirectToAction("realizarInscricao", new { idEvento = idEvento }); 
                     }
 
-                    if (subevento.VagasDisponiveis < totalSubTickets)
+                    if (vagasDisponiveis < totalSubTickets)
                     {
                         TempData["ParticipanteMessage"] = $"A quantidade de ingressos solicitada excede o número de vagas disponíveis para o subevento {subevento.Nome}.";
                         return RedirectToAction("minhasInscricoes", new { idEvento = idEvento }); 

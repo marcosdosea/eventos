@@ -75,7 +75,7 @@ namespace EventoWeb.Controllers
             return View(eventoModel);
         }
 
-        [Authorize(Roles = "ADMINISTRADOR,GESTOR")]
+        [Authorize(Roles = "ADMINISTRADOR")]
 
         [HttpGet]
         [Route("Create")]
@@ -926,8 +926,8 @@ namespace EventoWeb.Controllers
             if (evento == null)
             {
                 TempData.Clear();
-                TempData["Message"] = "Evento não encontrado!";
-                return RedirectToAction("Index", "Home");
+                TempData["ErrorMessage"] = "Evento não encontrado!";
+                return RedirectToAction(nameof(GerenciarEventoListar));
             }
 
             var gestor = _inscricaoService.GetGestorInEvent(User.Identity.Name, idEvento);
@@ -937,12 +937,14 @@ namespace EventoWeb.Controllers
             if (!isAdmin && gestor == null && colaborador == null)
             {
                 TempData.Clear();
-                TempData["Message"] = "Você não tem permissão para gerenciar este evento!";
-                return RedirectToAction("Index", "Home");
+                TempData["ErrorMessage"] = "Você não tem permissão para gerenciar este evento!";
+                return RedirectToAction(nameof(GerenciarEventoListar));
             }
             else
             {
                 ViewData["EventoId"] = idEvento;
+                ViewData["GestorVinculado"] = gestor != null;
+                ViewData["ParticipacaoEquipe"] = gestor != null || colaborador != null;
                 var viewModel = new GerenciarEventoModel()
                 {
                     Evento = _mapper.Map<EventoModel>(evento),
