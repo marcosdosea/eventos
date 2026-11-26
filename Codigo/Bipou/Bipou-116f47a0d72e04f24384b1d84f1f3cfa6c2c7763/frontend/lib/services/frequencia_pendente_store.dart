@@ -1,4 +1,5 @@
 import 'package:bipou_frontend/models/frequencia_pendente.dart';
+import 'package:bipou_frontend/models/tipo_acao.dart';
 import 'package:bipou_frontend/services/frequencia_pendente_store_contract.dart';
 import 'package:path/path.dart' as p;
 import 'package:sqflite/sqflite.dart';
@@ -321,6 +322,51 @@ final class SqliteFrequenciaPendenteStore implements FrequenciaPendenteStore {
       Error.throwWithStackTrace(
         FrequenciaPendenteStoreException(
           'Falha ao registrar tentativa de reenvio na fila offline.',
+          error,
+        ),
+        stackTrace,
+      );
+    }
+  }
+
+  @override
+  Future<TipoAcao?> obterUltimaAcaoValida({
+    required String participanteId,
+    required int idPessoa,
+    required int idEvento,
+    int? idSubEvento,
+  }) async {
+    try {
+      final db = await _getDatabase();
+      final whereParts = <String>[
+        'status_envio != ?',
+        'id_evento = ?',
+        if (idSubEvento != null) 'id_sub_evento = ?' else 'id_sub_evento IS NULL',
+        if (idPessoa > 0) 'id_pessoa = ?' else 'participante_id = ?',
+      ];
+      final whereArgs = <Object?>[
+        StatusEnvioFrequencia.erro.apiValue,
+        idEvento,
+        ?idSubEvento,
+        if (idPessoa > 0) idPessoa else participanteId,
+      ];
+      final rows = await db.query(
+        tableName,
+        where: whereParts.join(' AND '),
+        whereArgs: whereArgs,
+        orderBy: 'data_hora_lida DESC, leitura_id DESC',
+        limit: 1,
+      );
+      if (rows.isEmpty) {
+        return null;
+      }
+      return FrequenciaPendente.fromMap(rows.first).tipoAcao;
+    } on FrequenciaPendenteStoreException {
+      rethrow;
+    } on Object catch (error, stackTrace) {
+      Error.throwWithStackTrace(
+        FrequenciaPendenteStoreException(
+          'Falha ao consultar ultima acao do participante.',
           error,
         ),
         stackTrace,

@@ -22,7 +22,7 @@ final class ScannerViewModel extends ChangeNotifier {
   ScannerViewModel({
     required this._credenciamento,
     required this.dispositivoId,
-    this.tipoAcao = TipoAcao.auto,
+    this.tipoAcao = TipoAcao.entrada,
     this.contextoAtivo,
     this.sessaoAtiva,
     this.localParticipants,
@@ -364,6 +364,7 @@ final class ScannerViewModel extends ChangeNotifier {
           eventoId: eventoResolvido,
           subeventoId: subeventoAtivo,
           operadorUsuario: sessaoAtiva?.operadorUsuario,
+          ultimaAcaoLista: local?.ultimaAcao,
         );
 
         final statusAcao = _statusAcaoRegistrada(tipoAcao);
