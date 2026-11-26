@@ -262,78 +262,81 @@ namespace EventoWeb.Controllers
         [Route("CreateGestor")]
         public ActionResult CreateGestor(uint idEvento)
         {
-            var gestorModel = new GestaoPapelModel
-            {
-                Evento = _eventoService.GetEventoSimpleDto(idEvento),
-                Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 2)
-            };
-            return View(gestorModel);
+            return ExibirGestores(new GestoresEventoModel { IdEvento = idEvento });
         }
-
 
         [Authorize(Roles = "ADMINISTRADOR")]
         [HttpPost]
         [Route("CreateGestor")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CreateGestor(GestaoPapelModel gestaoPapelModel)
+        public async Task<IActionResult> CreateGestor(GestoresEventoModel model)
         {
-            if (ModelState.IsValid)
+            var idEvento = model.IdEvento;
+            model.Evento = _eventoService.GetEventoSimpleDto(idEvento);
+            if (model.Evento == null)
+                return NotFound();
+
+            if (!ModelState.IsValid)
+                return ExibirGestores(model);
+
+            var cpf = Util.Methods.RemoveNaoNumericos(model.Pessoa.Cpf);
+            var pessoaExistente = _pessoaService.GetByCpf(cpf);
+            if (pessoaExistente == null)
             {
-                var pessoaExistente = _pessoaService.GetByCpf(gestaoPapelModel.Pessoa.Cpf);
-                var idEvento = gestaoPapelModel.Evento.Id;
-
-                if (pessoaExistente is null)
-                {
-                    ModelState.AddModelError("Pessoa.Cpf", "CPF não encontrado no sistema.");
-                    gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
-                    gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 2);
-                    return View(gestaoPapelModel);
-                }
-
-                var nomeDigitado = gestaoPapelModel.Pessoa.Nome?.Trim() ?? "";
-                var nomeComparacao = pessoaExistente.Nome?.Trim() ?? "";
-                var primeiroEspaco = nomeComparacao.IndexOf(' ');
-                var nomeCurto = primeiroEspaco > 0
-                    ? nomeComparacao.Substring(0, primeiroEspaco)
-                    : nomeComparacao.Substring(0, Math.Min(20, nomeComparacao.Length));
-                var nomeCracha = string.IsNullOrWhiteSpace(pessoaExistente.NomeCracha)
-                    ? nomeComparacao
-                    : pessoaExistente.NomeCracha;
-                nomeCracha = nomeCracha[..Math.Min(20, nomeCracha.Length)].Trim();
-                if (!nomeDigitado.Equals(nomeCracha, StringComparison.OrdinalIgnoreCase) &&
-                    !nomeDigitado.StartsWith(nomeCurto, StringComparison.OrdinalIgnoreCase))
-                    ModelState.AddModelError("Pessoa.Nome", "Nome não confere com o cadastro do CPF informado.");
-
-                if (!pessoaExistente.Email.Equals(gestaoPapelModel.Pessoa.Email, StringComparison.OrdinalIgnoreCase))
-                    ModelState.AddModelError("Pessoa.Email", "E-mail não confere com o cadastro do CPF informado.");
-
-                if (!ModelState.IsValid)
-                {
-                    gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
-                    gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 2);
-                    return View(gestaoPapelModel);
-                }
-
-                var papel = _inscricaoService.GetPapelPessoaByEvento(pessoaExistente.Id, idEvento);
-
-                if (papel is 2 or 3 or 4)
-                {
-                    ModelState.AddModelError(string.Empty, MensagemPapelJaVinculado(papel));
-                    gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(idEvento);
-                    gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(idEvento, 2);
-                    return View(gestaoPapelModel);
-                }
-
-                await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoaExistente, idEvento, 2);
-                _eventoService.AtualizarVagasDisponiveis(idEvento);
-
-                return RedirectToAction("CreateGestor", new { idEvento });
+                ModelState.AddModelError("Pessoa.Cpf", "CPF não encontrado no sistema.");
+                return ExibirGestores(model);
             }
 
-            gestaoPapelModel.Evento = _eventoService.GetEventoSimpleDto(gestaoPapelModel.Evento.Id);
-            gestaoPapelModel.Inscricoes = _inscricaoService.GetByEventoAndPapel(gestaoPapelModel.Evento.Id, 2);
-            return View(gestaoPapelModel);
+            var nomeDigitado = model.Pessoa.Nome.Trim();
+            var nomeCadastro = pessoaExistente.Nome?.Trim() ?? "";
+            var primeiroEspaco = nomeCadastro.IndexOf(' ');
+            var nomeCurto = primeiroEspaco > 0
+                ? nomeCadastro[..primeiroEspaco]
+                : nomeCadastro[..Math.Min(20, nomeCadastro.Length)];
+            var nomeCracha = string.IsNullOrWhiteSpace(pessoaExistente.NomeCracha)
+                ? nomeCadastro
+                : pessoaExistente.NomeCracha;
+            nomeCracha = nomeCracha[..Math.Min(20, nomeCracha.Length)].Trim();
+            if (!nomeDigitado.Equals(nomeCracha, StringComparison.OrdinalIgnoreCase) &&
+                !nomeDigitado.StartsWith(nomeCurto, StringComparison.OrdinalIgnoreCase))
+                ModelState.AddModelError("Pessoa.Nome", "Nome não confere com o cadastro do CPF informado.");
+
+            if (!string.Equals(pessoaExistente.Email, model.Pessoa.Email, StringComparison.OrdinalIgnoreCase))
+                ModelState.AddModelError("Pessoa.Email", "E-mail não confere com o cadastro do CPF informado.");
+
+            if (!ModelState.IsValid)
+                return ExibirGestores(model);
+
+            var papel = _inscricaoService.GetPapelPessoaByEvento(pessoaExistente.Id, idEvento);
+            if (papel is 2 or 3 or 4)
+            {
+                ModelState.AddModelError(string.Empty, MensagemPapelJaVinculado(papel));
+                return ExibirGestores(model);
+            }
+
+            if (!await _pessoaService.CreatePessoaIdentityComPapelAsync(pessoaExistente, idEvento, 2))
+            {
+                ModelState.AddModelError(string.Empty, "Não foi possível vincular o gestor ao evento.");
+                return ExibirGestores(model);
+            }
+
+            _eventoService.AtualizarVagasDisponiveis(idEvento);
+            TempData["SuccessMessage"] = "Gestor vinculado ao evento.";
+            return RedirectToAction(nameof(CreateGestor), new { idEvento });
         }
+
+        private ActionResult ExibirGestores(GestoresEventoModel model)
+        {
+            model.Evento ??= _eventoService.GetEventoSimpleDto(model.IdEvento);
+            if (model.Evento == null)
+                return NotFound();
+
+            model.Gestores = _inscricaoService.GetByEventoAndPapel(model.IdEvento, 2)
+                .OrderBy(inscricao => inscricao.IdPessoaNavigation?.Nome)
+                .ToList();
+            return View(nameof(CreateGestor), model);
+        }
+
 
         [Authorize(Roles = "GESTOR")]
 

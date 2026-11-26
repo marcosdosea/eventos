@@ -1,0 +1,220 @@
+.evento-gestores {
+    --gestores-azul: #232ed0;
+    --gestores-borda: #e2e8f0;
+    --gestores-texto-suave: #52647d;
+    color: #0f172a;
+    padding-block: 0.5rem 1rem;
+}
+
+.evento-gestores-titulo {
+    color: var(--gestores-azul);
+    font-size: 1.85rem;
+    font-weight: 700;
+}
+
+.evento-gestores-texto {
+    color: var(--gestores-texto-suave);
+}
+
+.evento-gestores-contexto {
+    background: #f0f4ff;
+    border: 1px solid #dbeafe;
+    border-radius: 12px;
+    padding: 1rem 1.125rem;
+    overflow-wrap: anywhere;
+}
+
+.evento-gestores-icone,
+.evento-gestores-avatar {
+    display: inline-grid;
+    place-items: center;
+    width: 2.375rem;
+    height: 2.375rem;
+    flex: 0 0 auto;
+    border-radius: 10px;
+    color: var(--gestores-azul);
+    background: #eff6ff;
+}
+
+.evento-gestores-avatar {
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.evento-gestores-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.65rem;
+    color: var(--gestores-azul);
+    background: #eef2ff;
+    border: 1px solid #dbe4ff;
+    border-radius: 50rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.evento-gestores-pill.is-active {
+    color: #065f46;
+    background: #d1fae5;
+    border-color: #a7f3d0;
+}
+
+.evento-gestores-pill.is-draft {
+    color: #854d0e;
+    background: #fef3c7;
+    border-color: #fde68a;
+}
+
+.evento-gestores-card {
+    background: #fff;
+    border: 1px solid var(--gestores-borda);
+    border-radius: 16px;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);
+}
+
+.evento-gestores .form-label {
+    font-size: 0.875rem;
+    font-weight: 700;
+}
+
+.evento-gestores .form-label i {
+    color: var(--gestores-azul);
+    margin-right: 0.2rem;
+}
+
+.evento-gestores .form-control {
+    min-height: 42px;
+    border-color: #cbd5e1;
+    font-size: 0.9rem;
+}
+
+.evento-gestores .form-control.input-validation-error {
+    border-color: var(--bs-danger);
+}
+
+.evento-gestores-enviar .btn {
+    min-height: 42px;
+    background-color: var(--gestores-azul);
+}
+
+.evento-gestores-enviar .btn:hover,
+.evento-gestores-enviar .btn:focus-visible {
+    background-color: #151c7d;
+}
+
+.evento-gestores-voltar {
+    color: #23334e;
+    background: #fff;
+    border: 1px solid #cbd5e1;
+}
+
+.evento-gestores-voltar:hover {
+    color: var(--gestores-azul);
+    background: #f0f4ff;
+    border-color: #a5b4fc;
+}
+
+.evento-gestores-lista {
+    overflow: hidden;
+}
+
+.evento-gestores-lista-topo,
+.evento-gestores-lista-rodape {
+    padding: 1rem 1.5rem;
+}
+
+.evento-gestores-lista-rodape {
+    font-size: 0.875rem;
+}
+
+.evento-gestores-busca {
+    position: relative;
+    width: min(100%, 18rem);
+}
+
+.evento-gestores-busca i {
+    color: var(--gestores-texto-suave);
+    position: absolute;
+    top: 50%;
+    left: 0.9rem;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+.evento-gestores-busca .form-control {
+    padding-left: 2.5rem;
+    background-color: #f1f4fa;
+    border-color: var(--gestores-borda);
+}
+
+.evento-gestores .table {
+    min-width: 46rem;
+    font-size: 0.875rem;
+    --bs-table-border-color: var(--gestores-borda);
+}
+
+.evento-gestores .table th {
+    background-color: #edf2fb;
+    border-bottom: 1px solid var(--gestores-borda);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+}
+
+.evento-gestores .table th,
+.evento-gestores .table td {
+    padding: 1rem 1.125rem;
+    vertical-align: middle;
+    overflow-wrap: anywhere;
+}
+
+.evento-gestores .table .evento-gestores-cpf {
+    color: var(--gestores-texto-suave);
+    white-space: nowrap;
+}
+
+.evento-gestores-remover {
+    color: #b91c1c;
+    white-space: nowrap;
+}
+
+.evento-gestores-remover:hover {
+    color: #991b1b;
+    background: #fef2f2;
+}
+
+.evento-gestores-pagina {
+    display: grid;
+    place-items: center;
+    min-width: 2rem;
+    min-height: 2rem;
+    border-radius: 8px;
+    background: var(--gestores-azul);
+    color: #fff;
+    font-weight: 700;
+}
+
+#tituloRemoverGestor .evento-gestores-icone {
+    background: #fef2f2;
+}
+
+@media (min-width: 992px) {
+    .evento-gestores-enviar {
+        padding-top: 1.95rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .evento-gestores-lista-topo,
+    .evento-gestores-lista-rodape {
+        padding-inline: 1rem;
+    }
+
+    .evento-gestores-busca {
+        width: 100%;
+    }
+}
