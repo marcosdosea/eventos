@@ -47,6 +47,20 @@ void main() {
     viewModel.dispose();
   });
 
+  test('usa TipoAcao.auto como padrao quando tipoAcao nao e informado', () async {
+    final vmPadrao = ScannerViewModel(
+      credenciamento: credenciamento,
+      dispositivoId: 'portaria-01',
+      clock: () => now,
+    );
+    addTearDown(vmPadrao.dispose);
+
+    await vmPadrao.processarPayload(participantePayload);
+
+    expect(credenciamento.calls, 1);
+    expect(credenciamento.lastTipoAcao, TipoAcao.auto);
+  });
+
   test('extrai id e nome do JSON e registra a acao selecionada', () async {
     await viewModel.processarPayload(participantePayload);
 

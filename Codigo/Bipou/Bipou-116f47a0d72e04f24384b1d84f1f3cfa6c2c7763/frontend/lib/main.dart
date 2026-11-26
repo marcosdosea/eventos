@@ -49,6 +49,7 @@ Future<void> main() async {
         dispositivoId: dispositivoId,
         localParticipantRepository: localParticipantRepository,
         boralaApi: boralaApi,
+        boralaSessionManager: boralaSessionManager,
         initialBoralaBaseUrl: ApiConfig.boralaBaseUrl,
       ),
     );
@@ -65,6 +66,7 @@ final class BipouApp extends StatelessWidget {
     required this.dispositivoId,
     this.localParticipantRepository,
     this.boralaApi,
+    this.boralaSessionManager,
     this.initialBoralaBaseUrl,
     this.initialContext,
     this.scannerSensoryFeedback,
@@ -80,6 +82,7 @@ final class BipouApp extends StatelessWidget {
   final String dispositivoId;
   final LocalParticipantRepository? localParticipantRepository;
   final BoralaApiClient? boralaApi;
+  final BoralaSessionManager? boralaSessionManager;
   final String? initialBoralaBaseUrl;
   final ScannerSessionContext? initialContext;
   final ScannerSensoryFeedback? scannerSensoryFeedback;
@@ -108,6 +111,7 @@ final class BipouApp extends StatelessWidget {
         dispositivoId: dispositivoId,
         localParticipantRepository: localParticipantRepository,
         boralaApi: boralaApi,
+        boralaSessionManager: boralaSessionManager,
         initialBoralaBaseUrl: initialBoralaBaseUrl,
         initialContext: initialContext,
         scannerSensoryFeedback: scannerSensoryFeedback,

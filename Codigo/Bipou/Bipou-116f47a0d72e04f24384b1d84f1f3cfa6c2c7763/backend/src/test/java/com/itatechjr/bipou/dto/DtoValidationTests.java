@@ -30,10 +30,28 @@ class DtoValidationTests {
                 UUID.randomUUID(),
                 1042L,
                 15L,
-                List.of(42L, 43L)
+                List.of(42L, 43L),
+                "participante@ufs.br"
         );
 
         assertThat(validator.validate(participante)).isEmpty();
+    }
+
+    @Test
+    void deveRejeitarParticipanteComEmailInvalido() {
+        ParticipanteRequestDTO participante = new ParticipanteRequestDTO(
+                "Participante Teste",
+                "52998224725",
+                null,
+                null,
+                15L,
+                List.of(),
+                "email-invalido"
+        );
+
+        assertThat(validator.validate(participante))
+                .extracting(violacao -> violacao.getPropertyPath().toString())
+                .contains("email");
     }
 
     @Test

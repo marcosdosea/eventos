@@ -15,5 +15,9 @@ final class RecentScanRecord {
   final DateTime registradoEm;
   final bool offline;
 
-  String get statusLabel => tipoAcao == TipoAcao.entrada ? 'ENTRADA' : 'SAÍDA';
+  String get statusLabel => switch (tipoAcao) {
+    TipoAcao.entrada => 'ENTRADA',
+    TipoAcao.saida => 'SAÍDA',
+    TipoAcao.auto => 'FREQUÊNCIA',
+  };
 }

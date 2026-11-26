@@ -48,6 +48,42 @@ void main() {
 
   group('BoralaSessionManager', () {
     test(
+      'preserves eventoId and subeventoId when returning active credentials without refresh',
+      () async {
+        final now = DateTime.utc(2026, 11, 25, 14, 0, 0);
+        final repo = _FakeLocalParticipantRepository(
+          PortariaSession(
+            eventoId: 15,
+            eventoNome: 'Evento Teste',
+            subeventoId: 42,
+            subeventoNome: 'Curso Teste',
+            totalParticipantesCarregados: 5,
+            sincronizadoEm: DateTime.utc(2026, 11, 25, 12, 0, 0),
+            boralaBaseUrl: 'https://borala.example.test',
+            operadorUsuario: '11144477735',
+            accessToken: 'active-access',
+            refreshToken: 'active-refresh',
+            expiresAt: DateTime.utc(2026, 11, 25, 20, 0, 0),
+          ),
+        );
+        final api = _FakeBoralaApiClient();
+        final manager = BoralaSessionManager(
+          repository: repo,
+          boralaApi: api,
+          clock: () => now,
+        );
+
+        final credentials = await manager.getValidCredentials();
+
+        expect(api.refreshCalls, 0);
+        expect(credentials?.baseUrl, 'https://borala.example.test');
+        expect(credentials?.accessToken, 'active-access');
+        expect(credentials?.eventoId, 15);
+        expect(credentials?.subeventoId, 42);
+      },
+    );
+
+    test(
       'proactively refreshes expiring token and deduplicates concurrent refreshes',
       () async {
         final now = DateTime.utc(2026, 11, 25, 19, 57, 0);
@@ -55,6 +91,8 @@ void main() {
           PortariaSession(
             eventoId: 1,
             eventoNome: 'Evento Teste',
+            subeventoId: 42,
+            subeventoNome: 'Curso Teste',
             totalParticipantesCarregados: 5,
             sincronizadoEm: DateTime.utc(2026, 11, 25, 12, 0, 0),
             boralaBaseUrl: 'https://borala.example.test',
@@ -78,7 +116,11 @@ void main() {
 
         expect(api.refreshCalls, 1);
         expect(results[0]?.accessToken, 'new-access');
+        expect(results[0]?.eventoId, 1);
+        expect(results[0]?.subeventoId, 42);
         expect(results[1]?.accessToken, 'new-access');
+        expect(results[1]?.eventoId, 1);
+        expect(results[1]?.subeventoId, 42);
 
         final saved = await repo.loadSession();
         expect(saved?.accessToken, 'new-access');
@@ -213,6 +255,72 @@ void main() {
       expect(authHeaders, ['Bearer expired-token', 'Bearer refreshed-token']);
       expect(response.confirmados, ['00000000-0000-4000-8000-000000000001']);
     });
+
+    test(
+      'listarParticipantes refreshes credentials once on 401 and retries request',
+      () async {
+        final authHeaders = <String>[];
+        final dio = Dio()
+          ..httpClientAdapter = _CallbackAdapter((options) async {
+            final auth = options.headers['Authorization']?.toString() ?? '';
+            authHeaders.add(auth);
+            if (auth == 'Bearer expired-token') {
+              return ResponseBody.fromString(
+                '{}',
+                401,
+                headers: <String, List<String>>{
+                  Headers.contentTypeHeader: <String>[Headers.jsonContentType],
+                },
+              );
+            }
+            return ResponseBody.fromString(
+              jsonEncode(<Map<String, Object?>>[
+                <String, Object?>{
+                  'idPessoa': 101,
+                  'nome': 'Ana Renovada',
+                  'nomeCracha': 'Ana',
+                  'cpf': '52998224725',
+                  'statusInscricao': 'A',
+                  'subeventosInscritos': <int>[42],
+                },
+              ]),
+              200,
+              headers: <String, List<String>>{
+                Headers.contentTypeHeader: <String>[Headers.jsonContentType],
+              },
+            );
+          });
+
+        var refreshCalled = 0;
+        final apiService = ApiService(
+          dio: dio,
+          boralaCredentialsProvider: () async => const BoralaSessionCredentials(
+            baseUrl: 'https://borala.example.test',
+            accessToken: 'expired-token',
+            eventoId: 15,
+            subeventoId: 42,
+          ),
+          boralaSessionRefresher: () async {
+            refreshCalled++;
+            return const BoralaSessionCredentials(
+              baseUrl: 'https://borala.example.test',
+              accessToken: 'refreshed-token',
+              eventoId: 15,
+              subeventoId: 42,
+            );
+          },
+        );
+
+        final participantes = await apiService.listarParticipantes();
+
+        expect(refreshCalled, 1);
+        expect(authHeaders, ['Bearer expired-token', 'Bearer refreshed-token']);
+        expect(participantes, hasLength(1));
+        expect(participantes.single.nome, 'Ana Renovada');
+        expect(participantes.single.eventoId, 15);
+        expect(participantes.single.subeventoIds, <int>[42]);
+      },
+    );
   });
 }
 

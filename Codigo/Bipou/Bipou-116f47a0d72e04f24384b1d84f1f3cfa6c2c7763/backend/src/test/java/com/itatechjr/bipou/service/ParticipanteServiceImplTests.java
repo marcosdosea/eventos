@@ -57,7 +57,8 @@ class ParticipanteServiceImplTests {
                 UUID.randomUUID(),
                 1042L,
                 15L,
-                List.of(43L, 42L)
+                List.of(43L, 42L),
+                "  Participante@UFS.br "
         );
         Participante participante = new ParticipanteMapper().toEntity(request);
         participante.setId(UUID.randomUUID());
@@ -70,6 +71,7 @@ class ParticipanteServiceImplTests {
         assertThat(response.id()).isNotNull();
         assertThat(response.nome()).isEqualTo("Participante Teste");
         assertThat(response.cpf()).isEqualTo("52998224725");
+        assertThat(response.email()).isEqualTo("participante@ufs.br");
         assertThat(response.idPessoaBorala()).isEqualTo(1042L);
         assertThat(response.eventoId()).isEqualTo(15L);
         assertThat(response.subeventoIds()).containsExactly(42L, 43L);

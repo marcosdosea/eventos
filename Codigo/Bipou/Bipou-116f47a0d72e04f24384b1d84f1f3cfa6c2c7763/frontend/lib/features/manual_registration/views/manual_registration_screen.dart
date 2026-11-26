@@ -1,4 +1,5 @@
 import 'package:bipou_frontend/core/validation/cpf_validator.dart';
+import 'package:bipou_frontend/core/validation/email_validator.dart';
 import 'package:bipou_frontend/features/manual_registration/view_models/manual_registration_view_model.dart';
 import 'package:bipou_frontend/models/operation_result.dart';
 import 'package:bipou_frontend/models/participante_response.dart';
@@ -26,6 +27,7 @@ final class _ManualRegistrationScreenState
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _nomeController = TextEditingController();
   final TextEditingController _cpfController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   late final ManualRegistrationViewModel _viewModel;
 
   @override
@@ -41,6 +43,7 @@ final class _ManualRegistrationScreenState
   void dispose() {
     _nomeController.dispose();
     _cpfController.dispose();
+    _emailController.dispose();
     _viewModel.dispose();
     super.dispose();
   }
@@ -54,6 +57,7 @@ final class _ManualRegistrationScreenState
     final result = await _viewModel.salvar(
       nome: _nomeController.text,
       cpf: _cpfController.text,
+      email: _emailController.text,
     );
     if (!mounted) {
       return;
@@ -114,7 +118,7 @@ final class _ManualRegistrationScreenState
                           controller: _cpfController,
                           enabled: !_viewModel.salvando,
                           keyboardType: TextInputType.number,
-                          textInputAction: TextInputAction.done,
+                          textInputAction: TextInputAction.next,
                           autofillHints: const <String>[AutofillHints.username],
                           maxLength: 11,
                           inputFormatters: <TextInputFormatter>[
@@ -127,6 +131,22 @@ final class _ManualRegistrationScreenState
                             prefixIcon: Icon(Icons.badge),
                           ),
                           validator: _validarCpf,
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          key: const Key('manual-registration-email-field'),
+                          controller: _emailController,
+                          enabled: !_viewModel.salvando,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.done,
+                          autofillHints: const <String>[AutofillHints.email],
+                          maxLength: EmailValidator.maxLength,
+                          decoration: const InputDecoration(
+                            labelText: 'E-mail',
+                            hintText: 'nome@exemplo.com',
+                            prefixIcon: Icon(Icons.email),
+                          ),
+                          validator: _validarEmail,
                           onFieldSubmitted: (_) => _salvar(),
                         ),
                         const SizedBox(height: 24),
@@ -177,6 +197,17 @@ final class _ManualRegistrationScreenState
     }
     if (!CpfValidator.isValid(cpf)) {
       return 'CPF inválido';
+    }
+    return null;
+  }
+
+  String? _validarEmail(String? value) {
+    final email = value?.trim() ?? '';
+    if (email.isEmpty) {
+      return 'Informe o e-mail';
+    }
+    if (!EmailValidator.isValid(email)) {
+      return 'E-mail inválido';
     }
     return null;
   }

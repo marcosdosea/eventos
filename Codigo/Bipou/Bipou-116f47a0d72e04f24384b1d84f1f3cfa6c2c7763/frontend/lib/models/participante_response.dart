@@ -3,6 +3,7 @@ final class ParticipanteResponse {
     required this.id,
     required this.nome,
     required this.cpf,
+    this.email,
     this.idPessoaBorala,
     this.eventoId,
     this.subeventoIds = const <int>[],
@@ -19,6 +20,7 @@ final class ParticipanteResponse {
       }
     }
 
+    final rawEmail = json['email'];
     final rawPid = json['idPessoaBorala'];
     final rawEventoId = json['eventoId'];
 
@@ -26,6 +28,9 @@ final class ParticipanteResponse {
       id: _uuid(json, 'id'),
       nome: _string(json, 'nome'),
       cpf: _string(json, 'cpf'),
+      email: rawEmail is String && rawEmail.trim().isNotEmpty
+          ? rawEmail.trim()
+          : null,
       idPessoaBorala: rawPid is num && rawPid.toInt() > 0
           ? rawPid.toInt()
           : null,
@@ -39,6 +44,7 @@ final class ParticipanteResponse {
   final String id;
   final String nome;
   final String cpf;
+  final String? email;
   final int? idPessoaBorala;
   final int? eventoId;
   final List<int> subeventoIds;

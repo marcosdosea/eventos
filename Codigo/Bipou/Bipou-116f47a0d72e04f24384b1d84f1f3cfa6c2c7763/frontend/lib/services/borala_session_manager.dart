@@ -47,6 +47,8 @@ final class BoralaSessionManager {
     return BoralaSessionCredentials(
       baseUrl: sessao.boralaBaseUrl,
       accessToken: sessao.accessToken,
+      eventoId: sessao.eventoId,
+      subeventoId: sessao.subeventoId,
     );
   }
 
@@ -90,6 +92,8 @@ final class BoralaSessionManager {
     return BoralaSessionCredentials(
       baseUrl: baseUrl,
       accessToken: novoToken.accessToken,
+      eventoId: sessaoAtualizada.eventoId,
+      subeventoId: sessaoAtualizada.subeventoId,
     );
   }
 }

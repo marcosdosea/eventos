@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:bipou_frontend/features/dashboard/views/dashboard_screen.dart';
+import 'package:bipou_frontend/features/scanner/views/scanner_screen.dart';
 import 'package:bipou_frontend/models/operation_result.dart';
 import 'package:bipou_frontend/models/participante_request.dart';
 import 'package:bipou_frontend/models/participante_response.dart';
@@ -14,21 +15,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('exibe os atalhos principais e abre selecao de acao', (
+  testWidgets('exibe os atalhos principais e abre camera diretamente sem modal', (
     tester,
   ) async {
-    await tester.pumpWidget(_app(_CredenciamentoWidgetSpy()));
+    await tester.pumpWidget(
+      _app(
+        _CredenciamentoWidgetSpy(),
+        scannerCameraPreviewOverride: const ColoredBox(color: Colors.black87),
+      ),
+    );
 
     expect(find.text('Escanear QR Code'), findsOneWidget);
     expect(find.text('Ver participantes'), findsOneWidget);
     expect(find.text('Cadastrar participante'), findsOneWidget);
-    expect(find.text('Entrada'), findsNothing);
+    expect(find.text('Selecione a ação'), findsNothing);
 
     await tester.tap(find.text('Escanear QR Code'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Entrada'), findsOneWidget);
-    expect(find.text('Saída'), findsOneWidget);
+    expect(find.text('Selecione a ação'), findsNothing);
+    expect(find.text('Entrada'), findsNothing);
+    expect(find.text('Saída'), findsNothing);
+    expect(find.byType(ScannerScreen), findsOneWidget);
   });
 
   testWidgets('cadastra manualmente e mostra QR Code', (tester) async {
@@ -41,9 +49,10 @@ void main() {
     await tester.pumpAndSettle();
 
     final fields = find.byType(TextFormField);
-    expect(fields, findsNWidgets(2));
+    expect(fields, findsNWidgets(3));
     await tester.enterText(fields.at(0), 'Participante Teste');
     await tester.enterText(fields.at(1), '52998224725');
+    await tester.enterText(fields.at(2), 'participante@teste.com');
     await tester.tap(find.text('Salvar'));
     await tester.pumpAndSettle();
 
@@ -53,6 +62,7 @@ void main() {
     expect(find.byKey(const Key('marca-dsi')), findsOneWidget);
     expect(find.text('Compartilhar QR Code'), findsOneWidget);
     expect(credenciamento.lastParticipante?.cpf, '52998224725');
+    expect(credenciamento.lastParticipante?.email, 'participante@teste.com');
   });
 
   testWidgets('avisa quando o CPF possui dígitos verificadores inválidos', (
@@ -69,10 +79,33 @@ void main() {
     final fields = find.byType(TextFormField);
     await tester.enterText(fields.at(0), 'Participante Teste');
     await tester.enterText(fields.at(1), '12345678900');
+    await tester.enterText(fields.at(2), 'participante@teste.com');
     await tester.tap(find.text('Salvar'));
     await tester.pump();
 
     expect(find.text('CPF inválido'), findsOneWidget);
+    expect(credenciamento.lastParticipante, isNull);
+  });
+
+  testWidgets('avisa quando o e-mail informado no cadastro manual é inválido', (
+    tester,
+  ) async {
+    final credenciamento = _CredenciamentoWidgetSpy();
+    await tester.pumpWidget(_app(credenciamento));
+
+    final cadastroButton = find.text('Cadastrar participante');
+    await tester.ensureVisible(cadastroButton);
+    await tester.tap(cadastroButton);
+    await tester.pumpAndSettle();
+
+    final fields = find.byType(TextFormField);
+    await tester.enterText(fields.at(0), 'Participante Teste');
+    await tester.enterText(fields.at(1), '52998224725');
+    await tester.enterText(fields.at(2), 'email-invalido');
+    await tester.tap(find.text('Salvar'));
+    await tester.pump();
+
+    expect(find.text('E-mail inválido'), findsOneWidget);
     expect(credenciamento.lastParticipante, isNull);
   });
 
@@ -140,6 +173,7 @@ void main() {
 Widget _app(
   CredenciamentoGateway credenciamento, {
   AuditLogExporter? auditLogExporter,
+  Widget? scannerCameraPreviewOverride,
 }) {
   return MaterialApp(
     home: DashboardScreen(
@@ -147,6 +181,7 @@ Widget _app(
       auditLogExporter: auditLogExporter ?? _AuditLogExporterSpy(),
       qrCodeShare: _QrCodeShareGatewayFake(),
       dispositivoId: 'portaria-01',
+      scannerCameraPreviewOverride: scannerCameraPreviewOverride,
     ),
   );
 }

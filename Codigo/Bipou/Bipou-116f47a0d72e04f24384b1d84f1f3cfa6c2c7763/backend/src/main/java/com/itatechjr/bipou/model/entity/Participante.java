@@ -46,6 +46,9 @@ public class Participante {
     @Column(nullable = false, length = 11)
     private Cpf cpf;
 
+    @Column(length = 254)
+    private String email;
+
     @Column(name = "cadastro_id", unique = true)
     private UUID cadastroId;
 

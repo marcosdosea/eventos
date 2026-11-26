@@ -21,8 +21,8 @@ typedef ScannerClock = DateTime Function();
 final class ScannerViewModel extends ChangeNotifier {
   ScannerViewModel({
     required this._credenciamento,
-    required this.tipoAcao,
     required this.dispositivoId,
+    this.tipoAcao = TipoAcao.auto,
     this.contextoAtivo,
     this.sessaoAtiva,
     this.localParticipants,
@@ -513,6 +513,7 @@ final class ScannerViewModel extends ChangeNotifier {
     return switch (acao) {
       TipoAcao.entrada => 'ENTRADA REGISTRADA',
       TipoAcao.saida => 'SAÍDA REGISTRADA',
+      TipoAcao.auto => 'FREQUÊNCIA REGISTRADA',
     };
   }
 
