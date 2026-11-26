@@ -163,6 +163,41 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
   });
 
+  testWidgets('abre direto sem tipoAcao usando titulo Escanear QR Code', (
+    tester,
+  ) async {
+    final payloadController = StreamController<String>.broadcast();
+    final sensory = _SensoryFeedbackSpy();
+    final credenciamento = _CredenciamentoScreenSpy();
+    addTearDown(payloadController.close);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ScannerScreen(
+          credenciamento: credenciamento,
+          dispositivoId: 'portaria-01',
+          sensoryFeedback: sensory,
+          payloadStream: payloadController.stream,
+          cameraPreviewOverride: const ColoredBox(color: Colors.black87),
+        ),
+      ),
+    );
+
+    expect(find.text('Escanear QR Code'), findsOneWidget);
+
+    const goldenV1 =
+        '{"v":1,"pid":1042,"cpf":"12345678901","nome":"Maria Santos","eid":15,"sid":[42,43],"hash":"0ec02205"}';
+    payloadController.add(goldenV1);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 150));
+
+    expect(credenciamento.calls, 1);
+    expect(sensory.successCalls, 1);
+    expect(find.text('FREQUÊNCIA REGISTRADA'), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 3));
+  });
+
   testWidgets(
     'nao realiza segunda chamada com o mesmo cracha parado no quadro por 6 segundos',
     (tester) async {

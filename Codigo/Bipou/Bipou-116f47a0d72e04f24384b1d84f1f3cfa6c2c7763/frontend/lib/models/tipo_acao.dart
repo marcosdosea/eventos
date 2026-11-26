@@ -1,6 +1,7 @@
 enum TipoAcao {
   entrada('ENTRADA'),
-  saida('SAIDA');
+  saida('SAIDA'),
+  auto('AUTO');
 
   const TipoAcao(this.apiValue);
 

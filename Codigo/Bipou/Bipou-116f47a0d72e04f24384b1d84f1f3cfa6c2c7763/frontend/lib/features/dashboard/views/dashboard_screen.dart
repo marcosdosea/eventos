@@ -9,7 +9,6 @@ import 'package:bipou_frontend/features/scanner/views/scanner_screen.dart';
 import 'package:bipou_frontend/models/operation_result.dart';
 import 'package:bipou_frontend/models/participante_response.dart';
 import 'package:bipou_frontend/models/portaria_session.dart';
-import 'package:bipou_frontend/models/tipo_acao.dart';
 import 'package:bipou_frontend/services/audit_log_export_service.dart';
 import 'package:bipou_frontend/services/borala_api_service.dart';
 import 'package:bipou_frontend/services/credenciamento_service.dart';
@@ -196,7 +195,7 @@ final class _DashboardScreenState extends State<DashboardScreen> {
                       label: 'Escanear QR Code',
                       icon: Icons.qr_code_scanner,
                       color: const Color(0xFF175CD3),
-                      onPressed: () => _selecionarAcao(context),
+                      onPressed: () => _abrirScanner(context),
                     ),
                     const SizedBox(height: 14),
                     _DashboardButton(
@@ -284,65 +283,10 @@ final class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  Future<void> _selecionarAcao(BuildContext context) async {
-    final tipoAcao = await showModalBottomSheet<TipoAcao>(
-      context: context,
-      backgroundColor: Colors.white,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (context) {
-        return SafeArea(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.sizeOf(context).height * 0.86,
-            ),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  Text(
-                    'Selecione a ação',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  _ActionButton(
-                    label: 'Entrada',
-                    description: 'Chegada no evento',
-                    icon: Icons.login,
-                    color: const Color(0xFF16803C),
-                    onPressed: () =>
-                        Navigator.of(context).pop(TipoAcao.entrada),
-                  ),
-                  const SizedBox(height: 10),
-                  _ActionButton(
-                    label: 'Saída',
-                    description: 'Saída do evento',
-                    icon: Icons.logout,
-                    color: const Color(0xFFB42318),
-                    onPressed: () => Navigator.of(context).pop(TipoAcao.saida),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-
-    if (tipoAcao != null && context.mounted) {
-      await _abrirScanner(context, tipoAcao);
-    }
-  }
-
-  Future<void> _abrirScanner(BuildContext context, TipoAcao tipoAcao) async {
+  Future<void> _abrirScanner(BuildContext context) async {
     await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (_) => ScannerScreen(
-          tipoAcao: tipoAcao,
           credenciamento: credenciamento,
           dispositivoId: dispositivoId,
           contextoAtivo: _contextoAtivo,
@@ -1080,60 +1024,6 @@ final class _DashboardButton extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
         textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      ),
-    );
-  }
-}
-
-final class _ActionButton extends StatelessWidget {
-  const _ActionButton({
-    required this.label,
-    required this.description,
-    required this.icon,
-    required this.color,
-    required this.onPressed,
-  });
-
-  final String label;
-  final String description;
-  final IconData icon;
-  final Color color;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return FilledButton(
-      onPressed: onPressed,
-      style: FilledButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: Colors.white,
-        minimumSize: const Size.fromHeight(72),
-        alignment: Alignment.centerLeft,
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      ),
-      child: Row(
-        children: <Widget>[
-          Icon(icon, size: 28),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(description, style: const TextStyle(fontSize: 13)),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }

@@ -290,6 +290,34 @@ public class SincronizacaoFrequenciaService : ISincronizacaoFrequenciaService
     {
         var lista = registrosExistentes.ToList();
 
+        if (item.TipoAcao == TipoAcaoAuto)
+        {
+            var abertasAuto = lista
+                .Where(p => !getSaida(p).HasValue)
+                .OrderByDescending(getEntrada)
+                .ThenByDescending(getId)
+                .ToList();
+
+            var abertaParaFechar = abertasAuto.FirstOrDefault(p => getEntrada(p) <= item.DataHora);
+            if (abertaParaFechar != null)
+            {
+                if (getEntrada(abertaParaFechar) == item.DataHora)
+                    return ResultadoRegistroParticipacao.Idempotente;
+
+                setSaida(abertaParaFechar, item.DataHora);
+                return ResultadoRegistroParticipacao.Alterado;
+            }
+
+            if (abertasAuto.Count > 0)
+                return ResultadoRegistroParticipacao.SaidaAnteriorAEntrada;
+
+            if (lista.Any(p => getEntrada(p) == item.DataHora || getSaida(p) == item.DataHora))
+                return ResultadoRegistroParticipacao.Idempotente;
+
+            adicionarNovaEntrada(item.DataHora);
+            return ResultadoRegistroParticipacao.Alterado;
+        }
+
         if (item.TipoAcao == TipoAcaoEntrada)
         {
             if (lista.Any(p => getEntrada(p) == item.DataHora))
@@ -373,9 +401,11 @@ public class SincronizacaoFrequenciaService : ISincronizacaoFrequenciaService
         if (leitura.DataHoraLida == default)
             return new BipouLeituraErroDTO(leituraId, "DATA_HORA_INVALIDA", "A dataHoraLida informada é inválida.");
 
-        var acao = leitura.TipoAcao?.Trim().ToUpperInvariant();
-        if (acao != TipoAcaoEntrada && acao != TipoAcaoSaida)
-            return new BipouLeituraErroDTO(leituraId, "TIPO_ACAO_INVALIDO", "O campo tipoAcao deve ser ENTRADA ou SAIDA.");
+        var acao = string.IsNullOrWhiteSpace(leitura.TipoAcao)
+            ? TipoAcaoAuto
+            : leitura.TipoAcao.Trim().ToUpperInvariant();
+        if (acao != TipoAcaoEntrada && acao != TipoAcaoSaida && acao != TipoAcaoAuto)
+            return new BipouLeituraErroDTO(leituraId, "TIPO_ACAO_INVALIDO", "O campo tipoAcao deve ser AUTO, ENTRADA ou SAIDA.");
 
         if (!eventosPermitidos.Contains(leitura.IdEvento))
             return new BipouLeituraErroDTO(leituraId, "SEM_PERMISSAO_EVENTO", "Operador não possui permissão para sincronizar frequências neste evento.");
@@ -440,6 +470,7 @@ public class SincronizacaoFrequenciaService : ISincronizacaoFrequenciaService
 
     private const string TipoAcaoEntrada = "ENTRADA";
     private const string TipoAcaoSaida = "SAIDA";
+    private const string TipoAcaoAuto = "AUTO";
 
     private sealed record LeituraCandidata(
         int IndiceOriginal,

@@ -94,10 +94,8 @@ void main() {
         findsOneWidget,
       );
 
-      // 2. Abrir Scanner em modo Entrada
+      // 2. Abrir Scanner diretamente (sem modal intermediario)
       await tester.tap(find.text('Escanear QR Code'));
-      await _pauseAndPump(tester, const Duration(milliseconds: 700));
-      await tester.tap(find.text('Entrada'));
       await _pauseAndPump(tester, const Duration(milliseconds: 900));
 
       expect(
@@ -202,8 +200,6 @@ void main() {
       await _pauseAndPump(tester, const Duration(milliseconds: 700));
 
       await tester.tap(find.text('Escanear QR Code'));
-      await _pauseAndPump(tester, const Duration(milliseconds: 600));
-      await tester.tap(find.text('Saída'));
       await _pauseAndPump(tester, const Duration(milliseconds: 900));
 
       // Aluno apenas do Curso A (sid: [42]) e barrado na portaria do Curso B
@@ -221,12 +217,12 @@ void main() {
       expect(find.text('Não inscrito neste curso!'), findsOneWidget);
       await _pauseAndPump(tester, const Duration(milliseconds: 1800));
 
-      // Carlos Souza (sid: [43]) registra SAIDA no Curso B
+      // Carlos Souza (sid: [43]) registra leitura no Curso B
       await emitQr(
         label: 'Carlos Souza • sid: [43] (Curso B)',
         rawPayload: carlosCursoB,
       );
-      expect(find.text('SAÍDA REGISTRADA'), findsOneWidget);
+      expect(find.text('ENTRADA REGISTRADA'), findsOneWidget);
       expect(find.text('1/5'), findsOneWidget);
       await _pauseAndPump(tester, const Duration(milliseconds: 2200));
     },

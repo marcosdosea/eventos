@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:bipou_frontend/features/dashboard/views/dashboard_screen.dart';
+import 'package:bipou_frontend/features/scanner/views/scanner_screen.dart';
 import 'package:bipou_frontend/models/operation_result.dart';
 import 'package:bipou_frontend/models/participante_request.dart';
 import 'package:bipou_frontend/models/participante_response.dart';
@@ -14,21 +15,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('exibe os atalhos principais e abre selecao de acao', (
+  testWidgets('exibe os atalhos principais e abre camera diretamente sem modal', (
     tester,
   ) async {
-    await tester.pumpWidget(_app(_CredenciamentoWidgetSpy()));
+    await tester.pumpWidget(
+      _app(
+        _CredenciamentoWidgetSpy(),
+        scannerCameraPreviewOverride: const ColoredBox(color: Colors.black87),
+      ),
+    );
 
     expect(find.text('Escanear QR Code'), findsOneWidget);
     expect(find.text('Ver participantes'), findsOneWidget);
     expect(find.text('Cadastrar participante'), findsOneWidget);
-    expect(find.text('Entrada'), findsNothing);
+    expect(find.text('Selecione a ação'), findsNothing);
 
     await tester.tap(find.text('Escanear QR Code'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Entrada'), findsOneWidget);
-    expect(find.text('Saída'), findsOneWidget);
+    expect(find.text('Selecione a ação'), findsNothing);
+    expect(find.text('Entrada'), findsNothing);
+    expect(find.text('Saída'), findsNothing);
+    expect(find.byType(ScannerScreen), findsOneWidget);
   });
 
   testWidgets('cadastra manualmente e mostra QR Code', (tester) async {
@@ -165,6 +173,7 @@ void main() {
 Widget _app(
   CredenciamentoGateway credenciamento, {
   AuditLogExporter? auditLogExporter,
+  Widget? scannerCameraPreviewOverride,
 }) {
   return MaterialApp(
     home: DashboardScreen(
@@ -172,6 +181,7 @@ Widget _app(
       auditLogExporter: auditLogExporter ?? _AuditLogExporterSpy(),
       qrCodeShare: _QrCodeShareGatewayFake(),
       dispositivoId: 'portaria-01',
+      scannerCameraPreviewOverride: scannerCameraPreviewOverride,
     ),
   );
 }
