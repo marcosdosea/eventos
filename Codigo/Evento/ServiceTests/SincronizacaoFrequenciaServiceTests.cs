@@ -224,6 +224,37 @@ public class SincronizacaoFrequenciaServiceTests
         Assert.IsNull(participacao.Saida);
     }
 
+    [TestMethod]
+    public async Task SincronizarLoteAsync_TipoAcaoAutoOuAusente_AlternaEntradaESaidaAutomaticamente()
+    {
+        var lote = new[]
+        {
+            new BipouLeituraFrequenciaDTO("auto-1", 3, 1, null, "AUTO", DataHora(2026, 11, 6, 8, 0), "dev-1"),
+            new BipouLeituraFrequenciaDTO("auto-2", 3, 1, null, null!, DataHora(2026, 11, 6, 10, 0), "dev-1"),
+            new BipouLeituraFrequenciaDTO("auto-3", 3, 1, null, "AUTO", DataHora(2026, 11, 6, 10, 30), "dev-1"),
+            new BipouLeituraFrequenciaDTO("auto-4", 3, 1, null, "", DataHora(2026, 11, 6, 12, 30), "dev-1")
+        };
+
+        var resultado = await _service.SincronizarLoteAsync(lote, new uint[] { 1 });
+
+        CollectionAssert.AreEqual(new[] { "auto-1", "auto-2", "auto-3", "auto-4" }, resultado.Confirmados.ToArray());
+        Assert.AreEqual(0, resultado.Rejeitados.Count);
+
+        var participacoes = await _context.Participacaopessoaeventos.AsNoTracking()
+            .Where(p => p.IdEvento == 1 && p.IdPessoa == 3)
+            .OrderBy(p => p.Entrada)
+            .ToListAsync();
+        Assert.AreEqual(2, participacoes.Count);
+        Assert.AreEqual(new DateTime(2026, 11, 6, 8, 0, 0), participacoes[0].Entrada);
+        Assert.AreEqual(new DateTime(2026, 11, 6, 10, 0, 0), participacoes[0].Saida);
+        Assert.AreEqual(new DateTime(2026, 11, 6, 10, 30, 0), participacoes[1].Entrada);
+        Assert.AreEqual(new DateTime(2026, 11, 6, 12, 30, 0), participacoes[1].Saida);
+
+        var inscricao = await _context.Inscricaopessoaeventos.AsNoTracking()
+            .SingleAsync(i => i.IdEvento == 1 && i.IdPessoa == 3);
+        Assert.AreEqual(87.5m, inscricao.FrequenciaFinal);
+    }
+
     private void SemearBase()
     {
         _context.Papels.AddRange(

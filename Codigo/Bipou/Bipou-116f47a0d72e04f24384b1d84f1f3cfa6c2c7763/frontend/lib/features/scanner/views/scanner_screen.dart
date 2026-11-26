@@ -79,7 +79,7 @@ final class _ScannerScreenState extends State<ScannerScreen>
         widget.sensoryFeedback ?? const PlatformScannerSensoryFeedback();
     _viewModel = ScannerViewModel(
       credenciamento: widget.credenciamento,
-      tipoAcao: widget.tipoAcao ?? TipoAcao.entrada,
+      tipoAcao: widget.tipoAcao ?? TipoAcao.auto,
       dispositivoId: widget.dispositivoId,
       contextoAtivo: widget.contextoAtivo,
       sessaoAtiva: widget.sessaoAtiva,
@@ -335,6 +335,7 @@ final class _ScannerScreenState extends State<ScannerScreen>
       null => 'Escanear QR Code',
       TipoAcao.entrada => 'Registrar ENTRADA',
       TipoAcao.saida => 'Registrar SAÍDA',
+      TipoAcao.auto => 'Registrar Frequência',
     };
   }
 
@@ -935,10 +936,10 @@ final class _RecentHistoryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isEntrada = record.tipoAcao == TipoAcao.entrada;
-    final badgeColor = isEntrada
-        ? const Color(0xFF15803D)
-        : const Color(0xFFB42318);
+    final isSaida = record.tipoAcao == TipoAcao.saida;
+    final badgeColor = isSaida
+        ? const Color(0xFFB42318)
+        : const Color(0xFF15803D);
     final horaLocal = record.registradoEm.toLocal();
     final hh = horaLocal.hour.toString().padLeft(2, '0');
     final mm = horaLocal.minute.toString().padLeft(2, '0');

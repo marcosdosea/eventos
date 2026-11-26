@@ -193,7 +193,7 @@ void main() {
 
     expect(credenciamento.calls, 1);
     expect(sensory.successCalls, 1);
-    expect(find.text('ENTRADA REGISTRADA'), findsOneWidget);
+    expect(find.text('FREQUÊNCIA REGISTRADA'), findsOneWidget);
 
     await tester.pump(const Duration(seconds: 3));
   });
