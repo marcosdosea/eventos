@@ -324,7 +324,7 @@ namespace EventoWeb.Controllers.Tests
             // Arrange: posta o sentinela de meia entrada tanto para o evento
             // principal (valor 100 -> 50) quanto para o subevento 10 (valor 50 -> 25).
             // Deve persistir IdTipoInscricao = null em ambos.
-            var evento = new Evento { Id = 1, Status = "A", PossuiCertificado = 1, ValorInscricao = 100m, VagasDisponiveis = 100 };
+            var evento = new Evento { Id = 1, Status = "A", PossuiCertificado = 1, ValorInscricao = 100m, VagasOfertadas = 100 };
             var meia = InscricaoController.TIPO_MEIA_ENTRADA;
             var (postController, criadas, criadasSub) = CreatePostController(
                 new Dictionary<uint, Tipoinscricao>(),
@@ -393,7 +393,7 @@ namespace EventoWeb.Controllers.Tests
             var (postController, criadas, _) = CreatePostController(
                 new Dictionary<uint, Tipoinscricao>(),
                 new Dictionary<string, string>(),
-                new Evento { Id = 1, Status = "A", PossuiCertificado = 1, InscricaoGratuita = 0, ValorInscricao = 100m, VagasDisponiveis = 100 });
+                new Evento { Id = 1, Status = "A", PossuiCertificado = 1, InscricaoGratuita = 0, ValorInscricao = 100m, VagasOfertadas = 100 });
 
             var input = new InscricaoEventoModel
             {
@@ -418,7 +418,7 @@ namespace EventoWeb.Controllers.Tests
             var (postController, criadas, _) = CreatePostController(
                 new Dictionary<uint, Tipoinscricao>(),
                 new Dictionary<string, string>(),
-                new Evento { Id = 1, Status = "A", PossuiCertificado = 1, InscricaoGratuita = 1, ValorInscricao = 0m, VagasDisponiveis = 100 });
+                new Evento { Id = 1, Status = "A", PossuiCertificado = 1, InscricaoGratuita = 1, ValorInscricao = 0m, VagasOfertadas = 100 });
 
             var input = new InscricaoEventoModel
             {
@@ -790,7 +790,7 @@ namespace EventoWeb.Controllers.Tests
             mockTipoService.Setup(service => service.Get(It.IsAny<uint>()))
                 .Returns<uint>(id => tipos.TryGetValue(id, out var tipo) ? tipo : null);
 
-            var evento = new Evento { Id = 1, Status = "A", PossuiCertificado = 0, VagasDisponiveis = 100 };
+            var evento = new Evento { Id = 1, Status = "A", PossuiCertificado = 0, VagasOfertadas = 100 };
             var mockEventoService = new Mock<IEventoService>();
             mockEventoService.Setup(service => service.Get(It.IsAny<uint>()))
                 .Returns(evento);
@@ -931,7 +931,7 @@ namespace EventoWeb.Controllers.Tests
             {
                 { 1, new Tipoinscricao { Id = 1, IdEvento = 1, Nome = "Geral", Valor = 10m } }
             };
-            var evento = new Evento { Id = 1, Status = "A", PossuiCertificado = 1, VagasDisponiveis = 100, DataInicioInscricao = DateTime.Now.AddDays(2) };
+            var evento = new Evento { Id = 1, Status = "A", PossuiCertificado = 1, VagasOfertadas = 100, DataInicioInscricao = DateTime.Now.AddDays(2) };
             var (postController, criadas, _) = CreatePostController(tipos, new Dictionary<string, string>
             {
                 { "QuantidadeTipoInscricao_1", "1" }
@@ -959,7 +959,7 @@ namespace EventoWeb.Controllers.Tests
             {
                 { 1, new Tipoinscricao { Id = 1, IdEvento = 1, Nome = "Geral", Valor = 10m } }
             };
-            var evento = new Evento { Id = 1, Status = "A", PossuiCertificado = 1, VagasDisponiveis = 100, DataFimInscricao = DateTime.Now.AddDays(-1) };
+            var evento = new Evento { Id = 1, Status = "A", PossuiCertificado = 1, VagasOfertadas = 100, DataFimInscricao = DateTime.Now.AddDays(-1) };
             var (postController, criadas, _) = CreatePostController(tipos, new Dictionary<string, string>
             {
                 { "QuantidadeTipoInscricao_1", "1" }
@@ -1177,7 +1177,7 @@ namespace EventoWeb.Controllers.Tests
 
             var mockEventoService = new Mock<IEventoService>();
             mockEventoService.Setup(s => s.Get(1))
-                .Returns(new Evento { Id = 1, Status = "A", PossuiCertificado = 1, VagasDisponiveis = 100 });
+                .Returns(new Evento { Id = 1, Status = "A", PossuiCertificado = 1, VagasOfertadas = 100 });
 
             var mockTipoService = new Mock<ITipoInscricaoService>();
             mockTipoService.Setup(s => s.Get(It.IsAny<uint>()))
@@ -1185,9 +1185,9 @@ namespace EventoWeb.Controllers.Tests
 
             var mockSubeventoService = new Mock<ISubeventoService>();
             mockSubeventoService.Setup(s => s.Get(10))
-                .Returns(new Subevento { Id = 10, IdEvento = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(1), VagasDisponiveis = 100 });
+                .Returns(new Subevento { Id = 10, IdEvento = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(1), VagasOfertadas = 100 });
             mockSubeventoService.Setup(s => s.Get(20))
-                .Returns(new Subevento { Id = 20, IdEvento = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(1), VagasDisponiveis = 100 });
+                .Returns(new Subevento { Id = 20, IdEvento = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(1), VagasOfertadas = 100 });
 
             var mockInscricaoService = new Mock<IInscricaoService>();
             mockInscricaoService.Setup(s => s.IsInscrito(1, 1)).Returns(true);
@@ -1263,7 +1263,7 @@ namespace EventoWeb.Controllers.Tests
 
             var mockEventoService = new Mock<IEventoService>();
             mockEventoService.Setup(s => s.Get(1))
-                .Returns(new Evento { Id = 1, Status = "A", PossuiCertificado = 1, VagasDisponiveis = 100 });
+                .Returns(new Evento { Id = 1, Status = "A", PossuiCertificado = 1, VagasOfertadas = 100 });
 
             var mockInscricaoService = new Mock<IInscricaoService>();
             mockInscricaoService.Setup(s => s.IsInscrito(1, 1)).Returns(true);
@@ -1337,7 +1337,7 @@ namespace EventoWeb.Controllers.Tests
             {
                 { 1, new Tipoinscricao { Id = 1, IdEvento = 1, Nome = "Geral", Valor = 10m } }
             };
-            var evento = new Evento { Id = 1, Status = "I", PossuiCertificado = 1, VagasDisponiveis = 100 };
+            var evento = new Evento { Id = 1, Status = "I", PossuiCertificado = 1, VagasOfertadas = 100 };
             var (postController, criadas, criadasSub) = CreatePostController(tipos, new Dictionary<string, string>
             {
                 { "QuantidadeTipoInscricao_1", "1" }
@@ -1376,7 +1376,7 @@ namespace EventoWeb.Controllers.Tests
                     Nome = "Minicurso Inativo",
                     Status = "I",
                     DataFimInscricao = DateTime.Now.AddDays(1),
-                    VagasDisponiveis = 10
+                    VagasOfertadas = 10
                 });
 
             var (postController, criadas, criadasSub) = CreatePostController(
@@ -1421,7 +1421,7 @@ namespace EventoWeb.Controllers.Tests
                     Nome = "Minicurso Rascunho",
                     Status = "C",
                     DataFimInscricao = DateTime.Now.AddDays(1),
-                    VagasDisponiveis = 10
+                    VagasOfertadas = 10
                 });
 
             var (postController, criadas, criadasSub) = CreatePostController(
@@ -1464,7 +1464,7 @@ namespace EventoWeb.Controllers.Tests
 
             var mockEventoService = new Mock<IEventoService>();
             mockEventoService.Setup(s => s.Get(1))
-                .Returns(new Evento { Id = 1, Status = "A", PossuiCertificado = 0, VagasDisponiveis = 100, ValorInscricao = 10m });
+                .Returns(new Evento { Id = 1, Status = "A", PossuiCertificado = 0, VagasOfertadas = 100, ValorInscricao = 10m });
 
             var mockTipoService = new Mock<ITipoInscricaoService>();
             mockTipoService.Setup(s => s.Get(It.IsAny<uint>()))
@@ -1472,9 +1472,9 @@ namespace EventoWeb.Controllers.Tests
 
             var mockSubeventoService = new Mock<ISubeventoService>();
             mockSubeventoService.Setup(s => s.Get(10))
-                .Returns(new Subevento { Id = 10, IdEvento = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(1), VagasDisponiveis = 100 });
+                .Returns(new Subevento { Id = 10, IdEvento = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(1), VagasOfertadas = 100 });
             mockSubeventoService.Setup(s => s.Get(20))
-                .Returns(new Subevento { Id = 20, IdEvento = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(1), VagasDisponiveis = 100 });
+                .Returns(new Subevento { Id = 20, IdEvento = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(1), VagasOfertadas = 100 });
 
             var mockInscricaoService = new Mock<IInscricaoService>();
             mockInscricaoService.Setup(s => s.IsInscrito(1, 1)).Returns(true);
@@ -1555,7 +1555,7 @@ namespace EventoWeb.Controllers.Tests
 
             var mockEventoService = new Mock<IEventoService>();
             mockEventoService.Setup(s => s.Get(1))
-                .Returns(new Evento { Id = 1, Status = "A", PossuiCertificado = 0, VagasDisponiveis = 100, ValorInscricao = 10m });
+                .Returns(new Evento { Id = 1, Status = "A", PossuiCertificado = 0, VagasOfertadas = 100, ValorInscricao = 10m });
 
             var mockTipoService = new Mock<ITipoInscricaoService>();
             mockTipoService.Setup(s => s.Get(It.IsAny<uint>()))
@@ -1563,7 +1563,7 @@ namespace EventoWeb.Controllers.Tests
 
             var mockSubeventoService = new Mock<ISubeventoService>();
             mockSubeventoService.Setup(s => s.Get(10))
-                .Returns(new Subevento { Id = 10, IdEvento = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(1), VagasDisponiveis = 100 });
+                .Returns(new Subevento { Id = 10, IdEvento = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(1), VagasOfertadas = 100 });
 
             var mockInscricaoService = new Mock<IInscricaoService>();
             mockInscricaoService.Setup(s => s.IsInscrito(1, 1)).Returns(true);
@@ -1633,7 +1633,7 @@ namespace EventoWeb.Controllers.Tests
 
             var mockEventoService = new Mock<IEventoService>();
             mockEventoService.Setup(s => s.Get(1))
-                .Returns(new Evento { Id = 1, Status = "A", PossuiCertificado = 0, VagasDisponiveis = 100 });
+                .Returns(new Evento { Id = 1, Status = "A", PossuiCertificado = 0, VagasOfertadas = 100 });
 
             var mockInscricaoService = new Mock<IInscricaoService>();
             mockInscricaoService.Setup(s => s.IsInscrito(1, 1)).Returns(true);
@@ -1711,7 +1711,7 @@ namespace EventoWeb.Controllers.Tests
                     Nome = "Minicurso",
                     Status = "A",
                     DataFimInscricao = DateTime.Now.AddDays(1),
-                    VagasDisponiveis = 10
+                    VagasOfertadas = 10
                 });
 
             var (postController, criadas, criadasSub) = CreatePostController(
@@ -1825,7 +1825,7 @@ namespace EventoWeb.Controllers.Tests
             mockTipoService.Setup(service => service.Get(It.IsAny<uint>()))
                 .Returns<uint>(id => tipos.TryGetValue(id, out var tipo) ? tipo : null);
 
-            evento ??= new Evento { Id = 1, Status = "A", PossuiCertificado = 1, VagasDisponiveis = 100 };
+            evento ??= new Evento { Id = 1, Status = "A", PossuiCertificado = 1, VagasOfertadas = 100 };
             var mockEventoService = new Mock<IEventoService>();
             mockEventoService.Setup(service => service.Get(It.IsAny<uint>()))
                 .Returns(evento);
@@ -1834,7 +1834,7 @@ namespace EventoWeb.Controllers.Tests
             if (customSubeventoService == null)
             {
                 mockSubeventoService.Setup(service => service.Get(10))
-                    .Returns(new Subevento { Id = 10, IdEvento = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(1), ValorInscricao = 50m, VagasDisponiveis = 100 });
+                    .Returns(new Subevento { Id = 10, IdEvento = 1, Status = "A", DataFimInscricao = DateTime.Now.AddDays(1), ValorInscricao = 50m, VagasOfertadas = 100 });
             }
 
             IMapper mapper = new MapperConfiguration(cfg =>

@@ -60,18 +60,22 @@
 						&nbsp;&nbsp;
 						@Html.ActionLink("Gestores", "CreateGestor", new { idEvento = item.Id}, new { @style = "text-decoration:none;" })
 						&nbsp;&nbsp;
-						<partial name="_DeleteModal" model="@(new EventoWeb.Models.DeleteModel {
-							ModalId = $"modalExcluir-{item.Id}",
-							ActionName = "Delete",
-							ControllerName = "Evento",
-							RouteValues = item.Id,
-							ItemName = item.Nome
-						})" />
 					</td>
 				</tr>
 			}
 		</tbody>
 	</table>
+
+	@foreach (var item in Model)
+	{
+		<partial name="_DeleteModal" model="@(new EventoWeb.Models.DeleteModel {
+			ModalId = $"modalExcluir-{item.Id}",
+			ActionName = "Delete",
+			ControllerName = "Evento",
+			RouteValues = item.Id,
+			ItemName = item.Nome
+		})" />
+	}
 </div>
 
 @section Scripts {
