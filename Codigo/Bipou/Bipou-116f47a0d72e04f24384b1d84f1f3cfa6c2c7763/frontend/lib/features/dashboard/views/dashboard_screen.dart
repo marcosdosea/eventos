@@ -241,10 +241,12 @@ final class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  Future<void> _abrirConfiguracaoSessao(BuildContext context) async {
+  Future<PortariaSession?> _abrirConfiguracaoSessao(
+    BuildContext context,
+  ) async {
     final repo = localRepository;
     if (repo == null) {
-      return;
+      return null;
     }
 
     final result = await Navigator.of(context).push<PortariaSession>(
@@ -258,7 +260,7 @@ final class _DashboardScreenState extends State<DashboardScreen> {
     );
 
     if (!context.mounted) {
-      return;
+      return result;
     }
 
     if (result != null) {
@@ -275,8 +277,10 @@ final class _DashboardScreenState extends State<DashboardScreen> {
           ),
         );
       await _sincronizarFrequenciasAutomaticamente();
+      return result;
     } else {
       await _carregarSessaoAtiva();
+      return _sessaoAtiva;
     }
   }
 
@@ -397,17 +401,24 @@ final class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  Future<void> _abrirParticipantes(BuildContext context) {
-    return Navigator.of(context).push<void>(
+  Future<void> _abrirParticipantes(BuildContext context) async {
+    await Navigator.of(context).push<void>(
       MaterialPageRoute<void>(
         builder: (_) => ParticipantsScreen(
           credenciamento: credenciamento,
           qrCodeShare: qrCodeShare,
           sessaoAtiva: _sessaoAtiva,
           localParticipants: localRepository,
+          boralaApi: localRepository != null
+              ? (widget.boralaApi ?? BoralaApiService())
+              : widget.boralaApi,
+          onConfigureSession: localRepository != null
+              ? () => _abrirConfiguracaoSessao(context)
+              : null,
         ),
       ),
     );
+    await _carregarSessaoAtiva();
   }
 
   Future<void> _inicializarSincronizacao() async {

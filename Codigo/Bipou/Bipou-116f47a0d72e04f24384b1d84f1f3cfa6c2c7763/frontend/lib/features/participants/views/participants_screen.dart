@@ -1,7 +1,10 @@
+import 'package:bipou_frontend/core/config/api_config.dart';
 import 'package:bipou_frontend/features/participants/views/participant_qr_screen.dart';
+import 'package:bipou_frontend/models/local_participant.dart';
 import 'package:bipou_frontend/models/participante_response.dart';
 import 'package:bipou_frontend/models/portaria_session.dart';
 import 'package:bipou_frontend/services/api_service.dart';
+import 'package:bipou_frontend/services/borala_api_service.dart';
 import 'package:bipou_frontend/services/credenciamento_service.dart';
 import 'package:bipou_frontend/services/local_participant_repository.dart';
 import 'package:bipou_frontend/services/qr_code_share_service.dart';
@@ -13,6 +16,8 @@ final class ParticipantsScreen extends StatefulWidget {
     required this.qrCodeShare,
     this.sessaoAtiva,
     this.localParticipants,
+    this.boralaApi,
+    this.onConfigureSession,
     super.key,
   });
 
@@ -20,6 +25,8 @@ final class ParticipantsScreen extends StatefulWidget {
   final QrCodeShareGateway qrCodeShare;
   final PortariaSession? sessaoAtiva;
   final LocalParticipantLookup? localParticipants;
+  final BoralaApiClient? boralaApi;
+  final Future<PortariaSession?> Function()? onConfigureSession;
 
   @override
   State<ParticipantsScreen> createState() => _ParticipantsScreenState();
@@ -28,23 +35,45 @@ final class ParticipantsScreen extends StatefulWidget {
 final class _ParticipantsScreenState extends State<ParticipantsScreen> {
   final TextEditingController _searchController = TextEditingController();
   late Future<_ParticipantsLoadResult> _participantesFuture;
+  PortariaSession? _sessaoAtiva;
   String _searchTerm = '';
+
+  LocalParticipantRepository? get _localRepository {
+    final lookup = widget.localParticipants;
+    return lookup is LocalParticipantRepository ? lookup : null;
+  }
 
   @override
   void initState() {
     super.initState();
+    _sessaoAtiva = widget.sessaoAtiva;
     _participantesFuture = _carregarParticipantes();
   }
 
-  Future<_ParticipantsLoadResult> _carregarParticipantes() async {
-    final sessao = widget.sessaoAtiva;
+  Future<_ParticipantsLoadResult> _carregarParticipantes({
+    bool forceRemote = false,
+  }) async {
+    var sessao = _sessaoAtiva;
+    final repo = _localRepository;
+    if (sessao == null && repo != null) {
+      try {
+        sessao = await repo.loadSession();
+        _sessaoAtiva = sessao;
+      } on Object {
+        // Segue sem sessao local persistida.
+      }
+    }
+
     final lookup = widget.localParticipants;
-    if (sessao != null && lookup != null) {
-      final locais = await lookup.listByContext(
-        eventoId: sessao.eventoId,
-        subeventoId: sessao.subeventoId,
-      );
-      if (locais.isNotEmpty) {
+    if (sessao != null) {
+      final locais = lookup != null
+          ? await lookup.listByContext(
+              eventoId: sessao.eventoId,
+              subeventoId: sessao.subeventoId,
+            )
+          : const <LocalParticipant>[];
+
+      if (!forceRemote && locais.isNotEmpty) {
         return _ParticipantsLoadResult(
           participantes: locais
               .map((item) => item.toParticipanteResponse())
@@ -52,16 +81,137 @@ final class _ParticipantsScreenState extends State<ParticipantsScreen> {
           origemLocal: true,
         );
       }
+
+      final token = sessao.accessToken?.trim();
+      final possuiToken = token != null && token.isNotEmpty;
+      if (possuiToken && widget.boralaApi != null) {
+        final baseUrl =
+            sessao.boralaBaseUrl != null &&
+                sessao.boralaBaseUrl!.trim().isNotEmpty
+            ? sessao.boralaBaseUrl!.trim()
+            : widget.credenciamento.apiBaseUrl;
+        try {
+          final result = await widget.boralaApi!.listarParticipantes(
+            baseUrl: baseUrl,
+            accessToken: token,
+            eventoId: sessao.eventoId,
+          );
+
+          final List<LocalParticipant> todosLocais;
+          if (result.notModified) {
+            todosLocais = locais;
+          } else {
+            todosLocais = result.participantes
+                .map(
+                  (p) => LocalParticipant.fromBorala(
+                    eventoId: sessao!.eventoId,
+                    participante: p,
+                  ),
+                )
+                .toList();
+            if (repo != null) {
+              await repo.replaceAllForEvent(
+                eventoId: sessao.eventoId,
+                participants: todosLocais,
+              );
+              await repo.saveEventEtag(
+                eventoId: sessao.eventoId,
+                etag: result.etag,
+              );
+            }
+          }
+
+          final subeventoId = sessao.subeventoId;
+          final filtradosContexto = subeventoId == null
+              ? todosLocais
+              : todosLocais
+                    .where((p) => p.inscritoNoSubevento(subeventoId))
+                    .toList();
+
+          if (repo != null && !result.notModified) {
+            final sessaoAtualizada = sessao.copyWith(
+              totalParticipantesCarregados: filtradosContexto.length,
+              sincronizadoEm: DateTime.now().toUtc(),
+            );
+            await repo.saveSession(sessaoAtualizada);
+            _sessaoAtiva = sessaoAtualizada;
+          }
+
+          return _ParticipantsLoadResult(
+            participantes: filtradosContexto
+                .map((item) => item.toParticipanteResponse())
+                .toList(),
+            origemLocal: result.notModified,
+          );
+        } on ApiUnavailableException {
+          if (locais.isNotEmpty) {
+            return _ParticipantsLoadResult(
+              participantes: locais
+                  .map((item) => item.toParticipanteResponse())
+                  .toList(),
+              origemLocal: true,
+            );
+          }
+          rethrow;
+        }
+      }
+
+      if (possuiToken) {
+        final remotos = await widget.credenciamento.listarParticipantes();
+        return _ParticipantsLoadResult(
+          participantes: remotos,
+          origemLocal: false,
+        );
+      }
+
+      return _ParticipantsLoadResult(
+        participantes: locais
+            .map((item) => item.toParticipanteResponse())
+            .toList(),
+        origemLocal: true,
+      );
+    }
+
+    if (widget.onConfigureSession != null &&
+        lookup != null &&
+        widget.credenciamento.apiBaseUrl.toLowerCase() ==
+            ApiConfig.defaultBoralaApiBaseUrl.toLowerCase()) {
+      return const _ParticipantsLoadResult.semSessao();
     }
 
     final remotos = await widget.credenciamento.listarParticipantes();
     return _ParticipantsLoadResult(participantes: remotos, origemLocal: false);
   }
 
-  void _recarregar() {
+  Future<void> _recarregar({bool forceRemote = true}) {
+    final future = _carregarParticipantes(forceRemote: forceRemote);
     setState(() {
-      _participantesFuture = _carregarParticipantes();
+      _participantesFuture = future;
     });
+    return future.then<void>((_) {}, onError: (Object _) {});
+  }
+
+  Future<void> _configurarSessao() async {
+    final callback = widget.onConfigureSession;
+    if (callback == null) {
+      return;
+    }
+
+    final novaSessao = await callback();
+    if (!mounted) {
+      return;
+    }
+
+    if (novaSessao != null) {
+      setState(() {
+        _sessaoAtiva = novaSessao;
+        _participantesFuture = _carregarParticipantes();
+      });
+    } else {
+      setState(() {
+        _participantesFuture = _carregarParticipantes();
+      });
+    }
   }
 
   @override
@@ -72,7 +222,7 @@ final class _ParticipantsScreenState extends State<ParticipantsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final sessao = widget.sessaoAtiva;
+    final sessao = _sessaoAtiva;
 
     return Scaffold(
       appBar: AppBar(
@@ -80,7 +230,7 @@ final class _ParticipantsScreenState extends State<ParticipantsScreen> {
         actions: <Widget>[
           IconButton(
             tooltip: 'Atualizar',
-            onPressed: _recarregar,
+            onPressed: () => _recarregar(forceRemote: true),
             icon: const Icon(Icons.refresh),
           ),
         ],
@@ -96,20 +246,30 @@ final class _ParticipantsScreenState extends State<ParticipantsScreen> {
             if (snapshot.hasError) {
               return _ErrorState(
                 message: _mensagemErro(snapshot.error),
-                onRetry: _recarregar,
+                onRetry: () => _recarregar(forceRemote: true),
+                onConfigureSession:
+                    widget.onConfigureSession != null &&
+                        _erroRequerSessao(snapshot.error)
+                    ? _configurarSessao
+                    : null,
               );
             }
 
             final loaded = snapshot.data!;
+            if (loaded.requerConfiguracaoSessao) {
+              return _ConfigureSessionState(onConfigure: _configurarSessao);
+            }
+
             final participantes = _ordenarParticipantes(loaded.participantes);
             if (participantes.isEmpty) {
               return const _EmptyState();
             }
 
             final filtrados = _filtrarParticipantes(participantes);
+            final sessaoAtual = _sessaoAtiva ?? sessao;
 
             return RefreshIndicator(
-              onRefresh: () async => _recarregar(),
+              onRefresh: () => _recarregar(forceRemote: true),
               child: ListView.separated(
                 padding: const EdgeInsets.all(16),
                 itemCount: filtrados.isEmpty ? 2 : filtrados.length + 1,
@@ -122,8 +282,10 @@ final class _ParticipantsScreenState extends State<ParticipantsScreen> {
                       controller: _searchController,
                       total: participantes.length,
                       filtered: filtrados.length,
-                      contextoLabel: loaded.origemLocal && sessao != null
-                          ? '${sessao.contextoBanner} (cache local)'
+                      contextoLabel: sessaoAtual != null
+                          ? (loaded.origemLocal
+                                ? '${sessaoAtual.contextoBanner} (cache local)'
+                                : sessaoAtual.contextoBanner)
                           : null,
                       onChanged: (value) {
                         setState(() => _searchTerm = value.trim());
@@ -148,7 +310,8 @@ final class _ParticipantsScreenState extends State<ParticipantsScreen> {
                       overflow: TextOverflow.ellipsis,
                     ),
                     subtitle: Text(
-                      loaded.origemLocal
+                      (loaded.origemLocal || sessaoAtual != null) &&
+                              participante.cpf.isNotEmpty
                           ? 'CPF: ${participante.cpf} • Toque para ver QR Code'
                           : 'Toque para visualizar o QR Code',
                     ),
@@ -199,6 +362,15 @@ final class _ParticipantsScreenState extends State<ParticipantsScreen> {
     );
   }
 
+  bool _erroRequerSessao(Object? error) {
+    if (error is ApiRequestException) {
+      return error.statusCode == 401 ||
+          error.statusCode == 403 ||
+          error.statusCode == 404;
+    }
+    return false;
+  }
+
   String _mensagemErro(Object? error) {
     if (error is ApiRequestException) {
       return error.message;
@@ -214,10 +386,16 @@ final class _ParticipantsLoadResult {
   const _ParticipantsLoadResult({
     required this.participantes,
     required this.origemLocal,
-  });
+  }) : requerConfiguracaoSessao = false;
+
+  const _ParticipantsLoadResult.semSessao()
+    : participantes = const <ParticipanteResponse>[],
+      origemLocal = false,
+      requerConfiguracaoSessao = true;
 
   final List<ParticipanteResponse> participantes;
   final bool origemLocal;
+  final bool requerConfiguracaoSessao;
 }
 
 final class _ParticipantsSearchHeader extends StatelessWidget {
@@ -320,11 +498,55 @@ final class _EmptyState extends StatelessWidget {
   }
 }
 
+final class _ConfigureSessionState extends StatelessWidget {
+  const _ConfigureSessionState({required this.onConfigure});
+
+  final VoidCallback onConfigure;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            const Icon(Icons.event_note, size: 48, color: Color(0xFF175CD3)),
+            const SizedBox(height: 16),
+            const Text(
+              'Nenhuma sessão de portaria configurada.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Conecte-se ao Boralá e selecione um evento para listar os participantes.',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              key: const Key('participants-configure-session-button'),
+              onPressed: onConfigure,
+              icon: const Icon(Icons.tune),
+              label: const Text('Configurar Sessão de Portaria'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 final class _ErrorState extends StatelessWidget {
-  const _ErrorState({required this.message, required this.onRetry});
+  const _ErrorState({
+    required this.message,
+    required this.onRetry,
+    this.onConfigureSession,
+  });
 
   final String message;
   final VoidCallback onRetry;
+  final VoidCallback? onConfigureSession;
 
   @override
   Widget build(BuildContext context) {
@@ -343,6 +565,15 @@ final class _ErrorState extends StatelessWidget {
               icon: const Icon(Icons.refresh),
               label: const Text('Tentar novamente'),
             ),
+            if (onConfigureSession != null) ...<Widget>[
+              const SizedBox(height: 10),
+              FilledButton.icon(
+                key: const Key('participants-error-configure-session-button'),
+                onPressed: onConfigureSession,
+                icon: const Icon(Icons.tune),
+                label: const Text('Configurar Sessão de Portaria'),
+              ),
+            ],
           ],
         ),
       ),

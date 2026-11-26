@@ -32,6 +32,8 @@ Future<void> main() async {
         return BoralaSessionCredentials(
           baseUrl: sessao.boralaBaseUrl,
           accessToken: sessao.accessToken,
+          eventoId: sessao.eventoId,
+          subeventoId: sessao.subeventoId,
         );
       },
     );
