@@ -26,14 +26,28 @@ void main() {
     final result = await viewModel.salvar(
       nome: 'Participante Teste',
       cpf: '52998224725',
+      email: '  Participante@Teste.Com  ',
     );
 
     expect(result?.status, SyncStatus.enviado);
     expect(result?.data?.id, '6ba7b810-9dad-41d1-80b4-00c04fd430c8');
     expect(credenciamento.lastParticipante?.nome, 'Participante Teste');
     expect(credenciamento.lastParticipante?.cpf, '52998224725');
+    expect(credenciamento.lastParticipante?.email, 'participante@teste.com');
     expect(credenciamento.lastDispositivoId, 'portaria-01');
     expect(viewModel.salvando, isFalse);
+  });
+
+  test('rejeita e-mail invalido antes de chamar o backend', () async {
+    final result = await viewModel.salvar(
+      nome: 'Participante Teste',
+      cpf: '52998224725',
+      email: 'email-invalido',
+    );
+
+    expect(result, isNull);
+    expect(credenciamento.lastParticipante, isNull);
+    expect(viewModel.errorMessage, 'Verifique os dados informados');
   });
 
   test('retorna salvoOffline sem tratar indisponibilidade como erro', () async {
@@ -42,6 +56,7 @@ void main() {
     final result = await viewModel.salvar(
       nome: 'Participante Teste',
       cpf: '52998224725',
+      email: 'participante@teste.com',
     );
 
     expect(result?.status, SyncStatus.salvoOffline);
@@ -54,6 +69,7 @@ void main() {
     final result = await viewModel.salvar(
       nome: 'Participante Teste',
       cpf: '52998224725',
+      email: 'participante@teste.com',
     );
 
     expect(result, isNull);

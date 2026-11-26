@@ -22,6 +22,7 @@ void main() {
           cadastroId: primeiroId,
           nome: 'Participante Um',
           cpf: '52998224725',
+          email: 'um@ufs.br',
           dispositivoId: 'portaria-01',
           criadoEm: criadoEm,
         ),
@@ -46,6 +47,14 @@ void main() {
     expect(
       recuperados.map((item) => item.cadastroId),
       containsAll(<String>[primeiroId, segundoId]),
+    );
+    expect(
+      recuperados.firstWhere((item) => item.cadastroId == primeiroId).email,
+      'um@ufs.br',
+    );
+    expect(
+      recuperados.firstWhere((item) => item.cadastroId == segundoId).email,
+      isNull,
     );
 
     await depoisDoReinicio.remover(primeiroId);

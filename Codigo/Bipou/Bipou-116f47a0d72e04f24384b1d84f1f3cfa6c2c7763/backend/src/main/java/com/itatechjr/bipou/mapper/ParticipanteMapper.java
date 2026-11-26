@@ -21,6 +21,7 @@ public class ParticipanteMapper {
         return Participante.builder()
                 .nome(dto.nome().strip())
                 .cpf(Cpf.paraNovoCadastro(dto.cpf().strip()))
+                .email(dto.email())
                 .cadastroId(dto.cadastroId())
                 .idPessoaBorala(dto.idPessoaBorala())
                 .eventoId(dto.eventoId())
@@ -39,7 +40,8 @@ public class ParticipanteMapper {
                 participante.getCpf().valor(),
                 participante.getIdPessoaBorala(),
                 participante.getEventoId(),
-                subeventoIds
+                subeventoIds,
+                participante.getEmail()
         );
     }
 }

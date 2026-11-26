@@ -1,3 +1,4 @@
+import 'package:bipou_frontend/core/validation/email_validator.dart';
 import 'package:bipou_frontend/models/participante_request.dart';
 
 final class CadastroPendente {
@@ -5,10 +6,16 @@ final class CadastroPendente {
     required this.cadastroId,
     required this.nome,
     required this.cpf,
+    String? email,
     required this.dispositivoId,
     required this.criadoEm,
-  }) {
-    ParticipanteRequest(nome: nome, cpf: cpf, cadastroId: cadastroId);
+  }) : email = EmailValidator.normalize(email) {
+    ParticipanteRequest(
+      nome: nome,
+      cpf: cpf,
+      email: this.email,
+      cadastroId: cadastroId,
+    );
     if (dispositivoId.trim().isEmpty) {
       throw ArgumentError.value(
         dispositivoId,
@@ -22,11 +29,13 @@ final class CadastroPendente {
     final cadastroId = json['cadastroId'];
     final nome = json['nome'];
     final cpf = json['cpf'];
+    final email = json['email'];
     final dispositivoId = json['dispositivoId'];
     final criadoEm = json['criadoEm'];
     if (cadastroId is! String ||
         nome is! String ||
         cpf is! String ||
+        (email != null && email is! String) ||
         dispositivoId is! String ||
         criadoEm is! String) {
       throw const FormatException('Cadastro pendente inválido.');
@@ -42,6 +51,7 @@ final class CadastroPendente {
         cadastroId: cadastroId,
         nome: nome,
         cpf: cpf,
+        email: email as String?,
         dispositivoId: dispositivoId,
         criadoEm: dataHora,
       );
@@ -53,16 +63,22 @@ final class CadastroPendente {
   final String cadastroId;
   final String nome;
   final String cpf;
+  final String? email;
   final String dispositivoId;
   final DateTime criadoEm;
 
-  ParticipanteRequest toRequest() =>
-      ParticipanteRequest(nome: nome, cpf: cpf, cadastroId: cadastroId);
+  ParticipanteRequest toRequest() => ParticipanteRequest(
+    nome: nome,
+    cpf: cpf,
+    email: email,
+    cadastroId: cadastroId,
+  );
 
   Map<String, String> toJson() => <String, String>{
     'cadastroId': cadastroId,
     'nome': nome.trim(),
     'cpf': cpf.trim(),
+    'email': ?email,
     'dispositivoId': dispositivoId.trim(),
     'criadoEm': criadoEm.toUtc().toIso8601String(),
   };

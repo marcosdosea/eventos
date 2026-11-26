@@ -131,6 +131,7 @@ void main() {
         participante: ParticipanteRequest(
           nome: 'Participante Teste',
           cpf: '52998224725',
+          email: 'teste@ufs.br',
         ),
         dispositivoId: 'portaria-01',
       );
@@ -140,6 +141,7 @@ void main() {
       expect(store.items, hasLength(1));
       expect(store.items.single.cadastroId, uuid);
       expect(store.items.single.cpf, '52998224725');
+      expect(store.items.single.email, 'teste@ufs.br');
     },
   );
 

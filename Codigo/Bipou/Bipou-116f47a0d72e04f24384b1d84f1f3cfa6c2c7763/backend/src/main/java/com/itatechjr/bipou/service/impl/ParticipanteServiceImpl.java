@@ -196,6 +196,7 @@ public class ParticipanteServiceImpl implements ParticipanteService {
 
         if (!existente.getNome().equals(nome)
                 || !existente.getCpf().valor().equals(cpf)
+                || !Objects.equals(existente.getEmail(), request.email())
                 || !Objects.equals(existente.getEventoId(), request.eventoId())
                 || !Objects.equals(existente.getIdPessoaBorala(), request.idPessoaBorala())
                 || !subeventosExistentes.equals(subeventosRequest)) {
