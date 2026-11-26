@@ -12,14 +12,10 @@
         </p>
 
         <div class="d-flex flex-column align-items-center justify-content-center gap-2">
-             <a id="btnReenviar"
-                class="btn btn-blue-normal"
-                asp-action="EnviarConfirmacaoEmail"
-                asp-controller="Pessoa"
-                asp-route-email="@Model.Email"
-                asp-route-cpf="@Model.Cpf">
-                Reenviar E-mail              
-             </a>
+            <form asp-area="Identity" asp-page="/Account/ResendEmailConfirmation" method="post">
+                <input type="hidden" name="Input.Email" value="@Model.Email" />
+                <button id="btnReenviar" class="btn btn-blue-normal" type="submit">Reenviar E-mail</button>
+            </form>
 
             <span id="tempoRestante" class="text-muted small text-center" style="display:none;"></span>
         </div>

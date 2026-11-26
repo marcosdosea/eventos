@@ -6,10 +6,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.WebUtilities;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
-using System.Text;
 using Util;
 
 namespace EventoWeb.Controllers
@@ -130,7 +128,7 @@ namespace EventoWeb.Controllers
                 
                 var pessoa = new Pessoa
                 {
-                    Cpf = viewModel.Cpf,
+                    Cpf = Methods.RemoveNaoNumericos(viewModel.Cpf),
                     Nome = viewModel.Nome,
                     NomeCracha = viewModel.Nome.Length > 20 ? viewModel.Nome.Substring(0, 20) : viewModel.Nome,
                     Telefone1 = viewModel.Telefone1,
@@ -353,13 +351,13 @@ namespace EventoWeb.Controllers
                 if (!_pessoaService.ValidaEmail(viewModel.Email))
                 {
                     ModelState.AddModelError("Email", "Por favor, digite um e-mail em um formato válido.");
-                } else if (await _pessoaService.EmailExist(viewModel.Email, viewModel.Cpf)) {
+                } else if (await _pessoaService.EmailExist(viewModel.Email, Methods.RemoveNaoNumericos(viewModel.Cpf))) {
                     ModelState.AddModelError("Email", "O e-mail informado já está em uso.");
                 } else {
 
                     var pessoa = new Pessoa
                     {
-                        Cpf = viewModel.Cpf,
+                        Cpf = Methods.RemoveNaoNumericos(viewModel.Cpf),
                         Nome = viewModel.Nome,
                         NomeCracha = nomeFormatado.Substring(0, Math.Min(nomeFormatado.Length, 20)),
                         Telefone1 = viewModel.Telefone1,
@@ -484,43 +482,9 @@ namespace EventoWeb.Controllers
         [AllowAnonymous]
         [HttpGet]
         [Route("EnviarConfirmacaoEmail")]
-        public async Task<ActionResult> EnviarConfirmacaoEmail(string email, string cpf, string returnUrl = null)
+        public ActionResult EnviarConfirmacaoEmail()
         {
-            Pessoa pessoa = _pessoaService.GetByCpf(cpf);
-            
-            var (token,user) = await _pessoaService.GerarTokenConfirmacaoEmailAsync(cpf);
-           
-            if (pessoa == null || user == null)
-            {
-                TempData["ErrorMessage"] = "Usuário não encontrado.";
-                return RedirectToPage("/Account/RegisterConfirmation", new { area = "Identity", email = email, cpf = cpf, returnUrl = returnUrl });
-            }
-            token = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
-            if (!string.IsNullOrWhiteSpace(token))
-            {
-                var callbackUrl = Url.Page(
-                    pageName: "/Account/ConfirmEmail",
-                    pageHandler: null,
-                    values: new { area = "Identity",userId = user.Id, code = token, returnUrl = returnUrl },
-                    protocol: Request.Scheme);
-                var sucesso = await _emailService.ModeloConfirmEmail(token, pessoa, callbackUrl);
-                if (sucesso)
-                {
-                    TempData["SuccessMessage"] = "E-mail de confirmação enviado com sucesso!";
-                }
-                else
-                {
-                    TempData["ErrorMessage"] = "Não foi possível enviar o e-mail. Tente novamente em alguns minutos.";
-                }
-
-            }
-            else
-            {
-                TempData["ErrorMessage"] = "Usuário não encontrado ou token inválido.";
-
-            }
-
-            return RedirectToPage("/Account/RegisterConfirmation", new { area = "Identity", email = email, cpf = cpf, returnUrl = returnUrl });
+            return RedirectToPage("/Account/ResendEmailConfirmation", new { area = "Identity" });
         }
         // =====================================================================
         // HELPER PRIVADO

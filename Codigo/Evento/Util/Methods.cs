@@ -40,11 +40,13 @@ namespace Util
 			return ret;
 		}
 
-		public static bool ValidarCpf(string cpf)
+		public static bool ValidarCpf(string? cpf)
         {
-			cpf = RemoveNaoNumericos(cpf);
+            if (cpf == null || !Regex.IsMatch(cpf.Trim(), @"\A(?:[0-9]{11}|[0-9]{3}\.[0-9]{3}\.[0-9]{3}-[0-9]{2})\z"))
+                return false;
 
-            if (string.IsNullOrEmpty(cpf))
+            cpf = RemoveNaoNumericos(cpf);
+            if (cpf.All(digito => digito == cpf[0]))
                 return false;
 
 			var multiplicador1 = new int[9] { 10, 9, 8, 7, 6, 5, 4, 3, 2 };
@@ -53,11 +55,6 @@ namespace Util
             string digito;
             int soma;
             int resto;
-            cpf = cpf.Trim();
-            cpf = cpf.Replace(".", "").Replace("-", "");
-
-            if (cpf.Length != 11)
-                return false;
 
             tempCpf = cpf.Substring(0, 9);
             soma = 0;

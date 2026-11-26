@@ -13,9 +13,7 @@ namespace Util
 		{
 			if (value == null || string.IsNullOrEmpty(value.ToString()))
 				return true;
-			var valueNoEspecial = Methods.RemoveSpecialsCaracts((string)value);
-			bool valido = Methods.ValidarCpf(valueNoEspecial.ToString());
-			return valido;
+			return value is string cpf && Methods.ValidarCpf(cpf);
 		}
 
 		public string GetErrorMessage() =>
