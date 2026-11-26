@@ -1,12 +1,19 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using AutoMapper;
+using Core;
+using EventoWeb.Models;
 
 namespace EventoWeb.Mappers
 {
-    public class ModelocertificadoProfile : Controller
+    public class ModelocertificadoProfile : Profile
     {
-        public IActionResult Index()
+        public ModelocertificadoProfile()
         {
-            return View();
+            CreateMap<Modelocertificado, ModelocertificadoModel>()
+                .ForMember(destino => destino.NomeEvento, opcao => opcao.MapFrom(origem => origem.IdEventoNavigation.Nome))
+                .ForMember(destino => destino.Eventos, opcao => opcao.Ignore());
+
+            CreateMap<ModelocertificadoModel, Modelocertificado>(MemberList.None)
+                .ForMember(destino => destino.Id, opcao => opcao.Ignore());
         }
     }
 }

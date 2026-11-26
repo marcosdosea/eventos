@@ -13,16 +13,16 @@
             <dt class="col-sm-3">Evento</dt>
             <dd class="col-sm-9">@Model.NomeEvento</dd>
 
-            <dt class="col-sm-3">Data de Emissão</dt>
-            <dd class="col-sm-9">@Model.DataEmissao.ToString("dd/MM/yyyy")</dd>
+            <dt class="col-sm-3">Texto antes do participante</dt>
+            <dd class="col-sm-9">@Model.TextoAntesParticipante</dd>
 
-            <dt class="col-sm-3">Código</dt>
-            <dd class="col-sm-9">@Model.Codigo</dd>
+            <dt class="col-sm-3">Texto antes do evento</dt>
+            <dd class="col-sm-9">@Model.TextoAntesEvento</dd>
         </dl>
     </div>
 </div>
 
 <p>
     <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Editar</a>
-    <a asp-action="Index" class="btn btn-secondary">Voltar</a>
+    <a asp-action="Index" asp-route-idEvento="@(Model.IdEvento == 0 ? (uint?)null : Model.IdEvento)" class="btn btn-secondary">Voltar</a>
 </p>

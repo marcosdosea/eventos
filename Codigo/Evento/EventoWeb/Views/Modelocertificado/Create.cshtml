@@ -8,6 +8,7 @@
 <h1>Criar Novo Modelo de Certificado</h1>
 
 <form asp-action="Create" method="post">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
     <div class="form-group">
         <label asp-for="IdEvento"></label>
         <select asp-for="IdEvento" asp-items="Model.Eventos" class="form-control"></select>
@@ -15,19 +16,19 @@
     </div>
 
     <div class="form-group">
-        <label asp-for="DataEmissao"></label>
-        <input asp-for="DataEmissao" type="date" class="form-control" />
-        <span asp-validation-for="DataEmissao" class="text-danger"></span>
+        <label asp-for="TextoAntesParticipante"></label>
+        <input asp-for="TextoAntesParticipante" class="form-control" />
+        <span asp-validation-for="TextoAntesParticipante" class="text-danger"></span>
     </div>
 
     <div class="form-group">
-        <label asp-for="Codigo"></label>
-        <input asp-for="Codigo" class="form-control" />
-        <span asp-validation-for="Codigo" class="text-danger"></span>
+        <label asp-for="TextoAntesEvento"></label>
+        <input asp-for="TextoAntesEvento" class="form-control" />
+        <span asp-validation-for="TextoAntesEvento" class="text-danger"></span>
     </div>
 
     <button type="submit" class="btn btn-primary">Salvar</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+    <a asp-action="Index" asp-route-idEvento="@(Model.IdEvento == 0 ? (uint?)null : Model.IdEvento)" class="btn btn-secondary">Cancelar</a>
 </form>
 
 @section Scripts {

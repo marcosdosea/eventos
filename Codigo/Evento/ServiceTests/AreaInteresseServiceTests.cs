@@ -50,6 +50,19 @@ namespace Service.Tests
             _areaInteresseService = new AreaInteresseService(_context);
         }
 
+        [TestMethod]
+        public void Salvar_RejeitaDuplicatasMasPermiteManterNomeNaEdicao()
+        {
+            Assert.Throws<ServiceException>(() =>
+                _areaInteresseService.Create(new Areainteresse { Nome = "  CURSO " }));
+            Assert.Throws<ServiceException>(() =>
+                _areaInteresseService.Edit(new Areainteresse { Id = 2, Nome = "curso" }));
+            var area = _areaInteresseService.Get(1);
+            area.Nome = "  CURSO ";
+            _areaInteresseService.Edit(area);
+            Assert.AreEqual("CURSO", _areaInteresseService.Get(1).Nome);
+        }
+
         [TestMethod()]
         public void CreateTest()
         {

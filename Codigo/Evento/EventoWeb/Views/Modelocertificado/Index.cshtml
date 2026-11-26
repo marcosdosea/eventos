@@ -7,14 +7,14 @@
     <h1 class="mb-0">Modelos de Certificado</h1>
 </div>
 <p>
-    <a asp-action="Create" class="btn btn-primary">Novo Modelo</a>
+    <a asp-action="Create" asp-route-idEvento="@ViewData["EventoId"]" class="btn btn-primary">Novo Modelo</a>
 </p>
 <table class="table table-striped">
     <thead>
         <tr>
             <th>Evento</th>
-            <th>Data de Emissão</th>
-            <th>Código</th>
+            <th>Texto antes do participante</th>
+            <th>Texto antes do evento</th>
             <th></th>
         </tr>
     </thead>
@@ -23,8 +23,8 @@
         {
             <tr>
                 <td>@item.NomeEvento</td>
-                <td>@item.DataEmissao.ToString("dd/MM/yyyy")</td>
-                <td>@item.Codigo</td>
+                <td>@item.TextoAntesParticipante</td>
+                <td>@item.TextoAntesEvento</td>
                 <td>
                     <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-info">Detalhes</a>
                     <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-warning">Editar</a>
@@ -37,6 +37,6 @@
 <br />
 <div class="d-flex justify-content-end">
     <button type="button" class="btn-blue-normal btn btn-lg mb-2 ">
-        <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@ViewData["EventoId"]" style="text-decoration:none; color:white">Voltar</a>
+        <a asp-controller="Evento" asp-action="@(ViewData["EventoId"] == null ? "GerenciarEventoListar" : "GerenciarEvento")" asp-route-idEvento="@ViewData["EventoId"]" style="text-decoration:none; color:white">Voltar</a>
     </button>
 </div>
