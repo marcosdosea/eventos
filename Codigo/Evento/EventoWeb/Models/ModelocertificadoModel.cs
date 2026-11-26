@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace EventoWeb.Models
@@ -9,17 +7,17 @@ namespace EventoWeb.Models
     {
         public uint Id { get; set; }
 
-        [Required(ErrorMessage = "Selecione o Evento")]
+        [Range(typeof(uint), "1", "4294967295", ErrorMessage = "Selecione o evento")]
         [Display(Name = "Evento")]
         public uint IdEvento { get; set; }
 
-        [Required(ErrorMessage = "Informe a Data de Emissão")]
-        [Display(Name = "Data de Emissão")]
-        [DataType(DataType.Date)]
-        public DateTime DataEmissao { get; set; } = DateTime.Now;
+        [Required, StringLength(500)]
+        [Display(Name = "Texto antes do participante")]
+        public string TextoAntesParticipante { get; set; } = "Certificamos que";
 
-        [Display(Name = "Código do Certificado")]
-        public string Codigo { get; set; } = string.Empty;
+        [Required, StringLength(500)]
+        [Display(Name = "Texto antes do evento")]
+        public string TextoAntesEvento { get; set; } = "participou do evento";
 
         // Para exibição
         [Display(Name = "Evento")]

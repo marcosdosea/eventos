@@ -1,6 +1,8 @@
 using Core;
 using Core.Service;
 using Microsoft.EntityFrameworkCore;
+using MySql.Data.MySqlClient;
+using System.Data;
 
 namespace Service;
 
@@ -22,8 +24,7 @@ public class AreaInteresseService : IAreaInteresseService
     /// <returns></returns>
     public uint Create(Areainteresse areainteresse)
     {
-        context.Add(areainteresse);
-        context.SaveChanges();
+        Salvar(areainteresse, nova: true);
         return areainteresse.Id;
     }
     
@@ -34,8 +35,34 @@ public class AreaInteresseService : IAreaInteresseService
     /// <returns></returns>
     public void Edit(Areainteresse areainteresse)
     {
-        context.Update(areainteresse);
-        context.SaveChanges();
+        Salvar(areainteresse, nova: false);
+    }
+
+    private void Salvar(Areainteresse area, bool nova)
+    {
+        using var transacao = context.Database.IsRelational() && context.Database.CurrentTransaction == null
+            ? context.Database.BeginTransaction(IsolationLevel.Serializable)
+            : null;
+
+        area.Nome = area.Nome.Trim();
+        var nomeNormalizado = area.Nome.ToLowerInvariant();
+        if (context.Areainteresses.Any(a => (nova || a.Id != area.Id) && a.Nome.Trim().ToLower() == nomeNormalizado))
+            throw new ServiceException("Já existe uma área de interesse cadastrada com este nome.");
+
+        if (nova)
+            context.Add(area);
+        else
+            context.Update(area);
+
+        try
+        {
+            context.SaveChanges();
+            transacao?.Commit();
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is MySqlException { Number: 1205 or 1213 })
+        {
+            throw new ServiceException("Outra alteração ocorreu ao salvar a área de interesse. Tente novamente.", ex);
+        }
     }
     /// <summary>
     /// Exclui uma área de interesse na base de dados

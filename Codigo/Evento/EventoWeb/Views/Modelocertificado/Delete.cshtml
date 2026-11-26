@@ -14,17 +14,17 @@
             <dt class="col-sm-3">Evento</dt>
             <dd class="col-sm-9">@Model.NomeEvento</dd>
 
-            <dt class="col-sm-3">Data de Emissão</dt>
-            <dd class="col-sm-9">@Model.DataEmissao.ToString("dd/MM/yyyy")</dd>
+            <dt class="col-sm-3">Texto antes do participante</dt>
+            <dd class="col-sm-9">@Model.TextoAntesParticipante</dd>
 
-            <dt class="col-sm-3">Código</dt>
-            <dd class="col-sm-10">@Model.Codigo</dd>
+            <dt class="col-sm-3">Texto antes do evento</dt>
+            <dd class="col-sm-10">@Model.TextoAntesEvento</dd>
         </dl>
     </div>
 </div>
 
-<form asp-action="DeleteConfirmed" method="post">
+<form asp-action="DeleteConfirmed" asp-route-id="@Model.Id" method="post">
     <input type="hidden" asp-for="Id" />
     <button type="submit" class="btn btn-danger">Excluir</button>
-    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+    <a asp-action="Index" asp-route-idEvento="@(Model.IdEvento == 0 ? (uint?)null : Model.IdEvento)" class="btn btn-secondary">Cancelar</a>
 </form>

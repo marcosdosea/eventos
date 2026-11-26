@@ -22,7 +22,7 @@ namespace Service
         public uint Create(Modelocertificado modelocertificado)
         {
             if (_context.Modelocertificados.Any(m => m.IdEvento == modelocertificado.IdEvento))
-                throw new Exception("Já existe um modelo de certificado para este evento");
+                throw new ServiceException("Já existe um modelo de certificado para este evento.");
                 
             _context.Modelocertificados.Add(modelocertificado);
             _context.SaveChanges();
@@ -35,6 +35,10 @@ namespace Service
             if (existingModel == null)
                 throw new Exception("Modelo de certificado não encontrado");
                 
+            if (existingModel.IdEvento != modelocertificado.IdEvento &&
+                _context.Modelocertificados.Any(m => m.IdEvento == modelocertificado.IdEvento))
+                throw new ServiceException("Já existe um modelo de certificado para este evento.");
+
             _context.Entry(existingModel).CurrentValues.SetValues(modelocertificado);
             _context.SaveChanges();
         }

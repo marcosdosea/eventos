@@ -82,12 +82,16 @@ namespace EventoWeb.Controllers
 
         [HttpGet]
         [Route("Create")]
-        public IActionResult Create()
+        public IActionResult Create(uint? idEvento = null)
         {
+            if (idEvento.HasValue && !IsAuthorized(idEvento.Value))
+                return Forbid();
+
+            ViewData["EventoId"] = idEvento;
             var model = new ModelocertificadoModel
             {
-                DataEmissao = System.DateTime.Now,
-                Eventos = EventosSelectList()
+                IdEvento = idEvento ?? 0,
+                Eventos = EventosSelectList(idEvento)
             };
             return View(model);
         }
@@ -106,8 +110,21 @@ namespace EventoWeb.Controllers
             }
 
             var entity = _mapper.Map<Modelocertificado>(model);
-            _service.Create(entity);
-            return RedirectToAction(nameof(Index));
+            entity.LogotipoSuperior = Array.Empty<byte>();
+            entity.Assinatura1 = Array.Empty<byte>();
+            entity.Assinatura1Texto = string.Empty;
+            entity.TextoAntesCargaHoraria = "com carga horária de";
+            try
+            {
+                _service.Create(entity);
+                return RedirectToAction(nameof(Index), new { idEvento = entity.IdEvento });
+            }
+            catch (ServiceException ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+                model.Eventos = EventosSelectList(model.IdEvento);
+                return View(model);
+            }
         }
 
         [HttpGet]
@@ -139,9 +156,18 @@ namespace EventoWeb.Controllers
                 return View(model);
             }
 
-            var entity = _mapper.Map<Modelocertificado>(model);
-            _service.Update(entity);
-            return RedirectToAction(nameof(Index));
+            _mapper.Map(model, existente);
+            try
+            {
+                _service.Update(existente);
+                return RedirectToAction(nameof(Index), new { idEvento = existente.IdEvento });
+            }
+            catch (ServiceException ex)
+            {
+                ModelState.AddModelError(string.Empty, ex.Message);
+                model.Eventos = EventosSelectList(model.IdEvento);
+                return View(model);
+            }
         }
 
         [HttpGet]
@@ -166,7 +192,7 @@ namespace EventoWeb.Controllers
             if (!IsAuthorized(existente.IdEvento))
                 return Forbid();
             _service.Delete((uint)id);
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Index), new { idEvento = existente.IdEvento });
         }
     }
 }

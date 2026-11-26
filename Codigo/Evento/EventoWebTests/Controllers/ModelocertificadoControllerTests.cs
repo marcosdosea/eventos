@@ -1,6 +1,7 @@
 using AutoMapper;
 using Core;
 using Core.Service;
+using EventoWeb.Mappers;
 using EventoWeb.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -56,11 +57,7 @@ namespace EventoWeb.Controllers.Tests
             var mockEvento = new Mock<IEventoService>();
             mockEvento.Setup(s => s.GetAll()).Returns(new List<Evento>());
             mockEvento.Setup(s => s.GetEventByCpf(It.IsAny<string>(), It.IsAny<uint>())).Returns(new List<Evento>());
-            var mapper = new MapperConfiguration(c =>
-            {
-                c.CreateMap<Modelocertificado, ModelocertificadoModel>();
-                c.CreateMap<ModelocertificadoModel, Modelocertificado>();
-            }).CreateMapper();
+            var mapper = new MapperConfiguration(c => c.AddProfile<ModelocertificadoProfile>()).CreateMapper();
             var ctl = new ModelocertificadoController(mockSvc.Object, mockEvento.Object, MockInscricaoSozinhoEventoProprio().Object, mapper);
             SetUser(ctl, GestorPrincipal());
 
@@ -74,5 +71,41 @@ namespace EventoWeb.Controllers.Tests
             // id da rota divergente do corpo -> 400
             Assert.IsInstanceOfType(ctl.Edit(11, new ModelocertificadoModel { Id = 99, IdEvento = EventoProprio }), typeof(BadRequestResult));
         }
+        [TestMethod]
+        public void Edit_AtualizaTextosEPreservaDadosDaAssinatura()
+        {
+            var existente = new Modelocertificado
+            {
+                Id = 11,
+                IdEvento = EventoProprio,
+                Assinatura1 = [1, 2],
+                Assinatura1Texto = "Assinatura original",
+                LogotipoSuperior = [3, 4],
+                TextoAntesCargaHoraria = "Carga horária original"
+            };
+            var service = new Mock<IModelocertificadoService>();
+            service.Setup(svc => svc.Get(11)).Returns(existente);
+            var mapper = new MapperConfiguration(c => c.AddProfile<ModelocertificadoProfile>()).CreateMapper();
+            var controller = new ModelocertificadoController(service.Object, Mock.Of<IEventoService>(),
+                MockInscricaoSozinhoEventoProprio().Object, mapper);
+            SetUser(controller, GestorPrincipal());
+
+            var result = controller.Edit(11, new ModelocertificadoModel
+            {
+                Id = 11,
+                IdEvento = EventoProprio,
+                TextoAntesParticipante = "Declaramos que"
+            }) as RedirectToActionResult;
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual(EventoProprio, result.RouteValues!["idEvento"]);
+            Assert.AreEqual("Declaramos que", existente.TextoAntesParticipante);
+            Assert.AreEqual("Assinatura original", existente.Assinatura1Texto);
+            Assert.AreEqual("Carga horária original", existente.TextoAntesCargaHoraria);
+            CollectionAssert.AreEqual(new byte[] { 1, 2 }, existente.Assinatura1);
+            CollectionAssert.AreEqual(new byte[] { 3, 4 }, existente.LogotipoSuperior);
+            service.Verify(svc => svc.Update(existente), Times.Once);
+        }
+
     }
 }

@@ -61,8 +61,15 @@ namespace EventoWeb.Controllers
             if (ModelState.IsValid)
             {
                 var areainteresse = AreaInteresseMapper.ToEntity(areaInteresseModel);
-                _areaInteresseService.Create(areainteresse);
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    _areaInteresseService.Create(areainteresse);
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (ServiceException ex)
+                {
+                    ModelState.AddModelError(nameof(AreaInteresseModel.Nome), ex.Message);
+                }
             }
             return View(areaInteresseModel);
         }
@@ -90,8 +97,15 @@ namespace EventoWeb.Controllers
             if (ModelState.IsValid)
             {
                 var areainteresse = AreaInteresseMapper.ToEntity(areaInteresseModel);
-                _areaInteresseService.Edit(areainteresse);
-                return RedirectToAction(nameof(Index));
+                try
+                {
+                    _areaInteresseService.Edit(areainteresse);
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (ServiceException ex)
+                {
+                    ModelState.AddModelError(nameof(AreaInteresseModel.Nome), ex.Message);
+                }
             }
             return View(areaInteresseModel);
         }

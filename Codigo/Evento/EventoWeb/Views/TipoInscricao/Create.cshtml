@@ -36,7 +36,7 @@
                     <div class="row">
                         <div class="col-md-10">
                             <div class="form-group mb-2">     
-                                <select asp-for="IdEvento" class="form-control" asp-items="Model.Evento" disabled style="display:none;":>
+                                <select asp-for="IdEvento" class="form-control" asp-items="Model.Evento" disabled style="display:none;">
                                     <option value="@Model.IdEvento" selected>
                                         @Model.Evento.FirstOrDefault(e => e.Value == Model.IdEvento.ToString())?.Text
                                     </option>                  
@@ -50,21 +50,21 @@
                         <div class="col-md-2">
                             <div class="form-group mb-2">
                                 <label asp-for="Valor" class="control-label">Valor Inscrição (R$)</label>
-                                <input type="number" asp-for="Valor" class="form-control" />
+                                <input asp-for="Valor" asp-format="{0:F2}" type="text" inputmode="decimal" class="form-control" data-val="false" />
                                 <span asp-validation-for="Valor" class="text-danger"></span>
                             </div>
                         </div>
                         <div class="col-3">
                             <div class="form-group">
                                 <label asp-for="DataInicio" class="control-label"> Data Início</label>
-                                <input asp-for="DataInicio" asp-format="{0:yyyy-MM-ddTHH:mm}" class="form-control" type="datetime-local" />
+                                <input asp-for="DataInicio" asp-format="{0:yyyy-MM-ddTHH:mm:ss}" class="form-control" type="datetime-local" step="1" />
                                 <span asp-validation-for="DataInicio" class="text-danger"></span>
                             </div>
                         </div>
                         <div class="col-3">
                             <div class="form-group">
                                 <label asp-for="Datafim" class="control-label"> Data Fim</label>
-                                <input asp-for="Datafim" asp-format="{0:yyyy-MM-ddTHH:mm}" class="form-control" type="datetime-local" />
+                                <input asp-for="Datafim" asp-format="{0:yyyy-MM-ddTHH:mm:ss}" class="form-control" type="datetime-local" step="1" />
                                 <span asp-validation-for="Datafim" class="text-danger"></span>
                             </div>
                         </div>
@@ -75,8 +75,8 @@
                             <div class="form-group mb-2">
                                 <div class="d-flex align-items-center">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" value="1" id="UsadaEvento" name="TipoInscricao.UsadaEvento"
-                                               @(Model.UsadaEvento == 1 ? "checked" : "")>
+                                        <input class="form-check-input" type="checkbox" value="1" id="UsadaEvento" name="UsadaEvento"
+                                               checked="@(Model.UsadaEvento == 1)">
                                         <label class="form-check-label" for="UsadaEvento">Usado em Evento</label>
                                         <input type="hidden" name="UsadaEvento" value="0">
                                     </div>
@@ -89,7 +89,7 @@
                                 <div class="d-flex align-items-center">
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" value="1" id="UsadaSubevento" name="UsadaSubevento"
-                                               @(Model.UsadaSubevento == 1 ? "checked" : "")>
+                                               checked="@(Model.UsadaSubevento == 1)">
                                         <label class="form-check-label" for="UsadaSubevento">Usado em Subevento</label>
                                         <input type="hidden" name="UsadaSubevento" value="0">
                                     </div>
@@ -105,7 +105,7 @@
                                 <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
                             </div>
                             <div class="form-group">
-                                <a href="/TipoInscricao/Index?idEvento=@Model..IdEvento" class="btn btn-outline-danger">Voltar</a>
+                                <a asp-action="Index" asp-route-idEvento="@Model.IdEvento" class="btn btn-outline-danger">Voltar</a>
                             </div>
                         </div>
                     </div>
