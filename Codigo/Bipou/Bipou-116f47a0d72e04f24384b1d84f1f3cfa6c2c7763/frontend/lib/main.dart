@@ -7,6 +7,7 @@ import 'package:bipou_frontend/services/api_service.dart';
 import 'package:bipou_frontend/services/audit_log_export_service.dart';
 import 'package:bipou_frontend/services/audit_log_service.dart';
 import 'package:bipou_frontend/services/borala_api_service.dart';
+import 'package:bipou_frontend/services/borala_session_manager.dart';
 import 'package:bipou_frontend/services/cadastro_pendente_store.dart';
 import 'package:bipou_frontend/services/connectivity_monitor.dart';
 import 'package:bipou_frontend/services/credenciamento_service.dart';
@@ -23,17 +24,14 @@ Future<void> main() async {
     final dispositivoId = await DeviceIdentityService().getOrCreate();
     final auditLog = AuditLogService();
     final localParticipantRepository = SqliteLocalParticipantRepository();
+    final boralaApi = BoralaApiService();
+    final boralaSessionManager = BoralaSessionManager(
+      repository: localParticipantRepository,
+      boralaApi: boralaApi,
+    );
     final apiService = ApiService(
-      boralaCredentialsProvider: () async {
-        final sessao = await localParticipantRepository.loadSession();
-        if (sessao == null) {
-          return null;
-        }
-        return BoralaSessionCredentials(
-          baseUrl: sessao.boralaBaseUrl,
-          accessToken: sessao.accessToken,
-        );
-      },
+      boralaCredentialsProvider: boralaSessionManager.getValidCredentials,
+      boralaSessionRefresher: boralaSessionManager.refreshActiveSession,
     );
     final credenciamento = CredenciamentoService(
       auditLog: auditLog,
@@ -42,7 +40,6 @@ Future<void> main() async {
       frequenciaPendenteStore: SqliteFrequenciaPendenteStore(),
       connectivityMonitor: ConnectivityPlusMonitor(),
     );
-    final boralaApi = BoralaApiService();
 
     runApp(
       BipouApp(

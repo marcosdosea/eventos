@@ -24,6 +24,11 @@ abstract interface class BoralaApiClient {
     required String senha,
   });
 
+  Future<BoralaSessaoToken> renovarSessao({
+    required String baseUrl,
+    required String refreshToken,
+  });
+
   Future<List<BoralaEvento>> listarEventos({
     required String baseUrl,
     required String accessToken,
@@ -102,6 +107,49 @@ final class BoralaApiService implements BoralaApiClient {
       Error.throwWithStackTrace(
         ApiRequestException(
           'Resposta invalida ao autenticar no Borala.',
+          cause: error,
+        ),
+        stackTrace,
+      );
+    }
+  }
+
+  @override
+  Future<BoralaSessaoToken> renovarSessao({
+    required String baseUrl,
+    required String refreshToken,
+  }) async {
+    final root = ApiConfig.normalizeHttpUrl(
+      baseUrl,
+      fieldName: 'URL da API do Borala',
+    );
+
+    try {
+      final response = await _dio.post<Object?>(
+        '$root/api/bipou/v1/sessao/refresh',
+        data: <String, String>{'refreshToken': refreshToken},
+        options: Options(contentType: Headers.jsonContentType),
+      );
+      if (response.data is! Map) {
+        throw const ApiRequestException(
+          'Resposta invalida ao renovar sessao no Borala.',
+        );
+      }
+      return BoralaSessaoToken.fromJson(
+        Map<String, dynamic>.from(response.data! as Map),
+      );
+    } on DioException catch (error, stackTrace) {
+      _rethrowDioError(
+        error,
+        stackTrace,
+        unauthorizedMessage: 'Sessao expirada. Faca login novamente.',
+        forbiddenMessage:
+            'Esta conta nao possui perfil de Gestor ou Colaborador.',
+      );
+    } on FormatException catch (error, stackTrace) {
+      Error.throwWithStackTrace(
+        ApiRequestException(
+          'Resposta invalida ao renovar sessao no Borala.',
           cause: error,
         ),
         stackTrace,
@@ -320,10 +368,18 @@ final class BoralaApiService implements BoralaApiClient {
       );
     }
 
+    final data = error.response?.data;
+    final serverMessage = switch (data) {
+      {'mensagem': final String msg} when msg.trim().isNotEmpty => msg.trim(),
+      {'message': final String msg} when msg.trim().isNotEmpty => msg.trim(),
+      _ => null,
+    };
+
     if (statusCode == 401) {
       Error.throwWithStackTrace(
         ApiRequestException(
-          unauthorizedMessage ??
+          serverMessage ??
+              unauthorizedMessage ??
               'Sessao expirada ou nao autorizada. Faca login novamente.',
           statusCode: 401,
           cause: error,
@@ -335,9 +391,22 @@ final class BoralaApiService implements BoralaApiClient {
     if (statusCode == 403) {
       Error.throwWithStackTrace(
         ApiRequestException(
-          forbiddenMessage ??
+          serverMessage ??
+              forbiddenMessage ??
               'Voce nao tem permissao de portaria para este evento.',
           statusCode: 403,
+          cause: error,
+        ),
+        stackTrace,
+      );
+    }
+
+    if (statusCode == 423) {
+      Error.throwWithStackTrace(
+        ApiRequestException(
+          serverMessage ??
+              'Conta temporariamente bloqueada por excesso de tentativas. Aguarde alguns minutos e tente novamente.',
+          statusCode: 423,
           cause: error,
         ),
         stackTrace,
@@ -347,7 +416,8 @@ final class BoralaApiService implements BoralaApiClient {
     if (statusCode == 429) {
       Error.throwWithStackTrace(
         ApiRequestException(
-          'Muitas tentativas de autenticacao. Aguarde um minuto e tente novamente.',
+          serverMessage ??
+              'Muitas tentativas de autenticacao. Aguarde um minuto e tente novamente.',
           statusCode: 429,
           cause: error,
         ),
@@ -355,12 +425,7 @@ final class BoralaApiService implements BoralaApiClient {
       );
     }
 
-    final data = error.response?.data;
-    final message = switch (data) {
-      {'mensagem': final String msg} when msg.trim().isNotEmpty => msg.trim(),
-      {'message': final String msg} when msg.trim().isNotEmpty => msg.trim(),
-      _ => 'A API do Borala recusou a requisicao.',
-    };
+    final message = serverMessage ?? 'A API do Borala recusou a requisicao.';
 
     Error.throwWithStackTrace(
       ApiRequestException(message, statusCode: statusCode, cause: error),

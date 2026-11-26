@@ -5,10 +5,12 @@ using Core;
 using Core.DTO;
 using Core.Service;
 using EventoApi.Models;
+using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 
 namespace EventoApi.Controllers;
@@ -49,15 +51,80 @@ public class BipouApiController : ControllerBase
         if (usuario == null && model.Usuario.Contains('@'))
             usuario = await usuarios.FindByEmailAsync(model.Usuario);
         if (usuario == null)
-            return Unauthorized();
+            return Unauthorized(new { codigo = "CREDENCIAIS_INVALIDAS", mensagem = "Usuário ou senha inválidos." });
 
         var resultado = await login.CheckPasswordSignInAsync(usuario, model.Senha, lockoutOnFailure: true);
+        if (resultado.IsLockedOut)
+        {
+            return StatusCode(StatusCodes.Status423Locked, new
+            {
+                codigo = "CONTA_BLOQUEADA",
+                mensagem = "Conta temporariamente bloqueada por excesso de tentativas. Aguarde alguns minutos e tente novamente."
+            });
+        }
+
         // Uma conta com segundo fator não pode contorná-lo pela API de operador.
         if (!resultado.Succeeded || await usuarios.GetTwoFactorEnabledAsync(usuario))
-            return Unauthorized();
+            return Unauthorized(new { codigo = "CREDENCIAIS_INVALIDAS", mensagem = "Usuário ou senha inválidos." });
         var principal = await login.CreateUserPrincipalAsync(usuario);
         if (!principal.IsInRole("GESTOR") && !principal.IsInRole("COLABORADOR"))
             return Forbid(IdentityConstants.BearerScheme);
+        return SignIn(principal, IdentityConstants.BearerScheme);
+    }
+
+    [HttpPost("sessao/refresh")]
+    [AllowAnonymous]
+    [EnableRateLimiting("bipou-refresh")]
+    public async Task<IActionResult> RenovarSessao(
+        BipouRefreshTokenModel model,
+        [FromServices] IOptionsMonitor<BearerTokenOptions> bearerTokenOptions)
+    {
+        Response.Headers.CacheControl = "no-store";
+        var options = bearerTokenOptions.Get(IdentityConstants.BearerScheme);
+        var ticket = options.RefreshTokenProtector.Unprotect(model.RefreshToken);
+
+        if (ticket?.Properties?.ExpiresUtc is not { } expiresUtc ||
+            expiresUtc <= DateTimeOffset.UtcNow)
+        {
+            return Unauthorized(new
+            {
+                codigo = "REFRESH_TOKEN_INVALIDO",
+                mensagem = "Sessão expirada. Faça login novamente."
+            });
+        }
+
+        var usuario = await login.ValidateSecurityStampAsync(ticket.Principal);
+        if (usuario == null)
+        {
+            return Unauthorized(new
+            {
+                codigo = "REFRESH_TOKEN_INVALIDO",
+                mensagem = "Sessão expirada. Faça login novamente."
+            });
+        }
+
+        if (await usuarios.IsLockedOutAsync(usuario))
+        {
+            return StatusCode(StatusCodes.Status423Locked, new
+            {
+                codigo = "CONTA_BLOQUEADA",
+                mensagem = "Conta temporariamente bloqueada por excesso de tentativas. Aguarde alguns minutos e tente novamente."
+            });
+        }
+
+        if (!await login.CanSignInAsync(usuario) || await usuarios.GetTwoFactorEnabledAsync(usuario))
+        {
+            return Unauthorized(new
+            {
+                codigo = "SESSAO_NAO_PERMITIDA",
+                mensagem = "Usuário não autorizado para renovar sessão."
+            });
+        }
+
+        var principal = await login.CreateUserPrincipalAsync(usuario);
+        if (!principal.IsInRole("GESTOR") && !principal.IsInRole("COLABORADOR"))
+            return Forbid(IdentityConstants.BearerScheme);
+
         return SignIn(principal, IdentityConstants.BearerScheme);
     }
 

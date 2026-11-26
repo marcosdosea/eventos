@@ -407,6 +407,18 @@ final class _FakeBoralaApi implements BoralaApiClient {
   }
 
   @override
+  Future<BoralaSessaoToken> renovarSessao({
+    required String baseUrl,
+    required String refreshToken,
+  }) async {
+    return const BoralaSessaoToken(
+      accessToken: 'fake-token-refreshed',
+      refreshToken: 'fake-refresh-2',
+      expiresIn: 28800,
+    );
+  }
+
+  @override
   Future<List<BoralaEvento>> listarEventos({
     required String baseUrl,
     required String accessToken,
