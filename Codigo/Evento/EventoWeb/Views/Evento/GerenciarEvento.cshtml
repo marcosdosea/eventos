@@ -8,6 +8,20 @@
 }
 <link rel="stylesheet" type="text/css" href="~/css/_gerenciarevento.css" asp-append-version="true">
 
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success" role="alert" id="alertsuccess">
+        @TempData["SuccessMessage"]
+    </div>
+    TempData.Remove("SuccessMessage");
+}
+@if (TempData["WarningMessage"] != null)
+{
+    <div class="alert alert-warning" role="alert" id="alertwarning">
+        @TempData["WarningMessage"]
+    </div>
+    TempData.Remove("WarningMessage");
+}
 @if (TempData["Message"] != null)
 {
     <div class="alert alert-danger" role="alert" id="alerterror">
@@ -24,6 +38,7 @@
 }
 <script>
     setTimeout(function() {
+        $("#alertsuccess").fadeOut("slow");
         $("#alerterror").fadeOut("slow");
         $("#alerterror2").fadeOut("slow");
     }, 3000);</script>
@@ -35,6 +50,30 @@
             <div><strong class="text-dark">Data:</strong> @Model.Evento.DataInicio?.ToString("dd/MM/yyyy")</div>
         </div>
     </div>
+
+    @if ((User.IsInRole("GESTOR") || User.IsInRole("ADMINISTRADOR")) && Model.NotificacoesComFalha > 0)
+    {
+        <div id="notificacoes-reenvio-banner"
+             class="rounded p-3 d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4"
+             style="background-color: #fff3cd; border: 1px solid #ffecb5; color: #664d03;"
+             role="status">
+            <div>
+                <strong>Notificações pendentes de reenvio:</strong>
+                @Model.NotificacoesComFalha aviso(s) de novo evento falharam no envio
+                @if (Model.NotificacoesEnviadas > 0)
+                {
+                    <span>(@Model.NotificacoesEnviadas já enviado(s) não serão duplicados).</span>
+                }
+            </div>
+            <form asp-controller="Evento" asp-action="ReenviarNotificacoesEvento" method="post" class="m-0">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="idEvento" value="@Model.Evento.Id" />
+                <button type="submit" class="btn btn-sm btn-warning fw-semibold">
+                    Reenviar avisos com falha
+                </button>
+            </form>
+        </div>
+    }
 
     <div class="cards-gerenciar-wrapper mb-5">
         @{

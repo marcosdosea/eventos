@@ -65,7 +65,7 @@ namespace EventoWeb.Models
         public string? EmailEvento { get; set; }
 
         [Display(Name = "Publicar Portal")]
-        public sbyte EventoPublico { get; set; }
+        public sbyte EventoPublico { get; set; } = 1;
 
         [Display(Name = "CEP")]
         [RegularExpression(@"^\d{8}$", ErrorMessage = "O CEP deve estar no formato 00000000.")]

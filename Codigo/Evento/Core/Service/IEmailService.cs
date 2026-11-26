@@ -7,5 +7,7 @@
         Task<bool> ModeloConfirmEmail(String token, Pessoa pessoa, String callbackUrl);
 
         Task<bool> ModeloEmail(String token, Pessoa pessoa, String callbackUrl, string email, string contato, string assunto, string caminhoTemplate);
+
+        Task<bool> TentarEnviarEmailAsync(string email, string assunto, string mensagemHtml);
     }
 }

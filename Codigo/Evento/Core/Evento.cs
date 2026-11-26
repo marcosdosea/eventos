@@ -80,6 +80,8 @@ public partial class Evento
 
     public virtual ICollection<Modelocracha> Modelocrachas { get; set; } = new List<Modelocracha>();
 
+    public virtual ICollection<Notificacaoevento> Notificacaoeventos { get; set; } = new List<Notificacaoevento>();
+
     public virtual ICollection<Participacaopessoaevento> Participacaopessoaeventos { get; set; } = new List<Participacaopessoaevento>();
 
     public virtual ICollection<Subevento> Subeventos { get; set; } = new List<Subevento>();

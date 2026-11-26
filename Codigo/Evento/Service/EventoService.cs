@@ -77,6 +77,7 @@ namespace Service
                     .ThenInclude(s => s.IdTipoInscricaos)
                 .Include(e => e.Modelocertificados)
                 .Include(e => e.Modelocrachas)
+                .Include(e => e.Notificacaoeventos)
                 .Include(e => e.Participacaopessoaeventos)
                 .Include(e => e.Tipoinscricaos)
                     .ThenInclude(t => t.IdSubEventos)
@@ -184,6 +185,7 @@ namespace Service
             _context.Inscricaopessoaeventos.RemoveRange(evento.Inscricaopessoaeventos);
             _context.Modelocertificados.RemoveRange(evento.Modelocertificados);
             _context.Modelocrachas.RemoveRange(evento.Modelocrachas);
+            _context.Notificacaoeventos.RemoveRange(evento.Notificacaoeventos);
             _context.Participacaopessoaeventos.RemoveRange(evento.Participacaopessoaeventos);
             _context.Tipoinscricaos.RemoveRange(evento.Tipoinscricaos);
 

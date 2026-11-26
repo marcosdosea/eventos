@@ -48,6 +48,8 @@ public partial class Pessoa
 
     public virtual ICollection<Inscricaopessoasubevento> Inscricaopessoasubeventos { get; set; } = new List<Inscricaopessoasubevento>();
 
+    public virtual ICollection<Notificacaoevento> Notificacaoeventos { get; set; } = new List<Notificacaoevento>();
+
     public virtual ICollection<Participacaopessoaevento> Participacaopessoaeventos { get; set; } = new List<Participacaopessoaevento>();
 
     public virtual ICollection<Participacaopessoasubevento> Participacaopessoasubeventos { get; set; } = new List<Participacaopessoasubevento>();

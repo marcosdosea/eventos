@@ -485,6 +485,38 @@ CREATE TABLE IF NOT EXISTS `evento`.`EstadosBrasilPessoaAreaInteresse` (
 ENGINE = InnoDB;
 
 
+-- -----------------------------------------------------
+-- Table `evento`.`NotificacaoEvento`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `evento`.`NotificacaoEvento` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `idEvento` INT UNSIGNED NOT NULL,
+  `idPessoa` INT UNSIGNED NOT NULL,
+  `emailDestino` VARCHAR(100) NOT NULL,
+  `status` CHAR(1) NOT NULL DEFAULT 'P' COMMENT 'P - PENDENTE\nE - ENVIADO\nF - FALHA\nC - CANCELADO',
+  `tentativas` INT NOT NULL DEFAULT 0,
+  `dataCriacao` DATETIME NOT NULL,
+  `dataUltimaTentativa` DATETIME NULL,
+  `dataEnvio` DATETIME NULL,
+  `mensagemErro` VARCHAR(500) NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `uk_notificacaoevento_evento_pessoa` (`idEvento` ASC, `idPessoa` ASC),
+  INDEX `fk_NotificacaoEvento_Evento1_idx` (`idEvento` ASC),
+  INDEX `fk_NotificacaoEvento_Pessoa1_idx` (`idPessoa` ASC),
+  INDEX `idx_notificacaoevento_status` (`status` ASC),
+  CONSTRAINT `fk_NotificacaoEvento_Evento1`
+    FOREIGN KEY (`idEvento`)
+    REFERENCES `evento`.`Evento` (`id`)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT,
+  CONSTRAINT `fk_NotificacaoEvento_Pessoa1`
+    FOREIGN KEY (`idPessoa`)
+    REFERENCES `evento`.`Pessoa` (`id`)
+    ON DELETE RESTRICT
+    ON UPDATE RESTRICT)
+ENGINE = InnoDB;
+
+
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;

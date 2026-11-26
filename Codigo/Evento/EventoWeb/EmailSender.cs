@@ -142,6 +142,33 @@ namespace EventoWeb
                 }
             }
         }
+
+        public async Task<bool> TentarEnviarEmailAsync(string email, string assunto, string mensagemHtml)
+        {
+            if (_client == null || string.IsNullOrWhiteSpace(_from))
+            {
+                _logger.LogWarning("Configuração SMTP ausente. E-mail para {Email} ({Subject}) não pôde ser enviado.", email, assunto);
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                _logger.LogWarning("Destinatário de e-mail ausente para {Subject}.", assunto);
+                return false;
+            }
+
+            try
+            {
+                await EnviarEmailAsync(email.Trim(), assunto, mensagemHtml);
+                _logger.LogInformation("E-mail de {Assunto} enviado com sucesso para {Email}", assunto, email);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao enviar e-mail de {Assunto} para {Email}", assunto, email);
+                return false;
+            }
+        }
         public async Task<bool> ModeloEmailReset(String token,Pessoa pessoa, String callbackUrl)
         {
             string email = pessoa.Email;
