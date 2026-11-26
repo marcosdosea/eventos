@@ -1,7 +1,3 @@
-/* ==========================================================================
-   Gestão de Eventos (Hub, Listagem e Edição do Gestor) - Design System Boralá
-   ========================================================================== */
-
 .gestor-page-container {
     padding: 1.25rem 0 3rem 0;
     font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -260,7 +256,7 @@
     padding: 7px 0;
 }
 
-.gestor-switch-row + .gestor-switch-row {
+.gestor-switch-row+.gestor-switch-row {
     border-top: 1px solid rgba(191, 219, 254, 0.6);
 }
 
@@ -638,34 +634,68 @@
 
 /* Harmonização DataTables dentro de .gestor-table-card */
 .gestor-table-card .dataTables_wrapper {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+        "length filter"
+        "table table"
+        "info paginate";
+    align-items: center;
     padding: 0;
 }
 
-.gestor-table-card .dataTables_wrapper .row:first-child {
-    padding: 16px 20px 12px 20px;
-    margin: 0;
-    align-items: center;
+.gestor-table-card .dataTables_wrapper::after {
+    display: none;
 }
 
-.gestor-table-card .dataTables_wrapper .row:last-child {
-    padding: 14px 20px;
-    margin: 0;
-    border-top: 1px solid #F1F5F9;
-    align-items: center;
-}
-
-.gestor-table-card .dataTables_length,
-.gestor-table-card .dataTables_filter {
-    margin-bottom: 0;
+.gestor-table-card .dataTables_length {
+    grid-area: length;
     float: none;
+    margin: 0;
+    padding: 16px 22px;
     font-size: 0.86rem;
     color: #475569;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #F1F5F9;
+    align-self: stretch;
+}
+
+.gestor-table-card .dataTables_length label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-weight: 500;
+}
+
+.gestor-table-card .dataTables_filter {
+    grid-area: filter;
+    float: none;
+    margin: 0;
+    padding: 16px 22px;
+    font-size: 0.86rem;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    border-bottom: 1px solid #F1F5F9;
+    align-self: stretch;
+}
+
+.gestor-table-card .dataTables_filter label {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-weight: 500;
 }
 
 .gestor-table-card .dataTables_length select {
     border-radius: 8px;
     border: 1px solid #CBD5E1;
-    padding: 4px 8px;
+    background-color: #FFFFFF;
+    padding: 4px 10px;
     color: #1E293B;
 }
 
@@ -673,10 +703,11 @@
     background-color: #F1F4FA;
     border: 1px solid #E2E8F0;
     border-radius: 50px;
-    padding: 6px 14px;
+    padding: 7px 16px;
+    min-width: 240px;
     font-size: 0.88rem;
     color: #334155;
-    margin-left: 8px;
+    margin-left: 0;
     transition: all 0.2s ease;
 }
 
@@ -687,18 +718,66 @@
     outline: none;
 }
 
+.gestor-table-card .dataTables_wrapper > table.dataTable {
+    grid-area: table;
+    width: 100% !important;
+    margin: 0 !important;
+}
+
 .gestor-table-card .dataTables_info {
+    grid-area: info;
+    float: none;
     font-size: 0.85rem;
     color: #64748B;
-    padding-top: 0 !important;
+    padding: 14px 22px !important;
+    border-top: 1px solid #F1F5F9;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
 }
 
 .gestor-table-card .dataTables_paginate {
-    padding-top: 0 !important;
+    grid-area: paginate;
+    float: none;
+    padding: 14px 22px !important;
+    border-top: 1px solid #F1F5F9;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
 }
 
 #tableGestorEventListar thead tr {
     border-bottom: none;
+}
+
+@media (max-width: 767.98px) {
+    .gestor-table-card {
+        overflow-x: auto;
+    }
+
+    .gestor-table-card .dataTables_wrapper {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "length"
+            "filter"
+            "table"
+            "info"
+            "paginate";
+    }
+
+    .gestor-table-card .dataTables_length,
+    .gestor-table-card .dataTables_filter,
+    .gestor-table-card .dataTables_info,
+    .gestor-table-card .dataTables_paginate {
+        justify-content: center;
+        border-bottom: none;
+    }
+
+    .gestor-table-card .dataTables_filter input {
+        min-width: 180px;
+    }
 }
 
 @media (max-width: 767.98px) {

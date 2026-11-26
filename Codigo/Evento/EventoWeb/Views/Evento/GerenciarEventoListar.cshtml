@@ -38,77 +38,75 @@
     @if (listaEventos.Any())
     {
         <div class="gestor-table-card">
-            <div class="table-responsive">
-                <table id="tableGestorEventListar" class="gestor-table align-middle">
-                    <thead>
-                        <tr>
-                            <th style="width: 72px;">@ViewData["Id"]</th>
-                            <th style="width: 130px;">@ViewData["DataInicio"]</th>
-                            <th>@ViewData["Nome"]</th>
-                            <th>@ViewData["NomeTipoEvento"]</th>
-                            <th style="width: 140px;">Status</th>
-                            <th class="text-end" style="width: 220px;">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in listaEventos)
+            <table id="tableGestorEventListar" class="gestor-table align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 76px;">@ViewData["Id"]</th>
+                        <th style="width: 130px;">@ViewData["DataInicio"]</th>
+                        <th>@ViewData["Nome"]</th>
+                        <th style="width: 170px;">@ViewData["NomeTipoEvento"]</th>
+                        <th style="width: 130px;">Status</th>
+                        <th class="text-end" style="width: 145px;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in listaEventos)
+                    {
+                        var (statusDescricao, statusClasse) = item.Status switch
                         {
-                            var (statusDescricao, statusClasse) = item.Status switch
-                            {
-                                "A" => ("Ativo", "gestor-pill-ativo"),
-                                "C" => ("Cadastro", "gestor-pill-cadastro"),
-                                "F" => ("Finalizado", "gestor-pill-finalizado"),
-                                "I" => ("Inativo", "gestor-pill-inativo"),
-                                _ => ("Desconhecido", "gestor-pill-finalizado")
-                            };
+                            "A" => ("Ativo", "gestor-pill-ativo"),
+                            "C" => ("Cadastro", "gestor-pill-cadastro"),
+                            "F" => ("Finalizado", "gestor-pill-finalizado"),
+                            "I" => ("Inativo", "gestor-pill-inativo"),
+                            _ => ("Desconhecido", "gestor-pill-finalizado")
+                        };
 
-                            <tr>
-                                <td class="gestor-col-id" data-order="@item.Id">#@item.Id</td>
-                                <td data-order="@(item.DataInicio?.ToString("yyyy-MM-dd") ?? "")">
-                                    @(item.DataInicio.HasValue ? item.DataInicio.Value.ToString("dd/MM/yyyy") : "-")
-                                </td>
-                                <td class="fw-semibold text-dark">@item.Nome</td>
-                                <td>
-                                    <span class="badge rounded-pill bg-light text-primary border border-primary-subtle px-3 py-1 fw-semibold">
-                                        @item.NomeTipoEvento
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="gestor-pill @statusClasse">
-                                        <span class="dot">●</span>
-                                        <span>@statusDescricao</span>
-                                    </span>
-                                </td>
-                                <td class="text-end" style="white-space: nowrap;">
-                                    <div class="d-inline-flex align-items-center gap-2">
-                                        @if (User.IsInRole("COLABORADOR") && !User.IsInRole("GESTOR") && !User.IsInRole("ADMINISTRADOR"))
-                                        {
-                                            <a asp-controller="ParticipacaoPessoaEvento" asp-action="Frequencia" asp-route-idEvento="@item.Id"
-                                               class="btn btn-sm btn-blue-normal color-white rounded-3 px-3 fw-semibold" title="Gerenciar Frequência">
-                                                <i class="bi bi-calendar-check me-1"></i>Frequência
-                                            </a>
-                                        }
-                                        @if (User.IsInRole("ADMINISTRADOR") || User.IsInRole("GESTOR"))
-                                        {
-                                            <a asp-action="GerenciarEvento" asp-route-idEvento="@item.Id"
-                                               class="btn btn-sm btn-blue-normal color-white rounded-3 px-3 fw-semibold" title="Gerenciar Evento">
-                                                <i class="bi bi-gear me-1"></i>Gerenciar
-                                            </a>
-                                        }
-                                        else if (User.IsInRole("COLABORADOR"))
-                                        {
-                                            <a asp-action="GerenciarEvento" asp-route-idEvento="@item.Id"
-                                               class="btn btn-sm btn-outline-blue-normal rounded-3 px-3 fw-semibold" title="Detalhes do Evento">
-                                                <i class="bi bi-info-circle me-1"></i>Detalhes
-                                            </a>
-                                        }
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+                        <tr>
+                            <td class="gestor-col-id" data-order="@item.Id">#@item.Id</td>
+                            <td data-order="@(item.DataInicio?.ToString("yyyy-MM-dd") ?? "")">
+                                @(item.DataInicio.HasValue ? item.DataInicio.Value.ToString("dd/MM/yyyy") : "-")
+                            </td>
+                            <td class="fw-semibold text-dark">@item.Nome</td>
+                            <td>
+                                <span class="badge rounded-pill bg-light text-primary border border-primary-subtle px-3 py-1 fw-semibold">
+                                    @item.NomeTipoEvento
+                                </span>
+                            </td>
+                            <td>
+                                <span class="gestor-pill @statusClasse">
+                                    <span class="dot">●</span>
+                                    <span>@statusDescricao</span>
+                                </span>
+                            </td>
+                            <td class="text-end" style="white-space: nowrap;">
+                                <div class="d-inline-flex align-items-center gap-2">
+                                    @if (User.IsInRole("COLABORADOR") && !User.IsInRole("GESTOR") && !User.IsInRole("ADMINISTRADOR"))
+                                    {
+                                        <a asp-controller="ParticipacaoPessoaEvento" asp-action="Frequencia" asp-route-idEvento="@item.Id"
+                                           class="btn btn-sm btn-blue-normal color-white rounded-3 px-3 fw-semibold" title="Gerenciar Frequência">
+                                            <i class="bi bi-calendar-check me-1"></i>Frequência
+                                        </a>
+                                    }
+                                    @if (User.IsInRole("ADMINISTRADOR") || User.IsInRole("GESTOR"))
+                                    {
+                                        <a asp-action="GerenciarEvento" asp-route-idEvento="@item.Id"
+                                           class="btn btn-sm btn-blue-normal color-white rounded-3 px-3 fw-semibold" title="Gerenciar Evento">
+                                            <i class="bi bi-gear me-1"></i>Gerenciar
+                                        </a>
+                                    }
+                                    else if (User.IsInRole("COLABORADOR"))
+                                    {
+                                        <a asp-action="GerenciarEvento" asp-route-idEvento="@item.Id"
+                                           class="btn btn-sm btn-outline-blue-normal rounded-3 px-3 fw-semibold" title="Detalhes do Evento">
+                                            <i class="bi bi-info-circle me-1"></i>Detalhes
+                                        </a>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     }
     else
