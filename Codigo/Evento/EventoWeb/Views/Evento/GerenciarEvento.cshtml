@@ -264,41 +264,5 @@
 </div>
 
 @section Scripts {
-    <script>
-        (function () {
-            "use strict";
-
-            setTimeout(function () {
-                if (window.jQuery) {
-                    $("#alerterror, #alerterror2").fadeOut("slow");
-                }
-            }, 3500);
-
-            const filtroInput = document.getElementById("filtroSubeventos");
-            const linhas = document.querySelectorAll("#tabelaSubeventos tbody tr.linha-subevento");
-            const linhaVazia = document.getElementById("linhaSemSubeventoFiltro");
-            const lblVisiveis = document.getElementById("lblSubeventosVisiveis");
-
-            if (filtroInput && linhas.length > 0) {
-                filtroInput.addEventListener("input", function () {
-                    const termo = this.value.trim().toLowerCase();
-                    let visiveis = 0;
-
-                    linhas.forEach(function (tr) {
-                        const texto = tr.getAttribute("data-busca") || "";
-                        const corresponde = termo === "" || texto.includes(termo);
-                        tr.classList.toggle("d-none", !corresponde);
-                        if (corresponde) visiveis++;
-                    });
-
-                    if (linhaVazia) {
-                        linhaVazia.classList.toggle("d-none", visiveis > 0);
-                    }
-                    if (lblVisiveis) {
-                        lblVisiveis.textContent = visiveis.toString();
-                    }
-                });
-            }
-        })();
-    </script>
+    <script src="~/js/evento-gestor.js" asp-append-version="true"></script>
 }
