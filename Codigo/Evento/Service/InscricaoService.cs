@@ -44,6 +44,22 @@ namespace Service
                 .ToListAsync(cancellationToken);
             var porPessoa = subinscricoes.ToLookup(s => s.IdPessoa);
 
+            var participacoes = idSubevento.HasValue
+                ? await _context.Participacaopessoasubeventos.AsNoTracking()
+                    .Where(p => p.IdSubEvento == idSubevento.Value)
+                    .Select(p => new { p.IdPessoa, p.Saida })
+                    .ToListAsync(cancellationToken)
+                : await _context.Participacaopessoaeventos.AsNoTracking()
+                    .Where(p => p.IdEvento == idEvento)
+                    .Select(p => new { p.IdPessoa, p.Saida })
+                    .ToListAsync(cancellationToken);
+
+            var ultimaAcaoPorPessoa = participacoes
+                .GroupBy(p => p.IdPessoa)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Any(p => !p.Saida.HasValue) ? "ENTRADA" : "SAIDA");
+
             var autorizadas = inscricoes.Where(i => i.Status == "A" ||
                 (i.Status == "S" && i.ValorTotal + porPessoa[i.IdPessoa].Sum(s => s.Valor) <= 0));
             return autorizadas.GroupBy(i => i.IdPessoa).Select(g =>
@@ -58,7 +74,8 @@ namespace Service
                     .Select(s => s.IdSubEvento).Distinct().OrderBy(id => id).ToArray();
                 return new BipouParticipanteDTO(inscricao.IdPessoa, inscricao.Nome,
                     string.IsNullOrWhiteSpace(cracha) ? inscricao.Nome : cracha,
-                    Methods.RemoveNaoNumericos(inscricao.Cpf), inscricao.Status, idsSubeventos);
+                    Methods.RemoveNaoNumericos(inscricao.Cpf), inscricao.Status, idsSubeventos,
+                    ultimaAcaoPorPessoa.GetValueOrDefault(inscricao.IdPessoa));
             }).Where(p => !idSubevento.HasValue || p.SubeventosInscritos.Contains(idSubevento.Value)).ToList();
         }
 

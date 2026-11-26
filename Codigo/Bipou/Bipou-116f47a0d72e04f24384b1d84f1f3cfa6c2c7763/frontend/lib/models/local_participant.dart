@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:bipou_frontend/models/borala_models.dart';
 import 'package:bipou_frontend/models/participante_qr_payload.dart';
 import 'package:bipou_frontend/models/participante_response.dart';
+import 'package:bipou_frontend/models/tipo_acao.dart';
 
 final class LocalParticipant {
   LocalParticipant({
@@ -15,6 +16,7 @@ final class LocalParticipant {
     List<int> subeventoIds = const <int>[],
     required String hashValidacao,
     String statusInscricao = 'A',
+    this.ultimaAcao,
   }) : nome = nome.trim(),
        nomeCracha = _normalizeOptional(nomeCracha),
        cpf = ParticipanteQrPayload.sanitizarCpf(cpf),
@@ -72,6 +74,7 @@ final class LocalParticipant {
       subeventoIds: participante.subeventosInscritos,
       hashValidacao: payload.hash ?? '',
       statusInscricao: participante.statusInscricao,
+      ultimaAcao: _parseUltimaAcao(participante.ultimaAcao),
     );
   }
 
@@ -99,6 +102,7 @@ final class LocalParticipant {
       subeventoIds: subIds,
       hashValidacao: (map['hash_validacao'] as String?) ?? '',
       statusInscricao: (map['status_inscricao'] as String?) ?? 'A',
+      ultimaAcao: _parseUltimaAcao(map['ultima_acao'] as String?),
     );
   }
 
@@ -111,6 +115,7 @@ final class LocalParticipant {
   final List<int> subeventoIds;
   final String hashValidacao;
   final String statusInscricao;
+  final TipoAcao? ultimaAcao;
 
   String get nomeExibicao => nomeCracha ?? nome;
 
@@ -149,7 +154,21 @@ final class LocalParticipant {
     'subevento_ids': jsonEncode(subeventoIds),
     'hash_validacao': hashValidacao,
     'status_inscricao': statusInscricao,
+    if (ultimaAcao != null) 'ultima_acao': ultimaAcao!.apiValue,
   };
+
+  static TipoAcao? _parseUltimaAcao(String? raw) {
+    if (raw == null || raw.trim().isEmpty) {
+      return null;
+    }
+    final normalized = raw.trim().toUpperCase();
+    for (final acao in TipoAcao.values) {
+      if (acao.apiValue == normalized) {
+        return acao;
+      }
+    }
+    return null;
+  }
 
   static String? _normalizeOptional(String? raw) {
     if (raw == null) {

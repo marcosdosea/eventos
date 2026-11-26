@@ -549,6 +549,133 @@ void main() {
       }
     },
   );
+
+  test(
+    'cancela entrada duplicada e saida duplicada sem gravar na fila ou chamar API',
+    () async {
+      final calls = <String>[];
+      final audit = _AuditSpy(calls);
+      final api = _BatchApiSpy(calls);
+      final store = InMemoryFrequenciaPendenteStore();
+      var counter = 0;
+      final uuids = <String>[
+        '550e8400-e29b-41d4-a716-446655440011',
+        '550e8400-e29b-41d4-a716-446655440012',
+        '550e8400-e29b-41d4-a716-446655440013',
+        '550e8400-e29b-41d4-a716-446655440014',
+      ];
+      final service = CredenciamentoService(
+        auditLog: audit,
+        api: api,
+        cadastroPendenteStore: _CadastroPendenteStoreMemory(),
+        frequenciaPendenteStore: store,
+        clock: () => now.add(Duration(minutes: counter)),
+        uuidGenerator: () => uuids[counter++],
+      );
+
+      await service.registrarLeitura(
+        participanteId: participanteId,
+        participanteNome: 'Participante Teste',
+        tipoAcao: TipoAcao.entrada,
+        dispositivoId: 'portaria-01',
+        idPessoa: 3,
+        idEvento: 1,
+      );
+
+      await expectLater(
+        service.registrarLeitura(
+          participanteId: participanteId,
+          participanteNome: 'Participante Teste',
+          tipoAcao: TipoAcao.entrada,
+          dispositivoId: 'portaria-01',
+          idPessoa: 3,
+          idEvento: 1,
+        ),
+        throwsA(
+          isA<ApiRequestException>().having(
+            (e) => e.message,
+            'message',
+            contains('Entrada duplicada'),
+          ),
+        ),
+      );
+
+      await service.registrarLeitura(
+        participanteId: participanteId,
+        participanteNome: 'Participante Teste',
+        tipoAcao: TipoAcao.saida,
+        dispositivoId: 'portaria-01',
+        idPessoa: 3,
+        idEvento: 1,
+      );
+
+      await expectLater(
+        service.registrarLeitura(
+          participanteId: participanteId,
+          participanteNome: 'Participante Teste',
+          tipoAcao: TipoAcao.saida,
+          dispositivoId: 'portaria-01',
+          idPessoa: 3,
+          idEvento: 1,
+        ),
+        throwsA(
+          isA<ApiRequestException>().having(
+            (e) => e.message,
+            'message',
+            contains('Saída duplicada'),
+          ),
+        ),
+      );
+
+      expect((await store.listarTodas()).length, 2);
+      expect(audit.entries.length, 2);
+    },
+  );
+
+  test(
+    'bloqueia entrada duplicada usando ultimaAcaoLista quando ainda nao ha leitura local',
+    () async {
+      final calls = <String>[];
+      final service = CredenciamentoService(
+        auditLog: _AuditSpy(calls),
+        api: _BatchApiSpy(calls),
+        cadastroPendenteStore: _CadastroPendenteStoreMemory(),
+        frequenciaPendenteStore: InMemoryFrequenciaPendenteStore(),
+        clock: () => now,
+        uuidGenerator: () => uuid,
+      );
+
+      await expectLater(
+        service.registrarLeitura(
+          participanteId: participanteId,
+          participanteNome: 'Participante Teste',
+          tipoAcao: TipoAcao.entrada,
+          dispositivoId: 'portaria-01',
+          idPessoa: 3,
+          idEvento: 1,
+          ultimaAcaoLista: TipoAcao.entrada,
+        ),
+        throwsA(
+          isA<ApiRequestException>().having(
+            (e) => e.message,
+            'message',
+            contains('Entrada duplicada'),
+          ),
+        ),
+      );
+
+      final saida = await service.registrarLeitura(
+        participanteId: participanteId,
+        participanteNome: 'Participante Teste',
+        tipoAcao: TipoAcao.saida,
+        dispositivoId: 'portaria-01',
+        idPessoa: 3,
+        idEvento: 1,
+        ultimaAcaoLista: TipoAcao.entrada,
+      );
+      expect(saida.status, SyncStatus.enviado);
+    },
+  );
 }
 
 final class _AuditSpy implements AuditLogWriter {

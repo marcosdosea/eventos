@@ -361,6 +361,7 @@ final class _InMemoryCredenciamentoGateway implements CredenciamentoGateway {
     int? eventoId,
     int? subeventoId,
     String? operadorUsuario,
+    TipoAcao? ultimaAcaoLista,
   }) async {
     _seq++;
     final agora = DateTime.now().toUtc();

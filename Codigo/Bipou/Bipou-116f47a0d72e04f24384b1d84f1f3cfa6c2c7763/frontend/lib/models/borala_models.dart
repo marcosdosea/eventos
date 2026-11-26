@@ -81,6 +81,7 @@ final class BoralaParticipante {
     required String cpf,
     String statusInscricao = 'A',
     List<int> subeventosInscritos = const <int>[],
+    String? ultimaAcao,
   }) : nome = nome.trim(),
        nomeCracha = _normalizeOptionalString(nomeCracha),
        cpf = ParticipanteQrPayload.sanitizarCpf(cpf),
@@ -89,7 +90,8 @@ final class BoralaParticipante {
            : statusInscricao.trim(),
        subeventosInscritos = List<int>.unmodifiable(
          subeventosInscritos.where((id) => id > 0).toSet().toList()..sort(),
-       );
+       ),
+       ultimaAcao = _normalizeOptionalString(ultimaAcao)?.toUpperCase();
 
   factory BoralaParticipante.fromJson(Map<String, dynamic> json) {
     final idPessoa = _positiveInt(json, 'idPessoa');
@@ -98,6 +100,7 @@ final class BoralaParticipante {
     final rawCpf = json['cpf'];
     final rawStatus = json['statusInscricao'];
     final rawSubIds = json['subeventosInscritos'] ?? json['subeventoIds'];
+    final rawUltimaAcao = json['ultimaAcao'];
 
     final subIds = <int>[];
     if (rawSubIds is List) {
@@ -120,6 +123,7 @@ final class BoralaParticipante {
       cpf: rawCpf is String ? rawCpf : '',
       statusInscricao: rawStatus is String ? rawStatus : 'A',
       subeventosInscritos: subIds,
+      ultimaAcao: rawUltimaAcao is String ? rawUltimaAcao : null,
     );
   }
 
@@ -129,6 +133,7 @@ final class BoralaParticipante {
   final String cpf;
   final String statusInscricao;
   final List<int> subeventosInscritos;
+  final String? ultimaAcao;
 
   String get nomeExibicao => nomeCracha ?? nome;
 
@@ -139,6 +144,7 @@ final class BoralaParticipante {
     'cpf': cpf,
     'statusInscricao': statusInscricao,
     'subeventosInscritos': subeventosInscritos,
+    if (ultimaAcao != null) 'ultimaAcao': ultimaAcao,
   };
 }
 

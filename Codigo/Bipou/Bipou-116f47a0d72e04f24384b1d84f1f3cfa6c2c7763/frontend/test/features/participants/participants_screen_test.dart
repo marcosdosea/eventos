@@ -385,6 +385,7 @@ final class _ParticipantsGatewayFake implements CredenciamentoGateway {
     int? eventoId,
     int? subeventoId,
     String? operadorUsuario,
+    TipoAcao? ultimaAcaoLista,
   }) {
     throw UnimplementedError();
   }

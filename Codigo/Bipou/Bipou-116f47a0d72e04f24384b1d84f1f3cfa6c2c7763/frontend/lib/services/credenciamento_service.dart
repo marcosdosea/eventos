@@ -32,6 +32,7 @@ abstract interface class CredenciamentoGateway {
     int? eventoId,
     int? subeventoId,
     String? operadorUsuario,
+    TipoAcao? ultimaAcaoLista,
   });
 
   Future<OperationResult<ParticipanteResponse>> cadastrarParticipante({
@@ -181,11 +182,38 @@ final class CredenciamentoService
     int? eventoId,
     int? subeventoId,
     String? operadorUsuario,
+    TipoAcao? ultimaAcaoLista,
   }) async {
     final dataHora = _clock().toUtc();
     final leituraId = _uuidGenerator();
     final eventoResolvido = eventoId ?? idEvento;
     final subeventoResolvido = subeventoId ?? idSubEvento;
+    final existentePorId = await _frequenciaPendenteStore.buscarPorLeituraId(
+      leituraId,
+    );
+    if (existentePorId == null) {
+      final ultimaAcaoLocal = await _frequenciaPendenteStore
+          .obterUltimaAcaoValida(
+            participanteId: participanteId,
+            idPessoa: idPessoa ?? 0,
+            idEvento: eventoResolvido ?? 0,
+            idSubEvento: subeventoResolvido,
+          );
+      final ultimaAcao = ultimaAcaoLocal ?? ultimaAcaoLista;
+      if (tipoAcao == TipoAcao.entrada && ultimaAcao == TipoAcao.entrada) {
+        throw const ApiRequestException(
+          'Entrada duplicada: este participante já possui uma entrada registrada.',
+          statusCode: 409,
+        );
+      }
+      if (tipoAcao == TipoAcao.saida && ultimaAcao == TipoAcao.saida) {
+        throw const ApiRequestException(
+          'Saída duplicada: este participante já possui uma saída registrada.',
+          statusCode: 409,
+        );
+      }
+    }
+
     final frequencia = FrequenciaPendente(
       leituraId: leituraId,
       idPessoa: idPessoa ?? 0,
@@ -249,6 +277,10 @@ final class CredenciamentoService
             }
           }
           if (rejeicao != null) {
+            await _frequenciaPendenteStore.marcarErroEmLote(<String, String>{
+              leituraId: rejeicao.mensagem,
+            });
+            await atualizarContagemFrequenciasPendentes();
             throw ApiRequestException(rejeicao.mensagem);
           }
           await _registrarTentativaFalhaRede(<String>[leituraId]);

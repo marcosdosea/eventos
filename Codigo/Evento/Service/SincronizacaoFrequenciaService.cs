@@ -323,6 +323,9 @@ public class SincronizacaoFrequenciaService : ISincronizacaoFrequenciaService
             if (lista.Any(p => getEntrada(p) == item.DataHora))
                 return ResultadoRegistroParticipacao.Idempotente;
 
+            if (lista.Any(p => !getSaida(p).HasValue))
+                return ResultadoRegistroParticipacao.EntradaDuplicada;
+
             adicionarNovaEntrada(item.DataHora);
             return ResultadoRegistroParticipacao.Alterado;
         }
@@ -380,6 +383,12 @@ public class SincronizacaoFrequenciaService : ISincronizacaoFrequenciaService
                     leituraId,
                     "ENTRADA_ABERTA_NAO_ENCONTRADA",
                     "Não há registro de entrada em aberto para registrar a saída."));
+                break;
+            case ResultadoRegistroParticipacao.EntradaDuplicada:
+                rejeitados.Add(new BipouLeituraErroDTO(
+                    leituraId,
+                    "ENTRADA_DUPLICADA",
+                    "Entrada duplicada: participante já possui uma entrada em aberto."));
                 break;
         }
     }
@@ -486,6 +495,7 @@ public class SincronizacaoFrequenciaService : ISincronizacaoFrequenciaService
         Alterado,
         Idempotente,
         SaidaAnteriorAEntrada,
-        EntradaAbertaNaoEncontrada
+        EntradaAbertaNaoEncontrada,
+        EntradaDuplicada
     }
 }

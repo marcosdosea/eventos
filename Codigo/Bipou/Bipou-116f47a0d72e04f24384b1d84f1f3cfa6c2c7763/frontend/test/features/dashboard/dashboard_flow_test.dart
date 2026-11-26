@@ -15,7 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  testWidgets('exibe os atalhos principais e abre camera diretamente sem modal', (
+  testWidgets('exibe os atalhos principais e abre selecao de acao', (
     tester,
   ) async {
     await tester.pumpWidget(
@@ -33,10 +33,15 @@ void main() {
     await tester.tap(find.text('Escanear QR Code'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Selecione a ação'), findsNothing);
-    expect(find.text('Entrada'), findsNothing);
-    expect(find.text('Saída'), findsNothing);
+    expect(find.text('Selecione a ação'), findsOneWidget);
+    expect(find.text('Entrada'), findsOneWidget);
+    expect(find.text('Saída'), findsOneWidget);
+
+    await tester.tap(find.text('Entrada'));
+    await tester.pumpAndSettle();
+
     expect(find.byType(ScannerScreen), findsOneWidget);
+    expect(find.text('Registrar ENTRADA'), findsOneWidget);
   });
 
   testWidgets('cadastra manualmente e mostra QR Code', (tester) async {
@@ -245,6 +250,7 @@ final class _CredenciamentoWidgetSpy implements CredenciamentoGateway {
     int? eventoId,
     int? subeventoId,
     String? operadorUsuario,
+    TipoAcao? ultimaAcaoLista,
   }) {
     throw UnimplementedError();
   }

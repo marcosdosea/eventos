@@ -47,7 +47,7 @@ void main() {
     viewModel.dispose();
   });
 
-  test('usa TipoAcao.auto como padrao quando tipoAcao nao e informado', () async {
+  test('usa TipoAcao.entrada como padrao quando tipoAcao nao e informado', () async {
     final vmPadrao = ScannerViewModel(
       credenciamento: credenciamento,
       dispositivoId: 'portaria-01',
@@ -58,7 +58,7 @@ void main() {
     await vmPadrao.processarPayload(participantePayload);
 
     expect(credenciamento.calls, 1);
-    expect(credenciamento.lastTipoAcao, TipoAcao.auto);
+    expect(credenciamento.lastTipoAcao, TipoAcao.entrada);
   });
 
   test('extrai id e nome do JSON e registra a acao selecionada', () async {
@@ -835,6 +835,7 @@ final class _CredenciamentoSpy implements CredenciamentoGateway {
     int? eventoId,
     int? subeventoId,
     String? operadorUsuario,
+    TipoAcao? ultimaAcaoLista,
   }) async {
     calls++;
     lastParticipanteId = participanteId;

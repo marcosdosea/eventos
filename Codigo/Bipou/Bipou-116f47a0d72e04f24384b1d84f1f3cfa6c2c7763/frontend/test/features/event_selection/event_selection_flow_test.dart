@@ -541,6 +541,7 @@ final class _FakeCredenciamento implements CredenciamentoGateway {
     int? eventoId,
     int? subeventoId,
     String? operadorUsuario,
+    TipoAcao? ultimaAcaoLista,
   }) {
     throw UnimplementedError();
   }

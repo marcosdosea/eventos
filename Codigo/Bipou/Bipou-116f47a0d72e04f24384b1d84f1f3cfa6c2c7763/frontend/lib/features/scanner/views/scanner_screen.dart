@@ -79,7 +79,7 @@ final class _ScannerScreenState extends State<ScannerScreen>
         widget.sensoryFeedback ?? const PlatformScannerSensoryFeedback();
     _viewModel = ScannerViewModel(
       credenciamento: widget.credenciamento,
-      tipoAcao: widget.tipoAcao ?? TipoAcao.auto,
+      tipoAcao: widget.tipoAcao ?? TipoAcao.entrada,
       dispositivoId: widget.dispositivoId,
       contextoAtivo: widget.contextoAtivo,
       sessaoAtiva: widget.sessaoAtiva,

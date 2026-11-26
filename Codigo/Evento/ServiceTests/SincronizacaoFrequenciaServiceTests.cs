@@ -255,6 +255,34 @@ public class SincronizacaoFrequenciaServiceTests
         Assert.AreEqual(87.5m, inscricao.FrequenciaFinal);
     }
 
+    [TestMethod]
+    public async Task SincronizarLoteAsync_EntradaDuplicadaSemSaida_RejeitaComCodigoEspecifico()
+    {
+        var primeira = await _service.SincronizarLoteAsync(
+            new[] { new BipouLeituraFrequenciaDTO("dup-e1", 3, 1, null, "ENTRADA", DataHora(2026, 11, 6, 8, 0), "dev-1") },
+            new uint[] { 1 });
+        Assert.AreEqual(1, primeira.Confirmados.Count);
+
+        var duplicada = await _service.SincronizarLoteAsync(
+            new[] { new BipouLeituraFrequenciaDTO("dup-e2", 3, 1, null, "ENTRADA", DataHora(2026, 11, 6, 8, 5), "dev-1") },
+            new uint[] { 1 });
+        Assert.AreEqual(0, duplicada.Confirmados.Count);
+        Assert.AreEqual(1, duplicada.Rejeitados.Count);
+        Assert.AreEqual("ENTRADA_DUPLICADA", duplicada.Rejeitados[0].Codigo);
+
+        // Após registrar a saída, uma nova entrada volta a ser permitida.
+        var saidaENovaEntrada = await _service.SincronizarLoteAsync(
+            new[]
+            {
+                new BipouLeituraFrequenciaDTO("dup-s1", 3, 1, null, "SAIDA", DataHora(2026, 11, 6, 10, 0), "dev-1"),
+                new BipouLeituraFrequenciaDTO("dup-e3", 3, 1, null, "ENTRADA", DataHora(2026, 11, 6, 10, 30), "dev-1")
+            },
+            new uint[] { 1 });
+        CollectionAssert.AreEqual(new[] { "dup-s1", "dup-e3" }, saidaENovaEntrada.Confirmados.ToArray());
+        Assert.AreEqual(0, saidaENovaEntrada.Rejeitados.Count);
+        Assert.AreEqual(2, await _context.Participacaopessoaeventos.CountAsync(p => p.IdEvento == 1 && p.IdPessoa == 3));
+    }
+
     private void SemearBase()
     {
         _context.Papels.AddRange(

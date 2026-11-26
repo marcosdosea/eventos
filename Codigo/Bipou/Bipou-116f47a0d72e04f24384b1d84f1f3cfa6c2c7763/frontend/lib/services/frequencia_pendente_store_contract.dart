@@ -1,4 +1,5 @@
 import 'package:bipou_frontend/models/frequencia_pendente.dart';
+import 'package:bipou_frontend/models/tipo_acao.dart';
 
 abstract interface class FrequenciaPendenteStore {
   Future<void> salvarTransacional(FrequenciaPendente frequencia);
@@ -8,6 +9,13 @@ abstract interface class FrequenciaPendenteStore {
   Future<List<FrequenciaPendente>> listarTodas();
 
   Future<FrequenciaPendente?> buscarPorLeituraId(String leituraId);
+
+  Future<TipoAcao?> obterUltimaAcaoValida({
+    required String participanteId,
+    required int idPessoa,
+    required int idEvento,
+    int? idSubEvento,
+  });
 
   Future<int> contarPendentes();
 
@@ -59,6 +67,32 @@ final class InMemoryFrequenciaPendenteStore implements FrequenciaPendenteStore {
   @override
   Future<FrequenciaPendente?> buscarPorLeituraId(String leituraId) async {
     return _items[leituraId];
+  }
+
+  @override
+  Future<TipoAcao?> obterUltimaAcaoValida({
+    required String participanteId,
+    required int idPessoa,
+    required int idEvento,
+    int? idSubEvento,
+  }) async {
+    final candidatos = _items.values.where((item) {
+      if (item.statusEnvio == StatusEnvioFrequencia.erro) {
+        return false;
+      }
+      if (item.idEvento != idEvento || item.idSubEvento != idSubEvento) {
+        return false;
+      }
+      if (idPessoa > 0) {
+        return item.idPessoa == idPessoa;
+      }
+      return item.participanteId == participanteId;
+    }).toList()
+      ..sort((a, b) {
+        final cmp = b.dataHoraLida.compareTo(a.dataHoraLida);
+        return cmp != 0 ? cmp : b.leituraId.compareTo(a.leituraId);
+      });
+    return candidatos.isEmpty ? null : candidatos.first.tipoAcao;
   }
 
   @override
