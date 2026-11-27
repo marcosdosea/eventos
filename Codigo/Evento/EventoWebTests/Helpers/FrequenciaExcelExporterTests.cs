@@ -82,7 +82,7 @@ namespace EventoWeb.Helpers.Tests
 
             Assert.AreEqual("TÍTULO: Evento Geral", ws.Cell(1, 1).GetString());
             Assert.AreEqual("CPF", ws.Cell(3, 1).GetString());
-            Assert.AreEqual("Histórico de Entradas e Saídas", ws.Cell(3, 10).GetString());
+            Assert.AreEqual("Histórico de Entradas e Saídas", ws.Cell(3, 9).GetString());
         }
 
         [TestMethod]

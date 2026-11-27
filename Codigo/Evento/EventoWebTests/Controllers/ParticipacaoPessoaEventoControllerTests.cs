@@ -701,6 +701,11 @@ namespace EventoWeb.Controllers.Tests
         public async Task ExportarFrequencia_Administrador_AcessoNegado()
         {
             var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+            _mockInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
+                .Returns((Inscricaopessoaevento)null);
+            _mockInscricao.Setup(s => s.GetColaboradorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
+                .Returns((Inscricaopessoaevento)null);
+
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, "admin@teste.com"),
@@ -738,6 +743,29 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("GerenciarEvento", result.ActionName);
             Assert.AreEqual("Evento", result.ControllerName);
             Assert.AreEqual("Você não possui um evento vinculado para exportar a frequência!", controller.TempData["ErrorMessage"]);
+        }
+
+        [TestMethod()]
+        public async Task ExportarFrequencia_ColaboradorComVinculo_PermiteExportacao()
+        {
+            var controller = CriarController(comInscricaoParticipante: false, jaVinculado: false, papelSeVinculado: 0);
+            _mockInscricao.Setup(s => s.GetGestorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
+                .Returns((Inscricaopessoaevento)null);
+            _mockInscricao.Setup(s => s.GetColaboradorInEvent(It.IsAny<string>(), It.IsAny<uint>()))
+                .Returns(new Inscricaopessoaevento());
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, "colaborador@teste.com"),
+                new Claim(ClaimTypes.Role, "COLABORADOR")
+            };
+            controller.ControllerContext.HttpContext.User = new ClaimsPrincipal(
+                new ClaimsIdentity(claims, "TestAuthType"));
+
+            var result = await controller.ExportarFrequencia(1, null, "csv") as FileContentResult;
+
+            Assert.IsNotNull(result);
+            Assert.AreEqual("text/csv; charset=utf-8", result.ContentType);
         }
 
         [TestMethod()]

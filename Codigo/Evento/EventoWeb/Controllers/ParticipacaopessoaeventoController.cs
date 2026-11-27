@@ -216,7 +216,7 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("GerenciarEventoListar", "Evento");
             }
 
-            var acessoNegado = ValidarPermissaoGestorEvento(
+            var acessoNegado = ValidarPermissaoEvento(
                 idEvento, username, cpfLimpo, "Você não possui um evento vinculado para exportar a frequência!");
             if (acessoNegado != null)
             {

@@ -22,7 +22,7 @@
             <button type="button" class="btn btn-outline-primary flex-fill" data-bs-toggle="modal" data-bs-target="#modalImportarCsv">
                 <i class="bi bi-upload me-1"></i> Importar CSV
             </button>
-            @if (User.IsInRole("GESTOR") || User.IsInRole("COLABORADOR") || User.IsInRole("ADMINISTRADOR"))
+            @if (User.IsInRole("GESTOR") || User.IsInRole("COLABORADOR"))
             {
                 <button type="button" class="btn btn-blue-normal flex-fill text-center" data-bs-toggle="modal" data-bs-target="#modalExportarFrequencia">
                     <i class="bi bi-download me-1"></i> Exportar Frequência
