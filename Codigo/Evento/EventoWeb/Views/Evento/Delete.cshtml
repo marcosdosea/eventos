@@ -1,253 +1,187 @@
 @model EventoWeb.Models.EventoModel
+@using System.Globalization
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Excluir Evento";
+    var culturaBr = new CultureInfo("pt-BR");
+
+    var (statusDescricao, statusClasse) = Model.Status switch
+    {
+        "A" => ("Ativo", "evento-pill-ativo"),
+        "C" => ("Cadastro", "evento-pill-cadastro"),
+        "F" => ("Finalizado", "evento-pill-finalizado"),
+        "I" => ("Inativo", "evento-pill-inativo"),
+        _ => ("Desconhecido", "evento-pill-finalizado")
+    };
+
+    var cepDigitos = new string((Model.Cep ?? string.Empty).Where(char.IsDigit).ToArray());
+    var cepFormatado = cepDigitos.Length == 8
+        ? $"{cepDigitos[..5]}-{cepDigitos[5..]}"
+        : (string.IsNullOrWhiteSpace(Model.Cep) ? "Não informado" : Model.Cep);
+
+    var enderecoPartes = new List<string>();
+    if (!string.IsNullOrWhiteSpace(Model.Rua))
+    {
+        enderecoPartes.Add(string.IsNullOrWhiteSpace(Model.Numero) ? Model.Rua.Trim() : $"{Model.Rua.Trim()}, {Model.Numero.Trim()}");
+    }
+    if (!string.IsNullOrWhiteSpace(Model.Bairro))
+    {
+        enderecoPartes.Add(Model.Bairro.Trim());
+    }
+    var cidadeUf = string.Join(" - ", new[] { Model.Cidade?.Trim(), Model.Estado?.Trim() }.Where(s => !string.IsNullOrWhiteSpace(s)));
+    if (!string.IsNullOrWhiteSpace(cidadeUf))
+    {
+        enderecoPartes.Add(cidadeUf);
+    }
+    var enderecoCompleto = enderecoPartes.Any() ? string.Join(" • ", enderecoPartes) : "Não informado";
 }
 
-<!DOCTYPE html>
-<html lang="pt-BR">
+<link rel="stylesheet" href="~/css/evento-admin.css" asp-append-version="true" />
 
-<div class="container-fluid no-padding">
-    <div class="row">
-        <h1 class="blue-normal">Excluir Evento</h1>
-        <div>
-            <h3>Certeza que deseja excluir este Evento?</h3>
-            <dl class="row">
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.Nome)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.Nome)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.Descricao)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.Descricao)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.DataInicio)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.DataInicio)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.DataFim)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.DataFim)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.InscricaoGratuita)
-                </dt>
-                <dd class="col-sm-8">
-                    @{
-                        string inscricaoGratuita = "Desconhecido";
-                        switch (Model.InscricaoGratuita)
-                        {
-                            case 1:
-                                inscricaoGratuita = "Sim";
-                                break;
-                            case 0:
-                                inscricaoGratuita = "Não";
-                                break;
+<div class="evento-delete-container">
+    <nav class="evento-breadcrumb" aria-label="Navegação estrutural">
+        <span class="d-inline-flex align-items-center gap-1">
+            <i class="bi bi-house-door"></i>
+            <span>Painel Administrativo</span>
+        </span>
+        <i class="bi bi-chevron-right small opacity-75"></i>
+        <a asp-action="Index">Eventos</a>
+        <i class="bi bi-chevron-right small opacity-75"></i>
+        <span class="evento-breadcrumb-active">Excluir Evento</span>
+    </nav>
 
-                        }
-                    }
-                    @inscricaoGratuita
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.Status)
-                </dt>
-                <dd class="col-sm-8">
-                    @{
-                        string statusDescricao = "Desconhecido";
-                        switch (Model.Status)
-                        {
-                            case "A":
-                                statusDescricao = "Ativo";
-                                break;
-                            case "C":
-                                statusDescricao = "Cadastro";
-                                break;
-                            case "F":
-                                statusDescricao = "Finalizado";
-                                break;
-                            case "I":
-                                statusDescricao = "Inativo";
-                                break;
-
-                        }
-                    }
-                    @statusDescricao
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.DataInicioInscricao)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.DataInicioInscricao)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.DataFimInscricao)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.DataFimInscricao)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.ValorInscricao)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.ValorInscricao)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.Website)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.Website)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.EmailEvento)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.EmailEvento)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.EventoPublico)
-                </dt>
-                <dd class="col-sm-8">
-                    @{
-                        string eventoPublico = "Desconhecido";
-                        switch (Model.EventoPublico)
-                        {
-                            case 1:
-                                eventoPublico = "Sim";
-                                break;
-                            case 0:
-                                eventoPublico = "Não";
-                                break;
-
-                        }
-                    }
-                    @eventoPublico
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.Cep)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.Cep)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.Estado)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.Estado)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.Cidade)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.Cidade)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.Bairro)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.Bairro)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.Rua)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.Rua)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.Numero)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.Numero)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.Complemento)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.Complemento)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.PossuiCertificado)
-                </dt>
-                <dd class="col-sm-8">
-                    @{
-                        string possuiCertificado = "Desconhecido";
-                        switch (Model.PossuiCertificado)
-                        {
-                            case 1:
-                                possuiCertificado = "Sim";
-                                break;
-                            case 0:
-                                possuiCertificado = "Não";
-                                break;
-
-                        }
-                    }
-                    @possuiCertificado
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.FrequenciaMinimaCertificado)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.FrequenciaMinimaCertificado)
-                </dd>
-                <dt class="col-sm-4">
-                    Tipo de Evento
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.NomeTipoEvento)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.VagasOfertadas)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.VagasOfertadas)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.VagasReservadas)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.VagasReservadas)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.VagasDisponiveis)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.VagasDisponiveis)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.TempoMinutosReserva)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.TempoMinutosReserva)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.CargaHoraria)
-                </dt>
-                <dd class="col-sm-8">
-                    @Html.DisplayFor(model => model.CargaHoraria)
-                </dd>
-            </dl>
-            <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="row">
-                @Html.AntiForgeryToken()
-                <input type="hidden" asp-for="Id" />
-                <div class="d-flex justify-content-end">
-                <div class="d-flex flex-row">
-                    <div class="form-group" style="margin-right: 10px;">
-                        <input type="submit" value="Excluir" class="btn btn-danger"/>
-                    </div>
-                    <div class="form-group">
-                        <a asp-action="Index" class="btn btn-outline-blue-normal">Cancelar</a>
-                    </div>
-                </div>
-                </div>
-            </form>
+    <section class="evento-delete-card" aria-labelledby="tituloExcluirEvento">
+        <div class="d-flex align-items-start gap-3 mb-3">
+            <div class="evento-delete-header-icon">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <div>
+                <h1 id="tituloExcluirEvento" class="h3 blue-normal fw-bold mb-1">Excluir Evento</h1>
+                <p class="text-muted small mb-0">Esta ação não poderá ser desfeita. Confirme se realmente deseja remover o evento abaixo.</p>
+            </div>
         </div>
-    </div>
+
+        <div class="evento-summary-box">
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <span class="evento-summary-label">Nome do Evento</span>
+                    <span class="evento-summary-value fs-6">@Model.Nome</span>
+                    <div class="evento-mono-id mt-1">#@Model.Id</div>
+                </div>
+                <div class="col-md-4 d-flex flex-column align-items-start align-items-md-end justify-content-start">
+                    <span class="evento-summary-label">Status Atual</span>
+                    <span class="evento-pill @statusClasse mt-1">
+                        <span class="dot">●</span>
+                        <span>@statusDescricao</span>
+                    </span>
+                </div>
+
+                <div class="col-sm-6">
+                    <span class="evento-summary-label">Tipo de Evento</span>
+                    <span class="evento-summary-value">@(string.IsNullOrWhiteSpace(Model.NomeTipoEvento) ? "Não informado" : Model.NomeTipoEvento)</span>
+                </div>
+
+                <div class="col-sm-6">
+                    <span class="evento-summary-label">Publicação no Portal</span>
+                    <span class="evento-summary-value">@(Model.EventoPublico == 1 ? "Sim" : "Não")</span>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(Model.Descricao))
+                {
+                    <div class="col-12">
+                        <span class="evento-summary-label">Descrição</span>
+                        <span class="evento-summary-value fw-normal text-secondary">@Model.Descricao</span>
+                    </div>
+                }
+            </div>
+
+            <div class="evento-summary-section">
+                <div class="row g-3">
+                    <div class="col-sm-6 col-md-3">
+                        <span class="evento-summary-label">Início do Evento</span>
+                        <span class="evento-summary-value">@(Model.DataInicio.HasValue ? Model.DataInicio.Value.ToString("dd/MM/yyyy HH:mm") : "Não definido")</span>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <span class="evento-summary-label">Término do Evento</span>
+                        <span class="evento-summary-value">@(Model.DataFim.HasValue ? Model.DataFim.Value.ToString("dd/MM/yyyy HH:mm") : "Não definido")</span>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <span class="evento-summary-label">Início das Inscrições</span>
+                        <span class="evento-summary-value">@(Model.DataInicioInscricao.HasValue ? Model.DataInicioInscricao.Value.ToString("dd/MM/yyyy HH:mm") : "Não definido")</span>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <span class="evento-summary-label">Término das Inscrições</span>
+                        <span class="evento-summary-value">@(Model.DataFimInscricao.HasValue ? Model.DataFimInscricao.Value.ToString("dd/MM/yyyy HH:mm") : "Não definido")</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="evento-summary-section">
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <span class="evento-summary-label">Localização</span>
+                        <span class="evento-summary-value">@enderecoCompleto</span>
+                        @if (!string.IsNullOrWhiteSpace(Model.Complemento))
+                        {
+                            <div class="text-muted small mt-1">@Model.Complemento</div>
+                        }
+                    </div>
+                    <div class="col-md-4">
+                        <span class="evento-summary-label">CEP</span>
+                        <span class="evento-summary-value font-monospace">@cepFormatado</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="evento-summary-label">E-mail de Contato</span>
+                        <span class="evento-summary-value">@(string.IsNullOrWhiteSpace(Model.EmailEvento) ? "Não informado" : Model.EmailEvento)</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="evento-summary-label">Website</span>
+                        <span class="evento-summary-value">@(string.IsNullOrWhiteSpace(Model.Website) ? "Não informado" : Model.Website)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="evento-summary-section">
+                <div class="row g-3">
+                    <div class="col-sm-4">
+                        <span class="evento-summary-label">Vagas (Ofertadas / Reserv. / Disp.)</span>
+                        <span class="evento-summary-value font-monospace">@Model.VagasOfertadas / @Model.VagasReservadas / @Model.VagasDisponiveis</span>
+                    </div>
+                    <div class="col-sm-4">
+                        <span class="evento-summary-label">Inscrição Gratuita</span>
+                        <span class="evento-summary-value">@(Model.InscricaoGratuita == 1 ? "Sim" : $"Não ({Model.ValorInscricao.ToString("C", culturaBr)})")</span>
+                    </div>
+                    <div class="col-sm-4">
+                        <span class="evento-summary-label">Certificação</span>
+                        <span class="evento-summary-value">@(Model.PossuiCertificado == 1 ? $"Sim (mín. {Model.FrequenciaMinimaCertificado:F0}%)" : "Não")</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="evento-summary-label">Carga Horária</span>
+                        <span class="evento-summary-value">@Model.CargaHoraria h</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <span class="evento-summary-label">Tempo de Reserva de Vaga</span>
+                        <span class="evento-summary-value">@Model.TempoMinutosReserva min</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2">
+                <a asp-action="Index" class="btn btn-outline-blue-normal rounded-3 px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-arrow-left"></i>
+                    <span>Cancelar</span>
+                </a>
+
+                <button type="submit" class="btn btn-danger rounded-3 px-4 py-2 fw-semibold shadow-sm d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-trash"></i>
+                    <span>Confirmar Exclusão</span>
+                </button>
+            </div>
+        </form>
+    </section>
 </div>

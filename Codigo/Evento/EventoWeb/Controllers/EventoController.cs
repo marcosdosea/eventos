@@ -81,13 +81,11 @@ namespace EventoWeb.Controllers
         [Route("Create")]
         public ActionResult Create()
         {
-            var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
-            var tiposEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
-            var areaInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
-            var viewModel = new EventoModel();
-            viewModel.Estados = new SelectList(estados, "Estado", "Nome");
-            viewModel.TiposEventos = new SelectList(tiposEventos, "Id", "Nome");
-            viewModel.AreaInteresse = new SelectList(areaInteresse, "Id", "Nome");
+            var viewModel = new EventoModel
+            {
+                Status = "C"
+            };
+            CarregarDadosEventos(viewModel);
 
             return View(viewModel);
         }
@@ -114,25 +112,48 @@ namespace EventoWeb.Controllers
                         }
                         else
                         {
-                            ModelState.AddModelError("Foto", "O arquivo é muito grande. Deve ser menor que 64 KB.");
+                            ModelState.AddModelError(nameof(EventoModel.ImagemPortal), "O arquivo é muito grande. Deve ser menor que 64 KB.");
+                            CarregarDadosEventos(eventoModel);
                             return View(eventoModel);
                         }
                     }
                 }
                 var evento = _mapper.Map<Evento>(eventoModel);
-                
+                if (fotoSource != null)
+                {
+                    evento.ImagemPortal = fotoSource;
+                }
+
                 var idsAreaInteresse = new List<uint>();
-                if (eventoModel.IdAreaInteresses != null && eventoModel.IdAreaInteresses.Any()) {
+                if (eventoModel.IdAreaInteresses != null && eventoModel.IdAreaInteresses.Any())
+                {
                     idsAreaInteresse.AddRange(eventoModel.IdAreaInteresses);
-                } else if (eventoModel.IdAreaInteresse > 0) {
+                }
+                else if (eventoModel.IdAreaInteresse > 0)
+                {
                     idsAreaInteresse.Add(eventoModel.IdAreaInteresse);
                 }
 
-                _eventoService.Create(evento, idsAreaInteresse);
-                evento.ImagemPortal = fotoSource;
+                var idEventoCriado = _eventoService.Create(evento, idsAreaInteresse);
+                if (idEventoCriado == 0 && evento.Id > 0)
+                {
+                    idEventoCriado = evento.Id;
+                }
+
+                TempData["SuccessMessage"] = $"Evento \"{evento.Nome}\" cadastrado com sucesso!";
+
+                var acao = HttpContext?.Request?.HasFormContentType == true
+                    ? Request.Form["acao"].ToString()
+                    : null;
+                if (string.Equals(acao, "associarGestor", StringComparison.OrdinalIgnoreCase) && idEventoCriado > 0)
+                {
+                    return RedirectToAction(nameof(CreateGestor), new { idEvento = idEventoCriado });
+                }
+
                 return RedirectToAction(nameof(Index));
             }
 
+            CarregarDadosEventos(eventoModel);
             return View(eventoModel);
         }
 
@@ -148,13 +169,8 @@ namespace EventoWeb.Controllers
                 return NotFound();
             }
 
-            var estados = _estadosbrasilService.GetAll().OrderBy(e => e.Nome);
-            var tiposEventos = _tipoEventoService.GetAll().OrderBy(t => t.Nome);
-            var areaInteresse = _areaInteresseService.GetAll().OrderBy(a => a.Nome);
             var viewModel = _mapper.Map<EventoModel>(evento);
-            viewModel.Estados = new SelectList(estados, "Estado", "Nome", viewModel.Estado);
-            viewModel.TiposEventos = new SelectList(tiposEventos, "Id", "Nome", viewModel.Id);
-            viewModel.AreaInteresse = new SelectList(areaInteresse, "Id", "Nome", viewModel.Id);
+            CarregarDadosEventos(viewModel);
 
             return View(viewModel);
         }
@@ -166,17 +182,24 @@ namespace EventoWeb.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Edit(uint id, EventoModel viewModel)
         {
-
             if (ModelState.IsValid)
             {
                 var eventoExistente = _eventoService.Get(id);
+                if (eventoExistente == null)
+                {
+                    return NotFound();
+                }
+
                 eventoExistente.Nome = viewModel.Nome;
                 eventoExistente.IdTipoEvento = viewModel.IdTipoEvento;
                 eventoExistente.Estado = viewModel.Estado;
                 eventoExistente.Status = viewModel.Status;
 
-
-                var idsAreaInteresse = new List<uint> { viewModel.IdAreaInteresse };
+                var idsAreaInteresse = (viewModel.IdAreaInteresses != null && viewModel.IdAreaInteresses.Any())
+                    ? viewModel.IdAreaInteresses
+                    : (viewModel.IdAreaInteresse > 0
+                        ? new List<uint> { viewModel.IdAreaInteresse }
+                        : _eventoService.GetAreasInteresseByEventoId(id).Select(a => a.Id).ToList());
 
                 if (_eventoService.Edit(eventoExistente, idsAreaInteresse))
                 {
@@ -189,9 +212,18 @@ namespace EventoWeb.Controllers
 
                 _eventoService.AtualizarVagasDisponiveis(eventoExistente.Id);
 
+                var acao = HttpContext?.Request?.HasFormContentType == true
+                    ? Request.Form["acao"].ToString()
+                    : null;
+                if (string.Equals(acao, "associarGestor", StringComparison.OrdinalIgnoreCase))
+                {
+                    return RedirectToAction(nameof(CreateGestor), new { idEvento = eventoExistente.Id });
+                }
+
                 return RedirectToAction(nameof(Index));
             }
 
+            viewModel.Id = id;
             CarregarDadosEventos(viewModel);
             return View(viewModel);
         }
