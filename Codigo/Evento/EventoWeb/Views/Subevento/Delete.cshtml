@@ -1,184 +1,147 @@
 @model EventoWeb.Models.SubeventoModel
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Excluir Subevento";
+    var culturaPtBr = new System.Globalization.CultureInfo("pt-BR");
+
+    var (statusDescricao, statusClasse) = Model.Status switch
+    {
+        "A" => ("Ativo", "subevento-pill-ativo"),
+        "C" => ("Cadastro", "subevento-pill-cadastro"),
+        "F" => ("Finalizado", "subevento-pill-finalizado"),
+        "I" => ("Inativo", "subevento-pill-inativo"),
+        _ => ("Desconhecido", "subevento-pill-finalizado")
+    };
+
+    var inscricaoGratuita = Model.InscricaoGratuita == 1;
+    var possuiCertificado = Model.PossuiCertificado == 1;
 }
 
+<link rel="stylesheet" href="~/css/subevento.css" asp-append-version="true" />
 
-<!DOCTYPE html>
-<html lang="pt-BR">
+<div class="subevento-page-container">
+    <nav class="subevento-breadcrumb justify-content-center mb-3" aria-label="Navegação estrutural">
+        <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Model.IdEvento">
+            <i class="bi bi-house-door me-1"></i>Gerenciar Evento
+        </a>
+        <i class="bi bi-chevron-right small"></i>
+        <a asp-controller="Subevento" asp-action="Index" asp-route-idEvento="@Model.IdEvento">Subeventos</a>
+        <i class="bi bi-chevron-right small"></i>
+        <span class="subevento-breadcrumb-active">Excluir Subevento</span>
+    </nav>
 
-<div class="container-fluid no-padding">
-    <div class="row">
-        <h1 class="blue-normal">Excluir Subevento</h1>
-        <div>
-            <h3>Certeza que deseja excluir este Subevento?</h3>
-            <dl class="row">
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.Nome)
-                </dt>
-                <dd class="col-sm-6">
-                    @Html.DisplayFor(model => model.Nome)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.NomeEvento)
-                </dt>
-                <dd class="col-sm-6">
-                    @Html.DisplayFor(model => model.NomeEvento)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.Descricao)
-                </dt>
-                <dd class="col-sm-6">
-                    @Html.DisplayFor(model => model.Descricao)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.DataInicio)
-                </dt>
-                <dd class="col-sm-6">
-                    @Html.DisplayFor(model => model.DataInicio)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.DataFim)
-                </dt>
-                <dd class="col-sm-6">
-                    @Html.DisplayFor(model => model.DataFim)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.InscricaoGratuita)
-                </dt>
-                <dd class="col-sm-6">
-                    @{
-                        string inscricaoGratuita = "Desconhecido";
-                        switch (Model.InscricaoGratuita)
-                        {
-                            case 1:
-                                inscricaoGratuita = "Sim";
-                                break;
-                            case 0:
-                                inscricaoGratuita = "Não";
-                                break;
-
-                        }
-                    }
-                    @inscricaoGratuita
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.Status)
-                </dt>
-                <dd class="col-sm-6">
-                   
-                    @{
-                        string statusDescricao = "Desconhecido";
-                        switch (Model.Status)
-                        {
-                            case "A":
-                                statusDescricao = "Ativo";
-                                break;
-                            case "C":
-                                statusDescricao = "Cadastro";
-                                break;
-                            case "F":
-                                statusDescricao = "Finalizado";
-                                break;
-                            case "I":
-                                statusDescricao = "Inativo";
-                                break;
-
-                        }
-                    }
-                    @statusDescricao
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.DataInicioInscricao)
-                </dt>
-                <dd class="col-sm-6">
-                    @Html.DisplayFor(model => model.DataInicioInscricao)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.DataFimInscricao)
-                </dt>
-                <dd class="col-sm-6">
-                    @Html.DisplayFor(model => model.DataFimInscricao)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.ValorInscricao)
-                </dt>
-                <dd class="col-sm-6">
-                    @Html.DisplayFor(model => model.ValorInscricao)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.PossuiCertificado)
-                </dt>
-                <dd class="col-sm-6">
-                    @{
-                        string possuiCertificado = "Desconhecido";
-                        switch (Model.PossuiCertificado)
-                        {
-                            case 1:
-                                possuiCertificado = "Sim";
-                                break;
-                            case 0:
-                                possuiCertificado = "Não";
-                                break;
-
-                        }
-                    }
-                    @possuiCertificado
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.FrequenciaMinimaCertificado)
-                </dt>
-                <dd class="col-sm-6">
-                    @Html.DisplayFor(model => model.FrequenciaMinimaCertificado)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.VagasOfertadas)
-                </dt>
-                <dd class="col-sm-6">
-                    @Html.DisplayFor(model => model.VagasOfertadas)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.VagasReservadas)
-                </dt>
-                <dd class="col-sm-6">
-                    @Html.DisplayFor(model => model.VagasReservadas)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.VagasDisponiveis)
-                </dt>
-                <dd class="col-sm-6">
-                    @Html.DisplayFor(model => model.VagasDisponiveis)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.CargaHoraria)
-                </dt>
-                <dd class="col-sm-6">
-                    @Html.DisplayFor(model => model.CargaHoraria)
-                </dd>
-                <dt class="col-sm-4">
-                    @Html.DisplayNameFor(model => model.NomeTipoEvento)
-                </dt>
-                <dd class="col-sm-6">
-                    @Html.DisplayFor(model => model.NomeTipoEvento)
-                </dd>
-            </dl>
-
-            <form asp-action="Delete" asp-route-id="@Model.Id" method="post" class="row">
-                @Html.AntiForgeryToken()
-                <input type="hidden" asp-for="Id" />
-                <input type="hidden" asp-for="IdEvento" />
-                <div class="d-flex justify-content-end">
-                <div class="d-flex flex-row">
-                    <div class="form-group" style="margin-right: 10px;">
-                        <input type="submit" value="Excluir" class="btn btn-danger"/>
-                    </div>
-                    <div class="form-group">
-                        <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Model.IdEvento" class="btn btn-outline-blue-normal">Cancelar</a>
-                    </div>
-                </div>
-                </div>
-            </form>
+    <div class="subevento-delete-card">
+        <div class="d-flex align-items-center gap-3 mb-2">
+            <div class="subevento-delete-icon">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <div>
+                <h1 class="subevento-title fs-3 mb-1">Excluir Subevento</h1>
+                <p class="text-muted small mb-0">
+                    Esta ação não poderá ser desfeita. Confirme os dados abaixo antes de remover este subevento.
+                </p>
+            </div>
         </div>
+
+        <div class="subevento-summary-box">
+            <div class="d-flex flex-wrap align-items-start justify-content-between gap-2 mb-3">
+                <div>
+                    <span class="subevento-summary-label">Subevento</span>
+                    <div class="fw-bold text-dark fs-5">@Model.Nome</div>
+                    <div class="text-muted small mt-1">
+                        <i class="bi bi-calendar-event text-primary me-1"></i>
+                        <span>@(string.IsNullOrWhiteSpace(Model.NomeEvento) ? "Evento vinculado" : Model.NomeEvento)</span>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    @if (!string.IsNullOrWhiteSpace(Model.NomeTipoEvento))
+                    {
+                        <span class="subevento-type-badge">@Model.NomeTipoEvento</span>
+                    }
+                    <span class="subevento-pill @statusClasse">
+                        <span class="dot">●</span>
+                        <span>@statusDescricao</span>
+                    </span>
+                </div>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.Descricao))
+            {
+                <div class="mb-3">
+                    <span class="subevento-summary-label">Descrição / Ementa</span>
+                    <div class="text-secondary small">@Model.Descricao</div>
+                </div>
+            }
+
+            <div class="subevento-summary-divider"></div>
+
+            <div class="row g-3">
+                <div class="col-sm-6">
+                    <span class="subevento-summary-label">Início do Subevento</span>
+                    <span class="subevento-summary-value subevento-summary-mono">@Model.DataInicio.ToString("dd/MM/yyyy HH:mm")</span>
+                </div>
+                <div class="col-sm-6">
+                    <span class="subevento-summary-label">Término do Subevento</span>
+                    <span class="subevento-summary-value subevento-summary-mono">@Model.DataFim.ToString("dd/MM/yyyy HH:mm")</span>
+                </div>
+
+                <div class="col-sm-6">
+                    <span class="subevento-summary-label">Início das Inscrições</span>
+                    <span class="subevento-summary-value subevento-summary-mono">@Model.DataInicioInscricao.ToString("dd/MM/yyyy HH:mm")</span>
+                </div>
+                <div class="col-sm-6">
+                    <span class="subevento-summary-label">Fim das Inscrições</span>
+                    <span class="subevento-summary-value subevento-summary-mono">@Model.DataFimInscricao.ToString("dd/MM/yyyy HH:mm")</span>
+                </div>
+
+                <div class="col-sm-4">
+                    <span class="subevento-summary-label">Inscrição Gratuita</span>
+                    <span class="subevento-summary-value">@(inscricaoGratuita ? "Sim" : "Não")</span>
+                </div>
+                <div class="col-sm-4">
+                    <span class="subevento-summary-label">Valor de Inscrição</span>
+                    <span class="subevento-summary-value subevento-summary-mono">R$ @Model.ValorInscricao.ToString("N2", culturaPtBr)</span>
+                </div>
+                <div class="col-sm-4">
+                    <span class="subevento-summary-label">Carga Horária</span>
+                    <span class="subevento-summary-value">@Model.CargaHoraria h</span>
+                </div>
+
+                <div class="col-sm-4">
+                    <span class="subevento-summary-label">Possui Certificado</span>
+                    <span class="subevento-summary-value">@(possuiCertificado ? "Sim" : "Não")</span>
+                </div>
+                <div class="col-sm-4">
+                    <span class="subevento-summary-label">Frequência Mínima</span>
+                    <span class="subevento-summary-value subevento-summary-mono">@Model.FrequenciaMinimaCertificado.ToString("N2", culturaPtBr)%</span>
+                </div>
+                <div class="col-sm-4">
+                    <span class="subevento-summary-label">Vagas (Ofertadas / Reservadas / Disponíveis)</span>
+                    <span class="subevento-summary-value subevento-summary-mono">@Model.VagasOfertadas / @Model.VagasReservadas / @Model.VagasDisponiveis</span>
+                </div>
+            </div>
+        </div>
+
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="IdEvento" />
+
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 pt-2">
+                <a asp-controller="Evento"
+                   asp-action="GerenciarEvento"
+                   asp-route-idEvento="@Model.IdEvento"
+                   class="btn btn-outline-blue-normal bg-white px-4 py-2 rounded-3 fw-semibold text-decoration-none">
+                    Cancelar
+                </a>
+
+                <button type="submit"
+                        class="btn btn-danger px-4 py-2 rounded-3 fw-semibold shadow-sm d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-trash"></i>
+                    <span>Confirmar Exclusão</span>
+                </button>
+            </div>
+        </form>
     </div>
 </div>

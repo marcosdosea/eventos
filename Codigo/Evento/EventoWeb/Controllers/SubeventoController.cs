@@ -91,6 +91,11 @@ namespace EventoWeb.Controllers
                 ? todosEventos.ToDictionary(e => e.Id, e => e.Nome)
                 : new Dictionary<uint, string>();
 
+            if (idEvento.HasValue && dicionarioEventos.TryGetValue(idEvento.Value, out var nomeEventoSelecionado))
+            {
+                ViewData["EventoNome"] = nomeEventoSelecionado;
+            }
+
             var todosTipos = _tipoEventoService.GetAll();
             var dicionarioTipos = todosTipos != null
                 ? todosTipos.ToDictionary(t => t.Id, t => t.Nome)
@@ -295,6 +300,7 @@ namespace EventoWeb.Controllers
             if (!IsAuthorized(subevento.IdEvento))
                 return Forbid();
             var subeventoModel = _mapper.Map<SubeventoModel>(subevento);
+            ViewData["EventoId"] = subevento.IdEvento;
 
             string nomeEvento = _eventoService.GetNomeById(subevento.IdEvento);
             subeventoModel.NomeEvento = nomeEvento;

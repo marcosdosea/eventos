@@ -1,126 +1,208 @@
-@using Core
-@using EventoWeb.Controllers
 @model IEnumerable<EventoWeb.Models.SubeventoModel>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Subeventos";
+
+    var eventoIdTexto = ViewData["EventoId"]?.ToString();
+    if (string.IsNullOrWhiteSpace(eventoIdTexto))
+    {
+        eventoIdTexto = Context.Request.Query["idEvento"].ToString();
+    }
+
+    uint.TryParse(eventoIdTexto, out var eventoId);
+
+    var listaSubeventos = Model?.ToList() ?? new List<EventoWeb.Models.SubeventoModel>();
+    var totalSubeventos = listaSubeventos.Count;
+    var eventoNome = ViewData["EventoNome"]?.ToString()
+        ?? (eventoId > 0 ? listaSubeventos.FirstOrDefault()?.NomeEvento : null);
 }
 
 <link href="~/lib/datatable/css/datatables.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="~/css/subevento.css" asp-append-version="true" />
 
-<div>
-    <h1 class="blue-normal">Verifique os Subeventos de seus Eventos!</h1>
-    <button type="button" class="btn-blue-normal btn btn-lg mb-2">
-        <a asp-action="CreateOrEdit" asp-route-idEvento='@Context.Request.Query["idEvento"]' style="text-decoration:none; color:white">Novo Subevento</a>
-    </button>
-    <table id="tableSubEvento" class="table table-striped">
-        <thead class="blue-normal blue-normal-bg-table">
-            <tr>
-                <th>
-                    @Html.DisplayNameFor(model => model.Nome)
-                </th>
-                <th>
-                    Evento
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.DataInicio)
-                </th>
-                <th>
-                    @Html.DisplayNameFor(model => model.Status)
-                </th>
-                <th>
-                    Tipo de Subevento
-                </th>
-                <th>Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in Model)
+<div class="subevento-page-container">
+    <nav class="subevento-breadcrumb" aria-label="Navegação estrutural">
+        @if (eventoId > 0)
+        {
+            <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@eventoId">
+                <i class="bi bi-house-door me-1"></i>Gerenciar Evento
+            </a>
+        }
+        else
+        {
+            <a asp-controller="Evento" asp-action="GerenciarEventoListar">
+                <i class="bi bi-house-door me-1"></i>Meus Eventos
+            </a>
+        }
+        <i class="bi bi-chevron-right small"></i>
+        <span class="subevento-breadcrumb-active">Subeventos</span>
+    </nav>
+
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="subevento-title">Subeventos</h1>
+            <p class="subevento-subtitle">
+                Gerencie minicursos, oficinas, palestras e atividades vinculadas aos seus eventos
+            </p>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            @if (!string.IsNullOrWhiteSpace(eventoNome))
             {
-                <tr>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.Nome)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.NomeEvento)
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.DataInicio)
-                    </td>
-                    <td>
-                        @{
-                            string statusDescricao = "Desconhecido";
-                            switch (item.Status)
-                            {
-                                case "A":
-                                    statusDescricao = "Ativo";
-                                    break;
-                                case "C":
-                                    statusDescricao = "Cadastro";
-                                    break;
-                                case "F":
-                                    statusDescricao = "Finalizado";
-                                    break;
-                                case "I":
-                                    statusDescricao = "Inativo";
-                                    break;
-                            }
-                        }
-                        @statusDescricao
-                    </td>
-                    <td>
-                        @Html.DisplayFor(modelItem => item.NomeTipoEvento)
-                    </td>
-                    <td>
-                        <a asp-controller="ParticipacaoPessoaEvento"
-                           asp-action="Frequencia"
-                           asp-route-idEvento="@item.IdEvento"
-                           asp-route-idSubEvento="@item.Id"
-                           class="btn btn-sm btn-blue-normal text-white"
-                           title="Frequência do Subevento">
-                            <i class="bi bi-calendar-check me-1"></i> Frequência
-                        </a>
-                        &nbsp;&nbsp;
-                        @Html.ActionLink("Editar", "CreateOrEdit",
-                        new { idEvento = item.IdEvento, idSubevento = item.Id }, new { @style = "text-decoration:none;" })
-                    &nbsp;&nbsp;
-                    @Html.ActionLink("Excluir", "Delete", new { id = item.Id },
-                                        new { @style = "text-decoration:none;", @class = "danger-normal" })
-                    &nbsp;&nbsp;
-                    @Html.ActionLink("Tipo Inscrição", "CreateTipoInscricaoSubevento", "TipoInscricao",
-                                        new { idEvento = item.IdEvento, idSubevento = item.Id },
-                                        new { @style = "text-decoration:none;" })
-                </td>
-            </tr>
-                        }
-        </tbody>
-    </table>
-</div>
+                <span class="subevento-event-badge" title="Evento selecionado">
+                    <i class="bi bi-calendar-event"></i>
+                    <span>@eventoNome</span>
+                </span>
+            }
 
-<div class="d-flex flex-row-reverse mt-4">
-    <div class="form-group" style="margin-right: 10px;">
-        <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento='@Context.Request.Query["idEvento"]' class="btn btn-lg btn-blue-normal">Voltar</a>
+            <span class="subevento-count-badge">
+                <i class="bi bi-diagram-3"></i>
+                <span>@totalSubeventos @(totalSubeventos == 1 ? "subevento" : "subeventos")</span>
+            </span>
+
+            @if (eventoId > 0)
+            {
+                <a asp-action="CreateOrEdit"
+                   asp-route-idEvento="@eventoId"
+                   class="btn btn-blue-normal color-white rounded-3 px-3 py-2 fw-semibold shadow-sm d-inline-flex align-items-center gap-2 text-decoration-none">
+                    <i class="bi bi-plus-lg"></i>
+                    <span>Novo Subevento</span>
+                </a>
+            }
+        </div>
+    </div>
+
+    @if (listaSubeventos.Any())
+    {
+        <div class="subevento-table-card">
+            <table id="tableSubEvento"
+                   class="subevento-table align-middle"
+                   data-language-url="@Url.Content("~/lib/datatable/js/pt-BR.json")">
+                <thead>
+                    <tr>
+                        <th>Nome do Subevento</th>
+                        <th>Evento</th>
+                        <th style="width: 170px;">Data e Hora de Início</th>
+                        <th style="width: 135px;">Status</th>
+                        <th style="width: 165px;">Tipo de Subevento</th>
+                        <th class="text-end" style="width: 310px;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in listaSubeventos)
+                    {
+                        var (statusDescricao, statusClasse) = item.Status switch
+                        {
+                            "A" => ("Ativo", "subevento-pill-ativo"),
+                            "C" => ("Cadastro", "subevento-pill-cadastro"),
+                            "F" => ("Finalizado", "subevento-pill-finalizado"),
+                            "I" => ("Inativo", "subevento-pill-inativo"),
+                            _ => ("Desconhecido", "subevento-pill-finalizado")
+                        };
+
+                        <tr>
+                            <td class="subevento-col-nome">@item.Nome</td>
+                            <td>@item.NomeEvento</td>
+                            <td class="subevento-col-data" data-order="@item.DataInicio.ToString("yyyy-MM-ddTHH:mm")">
+                                @item.DataInicio.ToString("dd/MM/yyyy HH:mm")
+                            </td>
+                            <td>
+                                <span class="subevento-pill @statusClasse">
+                                    <span class="dot">●</span>
+                                    <span>@statusDescricao</span>
+                                </span>
+                            </td>
+                            <td>
+                                <span class="subevento-type-badge">@item.NomeTipoEvento</span>
+                            </td>
+                            <td class="text-end">
+                                <div class="subevento-actions-cell">
+                                    <a asp-controller="ParticipacaoPessoaEvento"
+                                       asp-action="Frequencia"
+                                       asp-route-idEvento="@item.IdEvento"
+                                       asp-route-idSubEvento="@item.Id"
+                                       class="btn btn-sm btn-blue-normal color-white rounded-3 px-3 fw-semibold d-inline-flex align-items-center gap-1 text-decoration-none"
+                                       title="Frequência do Subevento">
+                                        <i class="bi bi-calendar-check"></i>
+                                        <span>Frequência</span>
+                                    </a>
+                                    <a asp-action="CreateOrEdit"
+                                       asp-route-idEvento="@item.IdEvento"
+                                       asp-route-idSubevento="@item.Id"
+                                       class="subevento-action-link"
+                                       title="Editar Subevento">
+                                        Editar
+                                    </a>
+                                    <a asp-controller="TipoInscricao"
+                                       asp-action="CreateTipoInscricaoSubevento"
+                                       asp-route-idEvento="@item.IdEvento"
+                                       asp-route-idSubevento="@item.Id"
+                                       class="subevento-action-link"
+                                       title="Tipos de Inscrição do Subevento">
+                                        Tipo Inscrição
+                                    </a>
+                                    <a asp-action="Delete"
+                                       asp-route-id="@item.Id"
+                                       class="subevento-action-delete"
+                                       title="Excluir Subevento">
+                                        Excluir
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="subevento-empty-box">
+            <div class="subevento-empty-icon">
+                <i class="bi bi-diagram-3"></i>
+            </div>
+            <h2 class="h5 fw-bold text-dark mb-1">Nenhum subevento cadastrado</h2>
+            <p class="text-muted small mb-3">
+                @(eventoId > 0
+                    ? "Adicione o primeiro subevento para compor a grade de atividades deste evento."
+                    : "Selecione um evento em Meus Eventos para cadastrar e gerenciar seus subeventos.")
+            </p>
+            @if (eventoId > 0)
+            {
+                <a asp-action="CreateOrEdit"
+                   asp-route-idEvento="@eventoId"
+                   class="btn btn-blue-normal color-white rounded-3 px-4 py-2 fw-semibold shadow-sm d-inline-flex align-items-center gap-2 text-decoration-none">
+                    <i class="bi bi-plus-lg"></i>
+                    <span>Criar Primeiro Subevento</span>
+                </a>
+            }
+        </div>
+    }
+
+    <div class="d-flex justify-content-end mt-4">
+        @if (eventoId > 0)
+        {
+            <a asp-controller="Evento"
+               asp-action="GerenciarEvento"
+               asp-route-idEvento="@eventoId"
+               class="subevento-back-btn">
+                <i class="bi bi-arrow-left"></i>
+                <span>Voltar ao Evento</span>
+            </a>
+        }
+        else
+        {
+            <a asp-controller="Evento"
+               asp-action="GerenciarEventoListar"
+               class="subevento-back-btn">
+                <i class="bi bi-arrow-left"></i>
+                <span>Voltar aos Eventos</span>
+            </a>
+        }
     </div>
 </div>
 
 @section Scripts {
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/lib/datatable/js/datatables.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            $('#tableSubEvento').DataTable({
-                columnDefs: [
-                    { orderable: true, targets: [0, 1] },
-                    { orderable: false, targets: [2, 3, 4] }
-                ],
-                searching: true,
-                ordering: true,
-                paging: true,
-                language: {
-                    url: '@Url.Content("~/lib/datatable/js/pt-BR.json")'
-                }
-            });
-        });
-    </script>
+    <script src="~/js/subevento.js" asp-append-version="true"></script>
 }
