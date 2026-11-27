@@ -1,20 +1,19 @@
-﻿ 
-@if (TempData["SuccessMessage"] != null)
+﻿@if (TempData["SuccessMessage"] != null)
 {
    <div class="alert alert-success alert-dismissible fade show" role="alert">
     @TempData["SuccessMessage"]
-    <button type="button" class="btn-close" data-bs-dismiss="alert"> &times;</button>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
    </div>
- }
+}
 
 @if (TempData["ErrorMessage"] != null)
 {
   <div class="alert alert-danger alert-dismissible fade show" role="alert">
     @TempData["ErrorMessage"]
-    <button type="button" class="btn-close" data-bs-dismiss="alert">  &times; </button>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
   </div>
 }
-﻿@if (TempData["alertText"] != null && TempData["alertType"] != null)
+@if (TempData["alertText"] != null && TempData["alertType"] != null)
 {
     var rawType = TempData["alertType"]?.ToString();
     var allowedTypes = new HashSet<string> { "success", "danger", "warning", "info", "primary", "secondary", "light", "dark" };
@@ -24,6 +23,6 @@
    <div class="alert alert-@alertTypeSafe alert-dismissible fade show d-flex align-items-center" role="alert">
      <i class="@alertIconSafe fs-5"></i>
      <span class="ms-3">@TempData["alertText"]</span>
-     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"> &times;</button>
+     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
    </div>
 }

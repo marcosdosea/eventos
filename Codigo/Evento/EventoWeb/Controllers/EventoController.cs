@@ -847,6 +847,7 @@ namespace EventoWeb.Controllers
             switch (idPapel)
             {
                 case 2:
+                    TempData["SuccessMessage"] = "Gestor removido do evento.";
                     return RedirectToAction("CreateGestor", new { idEvento });
                 case 3:
                     return RedirectToAction("CreateColaborador", new { idEvento });
