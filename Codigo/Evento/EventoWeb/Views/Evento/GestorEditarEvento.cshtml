@@ -72,7 +72,6 @@
 
         <div class="row g-4 align-items-start">
             <div class="col-lg-8 d-flex flex-column gap-4">
-                <!-- Card 1: Identificação e Descrição -->
                 <section class="gestor-card" aria-labelledby="secIdentificacao">
                     <div class="gestor-card-header">
                         <div class="d-flex align-items-center gap-2">
@@ -133,7 +132,6 @@
                     </div>
                 </section>
 
-                <!-- Card 2: Cronograma e Período de Inscrições -->
                 <section class="gestor-card" aria-labelledby="secCronograma">
                     <div class="gestor-card-header">
                         <div class="d-flex align-items-center gap-2">
@@ -183,7 +181,6 @@
                     </div>
                 </section>
 
-                <!-- Card 3: Localização e Endereço -->
                 <section class="gestor-card" aria-labelledby="secLocalizacao">
                     <div class="gestor-card-header">
                         <div class="d-flex align-items-center gap-2">
@@ -258,7 +255,6 @@
             </div>
 
             <div class="col-lg-4 d-flex flex-column gap-4">
-                <!-- Card 4: Publicação & Regras -->
                 <section class="gestor-card" aria-labelledby="secPublicacao">
                     <div class="gestor-card-header">
                         <div class="d-flex align-items-center gap-2">
@@ -274,9 +270,9 @@
                             <span>Status do Evento</span>
                         </label>
                         <select asp-for="Status" class="form-select gestor-select">
-                            <option value="C">Cadastro (C)</option>
-                            <option value="A">Ativo (A)</option>
-                            <option value="F">Finalizado (F)</option>
+                            <option value="C">Cadastro</option>
+                            <option value="A">Ativo</option>
+                            <option value="F">Finalizado</option>
                         </select>
                         <span asp-validation-for="Status" class="text-danger small"></span>
                     </div>
@@ -367,7 +363,6 @@
                     </div>
                 </section>
 
-                <!-- Card 5: Capa & Áreas de Interesse -->
                 <section class="gestor-card" aria-labelledby="secCapaAreas">
                     <div class="gestor-card-header">
                         <div class="d-flex align-items-center gap-2">
@@ -468,7 +463,7 @@
                     </div>
                 </section>
 
-                <!-- Botões de Ação -->
+            
                 <div class="d-flex flex-wrap justify-content-end gap-2">
                     <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Model.Id" class="btn btn-outline-danger rounded-3 px-4 py-2 fw-semibold">
                         Cancelar
