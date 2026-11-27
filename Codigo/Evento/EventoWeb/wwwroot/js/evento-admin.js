@@ -228,19 +228,16 @@
         const mapaStatus = {
             C: {
                 nome: "Cadastro",
-                sigla: "Cadastro (C)",
                 classe: "evento-pill-cadastro",
                 descricao: "Em preparação administrativa. O evento não é exibido na vitrine pública até que o Gestor finalize as configurações e ative a publicação."
             },
             A: {
                 nome: "Ativo",
-                sigla: "Ativo (A)",
                 classe: "evento-pill-ativo",
                 descricao: "Evento ativo no sistema. Quando marcado como público pelo Gestor e dentro do período vigente, fica disponível na vitrine do portal."
             },
             F: {
                 nome: "Finalizado",
-                sigla: "Finalizado (F)",
                 classe: "evento-pill-finalizado",
                 descricao: "Evento encerrado. As inscrições são bloqueadas e o cálculo final de frequência e certificados passa a ser consolidado."
             }
@@ -257,7 +254,7 @@
                 lblStatusHeader.textContent = `Status: ${info.nome}`;
             }
             if (badgeBox) {
-                badgeBox.textContent = info.sigla;
+                badgeBox.textContent = info.nome;
             }
             if (descBox) {
                 descBox.textContent = info.descricao;
@@ -266,6 +263,32 @@
 
         selectStatus.addEventListener("change", atualizarStatusVisual);
         atualizarStatusVisual();
+    }
+
+    function inicializarModalExclusaoEvento() {
+        const modal = document.getElementById("modalExcluirEvento");
+        if (!modal) return;
+
+        const inputId = document.getElementById("excluirEventoId");
+        const lblNome = document.getElementById("excluirEventoNome");
+
+        modal.addEventListener("show.bs.modal", function (event) {
+            const botao = event.relatedTarget;
+            const eventoId = botao ? botao.getAttribute("data-evento-id") : null;
+            const eventoNome = botao ? botao.getAttribute("data-evento-nome") : "";
+
+            if (!eventoId) {
+                event.preventDefault();
+                return;
+            }
+
+            if (inputId) {
+                inputId.value = eventoId;
+            }
+            if (lblNome) {
+                lblNome.textContent = eventoNome || "";
+            }
+        });
     }
 
     function inicializarValidacaoImediataFormulario() {
@@ -285,6 +308,7 @@
 
     document.addEventListener("DOMContentLoaded", function () {
         inicializarTabelaEventos();
+        inicializarModalExclusaoEvento();
         inicializarEditStatusFeedback();
         inicializarValidacaoImediataFormulario();
     });

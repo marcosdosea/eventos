@@ -577,6 +577,9 @@
 }
 
 .evento-action-delete {
+    background: none;
+    border: none;
+    padding: 0;
     color: #dc3545;
     font-weight: 600;
     font-size: 0.86rem;
@@ -591,6 +594,19 @@
 .evento-action-delete:hover {
     color: #b02a37;
     text-decoration: underline;
+}
+
+.evento-delete-modal-icon {
+    width: 38px;
+    height: 38px;
+    background-color: #FEE2E2;
+    color: #dc3545;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    flex-shrink: 0;
 }
 
 /* Rodapé e Paginação */

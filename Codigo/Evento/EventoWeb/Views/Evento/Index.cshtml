@@ -128,10 +128,17 @@
                                             <i class="bi bi-pencil"></i>
                                             <span>Editar</span>
                                         </a>
-                                        <a href="#" class="evento-action-delete" data-bs-toggle="modal" data-bs-target="#modalExcluir-@item.Id" title="Excluir evento">
-                                            <i class="bi bi-trash"></i>
+                                        <button type="button"
+                                                class="evento-action-delete"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#modalExcluirEvento"
+                                                data-evento-id="@item.Id"
+                                                data-evento-nome="@item.Nome"
+                                                title="Excluir evento"
+                                                aria-label="Excluir evento @item.Nome">
+                                            <i class="bi bi-trash" aria-hidden="true"></i>
                                             <span>Excluir</span>
-                                        </a>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>
@@ -149,16 +156,37 @@
             </div>
         </section>
 
-        @foreach (var item in listaEventos)
-        {
-            <partial name="_DeleteModal" model="@(new EventoWeb.Models.DeleteModel {
-                ModalId = $"modalExcluir-{item.Id}",
-                ActionName = "Delete",
-                ControllerName = "Evento",
-                RouteValues = item.Id,
-                ItemName = item.Nome
-            })" />
-        }
+        <div class="modal fade" id="modalExcluirEvento" tabindex="-1" aria-labelledby="tituloExcluirEventoModal" aria-describedby="descricaoExcluirEventoModal" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <form asp-action="Delete" asp-controller="Evento" method="post" class="modal-content rounded-4 shadow border-0">
+                    <input type="hidden" name="id" id="excluirEventoId" />
+                    <div class="modal-header border-0 pb-0">
+                        <h2 class="modal-title h5 fw-bold d-flex align-items-center gap-2" id="tituloExcluirEventoModal">
+                            <span class="evento-delete-modal-icon" aria-hidden="true">
+                                <i class="bi bi-exclamation-triangle"></i>
+                            </span>
+                            <span>Confirmar exclusão</span>
+                        </h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body" id="descricaoExcluirEventoModal">
+                        <p class="mb-2">
+                            Tem certeza que deseja excluir o evento <strong id="excluirEventoNome"></strong>?
+                        </p>
+                        <p class="text-danger fw-semibold small mb-0">
+                            Essa operação não pode ser desfeita.
+                        </p>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn evento-back-btn rounded-3" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger rounded-3 fw-semibold d-inline-flex align-items-center gap-1" id="btnConfirmarExclusaoEvento">
+                            <i class="bi bi-trash" aria-hidden="true"></i>
+                            <span>Excluir evento</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     }
     else
     {
