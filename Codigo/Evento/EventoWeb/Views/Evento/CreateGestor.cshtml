@@ -1,176 +1,248 @@
-@model EventoWeb.Models.GestaoPapelModel
+@model EventoWeb.Models.GestoresEventoModel
 
-<style>
-    .dataTables_length {
-        display: none !important;
-    }
-
-    .dataTables_filter {
-        display: none !important;
-    }
-
-    .dataTables_paginate {
-        display: none !important;
-    }
-
-    .dataTables_info {
-        display: none !important;
-    }
-</style>
-
-<link href="~/lib/datatable/css/datatables.min.css" rel="stylesheet" />
-
-<h1 class="blue-normal">Gestores do Evento</h1>
-
-<div class="row">
-    <div>
-        <form asp-action="CreateGestor" method="post" onsubmit="removerMascara()">
-            <div class="row">
-                <div class="col-lg-3">
-                    <div class="form-group">
-                        <label for="IdEvento" class="control-label">Evento</label>
-                        <select id="IdEvento" name="IdEvento" class="form-control" readonly>
-                            @if (Model.Evento == null || Model.Evento.Id == 0)
-                            {
-                                <option value="0">Não Informado</option>
-                            }
-                            else
-                            {
-                                <option value="@Model.Evento.Id" selected>@Model.Evento.Nome</option>
-                            }
-                        </select>
-                        @Html.HiddenFor(model => model.Evento.Id)
-                        @Html.HiddenFor(model => model.Evento.Nome)
-                    </div>
-                </div>
-            </div>
-            <br />
-            <h4 class="blue-normal">
-                Dados do gestor
-            </h4>
-            <div class="row">
-                <div class="col-6 col-sm-6 col-md-3 col-lg-2">
-                    <div class="form-group mb-3">
-                        <label asp-for="Pessoa.Cpf" class="control-label">CPF</label>
-                        <input asp-for="Pessoa.Cpf" class="form-control" id="Cpf" placeholder="000.000.000-00" onblur="autoCompletarCPF(true)" oninput="formatarCpfForm(this)" maxlength="14" />
-                        <span asp-validation-for="Pessoa.Cpf" class="text-danger"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label asp-for="Pessoa.Telefone1" class="control-label">Telefone</label>
-                        <input asp-for="Pessoa.Telefone1" type="tel" class="form-control" id="Telefone1" placeholder="Com o DDD" oninput="formatarTelefoneForm(this)" />
-                        <span asp-validation-for="Pessoa.Telefone1" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="col-12 col-sm-6 col-md-3 col-lg-4">
-                    <div class="form-group mb-3">
-                        <label asp-for="Pessoa.Nome" class="control-label">Nome</label>
-                        <input asp-for="Pessoa.Nome" class="form-control" id="Nome" placeholder="Nome completo" />
-                        <span asp-validation-for="Pessoa.Nome" class="text-danger"></span>
-                    </div>
-
-                    <div class="form-group">
-                        <label asp-for="Pessoa.Email" class="control-label">Email</label>
-                        <input asp-for="Pessoa.Email" class="form-control" id="Email" placeholder="Seu e-mail" />
-                        <span asp-validation-for="Pessoa.Email" class="text-danger"></span>
-                    </div>
-                </div>
-
-
-            </div>
-            <br />
-            <div class="d-flex flex-row-reverse">
-                <div class="form-group">
-                    <input type="submit" value="Adicionar gestor" class="btn btn-blue-normal" />
-                </div>
-            </div>
-            <br />
-        </form>
-    </div>
-</div>
-@if (!ViewData.ModelState.IsValid)
-{
-    <div class="alert alert-danger">
-        @Html.ValidationSummary(false, "", new { @class = "text-danger" })
-    </div>
+@{
+    ViewData["Title"] = "Gestores do Evento";
+    var total = Model.Gestores.Count;
+    var status = Model.Evento.Status switch
+    {
+        "A" => ("Ativo", "is-active", "bi-check-circle-fill"),
+        "C" => ("Cadastro", "is-draft", "bi-pencil"),
+        "F" => ("Finalizado", "", "bi-flag"),
+        "I" => ("Inativo", "", "bi-pause-circle"),
+        _ => ("Desconhecido", "", "bi-question-circle")
+    };
 }
-<div class="row">
-    <div class="col-md-12 mb-4">
-        <table id="tablePessoa" class="table table-striped">
-            <thead class="blue-normal blue-normal-bg-table">
-                <tr>
-                    <th>CPF</th>
-                    <th>Nome</th>
-                    <th class="text-center" style="width: 250px;">Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var inscricaopessoaevento in Model.Inscricoes)
-                {
-                    <tr>
-                        <td style="vertical-align: middle;">@FormatarCPF(inscricaopessoaevento.IdPessoaNavigation.Cpf)</td>
-                        <td style="vertical-align: middle;">@inscricaopessoaevento.IdPessoaNavigation.Nome</td>
-                        <td style="vertical-align: middle;">
-                            <form id="removeForm-@inscricaopessoaevento.IdPessoa" method="POST" action="/Evento/DeletePessoaPapel">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="IdPessoa" value="@inscricaopessoaevento.IdPessoa" />
-                                <input type="hidden" name="IdEvento" value="@Model.Evento.Id" />
-                                <input type="hidden" name="IdPapel" value="@inscricaopessoaevento.IdPapel" />
-                                <a data-bs-toggle="modal" data-bs-target="#confirmRemovalModal" onclick="setModalValues('@inscricaopessoaevento.IdPessoaNavigation.Nome', '@Model.Evento.Nome', '@inscricaopessoaevento.IdPessoa')" class="text-danger" style="text-decoration: none; cursor: pointer;">Remover gestor</a>
-                            </form>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+
+<link rel="stylesheet" href="~/css/evento-admin-gestores.css" asp-append-version="true" />
+
+<div class="evento-gestores">
+    <nav class="small mb-2" aria-label="Localização nesta área">
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a asp-action="Index">Eventos</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Gestores do Evento</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h1 class="evento-gestores-titulo mb-1">Gestores do Evento</h1>
+            <p class="evento-gestores-texto mb-0">Associe ou remova responsáveis pela gestão administrativa e operacional deste evento.</p>
+        </div>
+        <a asp-action="Index" class="btn evento-gestores-voltar rounded-3">
+            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i> Voltar aos Eventos
+        </a>
     </div>
-</div>
-<div class="d-flex flex-row-reverse">
-    <div class="form-group" style="margin-right: 10px;">
-        <a asp-controller="Evento" asp-action="Index" asp-route-idEvento="@Model.Evento.Id" class="btn btn-blue-normal">Voltar</a>
-    </div>
-</div>
-<!-- Modal -->
-<div class="modal fade" id="confirmRemovalModal" tabindex="-1" aria-labelledby="modalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalLabel">Confirmar Remoção</h5>
-            </div>
-            <div class="modal-body">
-                Quer realmente remover <strong><span id="pessoaNome"></span></strong> como gestor do evento: <strong><span id="eventoNome"></span></strong>?
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-outline-blue-normal" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger" id="confirmRemovalButton">Remover</button>
+
+    <div class="evento-gestores-contexto d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <span class="evento-gestores-icone bg-white shadow-sm"><i class="bi bi-calendar-event" aria-hidden="true"></i></span>
+            <div>
+                <span class="evento-gestores-texto small text-uppercase d-block">Evento selecionado</span>
+                <strong>@Model.Evento.Nome</strong>
             </div>
         </div>
+        <div class="d-flex flex-wrap gap-2">
+            <span class="evento-gestores-pill @status.Item2"><i class="bi @status.Item3" aria-hidden="true"></i> @status.Item1</span>
+            <span class="evento-gestores-pill">
+                <i class="bi bi-people-fill" aria-hidden="true"></i>
+                @total @(total == 1 ? "gestor vinculado" : "gestores vinculados")
+            </span>
+        </div>
     </div>
+
+    <section class="evento-gestores-card p-4 mb-4" aria-labelledby="tituloAdicionarGestor">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <span class="evento-gestores-icone"><i class="bi bi-person-plus" aria-hidden="true"></i></span>
+            <div>
+                <h2 class="h5 fw-bold mb-1" id="tituloAdicionarGestor">Adicionar Gestor ao Evento</h2>
+                <p class="evento-gestores-texto mb-0">Informe o CPF para autopreencher os dados de uma pessoa cadastrada no Boralá.</p>
+            </div>
+        </div>
+
+        @if (ViewData.ModelState.TryGetValue(string.Empty, out var erroGeral) && erroGeral.Errors.Count > 0)
+        {
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+        }
+
+        <form asp-action="CreateGestor" asp-route-idEvento="@Model.IdEvento" method="post" class="row g-3">
+            <input asp-for="IdEvento" type="hidden" />
+            <div class="col-12 col-lg-3">
+                <label asp-for="Pessoa.Cpf" for="Cpf" class="form-label">
+                    <i class="bi bi-person-vcard" aria-hidden="true"></i> CPF <span class="text-danger" aria-hidden="true">*</span>
+                </label>
+                <input asp-for="Pessoa.Cpf" id="Cpf" class="form-control rounded-3 font-monospace" placeholder="000.000.000-00"
+                       inputmode="numeric" maxlength="14" oninput="formatarCpfForm(this)" aria-describedby="erroCpfGestor" required />
+                <span asp-validation-for="Pessoa.Cpf" id="erroCpfGestor" class="text-danger small"></span>
+            </div>
+            <div class="col-12 col-lg-5">
+                <label asp-for="Pessoa.Nome" for="Nome" class="form-label">
+                    <i class="bi bi-person" aria-hidden="true"></i> Nome completo <span class="text-danger" aria-hidden="true">*</span>
+                </label>
+                <input asp-for="Pessoa.Nome" id="Nome" class="form-control rounded-3" maxlength="50" placeholder="Nome completo"
+                       aria-describedby="erroNomeGestor" required />
+                <span asp-validation-for="Pessoa.Nome" id="erroNomeGestor" class="text-danger small"></span>
+            </div>
+            <div class="col-12 col-sm-5 col-lg-4">
+                <label asp-for="Pessoa.Telefone1" for="Telefone1" class="form-label">
+                    <i class="bi bi-telephone" aria-hidden="true"></i> Celular / Telefone
+                </label>
+                <input asp-for="Pessoa.Telefone1" id="Telefone1" type="tel" class="form-control rounded-3" maxlength="15"
+                       placeholder="(00) 00000-0000" oninput="formatarTelefoneForm(this)" aria-describedby="erroTelefoneGestor" />
+                <span asp-validation-for="Pessoa.Telefone1" id="erroTelefoneGestor" class="text-danger small"></span>
+            </div>
+            <div class="col-12 col-sm-7 col-lg-8">
+                <label asp-for="Pessoa.Email" for="Email" class="form-label">
+                    <i class="bi bi-envelope" aria-hidden="true"></i> E-mail <span class="text-danger" aria-hidden="true">*</span>
+                </label>
+                <input asp-for="Pessoa.Email" id="Email" type="email" class="form-control rounded-3" placeholder="nome@exemplo.com"
+                       aria-describedby="erroEmailGestor" required />
+                <span asp-validation-for="Pessoa.Email" id="erroEmailGestor" class="text-danger small"></span>
+            </div>
+            <div class="col-12 col-lg-4 evento-gestores-enviar">
+                <button type="submit" class="btn btn-blue-normal w-100 rounded-3 fw-semibold">
+                    <i class="bi bi-plus-circle me-1" aria-hidden="true"></i> Adicionar Gestor
+                </button>
+            </div>
+        </form>
+    </section>
+
+    <section class="evento-gestores-card evento-gestores-lista" id="gestoresVinculados" aria-labelledby="tituloGestoresVinculados">
+        <div class="evento-gestores-lista-topo d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <h2 class="h6 fw-bold mb-0" id="tituloGestoresVinculados">Gestores Vinculados</h2>
+                <span class="evento-gestores-pill">@total @(total == 1 ? "registro" : "registros")</span>
+            </div>
+            @if (total > 0)
+            {
+                <div class="evento-gestores-busca">
+                    <label class="visually-hidden" for="filtroGestores">Filtrar gestor por nome ou CPF</label>
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                    <input type="search" class="form-control rounded-pill" id="filtroGestores" placeholder="Filtrar gestor por nome ou CPF…" />
+                </div>
+            }
+        </div>
+        @if (total == 0)
+        {
+            <p class="evento-gestores-texto text-center p-4 mb-0">Nenhum gestor vinculado a este evento.</p>
+        }
+        else
+        {
+            <div class="table-responsive" tabindex="0" role="region" aria-label="Tabela de gestores vinculados">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">Gestor</th>
+                            <th scope="col">CPF</th>
+                            <th scope="col">E-mail</th>
+                            <th scope="col">Papel</th>
+                            <th scope="col" class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var gestor in Model.Gestores)
+                        {
+                            var pessoa = gestor.IdPessoaNavigation;
+                            <tr data-nome="@pessoa.Nome" data-cpf="@Util.Methods.RemoveNaoNumericos(pessoa.Cpf)">
+                                <td>
+                                    <div class="d-flex align-items-center gap-3">
+                                        <span class="evento-gestores-avatar" aria-hidden="true">@Iniciais(pessoa.Nome)</span>
+                                        <div>
+                                            <strong class="d-block">@pessoa.Nome</strong>
+                                            <small class="evento-gestores-texto">@FormatarTelefone(pessoa.Telefone1)</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="font-monospace evento-gestores-cpf">@FormatarCpf(pessoa.Cpf)</td>
+                                <td>@pessoa.Email</td>
+                                <td><span class="evento-gestores-pill"><i class="bi bi-briefcase-fill" aria-hidden="true"></i> Gestor</span></td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm evento-gestores-remover" data-bs-toggle="modal"
+                                            data-bs-target="#confirmRemovalModal" data-pessoa-id="@pessoa.Id" data-pessoa-nome="@pessoa.Nome"
+                                            aria-label="Remover gestor @pessoa.Nome">
+                                        <i class="bi bi-trash" aria-hidden="true"></i> Remover gestor
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <p class="evento-gestores-texto text-center p-4 mb-0" id="gestoresSemResultados" hidden>Nenhum gestor encontrado para a busca.</p>
+            <div class="evento-gestores-lista-rodape d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <p class="evento-gestores-texto mb-0" id="contagemGestores" role="status"></p>
+                <nav class="d-flex align-items-center gap-1" aria-label="Páginas de gestores">
+                    <button class="btn btn-sm evento-gestores-voltar" type="button" id="gestoresAnterior" disabled>Anterior</button>
+                    <span class="evento-gestores-pagina" id="gestoresPagina" aria-current="page">1</span>
+                    <button class="btn btn-sm evento-gestores-voltar" type="button" id="gestoresProximo" disabled>Próximo</button>
+                </nav>
+            </div>
+        }
+    </section>
+
+    @if (total > 0)
+    {
+        <div class="modal fade" id="confirmRemovalModal" tabindex="-1" aria-labelledby="tituloRemoverGestor" aria-describedby="descricaoRemoverGestor">
+            <div class="modal-dialog modal-dialog-centered">
+                <form asp-action="DeletePessoaPapel" method="post" class="modal-content rounded-4 shadow border-0">
+                    <input type="hidden" name="idPessoa" id="removerGestorId" />
+                    <input type="hidden" name="idEvento" value="@Model.IdEvento" />
+                    <input type="hidden" name="idPapel" value="2" />
+                    <div class="modal-header border-0 pb-0">
+                        <h2 class="modal-title h5 fw-bold d-flex align-items-center gap-2" id="tituloRemoverGestor">
+                            <span class="evento-gestores-icone text-danger"><i class="bi bi-person-dash" aria-hidden="true"></i></span>
+                            Remover gestor
+                        </h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                    </div>
+                    <div class="modal-body" id="descricaoRemoverGestor">
+                        Deseja remover <strong id="removerGestorNome"></strong> da gestão do evento <strong>@Model.Evento.Nome</strong>?
+                    </div>
+                    <div class="modal-footer border-0">
+                        <button type="button" class="btn evento-gestores-voltar rounded-3" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-danger rounded-3"><i class="bi bi-trash me-1" aria-hidden="true"></i> Remover gestor</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
 </div>
 
 @section Scripts {
-    <script src="~/js/FormatarCampoCadastro.js"></script>
-    <script src="~/js/autoCompletarDadosCPF.js"></script>
-
-    <script>
-        function setModalValues(pessoaNome, eventoNome, pessoaId) {
-            document.getElementById('pessoaNome').textContent = pessoaNome;
-            document.getElementById('eventoNome').textContent = eventoNome;
-
-            removeForm = document.getElementById('removeForm-' + pessoaId);
-            document.getElementById('confirmRemovalButton').onclick = function () {
-                removeForm.submit();
-            };
+    @if (Layout != "_LayoutAdministrativo")
+    {
+        <script src="~/js/autoCompletarDadosCPF.js" asp-append-version="true"></script>
+        @if (Layout != "_Layout")
+        {
+            <script src="~/js/FormatarCampoCadastro.js" asp-append-version="true"></script>
         }
-    </script>
+    }
+    <script src="~/js/evento-admin-gestores.js" asp-append-version="true"></script>
 }
 
 @functions {
-    public static string FormatarCPF(string cpf)
+    private static string Iniciais(string nome)
     {
-        if (string.IsNullOrEmpty(cpf) || cpf.Length != 11)
-            return cpf;
+        var partes = nome.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return partes.Length switch
+        {
+            0 => "",
+            1 => partes[0][..1].ToUpperInvariant(),
+            _ => $"{partes[0][0]}{partes[^1][0]}".ToUpperInvariant()
+        };
+    }
 
-        return Convert.ToUInt64(cpf).ToString(@"000\.000\.000\-00");
+    private static string FormatarCpf(string cpf)
+    {
+        var digitos = Util.Methods.RemoveNaoNumericos(cpf);
+        return digitos.Length == 11 ? Util.Methods.PatternCpf(digitos) : cpf;
+    }
+
+    private static string? FormatarTelefone(string? telefone)
+    {
+        if (string.IsNullOrWhiteSpace(telefone))
+            return null;
+
+        var digitos = Util.Methods.RemoveNaoNumericos(telefone);
+        return digitos.Length is 10 or 11 ? $"({digitos[..2]}) {digitos[2..^4]}-{digitos[^4..]}" : telefone;
     }
 }

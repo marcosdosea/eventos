@@ -300,7 +300,8 @@ namespace Service
                 .Select(e => new EventoSimpleDTO
                 {
                     Id = e.Id,
-                    Nome = e.Nome
+                    Nome = e.Nome,
+                    Status = e.Status
                 })
                 .FirstOrDefault();
         }
@@ -313,7 +314,8 @@ namespace Service
                 .Select(e => new EventoSimpleDTO
                 {
                     Id = e.Id,
-                    Nome = e.Nome
+                    Nome = e.Nome,
+                    Status = e.Status
                 })
                 .ToList();
         }

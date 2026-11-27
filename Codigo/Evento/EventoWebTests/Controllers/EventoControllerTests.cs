@@ -26,6 +26,7 @@ namespace EventoWeb.Controllers.Tests
     {
         private static EventoController controller = null!;
         private static Mock<IInscricaoService> mockServiceInscricao = null!;
+        private Mock<IPessoaService> mockServicePessoa = null!;
 
         [TestInitialize]
         public void Initialize()
@@ -35,7 +36,7 @@ namespace EventoWeb.Controllers.Tests
             mockServiceInscricao = new Mock<IInscricaoService>();
             var mockServiceTipoevento = new Mock<ITipoeventoService>();
             var mockServiceAreaInteresse = new Mock<IAreaInteresseService>();
-            var mockServicePessoa = new Mock<IPessoaService>();
+            mockServicePessoa = new Mock<IPessoaService>();
             var mockServiceSubevento = new Mock<ISubeventoService>();
             var mockUserStore = new Mock<IUserStore<UsuarioIdentity>>();
             var mockUserManager = new Mock<UserManager<UsuarioIdentity>>(
@@ -281,17 +282,38 @@ namespace EventoWeb.Controllers.Tests
 
             Assert.IsInstanceOfType(result, typeof(ViewResult));
             ViewResult viewResult = (ViewResult)result;
-            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(GestaoPapelModel));
+            Assert.IsInstanceOfType(viewResult.ViewData.Model, typeof(GestoresEventoModel));
         }
 
         [TestMethod()]
         public async Task Gestor_Post_Valid()
         {
-            var result = await controller.CreateGestor(GetNewGestaoPapel());
+            var result = await controller.CreateGestor(new GestoresEventoModel
+            {
+                IdEvento = 1,
+                Pessoa = new GestorEventoForm { Cpf = "040.268.930-57", Nome = "João Vitor Sodré", Email = "email@gmail.com" }
+            });
 
             Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
             RedirectToActionResult redirectToActionResult = (RedirectToActionResult)result;
             Assert.AreEqual("CreateGestor", redirectToActionResult.ActionName);
+            Assert.AreEqual((uint)1, redirectToActionResult.RouteValues!["idEvento"]);
+            mockServicePessoa.Verify(service => service.GetByCpf("04026893057"), Times.Once);
+        }
+
+        [TestMethod]
+        public async Task Gestor_Post_Invalido_RecarregaEventoEGestores()
+        {
+            controller.ModelState.AddModelError("Pessoa.Cpf", "CPF inválido.");
+
+            var result = await controller.CreateGestor(new GestoresEventoModel { IdEvento = 1 });
+
+            Assert.IsInstanceOfType(result, typeof(ViewResult));
+            var model = (GestoresEventoModel)((ViewResult)result).Model!;
+            Assert.AreEqual((uint)1, model.IdEvento);
+            Assert.AreEqual("Evento Teste", model.Evento.Nome);
+            Assert.AreEqual(GetTestInscricoes().Count(), model.Gestores.Count);
+            mockServicePessoa.Verify(service => service.GetByCpf(It.IsAny<string>()), Times.Never);
         }
 
         [TestMethod()]
@@ -428,6 +450,20 @@ namespace EventoWeb.Controllers.Tests
             Assert.AreEqual("GerenciarEvento", redirectToActionResult.ActionName);
         }
 
+        [TestMethod]
+        public async Task DeletePessoaPapel_Post_Gestor_DefineMensagemDeSucessoERedirecionaParaCreateGestor()
+        {
+            mockServicePessoa.Setup(s => s.IsAdmAsync(It.IsAny<Pessoa>())).ReturnsAsync(true);
+
+            var result = await controller.DeletePessoaPapel(1, 1, 2);
+
+            Assert.IsInstanceOfType(result, typeof(RedirectToActionResult));
+            var redirectToActionResult = (RedirectToActionResult)result;
+            Assert.AreEqual("CreateGestor", redirectToActionResult.ActionName);
+            Assert.AreEqual((uint)1, redirectToActionResult.RouteValues!["idEvento"]);
+            Assert.AreEqual("Gestor removido do evento.", controller.TempData["SuccessMessage"]);
+        }
+
         [TestMethod()]
         public void GerenciarEvento_IdEventoZero_RedirecionaParaGerenciarEventoListar()
         {
@@ -455,7 +491,7 @@ namespace EventoWeb.Controllers.Tests
         [TestMethod()]
         [DataRow("Edit", new Type[] { typeof(uint), typeof(EventoModel) }, "ADMINISTRADOR")]
         [DataRow("Delete", new Type[] { typeof(uint), typeof(EventoModel) }, "ADMINISTRADOR")]
-        [DataRow("CreateGestor", new Type[] { typeof(GestaoPapelModel) }, "ADMINISTRADOR")]
+        [DataRow("CreateGestor", new Type[] { typeof(GestoresEventoModel) }, "ADMINISTRADOR")]
         [DataRow("CreateColaborador", new Type[] { typeof(GestaoPapelModel) }, "GESTOR")]
         [DataRow("CreateParticipante", new Type[] { typeof(GestaoPapelModel) }, "GESTOR,COLABORADOR")]
         [DataRow("EditParticipante", new Type[] { typeof(GestaoPapelModel) }, "GESTOR,COLABORADOR")]
