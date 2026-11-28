@@ -412,6 +412,13 @@
     border-width: 1px;
 }
 
+.gestor-inline-error {
+    background-color: #FEF2F2;
+    border: 1px solid #FECACA;
+    color: #991B1B;
+    border-radius: 10px;
+}
+
 /* Hub do Gestor (Cards de Ações Rápidas) */
 .cards-gerenciar-wrapper {
     display: grid;

@@ -350,7 +350,7 @@
                             <span asp-validation-for="ValorInscricao" class="text-danger small"></span>
                         </div>
 
-                        <div class="col-12" id="TempoMinutosReserva">
+                        <div class="col-12">
                             <label asp-for="TempoMinutosReserva" class="form-label gestor-label">
                                 <span>Bloqueio de Reserva de Vaga</span>
                             </label>
@@ -412,7 +412,7 @@
                             <input type="file" asp-for="ImagemPortal" id="fileInput" accept=".png,.jpg,.jpeg,.gif,.tif" class="d-none" />
                         </div>
 
-                        <div id="alertaTamanhoCapa" class="alert alert-danger small py-2 px-3 mt-2 mb-0 d-none" role="alert">
+                        <div id="alertaTamanhoCapa" class="gestor-inline-error small py-2 px-3 mt-2 mb-0 d-none" role="alert">
                             <i class="bi bi-exclamation-triangle-fill me-1"></i>
                             <span>O arquivo selecionado excede o limite de 64 KB. Escolha uma imagem menor.</span>
                         </div>
