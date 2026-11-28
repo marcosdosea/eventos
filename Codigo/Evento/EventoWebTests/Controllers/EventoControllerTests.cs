@@ -460,6 +460,7 @@ namespace EventoWeb.Controllers.Tests
         [DataRow("CreateParticipante", new Type[] { typeof(GestaoPapelModel) }, "GESTOR,COLABORADOR")]
         [DataRow("EditParticipante", new Type[] { typeof(GestaoPapelModel) }, "GESTOR,COLABORADOR")]
         [DataRow("DeletePessoaPapel", new Type[] { typeof(uint), typeof(uint), typeof(uint) }, "ADMINISTRADOR,GESTOR,COLABORADOR")]
+        [DataRow("GestorEditarEvento", new Type[] { typeof(uint), typeof(EventoModel) }, "GESTOR")]
         public void Post_ExigeCargoCorreto(string nomeAcao, Type[] tiposParametros, string cargosEsperados)
         {
             var metodo = typeof(EventoController).GetMethod(nomeAcao, tiposParametros);

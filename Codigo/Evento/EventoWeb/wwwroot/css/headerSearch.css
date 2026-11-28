@@ -1,4 +1,3 @@
-/* headerSearch.css */
 .header-search-container {
     width: 100%;
 }
@@ -12,7 +11,8 @@
     border-radius: 25px 0 0 25px;
     background-color: #fff;
     border-right: 0;
-    border-color: #232ED0; /* blue-normal */
+    border-color: #232ED0;
+    /* blue-normal */
 }
 
 .search-input {
@@ -76,6 +76,7 @@
     .search-input-wrapper {
         width: 100%;
     }
+
     .filter-dropdown-menu {
         width: 280px;
     }

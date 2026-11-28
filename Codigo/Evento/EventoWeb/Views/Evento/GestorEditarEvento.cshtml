@@ -1,289 +1,478 @@
 @model EventoWeb.Models.EventoModel
+@using System.Globalization
 
 @{
-    ViewData["Title"] = "GestorEditarEvento";
+    ViewData["Title"] = "Editar Detalhes do Evento";
+    ViewData["EventoId"] = Model.Id;
+    var culturaBr = new CultureInfo("pt-BR");
+
+    var cepDigitos = new string((Model.Cep ?? string.Empty).Where(char.IsDigit).ToArray());
+    var cepFormatado = cepDigitos.Length == 8
+        ? $"{cepDigitos[..5]}-{cepDigitos[5..]}"
+        : (Model.Cep ?? string.Empty);
+
+    var areasDisponiveis = Model.AreaInteresse ?? new SelectList(Enumerable.Empty<SelectListItem>());
+    var areasSelecionadasIds = Model.IdAreaInteresses ?? new List<uint>();
+
+    string ObterDataUrlImagem(string? base64)
+    {
+        if (string.IsNullOrWhiteSpace(base64)) return string.Empty;
+        var mime = "image/png";
+        if (base64.StartsWith("/9j/")) mime = "image/jpeg";
+        else if (base64.StartsWith("UklGR")) mime = "image/webp";
+        else if (base64.StartsWith("R0lGOD")) mime = "image/gif";
+        else if (base64.StartsWith("SUkq") || base64.StartsWith("TU0A")) mime = "image/tiff";
+        return $"data:{mime};base64,{base64}";
+    }
+
+    var imagemAtualUrl = ObterDataUrlImagem(Model.ImagemPortalBase64);
+    var possuiImagemAtual = !string.IsNullOrEmpty(imagemAtualUrl);
+    var tamanhoImagemKb = possuiImagemAtual
+        ? Math.Max(1, (int)Math.Round((Convert.FromBase64String(Model.ImagemPortalBase64!).Length) / 1024.0))
+        : 0;
 }
 
-<h1 class="blue-normal">Editar Evento</h1>
-<div class="row">
-    <form asp-action="GestorEditarEvento" enctype="multipart/form-data">
-        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-        <input type="hidden" asp-for="Id" />
-        <div class="row">
-            <div class="col-9">
-                <div class="form-group">
-                    <label asp-for="Nome" class="control-label"></label>
-                    <input asp-for="Nome" class="form-control" placeholder="Nome do evento" />
-                    <span asp-validation-for="Nome" class="text-danger"></span>
-                </div>
-            </div>
-            <div class="col-3">
-                <div class="form-group">
-                    <label asp-for="IdTipoEvento" class="control-label">Tipo</label>
-                    <select asp-for="IdTipoEvento" class="form-select" asp-items="Model.TiposEventos">
-                        <option value="">Selecione o tipo de evento</option>
-                    </select>
-                    <span asp-validation-for="IdTipoEvento" class="text-danger"></span>
-                </div>
-            </div>
-        </div>
+<link rel="stylesheet" href="~/css/_gerenciarevento.css" asp-append-version="true" />
 
-        <br />
-        <div class="form-group">
-            <label asp-for="Descricao" class="control-label"></label>
-            <textarea asp-for="Descricao" class="form-control" id="exampleFormControlTextarea1" rows="5"></textarea>
-            <span asp-validation-for="Descricao" class="text-danger"></span>
-        </div>
-        <br />
-        <div class="row">
-            <div class="col-md-3">
-                <div class="form-group">
-                    <label asp-for="DataInicio" class="control-label"></label>
-                    <input asp-for="DataInicio" class="form-control" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
-                    <span asp-validation-for="DataInicio" class="text-danger"></span>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="form-group">
-                    <label asp-for="DataFim" class="control-label"></label>
-                    <input asp-for="DataFim" class="form-control" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
-                    <span asp-validation-for="DataFim" class="text-danger"></span>
-                </div>
-            </div>
-            <div class="col-md-2 align-content-end">
-                <div class="form-group">
-                    <div class="d-flex">
-                        <div class="form-check">
-                            <!-- Checkbox que marca se a Inscrição é Gratuita(valor 1) -->
-                            <input class="form-check-input" type="checkbox" value="1" id="InscricaoGratuita" name="InscricaoGratuita"
-                                   @(Model.InscricaoGratuita == 1 ? "checked" : "")>
-                            <label class="form-check-label" for="InscricaoGratuita">Inscricao Gratuita</label>
-                            <!-- Campo oculto para enviar valor 0 quando o checkbox não está marcado -->
-                            <input type="hidden" name="InscricaoGratuita" value="0">
-                        </div>
-                    </div>
-                    <span asp-validation-for="EventoPublico" class="text-danger"></span>
-                </div>
-            </div>
-            <div class="col-md-2 align-content-end">
-                <div class="form-group">
-                    <div class="d-flex">
-                        <div class="form-check">
-                            <!-- Checkbox que marca se o Evento é Público (valor 1) -->
-                            <input class="form-check-input" type="checkbox" value="1" id="EventoPublico" name="EventoPublico"
-                                   @(Model.EventoPublico == 1 ? "checked" : "")>
-                            <label class="form-check-label" for="EventoPublico">Publicar no Portal</label>
-                            <!-- Campo oculto para enviar valor 0 quando o checkbox não está marcado -->
-                            <input type="hidden" name="EventoPublico" value="0">
-                        </div>
-                    </div>
-                    <span asp-validation-for="EventoPublico" class="text-danger"></span>
-                </div>
-            </div>
-            <div class="col-md-2 align-content-end">
-                <div class="form-group">
-                    <div class="d-flex ">
-                        <div class="form-check">
-                            <!-- Checkbox que marca se o evento Possui Certificado (valor 1) -->
-                            <input class="form-check-input" type="checkbox" value="1" id="PossuiCertificado" name="PossuiCertificado"
-                                   @(Model.PossuiCertificado == 1 ? "checked" : "")>
-                            <label class="form-check-label" for="PossuiCertificado">Possui Certificado </label>
-                            <!-- Campo oculto para enviar valor 0 quando o checkbox não está marcado -->
-                            <input type="hidden" name="PossuiCertificado" value="0">
-                        </div>
-                    </div>
-                    <span asp-validation-for="PossuiCertificado" class="text-danger"></span>
-                </div>
-            </div>
-        </div>
-        <br />
-        <div class="row">
-            <div class="col-2">
-                <div class="form-group">
-                    <label asp-for="Status" class="control-label"></label>
-                    <select asp-for="Status" class="form-select" aria-label="Default select example">
-                        <option value="C">Cadastro</option>
-                        <option value="A">Ativo</option>
-                        <option value="F">Finalizado</option>
-                    </select>
-                    <span asp-validation-for="Status" class="text-danger"></span>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="form-group">
-                    <label asp-for="DataInicioInscricao" class="control-label"></label>
-                    <input asp-for="DataInicioInscricao" class="form-control" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
-                    <span asp-validation-for="DataInicioInscricao" class="text-danger"></span>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="form-group">
-                    <label asp-for="DataFimInscricao" class="control-label"></label>
-                    <input asp-for="DataFimInscricao" class="form-control" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
-                    <span asp-validation-for="DataFimInscricao" class="text-danger"></span>
-                </div>
-            </div>
-        </div>
-        <br />
-        <div class="form-group">
-            <label asp-for="Website" class="control-label"></label>
-            <input asp-for="Website" class="form-control" placeholder="Site do evento" />
-            <span asp-validation-for="Website" class="text-danger"></span>
-        </div>
-        <br />
-        <div class="form-group">
-            <label asp-for="EmailEvento" class="control-label">Email Evento</label>
-            <input asp-for="EmailEvento" class="form-control" placeholder="E-mail para contato do evento" />
-            <span asp-validation-for="EmailEvento" class="text-danger"></span>
-        </div>
-        <br />
-        <div class="row">
-            <div class="col-md-3">
-                <div class="form-group">
-                    <label asp-for="Cep" class="control-label"></label>
-                    <input asp-for="Cep" class="form-control" />
-                    <span asp-validation-for="Cep" class="text-danger"></span>
-                </div>
-            </div>
-            <div class="col-md-9">
-                <div class="form-group">
-                    <label asp-for="Rua" class="control-label"></label>
-                    <input asp-for="Rua" class="form-control" />
-                    <span asp-validation-for="Rua" class="text-danger"></span>
-                </div>
-            </div>
-        </div>
-        <br />
-        <div class="row">
-            <div class="col-md-9">
-                <div class="form-group">
-                    <label asp-for="Bairro" class="control-label"></label>
-                    <input asp-for="Bairro" class="form-control" />
-                    <span asp-validation-for="Bairro" class="text-danger"></span>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="form-group">
-                    <label asp-for="Numero" class="control-label"></label>
-                    <input asp-for="Numero" class="form-control" />
-                    <span asp-validation-for="Numero" class="text-danger"></span>
-                </div>
-            </div>
-        </div>
-        <br />
-        <div class="row">
-            <div class="col-md-9">
-                <div class="form-group">
-                    <label asp-for="Cidade" class="control-label"></label>
-                    <input asp-for="Cidade" class="form-control" />
-                    <span asp-validation-for="Cidade" class="text-danger"></span>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="form-group">
-                    <label asp-for="Estado" class="control-label"></label>
-                    <select asp-for="Estado" class="form-select" asp-items="Model.Estados">
-                        <option value="">Selecione o estado</option>
-                    </select>
-                    <span asp-validation-for="Estado" class="text-danger"></span>
-                </div>
-            </div>
-        </div>
-        <br />
-        <div class="row">
-            <div class="col-md-12">
-                <div class="form-group">
-                    <label asp-for="Complemento" class="control-label"></label>
-                    <input asp-for="Complemento" class="form-control" />
-                    <span asp-validation-for="Complemento" class="text-danger"></span>
-                </div>
-            </div>
-        </div>
-        <br />
-        <div class="row">
-            <div class="col-3">
-                <div class="form-group">
-                    <label asp-for="FrequenciaMinimaCertificado" class="control-label">Frequência Min.</label>
-                    <input type="text" id="FrequenciaMinimaCertificado_Tela" class="form-control" value="@Model.FrequenciaMinimaCertificado.ToString("F2", new System.Globalization.CultureInfo("pt-BR"))" placeholder="0,00" />
-                    <input type="hidden" asp-for="FrequenciaMinimaCertificado" id="FrequenciaMinimaCertificado_Real" />
-                    <span asp-validation-for="FrequenciaMinimaCertificado" class="text-danger"></span>
-                </div>
-            </div>
-            <div class="col-3">
-                <div class="form-group">
-                    <label asp-for="VagasOfertadas" class="control-label"></label>
-                    <input asp-for="VagasOfertadas" class="form-control" />
-                    <span asp-validation-for="VagasOfertadas" class="text-danger"></span>
-                </div>
-            </div>
-            <div class="col-3">
-                <div class="form-group">
-                    <label asp-for="CargaHoraria" class="control-label"></label>
-                    <input asp-for="CargaHoraria" class="form-control" />
-                    <span asp-validation-for="CargaHoraria" class="text-danger"></span>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-3">
-                    <div class="form-group" id="TempoMinutosReserva">
-                        <label asp-for="TempoMinutosReserva" class="control-label">Bloqueio de Reserva de Vaga (Minutos)</label>
-                        <input type="text" asp-for="TempoMinutosReserva" class="form-control" onkeypress="return validateInput(event)">
-                        <span asp-validation-for="TempoMinutosReserva" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="col-3">
-                    <div class="form-group">
-                        <label asp-for="ValorInscricao" class="control-label"></label>
-                        <input type="text" id="ValorInscricao_Tela" class="form-control" value="@Model.ValorInscricao.ToString("F2", new System.Globalization.CultureInfo("pt-BR"))" placeholder="0,00" />
-                        <input type="hidden" asp-for="ValorInscricao" id="ValorInscricao_Real" />
-                        <span asp-validation-for="ValorInscricao" class="text-danger"></span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-5 form-group">
-                <label asp-for="ImagemPortal" class="control-label"></label>
-                <input type="file" asp-for="ImagemPortal" class="form-control" accept=".png,.jpg,.jpeg,.gif,.tif" id="fileInput" />
-                <span asp-validation-for="ImagemPortal" class="text-danger"></span>
-            </div>
-        </div>
-        <br />
+<div class="gestor-page-container">
+    <nav class="gestor-breadcrumb" aria-label="Navegação estrutural">
+        <a asp-controller="Evento" asp-action="GerenciarEventoListar" class="d-inline-flex align-items-center gap-1">
+            <i class="bi bi-house-door"></i>
+            <span>Meus Eventos</span>
+        </a>
+        <i class="bi bi-chevron-right small opacity-75"></i>
+        <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Model.Id">Gerenciar Evento</a>
+        <i class="bi bi-chevron-right small opacity-75"></i>
+        <span class="gestor-breadcrumb-active">Editar Detalhes do Evento</span>
+    </nav>
+
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
         <div>
-            <div class="form-group">
-                <label class="control-label">Área de Interesse</label>
-                <select id="areaInteresseSelect" class="form-control">
-                    <option value="">Selecione uma área de interesse</option>
-                    @foreach (var area in Model.AreaInteresse)
-                    {
-                        <option value="@area.Value">@area.Text</option>
-                    }
-                </select>
-                <button type="button" id="addAreaButton" class="btn btn-primary mt-2">Adicionar</button>
-
-                <ul id="selectedAreas" class="mt-2 list-group">
-                    @foreach (var idArea in Model.IdAreaInteresses)
-                    {
-                        var areaNome = Model.AreaInteresse.FirstOrDefault(a => a.Value == idArea.ToString())?.Text;
-                        if (!string.IsNullOrEmpty(areaNome))
-                        {
-                            <li class="list-group-item d-flex justify-content-between align-items-center" data-id="@idArea">
-                                @areaNome
-                                <input type="hidden" name="IdAreaInteresses" value="@idArea" />
-                                <button type="button" class="btn btn-danger btn-sm btn-remover-inicial" data-id="@idArea">Remover</button>
-                            </li>
-                        }
-                    }
-                </ul>
-                <span asp-validation-for="IdAreaInteresses" class="text-danger"></span>
-            </div>
+            <h1 class="gestor-title">@ViewData["Title"]</h1>
+            <p class="gestor-subtitle">Configure cronograma, endereço, vagas, certificado, imagem de capa e áreas de interesse</p>
         </div>
 
-        <br />
-        <div class="d-flex justify-content-end">
-            <div class="form-group" style="margin-right: 10px;">
-                <input type="submit" value="Salvar" class="btn btn-blue-normal color-white" />
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <span id="badgePublicacaoPortal" class="gestor-pill @(Model.EventoPublico == 1 ? "gestor-pill-publicado" : "gestor-pill-rascunho")">
+                <i class="bi @(Model.EventoPublico == 1 ? "bi-broadcast" : "bi-eye-slash")"></i>
+                <span id="lblPublicacaoPortal">@(Model.EventoPublico == 1 ? "Publicado no Portal" : "Oculto do Portal")</span>
+            </span>
+            <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Model.Id" class="gestor-back-btn">
+                <i class="bi bi-arrow-left"></i>
+                <span>Voltar ao Painel</span>
+            </a>
+        </div>
+    </div>
+
+    <form asp-action="GestorEditarEvento" asp-route-id="@Model.Id" method="post" enctype="multipart/form-data" id="formGestorEditarEvento">
+        <div asp-validation-summary="All" class="gestor-validation-summary" role="alert"></div>
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="VagasReservadas" />
+        <input type="hidden" asp-for="VagasDisponiveis" />
+
+        <div class="row g-4 align-items-start">
+            <div class="col-lg-8 d-flex flex-column gap-4">
+                <section class="gestor-card" aria-labelledby="secIdentificacao">
+                    <div class="gestor-card-header">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="gestor-card-icon">
+                                <i class="bi bi-info-circle"></i>
+                            </div>
+                            <h2 class="gestor-card-title" id="secIdentificacao">1. Identificação e Descrição</h2>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label asp-for="Nome" class="form-label gestor-label">
+                                <i class="bi bi-calendar-event"></i>
+                                <span>Nome do Evento</span>
+                            </label>
+                            <input asp-for="Nome" class="form-control gestor-input" placeholder="Nome do evento" />
+                            <span asp-validation-for="Nome" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="IdTipoEvento" class="form-label gestor-label">
+                                <i class="bi bi-tag"></i>
+                                <span>Tipo</span>
+                            </label>
+                            <select asp-for="IdTipoEvento" class="form-select gestor-select" asp-items="Model.TiposEventos">
+                                <option value="">Selecione o tipo de evento</option>
+                            </select>
+                            <span asp-validation-for="IdTipoEvento" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Descricao" class="form-label gestor-label">
+                                <i class="bi bi-text-left"></i>
+                                <span>Descrição</span>
+                            </label>
+                            <textarea asp-for="Descricao" class="form-control gestor-input" rows="4" placeholder="Descreva o evento, programação e informações relevantes para os participantes..."></textarea>
+                            <span asp-validation-for="Descricao" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Website" class="form-label gestor-label">
+                                <i class="bi bi-globe2"></i>
+                                <span>Website</span>
+                            </label>
+                            <input asp-for="Website" class="form-control gestor-input" placeholder="https://site-do-evento.com.br" />
+                            <span asp-validation-for="Website" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="EmailEvento" class="form-label gestor-label">
+                                <i class="bi bi-envelope"></i>
+                                <span>E-mail de Contato</span>
+                            </label>
+                            <input asp-for="EmailEvento" class="form-control gestor-input" placeholder="contato@evento.com.br" />
+                            <span asp-validation-for="EmailEvento" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="gestor-card" aria-labelledby="secCronograma">
+                    <div class="gestor-card-header">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="gestor-card-icon">
+                                <i class="bi bi-clock-history"></i>
+                            </div>
+                            <h2 class="gestor-card-title" id="secCronograma">2. Cronograma e Período de Inscrições</h2>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-sm-6 col-xl-3">
+                            <label asp-for="DataInicio" class="form-label gestor-label">
+                                <i class="bi bi-play-circle"></i>
+                                <span>Início do Evento</span>
+                            </label>
+                            <input asp-for="DataInicio" class="form-control gestor-input gestor-input-datetime" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
+                            <span asp-validation-for="DataInicio" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-sm-6 col-xl-3">
+                            <label asp-for="DataFim" class="form-label gestor-label">
+                                <i class="bi bi-stop-circle"></i>
+                                <span>Fim do Evento</span>
+                            </label>
+                            <input asp-for="DataFim" class="form-control gestor-input gestor-input-datetime" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
+                            <span asp-validation-for="DataFim" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-sm-6 col-xl-3">
+                            <label asp-for="DataInicioInscricao" class="form-label gestor-label">
+                                <i class="bi bi-door-open"></i>
+                                <span>Início Inscrições</span>
+                            </label>
+                            <input asp-for="DataInicioInscricao" class="form-control gestor-input gestor-input-datetime" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
+                            <span asp-validation-for="DataInicioInscricao" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-sm-6 col-xl-3">
+                            <label asp-for="DataFimInscricao" class="form-label gestor-label">
+                                <i class="bi bi-door-closed"></i>
+                                <span>Fim Inscrições</span>
+                            </label>
+                            <input asp-for="DataFimInscricao" class="form-control gestor-input gestor-input-datetime" type="datetime-local" asp-format="{0:yyyy-MM-ddTHH:mm}" />
+                            <span asp-validation-for="DataFimInscricao" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="gestor-card" aria-labelledby="secLocalizacao">
+                    <div class="gestor-card-header">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="gestor-card-icon">
+                                <i class="bi bi-geo-alt"></i>
+                            </div>
+                            <h2 class="gestor-card-title" id="secLocalizacao">3. Localização e Endereço</h2>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label for="Cep_Tela" class="form-label gestor-label">
+                                <span>CEP</span>
+                            </label>
+                            <input type="text" id="Cep_Tela" class="form-control gestor-input font-monospace" value="@cepFormatado" placeholder="00000-000" maxlength="9" inputmode="numeric" />
+                            <input type="hidden" asp-for="Cep" id="Cep_Real" />
+                            <span asp-validation-for="Cep" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="Rua" class="form-label gestor-label">
+                                <span>Logradouro / Rua</span>
+                            </label>
+                            <input asp-for="Rua" class="form-control gestor-input" placeholder="Av., Rua, Travessa..." />
+                            <span asp-validation-for="Rua" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label asp-for="Numero" class="form-label gestor-label">
+                                <span>Número</span>
+                            </label>
+                            <input asp-for="Numero" class="form-control gestor-input" placeholder="S/N" />
+                            <span asp-validation-for="Numero" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="Bairro" class="form-label gestor-label">
+                                <span>Bairro</span>
+                            </label>
+                            <input asp-for="Bairro" class="form-control gestor-input" placeholder="Bairro" />
+                            <span asp-validation-for="Bairro" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="Cidade" class="form-label gestor-label">
+                                <span>Cidade</span>
+                            </label>
+                            <input asp-for="Cidade" class="form-control gestor-input" placeholder="Cidade" />
+                            <span asp-validation-for="Cidade" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="Estado" class="form-label gestor-label">
+                                <span>Estado</span>
+                            </label>
+                            <select asp-for="Estado" class="form-select gestor-select" asp-items="Model.Estados">
+                                <option value="">Selecione o estado</option>
+                            </select>
+                            <span asp-validation-for="Estado" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Complemento" class="form-label gestor-label">
+                                <span>Complemento</span>
+                            </label>
+                            <input asp-for="Complemento" class="form-control gestor-input" placeholder="Auditório, bloco, sala ou ponto de referência" />
+                            <span asp-validation-for="Complemento" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </section>
             </div>
-            <div class="form-group">
-                <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Model.Id" class="btn btn-outline-danger">Voltar</a>
+
+            <div class="col-lg-4 d-flex flex-column gap-4">
+                <section class="gestor-card" aria-labelledby="secPublicacao">
+                    <div class="gestor-card-header">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="gestor-card-icon">
+                                <i class="bi bi-sliders"></i>
+                            </div>
+                            <h2 class="gestor-card-title" id="secPublicacao">4. Publicação &amp; Regras</h2>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Status" class="form-label gestor-label">
+                            <span>Status do Evento</span>
+                        </label>
+                        <select asp-for="Status" class="form-select gestor-select">
+                            <option value="C">Cadastro</option>
+                            <option value="A">Ativo</option>
+                            <option value="F">Finalizado</option>
+                        </select>
+                        <span asp-validation-for="Status" class="text-danger small"></span>
+                    </div>
+
+                    <div class="gestor-rules-box mb-3">
+                        <div class="gestor-switch-row">
+                            <label class="gestor-switch-label" for="EventoPublico">Publicar na vitrine do portal</label>
+                            <div class="form-check form-switch m-0 p-0">
+                                <input class="form-check-input gestor-switch-input" type="checkbox" role="switch" value="1" id="EventoPublico" name="EventoPublico" @(Model.EventoPublico == 1 ? "checked" : "") />
+                                <input type="hidden" name="EventoPublico" value="0" />
+                            </div>
+                        </div>
+
+                        <div class="gestor-switch-row">
+                            <label class="gestor-switch-label" for="InscricaoGratuita">Inscrição gratuita</label>
+                            <div class="form-check form-switch m-0 p-0">
+                                <input class="form-check-input gestor-switch-input" type="checkbox" role="switch" value="1" id="InscricaoGratuita" name="InscricaoGratuita" @(Model.InscricaoGratuita == 1 ? "checked" : "") />
+                                <input type="hidden" name="InscricaoGratuita" value="0" />
+                            </div>
+                        </div>
+
+                        <div class="gestor-switch-row">
+                            <label class="gestor-switch-label" for="PossuiCertificado">Emite certificado</label>
+                            <div class="form-check form-switch m-0 p-0">
+                                <input class="form-check-input gestor-switch-input" type="checkbox" role="switch" value="1" id="PossuiCertificado" name="PossuiCertificado" @(Model.PossuiCertificado == 1 ? "checked" : "") />
+                                <input type="hidden" name="PossuiCertificado" value="0" />
+                            </div>
+                        </div>
+                        <span asp-validation-for="EventoPublico" class="text-danger small d-block"></span>
+                        <span asp-validation-for="InscricaoGratuita" class="text-danger small d-block"></span>
+                        <span asp-validation-for="PossuiCertificado" class="text-danger small d-block"></span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label asp-for="VagasOfertadas" class="form-label gestor-label">
+                                <span>Vagas</span>
+                            </label>
+                            <input asp-for="VagasOfertadas" class="form-control gestor-input" min="0" />
+                            <span asp-validation-for="VagasOfertadas" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-6">
+                            <label asp-for="CargaHoraria" class="form-label gestor-label">
+                                <span>Carga Horária</span>
+                            </label>
+                            <div class="input-group gestor-input-group">
+                                <input asp-for="CargaHoraria" class="form-control" min="0" />
+                                <span class="input-group-text">h</span>
+                            </div>
+                            <span asp-validation-for="CargaHoraria" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-6">
+                            <label for="FrequenciaMinimaCertificado_Tela" class="form-label gestor-label">
+                                <span>Freq. Mín. (%)</span>
+                            </label>
+                            <div class="input-group gestor-input-group">
+                                <input type="text" id="FrequenciaMinimaCertificado_Tela" class="form-control" value="@Model.FrequenciaMinimaCertificado.ToString("F2", culturaBr)" placeholder="0,00" inputmode="decimal" />
+                                <span class="input-group-text">%</span>
+                            </div>
+                            <input type="hidden" asp-for="FrequenciaMinimaCertificado" id="FrequenciaMinimaCertificado_Real" />
+                            <span asp-validation-for="FrequenciaMinimaCertificado" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-6">
+                            <label for="ValorInscricao_Tela" class="form-label gestor-label">
+                                <span>Valor Base (R$)</span>
+                            </label>
+                            <div class="input-group gestor-input-group">
+                                <span class="input-group-text">R$</span>
+                                <input type="text" id="ValorInscricao_Tela" class="form-control" value="@Model.ValorInscricao.ToString("F2", culturaBr)" placeholder="0,00" inputmode="decimal" />
+                            </div>
+                            <input type="hidden" asp-for="ValorInscricao" id="ValorInscricao_Real" />
+                            <span asp-validation-for="ValorInscricao" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="TempoMinutosReserva" class="form-label gestor-label">
+                                <span>Bloqueio de Reserva de Vaga</span>
+                            </label>
+                            <div class="input-group gestor-input-group">
+                                <input type="text" asp-for="TempoMinutosReserva" class="form-control" onkeypress="return validateInput(event)" inputmode="numeric" />
+                                <span class="input-group-text">min</span>
+                            </div>
+                            <span asp-validation-for="TempoMinutosReserva" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="gestor-card" aria-labelledby="secCapaAreas">
+                    <div class="gestor-card-header">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="gestor-card-icon">
+                                <i class="bi bi-image"></i>
+                            </div>
+                            <h2 class="gestor-card-title" id="secCapaAreas">5. Capa &amp; Áreas de Interesse</h2>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-1 mb-2">
+                            <label asp-for="ImagemPortal" class="form-label gestor-label mb-0">
+                                <span>Imagem de Capa</span>
+                            </label>
+                            <span class="text-muted" style="font-size: 0.74rem; font-weight: 500;">PNG, JPG, GIF, TIF (máx. 64 KB)</span>
+                        </div>
+
+                        <div class="gestor-upload-box">
+                            <div class="gestor-upload-info">
+                                <div class="gestor-upload-thumb" id="thumbCapaBox">
+                                    @if (possuiImagemAtual)
+                                    {
+                                        <img id="thumbCapaImg" src="@imagemAtualUrl" alt="Capa atual do evento" />
+                                        <i class="bi bi-image text-muted fs-4 d-none" id="thumbCapaPlaceholder"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-image text-muted fs-4" id="thumbCapaPlaceholder"></i>
+                                        <img id="thumbCapaImg" src="" alt="Prévia da capa" class="d-none" />
+                                    }
+                                </div>
+                                <div class="gestor-upload-meta">
+                                    <div class="fw-bold text-dark small text-truncate" id="lblNomeCapa" title="@(possuiImagemAtual ? "Capa cadastrada no portal" : "")">
+                                        @(possuiImagemAtual ? "Capa cadastrada no portal" : "Nenhuma imagem selecionada")
+                                    </div>
+                                    <div class="text-muted text-truncate" id="lblInfoCapa" style="font-size: 0.75rem;">
+                                        @(possuiImagemAtual ? $"{tamanhoImagemKb} KB" : "Clique em Carregar para enviar")
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="button" id="btnSelecionarCapa" class="btn btn-outline-blue-normal btn-sm bg-white rounded-3 px-3 py-1 fw-semibold d-inline-flex align-items-center gap-2 flex-shrink-0 text-nowrap">
+                                <i class="bi bi-upload"></i>
+                                <span>@(possuiImagemAtual ? "Trocar" : "Carregar")</span>
+                            </button>
+                            <input type="file" asp-for="ImagemPortal" id="fileInput" accept=".png,.jpg,.jpeg,.gif,.tif" class="d-none" />
+                        </div>
+
+                        <div id="alertaTamanhoCapa" class="gestor-inline-error small py-2 px-3 mt-2 mb-0 d-none" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                            <span>O arquivo selecionado excede o limite de 64 KB. Escolha uma imagem menor.</span>
+                        </div>
+                        <span asp-validation-for="ImagemPortal" class="text-danger small d-block mt-1"></span>
+                    </div>
+
+                    <div>
+                        <label class="form-label gestor-label">
+                            <i class="bi bi-tags"></i>
+                            <span>Áreas Selecionadas</span>
+                        </label>
+
+                        <div id="selectedAreas" class="gestor-tags-list">
+                            @{
+                                var algumaArea = false;
+                            }
+                            @foreach (var idArea in areasSelecionadasIds)
+                            {
+                                var areaNome = areasDisponiveis.FirstOrDefault(a => a.Value == idArea.ToString())?.Text;
+                                if (!string.IsNullOrEmpty(areaNome))
+                                {
+                                    algumaArea = true;
+                                    <span class="gestor-tag-chip" data-id="@idArea">
+                                        <span>@areaNome</span>
+                                        <input type="hidden" name="IdAreaInteresses" value="@idArea" />
+                                        <button type="button" class="gestor-tag-remove btn-remover-inicial" data-id="@idArea" title="Remover @areaNome" aria-label="Remover @areaNome">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                    </span>
+                                }
+                            }
+                            <span id="areasVaziasHint" class="gestor-tags-empty @(algumaArea ? "d-none" : "")">Nenhuma área de interesse associada.</span>
+                        </div>
+
+                        <div class="input-group">
+                            <select id="areaInteresseSelect" class="form-select gestor-select" aria-label="Adicionar área de interesse">
+                                <option value="">Adicionar área de interesse...</option>
+                                @foreach (var area in areasDisponiveis)
+                                {
+                                    <option value="@area.Value">@area.Text</option>
+                                }
+                            </select>
+                            <button type="button" id="addAreaButton" class="btn btn-blue-normal color-white px-3 fw-bold" title="Adicionar área selecionada" aria-label="Adicionar área de interesse">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="IdAreaInteresses" class="text-danger small d-block mt-1"></span>
+                    </div>
+                </section>
+
+            
+                <div class="d-flex flex-wrap justify-content-end gap-2">
+                    <a asp-controller="Evento" asp-action="GerenciarEvento" asp-route-idEvento="@Model.Id" class="btn btn-outline-danger rounded-3 px-4 py-2 fw-semibold">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-blue-normal color-white rounded-3 px-4 py-2 fw-semibold shadow-sm d-inline-flex align-items-center justify-content-center gap-2 flex-grow-1">
+                        <i class="bi bi-save"></i>
+                        <span>Salvar Alterações</span>
+                    </button>
+                </div>
             </div>
         </div>
     </form>
@@ -293,84 +482,5 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-    <script>
-            $(document).ready(function () {
-            function gerenciarCampoMonetario(idTela, idReal) {
-                const campoTela = document.getElementById(idTela);
-                const campoReal = document.getElementById(idReal);
-                if (!campoTela || !campoReal) return;
-                campoReal.value = campoTela.value;
-                campoTela.addEventListener('input', function (e) {
-                    let value = e.target.value.replace(/\D/g, '');
-                    if (value.length > 0) {
-                        value = (parseFloat(value) / 100).toFixed(2).replace('.', ',');
-                    } else {
-                        value = '0,00';
-                    }
-                    e.target.value = value;
-                    campoReal.value = value;
-                });
-            }
-            gerenciarCampoMonetario('ValorInscricao_Tela', 'ValorInscricao_Real');
-            gerenciarCampoMonetario('FrequenciaMinimaCertificado_Tela', 'FrequenciaMinimaCertificado_Real');
-        });
-    </script>
-    <script>
-        document.getElementById('InscricaoGratuita').addEventListener('change', function () {
-            this.nextElementSibling.value = this.checked ? 1 : 0;
-        });
-    </script>
-    <script>
-        document.getElementById('EventoPublico').addEventListener('change', function () {
-            this.nextElementSibling.value = this.checked ? 1 : 0;
-        });
-    </script>
-    <script>
-        document.getElementById('PossuiCertificado').addEventListener('change', function () {
-            this.nextElementSibling.value = this.checked ? 1 : 0;
-        });
-    </script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        $(document).ready(function () {
-            var areaInteresseSelect = $('#areaInteresseSelect');
-            var selectedAreasList = $('#selectedAreas');
-
-            function addHiddenInput(listItem, value) {
-                var hiddenInput = $('<input type="hidden" name="IdAreaInteresses" value="' + value + '" />');
-                listItem.append(hiddenInput);
-            }
-
-            $('#addAreaButton').on('click', function () {
-                var selectedOption = areaInteresseSelect.find('option:selected');
-                var value = selectedOption.val();
-                var text = selectedOption.text();
-
-                if (value && !selectedAreasList.find('[data-id="' + value + '"]').length) {
-                    var listItem = $('<li class="list-group-item d-flex justify-content-between align-items-center"></li>');
-                    listItem.text(text);
-                    listItem.attr('data-id', value);
-
-                    var removeButton = $('<button type="button" class="btn btn-danger btn-sm">Remover</button>');
-                    removeButton.on('click', function () {
-                        listItem.remove();
-                    });
-
-                    listItem.append(removeButton);
-
-                    addHiddenInput(listItem, value);
-
-                    selectedAreasList.append(listItem);
-                    areaInteresseSelect.val('');
-                }
-            });
-
-            $(document).on('click', '.btn-remover-inicial', function () {
-                $(this).closest('li').remove();
-            });
-        });
-    </script>
-
-
-
+    <script src="~/js/evento-gestor.js" asp-append-version="true"></script>
 }

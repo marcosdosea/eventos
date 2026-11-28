@@ -1098,7 +1098,8 @@ namespace EventoWeb.Controllers
                         }
                         else
                         {
-                            ModelState.AddModelError("Foto", "O arquivo é muito grande. Deve ser menor que 64 KB.");
+                            ModelState.AddModelError(nameof(EventoModel.ImagemPortal), "O arquivo é muito grande. Deve ser menor que 64 KB.");
+                            viewModel.Id = id;
                             CarregarDadosEventos(viewModel);
                             return View(viewModel);
                         }
@@ -1131,6 +1132,7 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("GerenciarEvento", new { idEvento = id });
             }
 
+            viewModel.Id = id;
             CarregarDadosEventos(viewModel);
             return View(viewModel);
         }
@@ -1144,6 +1146,15 @@ namespace EventoWeb.Controllers
             viewModel.Estados = new SelectList(estados, "Estado", "Nome", viewModel.Estado);
             viewModel.TiposEventos = new SelectList(tiposEventos, "Id", "Nome", viewModel.IdTipoEvento);
             viewModel.AreaInteresse = new SelectList(areaInteresse, "Id", "Nome", viewModel.IdAreaInteresses);
+
+            if (string.IsNullOrEmpty(viewModel.ImagemPortalBase64) && viewModel.Id > 0)
+            {
+                var eventoExistente = _eventoService.Get(viewModel.Id);
+                if (eventoExistente?.ImagemPortal != null && eventoExistente.ImagemPortal.Length > 0)
+                {
+                    viewModel.ImagemPortalBase64 = Convert.ToBase64String(eventoExistente.ImagemPortal);
+                }
+            }
         }
     }
 }
