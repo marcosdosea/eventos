@@ -22,12 +22,11 @@
             <button type="button" class="btn btn-outline-primary flex-fill" data-bs-toggle="modal" data-bs-target="#modalImportarCsv">
                 <i class="bi bi-upload me-1"></i> Importar CSV
             </button>
-            @if (User.IsInRole("GESTOR"))
+            @if (User.IsInRole("GESTOR") || User.IsInRole("COLABORADOR"))
             {
-                <a href="@Url.Action("ExportarFrequencia", "ParticipacaoPessoaEvento", new { idEvento = Model.Evento.Id, idSubEvento = Model.SubEvento?.Id })"
-                   class="btn btn-blue-normal flex-fill text-center">
-                    <i class="bi bi-download me-1"></i> Exportar CSV
-                </a>
+                <button type="button" class="btn btn-blue-normal flex-fill text-center" data-bs-toggle="modal" data-bs-target="#modalExportarFrequencia">
+                    <i class="bi bi-download me-1"></i> Exportar Frequência
+                </button>
             }
         </div>
     </div>
@@ -174,6 +173,72 @@
 </div>
 
 <partial name="_ImportaCSV" model='new EventoWeb.Models.ImportarCsvModalModel { IdEvento = Model.Evento.Id, IdSubEvento = Model.SubEvento?.Id, ActionRetorno = "Frequencia", Titulo = "Importar Planilha de Frequência", Descricao = "Selecione o arquivo de planilha (formatos .csv, .xlsx ou .xls, como o relatório do SIGAA) para importar os participantes e registrar a frequência.", MensagemCarregamento = "Processando planilha e registrando frequência, aguarde..." }' />
+
+<div class="modal fade" id="modalExportarFrequencia" tabindex="-1" role="dialog" aria-labelledby="modalExportarFrequenciaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-primary text-white position-relative">
+                <h5 class="modal-title w-100 text-center fw-bold" id="modalExportarFrequenciaLabel">
+                    <i class="bi bi-file-earmark-spreadsheet me-2"></i>Exportar Relatório de Frequência
+                </h5>
+                <button type="button" class="btn-close btn-close-white position-absolute end-0 me-3" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="get" asp-action="ExportarFrequencia" asp-controller="ParticipacaoPessoaEvento">
+                <input type="hidden" name="idEvento" value="@Model.Evento.Id" />
+                <div class="modal-body p-4">
+                    <p class="text-muted small mb-3">
+                        Gere a planilha de frequência contendo os dados de presença sincronizados pelo Bipou, cálculo de carga horária e percentual para homologação e emissão de certificados.
+                    </p>
+
+                    <div class="mb-3">
+                        <label for="selectFormatoExportacao" class="form-label fw-bold text-secondary small">Formato do Arquivo</label>
+                        <select id="selectFormatoExportacao" name="formato" class="form-select">
+                            <option value="xlsx" selected>Planilha Excel (.xlsx) - Formatada com estilos e cores</option>
+                            <option value="csv">Arquivo de Texto / CSV (.csv) - Separado por ponto e vírgula (;)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="selectSubEventoExportacao" class="form-label fw-bold text-secondary small">Curso / Subevento</label>
+                        <select id="selectSubEventoExportacao" name="idSubEvento" class="form-select">
+                            @if (Model.SubEvento != null)
+                            {
+                                <option value="@Model.SubEvento.Id" selected>@Model.SubEvento.Nome (Atual)</option>
+                                <option value="">Evento Principal (@Model.Evento.Nome)</option>
+                            }
+                            else
+                            {
+                                <option value="" selected>Evento Principal (@Model.Evento.Nome)</option>
+                                if (Model.Subeventos != null)
+                                {
+                                    foreach (var sub in Model.Subeventos)
+                                    {
+                                        <option value="@sub.Id">@sub.Nome</option>
+                                    }
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="selectStatusExportacao" class="form-label fw-bold text-secondary small">Filtro de Situação</label>
+                        <select id="selectStatusExportacao" name="status" class="form-select">
+                            <option value="Todos" selected>Todos os Participantes</option>
+                            <option value="Somente Aptos">Somente Aptos para Certificado</option>
+                            <option value="Somente Abaixo da Média">Somente Abaixo da Média (Insuficiente)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-end bg-light border-top-0 pt-0 pb-3 pe-4">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-download me-1"></i> Baixar Relatório
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

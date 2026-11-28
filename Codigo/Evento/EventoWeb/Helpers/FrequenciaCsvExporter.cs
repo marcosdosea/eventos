@@ -23,7 +23,55 @@ namespace EventoWeb.Helpers
     public static class FrequenciaCsvExporter
     {
         public const string Cabecalho = "CPF;NOME;SOBRENOME;E-MAIL;TIPO DA PARTICIPAÇÃO;ENTRADA;SAIDA;PERMANENCIA_MINUTOS";
+        public const string CabecalhoRelatorio = "CPF;NOME COMPLETO;E-MAIL;CURSO / SUBEVENTO;CARGA HORÁRIA TOTAL (HORAS);TOTAL HORAS PRESENTES;PERCENTUAL DE FREQUÊNCIA (%);SITUAÇÃO DA FREQUÊNCIA;HISTÓRICO DE ENTRADAS E SAÍDAS";
         public const string TipoParticipacao = "PARTICIPANTE";
+
+        /// <summary>
+        /// Gera as linhas do CSV consolidado com as 9 colunas para homologação e emissão de certificados.
+        /// </summary>
+        public static List<string[]> GerarLinhasRelatorio(string? nomeEvento, string? nomeSubEvento, IEnumerable<FrequenciaRelatorioItem> itens)
+        {
+            ArgumentNullException.ThrowIfNull(itens);
+
+            var linhas = new List<string[]>
+            {
+                new[] { CsvFormat.Campo(Titulo(nomeEvento, nomeSubEvento)) },
+                Array.Empty<string>(),
+                CabecalhoRelatorio.Split(';')
+            };
+
+            foreach (var item in itens)
+            {
+                linhas.Add(new[]
+                {
+                    CsvFormat.Campo(item.Cpf),
+                    CsvFormat.Campo(item.NomeCompleto),
+                    CsvFormat.Campo(item.Email),
+                    CsvFormat.Campo(item.CursoOuSubevento),
+                    item.CargaHorariaTotal.ToString("0.00", CultureInfo.InvariantCulture),
+                    item.TotalHorasPresentes.ToString("0.00", CultureInfo.InvariantCulture),
+                    item.PercentualFrequencia.ToString("0.00", CultureInfo.InvariantCulture) + "%",
+                    CsvFormat.Campo(item.SituacaoFrequencia),
+                    CsvFormat.Campo(item.HistoricoEntradasSaidas)
+                });
+            }
+
+            return linhas;
+        }
+
+        /// <summary>
+        /// Gera os bytes UTF-8 com BOM do CSV consolidado com as 9 colunas para homologação e emissão de certificados.
+        /// </summary>
+        public static byte[] GerarRelatorio(string? nomeEvento, string? nomeSubEvento, IEnumerable<FrequenciaRelatorioItem> itens)
+        {
+            var sb = new StringBuilder();
+            foreach (var linha in GerarLinhasRelatorio(nomeEvento, nomeSubEvento, itens))
+            {
+                sb.AppendJoin(';', linha).AppendLine();
+            }
+
+            return CsvFormat.ComBom(sb.ToString());
+        }
 
         /// <summary>
         /// Gera as linhas do CSV (título, linha em branco, cabeçalho e dados).

@@ -8,5 +8,6 @@ namespace EventoWeb.Models
         public EventoSimpleDTO Evento { get; set; }
         public Subevento? SubEvento { get; set; }
         public IEnumerable<Participacaopessoaevento> Frequencias { get; set; }
+        public IEnumerable<SubeventoEventoDTO>? Subeventos { get; set; }
     }
 } 

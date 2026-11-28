@@ -179,21 +179,28 @@ namespace EventoWeb.Controllers
                 return NotFound();
             }
 
+            var subeventos = _subeventoService.GetByIdEvento(idEvento);
+
             var viewModel = new FrequenciaViewModel
             {
                 Evento = _eventoService.GetEventoSimpleDto(idEvento),
                 SubEvento = subEvento,
-                Frequencias = frequencias
+                Frequencias = frequencias,
+                Subeventos = subeventos
             };
 
             return View(viewModel);
         }
 
-        [Authorize(Roles = "GESTOR")]
+        [Authorize(Roles = "GESTOR,COLABORADOR")]
         [HttpGet]
         [Route("ParticipacaoPessoaEvento/ExportarFrequencia/{idEvento}/{idSubEvento?}")]
         [Route("ParticipacaoPessoaEvento/ExportarFrequencia")]
-        public async Task<IActionResult> ExportarFrequencia(uint idEvento, uint? idSubEvento)
+        public async Task<IActionResult> ExportarFrequencia(
+            uint idEvento,
+            uint? idSubEvento = null,
+            string formato = "xlsx",
+            string status = "Todos")
         {
             var user = await _userManager.GetUserAsync(User);
             if (user == null || string.IsNullOrEmpty(user.UserName))
@@ -209,32 +216,261 @@ namespace EventoWeb.Controllers
                 return RedirectToAction("GerenciarEventoListar", "Evento");
             }
 
-            var acessoNegado = ValidarPermissaoGestorEvento(
+            var acessoNegado = ValidarPermissaoEvento(
                 idEvento, username, cpfLimpo, "Você não possui um evento vinculado para exportar a frequência!");
             if (acessoNegado != null)
             {
                 return acessoNegado;
             }
 
-            var evento = _eventoService.GetEventoSimpleDto(idEvento);
+            var evento = _eventoService.Get(idEvento);
+            string nomeEvento = evento?.Nome ?? string.Empty;
+            decimal cargaHoraria = evento?.CargaHoraria ?? 20m;
+            decimal frequenciaMinima = (evento != null && evento.FrequenciaMinimaCertificado > 0) ? evento.FrequenciaMinimaCertificado : 75m;
+
             if (evento == null)
             {
-                return NotFound();
+                var eventoDto = _eventoService.GetEventoSimpleDto(idEvento);
+                if (eventoDto == null)
+                {
+                    return NotFound();
+                }
+                nomeEvento = eventoDto.Nome;
             }
 
-            var (frequencias, subEvento) = await CarregarFrequenciasAsync(idEvento, idSubEvento);
-            if (frequencias == null)
+            Subevento? subEvento = null;
+            string nomeCursoOuSub = nomeEvento;
+
+            var participacoes = new List<Participacaopessoaevento>();
+            var pessoasDict = new Dictionary<uint, Pessoa>();
+
+            if (idSubEvento.HasValue && idSubEvento.Value > 0)
             {
-                return NotFound();
+                subEvento = _subeventoService.Get(idSubEvento.Value);
+                if (subEvento == null || subEvento.IdEvento != idEvento)
+                {
+                    return NotFound();
+                }
+
+                if (subEvento.CargaHoraria > 0)
+                    cargaHoraria = subEvento.CargaHoraria;
+
+                if (subEvento.FrequenciaMinimaCertificado > 0)
+                    frequenciaMinima = subEvento.FrequenciaMinimaCertificado;
+
+                nomeCursoOuSub = subEvento.Nome;
+
+                var presencasSub = _participacaoSubEventoService.GetBySubEvento(idSubEvento.Value).ToList();
+                foreach (var p in presencasSub)
+                {
+                    participacoes.Add(new Participacaopessoaevento
+                    {
+                        Id = p.Id,
+                        IdPessoa = p.IdPessoa,
+                        IdEvento = idEvento,
+                        Entrada = p.Entrada,
+                        Saida = p.Saida,
+                        IdPessoaNavigation = p.IdPessoaNavigation
+                    });
+
+                    if (p.IdPessoaNavigation != null && !pessoasDict.ContainsKey(p.IdPessoa))
+                    {
+                        pessoasDict[p.IdPessoa] = p.IdPessoaNavigation;
+                    }
+                }
+
+                var inscricoesSub = _inscricaoService.GetSubByEvento(idEvento)?
+                    .Where(i => i.IdSubEvento == idSubEvento.Value && i.Status != "C")
+                    .ToList() ?? new List<Inscricaopessoasubevento>();
+
+                foreach (var insc in inscricoesSub)
+                {
+                    if (insc.IdPessoaNavigation != null && !pessoasDict.ContainsKey(insc.IdPessoa))
+                    {
+                        pessoasDict[insc.IdPessoa] = insc.IdPessoaNavigation;
+                    }
+                    else if (!pessoasDict.ContainsKey(insc.IdPessoa))
+                    {
+                        var pessoaDb = _pessoaService.Get(insc.IdPessoa);
+                        if (pessoaDb != null)
+                            pessoasDict[insc.IdPessoa] = pessoaDb;
+                    }
+                }
+            }
+            else
+            {
+                var presencasEvento = await _participacaoService.GetByEventoAsync(idEvento);
+                if (presencasEvento != null)
+                {
+                    foreach (var p in presencasEvento)
+                    {
+                        participacoes.Add(p);
+                        if (p.IdPessoaNavigation != null && !pessoasDict.ContainsKey(p.IdPessoa))
+                        {
+                            pessoasDict[p.IdPessoa] = p.IdPessoaNavigation;
+                        }
+                    }
+                }
+
+                var inscricoesEvento = _inscricaoService.GetByEvento(idEvento)?
+                    .Where(i => i.Status != "C" && i.IdPapel == 4)
+                    .ToList() ?? new List<Inscricaopessoaevento>();
+
+                foreach (var insc in inscricoesEvento)
+                {
+                    if (insc.IdPessoaNavigation != null && !pessoasDict.ContainsKey(insc.IdPessoa))
+                    {
+                        pessoasDict[insc.IdPessoa] = insc.IdPessoaNavigation;
+                    }
+                    else if (!pessoasDict.ContainsKey(insc.IdPessoa))
+                    {
+                        var pessoaDb = _pessoaService.Get(insc.IdPessoa);
+                        if (pessoaDb != null)
+                            pessoasDict[insc.IdPessoa] = pessoaDb;
+                    }
+                }
             }
 
-            var itens = frequencias.Select(ParaItemCsv).ToList();
-            var geradoEm = DateTime.Now;
-            var csv = FrequenciaCsvExporter.Gerar(evento.Nome, subEvento?.Nome, itens);
-            var nomeArquivo = FrequenciaCsvExporter.NomeArquivo(
-                evento.Nome, idEvento, subEvento?.Nome, subEvento?.Id, geradoEm);
+            var participacoesPorPessoa = participacoes
+                .GroupBy(p => p.IdPessoa)
+                .ToDictionary(g => g.Key, g => g.ToList());
 
-            return File(csv, "text/csv; charset=utf-8", nomeArquivo);
+            var itens = new List<FrequenciaRelatorioItem>();
+
+            foreach (var (idPessoa, pessoa) in pessoasDict)
+            {
+                participacoesPorPessoa.TryGetValue(idPessoa, out var bipesDaPessoa);
+                bipesDaPessoa ??= new List<Participacaopessoaevento>();
+
+                var periodosValidos = bipesDaPessoa
+                    .Where(b => b.Saida.HasValue && b.Saida.Value > b.Entrada)
+                    .Select(b => (Inicio: b.Entrada, Fim: b.Saida!.Value))
+                    .OrderBy(p => p.Inicio)
+                    .ThenBy(p => p.Fim)
+                    .ToList();
+
+                long ticks = 0;
+                if (periodosValidos.Count > 0)
+                {
+                    var atual = periodosValidos[0];
+                    foreach (var proximo in periodosValidos.Skip(1))
+                    {
+                        if (proximo.Inicio <= atual.Fim)
+                        {
+                            if (proximo.Fim > atual.Fim)
+                                atual.Fim = proximo.Fim;
+                        }
+                        else
+                        {
+                            ticks += (atual.Fim - atual.Inicio).Ticks;
+                            atual = proximo;
+                        }
+                    }
+                    ticks += (atual.Fim - atual.Inicio).Ticks;
+                }
+
+                decimal horasPresentes = Math.Round((decimal)TimeSpan.FromTicks(ticks).TotalHours, 2, MidpointRounding.AwayFromZero);
+
+                decimal percentual = 0m;
+                if (cargaHoraria > 0)
+                {
+                    var perc = (decimal)ticks * 100m / (cargaHoraria * (decimal)TimeSpan.TicksPerHour);
+                    percentual = Math.Round(Math.Min(100m, perc), 2, MidpointRounding.AwayFromZero);
+                }
+                else
+                {
+                    percentual = horasPresentes > 0 ? 100m : 0m;
+                }
+
+                string situacao = percentual >= frequenciaMinima ? "APTO PARA CERTIFICADO" : "INSUFICIENTE";
+
+                string historico;
+                if (bipesDaPessoa.Count == 0)
+                {
+                    historico = "Sem registros de entrada/saída";
+                }
+                else
+                {
+                    historico = string.Join(" | ", bipesDaPessoa
+                        .OrderBy(b => b.Entrada)
+                        .Select(b => b.Saida.HasValue
+                            ? $"{b.Entrada:dd/MM/yyyy HH:mm} às {b.Saida.Value:HH:mm}"
+                            : $"{b.Entrada:dd/MM/yyyy HH:mm} (sem saída registrada)"));
+                }
+
+                itens.Add(new FrequenciaRelatorioItem
+                {
+                    Cpf = FormatarCpf(pessoa.Cpf),
+                    NomeCompleto = pessoa.Nome,
+                    Email = pessoa.Email,
+                    CursoOuSubevento = nomeCursoOuSub,
+                    CargaHorariaTotal = cargaHoraria,
+                    TotalHorasPresentes = horasPresentes,
+                    PercentualFrequencia = percentual,
+                    SituacaoFrequencia = situacao,
+                    HistoricoEntradasSaidas = historico
+                });
+            }
+
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                var statusNorm = status.Trim().ToLowerInvariant();
+                if (statusNorm.Contains("apto"))
+                {
+                    itens = itens.Where(i => i.AptoParaCertificado).ToList();
+                }
+                else if (statusNorm.Contains("abaixo") || statusNorm.Contains("insuficiente"))
+                {
+                    itens = itens.Where(i => !i.AptoParaCertificado).ToList();
+                }
+            }
+
+            itens = itens.OrderBy(i => i.NomeCompleto).ToList();
+
+            var geradoEm = DateTime.Now;
+            var ehExcel = string.Equals(formato, "xlsx", StringComparison.OrdinalIgnoreCase) ||
+                          string.Equals(formato, "excel", StringComparison.OrdinalIgnoreCase);
+
+            if (string.Equals(formato, "moodle", StringComparison.OrdinalIgnoreCase))
+            {
+                var itensMoodle = participacoes.Select(p => new FrequenciaCsvItem
+                {
+                    Nome = p.IdPessoaNavigation?.Nome,
+                    Cpf = p.IdPessoaNavigation?.Cpf,
+                    Email = p.IdPessoaNavigation?.Email,
+                    Entrada = p.Entrada,
+                    Saida = p.Saida
+                });
+                var bytes = FrequenciaCsvExporter.Gerar(nomeEvento, subEvento?.Nome, itensMoodle);
+                var nomeArquivo = FrequenciaCsvExporter.NomeArquivo(
+                    nomeEvento, idEvento, subEvento?.Nome, subEvento?.Id, geradoEm);
+                return File(bytes, "text/csv; charset=utf-8", nomeArquivo);
+            }
+
+            if (ehExcel)
+            {
+                var bytes = FrequenciaExcelExporter.Gerar(nomeEvento, subEvento?.Nome, itens);
+                var nomeArquivo = FrequenciaExcelExporter.NomeArquivo(
+                    nomeEvento, idEvento, subEvento?.Nome, subEvento?.Id, geradoEm);
+                return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", nomeArquivo);
+            }
+            else
+            {
+                var bytes = FrequenciaCsvExporter.GerarRelatorio(nomeEvento, subEvento?.Nome, itens);
+                var nomeArquivo = FrequenciaCsvExporter.NomeArquivo(
+                    nomeEvento, idEvento, subEvento?.Nome, subEvento?.Id, geradoEm);
+                return File(bytes, "text/csv; charset=utf-8", nomeArquivo);
+            }
+        }
+
+        private static string FormatarCpf(string? cpf)
+        {
+            var numeros = Methods.RemoveNaoNumericos(cpf ?? string.Empty);
+            if (numeros.Length == 11)
+            {
+                return Convert.ToUInt64(numeros).ToString(@"000\.000\.000\-00");
+            }
+            return cpf ?? string.Empty;
         }
 
         [Authorize(Roles = "ADMINISTRADOR,GESTOR,COLABORADOR")]
@@ -530,7 +766,7 @@ namespace EventoWeb.Controllers
             {
                 TempData.Clear();
                 TempData["ErrorMessage"] = mensagemSemVinculo;
-                if (idEvento > 0 && User.IsInRole("GESTOR"))
+                if (idEvento > 0 && (User.IsInRole("GESTOR") || User.IsInRole("ADMINISTRADOR")))
                 {
                     return RedirectToAction("GerenciarEvento", "Evento", new { idEvento });
                 }
